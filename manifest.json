@@ -1,0 +1,88 @@
+{
+  "manifest_version": "1.0",
+  "bundle_version": "0.6.0",
+  "released_at": "2026-05-13",
+  "min_server_version": "0.6.0",
+  "skills": [
+    {
+      "name": "ea-com",
+      "title": "ea-com",
+      "description": "EA COM API automation patterns from Python",
+      "version": "0.6.0",
+      "min_server_version": "0.6.0",
+      "files": [
+        "ea-com/SKILL.md"
+      ],
+      "sha256": {
+        "ea-com/SKILL.md": "28e5ba25cfdbe5859abdd84e4a2bb8d9664d0448dedf212b77197e41affd9325"
+      }
+    },
+    {
+      "name": "ea-mcp-modeling",
+      "title": "ea-mcp-modeling",
+      "description": "Build EA models via the MCP server \u2014 phases, defects, verification",
+      "version": "0.6.0",
+      "min_server_version": "0.6.0",
+      "files": [
+        "ea-mcp-modeling/SKILL.md",
+        "ea-mcp-modeling/references/sql_schema.md"
+      ],
+      "sha256": {
+        "ea-mcp-modeling/SKILL.md": "5c4b421e30559764442a86252afacf1fba998f9d79746a1a7516c1d4a86698ea",
+        "ea-mcp-modeling/references/sql_schema.md": "c045c783aecfdf95af690d2181f7075d589d929c65bff9db1a3be9b7fa2084ef"
+      }
+    },
+    {
+      "name": "ea-mdg-author",
+      "title": "ea-mdg-author",
+      "description": "Author MDG Technology XML files for Sparx EA",
+      "version": "0.6.0",
+      "min_server_version": "0.6.0",
+      "files": [
+        "ea-mdg-author/SKILL.md"
+      ],
+      "sha256": {
+        "ea-mdg-author/SKILL.md": "c227c7dbd3c5e17ddc17ef0d9f39c84e60a13691970f445a9c91744699f11b58"
+      }
+    },
+    {
+      "name": "ea-mdg-deploy",
+      "title": "ea-mdg-deploy",
+      "description": "Deploy and test an EA MDG Technology",
+      "version": "0.6.0",
+      "min_server_version": "0.6.0",
+      "files": [
+        "ea-mdg-deploy/SKILL.md"
+      ],
+      "sha256": {
+        "ea-mdg-deploy/SKILL.md": "c38918fdf0d8fed69a5875a8fd351a219966993aef2d00147acedcc393936c9a"
+      }
+    },
+    {
+      "name": "ea-mcp-validation",
+      "title": "ea-mcp-validation",
+      "description": "Author validate_model YAML rule sidecars",
+      "version": "0.6.0",
+      "min_server_version": "0.6.0",
+      "files": [
+        "ea-mcp-validation/SKILL.md"
+      ],
+      "sha256": {
+        "ea-mcp-validation/SKILL.md": "99f244c72e4178648e9ca014b6f2ccaab544e8c59bbf58acc3a16020a8e81b09"
+      }
+    },
+    {
+      "name": "ea-mcp-quicklinker",
+      "title": "ea-mcp-quicklinker",
+      "description": "Author Quick Linker stereotypedrelationships for custom MDGs",
+      "version": "0.6.0",
+      "min_server_version": "0.6.0",
+      "files": [
+        "ea-mcp-quicklinker/SKILL.md"
+      ],
+      "sha256": {
+        "ea-mcp-quicklinker/SKILL.md": "78246f9cdaea3323673a55f18d66464288f112808613fd5c45a753029e851313"
+      }
+    }
+  ]
+}
