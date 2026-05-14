@@ -1,12 +1,12 @@
 # AI Power Tools — Shipped Skills Library
 
 Canonical, version-controlled set of Claude skills for **[AI Power Tools
-for Enterprise Architect](https://github.com/NovoCircle/ai-power-tools-releases)**
-— the MCP server that drives Sparx Systems Enterprise Architect via COM.
+for Sparx EA](https://github.com/NovoCircle/ai-power-tools-releases)** —
+the MCP server that drives Sparx Systems Enterprise Architect via COM.
 
 ## How to install
 
-If you have AI Power Tools v0.6.0 or later installed in Claude Desktop:
+If you have AI Power Tools for Sparx EA v1.0.0 or later installed in Claude Desktop:
 
 > *"Install the AI Power Tools skills."*
 
@@ -14,9 +14,9 @@ Claude will call the `install_skills` MCP tool, which fetches this
 bundle from `releases/latest` and copies the skills to your skill
 directory. Re-running the tool later picks up newer skill versions.
 
-For older AI Power Tools versions (0.5.x and earlier) the skills are
-bundled inside the `.mcpb` package; this repo is for the new fetch-on-
-demand flow added in 0.6.0.
+For 0.5.x and earlier, skills were bundled inside the `.mcpb` package;
+this repo is for the fetch-on-demand flow introduced in 0.6.0 and
+stabilized in 1.0.
 
 ## What's in the bundle
 
