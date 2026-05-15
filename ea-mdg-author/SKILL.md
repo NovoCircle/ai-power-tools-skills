@@ -336,20 +336,141 @@ Before deploying, verify:
 
 ---
 
+## Post-Install: Applying the MDG to Existing Repository Data
+
+After deploying an MDG, EA does not automatically update existing elements. Ask the user whether
+they want to migrate existing elements to use the new MDG's stereotypes and tagged values.
+
+### Step 1 — Ask
+
+> "The MDG is installed. Would you like to apply it to existing elements in the repository?
+> I can find all elements that match the base type(s) of your stereotypes and offer to update
+> their stereotype and initialise their tagged values."
+
+If yes, proceed with Steps 2–4. If no, stop.
+
+### Step 2 — Identify candidate elements
+
+Use `execute_sql` (read-only) to find elements whose `Object_Type` matches the base type(s)
+of your stereotypes and that do not yet have the MDG stereotype set:
+
+```python
+# Example: find all Class elements that aren't already stereotyped as TVO types
+candidates = execute_sql("""
+    SELECT o.Object_ID, o.Name, o.Object_Type, o.Stereotype, o.Package_ID
+    FROM t_object o
+    WHERE o.Object_Type = 'Class'
+      AND (o.Stereotype IS NULL OR o.Stereotype NOT IN ('Employee','Department','WorkLocation'))
+    ORDER BY o.Name
+""")
+```
+
+Present the list to the user and confirm which elements to update before proceeding.
+
+### Step 3 — Update elements
+
+For each confirmed element, use `update_element` to set the stereotype and initial tagged values:
+
+```python
+update_element(
+    element_id=obj_id,
+    properties={"stereotype": "Employee"},
+    tagged_values={
+        "empID": "",
+        "department": "",
+        "hireDate": "",
+    }
+)
+```
+
+> **Do not use `repo.Execute()` DML to set stereotypes** — EA's internal cache won't update.
+> Always use the `update_element` MCP tool for stereotype changes, so EA's runtime state
+> stays consistent.
+
+### Step 4 — Validate
+
+Run the companion YAML sidecar immediately after the migration to find any elements that need
+attention:
+
+```python
+validate_model(rules_path_or_content="TVO_rules.yaml")
+```
+
+Review violations and ask the user to fill in required tagged values before saving.
+
+---
+
 ## Quick Linker Rules
 
-Quick Linker rules are configured via a **Profile Diagram** in EA (not directly in the XML hand-authored here). The profile diagram workflow:
+Quick Linker (QL) is the hover menu EA shows on a diagram element when you pause over it. QL rules
+are embedded in your MDG XML and control which connector types appear in that menu.
 
-1. Create a Profile Diagram in your MDG package
-2. Add Metaclass elements for each source/target stereotype
-3. On source Metaclass elements, add attribute `_HideUmlLinks` (Boolean = True) to suppress default UML entries
-4. On source Metaclass elements, add `_MeaningForwards` (String = menu label, e.g., "Runs On")
-5. Connect metaclasses with Stereotyped-relationship connectors; set `stereotype` tag on each
-6. Generate MDG via MTS Wizard — the QL rules are embedded in the exported XML
+### Preferred approach — intermediate metamodel (write_mdg_xml)
 
-**Warning:** Setting `_HideUmlLinks` on a source with no QL rules produces an **empty QL menu**. Always confirm QL rules exist for each source before hiding UML links.
+When using `write_mdg_xml` to emit your MDG XML, declare QL rules directly on each source
+stereotype in the intermediate metamodel dict:
 
-To verify Quick Linker is enabled in EA: **Preferences → Objects → Links → Quick Linker: Enable ✓**
+```python
+{
+  "name": "Employee",
+  "base_metaclass": "Class",
+  "hide_uml_links": True,           # suppress EA's default UML entries
+  "meaning_forwards": "Reports To", # label on the QL menu item
+  "quicklinker_rules": [
+    # Each entry: which connector to create → which target stereotype is allowed
+    {"stereotype": "TVO::reports-to", "constraint": "TVO::Employee"},
+    {"stereotype": "TVO::belongs-to", "constraint": "TVO::Department"},
+    {"stereotype": "TVO::works-at",   "constraint": "TVO::WorkLocation"},
+  ],
+  # ... other fields
+}
+```
+
+`write_mdg_xml` emits the correct `<stereotypedrelationships>` and `<Apply>` properties
+automatically. See the `ea-mcp-quicklinker` skill for full reference.
+
+### Manual XML approach
+
+If writing MDG XML directly, add these two elements to each source stereotype:
+
+```xml
+<Stereotype name="Employee" ...>
+  <AppliesTo>
+    <Apply type="Class">
+      <Property name="_HideUmlLinks" value="True"/>
+      <Property name="_MeaningForwards" value="Reports To"/>
+    </Apply>
+  </AppliesTo>
+  <!-- ... TaggedValues ... -->
+  <stereotypedrelationships>
+    <stereotypedrelationship stereotype="TVO::reports-to" constraint="TVO::Employee"/>
+    <stereotypedrelationship stereotype="TVO::belongs-to" constraint="TVO::Department"/>
+    <stereotypedrelationship stereotype="TVO::works-at"   constraint="TVO::WorkLocation"/>
+  </stereotypedrelationships>
+</Stereotype>
+```
+
+### Rules
+
+- `stereotype` — connector stereotype EA creates when user picks this menu item. Must be defined
+  as a connector stereotype elsewhere in the same MDG XML.
+- `constraint` — the target element stereotype the menu item is valid for. Format: `TechID::Name`.
+- **`_HideUmlLinks: True`** — only set this when you have at least one QL rule. An empty hide
+  produces an entirely empty QL menu and looks like a broken feature.
+- **Legacy: Profile Diagram workflow.** Creating QL rules via a Profile Diagram in EA then
+  generating via the MTS Wizard is the old approach. It still works but is not recommended when
+  AI Power Tools is deployed — use the intermediate metamodel or hand-author the XML instead.
+
+### Verifying QL in EA
+
+1. Deploy MDG and restart EA.
+2. Open a diagram, drop a source stereotype element.
+3. Hover for 1–2 seconds — QL arrows appear; clicking shows your connector menu.
+4. If the menu is empty: check `_HideUmlLinks` isn't set without QL rules, and that
+   `constraint` uses the right namespace prefix (`TechID::StereotypeName`).
+
+> **Computer use note:** the QL hover overlay disappears on focus change. Take a screenshot
+> immediately after the menu appears — do not click elsewhere first.
 
 ---
 
@@ -392,6 +513,72 @@ rules:
         - name: empID
           must_be_non_empty: true
 ```
+
+### Creating the companion YAML sidecar
+
+Every MDG produced by this skill must have a companion `<tech_id>_rules.yaml` file. Create it
+as part of the MDG authoring workflow — one `tagged_value_required` rule for each tagged value
+that is marked as mandatory in your MDG design.
+
+Minimal template for a new MDG:
+
+```yaml
+meta:
+  version: "1.0"
+  mdg_family: TVO         # replace with your tech ID
+
+rules:
+  # One block per mandatory tagged value per stereotype.
+  # Rule IDs: <TechID>-TVR-001, -002, ... for tagged-value rules
+  #           <TechID>-CNX-001, -002, ... for connector rules
+
+  - id: TVO-TVR-001
+    severity: error
+    demo_trigger: true    # mark the most critical check for quick smoke-testing
+    selector:
+      type: element
+      stereotypes:
+        any_of: ["Employee"]
+    condition:
+      type: tagged_value_required
+      tags:
+        - name: empID
+          must_be_non_empty: true
+    remediation:
+      short: Populate the empID tagged value on this Employee
+
+  # Repeat for each additional mandatory tag / stereotype combination
+```
+
+Run validation after every MDG install to confirm it finds violations on test data:
+```
+validate_model(rules_path_or_content="TVO_rules.yaml", mode="demo_validation")
+```
+
+---
+
+## EA Computer Use — Latency Guidelines
+
+MDG authoring primarily uses file tools, but deployment verification and any diagram-based checks require the EA UI.
+
+When any step requires taking a screenshot, clicking in EA, or verifying EA UI state:
+
+| Operation | Wait before screenshot |
+|-----------|----------------------|
+| Any menu click or button in EA UI | 2–5 seconds |
+| Opening a `.qea` project file | 5–15 seconds |
+| Importing or deploying an MDG | 3–8 seconds |
+| Expanding a package in Project Browser | 1–3 seconds |
+| Any COM call that may trigger a dialog | 3–5 seconds |
+
+**Standard pattern:**
+1. Perform the action (click, COM call, MCP tool call that triggers EA UI change)
+2. Wait the appropriate interval above
+3. Take a screenshot to verify the result
+4. If EA shows **"(Not Responding)"**: this is normal during file/import operations — wait another 5 seconds and screenshot again before concluding anything failed
+5. **Never retry an action** without first confirming the previous one failed
+
+> **"(Not Responding)"** in the EA title bar means EA is processing, not crashed. Wait — do not double-click, re-issue the command, or open a second EA instance.
 
 ---
 

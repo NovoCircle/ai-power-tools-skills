@@ -65,6 +65,29 @@ This emits:
    - Did `_HideUmlLinks=True` hide the defaults without leaving QL rules?
    - Does the rule's `constraint` match an existing target stereotype name with the right namespace prefix?
 
+## EA Computer Use — Latency Guidelines
+
+Quick Linker verification always requires the EA diagram canvas — the hover overlay is only visible in the live EA UI.
+
+When any step requires taking a screenshot, clicking in EA, or verifying EA UI state:
+
+| Operation | Wait before screenshot |
+|-----------|----------------------|
+| Any menu click or button in EA UI | 2–5 seconds |
+| Opening a `.qea` project file | 5–15 seconds |
+| Importing or deploying an MDG | 3–8 seconds |
+| Expanding a package in Project Browser | 1–3 seconds |
+| Any COM call that may trigger a dialog | 3–5 seconds |
+
+**Standard pattern:**
+1. Perform the action (click, COM call, MCP tool call that triggers EA UI change)
+2. Wait the appropriate interval above
+3. Take a screenshot to verify the result
+4. If EA shows **"(Not Responding)"**: this is normal during file/import operations — wait another 5 seconds and screenshot again before concluding anything failed
+5. **Never retry an action** without first confirming the previous one failed
+
+> **"(Not Responding)"** in the EA title bar means EA is processing, not crashed. Wait — do not double-click, re-issue the command, or open a second EA instance.
+
 ## See also
 
 - `ea-mdg-author` — full MDG XML structure.
