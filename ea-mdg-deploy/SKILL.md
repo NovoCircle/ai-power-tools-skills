@@ -18,6 +18,20 @@ description: Deploy and test a Sparx EA MDG Technology — embed it into a .qea 
 
 ---
 
+## Tool Selection for MDG Deployment
+
+| Operation | Use |
+|-----------|-----|
+| Model-embedded install (preferred) | `install_mdg(scope="embedded")` MCP tool |
+| Model-embedded install fallback | COM `repo.ImportTechnology(xml_str)` via `ea-com` |
+| Application-level install | `install_mdg(scope="user")` MCP tool |
+| Verify MDG loaded | COM `repo.IsTechnologyLoaded("TVO")` → True |
+| Verify Location: Project | EA UI → Specialize → Technologies → Manage Technology |
+| Dismiss overwrite dialog | Computer use → screenshot → click Yes → screenshot again |
+| Fix wrong `Object_Type` in database | COM `repo.Execute()` DML (NOT `elem.Type` setter) |
+
+---
+
 ## Deploy: Model-Embedded (Preferred)
 
 Uses `Repository.ImportTechnology(xml_string)` via COM. This writes the MDG directly into the `.qea` SQLite database.
@@ -34,8 +48,8 @@ if os.path.exists(APPDATA_MDG):
     os.remove(APPDATA_MDG)
     print(f"Removed APPDATA copy: {APPDATA_MDG}")
 
-# MDG XML must be windows-1252 encoded — read with the same encoding
-with open(MDG_FILE, encoding="windows-1252") as f:
+# MDG XML must be UTF-8 encoded — read with the same encoding
+with open(MDG_FILE, encoding="utf-8") as f:
     xml = f.read()
 
 with EA() as ea:
@@ -53,6 +67,29 @@ print("Done. Restart EA to verify.")
   - `id=` attribute longer than 12 characters → shorten it
   - Malformed XML → validate with `xmllint` or Python's `xml.etree.ElementTree`
   - Namespace mismatch (stereotype references wrong tech ID)
+
+### ⚠ Post-ImportTechnology — Always Screenshot
+
+`repo.ImportTechnology()` can show a modal **"Profile already exists. Overwrite?"** dialog that
+blocks the COM thread. This is true even when `SuppressEADialogs = True` is set, in some EA
+builds.
+
+Standard pattern after any `ImportTechnology` call (or any model-mutating COM call):
+
+1. Execute the COM call
+2. **Immediately take a screenshot** (do not wait — you need to see if a dialog appeared)
+3. Wait 3–5 seconds (EA is slow to render dialogs)
+4. Take a **second screenshot**
+5. If a dialog is visible: read it, dismiss it appropriately, then confirm the result
+6. Only then proceed to the next step
+
+**Operations that ALWAYS require a post-call screenshot:**
+- `repo.ImportTechnology()`
+- `repo.OpenFile()` / `repo.CloseFile()`
+- `repo.Execute()` with INSERT/UPDATE/DELETE
+- Any MDG re-import after a profile change
+
+Never assume a COM call succeeded without taking a post-call screenshot.
 
 ---
 
@@ -148,6 +185,16 @@ ea2 = ea.close_and_reopen()  # save + shutdown + relaunch + reconnect
 
 After deploying and restarting EA, verify each of these:
 
+> **EA 17 note on `get_embedded_mdgs`:** The `get_embedded_mdgs` MCP tool queries `t_document`
+> for embedded MDG XML. In EA 17, `ImportTechnology()` does not store the MDG in `t_document` —
+> it uses a different internal location. `get_embedded_mdgs` will return empty even when the MDG
+> is correctly embedded. Use COM verification (`IsTechnologyLoaded`) or the EA UI instead.
+
+**Verification order (most reliable first):**
+1. **COM:** `repo.IsTechnologyLoaded("TVO")` must return `True`
+2. **EA UI:** Specialize → Technologies → Manage Technology → Location column shows **Project**
+3. **MCP:** `get_embedded_mdgs()` ← note: unreliable for model-embedded MDGs in EA 17
+
 ### 1. COM check (scripted)
 ```python
 from ea_com import EA
@@ -193,6 +240,29 @@ with EA() as ea:
 
 ---
 
+## EA Computer Use — Latency Guidelines
+
+EA 17 on a typical developer workstation takes:
+
+| Operation | Wait time |
+|-----------|-----------|
+| Menu click or dialog button | 2–5 seconds |
+| Open a `.qea` project file | 5–15 seconds |
+| Import an MDG technology | 3–8 seconds |
+| Expand a package in Project Browser | 1–3 seconds |
+
+**Standard pattern for computer use with EA:**
+1. Perform the action (click, key press, COM call)
+2. Wait at least **5 seconds**
+3. Take a screenshot to verify the result
+4. If EA shows **"(Not Responding)"**: this is normal during file operations — wait another 5 seconds and screenshot again before concluding anything failed
+5. **Never retry an action** without first confirming the previous action failed
+
+> **"(Not Responding)" in the title bar means EA is processing — not crashed.** Do not
+> double-click a file or re-issue a command while EA is still loading from a previous one.
+
+---
+
 ## Troubleshooting
 
 | Symptom | Cause | Fix |
@@ -203,23 +273,23 @@ with EA() as ea:
 | Diagram type missing from New Diagram dialog | DiagramProfile not loaded or wrong `Apply type` | Verify DiagramProfile section uses `Apply type="Diagram_Logical"` (not `"Logical"`) |
 | Tagged values don't appear | Stereotype name mismatch between Profile and Toolbox | Verify `APM::Application` format — prefix must match UMLProfile Documentation `id` |
 | `DeleteTechnology()` returns True but entry persists | COM removes from registry but not memory | Restart EA — deletion takes effect after restart |
-| MDG file rejected on load | File is UTF-8 encoded | Must be `windows-1252` — re-save with correct encoding |
+| MDG file rejected on load | Encoding declaration mismatch | Declare `encoding="utf-8"` in the XML prolog and save the file as UTF-8 |
 
 ---
 
 ## File Encoding (Critical)
 
-MDG Technology XML files **must be encoded as `windows-1252`**. UTF-8 causes EA to silently reject the file.
+MDG Technology XML files **must be encoded as UTF-8** and must declare `encoding="utf-8"` in the XML prolog.
 
 When writing MDG XML from Python:
 ```python
-with open("APM_MDG.xml", "w", encoding="windows-1252") as f:
+with open("APM_MDG.xml", "w", encoding="utf-8") as f:
     f.write(xml_content)
 ```
 
 When reading MDG XML to pass to `ImportTechnology`:
 ```python
-with open("APM_MDG.xml", encoding="windows-1252") as f:
+with open("APM_MDG.xml", encoding="utf-8") as f:
     xml = f.read()
 ```
 

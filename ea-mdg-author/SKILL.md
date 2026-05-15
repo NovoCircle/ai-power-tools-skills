@@ -12,7 +12,7 @@ description: Author a Sparx EA MDG Technology XML file — define stereotypes, t
 | Task | Key Rule |
 |------|----------|
 | All `id=` attributes | **≤ 12 characters** (EA hard limit — silently fails if exceeded) |
-| File encoding | Must be `windows-1252` — UTF-8 causes EA to reject the file |
+| File encoding | Must be `utf-8` |
 | UMLProfile `id` | Must match the technology `id` for toolbox namespace resolution |
 | `bgcolor` colour values | COLORREF integer: B×65536 + G×256 + R. `-1` = use EA theme default |
 | Tagged value type | Use `enumeration` (not `enum`) and `String` (capital S) |
@@ -20,10 +20,30 @@ description: Author a Sparx EA MDG Technology XML file — define stereotypes, t
 
 ---
 
+## Tool Selection
+
+When automating MDG work, pick the right tool tier:
+
+| Operation | Use |
+|-----------|-----|
+| Author MDG XML, read/write files | Claude Code file tools (`Write`, `Read`, `Edit`) |
+| Parse and validate MDG XML | `parse_mdg_xml` MCP tool |
+| Install MDG at application scope | `install_mdg(scope="user")` MCP tool |
+| Install MDG as model-embedded | `install_mdg(scope="embedded")` MCP tool — or COM `repo.ImportTechnology()` if MCP times out |
+| Verify MDG is loaded | COM: `repo.IsTechnologyLoaded("TVO")` — **not** `get_embedded_mdgs` (unreliable in EA 17) |
+| Fix `Object_Type` in database | `repo.Execute()` DML — **not** `elem.Type` COM setter (silently fails for ArchiMate types) |
+| Dismiss EA dialogs | Computer use screenshot → click → screenshot again |
+
+> **`get_embedded_mdgs` is unreliable in EA 17+ for model-embedded MDGs.** Use
+> `repo.IsTechnologyLoaded("TVO")` or check Specialize → Technologies → Manage Technology
+> in the EA UI instead.
+
+---
+
 ## Canonical EA 17 File Structure
 
 ```xml
-<?xml version="1.0" encoding="windows-1252"?>
+<?xml version="1.0" encoding="utf-8"?>
 <MDG.Technology version="1.0" id="APM" name="APM Modeling Language">
 
   <Documentation id="APM" name="APM Modeling Language" version="1.0"
@@ -144,6 +164,43 @@ description: Author a Sparx EA MDG Technology XML file — define stereotypes, t
 | `Integer` | Numeric | |
 
 > **Common mistake:** using `enum` or `Enumeration` — the correct value is `enumeration` (lowercase, full word).
+
+### ⚠ Base Type and Project Browser Visibility
+
+`<Apply type="..."/>` controls what `t_object.Object_Type` EA stores for elements of this
+stereotype. The value must be a **standard UML type** that EA's Project Browser natively renders
+— otherwise elements will be invisible in the browser tree even though they appear on diagram
+canvases and are accessible via SQL.
+
+**Safe base types (Project Browser renders them natively):**
+`Class`, `Component`, `Node`, `Package`, `Interface`, `Actor`, `UseCase`, `Activity`,
+`Artifact`, `Boundary`, `Collaboration`, `DataStore`, `Decision`
+
+**Dangerous base types — only use if the corresponding MDG is active at project scope:**
+
+| `Apply type=` | Requires |
+|---|---|
+| `BusinessActor`, `BusinessProcess`, etc. | ArchiMate3 MDG active at project scope |
+| `ApplicationComponent`, `ApplicationService`, etc. | ArchiMate3 MDG active at project scope |
+| Anything starting with a BPMN shape name | BPMN MDG active at project scope |
+
+> **Rule:** If you are building a standalone custom MDG that does not require ArchiMate3 or
+> another extended MDG, always use `<Apply type="Class">` (or another standard UML type) as the
+> base. The ArchiMate conceptual alignment is conveyed through the stereotype name, tagged values,
+> and documentation — not the base type. Using `BusinessActor` as the base type when ArchiMate3
+> is not project-loaded causes elements to be invisible in the Project Browser.
+
+**If elements are already stored with the wrong base type**, the COM setter (`elem.Type = "Class"`)
+silently ignores the change for ArchiMate-typed elements. Use `repo.Execute()` DML directly:
+
+```python
+repo.Execute(
+    "UPDATE t_object SET Object_Type='Class' "
+    "WHERE Object_Type='BusinessActor' "
+    "AND Stereotype IN ('Employee','Department')"
+)
+```
+Then close and reopen the project to flush EA's in-memory cache.
 
 ---
 
@@ -296,9 +353,79 @@ To verify Quick Linker is enabled in EA: **Preferences → Objects → Links →
 
 ---
 
+## Validation Rules — Do NOT Use `<Scripts>` with AI Power Tools
+
+When AI Power Tools for Sparx EA is deployed, **do not embed validation rules in the MDG's
+`<Scripts>` section**. The `<Scripts>` mechanism runs JavaScript inside EA's scripting engine
+and is not accessible to the MCP server.
+
+```xml
+<!-- WRONG — EA scripting, not accessible to validate_model tool -->
+<Scripts>
+  <Script name="TVO Conformance Rules" type="Normal" language="JavaScript">
+    <![CDATA[
+    function EA_GetRuleSetList() { return "TVO Conformance"; }
+    function EA_OnRunRule(RuleSetID, RuleID, ObjectType, ObjectID) { ... }
+    ]]>
+  </Script>
+</Scripts>
+```
+
+Instead, create a `<mdg_name>_rules.yaml` sidecar file and run it with the `validate_model`
+MCP tool. See the `ea-mcp-validation` skill for the sidecar schema.
+
+```yaml
+# TechVentures_rules.yaml — run with validate_model(rules_path_or_content="...")
+meta:
+  version: "1.0"
+  mdg_family: TVO
+rules:
+  - id: EMP-001
+    severity: error
+    selector:
+      type: element
+      stereotypes:
+        any_of: ["Employee"]
+    condition:
+      type: tagged_value_required
+      tags:
+        - name: empID
+          must_be_non_empty: true
+```
+
+---
+
 ## Researching the Sparx EA API
 
 - MDG Technology authoring → Sparx EA help, search "MDG Technology" or "UML Profile"
 - Tagged value types → search "TaggedValueTypes"
 - Diagram types → search "Diagram Stereotypes" or "Custom Diagram"
 - When documentation is unclear, use `ea.repo_methods()` to enumerate available COM methods at runtime
+
+---
+
+## File Encoding (Critical)
+
+MDG Technology XML files **must declare and use `utf-8` encoding**. The Claude Code `Write` tool
+always saves files as UTF-8 — the XML declaration must match.
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+```
+
+When writing MDG XML from Python:
+```python
+with open("APM_MDG.xml", "w", encoding="utf-8") as f:
+    f.write(xml_content)
+```
+
+When reading MDG XML to pass to `ImportTechnology`:
+```python
+with open("APM_MDG.xml", encoding="utf-8") as f:
+    xml = f.read()
+```
+
+> **Legacy note:** Older EA versions and hand-written MDG files sometimes used `windows-1252`. If
+> you receive an MDG XML file that is windows-1252 encoded, re-save it as UTF-8 and update the
+> declaration. Do not mix the declaration and the actual byte encoding — EA will reject the file
+> if they disagree.

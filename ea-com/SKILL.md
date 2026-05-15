@@ -158,6 +158,33 @@ new_ea = ea.close_and_reopen(wait=6.0)
 
 ---
 
+## Post-Action UI Check (Model-Mutating COM Calls)
+
+EA COM calls that modify the model can raise blocking modal dialogs. The COM thread hangs
+until the dialog is dismissed. Always take a screenshot after any model-mutating call.
+
+**Operations that require a post-call screenshot:**
+- `repo.ImportTechnology()` — "Profile already exists. Overwrite?"
+- `repo.Execute()` with DML — SQL error dialogs
+- `repo.OpenFile()` / `repo.CloseFile()` — save-changes prompts
+- MDG re-import after any profile change
+
+**Pattern:**
+```python
+# 1. Execute the COM call
+ok = repo.ImportTechnology(xml_str)
+
+# 2. Immediately take a screenshot and wait for dialogs to appear
+# (use computer use: take_screenshot(), wait 3s, take_screenshot() again)
+
+# 3. Dismiss any dialog visible in the screenshot before proceeding
+
+# 4. Verify the result
+print(f"IsTechnologyLoaded: {repo.IsTechnologyLoaded('TVO')}")
+```
+
+---
+
 ## Running the Module Directly
 
 `ea_com.py` has a built-in smoke test:
@@ -237,6 +264,30 @@ for tag in element.TaggedValues:
         tag.Update()
 ```
 
+### ⚠ `elem.Type` Setter — Silent Failure for ArchiMate Types
+
+Setting `elem.Type` via the COM setter silently does nothing for elements stored as
+ArchiMate base types (`BusinessActor`, `BusinessProcess`, `ApplicationComponent`, etc.):
+
+```python
+# WRONG — silently ignored for ArchiMate-typed elements
+elem.Type = "Class"
+elem.Update()
+# elem.Type still reads "Class" via COM (cached), but t_object still has "BusinessActor"
+```
+
+The correct fix is `repo.Execute()` DML directly against the database:
+
+```python
+# CORRECT — directly updates the stored Object_Type
+repo.Execute(
+    "UPDATE t_object SET Object_Type='Class' "
+    "WHERE Object_Type='BusinessActor' "
+    "AND Stereotype IN ('Employee','Department')"
+)
+# Then close and reopen the project to flush EA's in-memory cache
+```
+
 ### Set a tagged value via SQL (bulk update)
 ```python
 ea.execute("""
@@ -294,6 +345,23 @@ WHERE tv.Object_ID = <element_id>;
 - `pywin32`: `pip install pywin32`
 - EA must be running with a project open
 - Works on Windows only (COM is Windows-only)
+
+---
+
+## EA Computer Use — Latency Guidelines
+
+When combining COM calls with computer use (screenshots, clicks):
+
+| Operation | Wait before screenshot |
+|-----------|----------------------|
+| Any COM call that triggers a dialog | 3–5 seconds |
+| `repo.OpenFile()` / `repo.CloseFile()` | 8–15 seconds |
+| `repo.ImportTechnology()` | 3–8 seconds |
+| `repo.Execute()` DML | 1–3 seconds |
+
+> **"(Not Responding)"** in the EA title bar is normal during file and import operations.
+> Wait the full interval and screenshot again before treating it as a failure.
+> Never retry a COM call without confirming the previous call actually failed.
 
 ---
 
