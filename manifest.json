@@ -1,87 +1,87 @@
 {
   "manifest_version": "1.0",
-  "bundle_version": "1.0.0",
-  "released_at": "2026-05-14",
+  "bundle_version": "1.1.0",
+  "released_at": "2026-05-15",
   "min_server_version": "1.0.0",
   "skills": [
     {
       "name": "ea-com",
       "title": "ea-com",
       "description": "EA COM API automation patterns from Python",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "min_server_version": "1.0.0",
       "files": [
         "ea-com/SKILL.md"
       ],
       "sha256": {
-        "ea-com/SKILL.md": "28e5ba25cfdbe5859abdd84e4a2bb8d9664d0448dedf212b77197e41affd9325"
+        "ea-com/SKILL.md": "0d16b3a11e55d5363b238942be5e9233627e277b9584f379fb1f23a0f26b2b51"
       }
     },
     {
       "name": "ea-mcp-modeling",
       "title": "ea-mcp-modeling",
-      "description": "Build EA models via the MCP server \u2014 phases, defects, verification",
-      "version": "1.0.0",
+      "description": "Build EA models via the MCP server — phases, defects, verification",
+      "version": "1.0.1",
       "min_server_version": "1.0.0",
       "files": [
         "ea-mcp-modeling/SKILL.md",
         "ea-mcp-modeling/references/sql_schema.md"
       ],
       "sha256": {
-        "ea-mcp-modeling/SKILL.md": "5c4b421e30559764442a86252afacf1fba998f9d79746a1a7516c1d4a86698ea",
+        "ea-mcp-modeling/SKILL.md": "43b3cf27289734849c569c6e984262839f91995955550c781762b0da5dfba1b4",
         "ea-mcp-modeling/references/sql_schema.md": "c045c783aecfdf95af690d2181f7075d589d929c65bff9db1a3be9b7fa2084ef"
       }
     },
     {
       "name": "ea-mdg-author",
       "title": "ea-mdg-author",
-      "description": "Author MDG Technology XML files for Sparx EA",
-      "version": "1.0.0",
+      "description": "Author MDG Technology XML files for Sparx EA — stereotypes, tagged values, toolbox pages, Quick Linker rules, and validation sidecars",
+      "version": "1.1.0",
       "min_server_version": "1.0.0",
       "files": [
         "ea-mdg-author/SKILL.md"
       ],
       "sha256": {
-        "ea-mdg-author/SKILL.md": "c227c7dbd3c5e17ddc17ef0d9f39c84e60a13691970f445a9c91744699f11b58"
+        "ea-mdg-author/SKILL.md": "97b500fbdb651c7824213287a5b974271b443287d7e234d264bc5e5fe64e3199"
       }
     },
     {
       "name": "ea-mdg-deploy",
       "title": "ea-mdg-deploy",
       "description": "Deploy and test an EA MDG Technology",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "min_server_version": "1.0.0",
       "files": [
         "ea-mdg-deploy/SKILL.md"
       ],
       "sha256": {
-        "ea-mdg-deploy/SKILL.md": "c38918fdf0d8fed69a5875a8fd351a219966993aef2d00147acedcc393936c9a"
+        "ea-mdg-deploy/SKILL.md": "dda6d4e28f9b97359a50f5e6aa26c25ac17b2a637006753e8d3ad3b4a332e0b1"
       }
     },
     {
       "name": "ea-mcp-validation",
       "title": "ea-mcp-validation",
       "description": "Author validate_model YAML rule sidecars",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "min_server_version": "1.0.0",
       "files": [
         "ea-mcp-validation/SKILL.md"
       ],
       "sha256": {
-        "ea-mcp-validation/SKILL.md": "99f244c72e4178648e9ca014b6f2ccaab544e8c59bbf58acc3a16020a8e81b09"
+        "ea-mcp-validation/SKILL.md": "2af01828ff9779fe8057dd98b30d3ed6738049fefe8677701aa379dd01a67c91"
       }
     },
     {
-      "name": "ea-mcp-quicklinker",
-      "title": "ea-mcp-quicklinker",
-      "description": "Author Quick Linker stereotypedrelationships for custom MDGs",
+      "name": "ea-diagnostic",
+      "title": "ea-diagnostic",
+      "description": "Generate a structured diagnostic report for submission to help@novocircle.com",
       "version": "1.0.0",
       "min_server_version": "1.0.0",
       "files": [
-        "ea-mcp-quicklinker/SKILL.md"
+        "ea-diagnostic/SKILL.md"
       ],
       "sha256": {
-        "ea-mcp-quicklinker/SKILL.md": "78246f9cdaea3323673a55f18d66464288f112808613fd5c45a753029e851313"
+        "ea-diagnostic/SKILL.md": "8c3298f6215aa9c595f9b1b19e9505aac5ed0912ed3e86504599d4ba62308337"
       }
     }
   ]

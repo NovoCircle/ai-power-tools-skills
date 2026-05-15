@@ -427,7 +427,24 @@ stereotype in the intermediate metamodel dict:
 ```
 
 `write_mdg_xml` emits the correct `<stereotypedrelationships>` and `<Apply>` properties
-automatically. See the `ea-mcp-quicklinker` skill for full reference.
+automatically. The dict above produces:
+
+```xml
+<Stereotype name="Employee" ...>
+  <AppliesTo>
+    <Apply type="Class">
+      <Property name="_HideUmlLinks" value="True"/>
+      <Property name="_MeaningForwards" value="Reports To"/>
+    </Apply>
+  </AppliesTo>
+  ...
+  <stereotypedrelationships>
+    <stereotypedrelationship stereotype="TVO::reports-to" constraint="TVO::Employee"/>
+    <stereotypedrelationship stereotype="TVO::belongs-to" constraint="TVO::Department"/>
+    <stereotypedrelationship stereotype="TVO::works-at"   constraint="TVO::WorkLocation"/>
+  </stereotypedrelationships>
+</Stereotype>
+```
 
 ### Manual XML approach
 
