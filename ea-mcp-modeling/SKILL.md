@@ -8,12 +8,14 @@ description: How to build and maintain Sparx EA models through the ea-mcp-server
 *Grounded in the Westbrook Bank full-repository build session.  Every pattern here either
 prevented a defect or fixed one.*
 
-> **Server v0.3.0 â€” substantial efficiency upgrades.** New `create_elements_bulk`
-> and `add_elements_to_diagram_bulk` tools, inline `tagged_values` on single-element
-> calls, and `verbose=False` as the default response shape. See Â§0.5 and Â§15 for
-> when to use what. The v0.2.2 hang on `create_element(properties=...)` is fixed â€”
-> ignore any older guidance that says "do not pass properties to create_element."
-> Opt-in diagnostics is available via `EA_MCP_DIAGNOSTICS=1` (see Â§16).
+> **Server v1.0.4 â€” diagram connector fix + MDG routing.** `add_elements_to_diagram_bulk`
+> now auto-populates `t_diagramlinks` so connector lines appear immediately (v1.0.3 and
+> earlier diagrams need a one-time `add_connectors_to_diagram_bulk` repair call â€” see
+> Â§6.5). `create_elements_bulk` accepts `language_id`+`language_type` per spec for
+> MDG-native routing. `update_element` now persists `StereotypeEx` reliably with a
+> two-phase `Update()` and returns `stereotype_warning` on silent rejection.
+> Diagrams opened internally as a side-effect of layout or element placement are now
+> automatically closed â€” the EA UI stays clean during agent-driven builds.
 
 > **Writing raw SQL?** EA's table/column naming is deeply inconsistent and
 > the #1 source of wasted turns is "invalid column name" errors (e.g.,
@@ -118,10 +120,10 @@ amortise latency rather than firing multiple single-entity calls in parallel.
 
 ## 2. Creating the Root Package
 
-### Known defect (REQ-001) â€” fixed in server v2; workaround for v1
+### Root package parent (REQ-001) â€” fixed in v1.0.0
 
-In MCP server v1, to create a package at the true repository root (not under EA's default
-"Model" node), you must first identify the correct parent.
+EA's repository root can be at parent ID 0 or 1 depending on how the project was created.
+Always confirm the correct parent before creating your top-level package:
 
 **Correct approach:**
 ```
@@ -147,15 +149,12 @@ at creation time and will be correct relative to their parent regardless of the 
 
 ## 3. Package Names Containing `&`
 
-### Known defect (REQ-002) â€” fixed in server v2; workaround for v1
+### Ampersand encoding (REQ-002) â€” fixed in v1.0.0
 
-EA's COM layer HTML-encodes the `&` character when passed through MCP.  A package named
-`"Operations & Support"` is stored as `"Operations &amp; Support"`.  This breaks all
-path-based lookups.
+EA's COM layer HTML-encodes `&` on some paths.  A package named `”Operations & Support”`
+may be stored as `”Operations &amp; Support”`, breaking all path-based lookups.
 
-**Workaround for server v1:**
-
-After creating any package whose name contains `&`, immediately verify and fix:
+**Defensive pattern â€” always verify after creating a package whose name contains `&`:**
 
 ```python
 # 1. Create the package (name will be stored with &amp;)
@@ -810,9 +809,10 @@ SELECT COUNT(*) FROM t_object WHERE Stereotype IN ('WBAAIGateway', 'WBAAIService
 | Task | Tool | Notes |
 |------|------|-------|
 | Orient in repo | `list_root_packages` | Always first |
-| Create package | `create_package` | Verify `&` names afterward (v1 bug) |
-| Create one element | `create_element` | Pass `properties=`, `tagged_values=` inline (v0.3.0+) |
-| Create many elements | `create_elements_bulk` | Idempotent; use for >5 (v0.3.0+) |
+| Create package | `create_package` | Verify `&` names (may encode as `&amp;`) |
+| Create one element | `create_element` | Pass `properties=`, `tagged_values=` inline |
+| Create MDG element | `create_element_in_language` | Writes t_xref profile application; prefer over `create_element` for MDG types |
+| Create many elements | `create_elements_bulk` | Idempotent; use for >5; supports `language_id`+`language_type` per spec |
 | Set one tag | `set_tagged_value` | Use only for after-the-fact updates |
 | Create connector | `create_connector` | Verify endpoints exist first |
 | Create many connectors | `create_connectors_bulk` | Idempotent |
@@ -825,7 +825,7 @@ SELECT COUNT(*) FROM t_object WHERE Stereotype IN ('WBAAIGateway', 'WBAAIService
 | Layout diagram | `layout_diagram` | Works in v1.0.0+; called automatically by `add_elements_to_diagram_bulk` |
 | Repair connector lines | `add_connectors_to_diagram_bulk` | Run when connector lines are missing from a diagram |
 
-**Default response shape (v0.3.0+):** mutating tools return a minimal `{ok, *_id, guid, name, applied_*}` envelope. Pass `verbose=True` only if you actually need the full serialization in the response â€” see Â§15.
+**Default response shape:** mutating tools return a minimal `{ok, *_id, guid, name, applied_*}` envelope. Pass `verbose=True` only if you actually need the full serialization in the response â€” see Â§15.
 
 ---
 
