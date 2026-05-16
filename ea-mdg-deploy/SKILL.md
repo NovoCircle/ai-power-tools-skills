@@ -40,7 +40,7 @@ Uses `Repository.ImportTechnology(xml_string)` via COM. This writes the MDG dire
 import os
 from ea_com import EA
 
-MDG_FILE = r"C:\SparxServices\westbrook-build\wba-mdg\WBA_MDG.xml"
+MDG_FILE = r"C:\SparxServices\demos\westbrook-bank\wba-mdg\WBA_MDG.xml"
 APPDATA_MDG = r"C:\Users\RyanSchmierer\AppData\Roaming\Sparx Systems\EA\MDGTechnologies\WBA_MDG.xml"
 
 # Remove any application-level copy first to prevent duplicates
@@ -100,7 +100,7 @@ Only use this for machine-specific installs (e.g., a developer's local tooling M
 ```python
 import shutil, os
 
-MDG_FILE = r"C:\SparxServices\westbrook-build\wba-mdg\WBA_MDG.xml"
+MDG_FILE = r"C:\SparxServices\demos\westbrook-bank\wba-mdg\WBA_MDG.xml"
 APPDATA_MDG = os.path.join(
     os.environ["APPDATA"],
     "Sparx Systems", "EA", "MDGTechnologies", "WBA_MDG.xml"
@@ -297,8 +297,8 @@ with open("APM_MDG.xml", encoding="utf-8") as f:
 
 ## Scripts
 
-- `C:\SparxServices\westbrook-build\wba-mdg\install_wba_mdg.py` — application-level install (APPDATA)
-- `C:\SparxServices\westbrook-build\wba-mdg\ea_com.py` — COM API module, run directly for a quick check:
+- `C:\SparxServices\demos\westbrook-bank\wba-mdg\install_wba_mdg.py` — application-level install (APPDATA)
+- `C:\SparxServices\demos\westbrook-bank\wba-mdg\ea_com.py` — COM API module, run directly for a quick check:
   ```
   python ea_com.py          # check: loads, prints tech status
   python ea_com.py restart  # save + restart EA + reconnect + print tech status

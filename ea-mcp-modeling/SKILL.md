@@ -93,6 +93,27 @@ inline `tagged_values={...}` parameter on `create_element` (or as a key inside e
 recommended pattern; the old "create then loop set_tagged_value" idiom still works but
 costs roughly 5Ã— the round trips for typical catalog elements.
 
+### Concurrency limits
+
+**Do not issue parallel `create_package` calls.**  EA's COM single-threaded apartment
+model serialises all COM calls through one thread; sending multiple `create_package` calls
+in parallel causes race conditions in EA's internal package-tree cache and produces
+intermittent `Object reference not set` or `Invalid Class` COM errors.
+
+**Safe concurrency rules:**
+
+| Operation | Max parallel calls | Notes |
+|---|---|---|
+| `create_package` | 1 (sequential only) | EA package tree is not thread-safe |
+| `create_element` / `create_elements_bulk` | 1 at a time | Sequential is safe; bulk is preferred over many parallel singles |
+| `create_connector` / `create_connectors_bulk` | 1 at a time | Same COM constraint |
+| `execute_sql` (read-only) | Up to ~3 | Read path is safer but still best kept sequential |
+| `get_element`, `get_package`, `get_diagram` | Up to ~3 | Read-only; usually safe |
+
+In practice: **run all write calls sequentially.**  Use bulk tools
+(`create_elements_bulk`, `create_connectors_bulk`, `add_elements_to_diagram_bulk`) to
+amortise latency rather than firing multiple single-entity calls in parallel.
+
 ---
 
 ## 2. Creating the Root Package
@@ -208,6 +229,50 @@ on `properties` is fixed). Tagged values are idempotent by name â€” calling
 `update_element(... tagged_values={"k": "v2"})` on an element where `k=v1` already exists
 overwrites in place rather than creating a duplicate.
 
+### MDG-native element creation â€" `create_element_in_language`
+
+When the target element type is defined by an MDG profile (ArchiMate3, BPMN2.0, or a
+custom MDG like WBA), prefer `create_element_in_language` over plain `create_element`.
+It routes through EA’s COM `CreateElementInPackage` path which writes the stereotype into
+`t_xref` (the MDG profile application store) rather than only `t_object.Stereotype`, and
+sets the correct base metaclass automatically.
+
+```python
+create_element_in_language(
+    package_id=app_pkg_id,
+    name="Customer Portal",
+    language_id="WestbrookBankArchitecture",  # MDG Technology ID
+    language_type="WBABusinessApplication",   # stereotype name within that MDG
+    properties={"Note": "Internet banking front-end"},
+    tagged_values={"criticality": "Mission Critical", "lifecycle": "Current"},
+)
+```
+
+**When to use which:**
+
+| Scenario | Use |
+|---|---|
+| Creating MDG-profile elements (ArchiMate, BPMN, custom MDG) | `create_element_in_language` |
+| Generic UML elements (Class, Component, Node, etc.) | `create_element` |
+| Bulk creation with MDG types | `create_elements_bulk` with `language_id`+`language_type` in each spec |
+| Plain `create_element` with MDG `stereotype=` | Writes only `t_object.Stereotype`; may silently fail for some MDG types |
+
+**Bulk with MDG routing:** Pass `language_id` and `language_type` inside each spec in
+`create_elements_bulk`.  When both are present, the bulk call automatically routes that
+spec through `create_element_in_language` instead of `create_element`:
+
+```python
+create_elements_bulk(specs=[
+    {
+        "package_id": app_pkg_id,
+        "name": "Customer Portal",
+        "language_id": "WestbrookBankArchitecture",
+        "language_type": "WBABusinessApplication",
+        "tagged_values": {"criticality": "Mission Critical"},
+    },
+])
+```
+
 ### Stereotype â†’ Object_Type mapping
 
 The WBA MDG stereotypes map to these EA `Object_Type` values:
@@ -246,12 +311,12 @@ auditLogging           â†’ "true" | "false" (for AI elements only)
 
 Spot-check a tagged element with SQL to confirm storage:
 ```
-execute_sql("""
+execute_sql(“””
     SELECT p.Property, p.Value
     FROM t_objectproperties p
     WHERE p.Object_ID = <element_id>
     ORDER BY p.Property
-""")
+“””)
 ```
 
 Expect one row per tag.  If a tag is missing, `set_tagged_value` did not persist â€” retry
@@ -260,28 +325,125 @@ the tag schema is being initialised.
 
 ---
 
+## 4.5 Stereotype Persistence â€” Where EA Stores What
+
+**This is the most common source of silent failures.**  EA stores stereotype information
+in up to three separate places, and which place it writes to depends on which tool and
+path you use.
+
+### Three stereotype storage locations
+
+| Store | Table | Column | What writes here | What reads here |
+|---|---|---|---|---|
+| Simple stereotype | `t_object` | `Stereotype` | `create_element(stereotype=)`, `update_element(properties={“Stereotype”:})` | EA browser, most queries |
+| StereotypeEx (full MDG path) | `t_object` | `StereotypeEx` | `update_element(properties={“StereotypeEx”:})` | EA validation, profile-aware tools |
+| MDG profile application | `t_xref` | `Description` | `create_element_in_language`, `create_elements_bulk` with `language_id`+`language_type` | EA MDG engine, diagram rendering |
+
+### How each tool writes stereotypes
+
+```
+create_element(stereotype=”WBABusinessApplication”)
+  â†' writes t_object.Stereotype = “WBABusinessApplication”
+  â†' does NOT write t_xref (MDG profile not applied)
+  â†' element may not render correctly in MDG-aware diagrams
+
+create_element_in_language(language_id=”WestbrookBankArchitecture”, language_type=”WBABusinessApplication”)
+  â†' writes t_object.Stereotype = “WBABusinessApplication”
+  â†' writes t_object.StereotypeEx = “WBABusinessApplication=WestbrookBankArchitecture::WBABusinessApplication;”
+  â†' writes t_xref row (MDG profile application, BaseClass=”element”)
+  â†' element renders correctly in MDG-aware diagrams
+
+update_element(properties={“StereotypeEx”: “WBABusinessApplication=WestbrookBankArchitecture::WBABusinessApplication;”})
+  â†' writes t_object.StereotypeEx
+  â†' does two Update() calls internally (first for other props, second specifically for StereotypeEx)
+  â†' returns stereotype_warning if EA rejected the value (readback is empty after Update)
+  â†' does NOT create t_xref row â€” less reliable than create_element_in_language
+```
+
+### How to verify stereotype persistence
+
+```sql
+-- 1. Check t_object (basic + StereotypeEx)
+SELECT Object_ID, Name, Stereotype, StereotypeEx
+FROM t_object
+WHERE Object_ID = <element_id>
+
+-- 2. Check t_xref (MDG profile application)
+SELECT XrefID, [Type], [Name], Client, Supplier, [Description]
+FROM t_xref
+WHERE Client = '<element_guid>'
+  AND [Type] = 'element'
+
+-- 3. Check tagged values (confirms MDG profile is active)
+SELECT Property, [Value]
+FROM t_objectproperties
+WHERE Object_ID = <element_id>
+```
+
+If step 2 returns no rows, the MDG profile was not applied â€” the element's stereotype
+is cosmetic only.  To fix, delete and recreate the element using `create_element_in_language`.
+
+### Diagnosing `update_element` StereotypeEx failures
+
+`update_element` now returns `stereotype_warning` in the response when the StereotypeEx
+write was rejected by EA.  Check for this key:
+
+```python
+result = update_element(element_id=<id>, properties={“StereotypeEx”: “...”})
+if result.get(“stereotype_warning”):
+    # EA rejected the stereotype â€” use create_element_in_language instead
+    print(result[“stereotype_warning”])
+```
+
+The most common rejection cause: the element's `Object_Type` (`t_object.Object_Type`)
+doesn't match what the MDG profile expects as the base metaclass.  You cannot change
+`Object_Type` after creation â€” recreate via `create_element_in_language`.
+
+---
+
 ## 5. Creating Diagrams with MDG Types
 
-### Known defect (REQ-003) â€” fixed in server v2; workaround for v1
+### Preferred approach â€” `create_diagram_in_language`
 
-`create_diagram` accepts MDG-prefixed type strings but silently ignores the MDG prefix in
-server v1, storing the diagram as a generic EA type.
+Use `create_diagram_in_language` when the target diagram type is defined by an MDG
+profile.  It routes through EA's COM diagram-factory path and sets both the EA base type
+and the MDG `StyleEx` in one call, without needing the two-step workaround:
 
-**Workaround â€” set StyleEx after creation:**
+```python
+create_diagram_in_language(
+    name=”Application Landscape”,
+    package_id=<id>,
+    language_id=”ArchiMate3”,              # MDG Technology ID
+    language_type=”Application”,           # diagram type within that MDG
+)
+```
+
+Common language_id / language_type pairs:
+
+| Diagram | language_id | language_type |
+|---|---|---|
+| ArchiMate Application | `ArchiMate3` | `Application` |
+| ArchiMate Technology | `ArchiMate3` | `Technology` |
+| BPMN Business Process | `BPMN2.0` | `Business Process` |
+| UML Component | `UML` | `Component` |
+
+### Fallback â€” two-step workaround for `create_diagram`
+
+If `create_diagram_in_language` is unavailable or you need fine-grained control:
 
 ```python
 # Step 1: create with the base EA type (not the MDG string)
 result = create_diagram(
-    name="Application Landscape",
+    name=”Application Landscape”,
     package_id=<id>,
-    type="Logical"          # use EA base type, not "ArchiMate3::Application"
+    type=”Logical”          # use EA base type, not “ArchiMate3::Application”
 )
-diagram_id = result["diagram_id"]
+diagram_id = result[“diagram_id”]
 
 # Step 2: set the MDG StyleEx immediately
 update_diagram(
     diagram_id=diagram_id,
-    properties={"StyleEx": "MDGDgm=ArchiMate3::Application;"}
+    properties={“StyleEx”: “MDGDgm=ArchiMate3::Application;”}
 )
 ```
 
@@ -307,21 +469,52 @@ For a BPMN diagram, `Diagram_Type` should contain `"Business Process"` or `"BPMN
 
 ---
 
-## 6. layout_diagram â€” Do Not Call (Server v1)
+## 6. Diagram Layout
 
-### Known defect (REQ-004)
+### `layout_diagram` â€” works as of server v1.0.0
 
-`layout_diagram` always fails in server v1 with:
+The earlier GUID bug (REQ-004) is **fixed in v1.0.0**.  Call `layout_diagram` freely.
+
+`add_elements_to_diagram_bulk` auto-applies `”Hierarchical”` layout after placement by
+default (`layout=”Hierarchical”`).  You can pass `layout=None` to skip it, or pass any
+supported style name (`”Circular”`, `”Digraph”`, etc.) to override.
+
+To manually trigger layout on a diagram at any time:
 ```
-(-2147352561, 'Parameter not optional.')
+layout_diagram(diagram_id=<id>, style=”Hierarchical”)
 ```
 
-The COM call passes an integer diagram ID but the EA `Project.LayoutDiagramEx` method
-requires a GUID string.  **Do not call `layout_diagram` until the server is updated to v2.**
+---
 
-Instead, elements added to diagrams via `add_element_to_diagram` will appear at default
-coordinates.  Arrange them manually in EA's diagram editor, or use `update_diagram` to
-set element positions explicitly if the tool supports it.
+## 6.5 Connector Visibility on Diagrams â€” t_diagramlinks
+
+**This is the most important diagram trap.**  Placing elements on a diagram via
+`add_elements_to_diagram_bulk` does NOT automatically render the connectors between
+those elements.  EA stores two completely independent things:
+
+| Store | What it is | Tools that write it |
+|---|---|---|
+| `t_connector` | The logical connector (exists in the model) | `create_connector`, `create_connectors_bulk` |
+| `t_diagramlinks` | The diagram-visible rendering of that connector | `add_connectors_to_diagram_bulk` (auto-called by `add_elements_to_diagram_bulk`) |
+
+If `t_diagramlinks` rows are missing, connectors are invisible on the diagram even though
+`get_connector` and `execute_sql` against `t_connector` show them present.
+
+**`add_elements_to_diagram_bulk` auto-repairs this** (since v1.0.4):
+- After placing elements it calls `add_connectors_to_diagram_bulk` with `connector_ids=None`
+  which auto-discovers every connector whose both endpoints are already on the diagram and
+  are not yet in `t_diagramlinks`.
+- This is controlled by the `auto_show_connectors=True` default.
+
+If you manually add elements via `add_element_to_diagram` (single-element variant), you
+must call `add_connectors_to_diagram_bulk(diagram_id=<id>)` afterwards yourself â€” or use
+the bulk variant which handles it automatically.
+
+**To repair a diagram with missing connector lines** (e.g. diagrams built with v1.0.3 or
+earlier):
+```
+add_connectors_to_diagram_bulk(diagram_id=<id>)
+```
 
 ---
 
@@ -629,7 +822,8 @@ SELECT COUNT(*) FROM t_object WHERE Stereotype IN ('WBAAIGateway', 'WBAAIService
 | Bulk verify | `execute_sql` | Most reliable tool; use liberally |
 | Fix names | `update_package` / `update_element` | Works even in v1 |
 | Fix parent | `execute_sql` UPDATE | Only way in v1 for packages |
-| **Do NOT call** | `layout_diagram` | Broken in v1 (GUID bug) |
+| Layout diagram | `layout_diagram` | Works in v1.0.0+; called automatically by `add_elements_to_diagram_bulk` |
+| Repair connector lines | `add_connectors_to_diagram_bulk` | Run when connector lines are missing from a diagram |
 
 **Default response shape (v0.3.0+):** mutating tools return a minimal `{ok, *_id, guid, name, applied_*}` envelope. Pass `verbose=True` only if you actually need the full serialization in the response â€” see Â§15.
 

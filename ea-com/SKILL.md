@@ -12,7 +12,7 @@ description: Use the Sparx EA COM API from Python to read and modify EA models â
 All EA automation uses `ea_com.py`:
 
 ```
-C:\SparxServices\westbrook-build\wba-mdg\ea_com.py
+C:\SparxServices\demos\westbrook-bank\wba-mdg\ea_com.py
 ```
 
 ```python
