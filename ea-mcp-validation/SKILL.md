@@ -5,13 +5,14 @@ description: Author and run YAML sidecar conformance rules against a Sparx EA mo
 
 # Validating a Sparx EA Model Against a YAML Sidecar Ruleset
 
-*Tool: `validate_model` (AI Power Tools for EA, v0.5+)*
+*Tool: `validate_model` (AI Power Tools for EA, v0.5+; URL fetching requires v1.2.0+)*
 
 ## When to use
 
 - After importing or building a model that uses a custom MDG, to confirm every element carries the required tagged values.
 - Before exporting a model snapshot for downstream consumption.
 - As an automated gate in a model-CI pipeline.
+- To run a pre-built hosted ruleset (e.g. the ArchiMate 3.1 conformance set) without any local file.
 
 ## Sidecar YAML shape
 
@@ -61,7 +62,7 @@ A YAML file with a top-level `rules` list. Each rule has:
 ## Running the validator
 
 ```python
-# Full scan — every rule in the file
+# Full scan — every rule in a local file
 result = validate_model(rules_path_or_content="path/to/rules.yaml")
 
 # Demo mode — only rules with demo_trigger: true
@@ -75,6 +76,41 @@ result = validate_model(
     rules_path_or_content="path/to/rules.yaml",
     package_id=42,
 )
+
+# URL fetch — server downloads and runs the ruleset (v1.2.0+)
+result = validate_model(
+    rules_path_or_content="https://raw.githubusercontent.com/NovoCircle/ai-power-tools-skills/main/ruleset-archimate31/archimate31_rules.yaml",
+)
+```
+
+### Using hosted rulesets (v1.2.0+)
+
+`rules_path_or_content` accepts an `https://` URL — the server fetches the YAML at call time. No local file needed.
+
+**Pre-built hosted rulesets (install via `install_skills` then reference by URL):**
+
+| Ruleset | Description | URL fragment |
+|---------|-------------|--------------|
+| `ruleset-archimate31` | 27-rule ArchiMate 3.1 conformance set | `ruleset-archimate31/archimate31_rules.yaml` |
+
+Base URL: `https://raw.githubusercontent.com/NovoCircle/ai-power-tools-skills/main/`
+
+**Typical workflow with a hosted ruleset:**
+
+```python
+# 1. Install the skills bundle so the ruleset appears in install_skills list
+install_skills()          # lists available skills including ruleset-archimate31
+
+# 2. Run directly via URL — no install step needed, server fetches at call time
+result = validate_model(
+    rules_path_or_content=(
+        "https://raw.githubusercontent.com/NovoCircle/ai-power-tools-skills"
+        "/main/ruleset-archimate31/archimate31_rules.yaml"
+    ),
+)
+
+# 3. Or pass inline YAML content as a string (no file or URL required)
+result = validate_model(rules_path_or_content="rules:\n- id: QUICK-001\n  ...")
 ```
 
 ## Response shape
