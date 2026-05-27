@@ -1,11 +1,15 @@
 ---
 name: ea-mcp-validation
-description: Author and run YAML sidecar conformance rules against a Sparx EA model via the validate_model MCP tool. Use when you need to check that an MDG-modeled repository meets its required tagged values, connector cardinality, and endpoint stereotype constraints.
+description: Author and run YAML sidecar conformance rules against a Sparx EA model via the ea_validate meta-tool. Use when you need to check that an MDG-modeled repository meets its required tagged values, connector cardinality, and endpoint stereotype constraints.
 ---
 
 # Validating a Sparx EA Model Against a YAML Sidecar Ruleset
 
-*Tool: `validate_model(rules_path_or_content=...)` (AI Power Tools for EA, v1.0.1+)*
+*Tool: `ea_validate(operation="audit", params={...})` (AI Power Tools for EA, v1.3.0+)*
+
+> **v1.3.0 — meta-tool dispatch.** All individual tools are now dispatched via 6 meta-tools.
+> `validate_model` is exposed as `ea_validate(operation="audit", params={"rules_path_or_content": ...})`.
+> The underlying behavior is unchanged.
 
 > **Building a complete ruleset for a modeling language?** Use the `ea-ruleset-author`
 > skill instead — it covers the full workflow: spec research → rule-category planning →
@@ -68,26 +72,26 @@ A YAML file with a top-level `rules` list. Each rule has:
 
 ```python
 # Full scan — every rule in a local file
-result = validate_model(
-    rules_path_or_content="path/to/rules.yaml"
-)
+result = ea_validate(operation="audit", params={
+    "rules_path_or_content": "path/to/rules.yaml"
+})
 
 # Demo mode — only rules with demo_trigger: true
-result = validate_model(
-    rules_path_or_content="path/to/rules.yaml",
-    mode="demo_validation",
-)
+result = ea_validate(operation="audit", params={
+    "rules_path_or_content": "path/to/rules.yaml",
+    "mode": "demo_validation",
+})
 
 # Scope to a single package subtree
-result = validate_model(
-    rules_path_or_content="path/to/rules.yaml",
-    package_id=42,
-)
+result = ea_validate(operation="audit", params={
+    "rules_path_or_content": "path/to/rules.yaml",
+    "package_id": 42,
+})
 
 # URL fetch — server downloads and runs the ruleset (v1.2.0+)
-result = validate_model(
-    rules_path_or_content="https://raw.githubusercontent.com/NovoCircle/ai-power-tools-skills/main/ruleset-archimate31/archimate31_rules.yaml",
-)
+result = ea_validate(operation="audit", params={
+    "rules_path_or_content": "https://raw.githubusercontent.com/NovoCircle/ai-power-tools-skills/main/ruleset-archimate31/archimate31_rules.yaml",
+})
 ```
 
 ### Using hosted rulesets (v1.2.0+)
@@ -106,23 +110,23 @@ Base URL: `https://raw.githubusercontent.com/NovoCircle/ai-power-tools-skills/ma
 
 ```python
 # 1. Run directly via URL — no install step needed, server fetches at call time
-result = validate_model(
-    rules_path_or_content=(
+result = ea_validate(operation="audit", params={
+    "rules_path_or_content": (
         "https://raw.githubusercontent.com/NovoCircle/ai-power-tools-skills"
         "/main/ruleset-archimate31/archimate31_rules.yaml"
     ),
-)
+})
 
 # 2. Or install locally first, then run from the installed path
-install_skills(names=["ruleset-archimate31"])
-result = validate_model(
-    rules_path_or_content="~/.claude/skills/ruleset-archimate31/archimate31_rules.yaml"
-)
+ea_repository(operation="install_skills", params={"names": ["ruleset-archimate31"]})
+result = ea_validate(operation="audit", params={
+    "rules_path_or_content": "~/.claude/skills/ruleset-archimate31/archimate31_rules.yaml"
+})
 
 # 3. Or pass inline YAML content as a string (no file or URL required)
-result = validate_model(
-    rules_path_or_content="rules:\n- id: QUICK-001\n  ..."
-)
+result = ea_validate(operation="audit", params={
+    "rules_path_or_content": "rules:\n- id: QUICK-001\n  ..."
+})
 ```
 
 ## Response shape
@@ -156,7 +160,7 @@ result = validate_model(
 
 ## Common pitfalls
 
-- **Stereotype namespace.** EA stores stereotypes as `TechID::StereotypeName`. The sidecar matches on the bare name; `validate_model` strips the prefix when comparing.
+- **Stereotype namespace.** EA stores stereotypes as `TechID::StereotypeName`. The sidecar matches on the bare name; `ea_validate` strips the prefix when comparing.
 - **Quoting tag values.** `OrgLevel` is stored as a string even when typed `int`. Use `value_must_be_one_of: ["1", "2", "3", "4"]` (strings).
 - **Connector direction.** `outgoing` = "this element is the source"; `incoming` = "this element is the target". Reports-to runs subordinate→manager, so an Employee's `reports-to` count is *outgoing* from the subordinate.
 

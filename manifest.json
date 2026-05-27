@@ -1,6 +1,6 @@
 {
   "manifest_version": "1.0",
-  "bundle_version": "1.3.2",
+  "bundle_version": "1.3.3",
   "released_at": "2026-05-26",
   "min_server_version": "1.0.0",
   "skills": [
@@ -62,13 +62,13 @@
       "name": "ea-mcp-validation",
       "title": "ea-mcp-validation",
       "description": "Author validate_model YAML rule sidecars; run hosted rulesets via URL (v1.2.0+)",
-      "version": "1.0.3",
+      "version": "1.0.4",
       "min_server_version": "1.0.0",
       "files": [
         "ea-mcp-validation/SKILL.md"
       ],
       "sha256": {
-        "ea-mcp-validation/SKILL.md": "858bf0631acb8a936aade00b69cadac687895e23f13bb122dc2270e7fe8e630e"
+        "ea-mcp-validation/SKILL.md": "994770eac3d4ccbb571d4399114233986da4f3c1b28a4337eaf726e02aaf562b"
       }
     },
     {
