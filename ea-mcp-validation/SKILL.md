@@ -5,7 +5,12 @@ description: Author and run YAML sidecar conformance rules against a Sparx EA mo
 
 # Validating a Sparx EA Model Against a YAML Sidecar Ruleset
 
-*Tool: `validate_model` (AI Power Tools for EA, v0.5+; URL fetching requires v1.2.0+)*
+*Tool: `validate_model(rules_path_or_content=...)` (AI Power Tools for EA, v1.0.1+)*
+
+> **Building a complete ruleset for a modeling language?** Use the `ea-ruleset-author`
+> skill instead — it covers the full workflow: spec research → rule-category planning →
+> YAML authoring → testing → publishing to the skills bundle. This skill covers the YAML
+> syntax and the validator API.
 
 ## When to use
 
@@ -63,7 +68,9 @@ A YAML file with a top-level `rules` list. Each rule has:
 
 ```python
 # Full scan — every rule in a local file
-result = validate_model(rules_path_or_content="path/to/rules.yaml")
+result = validate_model(
+    rules_path_or_content="path/to/rules.yaml"
+)
 
 # Demo mode — only rules with demo_trigger: true
 result = validate_model(
@@ -98,10 +105,7 @@ Base URL: `https://raw.githubusercontent.com/NovoCircle/ai-power-tools-skills/ma
 **Typical workflow with a hosted ruleset:**
 
 ```python
-# 1. Install the skills bundle so the ruleset appears in install_skills list
-install_skills()          # lists available skills including ruleset-archimate31
-
-# 2. Run directly via URL — no install step needed, server fetches at call time
+# 1. Run directly via URL — no install step needed, server fetches at call time
 result = validate_model(
     rules_path_or_content=(
         "https://raw.githubusercontent.com/NovoCircle/ai-power-tools-skills"
@@ -109,8 +113,16 @@ result = validate_model(
     ),
 )
 
+# 2. Or install locally first, then run from the installed path
+install_skills(names=["ruleset-archimate31"])
+result = validate_model(
+    rules_path_or_content="~/.claude/skills/ruleset-archimate31/archimate31_rules.yaml"
+)
+
 # 3. Or pass inline YAML content as a string (no file or URL required)
-result = validate_model(rules_path_or_content="rules:\n- id: QUICK-001\n  ...")
+result = validate_model(
+    rules_path_or_content="rules:\n- id: QUICK-001\n  ..."
+)
 ```
 
 ## Response shape
@@ -173,5 +185,6 @@ When any step requires taking a screenshot, clicking in EA, or verifying EA UI s
 
 ## See also
 
+- `ea-ruleset-author` — full workflow for building and publishing a complete ruleset for a modeling language (ArchiMate, BPMN, UML, SysML, custom MDG, etc.).
 - `ea-mdg-author` — for the matching MDG XML (stereotypes + tags + OCL).
 - `ea-mdg-deploy` — for getting that MDG into the model so rules have something to validate.
