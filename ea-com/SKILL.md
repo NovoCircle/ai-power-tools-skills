@@ -7,6 +7,42 @@ description: Use the Sparx EA COM API from Python to read and modify EA models �
 
 *Verified against EA 17.0 Build 1704.*
 
+> **⚠ Verification discipline — trust the EA model, not your memory.**
+>
+> When the user (or a calling script) asks anything about the current state of the
+> model — *"does element X exist?"*, *"what's in package P?"*, *"what's the tagged
+> value of T on E?"* — you MUST answer from a fresh read in the current turn, not
+> from memory of what you (or the script) did earlier. Memory is an index, not a
+> source of truth.
+>
+> Elements can be renamed, moved, deleted, or silently fail to persist between
+> turns; out-of-band scripts and other users can mutate the model; EA can roll
+> back a transaction without telling Python. Any answer about model state that
+> isn't backed by a current read is a guess, and confident guesses destroy user
+> trust in everything else the agent says.
+>
+> **Canonical verification primitives:**
+>
+> | Question | Call |
+> |---|---|
+> | Existence by name | `ea.sql("SELECT Object_ID, Name FROM t_object WHERE Name = '...'")` |
+> | Existence by GUID | `ea.sql("SELECT Object_ID, Name FROM t_object WHERE ea_guid = '{...}'")` |
+> | Package contents | `ea.sql("SELECT Object_ID, Name, Stereotype FROM t_object WHERE Package_ID = <id>")` |
+> | Tagged values on E | `ea.sql("SELECT Property, Value FROM t_objectproperties WHERE Object_ID = <id>")` |
+> | Connectors on E | `ea.sql("SELECT ... FROM t_connector WHERE Start_Object_ID = <id> OR End_Object_ID = <id>")` |
+> | Anything else | `ea.sql("...")` — always authoritative |
+>
+> **Rules:**
+>
+> 1. **Never assert model state from prior-turn memory.** Re-query, even if you "just"
+>    created the element a few calls ago.
+> 2. **Persist IDs/GUIDs, not names.** Names can collide and be renamed; IDs are stable.
+> 3. **A successful COM mutation call is not proof of persistence.** EA can swallow
+>    writes silently (see the `elem.Type` setter section below for one such case).
+>    Always read back via `ea.sql(...)` after a non-trivial write.
+> 4. **After EA restart or project reopen, your in-process COM references are stale.**
+>    Reconnect and re-query before asserting anything.
+
 ## Module
 
 All EA automation uses `ea_com.py`:
