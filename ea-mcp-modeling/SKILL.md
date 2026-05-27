@@ -1035,11 +1035,12 @@ time. The SQL state capture (step 2) is both cheaper and more reliable.
 |---|---|
 | `ea_model(“create_elements_bulk”)` (10 specs) | ~800â€”1,200 |
 | `ea_model(“create_element”)` Ã— 10 (single calls) | ~3,000â€”5,000 |
-| `ea_model(“list_elements_in_package”)` (50 elements, verbose) | ~8,000â€”15,000 |
+| `ea_model(“list_elements_in_package”)` (50 elements, default) | ~400â€”800 |
+| `ea_model(“list_elements_in_package”)` (50 elements, `verbose=True`) | ~8,000â€”15,000 |
 | `ea_analyze(“execute_sql”)` verification query (10 rows) | ~300â€”600 |
 | `ea_analyze(“summarize_stereotype_usage”)` (whole repo) | ~500â€”1,000 |
-| `ea_model(“get_element”)` (single, verbose) | ~800â€”1,500 |
+| `ea_model(“get_element”)` (single) | ~800â€”1,500 |
 
-The gap between `ea_model(“list_elements_in_package”)` and `ea_analyze(“execute_sql”)` COUNT(*) for the
-same question is ~30â€”50Ã—. Verification via SQL is always the right choice
-when you're budget-conscious.
+Default list operations return minimal shape `{element_id, guid, name}` â€” use `get_element` for full
+detail on individual elements, or pass `verbose=True` to the list call only when you need all fields
+at once. For existence/count verification, `ea_analyze(“execute_sql”)` is still the cheapest option.

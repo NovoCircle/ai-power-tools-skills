@@ -27,9 +27,9 @@ When automating MDG work, pick the right tool tier:
 | Operation | Use |
 |-----------|-----|
 | Author MDG XML, read/write files | Claude Code file tools (`Write`, `Read`, `Edit`) |
-| Parse and validate MDG XML | `parse_mdg_xml` MCP tool |
-| Install MDG at application scope | `install_mdg(scope="user")` MCP tool |
-| Install MDG as model-embedded | `install_mdg(scope="embedded")` MCP tool — or COM `repo.ImportTechnology()` if MCP times out |
+| Parse and validate MDG XML | `ea_mdg(operation="parse_mdg_xml", params={"path_or_content": "..."})` |
+| Install MDG at application scope | `ea_mdg(operation="install_mdg", params={"scope": "user"})` |
+| Install MDG as model-embedded | `ea_mdg(operation="install_mdg", params={"scope": "embedded"})` — or COM `repo.ImportTechnology()` if MCP times out |
 | Verify MDG is loaded | COM: `repo.IsTechnologyLoaded("TVO")` — **not** `get_embedded_mdgs` (unreliable in EA 17) |
 | Fix `Object_Type` in database | `repo.Execute()` DML — **not** `elem.Type` COM setter (silently fails for ArchiMate types) |
 | Dismiss EA dialogs | Computer use screenshot → click → screenshot again |
@@ -351,36 +351,36 @@ If yes, proceed with Steps 2–4. If no, stop.
 
 ### Step 2 — Identify candidate elements
 
-Use `execute_sql` (read-only) to find elements whose `Object_Type` matches the base type(s)
+Use `ea_analyze(operation="execute_sql", ...)` (read-only) to find elements whose `Object_Type` matches the base type(s)
 of your stereotypes and that do not yet have the MDG stereotype set:
 
 ```python
 # Example: find all Class elements that aren't already stereotyped as TVO types
-candidates = execute_sql("""
+candidates = ea_analyze(operation="execute_sql", params={"sql": """
     SELECT o.Object_ID, o.Name, o.Object_Type, o.Stereotype, o.Package_ID
     FROM t_object o
     WHERE o.Object_Type = 'Class'
       AND (o.Stereotype IS NULL OR o.Stereotype NOT IN ('Employee','Department','WorkLocation'))
     ORDER BY o.Name
-""")
+"""})
 ```
 
 Present the list to the user and confirm which elements to update before proceeding.
 
 ### Step 3 — Update elements
 
-For each confirmed element, use `update_element` to set the stereotype and initial tagged values:
+For each confirmed element, use `ea_model(operation="update_element", ...)` to set the stereotype and initial tagged values:
 
 ```python
-update_element(
-    element_id=obj_id,
-    properties={"stereotype": "Employee"},
-    tagged_values={
+ea_model(operation="update_element", params={
+    "element_id": obj_id,
+    "properties": {"stereotype": "Employee"},
+    "tagged_values": {
         "empID": "",
         "department": "",
         "hireDate": "",
     }
-)
+})
 ```
 
 > **Do not use `repo.Execute()` DML to set stereotypes** — EA's internal cache won't update.
@@ -498,7 +498,7 @@ When AI Power Tools for Sparx EA is deployed, **do not embed validation rules in
 and is not accessible to the MCP server.
 
 ```xml
-<!-- WRONG — EA scripting, not accessible to validate_model tool -->
+<!-- WRONG — EA scripting, not accessible to ea_validate tool -->
 <Scripts>
   <Script name="TVO Conformance Rules" type="Normal" language="JavaScript">
     <![CDATA[
@@ -509,11 +509,11 @@ and is not accessible to the MCP server.
 </Scripts>
 ```
 
-Instead, create a `<mdg_name>_rules.yaml` sidecar file and run it with the `validate_model`
-MCP tool. See the `ea-mcp-validation` skill for the sidecar schema.
+Instead, create a `<mdg_name>_rules.yaml` sidecar file and run it with `ea_validate`.
+See the `ea-mcp-validation` skill for the sidecar schema.
 
 ```yaml
-# TechVentures_rules.yaml — run with validate_model(rules_path_or_content="...")
+# TechVentures_rules.yaml — run with ea_validate(operation="audit", params={"rules_path_or_content": "..."})
 meta:
   version: "1.0"
   mdg_family: TVO
@@ -569,7 +569,7 @@ rules:
 
 Run validation after every MDG install to confirm it finds violations on test data:
 ```
-validate_model(rules_path_or_content="TVO_rules.yaml", mode="demo_validation")
+ea_validate(operation="audit", params={"rules_path_or_content": "TVO_rules.yaml", "mode": "demo_validation"})
 ```
 
 ---

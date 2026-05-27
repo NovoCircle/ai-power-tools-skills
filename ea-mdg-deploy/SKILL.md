@@ -22,9 +22,9 @@ description: Deploy and test a Sparx EA MDG Technology — embed it into a .qea 
 
 | Operation | Use |
 |-----------|-----|
-| Model-embedded install (preferred) | `install_mdg(scope="embedded")` MCP tool |
+| Model-embedded install (preferred) | `ea_mdg(operation="install_mdg", params={"scope": "embedded"})` |
 | Model-embedded install fallback | COM `repo.ImportTechnology(xml_str)` via `ea-com` |
-| Application-level install | `install_mdg(scope="user")` MCP tool |
+| Application-level install | `ea_mdg(operation="install_mdg", params={"scope": "user"})` |
 | Verify MDG loaded | COM `repo.IsTechnologyLoaded("TVO")` → True |
 | Verify Location: Project | EA UI → Specialize → Technologies → Manage Technology |
 | Dismiss overwrite dialog | Computer use → screenshot → click Yes → screenshot again |
@@ -193,7 +193,7 @@ After deploying and restarting EA, verify each of these:
 **Verification order (most reliable first):**
 1. **COM:** `repo.IsTechnologyLoaded("TVO")` must return `True`
 2. **EA UI:** Specialize → Technologies → Manage Technology → Location column shows **Project**
-3. **MCP:** `get_embedded_mdgs()` ← note: unreliable for model-embedded MDGs in EA 17
+3. **MCP:** `ea_mdg(operation="get_embedded_mdgs", params={})` ← note: unreliable for model-embedded MDGs in EA 17
 
 ### 1. COM check (scripted)
 ```python
