@@ -8,6 +8,54 @@ description: How to build and maintain Sparx EA models through the ea-mcp-server
 *Grounded in the Westbrook Bank full-repository build session.  Every pattern here either
 prevented a defect or fixed one.*
 
+> **â—  Verification discipline â€” trust the EA model, not your memory.**
+>
+> When a user (or a downstream step) asks anything about the current state of the
+> model â€” *“does element X exist?”*, *“what's in package P?”*, *“is connector C still
+> there?”*, *“what's the tagged value of T on element E?”* â€” you MUST answer from a
+> read tool call issued **in the current turn**, not from your memory of what you
+> created earlier in the session. Memory is an index, not a source of truth.
+>
+> This is the single largest cause of perceived hallucinations in this tool. Elements
+> can be renamed, moved, deleted, or silently fail to persist between turns; another
+> user or script can mutate the model out-of-band; an EA crash can roll back a
+> transaction. Any answer about model state that is not backed by a fresh read call
+> is a guess, and confident guesses destroy user trust.
+>
+> **Canonical verification primitives by question type:**
+>
+> | Question | Tool |
+> |---|---|
+> | Does element X exist? | `ea_model("find_elements_by_name", {"name": "X", "exact": True})` or `ea_analyze("execute_sql", {"sql": "SELECT Object_ID FROM t_object WHERE Name = 'X'"})` |
+> | Full state of element by ID | `ea_model("get_element", {"element_id": <id>})` |
+> | What's in package P? | `ea_model("list_elements_in_package", {"package_id": <id>})` |
+> | Package hierarchy | `ea_model("list_package_tree", {"package_id": <id>})` or `list_child_packages` |
+> | Tagged values on E? | `ea_model("get_element_tags", {"element_id": <id>})` or SQL against `t_objectproperties` |
+> | Connectors on/around E? | `ea_model("list_connectors_for_element", {"element_id": <id>})` or `ea_analyze("trace_connectors", ...)` |
+> | What stereotypes are in use? | `ea_analyze("summarize_stereotype_usage", {})` |
+> | What connector patterns are in use? | `ea_analyze("summarize_connector_patterns", {})` |
+> | What's on diagram D? | `ea_diagram("get_diagram", {"diagram_id": <id>})` |
+> | Anything not covered above | `ea_analyze("execute_sql", {"sql": "..."})` â€” always available, always authoritative |
+>
+> **Rules:**
+>
+> 1. **Never assert model state from prior-turn memory.** Even one turn old is too
+>    old for a state assertion. Re-query.
+> 2. **Returned IDs/GUIDs are the only authoritative reference.** Names can collide
+>    or be renamed. Persist IDs, not names, across turns.
+> 3. **After a `/clear` or any session boundary, your memory is gone.** Re-orient
+>    with `ea_repository("get_repository_info")` and targeted SQL before answering
+>    anything about model contents.
+> 4. **After long sessions (>30 turns), reverify before any factual claim.**
+>    Silent failures and out-of-band changes accumulate.
+> 5. **If a verify call is too expensive to run, say so.** "I created X earlier in
+>    this session but haven't re-verified" is acceptable; "X exists" without a
+>    fresh read call is not.
+>
+> The cost of a verification call is almost always < 1k tokens (see Â§15, Â§17). The
+> cost of one confidently-wrong answer is your user's trust in everything else you
+> said.
+
 > **Server v1.3.0 â€” meta-tool dispatch refactor.** All individual MCP tools have been
 > consolidated into 6 meta-tool dispatchers: `ea_model`, `ea_diagram`, `ea_analyze`,
 > `ea_mdg`, `ea_validate`, and `ea_repository`. Call syntax: instead of
