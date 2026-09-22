@@ -28,8 +28,21 @@
         "ea-mcp-modeling/references/sql_schema.md"
       ],
       "sha256": {
-        "ea-mcp-modeling/SKILL.md": "287d8421f5d4c600940200715f88c1de832f0be84f4b695bfe92c3e907aaa106",
+        "ea-mcp-modeling/SKILL.md": "d08de6e1d44078a32a785b35bdd5ef8e7822974249b01c653e7546950c7e7acd",
         "ea-mcp-modeling/references/sql_schema.md": "c045c783aecfdf95af690d2181f7075d589d929c65bff9db1a3be9b7fa2084ef"
+      }
+    },
+    {
+      "name": "ea-navigation-diagrams",
+      "title": "ea-navigation-diagrams",
+      "description": "How to generate click-through \"navigation diagrams\" over hierarchical data in a Sparx EA repository \u2014 the composite-element mechanism, the nested-container layout, the exact write sequence, and verification",
+      "version": "1.0.0",
+      "min_server_version": "1.0.0",
+      "files": [
+        "ea-navigation-diagrams/SKILL.md"
+      ],
+      "sha256": {
+        "ea-navigation-diagrams/SKILL.md": "df5a38ca62ba3a4236a9b47cb68c9cd78844ef59b0ddf5c560b27c6ca7360a9a"
       }
     },
     {

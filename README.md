@@ -24,6 +24,7 @@ stabilized in 1.0.
 |---|---|
 | `ea-com` | EA COM API automation patterns from Python |
 | `ea-mcp-modeling` | Build EA models via the MCP server — phases, defects, verification |
+| `ea-navigation-diagrams` | Build click-through "navigation diagrams" over hierarchical data — composite elements, nested-container layout, verification |
 | `ea-mdg-author` | Author MDG Technology XML files — stereotypes, tagged values, toolbox, Quick Linker rules, validation sidecars |
 | `ea-mdg-deploy` | Deploy and test an EA MDG Technology |
 | `ea-mcp-validation` | Author `validate_model` YAML rule sidecars |

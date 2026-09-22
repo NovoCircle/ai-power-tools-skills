@@ -132,6 +132,12 @@ Phase 4 â€” Diagrams           (create diagram â†’ update StyleEx â�
 Phase 5 â€” Verification       (ea_analyze(“execute_sql”) spot checks; element counts; connector queries)
 ```
 
+**Phase 4 covers diagram creation, not diagram *navigation*.** If the diagrams you're
+building are meant to be click-through drill-downs over a hierarchy (a parent diagram
+whose boxes open a child diagram one level down) â€” composite elements, `t_diagram.ParentID`,
+`t_object.NType` â€” that mechanism is a separate skill: see **`ea-navigation-diagrams`**.
+It is not covered here.
+
 **Why elements before connectors:** `create_connector` needs both endpoint `Object_ID`
 values.  If you try to create connectors while elements are still being built you will
 reference IDs that don't exist yet.
