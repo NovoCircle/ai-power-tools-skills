@@ -45,11 +45,7 @@ description: Use the Sparx EA COM API from Python to read and modify EA models â
 
 ## Module
 
-All EA automation uses `ea_com.py`:
-
-```
-C:\SparxServices\demos\westbrook-bank\wba-mdg\ea_com.py
-```
+All EA automation uses the `ea_com.py` module shown in this skill:
 
 ```python
 from ea_com import EA, EAError
@@ -216,7 +212,7 @@ ok = repo.ImportTechnology(xml_str)
 # 3. Dismiss any dialog visible in the screenshot before proceeding
 
 # 4. Verify the result
-print(f"IsTechnologyLoaded: {repo.IsTechnologyLoaded('TVO')}")
+print(f"IsTechnologyLoaded: {repo.IsTechnologyLoaded('WBA')}")
 ```
 
 ---

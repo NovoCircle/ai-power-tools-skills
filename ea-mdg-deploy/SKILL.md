@@ -42,7 +42,7 @@ path is shadowing the copy you meant to test.
 | Model-embedded install (preferred) | `ea_mdg(operation="install_mdg", params={"scope": "embedded"})` |
 | Model-embedded install fallback | COM `repo.ImportTechnology(xml_str)` via `ea-com` |
 | Application-level install | `ea_mdg(operation="install_mdg", params={"scope": "user"})` |
-| Verify MDG loaded | COM `repo.IsTechnologyLoaded("TVO")` → True |
+| Verify MDG loaded | COM `repo.IsTechnologyLoaded("WBA")` → True |
 | Verify Location: Project | EA UI → Specialize → Technologies → Manage Technology |
 | Dismiss overwrite dialog | Computer use → screenshot → click Yes → screenshot again |
 | Fix wrong `Object_Type` in database | COM `repo.Execute()` DML (NOT `elem.Type` setter) |
@@ -57,8 +57,12 @@ Uses `Repository.ImportTechnology(xml_string)` via COM. This writes the MDG dire
 import os
 from ea_com import EA
 
-MDG_FILE = r"C:\SparxServices\demos\westbrook-bank\wba-mdg\WBA_MDG.xml"
-APPDATA_MDG = r"C:\Users\RyanSchmierer\AppData\Roaming\Sparx Systems\EA\MDGTechnologies\WBA_MDG.xml"
+# MDG_FILE: path to your own MDG XML file
+MDG_FILE = r"<mdg-dir>\WBA_MDG.xml"
+APPDATA_MDG = os.path.join(
+    os.environ["APPDATA"],
+    "Sparx Systems", "EA", "MDGTechnologies", "WBA_MDG.xml"
+)
 
 # Remove any application-level copy first to prevent duplicates
 if os.path.exists(APPDATA_MDG):
@@ -117,7 +121,8 @@ Only use this for machine-specific installs (e.g., a developer's local tooling M
 ```python
 import shutil, os
 
-MDG_FILE = r"C:\SparxServices\demos\westbrook-bank\wba-mdg\WBA_MDG.xml"
+# MDG_FILE: path to your own MDG XML file
+MDG_FILE = r"<mdg-dir>\WBA_MDG.xml"
 APPDATA_MDG = os.path.join(
     os.environ["APPDATA"],
     "Sparx Systems", "EA", "MDGTechnologies", "WBA_MDG.xml"
@@ -127,7 +132,7 @@ shutil.copy2(MDG_FILE, APPDATA_MDG)
 print(f"Installed to: {APPDATA_MDG}")
 ```
 
-Verified APPDATA path on this machine: `C:\Users\RyanSchmierer\AppData\Roaming\Sparx Systems\EA\MDGTechnologies`
+Typical APPDATA path: `%APPDATA%\Sparx Systems\EA\MDGTechnologies`
 
 Restart EA after install.
 
@@ -208,7 +213,7 @@ After deploying and restarting EA, verify each of these:
 > is correctly embedded. Use COM verification (`IsTechnologyLoaded`) or the EA UI instead.
 
 **Verification order (most reliable first):**
-1. **COM:** `repo.IsTechnologyLoaded("TVO")` must return `True`
+1. **COM:** `repo.IsTechnologyLoaded("WBA")` must return `True`
 2. **EA UI:** Specialize → Technologies → Manage Technology → Location column shows **Project**
 3. **MCP:** `ea_mdg(operation="get_embedded_mdgs", params={})` ← note: unreliable for model-embedded MDGs in EA 17
 
@@ -238,7 +243,7 @@ with EA() as ea:
 ### 4. Toolbox
 - With a custom diagram open, look at the Toolbox panel
 - If auto-switching doesn't happen, click the filter icon (≡) and select your technology
-- ✅ Your toolbox page(s) appear (e.g., "APM Elements", "APM Connectors")
+- ✅ Your toolbox page(s) appear (e.g., "WBA ArchiMate Elements", "WBA UML Elements")
 - ✅ All expected stereotypes are listed
 
 ### 5. Stereotype application + tagged values
@@ -288,7 +293,7 @@ EA 17 on a typical developer workstation takes:
 | Duplicate entry with `*` in Manage Technologies | Both APPDATA and model copies exist | Delete APPDATA copy, restart EA |
 | Technology shows but toolbox is empty | `ToolboxPage name` doesn't match `toolbox` property value in DiagramProfile | Make them identical |
 | Diagram type missing from New Diagram dialog | DiagramProfile not loaded or wrong `Apply type` | Verify DiagramProfile section uses `Apply type="Diagram_Logical"` (not `"Logical"`) |
-| Tagged values don't appear | Stereotype name mismatch between Profile and Toolbox | Verify `APM::Application` format — prefix must match UMLProfile Documentation `id` |
+| Tagged values don't appear | Stereotype name mismatch between Profile and Toolbox | Verify `WBA::WBABusinessApplication` format — prefix must match UMLProfile Documentation `id` |
 | `DeleteTechnology()` returns True but entry persists | COM removes from registry but not memory | Restart EA — deletion takes effect after restart |
 | MDG file rejected on load | Encoding declaration mismatch | Declare `encoding="utf-8"` in the XML prolog and save the file as UTF-8 |
 
@@ -314,9 +319,11 @@ with open("APM_MDG.xml", encoding="utf-8") as f:
 
 ## Scripts
 
-- `C:\SparxServices\demos\westbrook-bank\wba-mdg\install_wba_mdg.py` — application-level install (APPDATA)
-- `C:\SparxServices\demos\westbrook-bank\wba-mdg\ea_com.py` — COM API module, run directly for a quick check:
+These are not shipped files — build them yourself from the code already in this skill:
+
+- **Application-level install script** — wrap the "Deploy: Application-Level" snippet above in a standalone `.py` file to do an APPDATA install (copy `MDG_FILE` to `APPDATA_MDG`) in one run.
+- **COM API quick-check script** — using the `ea_com.EA` class (see the `ea-com` skill), write a small script with a CLI switch:
   ```
-  python ea_com.py          # check: loads, prints tech status
-  python ea_com.py restart  # save + restart EA + reconnect + print tech status
+  python your_script.py          # check: connect, then print IsTechnologyLoaded/is_technology_enabled/technology_version
+  python your_script.py restart  # save + restart EA + reconnect (see "Restart EA via COM" above), then print tech status
   ```

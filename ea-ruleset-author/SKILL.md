@@ -349,7 +349,7 @@ Bump `bundle_version` (patch increment: 1.3.0 → 1.3.1).
 After committing manifest.json:
 
 ```powershell
-cd C:\SparxServices\products\ai-power-tools-skills
+cd <skills-repo>
 git add ruleset-{lang}/ manifest.json
 git commit -m "feat(ruleset): add {Language} {version} conformance ruleset ({N} rules)"
 git push origin main
@@ -400,7 +400,7 @@ get_element(element_id=N)   # look at the "stereotype" field
 # or
 execute_sql(sql="SELECT stereotype FROM t_object WHERE Object_ID = N")
 ```
-The raw value is what you put in the YAML. The validate_model tool strips the `Namespace::`
+The raw value is what you put in the YAML. The validate_model tool strips the `<YourTechID>::`
 prefix, so use bare names.
 
 **Wrong connector direction.** `direction: incoming` means the edge ENDS at this element

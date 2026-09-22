@@ -28,7 +28,7 @@ description: Author and run YAML sidecar conformance rules against a Sparx EA mo
 A YAML file with a top-level `rules` list. Each rule has:
 
 ```yaml
-- id: TVO-TVR-001
+- id: WBA-TVR-001
   name: Employee Required Fields
   category: tagged_value_completeness
   severity: error          # error | warning | info
@@ -177,7 +177,7 @@ result = ea_validate(operation="audit", params={
   "violation_count": 3,
   "violations": [
     {
-      "rule_id": "TVO-TVR-001",
+      "rule_id": "WBA-TVR-001",
       "severity": "error",
       "element_id": 4231,
       "element_name": "Jane Doe (CEO)",
@@ -191,14 +191,14 @@ result = ea_validate(operation="audit", params={
 
 ## Authoring tips
 
-- Keep `id` codes short and grouped by category (`TVO-TVR-*` for tagged-value rules, `TVO-CNX-*` for connector rules).
+- Keep `id` codes short and grouped by category (`WBA-TVR-*` for tagged-value rules, `WBA-CNX-*` for connector rules).
 - Set `severity: warning` for "should-have" rules (e.g. *Department has Members*) and `error` only for structural violations.
 - Mark rules `demo_trigger: true` when they cover the happy-path subset you want to run as a quick smoke check.
 - Pair this skill with `ea-mdg-author` — for every required tag in your MDG, add a `tagged_value_required` rule here.
 
 ## Common pitfalls
 
-- **Stereotype namespace.** EA stores stereotypes as `TechID::StereotypeName`. The sidecar matches on the bare name; `ea_validate` strips the prefix when comparing.
+- **Stereotype namespace.** EA stores stereotypes as `<YourTechID>::StereotypeName`. The sidecar matches on the bare name; `ea_validate` strips the prefix when comparing.
 - **Quoting tag values.** `OrgLevel` is stored as a string even when typed `int`. Use `value_must_be_one_of: ["1", "2", "3", "4"]` (strings).
 - **Connector direction.** `outgoing` = "this element is the source"; `incoming` = "this element is the target". Reports-to runs subordinate→manager, so an Employee's `reports-to` count is *outgoing* from the subordinate.
 

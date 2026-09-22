@@ -47,7 +47,7 @@ UNAVAILABLE — <error message returned>
 **EA version + build:** <e.g. EA 17.0 Build 1704> (UNAVAILABLE if call failed)
 **Project file:** <full path to .qea file> (UNAVAILABLE if call failed)
 **MCP server version:** <e.g. 0.3.1> (UNAVAILABLE if call failed)
-**Loaded MDGs:** <e.g. TechVentures v2.0, ArchiMate3 v3.2> (UNAVAILABLE if call failed)
+**Loaded MDGs:** <e.g. WBA v1.0, ArchiMate3 v3.2> (UNAVAILABLE if call failed)
 **EA_MCP_DIAGNOSTICS active:** <Yes / No / UNAVAILABLE>
 **Prepared by:** Claude (<model-id>) on behalf of end user
 ```

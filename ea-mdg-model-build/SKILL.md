@@ -5,8 +5,9 @@ description: Build a Sparx EA MDG Technology from a model held inside the reposi
 
 # Building an MDG Technology from a Model
 
-*Grounded in a real end-to-end MDG build (CA EDD TEA v3.1.0). Tool-surface claims verified
-against `ea-mcp-server` v2.0.0 (2026-09-21) — see the note at the bottom of Quick Reference.*
+*Grounded in an end-to-end, model-driven build of the Westbrook Bank Architecture (`WBA`)
+technology. Tool-surface claims verified against `ea-mcp-server` v2.0.0 (2026-09-21) — see the
+note at the bottom of Quick Reference.*
 
 Two ways exist to produce an MDG. This skill covers the model-driven one. `ea-mdg-author` covers the other.
 
@@ -62,7 +63,7 @@ Skipping this is the single most expensive mistake available, because one step i
 
 ⚠ **0.1 must be done in the UI.** Untick "Hide disabled Technologies" in Manage Technology. Present-but-disabled is indistinguishable from absent through the API, and `get_mdg_from_runtime` is not a reliable probe (see Gotchas).
 
-⚠ **0.6 matters more than it looks.** A duplicated profile package has the same name as its source — both trees show a child called `TEA`. Renaming the baseline root is the cheapest protection for the remaining phases, and unlike locking it blocks nobody.
+⚠ **0.6 matters more than it looks.** A duplicated profile package has the same name as its source — both trees show a child called `WBA`. Renaming the baseline root is the cheapest protection for the remaining phases, and unlike locking it blocks nobody.
 
 **Verifying baseline scope.** A package baseline covers the whole subtree. Confirm it rather than assume: a package holding no elements directly still produces a large compressed payload if its children are captured.
 
@@ -113,7 +114,7 @@ Read from working stereotypes so new work matches. Every one of these is a model
 
 ⚠ **A stereotype with no Extension never exports.** It will sit in the profile package looking complete — tags, `_metatype`, even constraints — and appear in no MDG. If a stereotype is missing from a built file, check its Extension first.
 
-⚠ **Namespace-qualify every constraint value.** `TEA::TEA_Capability`, never `TEA_Capability`. Unqualified constraints do not resolve and fail silently. Where `_strictness = profile` is set, enforcement is live against a rule that cannot resolve — the worst combination.
+⚠ **Namespace-qualify every constraint value.** `WBA::WBABusinessApplication`, never `WBABusinessApplication`. Unqualified constraints do not resolve and fail silently. Where `_strictness = profile` is set, enforcement is live against a rule that cannot resolve — the worst combination.
 
 ⚠ **Connector tagged values have no API route.** `ea_model` has no operation for them and `update_connector` silently ignores one passed as a property. Set them through the UI: Inspector ▸ Relationships ▸ double-click the row ▸ Tags tab. Budget for this — it is the main manual cost of the profile phase. (Tracked as `APT-2026-0052`; if it ships, this becomes API-scriptable and this gotcha should be trimmed.)
 
