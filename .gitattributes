@@ -1,0 +1,6 @@
+# Skills ship as text assets whose sha256 is pinned in manifest.json.
+# Line endings must be identical in git, the working tree, and the release
+# assets, or install_skills fails its post-download hash check.
+* text=auto eol=lf
+*.png binary
+*.qea binary
