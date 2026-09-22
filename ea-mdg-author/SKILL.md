@@ -7,6 +7,19 @@ description: Author a Sparx EA MDG Technology XML file — define stereotypes, t
 
 *Verified against EA 17.0 Build 1704. All XML patterns here load and deploy correctly.*
 
+## Before you start — does this MDG already have a source model?
+
+This skill treats the `.xml` file as the source of truth. If the technology you're editing has a
+source model in an EA repository (profile packages, a design metamodel, a build/export procedure
+someone follows to produce the shipped XML), **stop and use `ea-mdg-model-build` instead.**
+
+⚠ **Hand-editing an MDG that has a source model causes permanent, silent divergence.** The XML
+edit works today — but the next time anyone runs the model-driven export/build procedure, it
+overwrites the file from the profile packages and your edit is gone, with no warning and no
+record that it ever existed. There's no reconciliation step; the export doesn't know your edit
+happened. If you're not sure whether a technology has a source model, ask before editing its XML
+directly.
+
 ## Quick Reference
 
 | Task | Key Rule |

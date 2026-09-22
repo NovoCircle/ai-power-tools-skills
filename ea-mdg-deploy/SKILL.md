@@ -16,6 +16,23 @@ description: Deploy and test a Sparx EA MDG Technology — embed it into a .qea 
 
 **Never have both at the same time for the same tech ID** — EA will show a duplicate entry with an asterisk (`*`) in Manage Technologies, and the asterisk entry cannot be removed via the UI.
 
+### Model vs. runtime technologies — and the search-path auto-registration trap
+
+The table above is about *where the file lives*. Separately, a technology can be **model-driven**
+(built from profile packages inside a repository — see `ea-mdg-model-build`) or **direct-XML**
+(hand-authored or generated once — this skill's usual case). Either kind can be deployed either
+Model-embedded or Application-level; the two axes are independent.
+
+⚠ **EA auto-registers any MDG file found on its search path**, regardless of deployment mode. The
+path list is at `Manage Technology ▸ Advanced`, and it routinely includes a user's `Downloads`
+folder. A build (or a stray copy) written there registers itself silently, shadows the intended
+Model-embedded copy, and makes deployment look successful on the author's machine while nothing
+changes for anyone else who opens the repository. The search path is **not** recursive — placing
+files in a subfolder is safe. Before trusting any deployment, check Manage Technology with "Hide
+disabled Technologies" unticked and confirm **exactly one** entry for the tech ID, at `Location:
+Model` (or whichever location you intended) — more than one entry means something on the search
+path is shadowing the copy you meant to test.
+
 ---
 
 ## Tool Selection for MDG Deployment

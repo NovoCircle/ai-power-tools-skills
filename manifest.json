@@ -49,26 +49,39 @@
       "name": "ea-mdg-author",
       "title": "ea-mdg-author",
       "description": "Author MDG Technology XML files for Sparx EA \u2014 stereotypes, tagged values, toolbox pages, Quick Linker rules, and validation sidecars",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "min_server_version": "1.0.0",
       "files": [
         "ea-mdg-author/SKILL.md"
       ],
       "sha256": {
-        "ea-mdg-author/SKILL.md": "97b500fbdb651c7824213287a5b974271b443287d7e234d264bc5e5fe64e3199"
+        "ea-mdg-author/SKILL.md": "a65c538c77dd03780f33176fa561beabb115e581b631adb764b404d834110a47"
       }
     },
     {
       "name": "ea-mdg-deploy",
       "title": "ea-mdg-deploy",
       "description": "Deploy and test an EA MDG Technology",
-      "version": "1.0.2",
+      "version": "1.1.0",
       "min_server_version": "1.0.0",
       "files": [
         "ea-mdg-deploy/SKILL.md"
       ],
       "sha256": {
-        "ea-mdg-deploy/SKILL.md": "ad2cad107dfe2908ee96fbd2ffd0fbcefb441ce1d3e08e98d76dd855b0fd1ef3"
+        "ea-mdg-deploy/SKILL.md": "b374c9d4b2bebe259dd6a427d5078b361c72b60c5efd499bc9e7f9aa66e3ec7e"
+      }
+    },
+    {
+      "name": "ea-mdg-model-build",
+      "title": "ea-mdg-model-build",
+      "description": "Build a Sparx EA MDG Technology from a source model inside a repository \u2014 profile packages, toolbox/diagram profiles, reference data, and the export/build/deploy procedure",
+      "version": "1.0.0",
+      "min_server_version": "1.0.0",
+      "files": [
+        "ea-mdg-model-build/SKILL.md"
+      ],
+      "sha256": {
+        "ea-mdg-model-build/SKILL.md": "4c1ae0d14600fc4b295bad8daa1ea44e26202d999f1ce56671e571c193388c53"
       }
     },
     {
