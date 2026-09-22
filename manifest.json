@@ -1,20 +1,20 @@
 {
   "manifest_version": "1.0",
-  "bundle_version": "1.4.0",
-  "released_at": "2026-05-26",
+  "bundle_version": "1.4.1",
+  "released_at": "2026-09-22",
   "min_server_version": "1.0.0",
   "skills": [
     {
       "name": "ea-com",
       "title": "ea-com",
       "description": "EA COM API automation patterns from Python",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "min_server_version": "1.0.0",
       "files": [
         "ea-com/SKILL.md"
       ],
       "sha256": {
-        "ea-com/SKILL.md": "996bcbd118bba78ef4b3502ff3ce23e3ccd6ed77e007393ae310e8e08aee36e7"
+        "ea-com/SKILL.md": "db5a9cfeebbeb90646e7dd86ff02149733a97a7af73720126b43a8a6236c18cb"
       }
     },
     {
@@ -49,78 +49,78 @@
       "name": "ea-mdg-author",
       "title": "ea-mdg-author",
       "description": "Author MDG Technology XML files for Sparx EA \u2014 stereotypes, tagged values, toolbox pages, Quick Linker rules, and validation sidecars",
-      "version": "1.2.0",
+      "version": "1.2.1",
       "min_server_version": "1.0.0",
       "files": [
         "ea-mdg-author/SKILL.md"
       ],
       "sha256": {
-        "ea-mdg-author/SKILL.md": "a65c538c77dd03780f33176fa561beabb115e581b631adb764b404d834110a47"
+        "ea-mdg-author/SKILL.md": "56e8bff79f93e9cd167e7582966bcc0ddd94b7ef07417e779ef92aab5bc5369d"
       }
     },
     {
       "name": "ea-mdg-deploy",
       "title": "ea-mdg-deploy",
       "description": "Deploy and test an EA MDG Technology",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "min_server_version": "1.0.0",
       "files": [
         "ea-mdg-deploy/SKILL.md"
       ],
       "sha256": {
-        "ea-mdg-deploy/SKILL.md": "b374c9d4b2bebe259dd6a427d5078b361c72b60c5efd499bc9e7f9aa66e3ec7e"
+        "ea-mdg-deploy/SKILL.md": "d65b7ddfcc5a1dc871d737c6807b43d719a741c804350cc2e5964c5e8d124571"
       }
     },
     {
       "name": "ea-mdg-model-build",
       "title": "ea-mdg-model-build",
       "description": "Build a Sparx EA MDG Technology from a source model inside a repository \u2014 profile packages, toolbox/diagram profiles, reference data, and the export/build/deploy procedure",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "min_server_version": "1.0.0",
       "files": [
         "ea-mdg-model-build/SKILL.md"
       ],
       "sha256": {
-        "ea-mdg-model-build/SKILL.md": "18d4af0f8cc7b936ddb247e2ca12671477cac15447a3aa21fe0f7de9bde31ac6"
+        "ea-mdg-model-build/SKILL.md": "abc550fa29221f765c4e37839063b942bcc3efb9ebce6dc1423649bdfe92bc89"
       }
     },
     {
       "name": "ea-mcp-validation",
       "title": "ea-mcp-validation",
       "description": "Author validate_model YAML rule sidecars; run hosted rulesets via URL (v1.2.0+)",
-      "version": "1.0.4",
+      "version": "1.0.5",
       "min_server_version": "1.0.0",
       "files": [
         "ea-mcp-validation/SKILL.md"
       ],
       "sha256": {
-        "ea-mcp-validation/SKILL.md": "f2336b6fbbc3dc30fc68cd5ca6c0c95377c62f2aa8691c1c93e2204643512d30"
+        "ea-mcp-validation/SKILL.md": "3e166c6ab6735c6ebb78b0d1e3a458446c52814e7c27c675a2e717d7b5c6a9f5"
       }
     },
     {
       "name": "ea-ruleset-author",
       "title": "ea-ruleset-author",
       "description": "Six-phase workflow for building and publishing a YAML validation ruleset for any modeling language (ArchiMate, BPMN, UML, SysML, custom MDG). Covers spec research, rule-category planning, YAML authoring, testing, and skills-bundle publishing.",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "min_server_version": "1.2.0",
       "files": [
         "ea-ruleset-author/SKILL.md"
       ],
       "sha256": {
-        "ea-ruleset-author/SKILL.md": "6da62af6047eb78f9d3cecada50e90f312bab4550316bdbe9346599b1db5245c"
+        "ea-ruleset-author/SKILL.md": "20470ecaf2632936a63ff2161dfa28541ddf9a8ab9d4144d335d7e718bd008a2"
       }
     },
     {
       "name": "ea-diagnostic",
       "title": "ea-diagnostic",
       "description": "Generate a structured diagnostic report for submission to help@novocircle.com",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "min_server_version": "1.0.0",
       "files": [
         "ea-diagnostic/SKILL.md"
       ],
       "sha256": {
-        "ea-diagnostic/SKILL.md": "8c3298f6215aa9c595f9b1b19e9505aac5ed0912ed3e86504599d4ba62308337"
+        "ea-diagnostic/SKILL.md": "80edf8e08eb879bccddc06ed11b6e6751fe658a54c24c25426847f875b126df4"
       }
     },
     {
