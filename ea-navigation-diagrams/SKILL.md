@@ -76,6 +76,69 @@ SELECT c.Start_Object_ID, COUNT(*) FROM t_connector c
  WHERE c.Stereotype LIKE '%PartOf%' GROUP BY c.Start_Object_ID;
 ```
 
+For the exact thresholds and wording to use when *proactively* raising this — unprompted, right after a load or an analysis call — see "Proactively offering this skill" below. This section covers whether the skill applies at all; that one covers whether to say something about it right now.
+
+## Proactively offering this skill
+
+This is a conversational behaviour, not a tool call. No MCP operation can "ask the user a question" — only you, the calling agent, decide when to speak up. This section is authoritative for *when* and *how* to offer; everything else in this skill is the *how to build*.
+
+The commercial case is direct: customers do not ask for navigation diagrams because most don't know the feature exists. The ones who do know build a handful by hand and stop (see the 6-of-21 defect above). Offering it the moment a qualifying hierarchy lands — while you already have the parent/child map in context and the user is looking for confirmation the load worked — is the difference between a feature nobody uses and the thing the tool gets remembered for.
+
+### Trigger points
+
+Check opportunistically, riding on work you were already doing — never issue a new tool call whose only purpose is to go scanning the repository for hierarchies to pitch:
+
+1. **On load.** At the end of any operation that creates elements with parentage or containment: `ea_model("create_elements_bulk")`/`create_element` with `parent_id` set, a spreadsheet import, an XMI import, or any other documented load workflow (`ea-mcp-modeling` Phase 2/5). Check the scope you just created.
+2. **On analysis.** A read or audit call you were already making happens to reveal a hierarchy meeting the threshold — `ea_analyze("summarize_connector_patterns")` or `ea_model("list_elements_in_package")` are the natural hook points. Check the package you just examined.
+
+### Threshold — do not prompt for trivia
+
+All three must hold. Below this, say nothing; a single diagram is the better answer and a prompt is noise.
+
+| Check | Threshold | How to get it (usually already in hand from the triggering call) |
+|---|---|---|
+| Depth | 2 or more levels | Walk `t_object.ParentID` from a leaf to a root within scope (or use a level/tier tag if present); depth = the longest chain. |
+| Scope size | more than 12 elements | `SELECT COUNT(*) FROM t_object WHERE Package_ID IN (<scope subtree>)` — see `ea-mcp-modeling` §8 for the recursive subtree pattern. |
+| Elements with children | 3 or more | `SELECT ParentID, COUNT(*) FROM t_object WHERE Package_ID IN (<scope subtree>) AND ParentID <> 0 GROUP BY ParentID` — count the distinct `ParentID` values that are themselves elements in scope. |
+
+### Before offering: check what's already navigable
+
+Run the audit before saying anything:
+
+```
+ea_model("find_composite_diagram_mismatches", {"package_id": <scope>, "recursive": true})
+```
+
+Combine that with a count of in-scope parents (elements with children) that already have **both** halves correct (a child diagram and `NType = 8`):
+
+- **Every qualifying parent is already navigable** → say nothing. Do not re-prompt on a package that's already done, even if it's touched again by a later load in the same session.
+- **Nothing is navigable yet** (no diagrams, or diagrams exist but none are flagged) → the full-build framing.
+- **Some are navigable and some aren't** → the narrower "fix" framing. This is the more valuable prompt, not a lesser one — it is cheaper, safer, and exactly the defect class this audit exists to catch.
+
+### What to say
+
+State scope, diagram count, and target package before the user answers — never ask blind. Match the source report's own audit language for the partial case rather than paraphrasing it:
+
+> **Full-build framing** (nothing navigable yet):
+> "This load just added a 3-level hierarchy to `<package>` — 13 areas, 43 categories, 128 capabilities (184 elements, 44 with children). Would you like me to build a set of navigation diagrams so you can browse it by clicking down through levels, instead of one large tree diagram?"
+
+> **Fix-only framing** (partially navigable — mirror this wording exactly, filled in with the real counts):
+> "9 of the 21 capabilities with sub-capabilities are navigable; 12 are not, and 6 have a child diagram but are missing the composite flag, so they look navigable but don't drill down. Want me to fix the flags?"
+
+Then offer exactly these four options, every time — don't reword or silently drop one, and offer option 3 even when the framing above is the full-build one, so a user who only wants the cheap fix isn't forced to ask for it separately:
+
+1. **Build the full set** — landing diagram plus one per parent, per the Build procedure below.
+2. **Complete an existing set** — generate only what's missing, matching the styling of diagrams already there (read the existing diagrams' `Diagram_Type`/`PDATA`/`StyleEx` per Phase 1 before generating).
+3. **Fix only the flags** — the cheap, safe, five-second option: run `set_composite_diagram` against every `diagram_without_flag` mismatch, nothing else.
+4. **No thanks** — and remember it for the rest of this session. Do not offer again for this package this session, even if it's loaded into or analysed again. A new session starts clean. If the user has told you (this session, or as a standing preference you're otherwise aware of) that they never want this offered at all, treat that as covering every package, not just the one in front of you.
+
+### Rules
+
+- Fires once per load or per analysed package, never mid-loop. If a single operation loads several packages, finish the whole load, then check/offer once per package — not once per batch and not once per element.
+- Scope, count, and target package are always stated before the user answers.
+- Accepting is not done until a rendered image confirms it — see Phase 5's "counting rows is not verification" rule.
+- Existing diagrams are never deleted or overwritten; see "Rebuilding after the hierarchy changes" below for the superseded-diagram handling.
+
 ## Build procedure
 
 ### Phase 0 — read the hierarchy

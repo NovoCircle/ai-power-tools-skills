@@ -21,14 +21,14 @@
       "name": "ea-mcp-modeling",
       "title": "ea-mcp-modeling",
       "description": "Build EA models via the MCP server \u2014 phases, defects, verification",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "min_server_version": "1.0.0",
       "files": [
         "ea-mcp-modeling/SKILL.md",
         "ea-mcp-modeling/references/sql_schema.md"
       ],
       "sha256": {
-        "ea-mcp-modeling/SKILL.md": "d08de6e1d44078a32a785b35bdd5ef8e7822974249b01c653e7546950c7e7acd",
+        "ea-mcp-modeling/SKILL.md": "b9602944eb376df8450cc59a3717e861cc59c925708ad96032b3a2ac18b7bc06",
         "ea-mcp-modeling/references/sql_schema.md": "c045c783aecfdf95af690d2181f7075d589d929c65bff9db1a3be9b7fa2084ef"
       }
     },
@@ -36,13 +36,13 @@
       "name": "ea-navigation-diagrams",
       "title": "ea-navigation-diagrams",
       "description": "How to generate click-through \"navigation diagrams\" over hierarchical data in a Sparx EA repository \u2014 the composite-element mechanism, the nested-container layout, the exact write sequence, and verification",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "min_server_version": "1.0.0",
       "files": [
         "ea-navigation-diagrams/SKILL.md"
       ],
       "sha256": {
-        "ea-navigation-diagrams/SKILL.md": "44eb2c2955688b65ba54ee2833c8c0af54877cb4f7673913e5bbd34b5535e0ce"
+        "ea-navigation-diagrams/SKILL.md": "1e8ef6707b266e6671ab44d7c9d4e925ed3b12ec9d5830d8ee8a7bbd68c22c31"
       }
     },
     {
@@ -81,7 +81,7 @@
         "ea-mdg-model-build/SKILL.md"
       ],
       "sha256": {
-        "ea-mdg-model-build/SKILL.md": "4c1ae0d14600fc4b295bad8daa1ea44e26202d999f1ce56671e571c193388c53"
+        "ea-mdg-model-build/SKILL.md": "18d4af0f8cc7b936ddb247e2ca12671477cac15447a3aa21fe0f7de9bde31ac6"
       }
     },
     {
@@ -94,7 +94,7 @@
         "ea-mcp-validation/SKILL.md"
       ],
       "sha256": {
-        "ea-mcp-validation/SKILL.md": "994770eac3d4ccbb571d4399114233986da4f3c1b28a4337eaf726e02aaf562b"
+        "ea-mcp-validation/SKILL.md": "f2336b6fbbc3dc30fc68cd5ca6c0c95377c62f2aa8691c1c93e2204643512d30"
       }
     },
     {

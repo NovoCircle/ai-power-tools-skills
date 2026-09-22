@@ -138,6 +138,15 @@ whose boxes open a child diagram one level down) â€” composite elements, `t
 `t_object.NType` â€” that mechanism is a separate skill: see **`ea-navigation-diagrams`**.
 It is not covered here.
 
+**After Phase 2/5 of a load that created elements with parentage, or after any analysis
+call that happens to surface a hierarchy** (`ea_analyze("summarize_connector_patterns")`,
+`ea_model("list_elements_in_package")`) â€” check whether it's worth proactively offering to
+build navigation diagrams over what you just loaded or found. Don't add a new call just to
+go looking; this rides on work you were already doing. See **`ea-navigation-diagrams` â€”
+"Proactively offering this skill"** for the exact thresholds (2+ levels, >12 elements, 3+
+elements with children), the audit-first check against what's already navigable, and the
+four response options to offer.
+
 **Why elements before connectors:** `create_connector` needs both endpoint `Object_ID`
 values.  If you try to create connectors while elements are still being built you will
 reference IDs that don't exist yet.
