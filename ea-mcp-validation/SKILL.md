@@ -67,6 +67,44 @@ A YAML file with a top-level `rules` list. Each rule has:
 | `tagged_value_constraint` | One or more tags must take a value from `value_must_be_one_of`. |
 | `connector_count` | Element must have between `min` and `max` connectors of a given stereotype (`direction: incoming \| outgoing`). |
 | `connector_endpoint_stereotype` | Connector source/target must be in `source_must_be_one_of` / `target_must_be_one_of`. |
+| `tagged_value_type_shipped` | A profile's tagged-value types (blank-`Type` attributes on stereotype-defining classes, per `ea-mdg-model-build`'s Phase 2 convention) must also appear in a **built MDG file's RefData** — i.e. must actually have been ticked on the MDG Technology Wizard's Tagged Value Types page, not just defined in `t_propertytypes`. Requires `built_mdg_path` (file path or raw XML). |
+
+### `tagged_value_type_shipped` — catching "defined but never selected"
+
+The MDG Technology Wizard's Tagged Value Types page is a *selection* step: a type
+fully defined in `t_propertytypes` but never ticked there does not ship, and
+nothing in the model shows this afterward. The symptom ("this field is free
+text") is identical to "the type was never defined" but the fix is completely
+different — see the `ea-mdg-model-build` skill's Phase 5/6 and Gotchas table.
+
+```yaml
+- id: mdg_tag_types_selected
+  severity: warning
+  selector:
+    type: element
+    stereotypes:
+      any_of: [stereotype]     # EA's built-in stereotype-definition marker
+  condition:
+    type: tagged_value_type_shipped
+    built_mdg_path: path/to/BuiltTechnology.xml   # or raw XML content
+```
+
+Scope to one profile package with the top-level `package_id` param on
+`ea_validate`. Only types that are **both** referenced (blank `Type` on a
+stereotype-defining class's attribute) **and** actually defined in
+`t_propertytypes` are eligible to be flagged — a blank-`Type` attribute with
+no `t_propertytypes` entry at all is the *other* failure mode (never defined)
+and is out of scope for this rule.
+
+> **Schema note.** No built MDG file with a populated `<TaggedValueTypes>`
+> block was available to verify this parser against at authoring time — every
+> local fixture ships an always-empty `<TaggedValueTypes/>` stub, since
+> reference data is EA-UI-only. The parser accepts any child element under
+> `<TaggedValueTypes>` that carries a `name` attribute (written against the
+> commonly observed `<TagType name="..." detail="..."/>` shape), so it
+> shouldn't be brittle to minor schema variation — but re-verify against a
+> real built file with reference data before relying on this for a
+> high-stakes gate.
 
 ## Running the validator
 
