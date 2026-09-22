@@ -130,6 +130,53 @@ def check_file(path: Path) -> list[str]:
     return out
 
 
+def check_manifest() -> list[str]:
+    """Every manifest hash must match the file on disk, byte for byte.
+
+    The installer verifies each download against this map and refuses a
+    mismatch, so a stale hash means the skill cannot install. This is also
+    the CRLF trap: a checkout that rewrites line endings after the map was
+    generated silently invalidates it. `.gitattributes` pins LF; this is the
+    check that proves it held.
+    """
+    import hashlib
+    import json
+
+    out: list[str] = []
+    mf = ROOT / "manifest.json"
+    if not mf.exists():
+        return ["manifest.json: missing"]
+
+    m = json.loads(mf.read_text(encoding="utf-8"))
+    listed: set[str] = set()
+    for skill in m.get("skills", []):
+        for rel, want in skill.get("sha256", {}).items():
+            listed.add(rel)
+            f = ROOT / rel
+            if not f.exists():
+                out.append(f"manifest.json: lists a missing file: {rel}")
+                continue
+            raw = f.read_bytes()
+            got = hashlib.sha256(raw).hexdigest()
+            if got != want:
+                out.append(f"manifest.json: stale sha256 for {rel} "
+                           f"(manifest {want[:12]}…, file {got[:12]}…) — "
+                           f"run tools/regen-manifest.py")
+            if b"\r\n" in raw:
+                out.append(f"{rel}: CRLF line endings — assets must ship as LF")
+
+    for skill_dir in sorted(p for p in ROOT.iterdir() if p.is_dir()):
+        if skill_dir.name.startswith((".", "_")) or skill_dir.name == "tools":
+            continue
+        for f in skill_dir.rglob("*"):
+            if f.is_file() and f.suffix.lower() in {".md", ".yaml", ".yml"}:
+                rel = f.relative_to(ROOT).as_posix()
+                if rel not in listed:
+                    out.append(f"{rel}: present in the repo but not in manifest.json "
+                               f"— it will not ship")
+    return out
+
+
 def main() -> int:
     # Findings quote source lines that may contain em-dashes and smart quotes.
     # A cp1252 console would raise UnicodeEncodeError mid-report and truncate it.
@@ -146,6 +193,8 @@ def main() -> int:
     findings: list[str] = []
     for f in iter_files(target):
         findings.extend(check_file(f))
+    if target == ROOT:
+        findings.extend(check_manifest())
 
     if not findings:
         print("GATE GREEN — no violations")
