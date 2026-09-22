@@ -36,13 +36,13 @@
       "name": "ea-navigation-diagrams",
       "title": "ea-navigation-diagrams",
       "description": "How to generate click-through \"navigation diagrams\" over hierarchical data in a Sparx EA repository \u2014 the composite-element mechanism, the nested-container layout, the exact write sequence, and verification",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "min_server_version": "1.0.0",
       "files": [
         "ea-navigation-diagrams/SKILL.md"
       ],
       "sha256": {
-        "ea-navigation-diagrams/SKILL.md": "df5a38ca62ba3a4236a9b47cb68c9cd78844ef59b0ddf5c560b27c6ca7360a9a"
+        "ea-navigation-diagrams/SKILL.md": "44eb2c2955688b65ba54ee2833c8c0af54877cb4f7673913e5bbd34b5535e0ce"
       }
     },
     {

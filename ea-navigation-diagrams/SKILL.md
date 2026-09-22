@@ -29,7 +29,15 @@ Both are required. This is the single most important fact in this skill:
 - `ParentID` alone → the diagram is owned by the element and appears under it in the Browser, but the element shows **no marker and does not navigate on double-click**.
 - `NType = 8` alone → nothing to navigate to.
 
-A repository that has hand-built navigation diagrams will often contain a mix. Before extending someone's existing pattern, audit it:
+A repository that has hand-built navigation diagrams will often contain a mix. Before extending someone's existing pattern, audit it. As of this release, prefer the dedicated operation over hand-rolled SQL:
+
+```
+ea_model("find_composite_diagram_mismatches", {"package_id": <pkg>, "recursive": true})
+```
+
+It scans the whole package subtree (or just `package_id` itself with `recursive: false`) in one call and returns `{ok, package_id, recursive, checked_count, mismatches}`, where each mismatch is `{element_id, name, ntype, child_diagram_ids, problem}`. `problem` is `diagram_without_flag` (a child diagram exists but `NType <> 8` — looks navigable in the Browser, doesn't drill down) or `flag_without_diagram` (`NType = 8` but no child diagram — a marker that opens nothing). Both are the same defect class described above, in either direction.
+
+The equivalent raw SQL, kept here for reference and as a fallback against a server predating this operation:
 
 ```sql
 SELECT o.Object_ID, o.Name, o.NType,
@@ -40,9 +48,9 @@ WHERE o.Package_ID = <pkg>
   AND o.NType <> 8
 ```
 
-Any rows returned are elements that look navigable to the author but are not. Fixing them is `UPDATE t_object SET NType = 8 WHERE Object_ID IN (...)`.
+Any rows returned (or any `diagram_without_flag` mismatch) are elements that look navigable to the author but are not. Fix them with `set_composite_diagram` (see Phase 4) rather than a hand-written `UPDATE` — it writes both halves together and reports whether they actually landed consistent.
 
-This audit query is the highest-value check in this skill — it is exactly what would have caught the 6-of-21 "looks navigable but isn't" defect described below, automatically, before a user ever clicked and found nothing. Run it before extending any existing set, and offer to run it any time a user asks about navigation diagrams in a repository you didn't build yourself.
+This audit is the highest-value check in this skill — it is exactly what would have caught the 6-of-21 "looks navigable but isn't" defect described below, automatically, before a user ever clicked and found nothing. Run it before extending any existing set, and offer to run it any time a user asks about navigation diagrams in a repository you didn't build yourself.
 
 > **Note on `t_diagram.ParentID`:** despite what some schema documentation says, this column holds the parent **element's** `Object_ID`, not a parent diagram and not a package. `Package_ID` is the owning package and is independent of it. An element-owned diagram (`ParentID > 0`) appears in the Browser under the element, not in the package's diagram list, so it does not clutter the package and does not collide with same-named package-level diagrams.
 >
@@ -151,17 +159,25 @@ child:     DUID=<8hex>;UCRect=1;NSL=0;BFol=-1;LCol=-1;LWth=-1;fontsz=0;bold=0;bl
            italic=0;ul=0;charset=0;pitch=0;HideIcon=0;BCol=<bgr>;LBL=CX=<width>:CY=15:…
 ```
 
-As with the diagram rows, insert the geometry first with a one-character placeholder in `ObjectStyle`, then set the real style in two batch updates (one for containers, one for children) using `CONCAT` over `Object_ID` and `RectRight - RectLeft`. It keeps the statements small and the style consistent.
+Build each element's `left`/`top`/`right`/`bottom` from the geometry above and each element's `style` string from the `ObjectStyle` pattern above, then place the whole diagram (container plus children) in one call — see "Using `add_elements_to_diagram_bulk` for Phase 3" below for the exact call shape and the two flags (`layout`, `auto_connectors`) that must be set explicitly.
 
 ### Phase 4 — flag the parents composite
 
-```sql
-UPDATE t_object SET NType = 8 WHERE Object_ID IN (<every parent>)
+As of **APT-2026-0059**, use `set_composite_diagram` — it writes both halves of the mechanism (`t_diagram.ParentID` and `t_object.NType`) together in one call, so they cannot land out of sync the way two separate hand-written writes can:
+
+```
+for parent_id, child_diagram_id in parent_diagram_pairs:
+    ea_model("set_composite_diagram", {
+        "element_id": parent_id,        # the parent element's Object_ID
+        "diagram_id": child_diagram_id  # the diagram Phase 2 created for it
+    })
 ```
 
-Leaves stay at `NType = 0`. That is correct and meaningful: no marker tells the user there is nothing below.
+Call it once per parent, after Phase 2 has created that parent's child diagram — `diagram_id` has no default, and passing `null` *clears* the link instead of setting it (useful only when rebuilding; see "Rebuilding after the hierarchy changes" below), so always pass the real diagram ID here. The response includes `consistent: bool`, read back from both halves after the write — check it. `ok: true` with `consistent: false` means the write did not fully land and needs investigating, not assuming fixed. It is idempotent: calling it again with the same arguments is a no-op, not an error.
 
-> **API-gap note (check before using the raw SQL above):** as of this writing there is no MCP operation that sets `t_object.NType` or otherwise touches EA's `Element.CompositeDiagram` COM property — `ea_model("set_composite_diagram")` is proposed but not shipped (tracked as **APT-2026-0059**). Before doing the `UPDATE` by hand, call `ea_analyze("execute_sql", {"sql": "SELECT ..."})` or check the backlog to see whether `set_composite_diagram` (or equivalent) has landed in the running server version. If it has, use it instead — it is expected to set `t_diagram.ParentID` and `t_object.NType` together in one call, which removes the two-part-mechanism failure mode (§ "The mechanism", above) at the source. Until then, the raw SQL above is correct and is the only path.
+Leaves stay unflagged (`NType = 0`, no diagram). That is correct and meaningful: no marker tells the user there is nothing below.
+
+The equivalent raw SQL (`UPDATE t_object SET NType = 8 WHERE Object_ID IN (<every parent>)`) still works as a fallback against a server predating APT-2026-0059, but it only ever sets the `NType` half — you would still be relying on the Phase 2 `t_diagram.ParentID` write being correct, with nothing checking that the two halves agree the way `set_composite_diagram`'s `consistent` field does. Prefer the API call.
 
 ### Phase 5 — verify, then refresh
 
@@ -181,17 +197,32 @@ Then **render at least the landing diagram, one mid-level diagram and one leaf-l
 
 EA caches diagrams it has already rendered, so a diagram written by SQL and previously opened will render stale. Call `ea_diagram("reload_diagram")` before rendering. Tell the user to reload the package in the Browser (right-click the package → *Contents → Reload Current Package*) or reopen the model — writes that go to the repository do not reach an EA session that already has the package cached.
 
-## Why not `add_elements_to_diagram_bulk`
+## Using `add_elements_to_diagram_bulk` for Phase 3
 
-The bulk add is the natural tool for this and currently cannot produce the result:
+As of **APT-2026-0050**, `add_elements_to_diagram_bulk` takes per-element position and style and an explicit layout opt-out, so it is now the right tool for Phase 3 — call it once per diagram with the container and its children in one list, instead of writing `t_diagramobjects` rows directly. Two flags must be set explicitly or the call reproduces the old tree-diagram result:
 
-- it re-runs a hierarchical auto-layout on every call and ignores supplied positions, so the container/nested arrangement is destroyed
-- it auto-draws connectors between elements already on the diagram, reintroducing the tree
-- it exposes no way to set `ObjectStyle`, so the parent/child colour cue cannot be applied
+- `"layout": "none"` — **required**. The default is `"Hierarchical"`, which re-runs EA's auto-layout after placement and overwrites the positions you just computed, destroying the container/nested arrangement. `"none"` (any case), `""`, or `null` all skip layout and leave your explicit `left`/`top`/`right`/`bottom` exactly as given.
+- `"auto_connectors": false` — **required**. The default (`true`) auto-draws every connector whose both endpoints are now on the diagram, reintroducing the tree this mechanism is meant to replace. (`auto_show_connectors` is the older name for the same flag; pass `auto_connectors` explicitly since it wins if both are given.)
+- per-element `style` — the `ObjectStyle` guidance above (DUID, BGR `BCol`) still applies; build the string exactly as before, but pass it as the entry's `style` key instead of writing it via a SQL `UPDATE`.
 
-Until it grows `layout=none`, explicit positions and a per-object style argument, build the diagram objects by direct writes. Do the same for the composite flag — there is no API operation for `NType` (see the API-gap note in Phase 4, above).
+Call shape, once per diagram:
 
-**Tracking note:** both gaps have open backlog items — **APT-2026-0050** (`add_elements_to_diagram_bulk` position/style parameters, `layout=none` opt-out, `auto_connectors` opt-out) and **APT-2026-0059** (`set_composite_diagram`). As of this skill's last review, neither has shipped in `ea-mcp-server` — `add_elements_to_diagram_bulk` still takes only a plain `element_ids` list with no per-element position or style, and no operation anywhere sets `t_object.NType`. Re-check both before relying on this section: if `add_elements_to_diagram_bulk` has grown per-element `left/top/width/height/style` parameters and a `layout="none"` option, use it for Phase 3 instead of direct `t_diagramobjects` writes; if `set_composite_diagram` (or an equivalent) exists, use it for Phase 4 instead of the raw `UPDATE`. Direct SQL will still work as a fallback either way, but the API path is idempotent and less error-prone once available.
+```
+ea_model("add_elements_to_diagram_bulk", {
+    "diagram_id": <child_diagram_id>,
+    "layout": "none",
+    "auto_connectors": False,
+    "element_ids": [
+        {"element_id": container_id, "left": 50, "top": -60, "right": ..., "bottom": ...,
+         "sequence": <highest>, "style": "<container ObjectStyle string>"},
+        {"element_id": child_id, "left": ..., "top": ..., "right": ..., "bottom": ...,
+         "sequence": <1..n>, "style": "<child ObjectStyle string>"},
+        ...
+    ]
+})
+```
+
+It is idempotent per element (an already-placed element comes back `skipped`, not duplicated) and a failure on one entry doesn't abort the rest of the batch — both properties direct SQL writes didn't give for free. Direct `t_diagramobjects` writes remain a valid fallback against a server predating APT-2026-0050.
 
 Where the API *does* work, use it: `ea_model("create_package")` for the staging/holding packages, `ea_diagram("reload_diagram")` for cache refresh, and `ea_diagram("get_diagram_png")` for visual verification.
 
