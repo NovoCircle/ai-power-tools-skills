@@ -89,7 +89,7 @@ Example format:
 - **File:** `ea_mcp_server/tools/connectors.py`
 - **Change:** Add a guard for `start_id == end_id` before calling the EA API; return a
   descriptive error rather than letting EA return a silent null.
-- **Skill update:** Update `ea-mcp-modeling §8` to warn that self-referencing connectors
+- **Skill update:** Update `ea-modeling §8` to warn that self-referencing connectors
   require the `allow_self_loop=True` flag.
 ```
 
@@ -117,7 +117,7 @@ After all issue blocks, insert a summary table ranked by severity (Critical firs
 
 | # | Severity | Short title | Affected component | Workaround found | Fix location |
 |---|---|---|---|---|---|
-| 1 | High | create_connector fails on self-referencing element | `create_connector` MCP tool | Yes | `connectors.py` + `ea-mcp-modeling §8` |
+| 1 | High | create_connector fails on self-referencing element | `create_connector` MCP tool | Yes | `connectors.py` + `ea-modeling §8` |
 | 2 | Medium | MDG reload required after toolbox edit | EA UI / `reload_diagram` | Yes | EA known limitation — document in skill |
 ```
 
@@ -213,6 +213,6 @@ A finished report always has these sections in this order:
 - **Workaround applied** must include the actual code or numbered steps, not a prose description alone.
 - **Recommended fix** must name the specific file, tool, or skill and the exact change needed — not just "fix the bug".
 - Severity must be one of the four defined values: Critical, High, Medium, Low.
-- Affected component must be specific: use the exact MCP tool name (e.g. `create_connector`), skill section reference (e.g. `ea-mcp-modeling §8`), or EA UI element name — not a category label like "the server".
+- Affected component must be specific: use the exact MCP tool name (e.g. `create_connector`), skill section reference (e.g. `ea-modeling §8`), or EA UI element name — not a category label like "the server".
 - Do not redact error messages — paste them verbatim.
 - If auto-collection calls fail, record the failure and continue — a partial report is better than no report.

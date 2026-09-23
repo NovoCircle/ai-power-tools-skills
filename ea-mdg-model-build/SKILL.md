@@ -144,7 +144,7 @@ Where a profile carries Enumeration classes on a data-types diagram, those value
 SELECT [Value], COUNT(*) FROM t_objectproperties WHERE Property = '<tag>' GROUP BY [Value]
 ```
 
-`Value` is a reserved-word column on `t_objectproperties` — bracket it, or the query is rejected. (See the `ea-mcp-modeling` SQL reference for the full reserved-word list.)
+`Value` is a reserved-word column on `t_objectproperties` — bracket it, or the query is rejected. (See the `ea-modeling` SQL reference for the full reserved-word list.)
 
 ⚠ **Renaming a tag orphans its values** in `t_objectproperties`. Fix trailing spaces and spelling before a production load, never after.
 
@@ -182,7 +182,7 @@ All UI. The sequence matters and several steps are easy to get subtly wrong. (Tr
 
 ⚠ **`Publish Diagram as UML Profile` is greyed out unless the diagram is open.** Selecting it in the Browser is not enough.
 
-⚠ **The wizard's Tagged Value Types page is a selection step, not an inclusion step.** Types not selected here do not ship, however completely they are defined. This is the usual cause of "the type exists but the field is still free text" — and because the omission is invisible in the model, it can persist across many releases. This step still has no API route, so the wizard itself can't be scripted around — but the omission can now be *detected*: `ea-mcp-validation`'s `tagged_value_type_shipped` rule condition compares a profile's blank-`Type` tagged-value attributes against a built MDG file's RefData and flags anything defined but not shipped (`APT-2026-0057`, shipped). Run it as part of Phase 6 verification.
+⚠ **The wizard's Tagged Value Types page is a selection step, not an inclusion step.** Types not selected here do not ship, however completely they are defined. This is the usual cause of "the type exists but the field is still free text" — and because the omission is invisible in the model, it can persist across many releases. This step still has no API route, so the wizard itself can't be scripted around — but the omission can now be *detected*: `ea-validation`'s `tagged_value_type_shipped` rule condition compares a profile's blank-`Type` tagged-value attributes against a built MDG file's RefData and flags anything defined but not shipped (`APT-2026-0057`, shipped). Run it as part of Phase 6 verification.
 
 ⚠ **Match the Contents checkboxes to the shape of the current deployed file** rather than guessing. Parse the deployed file and tick to match:
 
@@ -250,7 +250,7 @@ Then: import, confirm **enabled** rather than merely present, and validate on a 
 | Symptom | Cause |
 |---|---|
 | Stereotype missing from the built MDG | No Extension to a metaclass |
-| Tag ships as free text despite a complete definition | Not selected on the wizard's Tagged Value Types page — run `ea-mcp-validation`'s `tagged_value_type_shipped` rule to detect this (`APT-2026-0057`, shipped) |
+| Tag ships as free text despite a complete definition | Not selected on the wizard's Tagged Value Types page — run `ea-validation`'s `tagged_value_type_shipped` rule to detect this (`APT-2026-0057`, shipped) |
 | Quick Linker rule never fires | Constraint value not namespace-qualified |
 | Toolbox entry points at nothing | Stereotype deleted, toolbox not swept |
 | New stereotype invisible to users | On no toolbox page |

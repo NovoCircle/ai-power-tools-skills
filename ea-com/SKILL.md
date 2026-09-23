@@ -7,404 +7,186 @@ description: Use the Sparx EA COM API from Python to read and modify EA models �
 
 *Verified against EA 17.0 Build 1704.*
 
-> **⚠ Verification discipline — trust the EA model, not your memory.**
+This skill is self-contained. Every snippet is plain `win32com.client` + `pywin32` —
+there is no helper module to install. If you have Python, `pywin32`, and EA running
+with a project open, you can follow this skill with nothing else.
+
+> **Verification discipline — trust the EA model, not your memory.**
 >
 > When the user (or a calling script) asks anything about the current state of the
 > model — *"does element X exist?"*, *"what's in package P?"*, *"what's the tagged
-> value of T on E?"* — you MUST answer from a fresh read in the current turn, not
-> from memory of what you (or the script) did earlier. Memory is an index, not a
-> source of truth.
->
-> Elements can be renamed, moved, deleted, or silently fail to persist between
-> turns; out-of-band scripts and other users can mutate the model; EA can roll
-> back a transaction without telling Python. Any answer about model state that
-> isn't backed by a current read is a guess, and confident guesses destroy user
-> trust in everything else the agent says.
->
-> **Canonical verification primitives:**
+> value of T on E?"* — answer from a fresh read in the current turn, not from memory
+> of what a script did earlier. Elements can be renamed, moved, or deleted; other
+> users and out-of-band scripts can mutate the model; EA can roll back a transaction
+> without telling Python. An answer about model state that isn't backed by a current
+> read is a guess.
 >
 > | Question | Call |
 > |---|---|
-> | Existence by name | `ea.sql("SELECT Object_ID, Name FROM t_object WHERE Name = '...'")` |
-> | Existence by GUID | `ea.sql("SELECT Object_ID, Name FROM t_object WHERE ea_guid = '{...}'")` |
-> | Package contents | `ea.sql("SELECT Object_ID, Name, Stereotype FROM t_object WHERE Package_ID = <id>")` |
-> | Tagged values on E | `ea.sql("SELECT Property, Value FROM t_objectproperties WHERE Object_ID = <id>")` |
-> | Connectors on E | `ea.sql("SELECT ... FROM t_connector WHERE Start_Object_ID = <id> OR End_Object_ID = <id>")` |
-> | Anything else | `ea.sql("...")` — always authoritative |
+> | Existence by name | `sql("SELECT Object_ID, Name FROM t_object WHERE Name = '...'")` |
+> | Existence by GUID | `sql("SELECT Object_ID, Name FROM t_object WHERE ea_guid = '{...}'")` |
+> | Package contents | `sql("SELECT Object_ID, Name, Stereotype FROM t_object WHERE Package_ID = <id>")` |
+> | Tagged values on E | `sql("SELECT Property, Value FROM t_objectproperties WHERE Object_ID = <id>")` |
+> | Anything else | `sql("...")` — always authoritative |
 >
-> **Rules:**
->
-> 1. **Never assert model state from prior-turn memory.** Re-query, even if you "just"
->    created the element a few calls ago.
-> 2. **Persist IDs/GUIDs, not names.** Names can collide and be renamed; IDs are stable.
-> 3. **A successful COM mutation call is not proof of persistence.** EA can swallow
->    writes silently (see the `elem.Type` setter section below for one such case).
->    Always read back via `ea.sql(...)` after a non-trivial write.
-> 4. **After EA restart or project reopen, your in-process COM references are stale.**
->    Reconnect and re-query before asserting anything.
+> 1. Never assert model state from prior-turn memory — re-query, even if you "just" wrote it.
+> 2. Persist IDs/GUIDs, not names. Names collide and get renamed; IDs are stable.
+> 3. A successful COM mutation call is not proof of persistence — `repo.Execute()`
+>    and the mutating collection methods return `None`, not a status you can check.
+>    Always read back via `sql(...)` after a non-trivial write.
+> 4. After an EA restart or project reopen, in-process COM references are stale —
+>    reconnect and re-query before asserting anything.
 
-## Module
+## When COM is the right tool
 
-All EA automation uses the `ea_com.py` module shown in this skill:
-
-```python
-from ea_com import EA, EAError
-```
-
-EA must be running with a project open before connecting.
-
----
+Use `ea-com` when you need direct SQL access to the repository schema (bulk queries,
+ad-hoc reporting, cross-table joins) or EA lifecycle control (technology load/enable
+checks, restart) that the MCP server doesn't expose. If the task is building or
+editing a model through well-formed operations — create element, add connector, set
+tagged value — prefer the `ea-modeling` skill's MCP tools; they validate input
+and don't require a Python environment on the machine running EA. Drop to COM when
+MCP has no tool for what you need, or when you need raw SQL.
 
 ## Connecting
 
 ```python
-# Context manager — releases COM refs on exit, does NOT close EA
-with EA() as ea:
-    print(ea.project_path)
+import win32com.client
 
-# Manual — use when you need the instance to outlive a block
-ea = EA()
-ea.connect()                        # default: 3 retries, 2s delay
-ea.connect(retries=10, delay=3.0)   # for post-restart reconnect
+app = win32com.client.GetActiveObject("EA.App")
+repo = app.Repository
+print(repo.ConnectionString)   # -> "<model-dir>\WestbrookBank.qea"
 ```
 
-Under the hood: `win32com.client.GetActiveObject("EA.App")` — attaches to the currently running EA instance. Fails if EA is not running or no project is open.
-
----
-
-## Key Properties and Methods
-
-### Project info
-```python
-ea.project_path      # → "C:\...\WestbrookBank.qea"  (repo.ConnectionString)
-ea.repo              # → raw Repository COM object (escape hatch for unlisted methods)
-ea.app               # → raw App COM object
-```
-
-### SQL queries
-```python
-rows = ea.sql("SELECT Name, Object_Type FROM t_object WHERE Object_Type = 'Class'")
-# Returns: list of dicts, e.g. [{"Name": "MyApp", "Object_Type": "Class"}, ...]
-
-ea.execute("UPDATE t_object SET Status = 'Approved' WHERE ea_guid = '{...}'")
-# Returns: bool
-```
-
-EA returns SQL results as XML (`<EADATA><Dataset_0><Data><Row .../></Data>...`). The `sql()` helper parses that into a list of row dicts automatically.
-
-**Useful tables:**
-| Table | Contents |
-|-------|----------|
-| `t_object` | Elements (Class, Component, etc.) |
-| `t_connector` | Relationships between elements |
-| `t_diagram` | Diagrams |
-| `t_package` | Packages |
-| `t_attribute` | Attributes on elements |
-| `t_operation` | Operations/methods on elements |
-| `t_objectproperties` | Tagged values |
-| `t_xref` | Cross-references (stereotypes, constraints) |
-
-### Technology / MDG
-```python
-ea.is_technology_loaded("WBA")      # bool — is the MDG loaded?
-ea.is_technology_enabled("WBA")     # bool — is it enabled for this project?
-ea.technology_version("WBA")        # str — e.g. "1.0"
-ea.activate_technology("WBA")       # bool — enable/toggle
-ea.delete_technology("WBA")         # bool — marks for removal (takes effect after restart)
-ea.repo.ImportTechnology(xml_str)   # bool — embed MDG XML into model (model-embedded deploy)
-```
-
-**Note:** `GetTechnologyList()` does NOT exist in EA 17.0. Use `IsTechnologyLoaded()` per tech ID.
-
-### Element/package navigation
-```python
-elem = ea.get_element_by_guid("{GUID-HERE}")
-pkg  = ea.get_package_by_guid("{GUID-HERE}")
-ea.refresh()   # RefreshModelView(0) — refreshes the browser tree
-```
-
-### Lifecycle
-```python
-ea.save()           # SaveAllDiagrams()
-ea.shutdown()       # ShutdownEA() — graceful close
-ea2 = ea.close_and_reopen()   # save + shutdown + relaunch + reconnect, returns new EA instance
-```
-
-### Introspection (useful when exploring undocumented API)
-```python
-ea.repo_methods()   # list all public methods/properties on the Repository COM object
-# Filter example:
-tech_methods = [m for m in ea.repo_methods() if any(k in m for k in ("Tech", "MDG", "Import"))]
-```
-
----
-
-## Critical API Correction — GetElementsByQuery vs GetElementSet
-
-**`Repository.GetElementsByQuery` does NOT run raw SQL.** Passing a SQL string to it silently returns an empty collection — no error, no warning.
+`GetActiveObject("EA.App")` attaches to the currently running EA instance — it does
+not launch EA. It fails if EA is not running or no project is open, raising
+`pywintypes.com_error`. Wrap it in a retry loop for scripts that might race EA's
+startup (for example, right after the restart pattern in
+[`references/technology-and-lifecycle.md`](references/technology-and-lifecycle.md)):
 
 ```python
-# WRONG — silently returns empty collection
-elements = ea.repo.GetElementsByQuery(
-    "SELECT Object_ID FROM t_object WHERE Stereotype = 'Application'", "")
+import time
+import pywintypes
+import win32com.client
 
-# CORRECT — use GetElementSet with type parameter 2 (SQL against t_object)
-elements = ea.repo.GetElementSet(
-    "SELECT Object_ID FROM t_object WHERE Stereotype = 'Application'", 2)
+def connect(retries=3, delay=2.0):
+    last_err = None
+    for attempt in range(retries):
+        try:
+            return win32com.client.GetActiveObject("EA.App").Repository
+        except pywintypes.com_error as e:
+            last_err = e
+            if attempt < retries - 1:
+                time.sleep(delay)
+    raise RuntimeError(f"Could not connect to EA after {retries} attempts: {last_err}")
+
+repo = connect()                       # default: 3 retries, 2s delay
+repo = connect(retries=10, delay=3.0)  # for post-restart reconnect
 ```
 
-`GetElementsByQuery(queryName, searchTerm)` runs a **named model search** — the first argument is the name of a saved Search, not a SQL string. It will silently return 0 results if that search name doesn't exist.
+Verified live: both forms return the connected `Repository`, and
+`repo.ConnectionString` reads back the open project's path.
 
-`GetElementSet(sql, type)` where `type=2` means "SQL query against `t_object`" — this is the correct call for bulk element retrieval by SQL.
+## SQL access — sql()/execute() helpers and the GetElementSet trap
 
----
+Build a small `sql()` helper once per script — `Repository.SQLQuery()` returns XML,
+not rows. Full helper code, the `t_object`/`t_objectproperties`/etc. table reference,
+and the `execute()` / bulk-update pattern are in
+[`references/connecting-and-queries.md`](references/connecting-and-queries.md).
 
-## EA Restart Pattern
-
-Required after deploying an MDG, calling `DeleteTechnology`, or any operation that needs a fresh session:
+The one trap to know before writing anything: **`Repository.GetElementsByQuery` does
+not run SQL.** It runs a *named model search* — the first argument must be the name
+of a saved Search, not a SQL string. Passing SQL to it raises
+`com_error(..., 'Search Not Found', ...)` under a live (late-bound) connection.
 
 ```python
-from ea_com import EA
-import subprocess, time
+# WRONG — GetElementsByQuery's first arg is a saved-search name, not SQL
+repo.GetElementsByQuery("SELECT Object_ID FROM t_object WHERE Stereotype='WBABusinessApplication'", "")
+# -> raises com_error: 'Search Not Found'
 
-ea = EA()
-ea.connect()
-path = ea.project_path
-
-ea.save()
-time.sleep(0.5)
-ea.shutdown()
-time.sleep(8)   # wait for process to fully exit
-
-subprocess.Popen([r"C:\Program Files\Sparx Systems\EA\EA.exe", path])
-time.sleep(12)  # wait for EA to open and be ready for COM
-
-new_ea = EA()
-new_ea.connect(retries=10, delay=3.0)
-```
-
-Or use the convenience wrapper:
-```python
-new_ea = ea.close_and_reopen(wait=6.0)
-```
-
----
-
-## Post-Action UI Check (Model-Mutating COM Calls)
-
-EA COM calls that modify the model can raise blocking modal dialogs. The COM thread hangs
-until the dialog is dismissed. Always take a screenshot after any model-mutating call.
-
-**Operations that require a post-call screenshot:**
-- `repo.ImportTechnology()` — "Profile already exists. Overwrite?"
-- `repo.Execute()` with DML — SQL error dialogs
-- `repo.OpenFile()` / `repo.CloseFile()` — save-changes prompts
-- MDG re-import after any profile change
-
-**Pattern:**
-```python
-# 1. Execute the COM call
-ok = repo.ImportTechnology(xml_str)
-
-# 2. Immediately take a screenshot and wait for dialogs to appear
-# (use computer use: take_screenshot(), wait 3s, take_screenshot() again)
-
-# 3. Dismiss any dialog visible in the screenshot before proceeding
-
-# 4. Verify the result
-print(f"IsTechnologyLoaded: {repo.IsTechnologyLoaded('WBA')}")
-```
-
----
-
-## Running the Module Directly
-
-`ea_com.py` has a built-in smoke test:
-
-```bash
-python ea_com.py            # check mode: print project path, WBA tech status, sample elements
-python ea_com.py restart    # restart mode: save + restart EA + reconnect + print tech status
-```
-
----
-
-## COM Object Hierarchy
-
-```
-EA.App
-└── Repository
-    ├── Models[]             # root packages
-    │   └── Packages[]
-    │       ├── Elements[]
-    │       │   ├── Attributes[]
-    │       │   ├── Operations[]
-    │       │   └── TaggedValues[]
-    │       └── Diagrams[]
-    ├── SQLQuery(sql)        # raw XML result
-    ├── Execute(sql)         # non-SELECT
-    ├── ImportTechnology(xml)
-    ├── IsTechnologyLoaded(id)
-    ├── IsTechnologyEnabled(id)
-    ├── GetTechnologyVersion(id)
-    ├── ActivateTechnology(id)
-    ├── DeleteTechnology(id)
-    ├── GetElementSet(sql, 2)     # ← correct bulk element retrieval
-    ├── GetElementByGuid(guid)
-    ├── GetPackageByGuid(guid)
-    ├── RefreshModelView(0)
-    ├── SaveAllDiagrams()
-    └── ShutdownEA()
-```
-
----
-
-## Common Patterns
-
-### Find all elements of a stereotype
-```python
-# Via SQL helper (recommended — returns parsed list of dicts)
-rows = ea.sql("""
-    SELECT o.ea_guid, o.Name, o.Stereotype
-    FROM t_object o
-    WHERE o.Stereotype = 'Application'
-""")
-
-# Via COM GetElementSet (returns EA.Collection for iteration)
-elements = ea.repo.GetElementSet(
-    "SELECT Object_ID FROM t_object WHERE Stereotype = 'Application'", 2)
+# CORRECT — GetElementSet(sql, 2): type 2 means "SQL query against t_object"
+elements = repo.GetElementSet(
+    "SELECT Object_ID FROM t_object WHERE Stereotype = 'WBABusinessApplication'", 2)
 for elem in elements:
     print(elem.Name, elem.Stereotype)
 ```
 
-### Read tagged values for an element
-```python
-rows = ea.sql("""
-    SELECT p.Property, p.Value
-    FROM t_objectproperties p
-    WHERE p.Object_ID = (
-        SELECT Object_ID FROM t_object WHERE ea_guid = '{YOUR-GUID}'
-    )
-""")
-```
+Verified live against the Westbrook Bank demo model: `GetElementsByQuery` raised the
+`com_error` above; `GetElementSet(sql, 2)` returned all 45 matching elements,
+iterable with `.Name` / `.Stereotype`.
 
-### Set a tagged value via COM
-```python
-# Via the element's TaggedValues collection (preferred for live EA session)
-for tag in element.TaggedValues:
-    if tag.Name == "status":
-        tag.Value = "Retiring"
-        tag.Update()
-```
+## Another live trap: malformed SQL blocks on a modal dialog, not a Python exception
 
-### ⚠ `elem.Type` Setter — Silent Failure for ArchiMate Types
+A `SQLQuery()` call against a table or column that doesn't exist does **not** raise
+in Python and does **not** return an empty result immediately — EA raises a blocking
+"SQL API Open FAILED" dialog first, and the call only returns (as an error XML
+payload, not a Python exception) once a human dismisses it. An unattended script
+hangs here. Verified live — details and the exact dialog text in
+[`references/connecting-and-queries.md`](references/connecting-and-queries.md).
+This is the same failure mode `latency.md` calls "any COM call that may trigger a
+dialog"; it applies to read-only `SQLQuery()`, not just DML.
 
-Setting `elem.Type` via the COM setter silently does nothing for elements stored as
-ArchiMate base types (`BusinessActor`, `BusinessProcess`, `ApplicationComponent`, etc.):
+## Technology / MDG checks
 
 ```python
-# WRONG — silently ignored for ArchiMate-typed elements
-elem.Type = "Class"
-elem.Update()
-# elem.Type still reads "Class" via COM (cached), but t_object still has "BusinessActor"
+repo.IsTechnologyLoaded("WBA")      # bool — is the MDG loaded?
+repo.IsTechnologyEnabled("WBA")     # bool — is it enabled for this project?
+repo.GetTechnologyVersion("WBA")    # str — e.g. "1.0"
 ```
 
-The correct fix is `repo.Execute()` DML directly against the database:
+Verified live: all three returned correctly for the `WBA` technology.
+`repo.GetTechnologyList` does **not** exist in EA 17 — it raises `AttributeError`
+(verified live). Check technologies one ID at a time with `IsTechnologyLoaded`.
+Mutating calls (`ActivateTechnology`, `DeleteTechnology`, `ImportTechnology`) are
+deploy operations, not checks — see
+[`references/technology-and-lifecycle.md`](references/technology-and-lifecycle.md)
+and the `ea-mdg-deploy` skill.
 
-```python
-# CORRECT — directly updates the stored Object_Type
-repo.Execute(
-    "UPDATE t_object SET Object_Type='Class' "
-    "WHERE Object_Type='BusinessActor' "
-    "AND Stereotype IN ('Employee','Department')"
-)
-# Then close and reopen the project to flush EA's in-memory cache
-```
+## Mutating elements and tagged values
 
-### Set a tagged value via SQL (bulk update)
-```python
-ea.execute("""
-    UPDATE t_objectproperties
-    SET Value = 'RiskTeam'
-    WHERE Object_ID = 42 AND Property = 'businessOwner'
-""")
-```
+Create/update elements through the package's `Elements` collection, and set tagged
+values by updating an **existing** row in `elem.TaggedValues`, not by blindly calling
+`AddNew` — a stereotype's tags already exist as placeholder rows, and `AddNew`
+creates a duplicate instead of overwriting one (a real trap, found and verified while
+writing this skill). Worked, verified examples — including the correct update
+pattern, the `AddNew` duplicate-row trap, and the bulk-SQL-update alternative — are in
+[`references/mutating-elements.md`](references/mutating-elements.md).
 
----
+## EA lifecycle: save, restart, and the post-mutation UI check
 
-## SQLite Schema Notes (EA 17 — Verified)
+`repo.SaveAllDiagrams()` and `repo.RefreshModelView(0)` both return `None` on success
+(verified live) — they are fire-and-forget; verify results with a `sql()` read-back,
+not the return value.
 
-### MDG stereotypes are NOT in t_stereotype
+Restarting EA is required after deploying an MDG, calling `DeleteTechnology`, or any
+change that needs a fresh session. **This is the one procedure in this skill that was
+not executed against the live model** — the verification pass for this skill was run
+against a live, in-use EA session that had to stay open and unchanged, so the full
+save/shutdown/relaunch/reconnect sequence was documented but not run end-to-end.
+`repo.ShutdownEA` was confirmed to resolve to a real bound method without invoking
+it. Full sequence, plus the post-mutation/post-query UI check pattern (take a
+screenshot, expect "(Not Responding)" during long operations, never retry blind) in
+[`references/technology-and-lifecycle.md`](references/technology-and-lifecycle.md).
 
-`t_stereotype` is populated only for model-level (non-MDG) stereotypes. For MDG-defined stereotypes, always query `t_object`:
-
-```sql
--- CORRECT — MDG stereotypes
-SELECT Object_ID, Name, Stereotype, Object_Type
-FROM t_object
-WHERE Stereotype IS NOT NULL AND Stereotype != '';
-
--- t_stereotype is empty for MDG-only models
--- SELECT COUNT(*) FROM t_stereotype → returns 0
-```
-
-### t_attribute column names
-
-The attribute default value column is `Default` (not `Default_Value`):
-
-```sql
--- CORRECT
-SELECT a.Name, a.[Default], a.Type
-FROM t_attribute a
-WHERE a.Object_ID = <element_id>;
-
--- WRONG — column does not exist
--- SELECT a.Default_Value FROM t_attribute ...
-```
-
-`[Default]` requires bracket quoting because `DEFAULT` is a SQL reserved word in SQLite.
-
-### Tagged values
-```sql
-SELECT tv.Object_ID, tv.Property, tv.Value
-FROM t_objectproperties tv
-WHERE tv.Object_ID = <element_id>;
-```
-
----
+For any COM call that drives visible EA UI state — restart, MDG import, a DML call
+that might pop a dialog — follow the wait-then-screenshot timing in
+[`../_shared/references/latency.md`](../_shared/references/latency.md).
 
 ## Dependencies
 
 - `pywin32`: `pip install pywin32`
 - EA must be running with a project open
-- Works on Windows only (COM is Windows-only)
+- Windows only (COM is Windows-only)
 
----
+## Reference files
 
-## EA Computer Use — Latency Guidelines
-
-When combining COM calls with computer use (screenshots, clicks):
-
-| Operation | Wait before screenshot |
-|-----------|----------------------|
-| Any COM call that triggers a dialog | 3–5 seconds |
-| `repo.OpenFile()` / `repo.CloseFile()` | 8–15 seconds |
-| `repo.ImportTechnology()` | 3–8 seconds |
-| `repo.Execute()` DML | 1–3 seconds |
-
-> **"(Not Responding)"** in the EA title bar is normal during file and import operations.
-> Wait the full interval and screenshot again before treating it as a failure.
-> Never retry a COM call without confirming the previous call actually failed.
-
----
-
-## Troubleshooting
-
-| Error | Cause | Fix |
-|-------|-------|-----|
-| `Could not connect to EA` | EA not running, or no project open | Launch EA, open project, retry |
-| `AttributeError: GetTechnologyList` | Method doesn't exist in EA 17 | Use `IsTechnologyLoaded(id)` per tech |
-| `ImportTechnology` returns False | XML error or EA showed a dialog | Check EA for modal dialog; validate XML; check ID lengths ≤ 12 chars |
-| `GetElementsByQuery` returns empty | Raw SQL passed — wrong method | Use `GetElementSet(sql, 2)` instead |
-| COM call succeeds but change not visible | Needs EA restart or `refresh()` | Call `ea.refresh()` or restart EA |
-| `pywintypes.com_error: -2147221246` | EA closed while COM ref was held | Reconnect: `ea.connect()` |
-| SQL error on `t_attribute.Default_Value` | Column doesn't exist | Use `a.[Default]` (bracket-quoted) |
+- [`references/connecting-and-queries.md`](references/connecting-and-queries.md) —
+  full `sql()`/`execute()` helpers, the SQLite schema notes (including the
+  malformed-SQL dialog trap), the useful-tables reference, and common query patterns.
+- [`references/mutating-elements.md`](references/mutating-elements.md) — creating
+  elements, the tagged-value update pattern and the `AddNew` duplicate-row trap, and
+  the bulk-SQL-update alternative.
+- [`references/technology-and-lifecycle.md`](references/technology-and-lifecycle.md) —
+  the COM object hierarchy, the restart pattern, the post-mutation UI check, and the
+  full troubleshooting table.
+- [`../_shared/references/latency.md`](../_shared/references/latency.md) — shared
+  wait-time guidance for any COM call that can raise a blocking EA dialog.

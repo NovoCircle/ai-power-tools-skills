@@ -4,32 +4,94 @@ Canonical, version-controlled set of Claude skills for **[AI Power Tools
 for Sparx EA](https://github.com/NovoCircle/ai-power-tools-releases)** —
 the MCP server that drives Sparx Systems Enterprise Architect via COM.
 
+This library covers **Sparx Enterprise Architect only**. AI Power Tools for Microsoft Visio has
+its own separate skills library, with its own repository, manifest, installer and release
+cadence. Nothing is shared between them, and no Visio skill is ever installed from here.
+
 ## How to install
 
-If you have AI Power Tools for Sparx EA v1.0.0 or later installed in Claude Desktop:
+If you have AI Power Tools for Sparx EA installed:
 
 > *"Install the AI Power Tools skills."*
 
-Claude will call the `install_skills` MCP tool, which fetches this
-bundle from `releases/latest` and copies the skills to your skill
-directory. Re-running the tool later picks up newer skill versions.
+Claude calls the `install_skills` MCP tool, which fetches this bundle from `releases/latest` and
+copies the skills into `~/.claude/skills`. Re-run it any time to pick up newer versions;
+unchanged files are skipped.
 
-For 0.5.x and earlier, skills were bundled inside the `.mcpb` package;
-this repo is for the fetch-on-demand flow introduced in 0.6.0 and
-stabilized in 1.0.
+**Bundle 2.0.0 requires server 2.2.0 or later.** Several skills document operations that are
+broken or absent in earlier servers, so installing 2.0.0 against an older server is refused
+per-skill rather than silently producing guidance that does not work.
+
+### Upgrading from 1.4.1 or earlier
+
+Two things changed that affect an existing installation.
+
+**Skills now install to `~/.claude/skills`.** Earlier versions defaulted to
+`%APPDATA%\Claude\skills`, which no Claude surface actually reads — installs reported success and
+the skills never loaded. If you installed skills before 2.2.0 they are probably sitting there
+unused. After upgrading the server, ask Claude to:
+
+> *"Prune the legacy AI Power Tools skills."*
+
+That reports what it would remove; confirm to apply. It only removes directories it can prove
+came from this product, and backs up anything you edited.
+
+**Two skills were renamed.** `ea-mcp-modeling` → `ea-modeling`, and `ea-mcp-validation` →
+`ea-validation`. `ea-mcp-quicklinker` was withdrawn. Without pruning you will have both the old
+and new copies installed, giving contradictory guidance on the same subject — so prune as part of
+upgrading, not later.
 
 ## What's in the bundle
 
+Start with **`ea-start-here`**. It runs a short session preflight and routes to the right skill,
+which is quicker than choosing from the list below.
+
+### Core
+
 | Skill | Purpose |
 |---|---|
-| `ea-com` | EA COM API automation patterns from Python |
-| `ea-mcp-modeling` | Build EA models via the MCP server — phases, defects, verification |
-| `ea-navigation-diagrams` | Build click-through "navigation diagrams" over hierarchical data — composite elements, nested-container layout, verification |
-| `ea-mdg-author` | Author MDG Technology XML files — stereotypes, tagged values, toolbox, Quick Linker rules, validation sidecars |
-| `ea-mdg-model-build` | Build an MDG Technology from a source model inside a repository — profile packages, reference data, export/build/deploy |
-| `ea-mdg-deploy` | Deploy and test an EA MDG Technology |
-| `ea-mcp-validation` | Author `validate_model` YAML rule sidecars |
-| `ea-diagnostic` | Generate a structured diagnostic report for submission to help@novocircle.com |
+| `ea-start-here` | Entry point — session preflight, then routing to the right skill |
+| `ea-modeling` | Build EA models via the MCP server — build order, defects, verification |
+| `ea-navigation-diagrams` | Click-through "navigation diagrams" over hierarchical data |
+| `ea-diagnostic` | Produce a structured diagnostic report for support |
+
+### MDG technologies
+
+| Skill | Purpose |
+|---|---|
+| `ea-mdg-assess` | Work out what language situation a repository is actually in, before acting |
+| `ea-mdg-author` | Author MDG Technology XML — stereotypes, tagged values, toolboxes, Quick Linker |
+| `ea-mdg-model-build` | Build an MDG from a profile model that already exists in a repository |
+| `ea-mdg-deploy` | Deploy an MDG and prove it works |
+
+### Quality
+
+| Skill | Purpose |
+|---|---|
+| `ea-validation` | Author and run `validate_model` YAML conformance rulesets |
+| `ea-ruleset-author` | Build a complete ruleset for a modelling language from scratch |
+| `ea-model-hygiene` | Find and fix model decay — orphans, inconsistent usage, safe deletion |
+
+### Lifecycle and reporting
+
+| Skill | Purpose |
+|---|---|
+| `ea-change-management` | Baselines and change history — what changed, when, by whom |
+| `ea-import-export` | XMI interchange, document generation, diagram export to image/SVG/Visio |
+| `ea-stakeholder-reporting` | Portfolio roll-ups and business-language output for non-modellers |
+
+### Developer
+
+| Skill | Purpose |
+|---|---|
+| `ea-com` | Drive EA from Python via the COM API rather than through MCP |
+
+### Shared references
+
+`_shared/references/` installs alongside the skills and is linked from them. It holds the
+canonical Westbrook Bank example specification, the generated list of every server operation,
+and shared guidance on EA latency and file encoding. It contains no `SKILL.md` and does not load
+as a skill.
 
 ## Manifest
 
@@ -97,6 +159,14 @@ description: One sentence describing when Claude should invoke this skill.
 Keep the description tight and trigger-oriented — Claude uses it to
 decide whether to invoke the skill. After adding files, regenerate
 `manifest.json` and follow the release process above.
+
+### Customer names
+
+Never put a real customer's name, model name, MDG id, stereotype prefix, project
+code, or employee name into a skill. Convert every example to Westbrook Bank;
+read `_shared/references/westbrook-example.md` before writing a new example
+instead of inventing a parallel one. `tools/gate.py` fails the build on
+real-customer strings — run it before any release.
 
 ## Contributing
 

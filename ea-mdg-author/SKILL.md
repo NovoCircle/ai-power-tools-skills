@@ -53,286 +53,75 @@ When automating MDG work, pick the right tool tier:
 
 ---
 
-## Canonical EA 17 File Structure
+## Authoring workflow
 
-```xml
-<?xml version="1.0" encoding="utf-8"?>
-<MDG.Technology version="1.0" id="WBA" name="Westbrook Bank Architecture">
+An MDG Technology XML file has three parallel sections wrapped in one `<MDG.Technology>` root: a
+UML Profile (element and connector stereotypes with their tagged values), a Diagram Profile
+(custom diagram types), and one or more UIToolboxes (the palette pages EA shows for each diagram
+type). All three share the same `<UMLProfile profiletype="uml2">` wrapper, and the technology's
+`id=` must match everywhere it is referenced — that single mismatch is the most common reason a
+toolbox fails to resolve.
 
-  <Documentation id="WBA" name="Westbrook Bank Architecture" version="1.0"
-                 notes="Description shown in Manage Technologies dialog."
-                 filename="" date="2026-01-01"/>
+The full skeleton, with the three sections annotated, is in
+[references/xml-skeleton.md](references/xml-skeleton.md) (also covers file-encoding rules).
 
-  <!-- SECTION 1: UML Profile — element/connector stereotypes + tagged values -->
-  <UMLProfiles>
-    <UMLProfile profiletype="uml2">
-      <Documentation id="WBA"
-                     name="WBADomainProfile"
-                     version="1.0"
-                     alias="WBA Profile"
-                     notes="Stereotype definitions"/>
-      <Content>
-        <Stereotypes>
-          <!-- stereotypes go here -->
-        </Stereotypes>
-        <TaggedValueTypes/>
-      </Content>
-    </UMLProfile>
-  </UMLProfiles>
+Build in this order:
 
-  <!-- SECTION 2: Diagram Profile — custom diagram types -->
-  <DiagramProfile>
-    <UMLProfile profiletype="uml2">
-      <Documentation id="WBA-Diag" name="WBADiagrams" version="1.0"
-                     alias="WBA Diagrams" notes="Custom diagram types"/>
-      <Content>
-        <Stereotypes>
-          <!-- diagram stereotypes go here -->
-        </Stereotypes>
-        <TaggedValueTypes/>
-      </Content>
-    </UMLProfile>
-  </DiagramProfile>
+1. **Element stereotypes** — one `<Stereotype>` per concept, applied to a UML base type.
+2. **Connector stereotypes** — only if the technology needs its own relationship semantics.
+3. **Custom diagram types** — bind each to a toolbox page by exact name.
+4. **Toolbox pages** — the palette items EA shows for each diagram type.
+5. **Quick Linker rules** (optional) — hover-menu connector creation, if you added connector stereotypes.
+6. **Companion validation sidecar** — a `<tech_id>_rules.yaml`, never `<Scripts>` (MCP can't reach EA's script engine).
+7. **Deploy and verify** — hand off to `ea-mdg-deploy`.
 
-  <!-- SECTION 3: Toolboxes — palette pages shown in EA toolbox panel -->
-  <UIToolboxes>
-    <UMLProfile profiletype="uml2">
-      <Documentation id="WBA-TB" name="WBA Elements" version="1.0"
-                     notes="WBA element palette"/>
-      <Content>
-        <Stereotypes>
-          <!-- toolbox page stereotypes go here -->
-        </Stereotypes>
-        <TaggedValueTypes/>
-      </Content>
-    </UMLProfile>
-  </UIToolboxes>
+### Section 1 — Element Stereotype
 
-</MDG.Technology>
-```
+Each element stereotype wraps a UML base type (`Class`, `Component`, `Activity`, ...) and carries
+its tagged values. The real `WBABusinessApplication` stereotype — full XML, the attribute rules,
+and the tagged-value `type=` table — is in
+[references/stereotypes.md](references/stereotypes.md).
 
-**Critical rules:**
-- `<MDG.Technology id="WBA">` and `<Documentation id="WBA">` must match exactly — this is the tech ID used in COM API calls
-- The UMLProfile `<Documentation id="WBA">` must also match the technology id for toolbox `WBA::StereotypeName` namespace resolution to work
-- All three sections use the same `<UMLProfile profiletype="uml2">` wrapper
+**Pitfall — wrong base type hides elements in the Project Browser.** `<Apply type="...">` sets
+`t_object.Object_Type`. Using an ArchiMate or BPMN shape name (e.g. `BusinessActor`) as the base
+type when that MDG isn't active at project scope makes elements invisible in the Project Browser
+tree, even though they still appear on diagrams and in SQL. For a standalone custom MDG, always
+base on a standard UML type (`Class`, `Component`, etc.) and carry the ArchiMate concept through
+the stereotype name and tagged values instead. The full safe/dangerous base-type lists and the
+`repo.Execute()` DML fix for elements already stored wrong are in
+[references/stereotypes.md](references/stereotypes.md#base-type-and-project-browser-visibility).
 
----
+### Section 1 — Connector Stereotype
 
-## Section 1 — Element Stereotype
+**The shipped WBA technology defines no connector stereotypes.** For relationships between WBA
+elements, use a plain UML connector type with no stereotype (`Dependency`, `Realization`,
+`Association`, `Aggregation`). [references/stereotypes.md](references/stereotypes.md) shows how
+you *would* add one — the example is a `WBARunsOn` connector labelled **PROPOSED EXTENSION — not
+part of the shipped WBA technology**, kept only to teach the pattern.
 
-```xml
-<Stereotype name="Application"
-            alias="Application"
-            metatype="Application"
-            notes="A business or IT application in the portfolio."
-            isAbstract="false"
-            bgcolor="15782580"
-            fontcolor="-1"
-            bordercolor="-1"
-            borderWidth="-1"
-            cx="130" cy="70">
-  <AppliesTo>
-    <Apply type="Class"/>
-  </AppliesTo>
-  <TaggedValues>
-    <Tag name="owner" type="String"
-         description="Business owner name or team"
-         default="" unit="" values=""/>
-    <Tag name="status" type="enumeration"
-         description="Lifecycle phase"
-         default="Active" unit=""
-         values="Active,Retiring,Retired,Planned"/>
-    <Tag name="criticality" type="enumeration"
-         description="Business impact classification"
-         default="Standard" unit=""
-         values="Mission Critical,Business Critical,Standard"/>
-    <Tag name="hostingModel" type="enumeration"
-         description="Deployment model"
-         default="On-Premise" unit=""
-         values="On-Premise,SaaS,Hybrid"/>
-  </TaggedValues>
-</Stereotype>
-```
+### Section 2 — Custom Diagram Type
 
-**Attribute rules:**
-- `name=` — the stereotype identifier used in `WBA::Application` toolbox references
-- `alias=` — display label shown in EA UI (can differ from name)
-- `metatype=` — used in EA's element type display; set to same as `name` unless you have a reason to differ
-- `bgcolor=` — COLORREF integer (see colour table below); `-1` = use EA theme default
-- `cx` / `cy` — default element width/height in pixels on diagram canvas
-- `Apply type=` options: `Class`, `Component`, `Node`, `Package`, `Interface`, `Dependency`, `Association`, `Realization`, etc.
+A diagram stereotype uses `Apply type="Diagram_Logical"` and points at a toolbox page by its
+*exact* name via a `toolbox` property. The full XML and rules are in
+[references/diagrams-toolboxes.md](references/diagrams-toolboxes.md).
 
-**Tagged value `type=` options (verified EA 17):**
+**Pitfall — toolbox binding is a literal string match, not a namespace lookup.** The shipped
+Westbrook demo MDG gets this wrong: its diagram profile points its `toolbox` property at
+`WBA::WBA ArchiMate`, but no toolbox page is named that — the real page is `WBA ArchiMate
+Elements`. Because the two strings don't match, the demo's custom diagrams never bind to their
+toolbox. Treat that as a pitfall to avoid, not a pattern to copy — the `toolbox` value must equal
+the toolbox page's `Stereotype name=` exactly.
 
-| type= value | EA display | Notes |
-|-------------|------------|-------|
-| `String` | Text field | Free text |
-| `enumeration` | Dropdown | Comma-separated `values=` attribute |
-| `Boolean` | Checkbox | `default="true"` or `"false"` |
-| `Date` | Date picker | |
-| `memo` | Multi-line | Long text |
-| `RefGUID` | GUID picker | Link to another element |
-| `url` | URL field | |
-| `file` | File picker | |
-| `Integer` | Numeric | |
+### Section 3 — Toolbox Pages
 
-> **Common mistake:** using `enum` or `Enumeration` — the correct value is `enumeration` (lowercase, full word).
+One `<Stereotype>` per page, `Apply type="ToolboxPage"`, one `<Tag>` per palette item in the
+format `<YourTechID>::StereotypeName`. The real WBA technology ships three pages: `WBA ArchiMate
+Elements`, `WBA BPMN Elements`, `WBA UML Elements`. Full XML (including how a connector toolbox
+page would be wired up) is in
+[references/diagrams-toolboxes.md](references/diagrams-toolboxes.md).
 
-### ⚠ Base Type and Project Browser Visibility
-
-`<Apply type="..."/>` controls what `t_object.Object_Type` EA stores for elements of this
-stereotype. The value must be a **standard UML type** that EA's Project Browser natively renders
-— otherwise elements will be invisible in the browser tree even though they appear on diagram
-canvases and are accessible via SQL.
-
-**Safe base types (Project Browser renders them natively):**
-`Class`, `Component`, `Node`, `Package`, `Interface`, `Actor`, `UseCase`, `Activity`,
-`Artifact`, `Boundary`, `Collaboration`, `DataStore`, `Decision`
-
-**Dangerous base types — only use if the corresponding MDG is active at project scope:**
-
-| `Apply type=` | Requires |
-|---|---|
-| `BusinessActor`, `BusinessProcess`, etc. | ArchiMate3 MDG active at project scope |
-| `ApplicationComponent`, `ApplicationService`, etc. | ArchiMate3 MDG active at project scope |
-| Anything starting with a BPMN shape name | BPMN MDG active at project scope |
-
-> **Rule:** If you are building a standalone custom MDG that does not require ArchiMate3 or
-> another extended MDG, always use `<Apply type="Class">` (or another standard UML type) as the
-> base. The ArchiMate conceptual alignment is conveyed through the stereotype name, tagged values,
-> and documentation — not the base type. Using `BusinessActor` as the base type when ArchiMate3
-> is not project-loaded causes elements to be invisible in the Project Browser.
-
-**If elements are already stored with the wrong base type**, the COM setter (`elem.Type = "Class"`)
-silently ignores the change for ArchiMate-typed elements. Use `repo.Execute()` DML directly:
-
-```python
-repo.Execute(
-    "UPDATE t_object SET Object_Type='Component' "
-    "WHERE Stereotype IN ('WBABusinessApplication','WBAVendorSystem') "
-    "AND Object_Type <> 'Component'"
-)
-```
-Then close and reopen the project to flush EA's in-memory cache.
-
----
-
-## Section 1 — Connector Stereotype
-
-```xml
-<Stereotype name="RunsOn"
-            alias="Runs On"
-            notes="Application runs on Technology Platform."
-            isAbstract="false"
-            bgcolor="-1" fontcolor="-1" bordercolor="-1"
-            borderWidth="-1" cx="90" cy="70">
-  <AppliesTo>
-    <Apply type="Dependency"/>
-  </AppliesTo>
-  <TaggedValues>
-    <Tag name="integrationPattern" type="enumeration"
-         description="Integration pattern"
-         default="Synchronous" unit=""
-         values="Synchronous,Asynchronous,Batch"/>
-  </TaggedValues>
-</Stereotype>
-```
-
-Connector `Apply type=` options: `Dependency`, `Association`, `Realization`, `Aggregation`, `Composition`, `InformationFlow`, `Sequence`
-
----
-
-## Section 2 — Custom Diagram Type
-
-```xml
-<Stereotype name="WBAPortfolioView"
-            alias="WBA Portfolio View"
-            notes="Application portfolio architecture diagram."
-            cx="90" cy="70"
-            bgcolor="-1" fontcolor="-1" bordercolor="-1" borderWidth="-1">
-  <AppliesTo>
-    <Apply type="Diagram_Logical">
-      <Property name="alias"     value="WBA Portfolio View"/>
-      <Property name="diagramID" value="WBA-PortView"/>
-      <Property name="toolbox"   value="WBA::WBA Elements"/>
-    </Apply>
-  </AppliesTo>
-</Stereotype>
-```
-
-**Rules:**
-- `Apply type="Diagram_Logical"` — the correct value for EA 17 custom diagrams (NOT `"Logical"`)
-- `Property name="toolbox"` — links to a toolbox page; format `<YourTechID>::PageName` where `PageName` matches the `<Stereotype name="...">` in UIToolboxes exactly
-- `Property name="alias"` — the display name shown in the New Diagram dialog
-- EA 17.0 shows the stereotype `name` (e.g., "WBAPortfolioView") in the Model Builder/New Diagram dialog, NOT the `alias` attribute
-
----
-
-## Section 3 — Toolbox Pages
-
-```xml
-<!-- Each toolbox page is one Stereotype with Apply type="ToolboxPage" -->
-<Stereotype name="WBA Elements" notes="">
-  <AppliesTo>
-    <Apply type="ToolboxPage"/>
-  </AppliesTo>
-  <TaggedValues>
-    <!-- Each Tag is one item in the toolbox palette -->
-    <!-- Tag name format: <YourTechID>::StereotypeName -->
-    <!-- Tag default: the display label shown in the palette -->
-    <Tag name="WBA::Application"   type="" description="" unit="" values="" default="Application"/>
-    <Tag name="WBA::TechPlatform"  type="" description="" unit="" values="" default="Tech Platform"/>
-    <Tag name="WBA::BizCapability" type="" description="" unit="" values="" default="Biz Capability"/>
-    <Tag name="WBA::DataDomain"    type="" description="" unit="" values="" default="Data Domain"/>
-  </TaggedValues>
-</Stereotype>
-
-<Stereotype name="WBA Connectors" notes="">
-  <AppliesTo>
-    <Apply type="ToolboxPage"/>
-  </AppliesTo>
-  <TaggedValues>
-    <Tag name="WBA::RunsOn"      type="" description="" unit="" values="" default="Runs On"/>
-    <Tag name="WBA::Realises"    type="" description="" unit="" values="" default="Realises"/>
-    <Tag name="WBA::Integration" type="" description="" unit="" values="" default="Integration"/>
-  </TaggedValues>
-</Stereotype>
-```
-
-**Rules:**
-- The `Stereotype name=` (e.g., `"WBA Elements"`) is the toolbox page name — it must exactly match the `toolbox` Property value in the DiagramProfile
-- The `Tag name=` prefix (`WBA::`) must match the UMLProfile Documentation `id`
-- Multiple pages allowed — one `Stereotype` per page, all inside the same UIToolboxes `<Content>`
-
----
-
-## COLORREF Colour Reference
-
-Formula: `B × 65536 + G × 256 + R`
-
-| Colour | R | G | B | COLORREF |
-|--------|---|---|---|----------|
-| Light blue | 180 | 210 | 240 | **15782580** |
-| Light grey | 221 | 221 | 221 | **14540253** |
-| Light green | 204 | 255 | 204 | **13434828** |
-| Light amber | 255 | 220 | 100 | **6610175** |
-
-Verify any value: `R = val & 0xFF`, `G = (val >> 8) & 0xFF`, `B = (val >> 16) & 0xFF`
-
-> **Common mistake:** the formula is BGR order (not RGB). `12632319 = 0x00C0C0FF = RGB(255,192,192)` = pink, not blue.
-
----
-
-## ID Mapping Pattern
-
-When IDs exceed 12 characters, map them systematically:
-
-| Logical Name | MDG `id=` |
-|---|---|
-| Technology root | `WBA` |
-| UML Profile | `WBA` (same as root — required for namespace) |
-| Diagram Profile | `WBA-Diag` |
-| Toolbox | `WBA-TB` |
+The COLORREF colour formula and the `id=` mapping pattern for names over 12 characters are also in
+that reference file.
 
 ---
 
@@ -343,8 +132,8 @@ Before deploying, verify:
 - [ ] `<MDG.Technology id="WBA">`
 - [ ] `<Documentation id="WBA">` (top-level)
 - [ ] UMLProfile `<Documentation id="WBA">` — **must match technology id**
-- [ ] All toolbox `Tag name=` values: `WBA::Application` etc.
-- [ ] DiagramProfile `Property name="toolbox" value="WBA::WBA Elements"`
+- [ ] All toolbox `Tag name=` values: `WBA::WBABusinessApplication` etc.
+- [ ] DiagramProfile `Property name="toolbox" value="WBA::WBA ArchiMate Elements"`
 - [ ] COM calls: `Repository.IsTechnologyLoaded("WBA")`
 
 ---
@@ -352,263 +141,49 @@ Before deploying, verify:
 ## Post-Install: Applying the MDG to Existing Repository Data
 
 After deploying an MDG, EA does not automatically update existing elements. Ask the user whether
-they want to migrate existing elements to use the new MDG's stereotypes and tagged values.
-
-### Step 1 — Ask
-
-> "The MDG is installed. Would you like to apply it to existing elements in the repository?
-> I can find all elements that match the base type(s) of your stereotypes and offer to update
-> their stereotype and initialise their tagged values."
-
-If yes, proceed with Steps 2–4. If no, stop.
-
-### Step 2 — Identify candidate elements
-
-Use `ea_analyze(operation="execute_sql", ...)` (read-only) to find elements whose `Object_Type` matches the base type(s)
-of your stereotypes and that do not yet have the MDG stereotype set:
-
-```python
-# Example: find all Class elements that aren't already stereotyped as WBA types
-candidates = ea_analyze(operation="execute_sql", params={"sql": """
-    SELECT o.Object_ID, o.Name, o.Object_Type, o.Stereotype, o.Package_ID
-    FROM t_object o
-    WHERE o.Object_Type = 'Class'
-      AND (o.Stereotype IS NULL OR o.Stereotype NOT IN ('WBADataAsset','WBADataEntity','WBAAIModel'))
-    ORDER BY o.Name
-"""})
-```
-
-Present the list to the user and confirm which elements to update before proceeding.
-
-### Step 3 — Update elements
-
-For each confirmed element, use `ea_model(operation="update_element", ...)` to set the stereotype and initial tagged values:
-
-```python
-ea_model(operation="update_element", params={
-    "element_id": obj_id,
-    "properties": {"stereotype": "WBADataAsset"},
-    "tagged_values": {
-        "dataClassification": "",
-        "businessOwner": "",
-        "dataResidency": "",
-    }
-})
-```
-
-> **Do not use `repo.Execute()` DML to set stereotypes** — EA's internal cache won't update.
-> Always use the `update_element` MCP tool for stereotype changes, so EA's runtime state
-> stays consistent.
-
-### Step 4 — Validate
-
-Run the companion YAML sidecar immediately after the migration to find any elements that need
-attention:
-
-```python
-validate_model(rules_path_or_content="WBA_rules.yaml")
-```
-
-Review violations and ask the user to fill in required tagged values before saving.
+they want to migrate existing elements to the new stereotypes and tagged values; if yes, walk
+through: identify candidate elements with a read-only SQL query, present them for confirmation,
+update each via the `update_element` MCP tool (never raw DML — EA's cache won't see it), then
+re-run the validation sidecar to catch anything left incomplete. The full four-step workflow with
+the SQL and Python calls is in
+[references/post-install-migration.md](references/post-install-migration.md).
 
 ---
 
 ## Quick Linker Rules
 
-Quick Linker (QL) is the hover menu EA shows on a diagram element when you pause over it. QL rules
-are embedded in your MDG XML and control which connector types appear in that menu.
+Quick Linker (QL) is the hover menu EA shows on a diagram element, offering context-sensitive
+connector creation. QL rules live in the MDG XML on the *source* stereotype and name a target
+stereotype constraint. Add them only when you've also defined a connector stereotype — a plain,
+un-stereotyped relationship (`Dependency`, `Realization`, `Association`) already appears in EA's
+default QL menu with no extra XML. Setting `_HideUmlLinks` without at least one QL rule produces
+an empty, apparently-broken menu.
 
-### Preferred approach — intermediate metamodel (write_mdg_xml)
-
-When using `write_mdg_xml` to emit your MDG XML, declare QL rules directly on each source
-stereotype in the intermediate metamodel dict:
-
-```python
-{
-  "name": "WBABusinessApplication",
-  "base_metaclass": "Component",
-  "hide_uml_links": True,           # suppress EA's default UML entries
-  "meaning_forwards": "Depends On", # label on the QL menu item
-  "quicklinker_rules": [
-    # Each entry: which connector to create → which target stereotype is allowed
-    {"stereotype": "WBA::dependsOn",   "constraint": "WBA::WBABusinessApplication"},
-    {"stereotype": "WBA::realizes",    "constraint": "WBA::WBABusinessService"},
-    {"stereotype": "WBA::mastersData", "constraint": "WBA::WBADataAsset"},
-  ],
-  # ... other fields
-}
-```
-
-`write_mdg_xml` emits the correct `<stereotypedrelationships>` and `<Apply>` properties
-automatically. The dict above produces:
-
-```xml
-<Stereotype name="WBABusinessApplication" ...>
-  <AppliesTo>
-    <Apply type="Component">
-      <Property name="_HideUmlLinks" value="True"/>
-      <Property name="_MeaningForwards" value="Depends On"/>
-    </Apply>
-  </AppliesTo>
-  ...
-  <stereotypedrelationships>
-    <stereotypedrelationship stereotype="WBA::dependsOn"   constraint="WBA::WBABusinessApplication"/>
-    <stereotypedrelationship stereotype="WBA::realizes"    constraint="WBA::WBABusinessService"/>
-    <stereotypedrelationship stereotype="WBA::mastersData" constraint="WBA::WBADataAsset"/>
-  </stereotypedrelationships>
-</Stereotype>
-```
-
-### Manual XML approach
-
-If writing MDG XML directly, add these two elements to each source stereotype:
-
-```xml
-<Stereotype name="WBABusinessApplication" ...>
-  <AppliesTo>
-    <Apply type="Component">
-      <Property name="_HideUmlLinks" value="True"/>
-      <Property name="_MeaningForwards" value="Depends On"/>
-    </Apply>
-  </AppliesTo>
-  <!-- ... TaggedValues ... -->
-  <stereotypedrelationships>
-    <stereotypedrelationship stereotype="WBA::dependsOn"   constraint="WBA::WBABusinessApplication"/>
-    <stereotypedrelationship stereotype="WBA::realizes"    constraint="WBA::WBABusinessService"/>
-    <stereotypedrelationship stereotype="WBA::mastersData" constraint="WBA::WBADataAsset"/>
-  </stereotypedrelationships>
-</Stereotype>
-```
-
-### Rules
-
-- `stereotype` — connector stereotype EA creates when user picks this menu item. Must be defined
-  as a connector stereotype elsewhere in the same MDG XML.
-- `constraint` — the target element stereotype the menu item is valid for. Format: `<YourTechID>::Name`.
-- **`_HideUmlLinks: True`** — only set this when you have at least one QL rule. An empty hide
-  produces an entirely empty QL menu and looks like a broken feature.
-- **Legacy: Profile Diagram workflow.** Creating QL rules via a Profile Diagram in EA then
-  generating via the MTS Wizard is the old approach. It still works but is not recommended when
-  AI Power Tools is deployed — use the intermediate metamodel or hand-author the XML instead.
-
-### Verifying QL in EA
-
-1. Deploy MDG and restart EA.
-2. Open a diagram, drop a source stereotype element.
-3. Hover for 1–2 seconds — QL arrows appear; clicking shows your connector menu.
-4. If the menu is empty: check `_HideUmlLinks` isn't set without QL rules, and that
-   `constraint` uses the right namespace prefix (`<YourTechID>::StereotypeName`).
-
-> **Computer use note:** the QL hover overlay disappears on focus change. Take a screenshot
-> immediately after the menu appears — do not click elsewhere first.
+The full rule syntax (both the `write_mdg_xml` intermediate-metamodel form and the manual XML
+form), the legacy Profile Diagram / MTS Wizard note, and the EA verification steps are in
+[references/quick-linker.md](references/quick-linker.md).
 
 ---
 
 ## Validation Rules — Do NOT Use `<Scripts>` with AI Power Tools
 
 When AI Power Tools for Sparx EA is deployed, **do not embed validation rules in the MDG's
-`<Scripts>` section**. The `<Scripts>` mechanism runs JavaScript inside EA's scripting engine
-and is not accessible to the MCP server.
-
-```xml
-<!-- WRONG — EA scripting, not accessible to ea_validate tool -->
-<Scripts>
-  <Script name="WBA Conformance Rules" type="Normal" language="JavaScript">
-    <![CDATA[
-    function EA_GetRuleSetList() { return "WBA Conformance"; }
-    function EA_OnRunRule(RuleSetID, RuleID, ObjectType, ObjectID) { ... }
-    ]]>
-  </Script>
-</Scripts>
-```
-
-Instead, create a `<mdg_name>_rules.yaml` sidecar file and run it with `ea_validate`.
-See the `ea-mcp-validation` skill for the sidecar schema.
-
-```yaml
-# westbrook_rules.yaml — run with ea_validate(operation="audit", params={"rules_path_or_content": "..."})
-meta:
-  version: "1.0"
-  mdg_family: WBA
-rules:
-  - id: WBA-TVR-001
-    severity: error
-    selector:
-      type: element
-      stereotypes:
-        any_of: ["WBADataAsset"]
-    condition:
-      type: tagged_value_required
-      tags:
-        - name: dataClassification
-          must_be_non_empty: true
-```
-
-### Creating the companion YAML sidecar
-
-Every MDG produced by this skill must have a companion `<tech_id>_rules.yaml` file. Create it
-as part of the MDG authoring workflow — one `tagged_value_required` rule for each tagged value
-that is marked as mandatory in your MDG design.
-
-Minimal template for a new MDG:
-
-```yaml
-meta:
-  version: "1.0"
-  mdg_family: WBA         # replace with your tech ID
-
-rules:
-  # One block per mandatory tagged value per stereotype.
-  # Rule IDs: <TechID>-TVR-001, -002, ... for tagged-value rules
-  #           <TechID>-CNX-001, -002, ... for connector rules
-
-  - id: WBA-TVR-001
-    severity: error
-    demo_trigger: true    # mark the most critical check for quick smoke-testing
-    selector:
-      type: element
-      stereotypes:
-        any_of: ["WBADataAsset"]
-    condition:
-      type: tagged_value_required
-      tags:
-        - name: dataClassification
-          must_be_non_empty: true
-    remediation:
-      short: Populate the dataClassification tagged value on this WBADataAsset
-
-  # Repeat for each additional mandatory tag / stereotype combination
-```
-
-Run validation after every MDG install to confirm it finds violations on test data:
-```
-ea_validate(operation="audit", params={"rules_path_or_content": "WBA_rules.yaml", "mode": "demo_validation"})
-```
+`<Scripts>` section** — that mechanism runs JavaScript inside EA's scripting engine, which the MCP
+server cannot reach. Instead, every MDG produced by this skill ships a companion
+`<tech_id>_rules.yaml` sidecar and runs it with `ea_validate`; see the `ea-validation` skill
+for the schema. The wrong-vs-right XML/YAML comparison, the minimal rules template, and the
+smoke-test command are in
+[references/validation-sidecar.md](references/validation-sidecar.md).
 
 ---
 
 ## EA Computer Use — Latency Guidelines
 
-MDG authoring primarily uses file tools, but deployment verification and any diagram-based checks require the EA UI.
-
-When any step requires taking a screenshot, clicking in EA, or verifying EA UI state:
-
-| Operation | Wait before screenshot |
-|-----------|----------------------|
-| Any menu click or button in EA UI | 2–5 seconds |
-| Opening a `.qea` project file | 5–15 seconds |
-| Importing or deploying an MDG | 3–8 seconds |
-| Expanding a package in Project Browser | 1–3 seconds |
-| Any COM call that may trigger a dialog | 3–5 seconds |
-
-**Standard pattern:**
-1. Perform the action (click, COM call, MCP tool call that triggers EA UI change)
-2. Wait the appropriate interval above
-3. Take a screenshot to verify the result
-4. If EA shows **"(Not Responding)"**: this is normal during file/import operations — wait another 5 seconds and screenshot again before concluding anything failed
-5. **Never retry an action** without first confirming the previous one failed
-
-> **"(Not Responding)"** in the EA title bar means EA is processing, not crashed. Wait — do not double-click, re-issue the command, or open a second EA instance.
+MDG authoring primarily uses file tools, but deployment verification and any diagram-based
+checks require the EA UI. Wait before screenshotting — 2–15 seconds depending on the operation —
+and never retry without confirming the previous action failed. Full wait-time table and the
+standard action/wait/screenshot pattern:
+[`../_shared/references/latency.md`](../_shared/references/latency.md).
 
 ---
 
@@ -623,26 +198,20 @@ When any step requires taking a screenshot, clicking in EA, or verifying EA UI s
 
 ## File Encoding (Critical)
 
-MDG Technology XML files **must declare and use `utf-8` encoding**. The Claude Code `Write` tool
-always saves files as UTF-8 — the XML declaration must match.
+MDG Technology XML files must declare and use `utf-8` encoding, with the declaration and the
+actual byte encoding agreeing — EA rejects the file outright if they don't. Full guidance
+(legacy `windows-1252` handling, read/write code patterns):
+[`../_shared/references/file-encoding.md`](../_shared/references/file-encoding.md).
 
-```xml
-<?xml version="1.0" encoding="utf-8"?>
-```
+---
 
-When writing MDG XML from Python:
-```python
-with open("WBA_MDG.xml", "w", encoding="utf-8") as f:
-    f.write(xml_content)
-```
+## Reference files
 
-When reading MDG XML to pass to `ImportTechnology`:
-```python
-with open("WBA_MDG.xml", encoding="utf-8") as f:
-    xml = f.read()
-```
-
-> **Legacy note:** Older EA versions and hand-written MDG files sometimes used `windows-1252`. If
-> you receive an MDG XML file that is windows-1252 encoded, re-save it as UTF-8 and update the
-> declaration. Do not mix the declaration and the actual byte encoding — EA will reject the file
-> if they disagree.
+| File | Covers |
+|------|--------|
+| [references/xml-skeleton.md](references/xml-skeleton.md) | Full `<MDG.Technology>` skeleton; links to the shared file-encoding guidance |
+| [references/stereotypes.md](references/stereotypes.md) | Element stereotype XML, attribute and tagged-value-type tables, base-type visibility pitfall and fix, connector stereotype XML |
+| [references/diagrams-toolboxes.md](references/diagrams-toolboxes.md) | Custom diagram type XML, toolbox page XML, COLORREF table, ID mapping pattern |
+| [references/post-install-migration.md](references/post-install-migration.md) | Four-step workflow for migrating existing elements onto a newly installed MDG |
+| [references/quick-linker.md](references/quick-linker.md) | Quick Linker rule syntax, both authoring approaches, verification steps |
+| [references/validation-sidecar.md](references/validation-sidecar.md) | Why not `<Scripts>`, YAML sidecar template, smoke-test command |
