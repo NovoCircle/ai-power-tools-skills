@@ -68,14 +68,14 @@ Skipping this is the single most expensive mistake available, because one step i
 **Verifying baseline scope.** A package baseline covers the whole subtree. Confirm it rather than assume: a package holding no elements directly still produces a large compressed payload if its children are captured.
 
 ```sql
-SELECT DocID, DocName, OCTET_LENGTH(BinContent) AS bytes
+SELECT DocID, DocName, LENGTH(BinContent) AS bytes
 FROM t_document WHERE DocType = 'Baseline'
 ```
 
-> **Why `OCTET_LENGTH`, not `LENGTH`.** `execute_sql`'s validation guard currently misparses bare
-> `LENGTH(...)` as a column reference (it collides with `t_attribute.Length`) and rejects the
-> query — tracked as `APT-2026-0047`, not yet fixed. `OCTET_LENGTH` doesn't collide with any real
-> column name and passes today. Keep using the `OCTET_LENGTH` form until that item ships.
+> **Use `LENGTH`, never `OCTET_LENGTH`.** A `.qea` repository is SQLite, which has no
+> `OCTET_LENGTH` function. EA answers an unrunnable query with a **modal dialog**, which blocks
+> the calling tool until someone clicks OK at the machine — it does not return an error you can
+> catch. `LENGTH(...)` returns the byte count of a BLOB and is the correct form.
 
 ---
 
@@ -260,7 +260,7 @@ Then: import, confirm **enabled** rather than merely present, and validate on a 
 | `get_embedded_mdgs` returns empty | EA 17 no longer records imported technologies in `t_document` (`APT-2026-0046`, not yet fixed) |
 | Only the author sees the new version | File-based registration shadowing the model copy |
 | Export produces the previous version's content | `.mts` still referencing old filenames |
-| `SELECT LENGTH(...)` rejected as an invalid column | SQL guard bug — use `OCTET_LENGTH(...)` instead (`APT-2026-0047`, not yet fixed) |
+| A query hangs and EA shows "SQL API Open FAILED" | The SQL used a function this backend lacks (e.g. `OCTET_LENGTH` on a `.qea`). Click OK on the dialog; use `LENGTH(...)` |
 
 ---
 

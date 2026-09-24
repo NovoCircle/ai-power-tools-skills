@@ -64,7 +64,7 @@ Every baseline adds a blob to the repository file. Baselining large subtrees fre
 `.qea` file; if that matters, check size with SQL before making it a habit:
 
 ```sql
-SELECT DocID, DocName, OCTET_LENGTH(BinContent) AS bytes
+SELECT DocID, DocName, LENGTH(BinContent) AS bytes
 FROM t_document WHERE DocType = 'Baseline'
 ```
 
