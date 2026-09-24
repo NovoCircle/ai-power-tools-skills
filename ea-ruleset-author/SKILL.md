@@ -2,8 +2,8 @@
 name: ea-ruleset-author
 description: >
   Build a YAML validation ruleset for a modeling language (ArchiMate, BPMN, UML, SysML,
-  custom MDG, etc.) and publish it to the AI Power Tools skills bundle. Covers the full
-  workflow: research → rule-category planning → YAML authoring → testing → publishing.
+  custom MDG, etc.), consumed by validate_model. Covers the full authoring workflow:
+  research → rule-category planning → YAML authoring → testing.
   Use this skill at the start of every new language ruleset, and keep it open throughout.
 min_server_version: "1.2.0"
 ---
@@ -15,7 +15,7 @@ what a correctly-formed model should look like for a given modeling language, an
 every element or connector that does not conform. Once published to the skills bundle,
 any user can run it with a single URL argument — no local file required.
 
-This skill describes the repeatable six-phase workflow for building one ruleset from
+This skill describes the repeatable four-phase workflow for building one ruleset from
 scratch. Follow the phases in order, one language at a time.
 
 ---
@@ -100,7 +100,7 @@ Not every language needs every category. BPMN might have `SEQ` (sequence flow), 
 {LANG}-{CAT}-{NNN}
 ```
 
-Examples: `AM31-REL-001`, `BPMN2-SEQ-003`, `UML25-CLN-001`, `MYMDG-TV-002`
+Examples: `AM31-REL-001`, `BPMN2-SEQ-003`, `UML25-CLN-001`, `WBA-TV-002` (custom MDG)
 
 Use three-digit zero-padded numbers within each category. Leave gaps (e.g., 001, 003,
 007) if you expect to insert rules later — or don't; renumbering is fine at authoring
@@ -128,124 +128,26 @@ ruleset-{lang}/
 Use lowercase, hyphens in the directory name, underscores in the file name. Examples:
 `ruleset-bpmn2/bpmn2_rules.yaml`, `ruleset-uml25/uml25_rules.yaml`.
 
-### Start with the meta block
+### Grammar reference
 
-```yaml
-# {Language} Conformance Ruleset
-# Language:     {Language full name and version}
-# Enforced by:  AI Power Tools for Sparx EA — validate_model tool
-#
-# Stereotype note:
-#   <How EA names the stereotypes for this language>
-#
-# Sources:
-#   [S1] {Primary spec} — {URL}
-#   [S2] {Secondary source} — {URL}
+The full YAML grammar — the `meta:` header template, the per-rule template, the
+condition-type reference table, and worked examples for endpoint rules, count rules,
+and section comments — lives in `references/rule-grammar.md`. Read it before writing
+your first rule.
 
-meta:
-  version: "1.0"
-  language: {Language name}
-  organization: "(your organization)"
-  mdg_family: {MDG family name as it appears in EA's MDG list}
-  description: >
-    {One paragraph summary of what the ruleset checks.}
-  severity_levels:
-    error:   {What error means for this language}
-    warning: {What warning means}
-    info:    Advisory note; not a conformance violation
-```
+### Key decision points
 
-### Rule template
-
-```yaml
-  - id: {LANG}-{CAT}-{NNN}
-    name: {Short human-readable name}
-    description: >
-      {2-4 sentences. Explain WHY this rule exists, what spec section it comes
-      from, and what the violation means architecturally. Cite your sources.
-      Example: "An Assignment relationship must originate from an Active Structure
-      element. [S1 §5.2]"}
-    category: {category_code_lowercase}
-    severity: error        # error | warning | info
-    demo_trigger: false    # true for ~30% of rules
-
-    selector:
-      type: connector      # connector | element
-      connector_stereotype: {StereotypeName}     # for connector selectors
-      # OR for element selectors:
-      stereotypes:
-        any_of: ["{StereotypeName}"]
-
-    condition:
-      type: connector_endpoint_stereotype        # see condition types below
-      source_must_be_one_of:
-        - StereotypeName1
-        - StereotypeName2
-      target_must_be_one_of:
-        - StereotypeName3
-
-    remediation:
-      short: >
-        {One sentence telling the modeler exactly what to do to fix this.
-        Be concrete: "Use Serving instead of Realization here."}
-      auto_fixable: false
-```
-
-### Condition type reference
-
-| `condition.type` | Use for | Key fields |
-|-----------------|---------|-----------|
-| `connector_endpoint_stereotype` | Connector source/target stereotype constraints | `source_must_be_one_of`, `target_must_be_one_of` |
-| `connector_count` | Element must have N connectors of a given stereotype | `connector_stereotype`, `direction` (incoming\|outgoing), `min`, `max` |
-| `tagged_value_required` | Element must have non-empty tags | `tags: [{name, must_be_non_empty}]` |
-| `tagged_value_constraint` | Tag must be one of an enum | `tags: [{name, value_must_be_one_of}]` |
-
-### Writing connector endpoint rules
-
-The most powerful rule type. Write them in this order:
-
-1. List ALL valid source stereotypes (err toward inclusion — EA's MDG may have inherited
-   subtypes you don't know about)
-2. List ALL valid target stereotypes
-3. Write the description explaining WHY these constraints exist
-4. Set severity: `error` — endpoint violations are always structural
-
-**EA stereotype names:** EA stores stereotypes as bare names without namespace prefix.
-The selector `connector_stereotype: Assignment` matches connectors whose stereotype is
-`Assignment`, regardless of whether EA shows it as `ArchiMate3::Assignment` internally.
-Use the bare name everywhere in the YAML.
-
-### Writing connector count rules
-
-```yaml
-    condition:
-      type: connector_count
-      connector_stereotype: Aggregation   # the edge label to count
-      direction: incoming                 # incoming | outgoing
-      min: 2                              # at least 2
-      # max: 5                            # optional upper bound
-```
-
-`direction: incoming` = connectors pointing INTO this element (element is the target).
-`direction: outgoing` = connectors pointing OUT of this element (element is the source).
-
-### Section comments
-
-Use ASCII section headers to visually group rules:
-
-```yaml
-  # ═══════════════════════════════════════════════════════════════════════════
-  # SECTION 1 — RELATIONSHIP ENDPOINT VALIDITY (REL)
-  #
-  # One or two lines explaining what this section covers and which spec
-  # sections these rules come from.
-  # ═══════════════════════════════════════════════════════════════════════════
-
-  # ── Assignment ──────────────────────────────────────────────────────────────
-
-  - id: LANG-REL-001
-    ...
-```
+- **Endpoint rules** (`condition.type: connector_endpoint_stereotype`): list ALL valid
+  source stereotypes, then ALL valid target stereotypes, erring toward inclusion — EA's
+  MDG may have inherited subtypes you don't know about. Always `severity: error` —
+  endpoint violations are structural.
+- **Count rules** (`condition.type: connector_count`): `direction: incoming` means the
+  edge ends AT this element (element is the target); `direction: outgoing` means the
+  edge starts here (element is the source).
+- **EA stereotype names:** EA stores stereotypes as bare names without namespace
+  prefix. The selector `connector_stereotype: Assignment` matches connectors whose
+  stereotype is `Assignment`, regardless of whether EA shows it as
+  `ArchiMate3::Assignment` internally. Use the bare name everywhere in the YAML.
 
 ---
 
@@ -268,19 +170,18 @@ match what EA actually stores — inspect a connector or element via `get_elemen
 
 ### Test 2: URL fetch works
 
-After committing the file to the skills repo, test the round-trip:
+Once the ruleset is hosted somewhere reachable by URL (your own repo, a gist, an
+internal file server), test the round-trip:
 
 ```python
 result = validate_model(
-    rules_path_or_content=(
-        "https://raw.githubusercontent.com/NovoCircle/ai-power-tools-skills"
-        "/main/ruleset-{lang}/{lang}_rules.yaml"
-    )
+    rules_path_or_content="https://<your-host>/<path>/{lang}_rules.yaml"
 )
 ```
 
 **Expected:** `ok: true`, `rules_evaluated: {N}` matching your rule count. If you get
-`rules_fetch_failed`, the file isn't on the right branch/path yet.
+`rules_fetch_failed`, the file isn't reachable at that URL yet — check the host is
+public and the path is exact.
 
 ### Test 3: Rules fire on intentional violations (optional but recommended)
 
@@ -296,84 +197,6 @@ result = validate_model(
 ```
 
 Verify that exactly the rules you expect are reported.
-
----
-
-## Phase 5 — Publish to the Skills Bundle
-
-### Step 1: Place the file
-
-```
-NovoCircle/ai-power-tools-skills/
-└── ruleset-{lang}/
-    └── {lang}_rules.yaml
-```
-
-Commit and push to `main`.
-
-### Step 2: Compute SHA256
-
-```powershell
-# Windows
-certutil -hashfile ruleset-{lang}\{lang}_rules.yaml SHA256
-# The hash output (remove spaces) goes in manifest.json
-```
-
-### Step 3: Update manifest.json
-
-Add a new entry to the `skills` array:
-
-```json
-{
-  "name": "ruleset-{lang}",
-  "title": "{Language Name} Validation Ruleset",
-  "description": "{N}-rule {Language Name} conformance ruleset for use with validate_model. {One sentence on what it covers.}",
-  "version": "1.0.0",
-  "min_server_version": "1.2.0",
-  "files": [
-    "ruleset-{lang}/{lang}_rules.yaml"
-  ],
-  "sha256": {
-    "ruleset-{lang}/{lang}_rules.yaml": "{computed_sha256}"
-  }
-}
-```
-
-**Always set `min_server_version: "1.2.0"`** for rulesets — that's when URL fetching
-was added and is the minimum version that can consume a hosted ruleset directly.
-
-Bump `bundle_version` (patch increment: 1.3.0 → 1.3.1).
-
-### Step 4: Cut a GitHub release on the skills repo
-
-After committing manifest.json:
-
-```powershell
-cd <skills-repo>
-git add ruleset-{lang}/ manifest.json
-git commit -m "feat(ruleset): add {Language} {version} conformance ruleset ({N} rules)"
-git push origin main
-
-# Then cut a release on NovoCircle/ai-power-tools-skills so install_skills
-# picks up the new manifest
-gh release create "bundle-v{bundle_version}" \
-  --repo NovoCircle/ai-power-tools-skills \
-  --title "Skills bundle {bundle_version} — {Language} ruleset" \
-  --notes "Adds {Language} validation ruleset ({N} rules). Requires server ≥ 1.2.0."
-```
-
-### Step 5: Verify via install_skills
-
-```python
-# List available skills — new ruleset should appear
-list_available_skills()
-
-# Install it
-install_skills(names=["ruleset-{lang}"])
-
-# Run it locally
-validate_model(rules_path_or_content="~/.claude/skills/ruleset-{lang}/{lang}_rules.yaml")
-```
 
 ---
 
@@ -420,10 +243,10 @@ any_of: ["BusinessActor"]         # OK — explicitly quoted
 ```
 Use quotes when a stereotype name contains special YAML characters (`:`, `#`, `&`, etc.).
 
-**Not testing the URL before publishing.** Commit the file, wait for GitHub to index it
-(usually <10 seconds), then test `validate_model` with the raw.githubusercontent.com URL
-before updating the manifest. A broken URL in the manifest causes `install_skills` to fail
-for all users.
+**Not testing the URL before sharing it.** If a host takes a moment to index a newly
+pushed file, `validate_model` will report `rules_fetch_failed` even though the content
+is correct. Wait for the host to serve the raw file directly in a browser before handing
+the URL to anyone else.
 
 **`meta:` block is not validated.** The server reads only `rules:`. The `meta:` block is
 ignored at runtime but is critical for human readers and for future tooling. Always include
@@ -433,6 +256,8 @@ it; always cite sources.
 
 ## See Also
 
-- `ea-mcp-validation` — YAML syntax reference and how to run the validator
+- `references/rule-grammar.md` — full YAML rule grammar: templates, condition-type
+  reference, and worked examples
+- `ea-validation` — YAML syntax reference and how to run the validator
 - `ea-mdg-author` — Authoring the MDG Technology XML that defines the stereotypes you're validating
 - ArchiMate 3.1 reference implementation: `ruleset-archimate31/archimate31_rules.yaml`

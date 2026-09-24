@@ -193,3 +193,94 @@ table. `describe_table("t_objecttypes")` shows the catalog shape.
 | Operation PK | `t_operation` | `OperationID` *(no underscore)* |
 | Tagged value (element) | `t_objectproperties` | `Property`, `Value`, `Notes` |
 | Tagged value (unified) | `t_taggedvalue` | `ElementID` *(GUID)*, `BaseClass`, `TagValue` |
+
+---
+
+## 7. Verification query cookbook for a modeling build
+
+Use `execute_sql` throughout a build — it is the most reliable tool for confirming state.
+These are the queries that come up repeatedly. See [`../SKILL.md`](../SKILL.md) §9 for when
+to run each one.
+
+### Count elements in a package subtree
+
+```sql
+SELECT COUNT(*) AS cnt
+FROM t_object
+WHERE Package_ID IN (
+    SELECT Package_ID FROM t_package
+    WHERE Package_ID = <root_pkg_id>
+       OR Parent_ID  = <root_pkg_id>
+       OR Parent_ID IN (
+           SELECT Package_ID FROM t_package WHERE Parent_ID = <root_pkg_id>
+       )
+)
+```
+
+(Extend the IN nesting for deeper trees, or collect IDs iteratively.)
+
+### Find all elements with a specific stereotype
+
+```sql
+SELECT o.Object_ID, o.Name, o.Stereotype, o.Package_ID
+FROM t_object o
+WHERE o.Stereotype = 'WBAVendorSystem'
+ORDER BY o.Name
+```
+
+**Note:** MDG-defined stereotypes are stored in `t_object.Stereotype` — they are NOT in
+`t_stereotype`. The `t_stereotype` table is empty for MDG-only models. Always query
+`t_object` when looking for MDG stereotype usage.
+
+### Check tagged values for a set of elements
+
+```sql
+SELECT o.Name, p.Property, p.Value
+FROM t_object o
+JOIN t_objectproperties p ON p.Object_ID = o.Object_ID
+WHERE o.Package_ID IN (<pkg1>, <pkg2>)
+  AND p.Property IN ('lifecycle', 'criticality', 'regulatoryScope')
+ORDER BY o.Name, p.Property
+```
+
+### Find connectors involving a specific element
+
+```sql
+SELECT c.Connector_ID, c.Connector_Type, c.Stereotype,
+       src.Name AS Source, tgt.Name AS Target
+FROM t_connector c
+JOIN t_object src ON src.Object_ID = c.Start_Object_ID
+JOIN t_object tgt ON tgt.Object_ID = c.End_Object_ID
+WHERE c.Start_Object_ID = <element_id>
+   OR c.End_Object_ID   = <element_id>
+```
+
+### Check WBA-LFY-001 violations (pre-demo state: expect exactly 1)
+
+```sql
+SELECT src.Name AS source_name, tgt.Name AS target_name,
+       c.Stereotype, src_lc.Value AS src_lifecycle, tgt_lc.Value AS tgt_lifecycle
+FROM t_connector c
+JOIN t_object src ON src.Object_ID = c.Start_Object_ID
+JOIN t_object tgt ON tgt.Object_ID = c.End_Object_ID
+JOIN t_objectproperties src_lc ON src_lc.Object_ID = src.Object_ID
+                                AND src_lc.Property = 'lifecycle'
+JOIN t_objectproperties tgt_lc ON tgt_lc.Object_ID = tgt.Object_ID
+                                AND tgt_lc.Property = 'lifecycle'
+WHERE c.Stereotype IN ('Uses', 'ConsumesService', 'Realizes', 'Flows')
+  AND src_lc.Value IN ('Strategic', 'Current')
+  AND tgt_lc.Value = 'Deprecated'
+```
+
+See [`../SKILL.md`](../SKILL.md) §7 for what this rule means and the design implication for
+plain vs. stereotyped connectors.
+
+### Query element attributes (note: column is `Default`, not `Default_Value`)
+
+```sql
+SELECT a.Name, a.[Default], a.Type
+FROM t_attribute a
+WHERE a.Object_ID = <element_id>;
+```
+
+`[Default]` requires bracket quoting — `DEFAULT` is a reserved word in SQLite.

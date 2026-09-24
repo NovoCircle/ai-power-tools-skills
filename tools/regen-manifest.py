@@ -38,7 +38,11 @@ def main() -> int:
         entry["files"] = files
         entry["sha256"] = {f: sha256(ROOT / f) for f in files}
 
-    MANIFEST.write_text(json.dumps(current, indent=2), encoding="utf-8")
+    # newline="" prevents Windows from translating LF to CRLF on write.
+    # A CRLF manifest is what broke the v1.4.1 release: the assets hash as LF,
+    # the manifest ships as CRLF, and every post-download hash check fails.
+    with MANIFEST.open("w", encoding="utf-8", newline="") as fh:
+        fh.write(json.dumps(current, indent=2))
     n_skills = len(current["skills"])
     n_files = sum(len(s["files"]) for s in current["skills"])
     print(f"manifest.json rewritten — {n_skills} skills, {n_files} files")

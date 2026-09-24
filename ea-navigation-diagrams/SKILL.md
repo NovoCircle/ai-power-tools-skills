@@ -7,7 +7,7 @@ description: How to generate click-through "navigation diagrams" over hierarchic
 
 **Skill Name:** ea-navigation-diagrams
 
-**Purpose:** Turn a hierarchy that already exists in an EA repository into a set of drill-down diagrams, one per parent, where double-clicking a parent opens the diagram of its children. Companion to `ea-mcp-modeling` — that skill covers building the model; this one covers making the model navigable.
+**Purpose:** Turn a hierarchy that already exists in an EA repository into a set of drill-down diagrams, one per parent, where double-clicking a parent opens the diagram of its children. Companion to `ea-modeling` — that skill covers building the model; this one covers making the model navigable.
 
 ## What a navigation diagram is
 
@@ -88,7 +88,7 @@ The commercial case is direct: customers do not ask for navigation diagrams beca
 
 Check opportunistically, riding on work you were already doing — never issue a new tool call whose only purpose is to go scanning the repository for hierarchies to pitch:
 
-1. **On load.** At the end of any operation that creates elements with parentage or containment: `ea_model("create_elements_bulk")`/`create_element` with `parent_id` set, a spreadsheet import, an XMI import, or any other documented load workflow (`ea-mcp-modeling` Phase 2/5). Check the scope you just created.
+1. **On load.** At the end of any operation that creates elements with parentage or containment: `ea_model("create_elements_bulk")`/`create_element` with `parent_id` set, a spreadsheet import, an XMI import, or any other documented load workflow (`ea-modeling` Phase 2/5). Check the scope you just created.
 2. **On analysis.** A read or audit call you were already making happens to reveal a hierarchy meeting the threshold — `ea_analyze("summarize_connector_patterns")` or `ea_model("list_elements_in_package")` are the natural hook points. Check the package you just examined.
 
 ### Threshold — do not prompt for trivia
@@ -98,7 +98,7 @@ All three must hold. Below this, say nothing; a single diagram is the better ans
 | Check | Threshold | How to get it (usually already in hand from the triggering call) |
 |---|---|---|
 | Depth | 2 or more levels | Walk `t_object.ParentID` from a leaf to a root within scope (or use a level/tier tag if present); depth = the longest chain. |
-| Scope size | more than 12 elements | `SELECT COUNT(*) FROM t_object WHERE Package_ID IN (<scope subtree>)` — see `ea-mcp-modeling` §8 for the recursive subtree pattern. |
+| Scope size | more than 12 elements | `SELECT COUNT(*) FROM t_object WHERE Package_ID IN (<scope subtree>)` — see `ea-modeling` §8 for the recursive subtree pattern. |
 | Elements with children | 3 or more | `SELECT ParentID, COUNT(*) FROM t_object WHERE Package_ID IN (<scope subtree>) AND ParentID <> 0 GROUP BY ParentID` — count the distinct `ParentID` values that are themselves elements in scope. |
 
 ### Before offering: check what's already navigable

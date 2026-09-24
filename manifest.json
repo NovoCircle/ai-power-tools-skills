@@ -1,9 +1,22 @@
 {
   "manifest_version": "1.0",
-  "bundle_version": "1.4.1",
-  "released_at": "2026-09-22",
-  "min_server_version": "1.0.0",
+  "bundle_version": "2.0.0",
+  "released_at": "2026-09-23",
+  "min_server_version": "2.2.0",
   "skills": [
+    {
+      "name": "ea-start-here",
+      "title": "EA \u2014 start here",
+      "description": "Entry point for any Sparx EA task: session preflight, then routing to the right skill",
+      "version": "1.0.0",
+      "min_server_version": "2.2.0",
+      "files": [
+        "ea-start-here/SKILL.md"
+      ],
+      "sha256": {
+        "ea-start-here/SKILL.md": "8e49a385f98e5abe5d03004806591666fb4dd062ef902c769b724ac2b0114b8f"
+      }
+    },
     {
       "name": "ea-com",
       "title": "ea-com",
@@ -11,25 +24,47 @@
       "version": "1.1.1",
       "min_server_version": "1.0.0",
       "files": [
-        "ea-com/SKILL.md"
+        "ea-com/SKILL.md",
+        "ea-com/references/connecting-and-queries.md",
+        "ea-com/references/mutating-elements.md",
+        "ea-com/references/technology-and-lifecycle.md"
       ],
       "sha256": {
-        "ea-com/SKILL.md": "20fd1c37b45b53d69e56ddf2cf48812405d8acb06739741be058c966b2365021"
+        "ea-com/SKILL.md": "07a1a4e7a0dc1eba1c12887994ea622c23c124a4568e59dc41c1640747c5a318",
+        "ea-com/references/connecting-and-queries.md": "60bc09b368dee3c2e12de0955e7c59704b225253bba0eda766e79fd0e615dfad",
+        "ea-com/references/mutating-elements.md": "abd7a926aec1e90bba50ef4e1c6fb494a81b5c8965077b4b52d23d7919adaf6d",
+        "ea-com/references/technology-and-lifecycle.md": "4b671ab26d65d129dc2fcfa59c289e0a5e2918c0eb75b7866688a708364c8d59"
       }
     },
     {
-      "name": "ea-mcp-modeling",
-      "title": "ea-mcp-modeling",
+      "name": "ea-modeling",
+      "title": "ea-modeling",
       "description": "Build EA models via the MCP server \u2014 phases, defects, verification",
       "version": "1.2.0",
       "min_server_version": "1.0.0",
       "files": [
-        "ea-mcp-modeling/SKILL.md",
-        "ea-mcp-modeling/references/sql_schema.md"
+        "ea-modeling/SKILL.md",
+        "ea-modeling/references/class-modeling.md",
+        "ea-modeling/references/diagnostics_and_ui.md",
+        "ea-modeling/references/diagrams_and_connectors.md",
+        "ea-modeling/references/element_creation.md",
+        "ea-modeling/references/package_and_defects.md",
+        "ea-modeling/references/sql_schema.md",
+        "ea-modeling/references/token_and_session_management.md",
+        "ea-modeling/references/tool_quick_reference.md",
+        "ea-modeling/references/wba_mdg_reference.md"
       ],
       "sha256": {
-        "ea-mcp-modeling/SKILL.md": "4cbd90ebbbbca81d586bdbfdfcf0bd2d02c89333a1909dfcd7772e093beb0e92",
-        "ea-mcp-modeling/references/sql_schema.md": "c045c783aecfdf95af690d2181f7075d589d929c65bff9db1a3be9b7fa2084ef"
+        "ea-modeling/SKILL.md": "0097c666a6ed55cb98b5e437a21d4dcb92ce9939588e7a28a7914732132a7e7a",
+        "ea-modeling/references/class-modeling.md": "e7e1cb6f586462f2039375f2482816ed394047118dcce502fb02054eb6a3486e",
+        "ea-modeling/references/diagnostics_and_ui.md": "cfc1304b820bfe63fdb99602ad99ea0a411092aaf707a7795f99d2600a709645",
+        "ea-modeling/references/diagrams_and_connectors.md": "951a2823ca6f6ac06fb1d786ea6fd4a15e0f9b6f3f38903833792c5fd07063ae",
+        "ea-modeling/references/element_creation.md": "2cf6d94cfeecf883f653605af3345c2291e6373bba5509438dbdded144afa2e4",
+        "ea-modeling/references/package_and_defects.md": "f7e087a0d0e32e333b1653c49759e3a3dd743ccca6eca026d623c7a1588e3167",
+        "ea-modeling/references/sql_schema.md": "b59d3c2407d6e47a73df63e6b12aeb81823cf23b4c3936496caa440fbeb5b7b6",
+        "ea-modeling/references/token_and_session_management.md": "91ba16a555c130163ce5875ed8f8f45663c5960ec791af82fbe7277c9eda7609",
+        "ea-modeling/references/tool_quick_reference.md": "d98e101f4bf2185166c4d2a909ecdc2d9de25b136f9e2e2065a6e42ddc6e667c",
+        "ea-modeling/references/wba_mdg_reference.md": "60d38d4828e5f2b6e31386cf3d48fb642eb3d65eac7322702989493a4c37af41"
       }
     },
     {
@@ -42,7 +77,7 @@
         "ea-navigation-diagrams/SKILL.md"
       ],
       "sha256": {
-        "ea-navigation-diagrams/SKILL.md": "1e8ef6707b266e6671ab44d7c9d4e925ed3b12ec9d5830d8ee8a7bbd68c22c31"
+        "ea-navigation-diagrams/SKILL.md": "3db3703dd4123fc82dd40be43a85290659c8d70e88d0a9e3ee705aac34cccd57"
       }
     },
     {
@@ -52,10 +87,22 @@
       "version": "1.2.1",
       "min_server_version": "1.0.0",
       "files": [
-        "ea-mdg-author/SKILL.md"
+        "ea-mdg-author/SKILL.md",
+        "ea-mdg-author/references/diagrams-toolboxes.md",
+        "ea-mdg-author/references/post-install-migration.md",
+        "ea-mdg-author/references/quick-linker.md",
+        "ea-mdg-author/references/stereotypes.md",
+        "ea-mdg-author/references/validation-sidecar.md",
+        "ea-mdg-author/references/xml-skeleton.md"
       ],
       "sha256": {
-        "ea-mdg-author/SKILL.md": "56e8bff79f93e9cd167e7582966bcc0ddd94b7ef07417e779ef92aab5bc5369d"
+        "ea-mdg-author/SKILL.md": "78ee239962734e7379b8f79ac93bc4d6fe4d248f6dae895fa207d0251214192e",
+        "ea-mdg-author/references/diagrams-toolboxes.md": "1d58436df8a9bf826d5738520fb163a2d979b71afd0d19b87d26f4984c0824c8",
+        "ea-mdg-author/references/post-install-migration.md": "e13916755c511ac113682a5c5aa494258d96eac529c205654d4d7ab6ab2ee8b5",
+        "ea-mdg-author/references/quick-linker.md": "1b0e4e93230bce9138b650aa403f73e370cc6592807009949404b8f06ade232a",
+        "ea-mdg-author/references/stereotypes.md": "25fb7cc5ccd19ee6fdb5a99fce8ac54852e2b96e602222b04cac8121e6e73c75",
+        "ea-mdg-author/references/validation-sidecar.md": "1bf0e67a310bcc2bb7165f236cb3bff2d24ca2c2820fbc69c56bbc79ec25e96d",
+        "ea-mdg-author/references/xml-skeleton.md": "8473e0e43432bd622673edf23e51ba11c3ee690655fc63b9c324b1428c3ecf69"
       }
     },
     {
@@ -68,7 +115,7 @@
         "ea-mdg-deploy/SKILL.md"
       ],
       "sha256": {
-        "ea-mdg-deploy/SKILL.md": "d65b7ddfcc5a1dc871d737c6807b43d719a741c804350cc2e5964c5e8d124571"
+        "ea-mdg-deploy/SKILL.md": "11b36c1e432f33b16c6dbfeefec17f51e73e8917cf480e41999947d2ad18701a"
       }
     },
     {
@@ -81,33 +128,35 @@
         "ea-mdg-model-build/SKILL.md"
       ],
       "sha256": {
-        "ea-mdg-model-build/SKILL.md": "abc550fa29221f765c4e37839063b942bcc3efb9ebce6dc1423649bdfe92bc89"
+        "ea-mdg-model-build/SKILL.md": "96e280c4d61d6a21926f075ab2a0e383a7459ae4d3f7fcafb94400206791fa7a"
       }
     },
     {
-      "name": "ea-mcp-validation",
-      "title": "ea-mcp-validation",
+      "name": "ea-validation",
+      "title": "ea-validation",
       "description": "Author validate_model YAML rule sidecars; run hosted rulesets via URL (v1.2.0+)",
       "version": "1.0.5",
       "min_server_version": "1.0.0",
       "files": [
-        "ea-mcp-validation/SKILL.md"
+        "ea-validation/SKILL.md"
       ],
       "sha256": {
-        "ea-mcp-validation/SKILL.md": "3e166c6ab6735c6ebb78b0d1e3a458446c52814e7c27c675a2e717d7b5c6a9f5"
+        "ea-validation/SKILL.md": "a34531d1abb1533b614576478b52e2d1483b293ea1c4256f7a1868a83c9aef7a"
       }
     },
     {
       "name": "ea-ruleset-author",
       "title": "ea-ruleset-author",
-      "description": "Six-phase workflow for building and publishing a YAML validation ruleset for any modeling language (ArchiMate, BPMN, UML, SysML, custom MDG). Covers spec research, rule-category planning, YAML authoring, testing, and skills-bundle publishing.",
+      "description": "Build a YAML validation ruleset for a modeling language (ArchiMate, BPMN, UML, SysML, custom MDG), consumed by validate_model. Covers research, rule-category planning, YAML authoring, and testing.",
       "version": "1.0.1",
       "min_server_version": "1.2.0",
       "files": [
-        "ea-ruleset-author/SKILL.md"
+        "ea-ruleset-author/SKILL.md",
+        "ea-ruleset-author/references/rule-grammar.md"
       ],
       "sha256": {
-        "ea-ruleset-author/SKILL.md": "20470ecaf2632936a63ff2161dfa28541ddf9a8ab9d4144d335d7e718bd008a2"
+        "ea-ruleset-author/SKILL.md": "a372c01f5667bc6787757675a43dd6e5cc19bfbceb6c4fa7dbaf331306de986e",
+        "ea-ruleset-author/references/rule-grammar.md": "5d4e556c2b44c246719e8b618f2b85687b3e44c02cb42c2e603064617487f381"
       }
     },
     {
@@ -120,7 +169,88 @@
         "ea-diagnostic/SKILL.md"
       ],
       "sha256": {
-        "ea-diagnostic/SKILL.md": "80edf8e08eb879bccddc06ed11b6e6751fe658a54c24c25426847f875b126df4"
+        "ea-diagnostic/SKILL.md": "b99058069f32bdef804f951ad56aa0caa5df1fced6b70b3f7e031c21f917de1b"
+      }
+    },
+    {
+      "name": "ea-stakeholder-reporting",
+      "title": "ea-stakeholder-reporting",
+      "description": "Turn a model into answers a non-modeller can act on \u2014 portfolio roll-ups by tagged value, business-language display terms, and checking coverage before presenting a figure",
+      "version": "1.0.0",
+      "min_server_version": "2.2.0",
+      "files": [
+        "ea-stakeholder-reporting/SKILL.md",
+        "ea-stakeholder-reporting/references/coverage-data.md"
+      ],
+      "sha256": {
+        "ea-stakeholder-reporting/SKILL.md": "78c0ff9c0092053daa624fc37f3fab2a378976664552c5aca974a4337d582374",
+        "ea-stakeholder-reporting/references/coverage-data.md": "ef40c1fc6ed7bfb9b268385f1492761b9e892b81342e86453d2cfb66f821aa95"
+      }
+    },
+    {
+      "name": "ea-mdg-assess",
+      "title": "ea-mdg-assess",
+      "description": "Work out what modelling-language situation a repository is actually in before acting \u2014 which technologies are loaded, embedded or merely registered, and how much of the model conforms",
+      "version": "1.0.0",
+      "min_server_version": "2.2.0",
+      "files": [
+        "ea-mdg-assess/SKILL.md",
+        "ea-mdg-assess/references/three-states.md",
+        "ea-mdg-assess/references/verification-walkthrough.md"
+      ],
+      "sha256": {
+        "ea-mdg-assess/SKILL.md": "395e71c8aa8614d90bfffbc3c21813475f30b6cbbd7f542816422ad7c8e0b1ee",
+        "ea-mdg-assess/references/three-states.md": "b68e63592edf706bf85e2c7a1c36de9f851c381a661bdc824dce324e0fbfdecc",
+        "ea-mdg-assess/references/verification-walkthrough.md": "a131e7265edd43e9febbd95d50542d496bd5c733f63eb1ad8f0a07c7e31a4585"
+      }
+    },
+    {
+      "name": "ea-change-management",
+      "title": "ea-change-management",
+      "description": "Baselines and change history \u2014 create, list, compare and apply baselines, and answer what changed, when and by whom",
+      "version": "1.0.0",
+      "min_server_version": "2.2.0",
+      "files": [
+        "ea-change-management/SKILL.md",
+        "ea-change-management/references/worked-example.md"
+      ],
+      "sha256": {
+        "ea-change-management/SKILL.md": "94c9cafd309223691e986e42a68550a5ee247c30fa369cbfe45c8120f13b67a7",
+        "ea-change-management/references/worked-example.md": "a1d2d6086cd3aef896f69817fd0b5c611c8f0c46680b5d9acd6bcefe12e7e669"
+      }
+    },
+    {
+      "name": "ea-import-export",
+      "title": "ea-import-export",
+      "description": "Getting content in and out of EA \u2014 XMI interchange, document generation, and diagram export to image, SVG or Visio",
+      "version": "1.0.0",
+      "min_server_version": "2.2.0",
+      "files": [
+        "ea-import-export/SKILL.md",
+        "ea-import-export/references/generate-report.md",
+        "ea-import-export/references/xmi-export-import.md"
+      ],
+      "sha256": {
+        "ea-import-export/SKILL.md": "e4f17c12e1c2eea29a1f2ac16051b29ff72e22dc7fe00ebf35c61dca134bfd07",
+        "ea-import-export/references/generate-report.md": "8fc55ca353efc77748b712d9df1791227d452636acd0988255ad402f461b96b1",
+        "ea-import-export/references/xmi-export-import.md": "fa826f01dcc3dfe20eda73a035f699b304370c5df28e631926db0a54e239c85f"
+      }
+    },
+    {
+      "name": "ea-model-hygiene",
+      "title": "ea-model-hygiene",
+      "description": "Finding and fixing model decay \u2014 orphans, inconsistent stereotype and tagged-value usage, and safe deletion with pre-delete checks",
+      "version": "1.0.0",
+      "min_server_version": "2.2.0",
+      "files": [
+        "ea-model-hygiene/SKILL.md",
+        "ea-model-hygiene/references/consistency-audits.md",
+        "ea-model-hygiene/references/pre-delete-safety.md"
+      ],
+      "sha256": {
+        "ea-model-hygiene/SKILL.md": "bca0a290b07cc42dad5d6402625d35430ab1e1486b7f9a9a947336d0a9768779",
+        "ea-model-hygiene/references/consistency-audits.md": "cb1081ce92e215680904659e4f743b9462dae1a7281c09491d330709fdc46521",
+        "ea-model-hygiene/references/pre-delete-safety.md": "2e47295a0f13e650eb5d85d0ae75f04745e1014c84a34eef0c983fdd3eefcf5d"
       }
     },
     {
@@ -134,6 +264,25 @@
       ],
       "sha256": {
         "ruleset-archimate31/archimate31_rules.yaml": "695b06a73ce95eb09d513971e64d817fb3b246ebb8872dbbc05d7d0907b33032"
+      }
+    },
+    {
+      "name": "_shared",
+      "title": "Shared references",
+      "description": "Reference material several EA skills link to: the Westbrook Bank canonical example, EA latency guidance, and file-encoding guidance. Not a skill \u2014 it has no SKILL.md and does not load as one. It installs beside the skills so their relative links resolve.",
+      "version": "1.0.0",
+      "min_server_version": "1.0.0",
+      "files": [
+        "_shared/references/file-encoding.md",
+        "_shared/references/latency.md",
+        "_shared/references/operations.md",
+        "_shared/references/westbrook-example.md"
+      ],
+      "sha256": {
+        "_shared/references/file-encoding.md": "5759bac841234558071a4cde555587e45cabebe5a90420188b07f8323d62f7fe",
+        "_shared/references/latency.md": "af565b7e08f3a79a9239f548c63115181ef3ea7bd845b94ef0363a28f035d06f",
+        "_shared/references/operations.md": "0b9204a322d3d0044bd0b517cc470150ca748e02736a453b0a058d82cd1e8816",
+        "_shared/references/westbrook-example.md": "d4622f3cf9ef6a58d661fb54cb4248dfc364e8e6ab9d0314876838081600cdf2"
       }
     }
   ]

@@ -264,24 +264,12 @@ with EA() as ea:
 
 ## EA Computer Use — Latency Guidelines
 
-EA 17 on a typical developer workstation takes:
-
-| Operation | Wait time |
-|-----------|-----------|
-| Menu click or dialog button | 2–5 seconds |
-| Open a `.qea` project file | 5–15 seconds |
-| Import an MDG technology | 3–8 seconds |
-| Expand a package in Project Browser | 1–3 seconds |
-
-**Standard pattern for computer use with EA:**
-1. Perform the action (click, key press, COM call)
-2. Wait at least **5 seconds**
-3. Take a screenshot to verify the result
-4. If EA shows **"(Not Responding)"**: this is normal during file operations — wait another 5 seconds and screenshot again before concluding anything failed
-5. **Never retry an action** without first confirming the previous action failed
-
-> **"(Not Responding)" in the title bar means EA is processing — not crashed.** Do not
-> double-click a file or re-issue a command while EA is still loading from a previous one.
+Wait before screenshotting — the right interval depends on the operation (2–15 seconds), not a
+flat delay — and never retry without confirming the previous action failed. Full wait-time table
+and the standard action/wait/screenshot pattern:
+[`../_shared/references/latency.md`](../_shared/references/latency.md). See also "Post-
+ImportTechnology — Always Screenshot" above for this skill's specific screenshot-before-waiting
+sequence around the overwrite-confirmation dialog.
 
 ---
 
@@ -301,19 +289,10 @@ EA 17 on a typical developer workstation takes:
 
 ## File Encoding (Critical)
 
-MDG Technology XML files **must be encoded as UTF-8** and must declare `encoding="utf-8"` in the XML prolog.
-
-When writing MDG XML from Python:
-```python
-with open("APM_MDG.xml", "w", encoding="utf-8") as f:
-    f.write(xml_content)
-```
-
-When reading MDG XML to pass to `ImportTechnology`:
-```python
-with open("APM_MDG.xml", encoding="utf-8") as f:
-    xml = f.read()
-```
+MDG Technology XML files must be encoded as UTF-8 and declare `encoding="utf-8"` in the XML
+prolog — the declaration and the actual byte encoding must agree, or EA rejects the file
+outright. Full guidance (legacy `windows-1252` handling, read/write code patterns):
+[`../_shared/references/file-encoding.md`](../_shared/references/file-encoding.md).
 
 ---
 

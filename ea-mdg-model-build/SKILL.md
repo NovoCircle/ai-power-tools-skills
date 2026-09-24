@@ -68,14 +68,14 @@ Skipping this is the single most expensive mistake available, because one step i
 **Verifying baseline scope.** A package baseline covers the whole subtree. Confirm it rather than assume: a package holding no elements directly still produces a large compressed payload if its children are captured.
 
 ```sql
-SELECT DocID, DocName, OCTET_LENGTH(BinContent) AS bytes
+SELECT DocID, DocName, LENGTH(BinContent) AS bytes
 FROM t_document WHERE DocType = 'Baseline'
 ```
 
-> **Why `OCTET_LENGTH`, not `LENGTH`.** `execute_sql`'s validation guard currently misparses bare
-> `LENGTH(...)` as a column reference (it collides with `t_attribute.Length`) and rejects the
-> query — tracked as `APT-2026-0047`, not yet fixed. `OCTET_LENGTH` doesn't collide with any real
-> column name and passes today. Keep using the `OCTET_LENGTH` form until that item ships.
+> **Use `LENGTH`, never `OCTET_LENGTH`.** A `.qea` repository is SQLite, which has no
+> `OCTET_LENGTH` function. EA answers an unrunnable query with a **modal dialog**, which blocks
+> the calling tool until someone clicks OK at the machine — it does not return an error you can
+> catch. `LENGTH(...)` returns the byte count of a BLOB and is the correct form.
 
 ---
 
@@ -144,7 +144,7 @@ Where a profile carries Enumeration classes on a data-types diagram, those value
 SELECT [Value], COUNT(*) FROM t_objectproperties WHERE Property = '<tag>' GROUP BY [Value]
 ```
 
-`Value` is a reserved-word column on `t_objectproperties` — bracket it, or the query is rejected. (See the `ea-mcp-modeling` SQL reference for the full reserved-word list.)
+`Value` is a reserved-word column on `t_objectproperties` — bracket it, or the query is rejected. (See the `ea-modeling` SQL reference for the full reserved-word list.)
 
 ⚠ **Renaming a tag orphans its values** in `t_objectproperties`. Fix trailing spaces and spelling before a production load, never after.
 
@@ -182,7 +182,7 @@ All UI. The sequence matters and several steps are easy to get subtly wrong. (Tr
 
 ⚠ **`Publish Diagram as UML Profile` is greyed out unless the diagram is open.** Selecting it in the Browser is not enough.
 
-⚠ **The wizard's Tagged Value Types page is a selection step, not an inclusion step.** Types not selected here do not ship, however completely they are defined. This is the usual cause of "the type exists but the field is still free text" — and because the omission is invisible in the model, it can persist across many releases. This step still has no API route, so the wizard itself can't be scripted around — but the omission can now be *detected*: `ea-mcp-validation`'s `tagged_value_type_shipped` rule condition compares a profile's blank-`Type` tagged-value attributes against a built MDG file's RefData and flags anything defined but not shipped (`APT-2026-0057`, shipped). Run it as part of Phase 6 verification.
+⚠ **The wizard's Tagged Value Types page is a selection step, not an inclusion step.** Types not selected here do not ship, however completely they are defined. This is the usual cause of "the type exists but the field is still free text" — and because the omission is invisible in the model, it can persist across many releases. This step still has no API route, so the wizard itself can't be scripted around — but the omission can now be *detected*: `ea-validation`'s `tagged_value_type_shipped` rule condition compares a profile's blank-`Type` tagged-value attributes against a built MDG file's RefData and flags anything defined but not shipped (`APT-2026-0057`, shipped). Run it as part of Phase 6 verification.
 
 ⚠ **Match the Contents checkboxes to the shape of the current deployed file** rather than guessing. Parse the deployed file and tick to match:
 
@@ -250,7 +250,7 @@ Then: import, confirm **enabled** rather than merely present, and validate on a 
 | Symptom | Cause |
 |---|---|
 | Stereotype missing from the built MDG | No Extension to a metaclass |
-| Tag ships as free text despite a complete definition | Not selected on the wizard's Tagged Value Types page — run `ea-mcp-validation`'s `tagged_value_type_shipped` rule to detect this (`APT-2026-0057`, shipped) |
+| Tag ships as free text despite a complete definition | Not selected on the wizard's Tagged Value Types page — run `ea-validation`'s `tagged_value_type_shipped` rule to detect this (`APT-2026-0057`, shipped) |
 | Quick Linker rule never fires | Constraint value not namespace-qualified |
 | Toolbox entry points at nothing | Stereotype deleted, toolbox not swept |
 | New stereotype invisible to users | On no toolbox page |
@@ -260,7 +260,7 @@ Then: import, confirm **enabled** rather than merely present, and validate on a 
 | `get_embedded_mdgs` returns empty | EA 17 no longer records imported technologies in `t_document` (`APT-2026-0046`, not yet fixed) |
 | Only the author sees the new version | File-based registration shadowing the model copy |
 | Export produces the previous version's content | `.mts` still referencing old filenames |
-| `SELECT LENGTH(...)` rejected as an invalid column | SQL guard bug — use `OCTET_LENGTH(...)` instead (`APT-2026-0047`, not yet fixed) |
+| A query hangs and EA shows "SQL API Open FAILED" | The SQL used a function this backend lacks (e.g. `OCTET_LENGTH` on a `.qea`). Click OK on the dialog; use `LENGTH(...)` |
 
 ---
 

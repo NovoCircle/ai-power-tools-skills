@@ -147,7 +147,11 @@ def check_manifest() -> list[str]:
     if not mf.exists():
         return ["manifest.json: missing"]
 
-    m = json.loads(mf.read_text(encoding="utf-8"))
+    mf_raw = mf.read_bytes()
+    if b"\r\n" in mf_raw:
+        out.append("manifest.json: CRLF line endings — assets must ship as LF")
+
+    m = json.loads(mf_raw.decode("utf-8"))
     listed: set[str] = set()
     for skill in m.get("skills", []):
         for rel, want in skill.get("sha256", {}).items():
@@ -177,6 +181,71 @@ def check_manifest() -> list[str]:
     return out
 
 
+def check_op_drift(target: Path) -> list[str]:
+    """Every operation a skill names must exist in the server's dispatch tables.
+
+    This is the drift that is invisible until a customer hits it: a skill
+    confidently instructs the model to call an operation that was renamed or
+    never existed, and the failure surfaces as a confusing error on someone
+    else's machine. The server has already shipped links to two skills that
+    were never written; this is the same class in the other direction.
+
+    Only explicit ``operation="name"`` call sites are checked. That is
+    deliberately narrow — prose mentioning a name in backticks is not a call,
+    and flagging it would train people to ignore the gate.
+
+    Skipped silently when the server source is not available (for example on a
+    machine that only has the skills repo checked out). A check that cannot
+    run must not masquerade as a check that passed, so this prints a notice.
+    """
+    # Loaded by path: the filename contains a hyphen, so it is not importable
+    # by name.
+    import importlib.util
+    spec = importlib.util.spec_from_file_location(
+        "gen_operations", Path(__file__).resolve().parent / "gen-operations.py")
+    if spec is None or spec.loader is None:
+        print("  (op-drift check skipped: tools/gen-operations.py not found)")
+        return []
+    gen = importlib.util.module_from_spec(spec)
+    try:
+        spec.loader.exec_module(gen)
+    except Exception as e:
+        print(f"  (op-drift check skipped: {e})")
+        return []
+
+    server = gen.DEFAULT_SERVER
+    if not server.is_file():
+        print(f"  (op-drift check skipped: server source not found at {server})")
+        return []
+
+    try:
+        known: set[str] = set()
+        for ops in gen.collect_operations(server).values():
+            known.update(ops)
+    except Exception as e:
+        print(f"  (op-drift check skipped: {e})")
+        return []
+
+    call_site = re.compile(r'operation\s*=\s*["\']([a-z_][a-z0-9_]*)["\']')
+    out: list[str] = []
+    for path in iter_files(target):
+        if path.suffix.lower() != ".md":
+            continue
+        try:
+            text = path.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            continue
+        for n, line in enumerate(text.splitlines(), 1):
+            for op in call_site.findall(line):
+                if op not in known:
+                    rel = path.relative_to(ROOT).as_posix()
+                    out.append(
+                        f"{rel}:{n}: names operation '{op}', which is not in the "
+                        f"server's dispatch tables — renamed, removed, or invented"
+                    )
+    return out
+
+
 def main() -> int:
     # Findings quote source lines that may contain em-dashes and smart quotes.
     # A cp1252 console would raise UnicodeEncodeError mid-report and truncate it.
@@ -193,6 +262,7 @@ def main() -> int:
     findings: list[str] = []
     for f in iter_files(target):
         findings.extend(check_file(f))
+    findings.extend(check_op_drift(target))
     if target == ROOT:
         findings.extend(check_manifest())
 
