@@ -25,9 +25,9 @@ Two ways exist to produce an MDG. This skill covers the model-driven one. `ea-md
 | Task | Route |
 |---|---|
 | Create stereotype, attribute, constraint | MCP API |
-| Duplicate a package | **EA UI only** — Paste as New, new GUIDs |
-| Connector tagged value (Quick Linker constraint) | **EA UI only** — no API route |
-| Element background color | **EA UI only** — `update_element` ignores `backcolor` |
+| Duplicate a package | MCP API — `duplicate_package` (fresh GUIDs throughout; the API equivalent of Paste as New) |
+| Connector tagged value (Quick Linker constraint) | MCP API — `set_connector_tagged_value` / `get_connector_tags` / `list_connector_tagged_values` / `delete_connector_tagged_value` |
+| Element background color | **EA UI only** — `update_element` ignores `backcolor` (`APT-2026-0053`, open) |
 | Export a profile | **EA UI only** — Publish Package as UML Profile |
 | Build the MDG | **EA UI only** — MDG Technology Wizard |
 | Reference data (tagged value types) | **EA UI only** — Settings ▸ Reference Data ▸ Project Types |
@@ -116,7 +116,7 @@ Read from working stereotypes so new work matches. Every one of these is a model
 
 ⚠ **Namespace-qualify every constraint value.** `WBA::WBABusinessApplication`, never `WBABusinessApplication`. Unqualified constraints do not resolve and fail silently. Where `_strictness = profile` is set, enforcement is live against a rule that cannot resolve — the worst combination.
 
-⚠ **Connector tagged values have no API route.** `ea_model` has no operation for them and `update_connector` silently ignores one passed as a property. Set them through the UI: Inspector ▸ Relationships ▸ double-click the row ▸ Tags tab. Budget for this — it is the main manual cost of the profile phase. (Tracked as `APT-2026-0052`; if it ships, this becomes API-scriptable and this gotcha should be trimmed.)
+**Connector tagged values are scriptable.** Use `set_connector_tagged_value`, and read them back with `get_connector_tags` or `list_connector_tagged_values`. Note that `update_connector` still ignores a tagged value passed as an ordinary property — use the dedicated operations, not a property write. (This was UI-only work before `APT-2026-0052` shipped; earlier copies of this skill budgeted manual time for it.)
 
 **Telling identical connectors apart.** Two reflexive connectors on the same element are indistinguishable in EA's Relationships grid, which shows no name and no stereotype column. Set a temporary name on the new one, do the work, then clear it — and verify the clear.
 
@@ -254,10 +254,10 @@ Then: import, confirm **enabled** rather than merely present, and validate on a 
 | Quick Linker rule never fires | Constraint value not namespace-qualified |
 | Toolbox entry points at nothing | Stereotype deleted, toolbox not swept |
 | New stereotype invisible to users | On no toolbox page |
-| `update_element` returns `ok: true` and nothing changed | `backcolor` is silently ignored — set appearance in the UI (`APT-2026-0044`/`APT-2026-0053`, not yet fixed) |
-| Connector tagged value not applied | No API route — `update_connector` ignores it silently (`APT-2026-0052`, not yet fixed) |
-| `get_mdg_from_runtime` says `unknown_mdg` | Unreliable probe. Confirm in the UI (`APT-2026-0046`, not yet fixed) |
-| `get_embedded_mdgs` returns empty | EA 17 no longer records imported technologies in `t_document` (`APT-2026-0046`, not yet fixed) |
+| `update_element` returns `ok: true` and nothing changed | `backcolor` is silently ignored — set appearance in the UI (`APT-2026-0053`, open) |
+| Connector tagged value not applied | `update_connector` ignores it as a property — use `set_connector_tagged_value` instead |
+| `get_mdg_from_runtime` says `unknown_mdg` | Unreliable probe — it answers from a static table, not the live model. Confirm in the UI |
+| `get_embedded_mdgs` returns empty | EA 17 no longer records imported technologies in `t_document`. Confirm in the UI |
 | Only the author sees the new version | File-based registration shadowing the model copy |
 | Export produces the previous version's content | `.mts` still referencing old filenames |
 | A query hangs and EA shows "SQL API Open FAILED" | The SQL used a function this backend lacks (e.g. `OCTET_LENGTH` on a `.qea`). Click OK on the dialog; use `LENGTH(...)` |
