@@ -226,15 +226,17 @@
     {
       "name": "ea-change-management",
       "title": "ea-change-management",
-      "description": "Baselines and change history \u2014 create, list, compare and apply baselines, and answer what changed, when and by whom",
-      "version": "1.0.0",
+      "description": "Baselines and change history \u2014 create, list, compare and apply baselines, offer a baseline before a significant change, review and clean up accumulated baselines, and answer what changed, when and by whom",
+      "version": "1.1.0",
       "min_server_version": "2.2.0",
       "files": [
         "ea-change-management/SKILL.md",
+        "ea-change-management/references/offer-and-cleanup.md",
         "ea-change-management/references/worked-example.md"
       ],
       "sha256": {
-        "ea-change-management/SKILL.md": "f0d78b072527cfc503c4dd3bb734bab55b61b60c152d6660c30503cfbde9c7c5",
+        "ea-change-management/SKILL.md": "16aa4ab11b00a33f377decbd25f57cdbd8c61c39721337dcbf743bb4b55f4eb7",
+        "ea-change-management/references/offer-and-cleanup.md": "63e1d7f686cb7ce31cb1d61ba31c04b303646e9b6b24f41b9ece719153f451d1",
         "ea-change-management/references/worked-example.md": "d7c58251a9bd5a7738374992b67b51f839613bf83e4d024ae9753d6719e9b523"
       }
     },

@@ -1,6 +1,6 @@
 ---
 name: ea-change-management
-description: Manage baselines and change history in a Sparx EA repository via ea_repository and ea_analyze — when to baseline (whole model vs. one package), how to read a compare_baseline diff, the destructive behavior of apply_baseline and how to protect against it, and using get_updates_in_range / get_user_activity to answer "what changed, when, and by whom." Use before a risky bulk edit or MDG/ruleset rollout, when asked to snapshot, diff, or roll back model state, or when investigating recent changes or an editor's activity in a Sparx EA model.
+description: Manage baselines and change history in a Sparx EA repository via ea_repository and ea_analyze — when to baseline (whole model vs. one package), how to read a compare_baseline diff, the destructive behavior of apply_baseline and how to protect against it, when to proactively offer a baseline before a significant change (package delete, large bulk edit, ruleset fix, MDG rollout, XMI import), how to review accumulated baselines by payload size and guide cleanup, and using get_updates_in_range / get_user_activity to answer "what changed, when, and by whom." Use before a risky bulk edit or MDG/ruleset rollout, when asked to snapshot, diff, or roll back model state, when a baseline should be offered before a destructive operation, when reviewing or pruning old baselines, or when investigating recent changes or an editor's activity in a Sparx EA model.
 ---
 
 # EA Change Management — Baselines and Audit History
@@ -32,9 +32,11 @@ best.
 | **Apply a baseline** | `ea_repository(operation="apply_baseline", params={"package_id": ..., "baseline_guid": ...})` | **Overwrites current package content with the snapshot.** See the warning below before you call this. |
 | Updates in a time window | `ea_analyze(operation="get_updates_in_range", params={"start": ..., "end": ..., "kind": ...})` | Repository-wide list of elements/packages/diagrams created or modified in `[start, end]`. |
 | Activity by user | `ea_analyze(operation="get_user_activity", params={"start": ..., "end": ...})` | Repository-wide edit counts grouped by the author who made them. |
+| Raw SQL | `ea_analyze(operation="execute_sql", params={"sql": ...})` | No dedicated operation covers baseline payload size or baseline deletion (§7) — this is the fallback for both. |
 
 `create_baseline` and `apply_baseline` are writes. `list_baselines`, `compare_baseline`,
-`get_updates_in_range`, and `get_user_activity` are reads.
+`get_updates_in_range`, and `get_user_activity` are reads. `execute_sql` is either, depending on
+the statement — it reports `write_performed` in its response either way.
 
 ---
 
@@ -192,6 +194,127 @@ each item.
 
 ---
 
+## 6. Offering a baseline before a significant change
+
+A baseline only works as a rollback point if it's taken *before* the change. No MCP operation
+asks the user anything — offering is a conversational decision you make, following the same
+"ask once, honor a no" pattern `ea-navigation-diagrams` uses for its own proactive offer.
+
+### Trigger list — what counts as "significant"
+
+Offer a baseline before any of these, and nothing else — a single `update_element` or a small
+`create_elements_bulk` call isn't significant, and offering on every write is worse than
+offering on none: it bloats the repository (§1) and trains people to click through the prompt.
+
+| Trigger | Operation | Threshold |
+|---|---|---|
+| Package deletion | `ea_model(operation="delete_package", params={"package_id": ...})` | Always. There's no size below which deleting a whole subtree isn't worth protecting. |
+| Bulk edit | `ea_model(operation="create_elements_bulk")`, `ea_model(operation="create_connectors_bulk")`, `ea_diagram(operation="add_elements_to_diagram_bulk")`, or a scripted loop of `update_element`/`delete_element`/`set_tagged_value` calls performing one logical change | More than **25 elements or connectors** touched, counting the whole logical operation — a change made as 40 individual `update_element` calls is still a 40-element change, not 40 one-element changes. |
+| Ruleset-driven fix | Corrective writes applied after `ea_validate(operation="audit", ...)` reports non-conformant elements. The audit call itself is read-only and doesn't trigger this — only acting on its findings does. | More than 25 elements affected by the corrections, same rule as above. |
+| MDG rollout | `ea_mdg(operation="install_mdg", ...)` into a repository that already holds content of the kind the technology governs, followed by bringing existing elements into conformance with it | Always. A rollout's whole point is reclassifying existing elements, and the "before" state is exactly what a baseline protects. |
+| XMI import | `ea_repository(operation="import_xmi", params={"package_id": ..., "path": ...})` | Always, regardless of file size — the operation's own docstring calls it "semi-destructive": it mutates the target package in place. |
+
+25 elements is the line: below it, a mistake is something you can hand-fix by re-running a few
+calls; above it, reconstructing by hand is real work. It's a judgment call, but a stated one —
+adjust it for your own deployment if it doesn't fit, but state whatever number you use rather
+than leaving it to feel.
+
+### Ask once, honor a no
+
+Mirrors `ea-navigation-diagrams`'s own offer:
+
+- **Ask before the triggering call**, not after — state the operation, its scope, and roughly
+  how many elements are affected, and which package or the model root you'd baseline, then offer
+  the choice.
+- **Accepting** creates the baseline (§1 picks scope: the package being changed, or the model
+  root for a repository-wide operation), confirms it with `list_baselines`, then proceeds with
+  the triggering call.
+- **Declining** is remembered **for the rest of the session, per trigger category** — the same
+  granularity `ea-navigation-diagrams` uses per package. Don't re-ask about another
+  `delete_package` this session once the user has said no to one; a separate bulk edit or
+  ruleset fix is a different category and still gets its own first ask. If the "no" is phrased
+  as a standing preference ("stop offering to baseline," "I never want this asked"), treat it as
+  covering every category for the rest of the session — the same escalation
+  `ea-navigation-diagrams` makes for its own offer.
+- A new session starts clean.
+
+### What to say
+
+State scope and operation before the user answers — never ask blind:
+
+> "About to delete the `Legacy Integrations` package (14 elements, 3 diagrams). Want me to
+> baseline it first, so there's a rollback point?"
+
+> "This ruleset fix will update 38 elements' `criticality` tag. Want a baseline of
+> `Consumer Banking` before I apply it?"
+
+Two options, every time: **yes, baseline first**, or **no, proceed without one**. No third
+"always ask me" option — the per-category "no" already gives standing relief for the rest of the
+session, and the default behavior already asks the first time.
+
+For the full call sequence — computing scope size before `delete_package` (which doesn't report
+a count itself; use `ea_model(operation="list_package_tree", params={"root_package_id": ...,
+"include_element_counts": true})`), picking package-vs-model-root scope for an MDG rollout, and
+worked examples of each trigger — see
+[`references/offer-and-cleanup.md`](references/offer-and-cleanup.md).
+
+---
+
+## 7. Reviewing and cleaning up baselines
+
+Baselines accumulate — every `create_baseline` call adds a compressed blob to `t_document`
+(`DocType='Baseline'`), and nothing prunes them automatically. Periodically, or when asked, help
+the user see what's there and remove what's no longer needed.
+
+### List, with the cost
+
+`list_baselines` gives version, notes, and name, but not size (and `date`/`author` come back
+empty — §1). Payload size is the number that actually answers "which can I delete," so add it
+with one SQL call reusing the same proxy `compare_baseline` already computes internally:
+
+```python
+ea_repository(operation="list_baselines", params={"package_id": 5})
+# -> [{"guid": "{A}", "version": "2026-08-01", "notes": "pre-migration", "name": "..."}, ...]
+
+ea_analyze(operation="execute_sql", params={"sql":
+    "SELECT DocID, LENGTH(BinContent) AS bytes FROM t_document "
+    "WHERE DocType = 'Baseline' AND DocID IN ('{A}', '{B}', '{C}')"
+})
+```
+
+`LENGTH`, not `OCTET_LENGTH` — a `.qea`/`.eap` is SQLite under the hood and has no
+`OCTET_LENGTH` function. Join the two result sets on `guid`/`DocID` and present one table:
+version, date (when populated), notes, and size (convert bytes to KB/MB for readability). Sort
+by size descending — the expensive ones are usually the ones worth asking about first.
+
+To review a whole model rather than one package, walk `list_root_packages` /
+`list_package_tree` first to collect every `package_id` in scope, then call `list_baselines`
+once per package — it takes a single `package_id`, not a repository-wide sweep.
+
+### Delete only with explicit confirmation, never in a silent batch
+
+There's no dedicated delete operation — baselines are removed the same way their size is
+inspected, with `execute_sql` against the `t_document` row:
+
+```python
+ea_analyze(operation="execute_sql", params={"sql":
+    "DELETE FROM t_document WHERE DocType = 'Baseline' AND DocID = '{A}'"
+})
+```
+
+Before running it, name exactly what will go — version, notes, and size, not just a GUID — and
+get an explicit yes. A user can confirm several at once ("delete the three oldest"), but only
+after seeing all three named individually; never delete more than what was just shown and
+agreed to, and never default to "clean up everything older than X" without that same per-item
+listing first.
+
+Deleting a baseline is itself a write with no undo of its own. Verify it landed by re-running
+`list_baselines` afterward and confirming the deleted entries are gone —
+`execute_sql`'s `write_performed: true` means the statement ran, not that the row removed was
+the row intended.
+
+---
+
 ## See also
 
 - [`../_shared/references/latency.md`](../_shared/references/latency.md) — wait/screenshot
@@ -202,6 +325,8 @@ each item.
   conflate the two.
 - [`references/worked-example.md`](references/worked-example.md) — a full create → change →
   audit → clean-up walkthrough against Westbrook Bank elements.
+- [`references/offer-and-cleanup.md`](references/offer-and-cleanup.md) — worked examples of
+  offering a baseline for each trigger in §6, and a full baseline-review-and-delete pass for §7.
 
 ## Verify in EA's UI
 
