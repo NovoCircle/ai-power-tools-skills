@@ -126,7 +126,7 @@ If an operation is not in this list, it does not exist. Do not infer one from a 
 |---|---|
 | `assess_mdg_situation` | Classify the MDG state of the connected repository. |
 | `get_embedded_mdgs` | Read MDGs embedded in the current EA project file (from t_document). |
-| `get_mdg_from_runtime` | Return full stereotype, tagged value, and diagram type definitions for a loaded MDG. |
+| `get_mdg_from_runtime` | Return the stereotype, tagged value and diagram type definitions of the technology EA actually has loaded -- or decline to answer. |
 | `get_mdg_search_paths` | Return EA's configured MDG technology search-path directories (Manage Technology > Advanced tab). |
 | `install_mdg` | Install an MDG file into the EA environment. |
 | `list_available_modeling_languages` | Enumerate modeling languages available in the connected EA instance. |
@@ -154,7 +154,7 @@ If an operation is not in this list, it does not exist. Do not infer one from a 
 | `apply_baseline` | Roll back a package to a prior baseline (destructive). |
 | `check_for_updates` | Report whether a newer version of ea-mcp-server is available. |
 | `close_project` | Close the currently-open project without exiting EA. |
-| `compare_baseline` | Open EA's baseline comparison UI for a package against a baseline, and return structured scope metadata alongside it (APT-2026-0051). |
+| `compare_baseline` | Compare a package against one of its baselines and return the diff. |
 | `create_baseline` | Create a baseline snapshot of a package. |
 | `create_model` | Create a new EA model file at `path` and open it. |
 | `export_xmi` | Export a package as XMI for cross-tool interchange. |

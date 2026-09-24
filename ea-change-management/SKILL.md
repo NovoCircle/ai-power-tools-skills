@@ -82,12 +82,57 @@ metadata, query `t_document` directly.
 it's safe to run at any time, including against a package you don't own, to answer "has anything
 changed since this snapshot."
 
-Conceptually it reports the difference between the package's current state and the named
-baseline: elements/connectors/diagrams added since the snapshot, ones removed, and ones whose
-attributes or tagged values changed. Read it as three buckets — **added**, **removed**,
-**modified** — and for anything in the modified bucket, check which tagged values moved, not just
-that the element changed. A `criticality` flip from `Business-Critical` to `Standard` and a typo
-fix in `notes` both show up as "modified"; only the diff detail tells them apart.
+The diff arrives under `diff`, alongside `baseline` (the snapshot's own metadata),
+`current_scope` (live element/attribute/connector counts for the package subtree as it stands
+now) and `baseline_payload_bytes` (the snapshot's compressed size — a size proxy, not a diff).
+`structured_diff_available` is `true` when EA returned a comparison to parse.
+
+```python
+{"status": "comparison_opened", "package_id": 5, "baseline_guid": "{...}",
+ "structured_diff_available": True,
+ "diff": {
+   "has_changes": True,
+   "item_status_counts": {"Identical": 1, "Model only": 1, "Baseline only": 1},
+   "item_count": 3,
+   "include_identical": False,
+   "items": [
+     {"name": "PaymentGateway", "type": "", "status": "Model only",
+      "guid": "{C0CA1B4C-F674-4652-A180-F283DF5D06C6}",
+      "parent_guid": "{CE22A172-94A8-4c09-9979-B67BD05C8279}", "depth": 1,
+      "properties": [{"name": "Name", "model": "PaymentGateway",
+                      "baseline": None, "status": "Model only"}]},
+   ],
+   "compared_packages": [{"name": "Payments", "guid_form": "underscore",
+                          "guid": "EAID_CE22A172_94A8_4c09_9979_B67BD05C8279",
+                          "compared_on": "2026-09-24 10:14:21", "has_changes": True}],
+   "log_bytes": 5465}}
+```
+
+**Read `status`, on items and on properties, as the four buckets EA uses:**
+
+| `status` | Meaning |
+|---|---|
+| `Model only` | In the model, not in the baseline — **added** since the snapshot. |
+| `Baseline only` | In the baseline, not in the model — **deleted** since the snapshot. |
+| `Changed` | Present in both, with differing property values. |
+| `Identical` | Present in both and the same. |
+
+A changed item's `properties` carry the `model` value and the `baseline` value side by side, so
+a `criticality` flip from `Business-Critical` to `Standard` and a typo fix in `notes` are told
+apart by reading the two values, not merely that the element changed. A property absent from one
+side is `None` there.
+
+**`include_identical` defaults to `false`.** Identical items, and identical properties within
+changed items, are counted in `item_status_counts` but withheld from `items` — they are the bulk
+of a real log and rarely what was asked for. Pass `"include_identical": true` for the whole
+document. `item_count` always reflects the unfiltered total, so it can exceed `len(items)`.
+EA omits unchanged *child elements* from the comparison altogether, so `Identical` covers the
+compared package's own item and the unchanged properties of items that did change.
+
+**The two GUID forms in the response are not interchangeable.** Items carry the braced form
+(`{C0CA1B4C-...}`) that element lookups take; `compared_packages` entries carry EA's underscore
+form (`EAID_CE22A172_94A8_...`). Passing one where the other is expected matches nothing and
+reports no error.
 
 > **If `compare_baseline` appears to hang, look at EA's screen.** EA reports an unrunnable
 > query as a modal dialog that holds the COM connection until someone clicks OK, so every

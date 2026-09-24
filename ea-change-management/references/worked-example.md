@@ -97,9 +97,10 @@ ea_repository(operation="compare_baseline", params={
 })
 ```
 
-Expect a diff describing the new element as an addition and the `lifecycle` change as a
-modification on the pre-existing elements in the package. Confirm the exact field names against
-your own repository before scripting against them.
+`diff.items` lists the new element with `"status": "Model only"` and the edited element with
+`"status": "Changed"`, whose `properties` carry the `lifecycle` value on the `model` side and on
+the `baseline` side. Unchanged elements are counted in `diff.item_status_counts` but withheld
+until you pass `"include_identical": true`. See §2 of the skill for the full shape.
 
 If the call appears to hang, look at EA's screen — a modal dialog holds the COM connection until
 it is dismissed. See [`../../_shared/references/ea-ui-verification.md`](../../_shared/references/ea-ui-verification.md).
