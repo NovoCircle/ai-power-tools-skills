@@ -125,26 +125,24 @@ have already taken the precaution below.
    rather than trusting the response alone. See §4: a failed-looking response is not proof nothing
    happened, and a success-looking one deserves the same read-back.
 
-`apply_baseline` does not restore. It reports `baseline_restore_not_applied` and changes nothing
-— see §4 for what to do instead. Verify the package contents either way rather than trusting the
-response.
+`apply_baseline` verifies the outcome before reporting success: after restoring, it re-compares
+the package against the baseline and only returns `"status": "applied", "restored": true` when EA
+confirms no differences remain. If differences remain — which should not happen on a normal
+restore — it returns `baseline_restore_not_applied` rather than claiming success it has not
+confirmed; treat that response as "nothing changed," not a partial success. Verify the package
+contents either way rather than trusting the response alone.
 
 ---
 
 ## 4. Failure modes hit during verification
 
-All four found while verifying this skill against a live, small (2-element) scratch package —
-not edge cases from a large or unusual repository.
+The other three found while verifying this skill against a live, small (2-element) scratch
+package — not edge cases from a large or unusual repository.
 
 - **A call that appears to hang is usually a modal dialog**, not a slow operation. EA raises
   one for any SQL its backend cannot run, and it holds the COM connection until dismissed.
   Look at the screen before retrying — see
   [`../_shared/references/ea-ui-verification.md`](../_shared/references/ea-ui-verification.md).
-- **`apply_baseline` does not currently restore.** It runs without error and reports
-  `baseline_restore_not_applied` when the package still differs from the baseline, rather
-  than claiming a success it did not achieve. **Restore through EA's UI instead** — right-click
-  the package ▸ Package Control ▸ Baselines ▸ select ▸ Restore — which is drivable with
-  computer use.
 - **`get_updates_in_range` / `get_user_activity` silently return zero rows for ISO-8601
   timestamps.** Both expect `start`/`end` as `YYYY-MM-DD HH:MM:SS`, matching how
   `t_object.CreatedDate`/`ModifiedDate` are actually stored — not `2026-09-23T00:00:00Z`. Passing
