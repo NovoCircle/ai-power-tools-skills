@@ -88,17 +88,14 @@ attributes or tagged values changed. Read it as three buckets — **added**, **r
 that the element changed. A `criticality` flip from `Business-Critical` to `Standard` and a typo
 fix in `notes` both show up as "modified"; only the diff detail tells them apart.
 
-> **Not independently verified this session.** Every `compare_baseline` call made during
-> verification of this skill timed out (see §4) before returning a result, against a package with
-> only two elements — so the paragraph above follows the operation's documented parameters and
-> ordinary EA baseline-diff semantics, not an observed response body. Confirm the exact field
-> names against your own repository before scripting against them, and budget for the timeout in
-> §4 while you do.
-
-If a `compare_baseline` call is unavailable or too slow, you can build an approximate manual diff
-from the audit-trail operations in §5: run `get_updates_in_range` with `start` set to the
-baseline's creation time, and manually inspect the elements it returns against their current
-tagged values via `ea_model(operation="get_element", ...)`.
+> **The timeout described in earlier versions of this skill is fixed.** `compare_baseline`
+> was not slow — it issued a SQL function the `.qea` backend does not implement, and EA
+> answered with a **modal dialog** that held the connection until someone clicked OK. Every
+> call after it appeared to hang too. Fixed in server 2.2.0; the baseline tests now complete
+> in seconds.
+>
+> If you are on an older server, that is what you are seeing: look at EA's screen, dismiss
+> the dialog, and upgrade. Do not build a manual diff to work around it.
 
 ---
 
@@ -145,14 +142,20 @@ that had to be checked, not assumed from the error response.
 All four found while verifying this skill against a live, small (2-element) scratch package —
 not edge cases from a large or unusual repository.
 
-- **`compare_baseline` timed out on every attempt (4 of 4).** Against a package with two elements
-  and one baseline. No partial result, no error detail — just a timeout. Don't loop-retry more
-  than once or twice; fall back to the manual diff approach in §2 rather than burning the session
-  on retries.
-- **`apply_baseline` can fail with a raw COM error** (`(-2147352571, 'Type mismatch.', None, 3)`)
-  surfaced straight through, rather than a clean message. In this instance the failure was
-  non-destructive (verified by re-querying the package with SQL afterward) — but that has to be
-  checked each time, not assumed.
+- **`compare_baseline` "timed out" on every attempt — FIXED in 2.2.0.** It was never a
+  timeout. The call issued `OCTET_LENGTH`, which SQLite (a `.qea`) does not implement, and
+  EA raised a **modal dialog** that blocked the COM connection. The retries all queued behind
+  the same dialog. **This is the general lesson: when an EA call appears to hang, look at the
+  screen before concluding anything** — see
+  [`../_shared/references/ea-ui-verification.md`](../_shared/references/ea-ui-verification.md).
+- **`apply_baseline` reported a raw COM `Type mismatch` — root cause found in 2.2.0.**
+  `DoBaselineMerge` takes four arguments and was being called with three, so an empty string
+  landed in `MergeInstructions`, which EA parses as XML and rejects. It no longer blocks EA,
+  and it no longer claims success it has not earned: it re-compares afterwards and returns
+  `baseline_restore_not_applied` if the package still differs.
+  **Restoring a baseline still works through EA's UI** — Package Control ▸ Baselines ▸
+  Restore — which is drivable with computer use. "No working API route" does not mean the
+  restore cannot be done (`APT-2026-0115`).
 - **`get_updates_in_range` / `get_user_activity` silently return zero rows for ISO-8601
   timestamps.** Both expect `start`/`end` as `YYYY-MM-DD HH:MM:SS`, matching how
   `t_object.CreatedDate`/`ModifiedDate` are actually stored — not `2026-09-23T00:00:00Z`. Passing

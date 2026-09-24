@@ -56,7 +56,7 @@
       ],
       "sha256": {
         "ea-modeling/SKILL.md": "f075433c04aebfac74a3aeba7bb2092d188f75075e8afa617cec7bae53ceda09",
-        "ea-modeling/references/class-modeling.md": "e7e1cb6f586462f2039375f2482816ed394047118dcce502fb02054eb6a3486e",
+        "ea-modeling/references/class-modeling.md": "d4bb1b71b464ee6aef3a9b32fd0b9574242c70aa85e68ca3d057a897614a026a",
         "ea-modeling/references/diagnostics_and_ui.md": "cfc1304b820bfe63fdb99602ad99ea0a411092aaf707a7795f99d2600a709645",
         "ea-modeling/references/diagrams_and_connectors.md": "951a2823ca6f6ac06fb1d786ea6fd4a15e0f9b6f3f38903833792c5fd07063ae",
         "ea-modeling/references/element_creation.md": "bdf8430d4db3c3479857b9de7e2d86d567d6bb22c5dcd5c3aafb603148497452",
@@ -128,7 +128,7 @@
         "ea-mdg-model-build/SKILL.md"
       ],
       "sha256": {
-        "ea-mdg-model-build/SKILL.md": "c8fc075f5654eca478333711a2ffffe4421e63e6ac7a8bc64ac23163d1dc6ce2"
+        "ea-mdg-model-build/SKILL.md": "387b9b626d7afc07d18f8471a23a92568afdec5364419997bd27023454cffb19"
       }
     },
     {
@@ -141,7 +141,7 @@
         "ea-validation/SKILL.md"
       ],
       "sha256": {
-        "ea-validation/SKILL.md": "8ee1b671c37da52ca0a43133d2341f82b53261a41913e32947b687c09f8e2866"
+        "ea-validation/SKILL.md": "43a706451ab487b934733de49aa5d96387f5b78e5f4fb4be1f3557d5a58fe2dd"
       }
     },
     {
@@ -215,7 +215,7 @@
         "ea-change-management/references/worked-example.md"
       ],
       "sha256": {
-        "ea-change-management/SKILL.md": "a5c708812589b6c8f88a9d11888b4eef66d852c949907f8d2c8292e34ef3fd5a",
+        "ea-change-management/SKILL.md": "73bf00d116827faa519655ccd85daa9909548ef38192a6065116bf0051ccffc2",
         "ea-change-management/references/worked-example.md": "a1d2d6086cd3aef896f69817fd0b5c611c8f0c46680b5d9acd6bcefe12e7e669"
       }
     },

@@ -98,8 +98,12 @@ and is out of scope for this rule.
 
 > **Schema note.** No built MDG file with a populated `<TaggedValueTypes>`
 > block was available to verify this parser against at authoring time — every
-> local fixture ships an always-empty `<TaggedValueTypes/>` stub, since
-> reference data is EA-UI-only. The parser accepts any child element under
+> local fixture ships an always-empty `<TaggedValueTypes/>` stub. (That was
+> attributed to reference data being "EA-UI-only", which is wrong:
+> `Project.ImportReferenceData` / `ExportReferenceData` and
+> `Repository.PropertyTypes()` all exist on EA's COM surface, and the UI is
+> drivable with computer use regardless. A populated fixture can be produced.)
+> The parser accepts any child element under
 > `<TaggedValueTypes>` that carries a `name` attribute (written against the
 > commonly observed `<TagType name="..." detail="..."/>` shape), so it
 > shouldn't be brittle to minor schema variation — but re-verify against a
