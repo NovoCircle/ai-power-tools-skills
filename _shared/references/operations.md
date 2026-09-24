@@ -3,7 +3,7 @@
 **Generated — do not edit by hand.** Produced by `tools/gen-operations.py` from the
 server's dispatch tables. Re-run it after any server change rather than editing here.
 
-Server version: `2.2.0` · 113 operations across 6 meta-tools.
+Server version: `2.2.0` · 115 operations across 6 meta-tools.
 
 Every operation is called the same way:
 
@@ -102,13 +102,15 @@ If an operation is not in this list, it does not exist. Do not infer one from a 
 
 ---
 
-## `ea_analyze` — 11 operations
+## `ea_analyze` — 13 operations
 
 | Operation | What it does |
 |---|---|
 | `describe_table` | Return canonical column names, types, PK, and gotcha notes for an EA repository table (``t_object``, ``t_taggedvalue``, etc.). |
 | `execute_sql` | Execute a raw SQL query against the EA repository. |
+| `find_paths` | Return every SHORTEST path between two elements, as alternating element/connector hops. |
 | `get_element_business_view` | Return a complete, business-language view of an element. |
+| `get_traceability_tree` | Return a rooted tree of everything reachable from ``root_id`` along one set of connector types, in one direction. |
 | `get_updates_in_range` | Return packages, elements, or diagrams created or modified in a date range. |
 | `get_user_activity` | Per-user modification counts in a date range. |
 | `list_ea_tables` | List every EA repository table known to the MCP server, with PK. |

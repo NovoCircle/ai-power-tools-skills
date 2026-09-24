@@ -269,7 +269,7 @@
         "ea-model-hygiene/references/pre-delete-safety.md"
       ],
       "sha256": {
-        "ea-model-hygiene/SKILL.md": "8f1c2723e1768bb04ba3d03ba913c5f25c6ddfb4a111ff0112fa6858d33821df",
+        "ea-model-hygiene/SKILL.md": "e91a3191a75590b5c1fd1fb084a0aa4f19bd17a5cf4dbe7f4220d8ce632d463b",
         "ea-model-hygiene/references/consistency-audits.md": "cb1081ce92e215680904659e4f743b9462dae1a7281c09491d330709fdc46521",
         "ea-model-hygiene/references/pre-delete-safety.md": "1fde00e2f563b713e3ed92b3e71b430247d717ee5f0562743b49a61b04351bce"
       }
@@ -304,7 +304,7 @@
         "_shared/references/ea-ui-verification.md": "44f16d33cc3fd5a492d14f2712a266f483f2c0e756a00020d7215fe6d63d9035",
         "_shared/references/file-encoding.md": "5759bac841234558071a4cde555587e45cabebe5a90420188b07f8323d62f7fe",
         "_shared/references/latency.md": "af565b7e08f3a79a9239f548c63115181ef3ea7bd845b94ef0363a28f035d06f",
-        "_shared/references/operations.md": "6cd8ab443d711e22a4b94b6b44e938ea08115a51f2cd26196983e1e64389ab3b",
+        "_shared/references/operations.md": "ec4331f19cdba7c8f299ac198656d6eea117d4ef2630284dd6d83e49a6b03db9",
         "_shared/references/westbrook-example.md": "d4622f3cf9ef6a58d661fb54cb4248dfc364e8e6ab9d0314876838081600cdf2"
       }
     }

@@ -98,6 +98,10 @@ it -- e.g. before deleting a package, to see what the elements inside connect to
 Note it can list the same edge more than once when a node is reached by more than one path; treat
 the node and edge lists as a set, not a count.
 
+Three further operations read the same graph -- including the only one that answers "how do
+these *two* elements connect" (`find_paths`) and the only one that returns a rooted chain rather
+than a flat edge list (`get_traceability_tree`). See Section 6 for which to reach for when.
+
 ### Step 3 -- is it drawn anywhere, or does it anchor a navigation diagram
 
 Neither `ea_model` nor `ea_analyze` exposes a dedicated "which diagrams show this element" op.
@@ -242,6 +246,82 @@ pattern and its caveats).
 For general wait-before-verify guidance when a check needs the EA UI (opening a diagram to
 confirm a deletion visually, for example) rather than just another MCP call, see
 [`../_shared/references/latency.md`](../_shared/references/latency.md).
+
+---
+
+## 6. Choosing a traversal operation
+
+Five operations read the connector graph. Section 2 uses two of them; the other three answer
+questions those two do not. Picking wrongly is not a style matter -- `trace_connectors` cannot
+tell you *how* two elements connect no matter how you parameterise it, and reaching for
+`traverse_element_subgraph` on a large model will be slow for no benefit.
+
+Pick by the question, not by the name:
+
+| The question | Operation | Meta-tool |
+|---|---|---|
+| What is around this element? | `trace_connectors` | `ea_analyze` |
+| How do these **two** elements connect? | `find_paths` | `ea_analyze` |
+| What hangs off this element along one relationship? | `get_traceability_tree` | `ea_analyze` |
+| What is around this element, in ArchiMate/BPMN terms? | `traverse_element_subgraph` | `ea_model` |
+| Just list this one element's connectors | `get_connectors_for_element_filtered` | `ea_model` |
+
+**`trace_connectors`** is the default. One bulk SQL pull, no per-element round trips, depth
+capped at 10. It returns a flat `{nodes, edges}` neighbourhood -- a bag of edges, not routes.
+This is what Section 2 Step 1 uses for blast radius.
+
+**`find_paths`** is the only operation that takes two element ids. Use it when the question
+names both ends: "how does the account-origination system reach the account master", "is there
+any relationship at all between these two". It returns every *shortest* path (there are usually
+several), each an alternating element/connector list:
+
+```
+ea_analyze(operation="find_paths", params={"source_id": <a>, "target_id": <b>, "max_depth": 5})
+```
+
+```json
+{"paths": [[{"kind": "element", "id": 69, "name": "..."},
+            {"kind": "connector", "id": 412, "type": "Association", "direction": "outbound"},
+            {"kind": "element", "id": 140, "name": "..."}]],
+ "count": 1, "path_length": 1, "truncated": false}
+```
+
+Two things to know. It follows connectors **both ways** -- a real traceability route usually
+crosses at least one connector against its arrow, so each connector hop carries `direction`
+(`outbound` / `inbound`) to keep the orientation recoverable. And an unreachable, disconnected,
+or nonexistent target returns `{"paths": [], "count": 0}`, not an error -- do not read an empty
+result as a failed call.
+
+**`get_traceability_tree`** returns a hierarchy rather than a graph you have to re-assemble, and
+annotates every child with the connector that reached it (`via_connector`). Use it for
+"trace the requirements behind this", "show the realization chain under this service".
+
+```
+ea_analyze(operation="get_traceability_tree",
+           params={"root_id": <id>, "connector_types": ["Realization"], "direction": "outbound"})
+```
+
+`connector_types` is required -- an unfiltered tree is a neighbourhood graph in a tree costume,
+and `trace_connectors` does that better. `direction` accepts `outbound`/`inbound`, and also
+`downstream`/`upstream` and `outgoing`/`incoming`, because the other operations disagree on the
+word. Cycle handling is per-branch: an element is refused only if it already appears on the path
+from the root down to here, so a diamond correctly shows the same element under both parents
+while a loop terminates with `"cycle": true` on the repeated node. **A node carrying `"cycle"`
+is a cut branch, not a leaf** -- do not report it as "nothing further downstream".
+
+**`traverse_element_subgraph`** also returns a neighbourhood, but resolves MDG stereotype aliases
+into display terms and walks the model element by element over COM. That makes it slower and
+caps it at depth 5. Reach for it when you want the language's own vocabulary in the answer, as
+Section 2 Step 2 does; reach for `trace_connectors` on anything large.
+
+**`get_connectors_for_element_filtered`** is not a traversal -- it is a single-hop SQL lookup of
+one element's own connectors with direction and type filters. Use it when you want this
+element's relationships and nothing further out.
+
+**Guards.** `trace_connectors`, `find_paths`, and `get_traceability_tree` share one engine and
+the same three limits: depth capped at 10, `max_nodes` (2000), `wall_clock_ms` (8000). Any
+response with `"truncated": true` hit one of them and is **partial** -- narrow the depth or the
+connector types and re-run rather than reporting the partial result as complete.
 
 ---
 
