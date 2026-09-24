@@ -36,11 +36,10 @@ A stereotype counts as **covered** if it appears in a loaded language's known st
 which, per `assess_mdg_situation`'s own loaded-languages check, means the loaded WBA technology or
 any Sparx-shipped language currently active. Everything else is **ad hoc**.
 
-Against the `get_mdg_from_runtime` static table for `WBA` (see
-[three-states.md](three-states.md)), which lists `WBABusinessApplication`, `WBAVendorSystem`,
-`WBABusinessService`, `WBAAIService`, `WBAAIGateway`, `WBADataAsset`, and `TechNode`:
+Against the stereotype list `get_mdg_from_runtime` reports for `WBA` (see
+[three-states.md](three-states.md)), read out of the loaded technology itself:
 
-| Stereotype | Count | In the WBA static table? | Bucket |
+| Stereotype | Count | In the WBA technology? | Bucket |
 |---|---|---|---|
 | `WBABusinessApplication` | 52 | yes | covered |
 | `WBAVendorSystem` | 35 | yes | covered |
@@ -84,8 +83,8 @@ suspect one of:
   a technology between them, the two calls answer for different moments.
 - **A stereotype string with a namespace prefix on one side and not the other.** The assessment
   strips everything before `::` when matching (`WBA::WBABusinessApplication` and
-  `WBABusinessApplication` count the same); if you're matching by eye against the static table,
-  do the same normalization or a legitimately-covered stereotype will look ad hoc.
+  `WBABusinessApplication` count the same); if you're matching by eye against the technology's
+  stereotype list, do the same normalization or a legitimately-covered stereotype will look ad hoc.
 - **A Sparx-shipped language's stereotype set covering something you didn't expect.** The
   "covered" bucket includes every currently-loaded Sparx-shipped language, not just the client
   MDG — a plain ArchiMate or BPMN stereotype in use counts as covered even with no client

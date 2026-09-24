@@ -224,10 +224,10 @@ ea_mdg(operation="resolve_display_term", params={"kind": "tag", "technical_name"
 ```
 
 `found` is `false` for every base tag tried (`criticality`, and the rest behave the
-same). The alias comes back as the raw technical name, unresolved. This traces to
-`ea_mdg(operation="get_mdg_from_runtime", params={"tech_id": "WBA"})`: every stereotype
-entry it returns has an empty `tagged_value_definitions` list, so there's nothing for a
-tag-kind lookup to match against.
+same). The alias comes back as the raw technical name, unresolved. `resolve_display_term`
+matches tags against its own alias table rather than against the tag definitions
+`get_mdg_from_runtime` reads out of the loaded technology, so a tag-kind lookup finds
+nothing even when the technology declares the tag.
 
 **This is not a blocker** -- `get_element_business_view` and `aggregate_portfolio` both
 already produce correct business labels for tags (`"Business Owner"`, `"Regulatory

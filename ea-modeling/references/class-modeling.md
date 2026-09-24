@@ -43,57 +43,40 @@ tool's `method_id` field is an `ea_model` naming choice, not a pointer into `t_m
 ## 1. Worked sequence
 
 Carrier elements per canon (`_shared/references/westbrook-example.md` §2): `WBADataAsset` and
-`WBAAIModel` are both declared **Class** metaclass. **What was actually observed live disagrees
-with that for one of the two** — see the callout in §1a before you pick a creation path.
+`WBAAIModel` are both declared **Class** metaclass, and that is the metaclass
+`create_element_in_language` resolves for each.
 
-### 1a. Create the carrier element — and the metaclass disagreement
+### 1a. Create the carrier element
 
 ```python
 ea_model(operation="create_element_in_language", params={
     "package_id": pkg_id,
     "name": "CustomerRiskProfile",
-    "language_id": "WestbrookBankArchitecture",
+    "language_id": "WBA",
     "language_type": "WBADataAsset",
 })
-# -> "resolved_object_type": "Object"
+# -> "resolved_object_type": "Class", "resolved_stereotype": "WBADataAsset",
+#    "definition_source": "model"
 ```
 
-> **Observed, not assumed:** `ea_mdg(operation="get_mdg_from_runtime", params={"tech_id":
-> "WestbrookBankArchitecture"})` lists `WBADataAsset` with `"base_metaclass": "Object"`, and the
-> live `create_element_in_language` call above resolves and stores `t_object.Object_Type =
-> "Object"` (confirmed by direct SQL read after creation). Canon section 2 says `WBADataAsset` is
-> **Class**. The server's own runtime language table — the thing `create_element_in_language`
-> actually reads — disagrees with canon on this one stereotype. This is a real defect somewhere
-> (MDG XML vs. the server's static language table vs. canon), not a modeling mistake on the
-> caller's part. Don't "fix" it by assuming either source is right; say which one you observed.
->
-> **Bigger problem for `WBAAIModel`:** the same runtime call does not list `WBAAIModel` at all —
-> only 7 of the 14 canon stereotypes are in the server's language table
-> (`WBABusinessApplication`, `WBAVendorSystem`, `WBABusinessService`, `WBAAIService`,
-> `WBAAIGateway`, `WBADataAsset`, `TechNode`). Calling `create_element_in_language` with
-> `language_type="WBAAIModel"` fails outright:
-> ```
-> {"error": "unknown_language_type", "language_id": "WestbrookBankArchitecture", "language_type": "WBAAIModel"}
-> ```
+> **Pass the registered technology id.** `WBA` is what EA registers and what
+> `create_element_in_language` resolves against; `WestbrookBankArchitecture` is the display name
+> of the profile inside it. Check the id with `ea_mdg(operation="get_mdg_from_runtime",
+> params={"tech_id": "WBA"})` — the stereotype list it returns is read out of the technology EA
+> has loaded, and `definition_source` on the creation response echoes where the resolution came
+> from.
 
-To get an actual **Class**-metaclass element carrying `WBAAIModel` (matching canon), fall back to
-plain `create_element` with the metaclass forced and the stereotype set cosmetically:
+The same call creates every other carrier the technology declares, `WBAAIModel` included:
 
 ```python
-ea_model(operation="create_element", params={
+ea_model(operation="create_element_in_language", params={
     "package_id": pkg_id,
     "name": "FraudScoringModel",
-    "type": "Class",
-    "properties": {"Stereotype": "WBAAIModel"},
+    "language_id": "WBA",
+    "language_type": "WBAAIModel",
 })
+# -> "resolved_object_type": "Class", "resolved_stereotype": "WBAAIModel"
 ```
-
-This gets you the canon-correct Class metaclass, but per SKILL.md §4.5 it writes only
-`t_object.Stereotype` — no `t_xref` row, so the MDG profile is not applied and the element may
-not render correctly in an MDG-aware diagram. There is currently no path that gets you both
-"Class metaclass" and "MDG profile applied" for `WBAAIModel`, because the server doesn't know the
-stereotype. Flag this rather than picking silently — which property matters (metaclass fidelity
-vs. profile application) is a judgment call for whoever asked for the element.
 
 Everything below (attributes, operations, parameters) works identically regardless of which path
 created the element — these operations key off `element_id`, not off how the element was made.
@@ -253,12 +236,11 @@ regardless of what was requested.
    Use this (see the **ea-com** skill) rather than writing to `t_operationparams` directly —
    a supported API is always preferable to raw SQL against EA's schema.
 
-### 3c. `create_element_in_language` fails outright for stereotypes missing from the runtime table
+### 3c. `create_element_in_language` fails outright for a stereotype the technology doesn't declare
 
-Covered in §1a. `unknown_language_type` is a hard stop, not a partial write — nothing is created.
-Check `ea_mdg(operation="get_mdg_from_runtime", params={"tech_id": "WestbrookBankArchitecture"})`
-first if a `language_type` you expect to exist might not be in the 7-stereotype list the server
-actually knows.
+`unknown_language_type` is a hard stop, not a partial write — nothing is created. Check
+`ea_mdg(operation="get_mdg_from_runtime", params={"tech_id": "WBA"})` first if a `language_type`
+you expect might not be one the loaded technology declares.
 
 ### 3d. There is no `update_parameter` or `delete_parameter`
 

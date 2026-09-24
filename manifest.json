@@ -56,7 +56,7 @@
       ],
       "sha256": {
         "ea-modeling/SKILL.md": "d1f4a579eb7786961a35e7226482d72499bc02c78c189b6c175a99c1fe3df684",
-        "ea-modeling/references/class-modeling.md": "c8b910057a52394c2224715db7bef772a45869d67fe518aa2c738d841a4fc130",
+        "ea-modeling/references/class-modeling.md": "6cf8b1e4640b537b1d9a6a8bfec997c1263f3467967a9393050022f7d83179d4",
         "ea-modeling/references/diagnostics_and_ui.md": "cfc1304b820bfe63fdb99602ad99ea0a411092aaf707a7795f99d2600a709645",
         "ea-modeling/references/diagrams_and_connectors.md": "951a2823ca6f6ac06fb1d786ea6fd4a15e0f9b6f3f38903833792c5fd07063ae",
         "ea-modeling/references/element_creation.md": "bdf8430d4db3c3479857b9de7e2d86d567d6bb22c5dcd5c3aafb603148497452",
@@ -128,7 +128,7 @@
         "ea-mdg-model-build/SKILL.md"
       ],
       "sha256": {
-        "ea-mdg-model-build/SKILL.md": "907cdbb8378e883e3128cf535ec5023d1bdceb5d5a10a90585d5812e8949432b"
+        "ea-mdg-model-build/SKILL.md": "073fa21263bfbb62fd19c2c8f543ffd029b858859c33035f991552f526f68297"
       }
     },
     {
@@ -183,8 +183,8 @@
         "ea-stakeholder-reporting/references/coverage-data.md"
       ],
       "sha256": {
-        "ea-stakeholder-reporting/SKILL.md": "99697185e10e6b2dcef7a9043a0ef333d7da1a883c5063f62f5552f2b31d1761",
-        "ea-stakeholder-reporting/references/coverage-data.md": "ef40c1fc6ed7bfb9b268385f1492761b9e892b81342e86453d2cfb66f821aa95"
+        "ea-stakeholder-reporting/SKILL.md": "538b275ef4a0ffe5b7286b8309f1bf248a511992da13d966f1cd1510a989a579",
+        "ea-stakeholder-reporting/references/coverage-data.md": "51dd954af09d18a32515715012bb3069689a526284bcacea5b39f4a1d252e101"
       }
     },
     {
@@ -199,9 +199,9 @@
         "ea-mdg-assess/references/verification-walkthrough.md"
       ],
       "sha256": {
-        "ea-mdg-assess/SKILL.md": "f3e17d3c061e3786d9e47f731e5ee4eef93651b7754b621aa7f8011b8ce66ea8",
-        "ea-mdg-assess/references/three-states.md": "b68e63592edf706bf85e2c7a1c36de9f851c381a661bdc824dce324e0fbfdecc",
-        "ea-mdg-assess/references/verification-walkthrough.md": "a131e7265edd43e9febbd95d50542d496bd5c733f63eb1ad8f0a07c7e31a4585"
+        "ea-mdg-assess/SKILL.md": "fa6a10b512c4a6a2a82ee03cc2a9e0ff5d5d10e6c2872f61bc2a846e6551d79b",
+        "ea-mdg-assess/references/three-states.md": "de5db48052685e6008c30a89e9a704f3ab15a0942f16b97fce468945f6658d31",
+        "ea-mdg-assess/references/verification-walkthrough.md": "a98249cc9934336eb9931ec52391df87fff2fae294354c722dab6ccee513b95f"
       }
     },
     {

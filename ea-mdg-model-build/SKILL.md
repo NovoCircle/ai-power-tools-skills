@@ -80,7 +80,7 @@ Skipping this is the single most expensive mistake available, because one step i
 
 ⚠ **0.4 gates Phase 3.** Tagged Value Types live in `t_propertytypes`, which is **repository-wide**. The moment a new-version type is added, any export from the old profile packages stops being the old version — silently, with no error and no visible change in the Browser. Archive first or the baseline is unrecoverable.
 
-⚠ **0.1 needs the UI — which means computer use, not a manual detour.** Untick "Hide disabled Technologies" in Manage Technology. Present-but-disabled is indistinguishable from absent through the API, and `get_mdg_from_runtime` is not a reliable probe (see Gotchas). Drive it with computer use and screenshot the result; only ask the user to do it by hand if computer use is unavailable in the session.
+⚠ **0.1 needs the UI — which means computer use, not a manual detour.** Untick "Hide disabled Technologies" in Manage Technology. `get_mdg_from_runtime` separates present-but-disabled from absent only where it can read the technology's XML: `registered_not_loaded` means registered and readable but not loaded, while `unknown_mdg` for a technology with no readable copy cannot tell disabled from never installed. Drive it with computer use and screenshot the result; only ask the user to do it by hand if computer use is unavailable in the session.
 
 ⚠ **0.6 matters more than it looks.** A duplicated profile package has the same name as its source — both trees show a child called `WBA`. Renaming the baseline root is the cheapest protection for the remaining phases, and unlike locking it blocks nobody.
 
@@ -279,7 +279,7 @@ Then: import, confirm **enabled** rather than merely present, and validate on a 
 | New stereotype invisible to users | On no toolbox page |
 | `update_element` returns `ok: true` and nothing changed | `backcolor` is silently ignored — set appearance in the UI (`APT-2026-0053`, open) |
 | Connector tagged value not applied | `update_connector` ignores it as a property — use `set_connector_tagged_value` instead |
-| `get_mdg_from_runtime` says `unknown_mdg` | Unreliable probe — it answers from a static table, not the live model. Confirm in the UI |
+| `get_mdg_from_runtime` says `unknown_mdg` | EA reports nothing loaded under that exact id, and neither a registered technology file nor the model holds its XML. The registered id often differs from the display name — confirm it in Manage Technology |
 | `get_embedded_mdgs` returns empty | EA 17 no longer records imported technologies in `t_document`. Confirm in the UI |
 | Only the author sees the new version | File-based registration shadowing the model copy |
 | Export produces the previous version's content | `.mts` still referencing old filenames |

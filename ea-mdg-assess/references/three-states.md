@@ -1,7 +1,7 @@
 # Installed, embedded, and loaded — three different questions
 
 Every one of these payloads was captured live against the Westbrook Bank demo repository
-(`<model-dir>\WestbrookBank.qea`) on 2026-09-23, with EA already running and the model open.
+(`<model-dir>\WestbrookBank.qea`), with EA already running and the model open.
 Nothing here was constructed from the spec — where a call's answer looks incomplete or odd,
 that's what it actually returned.
 
@@ -63,7 +63,7 @@ or the EA UI's Manage Technology dialog instead, per the note.
 
 ---
 
-## `get_mdg_from_runtime` — what looks like "loaded," and what it actually is
+## `get_mdg_from_runtime` — the technology EA loaded
 
 ```
 ea_mdg(operation="get_mdg_from_runtime", params={"tech_id": "WBA"})
@@ -75,49 +75,68 @@ for one named technology, not the whole repository.
 ```
 {
   "tech_id": "WBA",
+  "technology_name": "WBA (Westbrook Bank Architecture)",
+  "version": "1.0",
   "stereotypes": [
-    {"name": "WBABusinessApplication", "alias": "Business Application", "base_metaclass": "Component"},
-    {"name": "WBAVendorSystem",        "alias": "Vendor System",        "base_metaclass": "Component"},
-    {"name": "WBABusinessService",     "alias": "Business Service",     "base_metaclass": "Component"},
-    {"name": "WBAAIService",           "alias": "AI Service",           "base_metaclass": "Component"},
-    {"name": "WBAAIGateway",           "alias": "AI Gateway",           "base_metaclass": "Component"},
-    {"name": "WBADataAsset",           "alias": "Data Asset",           "base_metaclass": "Object"},
-    {"name": "TechNode",               "alias": "Technology Node",      "base_metaclass": "Node"}
+    {"name": "WBABusinessApplication", "alias": "Business Application", "metatype": "WBABusinessApplication",
+     "base_metaclass": "Component",
+     "tagged_values": [
+       {"name": "criticality", "type": "enumeration", "default": "",
+        "description": "Business criticality classification",
+        "values": ["Mission-Critical", "Business-Critical", "Important", "Standard"]}, ...]},
+    {"name": "WBADataAsset",           "alias": "Data Asset",           "base_metaclass": "Class",   ...},
+    {"name": "WBAAIModel",             "alias": "AI Model",             "base_metaclass": "Class",   ...},
+    ... 14 in total ...
   ],
-  "diagram_types": [],
-  "source": "static"
+  "diagram_types": [
+    {"name": "WBAApplicationView", "alias": "WBA Application Architecture", "base": "Logical",
+     "diagramID": "WBA-AppView", "toolbox": "WBA::WBA ArchiMate"},
+    {"name": "WBAProcessView",   "base": "Activity", ...},
+    {"name": "WBADataModelView", "base": "Logical",  ...}
+  ],
+  "source": "live",
+  "loaded": true,
+  "provenance": {
+    "origin": "model",
+    "detail": "t_trxtypes -- technology imported into the open model",
+    "loaded": true,
+    "version_reported_by_ea": "1.0"
+  }
 }
 ```
 
-Two things to notice, both consequences of `"source": "static"`:
+Fourteen stereotypes, each with its metaclass and its tagged values, and the three diagram types —
+read out of the technology EA has loaded. `provenance.origin` says which of the two places that
+was:
 
-1. **Seven stereotypes, not the shipped technology's full fourteen**, no tagged values on any of
-   them, and no diagram types — even though the shipped `WBA_MDG.xml` defines all three. This
-   table is a hand-curated summary baked into the server for languages it already recognizes, not
-   a parse of the actual MDG XML.
-2. **`WBADataAsset`'s `base_metaclass` reads `Object`**, where the shipped technology's own spec
-   defines it against `Class`. Also present: `TechNode`, which isn't a canonical WBA stereotype at
-   all. Flag mismatches like this rather than silently treating either side as correct — see the
-   "known defects" convention in `_shared/references/westbrook-example.md` §11. The point for this
-   skill isn't which side is right; it's that this call cannot tell you, because it isn't reading
-   the deployed technology at all for a `tech_id` it already has a static entry for.
+- `model` — the technology was imported into this model, and EA keeps the profiles it imported
+  inside the model file.
+- `registered_file` — the technology is an `.xml` in a folder EA loads at startup (the per-user
+  MDGTechnologies folder, a configured search path, or EA's own install). `provenance.detail`
+  carries the path, which is what to open when a deployment looks stale.
 
-The fallback path — the one that genuinely checks EA — only runs for a `tech_id` **not** in the
-server's static/cached tables. There, the server calls `repo.IsTechnologyLoaded(tech_id)` directly
-and returns one of:
+`version_reported_by_ea` is `GetTechnologyVersion` for that id. When it disagrees with the version
+in the definitions read, the response carries `provenance.version_mismatch` — EA is loading a
+different build of the technology than the one being read, and neither side should be trusted
+until that is resolved.
 
-- `{"error": "cannot_determine", ...}` — the probe itself failed; treat as unknown, not absent
-- `{"error": "mdg_loaded_no_definition", "loaded": true, ...}` — confirmed loaded, but the server
-  has no parsed stereotype/diagram-type table for it; run `parse_mdg_xml` on its XML to populate
-  one
+### When it declines
+
+The call refuses rather than guessing, and `source` is `unavailable` with an `error` saying which
+kind of nothing it found:
+
+- `{"error": "cannot_determine", "loaded": null, ...}` — EA could not be probed at all; treat as
+  unknown, not absent.
+- `{"error": "mdg_loaded_no_definition", "loaded": true, ...}` — EA confirms the technology is
+  loaded, but its XML is in neither a technology folder nor the model, so there is nothing to
+  read. Export it from Specialize > Technologies > Manage Technology and run `parse_mdg_xml` on
+  the file.
 - `{"error": "unknown_mdg", "loaded": false, ...}` — a verified negative for that exact id string,
-  not a guess. EA 17's COM surface can't enumerate custom technology ids, so this only confirms
-  the one string you passed; the real registration may exist under a different id
+  not a guess. EA's COM surface can't enumerate custom technology ids, so this only confirms the
+  one string you passed; the real registration may exist under a different id.
 
-So: for a technology this server has never heard of, `get_mdg_from_runtime` is a real, live
-"loaded" probe. For `WBA`, `ArchiMate3`, and the other names it recognizes, it is not — it is a
-reference table that can be stale in exactly the ways shown above. Knowing which of the two
-behaviors you're getting requires knowing whether the id is in the server's static table, which
-isn't visible from the call itself. When in doubt, don't rely on this call alone for a "is it
-really loaded" answer on a known id — check the EA UI's Manage Technology dialog directly, or the
-`enabled` field from `list_registered_technologies`.
+Two further `source` values sit between those: `registered_not_loaded`, where the definitions were
+found but EA does not have the technology loaded right now, and `session_parse`, where the only
+definitions available are those `parse_mdg_xml` was handed this session — which is not necessarily
+what EA loaded. Both are still worth reading; neither is evidence of what the session is actually
+modelling with.

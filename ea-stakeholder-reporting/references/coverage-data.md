@@ -149,10 +149,10 @@ ea_mdg(operation="resolve_display_term", params={"kind": "tag", "technical_name"
    (same result with mdg_id omitted -- not a parameter-passing mistake)
 ```
 
-Root cause, from `ea_mdg(operation="get_mdg_from_runtime", params={"tech_id": "WBA"})`:
-every stereotype entry returned carries `"tagged_value_definitions": []`. There is
-nothing populated for a tag-kind lookup to match against, for any tag, on this
-technology, at this server version. Meanwhile `get_element_business_view` and
+Root cause: `resolve_display_term` matches tags against its own alias table, not against
+the tag definitions `get_mdg_from_runtime` reads out of the loaded technology, so a
+tag-kind lookup finds nothing for any tag on this technology even though the technology
+declares them. Meanwhile `get_element_business_view` and
 `aggregate_portfolio` both produce correct human labels for the same tags
 (`"Business Owner"`, `"Technical Owner"`, `"Data Classification"`, `"Regulatory Scope"`,
 `"Criticality"`) through their own formatting, independent of `resolve_display_term`.
