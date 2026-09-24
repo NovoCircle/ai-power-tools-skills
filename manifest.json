@@ -128,7 +128,7 @@
         "ea-mdg-model-build/SKILL.md"
       ],
       "sha256": {
-        "ea-mdg-model-build/SKILL.md": "073fa21263bfbb62fd19c2c8f543ffd029b858859c33035f991552f526f68297"
+        "ea-mdg-model-build/SKILL.md": "91e2aec2ac26781ccbc33d419e291b909169bf800d115068f0808ce36e2854d8"
       }
     },
     {
@@ -301,7 +301,7 @@
         "_shared/references/westbrook-example.md"
       ],
       "sha256": {
-        "_shared/references/ea-ui-verification.md": "44f16d33cc3fd5a492d14f2712a266f483f2c0e756a00020d7215fe6d63d9035",
+        "_shared/references/ea-ui-verification.md": "4f74960eed2c33a1097b19f8931a82c2f60fce90de70f5bb7c77f4105ecbe2ba",
         "_shared/references/file-encoding.md": "5759bac841234558071a4cde555587e45cabebe5a90420188b07f8323d62f7fe",
         "_shared/references/latency.md": "af565b7e08f3a79a9239f548c63115181ef3ea7bd845b94ef0363a28f035d06f",
         "_shared/references/operations.md": "ec4331f19cdba7c8f299ac198656d6eea117d4ef2630284dd6d83e49a6b03db9",

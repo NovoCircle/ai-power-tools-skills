@@ -10,7 +10,8 @@ what to look for and what to do about it.
 > **The principle: EA reports success it has not earned.** `export_xmi` reported
 > `"status": "exported"` while writing an empty file in the wrong format. `install_skills`
 > returned `ok: true` while writing to a directory nothing reads. `update_element` returns
-> `ok: true` and silently ignores `backcolor`. A success response is a claim, not evidence.
+> `ok: true` when a property it could not apply went into `rejected_properties` instead.
+> A success response is a claim, not evidence.
 
 ---
 

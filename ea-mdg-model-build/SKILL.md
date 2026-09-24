@@ -6,7 +6,7 @@ description: Build a Sparx EA MDG Technology from a model held inside the reposi
 # Building an MDG Technology from a Model
 
 *Grounded in an end-to-end, model-driven build of the Westbrook Bank Architecture (`WBA`)
-technology. Tool-surface claims verified against `ea-mcp-server` v2.0.0 (2026-09-21) — see the
+technology. Tool-surface claims verified against `ea-mcp-server` v2.2.0 — see the
 note at the bottom of Quick Reference.*
 
 Two ways exist to produce an MDG. This skill covers the model-driven one. `ea-mdg-author` covers the other.
@@ -27,9 +27,9 @@ Two ways exist to produce an MDG. This skill covers the model-driven one. `ea-md
 | Create stereotype, attribute, constraint | MCP API |
 | Duplicate a package | MCP API — `duplicate_package` (fresh GUIDs throughout; the API equivalent of Paste as New) |
 | Connector tagged value (Quick Linker constraint) | MCP API — `set_connector_tagged_value` / `get_connector_tags` / `list_connector_tagged_values` / `delete_connector_tagged_value` |
-| Element background color | COM — `Element.SetAppearance(Scope, Item, Value)`. No MCP operation |
-| Export a profile | COM — `Repository.SavePackageAsUMLProfile(pkgGUID, Filename)`. No MCP operation |
-| Build the MDG | COM — `Repository.GenerateMDGTechnology(mtsFilename)`. No MCP operation |
+| Element appearance — background, font, border | MCP API — `set_element_appearance` for the model-wide default; `set_diagram_object` for one placement on one diagram |
+| Export a profile | MCP API — `publish_package_as_profile` (always pass `version`) |
+| Build the MDG | COM — `Repository.GenerateMDGTechnology(mtsFilename)`, but the `.mts` it consumes has to come from the wizard first. No MCP operation |
 | Reference data (tagged value types) | COM — `Project.ImportReferenceData` / `ExportReferenceData`, `Repository.PropertyTypes()`. No MCP operation |
 | Verify anything | MCP API + parse the built XML, **and look at the UI** |
 
@@ -43,7 +43,7 @@ The rule that keeps this efficient: **build with the API, verify with both.**
 > | Route | Use it when |
 > |---|---|
 > | **MCP operation** | One exists. Fastest, and the only one that needs nothing on screen |
-> | **COM directly** (see **ea-com**) | EA exposes it but the MCP server does not wrap it yet — as with all four rows above |
+> | **COM directly** (see **ea-com**) | EA exposes it but the MCP server does not wrap it yet — as with the two COM rows above |
 > | **EA's UI with computer use** | Neither of the above, *or* you need to see what actually happened |
 >
 > The UI is not a fallback. The API tells you a call returned; the UI shows you what the
@@ -193,19 +193,29 @@ So toolbox work is `create_attribute` / `update_attribute` / `delete_attribute` 
 
 ## Phase 5 — Build
 
-All UI. The sequence matters and several steps are easy to get subtly wrong. (Tracked for API scripting as `APT-2026-0055`; not yet available.)
+Two halves, and only the first is scriptable today. The sequence matters and several steps are easy to get subtly wrong.
 
-1. **Export each profile** — `Specialize ▸ Publish Technology ▸ Publish Package as UML Profile`.
+1. **Export each profile** — `ea_mdg(operation="publish_package_as_profile", ...)`.
    - The UML profile exports from the `«profile»` package.
    - The diagram profile exports from the `«diagram profile»` package.
-   - **Each toolbox exports from its diagram**, via `Publish Diagram as UML Profile`.
-2. **Build the MDG** — `Specialize ▸ Publish Technology ▸ Generate MDG Technology`.
+   - **Each toolbox exports from its diagram**, which has no MCP operation — use `Repository.SaveDiagramAsUMLProfile(dgmGUID, Filename)` through COM, or `Publish Diagram as UML Profile` in the UI.
+2. **Build the MDG** — `Specialize ▸ Publish Technology ▸ Generate MDG Technology`, in the UI.
 
-⚠ **Version is typed into the export dialog, not stored on the package.** Profile packages commonly carry `Version 1.0` while exporting as 3.0.14. A version stamp that lags across releases is a symptom of the dialog being left at its remembered value, not of a package field.
+```python
+ea_mdg(operation="publish_package_as_profile", params={
+    "package_id": 4213,
+    "output_path": r"<build-dir>\WBA-profile.xml",
+    "version": "3.0.14",
+})
+```
+
+⚠ **Always pass `version`.** EA reads a package's `Version` property the first time that package is published in a session and then caches it — republish after changing the package and you get the old value, silently. This is the same stale-version failure the UI export dialog has, and it is why the operation takes an explicit `version` and stamps it into the generated XML rather than trusting EA. The response reports `version_from_ea` alongside it, so you can see what EA would have shipped.
 
 ⚠ **`Publish Diagram as UML Profile` is greyed out unless the diagram is open.** Selecting it in the Browser is not enough.
 
-⚠ **The wizard's Tagged Value Types page is a selection step, not an inclusion step.** Types not selected here do not ship, however completely they are defined. This is the usual cause of "the type exists but the field is still free text" — and because the omission is invisible in the model, it can persist across many releases. The wizard's own selection page has no MCP operation, but `Repository.GenerateMDGTechnology(mtsFilename)` exists and the `.mts` file controls which sections and tagged-value types are included, so this is scriptable through COM — but the omission can now be *detected*: `ea-validation`'s `tagged_value_type_shipped` rule condition compares a profile's blank-`Type` tagged-value attributes against a built MDG file's RefData and flags anything defined but not shipped (`APT-2026-0057`, shipped). Run it as part of Phase 6 verification.
+⚠ **Generate MDG Technology needs a wizard-authored `.mts` first.** `Repository.GenerateMDGTechnology(mtsFilename)` is callable and validates its argument, but the `.mts` schema is not published — Sparx documents the root element, the hand-edited `<ModelValidation>` and `<ModelTemplates>` sections, and the wizard's section list, but not the element names the wizard writes per section or the on-disk form of the tagged-value-type inclusion list. A hand-reconstructed file is rejected for reasons nothing explains. Run the wizard once to emit a real `.mts`, keep it under version control, and edit that file from then on.
+
+⚠ **The wizard's Tagged Value Types page is a selection step, not an inclusion step.** Types not selected here do not ship, however completely they are defined. This is the usual cause of "the type exists but the field is still free text" — and because the omission is invisible in the model, it can persist across many releases. Detect it: `ea-validation`'s `tagged_value_type_shipped` rule condition compares a profile's blank-`Type` tagged-value attributes against a built MDG file's RefData and flags anything defined but not shipped. Run it as part of Phase 6 verification.
 
 ⚠ **Match the Contents checkboxes to the shape of the current deployed file** rather than guessing. Parse the deployed file and tick to match:
 
@@ -273,11 +283,13 @@ Then: import, confirm **enabled** rather than merely present, and validate on a 
 | Symptom | Cause |
 |---|---|
 | Stereotype missing from the built MDG | No Extension to a metaclass |
-| Tag ships as free text despite a complete definition | Not selected on the wizard's Tagged Value Types page — run `ea-validation`'s `tagged_value_type_shipped` rule to detect this (`APT-2026-0057`, shipped) |
+| Tag ships as free text despite a complete definition | Not selected on the wizard's Tagged Value Types page — run `ea-validation`'s `tagged_value_type_shipped` rule to detect this |
 | Quick Linker rule never fires | Constraint value not namespace-qualified |
 | Toolbox entry points at nothing | Stereotype deleted, toolbox not swept |
 | New stereotype invisible to users | On no toolbox page |
-| `update_element` returns `ok: true` and nothing changed | `backcolor` is silently ignored — set appearance in the UI (`APT-2026-0053`, open) |
+| An element's color changed on one diagram but not the others | `set_diagram_object` restyles one placement. The model-wide default is `set_element_appearance` |
+| A color comes out with red and blue swapped | An integer color is EA's Win32 COLORREF, `0x00BBGGRR` — `255` is red, not blue. Pass `"#RRGGBB"` instead and the swap is handled for you |
+| Published profile carries the wrong version | `version` was omitted, so EA supplied its cached value — always pass it |
 | Connector tagged value not applied | `update_connector` ignores it as a property — use `set_connector_tagged_value` instead |
 | `get_mdg_from_runtime` says `unknown_mdg` | EA reports nothing loaded under that exact id, and neither a registered technology file nor the model holds its XML. The registered id often differs from the display name — confirm it in Manage Technology |
 | `get_embedded_mdgs` returns empty | EA 17 no longer records imported technologies in `t_document`. Confirm in the UI |
