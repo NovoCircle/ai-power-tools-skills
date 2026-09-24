@@ -215,3 +215,19 @@ and the standard action/wait/screenshot pattern:
 - `ea-ruleset-author` — full workflow for building and publishing a complete ruleset for a modeling language (ArchiMate, BPMN, UML, SysML, custom MDG, etc.).
 - `ea-mdg-author` — for the matching MDG XML (stereotypes + tags + OCL).
 - `ea-mdg-deploy` — for getting that MDG into the model so rules have something to validate.
+
+## Verify in EA's UI
+
+EA reports success it has not earned, and reports failure as a modal dialog that blocks the
+COM connection rather than as an error you can catch. Neither shows up in a tool response.
+
+- **If a call seems to hang, screenshot EA and read the dialog before concluding anything.**
+  It names the cause. Dismiss from the front — dialogs stack, and a later call can be queued
+  behind one raised by an earlier one. Windows reporting EA as "Responding" means nothing.
+- **After any diagram create or edit, reload the diagram, screenshot it, and look.**
+  `ok: true` means rows were written, not that elements landed where you intended, that
+  styling applied, or that the result is readable.
+- **Without computer use**, say so and ask the user to look — never report a hang you have
+  not diagnosed or a diagram you have not seen.
+
+Full procedure: [`../_shared/references/ea-ui-verification.md`](../_shared/references/ea-ui-verification.md)

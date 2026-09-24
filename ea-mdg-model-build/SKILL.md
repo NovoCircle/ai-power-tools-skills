@@ -270,3 +270,19 @@ Then: import, confirm **enabled** rather than merely present, and validate on a 
 - **Never edit the baseline packages.** Protect them by renaming; lock only where you know who the lock applies to.
 - **Do not fix things out of sequence.** A toolbox defect found during profile work is recorded, not corrected — nothing exports until the build phase, and out-of-sequence edits are how verification stops being meaningful.
 - **Measure against the repository, not against the plan.** Counts in planning documents go stale, and a sandbox is not production.
+
+## Verify in EA's UI
+
+EA reports success it has not earned, and reports failure as a modal dialog that blocks the
+COM connection rather than as an error you can catch. Neither shows up in a tool response.
+
+- **If a call seems to hang, screenshot EA and read the dialog before concluding anything.**
+  It names the cause. Dismiss from the front — dialogs stack, and a later call can be queued
+  behind one raised by an earlier one. Windows reporting EA as "Responding" means nothing.
+- **After any diagram create or edit, reload the diagram, screenshot it, and look.**
+  `ok: true` means rows were written, not that elements landed where you intended, that
+  styling applied, or that the result is readable.
+- **Without computer use**, say so and ask the user to look — never report a hang you have
+  not diagnosed or a diagram you have not seen.
+
+Full procedure: [`../_shared/references/ea-ui-verification.md`](../_shared/references/ea-ui-verification.md)

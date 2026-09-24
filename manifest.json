@@ -14,7 +14,7 @@
         "ea-start-here/SKILL.md"
       ],
       "sha256": {
-        "ea-start-here/SKILL.md": "8e49a385f98e5abe5d03004806591666fb4dd062ef902c769b724ac2b0114b8f"
+        "ea-start-here/SKILL.md": "092a220aa9dc9d47287586beaf23849d8823f6d5f7f64e34a5c49042392cc123"
       }
     },
     {
@@ -30,7 +30,7 @@
         "ea-com/references/technology-and-lifecycle.md"
       ],
       "sha256": {
-        "ea-com/SKILL.md": "07a1a4e7a0dc1eba1c12887994ea622c23c124a4568e59dc41c1640747c5a318",
+        "ea-com/SKILL.md": "bf7d985cea1a6001432edf122650c6961abcce1aa09a79baf43ae60b16ac0ce7",
         "ea-com/references/connecting-and-queries.md": "60bc09b368dee3c2e12de0955e7c59704b225253bba0eda766e79fd0e615dfad",
         "ea-com/references/mutating-elements.md": "abd7a926aec1e90bba50ef4e1c6fb494a81b5c8965077b4b52d23d7919adaf6d",
         "ea-com/references/technology-and-lifecycle.md": "4b671ab26d65d129dc2fcfa59c289e0a5e2918c0eb75b7866688a708364c8d59"
@@ -55,7 +55,7 @@
         "ea-modeling/references/wba_mdg_reference.md"
       ],
       "sha256": {
-        "ea-modeling/SKILL.md": "0097c666a6ed55cb98b5e437a21d4dcb92ce9939588e7a28a7914732132a7e7a",
+        "ea-modeling/SKILL.md": "f075433c04aebfac74a3aeba7bb2092d188f75075e8afa617cec7bae53ceda09",
         "ea-modeling/references/class-modeling.md": "e7e1cb6f586462f2039375f2482816ed394047118dcce502fb02054eb6a3486e",
         "ea-modeling/references/diagnostics_and_ui.md": "cfc1304b820bfe63fdb99602ad99ea0a411092aaf707a7795f99d2600a709645",
         "ea-modeling/references/diagrams_and_connectors.md": "951a2823ca6f6ac06fb1d786ea6fd4a15e0f9b6f3f38903833792c5fd07063ae",
@@ -77,7 +77,7 @@
         "ea-navigation-diagrams/SKILL.md"
       ],
       "sha256": {
-        "ea-navigation-diagrams/SKILL.md": "5b6b91e0bedfe6f87834df75300cf5c792aa7b7ee756d6d2e60fecae0f847345"
+        "ea-navigation-diagrams/SKILL.md": "129cde0c0a454c7aac6bd35a2c8246507217442eb4a56b39d3312229c30c63fc"
       }
     },
     {
@@ -96,7 +96,7 @@
         "ea-mdg-author/references/xml-skeleton.md"
       ],
       "sha256": {
-        "ea-mdg-author/SKILL.md": "13c31ff69030c74b816cac83f30a39072184d46f2fee794a936ffab75fc358cc",
+        "ea-mdg-author/SKILL.md": "8ca6002d489883978f021a17e874e4bb1ca68cd93e4446322165101e47a6d7c3",
         "ea-mdg-author/references/diagrams-toolboxes.md": "e81b5bff2094768ee93b73e5d33bb233057a1133434f773c4941c6328fc8d557",
         "ea-mdg-author/references/post-install-migration.md": "b2e3f1a2f047042a917eea2b201ebb454df7886ef0136d316bc092f997dd3cec",
         "ea-mdg-author/references/quick-linker.md": "1b0e4e93230bce9138b650aa403f73e370cc6592807009949404b8f06ade232a",
@@ -115,7 +115,7 @@
         "ea-mdg-deploy/SKILL.md"
       ],
       "sha256": {
-        "ea-mdg-deploy/SKILL.md": "11b36c1e432f33b16c6dbfeefec17f51e73e8917cf480e41999947d2ad18701a"
+        "ea-mdg-deploy/SKILL.md": "c00d4830f958fce15adc054a7d3f5e4994b96d3bad29079c8ef6071e89677803"
       }
     },
     {
@@ -128,7 +128,7 @@
         "ea-mdg-model-build/SKILL.md"
       ],
       "sha256": {
-        "ea-mdg-model-build/SKILL.md": "53855aaa09e164186ca7578487909e7c0ab2c412886bc67ac0f835e3e758e74d"
+        "ea-mdg-model-build/SKILL.md": "e24cd07615ce6c3f5e7f415045ec397e7f3424237c822d7d4cb2bcf8f3844e5c"
       }
     },
     {
@@ -141,7 +141,7 @@
         "ea-validation/SKILL.md"
       ],
       "sha256": {
-        "ea-validation/SKILL.md": "a34531d1abb1533b614576478b52e2d1483b293ea1c4256f7a1868a83c9aef7a"
+        "ea-validation/SKILL.md": "8ee1b671c37da52ca0a43133d2341f82b53261a41913e32947b687c09f8e2866"
       }
     },
     {
@@ -169,7 +169,7 @@
         "ea-diagnostic/SKILL.md"
       ],
       "sha256": {
-        "ea-diagnostic/SKILL.md": "19c3f6debcb4e924368d529398ee843616654e3ae91737c53d3fbb94ea07ae19"
+        "ea-diagnostic/SKILL.md": "8e652c8746f0c337d92f0a71cab2dfdf759996ef1d7e72dab5ea10337e8957c2"
       }
     },
     {
@@ -183,7 +183,7 @@
         "ea-stakeholder-reporting/references/coverage-data.md"
       ],
       "sha256": {
-        "ea-stakeholder-reporting/SKILL.md": "78c0ff9c0092053daa624fc37f3fab2a378976664552c5aca974a4337d582374",
+        "ea-stakeholder-reporting/SKILL.md": "99697185e10e6b2dcef7a9043a0ef333d7da1a883c5063f62f5552f2b31d1761",
         "ea-stakeholder-reporting/references/coverage-data.md": "ef40c1fc6ed7bfb9b268385f1492761b9e892b81342e86453d2cfb66f821aa95"
       }
     },
@@ -199,7 +199,7 @@
         "ea-mdg-assess/references/verification-walkthrough.md"
       ],
       "sha256": {
-        "ea-mdg-assess/SKILL.md": "b0ce58afcee5e0d9e4a3cb88c521eb10e8830c8837f082dc63f0fc35ae59ac3c",
+        "ea-mdg-assess/SKILL.md": "f3e17d3c061e3786d9e47f731e5ee4eef93651b7754b621aa7f8011b8ce66ea8",
         "ea-mdg-assess/references/three-states.md": "b68e63592edf706bf85e2c7a1c36de9f851c381a661bdc824dce324e0fbfdecc",
         "ea-mdg-assess/references/verification-walkthrough.md": "a131e7265edd43e9febbd95d50542d496bd5c733f63eb1ad8f0a07c7e31a4585"
       }
@@ -215,7 +215,7 @@
         "ea-change-management/references/worked-example.md"
       ],
       "sha256": {
-        "ea-change-management/SKILL.md": "94c9cafd309223691e986e42a68550a5ee247c30fa369cbfe45c8120f13b67a7",
+        "ea-change-management/SKILL.md": "a5c708812589b6c8f88a9d11888b4eef66d852c949907f8d2c8292e34ef3fd5a",
         "ea-change-management/references/worked-example.md": "a1d2d6086cd3aef896f69817fd0b5c611c8f0c46680b5d9acd6bcefe12e7e669"
       }
     },
@@ -231,7 +231,7 @@
         "ea-import-export/references/xmi-export-import.md"
       ],
       "sha256": {
-        "ea-import-export/SKILL.md": "fc804c64c059b56bd1c38d9dd0f9eb5ffe4f5be33586543bcc79165b8cd484ec",
+        "ea-import-export/SKILL.md": "2e7f5c98d7e16873d7d465ac05c8cf25505c6c4d6c0703d14e4eee697d5ee8ef",
         "ea-import-export/references/generate-report.md": "8fc55ca353efc77748b712d9df1791227d452636acd0988255ad402f461b96b1",
         "ea-import-export/references/xmi-export-import.md": "fa826f01dcc3dfe20eda73a035f699b304370c5df28e631926db0a54e239c85f"
       }
@@ -248,7 +248,7 @@
         "ea-model-hygiene/references/pre-delete-safety.md"
       ],
       "sha256": {
-        "ea-model-hygiene/SKILL.md": "bca0a290b07cc42dad5d6402625d35430ab1e1486b7f9a9a947336d0a9768779",
+        "ea-model-hygiene/SKILL.md": "8f1c2723e1768bb04ba3d03ba913c5f25c6ddfb4a111ff0112fa6858d33821df",
         "ea-model-hygiene/references/consistency-audits.md": "cb1081ce92e215680904659e4f743b9462dae1a7281c09491d330709fdc46521",
         "ea-model-hygiene/references/pre-delete-safety.md": "1fde00e2f563b713e3ed92b3e71b430247d717ee5f0562743b49a61b04351bce"
       }
@@ -273,12 +273,14 @@
       "version": "1.0.0",
       "min_server_version": "1.0.0",
       "files": [
+        "_shared/references/ea-ui-verification.md",
         "_shared/references/file-encoding.md",
         "_shared/references/latency.md",
         "_shared/references/operations.md",
         "_shared/references/westbrook-example.md"
       ],
       "sha256": {
+        "_shared/references/ea-ui-verification.md": "44f16d33cc3fd5a492d14f2712a266f483f2c0e756a00020d7215fe6d63d9035",
         "_shared/references/file-encoding.md": "5759bac841234558071a4cde555587e45cabebe5a90420188b07f8323d62f7fe",
         "_shared/references/latency.md": "af565b7e08f3a79a9239f548c63115181ef3ea7bd845b94ef0363a28f035d06f",
         "_shared/references/operations.md": "db5aafbe9122080ad217fcd25b98716461b24067824adf6764c0670c180c55f0",

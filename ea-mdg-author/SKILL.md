@@ -215,3 +215,19 @@ actual byte encoding agreeing — EA rejects the file outright if they don't. Fu
 | [references/post-install-migration.md](references/post-install-migration.md) | Four-step workflow for migrating existing elements onto a newly installed MDG |
 | [references/quick-linker.md](references/quick-linker.md) | Quick Linker rule syntax, both authoring approaches, verification steps |
 | [references/validation-sidecar.md](references/validation-sidecar.md) | Why not `<Scripts>`, YAML sidecar template, smoke-test command |
+
+## Verify in EA's UI
+
+EA reports success it has not earned, and reports failure as a modal dialog that blocks the
+COM connection rather than as an error you can catch. Neither shows up in a tool response.
+
+- **If a call seems to hang, screenshot EA and read the dialog before concluding anything.**
+  It names the cause. Dismiss from the front — dialogs stack, and a later call can be queued
+  behind one raised by an earlier one. Windows reporting EA as "Responding" means nothing.
+- **After any diagram create or edit, reload the diagram, screenshot it, and look.**
+  `ok: true` means rows were written, not that elements landed where you intended, that
+  styling applied, or that the result is readable.
+- **Without computer use**, say so and ask the user to look — never report a hang you have
+  not diagnosed or a diagram you have not seen.
+
+Full procedure: [`../_shared/references/ea-ui-verification.md`](../_shared/references/ea-ui-verification.md)
