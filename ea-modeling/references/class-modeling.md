@@ -18,7 +18,7 @@ consistent, and guessing wrong fails immediately with `missing_required_params`:
 |---|---|---|---|---|
 | Attribute | `attribute_id` (= `t_attribute.ID`) | `guid` (= `t_attribute.ea_guid`) | `attribute_guid` | `element_id` + `attribute_id` |
 | Operation | `method_id` (= `t_operation.OperationID`, **not** `t_method`) | `guid` (= `t_operation.ea_guid`) | `method_guid` | `element_id` + `method_id` |
-| Parameter | `parameter_id` — always **`null`** in every response (see §4) | `guid` (= `t_operationparams.ea_guid`) | no dedicated update op exists | no dedicated delete op exists |
+| Parameter | `parameter_id` — always **`null`** in `list_operations`, omitted entirely from `add_parameter`'s own response (see §4) | `guid` (= `t_operationparams.ea_guid`) | no dedicated update op exists | no dedicated delete op exists |
 
 **Confirmed live, both objects:** `update_attribute` takes `attribute_guid`; `delete_attribute`
 takes `element_id` + `attribute_id`. `update_operation` takes `method_guid`; `delete_operation`
@@ -88,22 +88,19 @@ ea_model(operation="create_attribute", params={
     "element_id": elem_id,
     "name": "assetId",
     "type": "String",
-    "properties": {"Default": "UNSET"},
+    "default": "UNSET",
 })
 # -> {"ok": true, "attribute_id": 2, "guid": "{...}", "name": "assetId",
 #     "type": "String", "default": "UNSET", ...}
 ```
 
-**The default value MUST go through `properties={"Default": ...}`.** A top-level `"default"` or
-`"default_value"` keyword argument is silently accepted by the call (no error, no entry in
-`rejected_properties`) but never reaches `t_attribute.Default` — the field comes back empty. This
-was confirmed by creating three attributes with a top-level `default`/`default_value` argument
-(all persisted with `Default = ""`), then one with `properties={"Default": "US"}` (persisted
-correctly), then fixing one of the broken ones after the fact with `update_attribute` +
-`properties={"Default": "UNSET"}`. Use the raw EA column name inside `properties` for anything
-beyond `name`/`type`/`element_id` — same pattern as `update_element` elsewhere in this skill.
-`Default`, `Type`, `Scope`, and `Const` are reserved words in `t_attribute` (bracket them in raw
-SQL, but that doesn't apply to the `properties` dict keys — those are just the column names).
+The top-level `default` param (alias: `default_value`) sets `t_attribute.Default` directly and is
+the recommended form. `properties={"Default": "UNSET"}` also works and takes precedence if both
+are supplied in the same call — but there's no reason to reach for `properties` for this one
+field. Use the raw EA column name inside `properties` for anything else beyond
+`name`/`type`/`element_id` — same pattern as `update_element` elsewhere in this skill. `Default`,
+`Type`, `Scope`, and `Const` are reserved words in `t_attribute` (bracket them in raw SQL, but
+that doesn't apply to the `properties` dict keys — those are just the column names).
 
 ### 1c. Operations — with a return type
 
@@ -130,12 +127,15 @@ ea_model(operation="add_parameter", params={
     "method_id": 2,
     "name": "strict",
     "type": "Boolean",
+    "default": "true",
 })
+# -> {"ok": true, "guid": "{B2A7...}", "name": "strict", "type": "Boolean",
+#     "kind": "in", "default": "true"}
 ```
 
-**This call throws on every invocation observed, but the write usually still lands.** See §4 —
-read it before you retry on error, because a naive retry can duplicate work in the one case where
-it doesn't land, and is a no-op (safe) in the case where it does.
+The response has no `parameter_id` field at all — `t_operationparams` has no integer id column,
+only a `guid` — so don't look for one. `default` is optional and, when supplied, persists. A call
+that raises means nothing was written (see §3b for what can cause that).
 
 ---
 
@@ -179,9 +179,9 @@ Reading it:
   owning element and filter by `name` yourself.
 - Order matches EA's internal `Pos` column — the order the browser would show, not creation
   order if any have been reordered since.
-- `parameter_id` is **always `null`.** Don't treat this as "the parameter creation failed" — it's
-  a fixed field on every parameter row regardless of outcome (see §4). Use the parameter's `guid`
-  or its `name` (unique per operation — see §4) if you ever need to refer back to one.
+- `parameter_id` is **always `null`** in `list_operations` — `t_operationparams` has no integer id
+  column, so there is nothing for this field to ever hold. Use the parameter's `guid` or its
+  `name` (unique per operation — see §3b) if you ever need to refer back to one.
 - An unset attribute/parameter default reads back as `""` immediately after creation in the tool
   response, but as the **literal string `"<none>"`** if you read it back later (via
   `update_operation`'s echo, or via raw SQL on `t_operationparams.Default` /
@@ -194,47 +194,36 @@ Reading it:
 
 ## 3. Failure modes actually hit
 
-### 3a. `create_attribute` / `add_parameter` silently drop a top-level `default`
+### 3a. Setting a default on an attribute or parameter
 
-Covered in §1b. Symptom: call returns `ok: true`, `rejected_properties: []` (nothing was
-rejected — the key just wasn't recognized), and the value never appears in the model. Fix: put it
-in `properties={"Default": ...}`.
+Use the top-level `default` param on `create_attribute` (alias `default_value`) or on
+`add_parameter` — both honor it and it persists. `properties={"Default": ...}` still works for
+`create_attribute` too (and wins if you somehow pass both in the same call), but there's no reason
+to reach for it just for this one field. See §1b and §1d for worked examples.
 
-### 3b. `add_parameter` throws `AddNew.ParameterID` — but the parameter is usually already written
+### 3b. `add_parameter` — no throw, no phantom id, and what a raised error actually means
 
-Reproduced on every single call made during verification (5/5), including:
-- Two different operations on two different elements.
-- A parameter with a `type`, one without.
-- `type` passed top-level and via `properties={"Type": ...}`.
-- A brand-new operation created seconds earlier (rules out "operation must be committed first").
+`add_parameter` does not raise for a normal, successful write. Its response has **no
+`parameter_id` field at all** — not `null`, simply absent — because `t_operationparams` has no
+integer id column; the response carries `guid` instead. `default`, when supplied, persists (see
+§3a) and reads back correctly in the same call.
 
-The raw error text is `Error executing tool ea_model: AddNew.ParameterID` — an unhandled COM-level
-exception, not a validated `{"ok": false, ...}` response. Despite the exception, `list_operations`
-called immediately after showed the parameter present with the `name` and `type` (when given)
-correctly stored, every time. What did **not** persist: any `Default` passed via `properties`
-alongside the failing call — the column reads back as EA's literal `<none>`, i.e. never set,
-regardless of what was requested.
+A raised error here means the write did not happen — verified by refreshing and reading the
+operation's `Parameters` collection back before reporting success, not by trusting the write call
+in isolation. Two ways this can happen:
+- An unknown `method_id`.
+- **A parameter name that already exists on the same operation.** EA does not raise for this and
+  does not overwrite the existing row in place — it silently no-ops the second write. A second
+  `add_parameter` call for a name already present on that operation therefore raises here rather
+  than reporting a false success or quietly creating nothing. If you actually want to change an
+  existing parameter, there is no update op for it (§3d) — recreate the owning operation, or drop
+  to raw SQL against `t_operationparams`.
 
-**Practical handling:**
-1. Call `add_parameter`. Expect it to throw.
-2. Immediately call `list_operations` for the owning element and confirm the parameter is there
-   under the `name` you gave it. It almost certainly is.
-3. Do **not** blind-retry `add_parameter` on a *different* name to "try again" — if step 2 already
-   shows it, a second call under a new name creates a second, unwanted parameter.
-4. A retry under the **same** name is safe either way: `t_operationparams`' primary key is
-   `(OperationID, Name)`, so EA overwrites in place rather than duplicating — confirmed by issuing
-   two `add_parameter` calls for the same operation and parameter name and finding exactly one row
-   afterward.
-5. The MCP `add_parameter` operation does not set a default value. EA does, through COM, and
-   it persists:
-
-   ```python
-   p = operation.Parameters.AddNew("count", "int"); p.Update()
-   p.Default = "42"; p.Update()
-   ```
-
-   Use this (see the **ea-com** skill) rather than writing to `t_operationparams` directly —
-   a supported API is always preferable to raw SQL against EA's schema.
+Retrying after a raised error is safe in the sense that it cannot silently duplicate or silently
+overwrite anything — either nothing was written and the retry is a normal second attempt, or the
+name collides with something already there and the retry raises again for the same reason. It is
+not useful to retry the exact same call expecting a different outcome, though: nothing about a
+plain retry changes an unknown `method_id` or an already-taken name.
 
 ### 3c. `create_element_in_language` fails outright for a stereotype the technology doesn't declare
 
@@ -246,10 +235,12 @@ you expect might not be one the loaded technology declares.
 
 `ea_model`'s operation list (confirmed by calling each with empty `params` and reading the
 `valid_operations` list back in the error) has no dedicated parameter update or delete call.
-`add_parameter` is the only parameter-mutating operation, and it's an upsert-by-name (§3b point
-4). To remove a parameter, either recreate the owning operation or drop to raw SQL
-(`DELETE FROM t_operationparams WHERE OperationID = ? AND Name = ?`) — there is no MCP-level
-delete for this one object kind, unlike every other object covered in this file.
+`add_parameter` is the only parameter-mutating operation, and it is **not** an upsert — a name
+that already exists on the operation raises rather than updating the existing row (§3b). To change
+or remove a parameter, either recreate the owning operation or drop to raw SQL
+(`UPDATE`/`DELETE ... FROM t_operationparams WHERE OperationID = ? AND Name = ?`) — there is no
+MCP-level update or delete for this one object kind, unlike every other object covered in this
+file.
 
 ### 3e. `execute_sql` can time out on a live, shared repository
 
