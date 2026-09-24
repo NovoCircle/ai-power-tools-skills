@@ -14,7 +14,7 @@
         "ea-start-here/SKILL.md"
       ],
       "sha256": {
-        "ea-start-here/SKILL.md": "092a220aa9dc9d47287586beaf23849d8823f6d5f7f64e34a5c49042392cc123"
+        "ea-start-here/SKILL.md": "a13b40c8c2b315ab522784e740493ae99abd126e88a4ee3d3b64e9d3ec4fade3"
       }
     },
     {
@@ -170,6 +170,25 @@
       ],
       "sha256": {
         "ea-diagnostic/SKILL.md": "8e652c8746f0c337d92f0a71cab2dfdf759996ef1d7e72dab5ea10337e8957c2"
+      }
+    },
+    {
+      "name": "ea-help",
+      "title": "EA help",
+      "description": "Fallback route for an EA task no skill covers: match the running EA version to Sparx's user guide, find the procedure, drive it, verify it",
+      "version": "1.0.0",
+      "min_server_version": "2.2.0",
+      "files": [
+        "ea-help/SKILL.md",
+        "ea-help/references/driving-the-ui.md",
+        "ea-help/references/finding-the-guide.md",
+        "ea-help/references/worked-example.md"
+      ],
+      "sha256": {
+        "ea-help/SKILL.md": "5ae37c9ed877ae1c4d9362d5d1f82d8bdb43f735d7bf3408f00b45a1232b3b70",
+        "ea-help/references/driving-the-ui.md": "f3b7d1a1914e033ce14502b7a12310d87fdae9c02c7172e488d6a201347ccd6b",
+        "ea-help/references/finding-the-guide.md": "ae923ea4a3fddb10cfd3244cd856eb599909363dca20fb3462a90da83493d91f",
+        "ea-help/references/worked-example.md": "a3f5f885e699fb48524c3f0d58e42acf6ce3a149eef2f5cadc5e9c5c97144e24"
       }
     },
     {

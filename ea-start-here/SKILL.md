@@ -99,6 +99,13 @@ neither.
 | Building a complete ruleset for a modeling language from scratch | **ea-ruleset-author** |
 | Driving EA from Python via the COM API rather than through MCP | **ea-com** |
 | Something is broken and you need a report to send to support | **ea-diagnostic** |
+| Nothing above covers the task, and it exists only in EA's UI | **ea-help** |
+
+**ea-help is the last row for a reason.** It works from Sparx's user guide for the running EA
+version and drives the interface, which is slower and less verifiable than any operation. Take
+it only when no skill above covers the task, no operation does the job, and `ea-com` has no
+route either. A limitation is only real when all three surfaces — MCP, COM, and the UI — have
+been checked.
 
 ### Choosing between the two MDG paths
 
