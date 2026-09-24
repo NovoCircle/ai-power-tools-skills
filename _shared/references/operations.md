@@ -3,7 +3,7 @@
 **Generated — do not edit by hand.** Produced by `tools/gen-operations.py` from the
 server's dispatch tables. Re-run it after any server change rather than editing here.
 
-Server version: `2.1.0` · 113 operations across 6 meta-tools.
+Server version: `2.2.0` · 113 operations across 6 meta-tools.
 
 Every operation is called the same way:
 
@@ -133,7 +133,7 @@ If an operation is not in this list, it does not exist. Do not infer one from a 
 | `list_registered_technologies` | Enumerate every technology EA's Manage Technology dialog would show -- name, version, location, and enabled state -- including disabled ones, so a build/deploy workflow can spot the exact failure mode a real customer report hit: a technology registered on the author's workstation silently shadowing (and drifting ahead of, or behind) the model's own copy, with no operation previously surfacing registration/ location/enabled state to make that visible. |
 | `parse_mdg_xml` | Parse MDG XML (file path or raw string) into the intermediate format. |
 | `resolve_display_term` | Translate a technical stereotype/tag name to its business alias. |
-| `set_active_mdg` | Configure the active MDG and enforcement mode for the session. |
+| `set_active_mdg` | Record a preferred MDG for the session. |
 | `write_mdg_xml` | Emit valid MDG XML from a normalized intermediate metamodel dict. |
 
 ---
