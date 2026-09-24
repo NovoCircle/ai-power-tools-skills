@@ -168,3 +168,52 @@ ea_analyze(operation="execute_sql", params={"sql": """
     WHERE Object_ID IN (<source_id>, <target_id>)
 """})
 ```
+
+---
+
+## 5. Diagram Notes — Recipe and Rationale
+
+Neither `create_diagram` nor `create_diagram_in_language` populate `Notes`; it comes back
+empty unless a caller supplies it via `properties`. Set it explicitly as the final step of
+diagram authoring, after `add_element_to_diagram` / `add_elements_to_diagram_bulk` — not at
+creation:
+
+```
+ea_diagram(operation="update_diagram", params={
+    "diagram_id": <id>,
+    "properties": {"Notes": "Class diagram showing the WBACapability hierarchy, "
+                             "including WBA_PaymentGateway and its dependent services."},
+})
+```
+
+### What a good note contains
+
+One sentence covering:
+1. **Type and purpose** — why someone would open this diagram, not just its EA type string.
+2. **Name**, only if it adds information the purpose sentence doesn't already carry.
+3. **At least one element it contains** — the most central or first-placed element is
+   enough. Do not attempt an exhaustive contents list; that duplicates `get_diagram`.
+
+| Note | Verdict |
+|---|---|
+| `"Class diagram showing the WBACapability hierarchy, including WBA_PaymentGateway and its dependent services."` | Good — type, purpose, a named element |
+| `"Class diagram in package Payments."` | Bad — generic, names no content, could have been written before any element existed |
+| `""` | Bad — the defect this recipe fixes |
+
+### Why this is a skill-layer fix, not a server `auto_notes` flag
+
+A diagram is empty at `create_diagram` time — elements are placed afterward in Phase 4 of
+the build order. A server-side flag that auto-synthesizes `Notes` at creation could therefore
+only ever produce the "Bad — generic" row above: it cannot reference diagram contents that
+don't exist yet, and per the backlog item's own framing, a generic-but-present note is worse
+than an empty field, because it *looks* documented and stops anyone from ever writing the
+real thing. The skill has what the server call boundary doesn't: full context on why the
+diagram was requested and what got placed on it, gathered across the whole authoring
+sequence. Write the note once, after that sequence completes, from that context.
+
+### `update_diagram` and existing Notes
+
+`update_diagram`'s `properties` dict only touches the keys it's given — omitting `Notes`
+from an unrelated update (a rename, a `StyleEx` fix) never clears or overwrites it. Re-set
+`Notes` only when the diagram's purpose or contents changed enough to make the old note
+wrong.

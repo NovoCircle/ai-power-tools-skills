@@ -88,7 +88,7 @@ Phase 0 — Pre-flight (ea_model("list_root_packages"), ea_repository("get_repos
 Phase 1 — Package hierarchy  (all packages, leaf-to-root NOT required; parent-first IS required)
 Phase 2 — Elements           (create element → set ALL tagged values immediately → next element)
 Phase 3 — Connectors         (all relationships between elements)
-Phase 4 — Diagrams           (create diagram → update StyleEx → add elements)
+Phase 4 — Diagrams           (create diagram → update StyleEx → add elements → set Notes)
 Phase 5 — Verification       (ea_analyze("execute_sql") spot checks; element counts; connector queries)
 ```
 
@@ -223,6 +223,29 @@ explanation: [`references/diagrams_and_connectors.md`](references/diagrams_and_c
 
 ---
 
+## 6.7 Diagram Notes — Make Every Diagram Self-Documenting
+
+`create_diagram` / `create_diagram_in_language` leave `Notes` empty — the server does not
+synthesize one. Always set it yourself, as the **last** step of diagram authoring, after
+elements are placed: a note written before content exists can only restate name and type,
+not what the diagram actually shows.
+
+```
+ea_diagram(operation="update_diagram", params={
+    "diagram_id": <id>,
+    "properties": {"Notes": "<one sentence — see recipe>"},
+})
+```
+
+Full recipe, worked example, and the reasoning against a server-generated placeholder:
+[`references/diagrams_and_connectors.md`](references/diagrams_and_connectors.md) §5.
+
+`update_diagram` never clobbers an existing `Notes` value unless `properties` explicitly
+includes the `Notes` key — omit it on unrelated updates (renames, StyleEx fixes) and the
+existing note survives.
+
+---
+
 ## 7. Connectors
 
 | Relationship | `connector_type` | `stereotype` |
@@ -342,7 +365,7 @@ format: [`references/diagnostics_and_ui.md`](references/diagnostics_and_ui.md) �
 
 - [`references/sql_schema.md`](references/sql_schema.md) — schema gotchas, tag-store decision tree, verification-query cookbook
 - [`references/element_creation.md`](references/element_creation.md) — element-creation code patterns, full WBA tag table, stereotype persistence, pre/post-demo state
-- [`references/diagrams_and_connectors.md`](references/diagrams_and_connectors.md) — diagram creation/layout, connector-visibility, connector-type detail
+- [`references/diagrams_and_connectors.md`](references/diagrams_and_connectors.md) — diagram creation/layout, connector-visibility, connector-type detail, Notes recipe
 - [`references/package_and_defects.md`](references/package_and_defects.md) — root-package and `&`-encoding defect fixes, package counts, idempotency, error recovery
 - [`references/wba_mdg_reference.md`](references/wba_mdg_reference.md) — MDG-active verification, tag-applicability rule
 - [`references/token_and_session_management.md`](references/token_and_session_management.md) — token-economy and session-hygiene guidance

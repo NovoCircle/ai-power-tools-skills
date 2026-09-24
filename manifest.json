@@ -55,10 +55,10 @@
         "ea-modeling/references/wba_mdg_reference.md"
       ],
       "sha256": {
-        "ea-modeling/SKILL.md": "d1f4a579eb7786961a35e7226482d72499bc02c78c189b6c175a99c1fe3df684",
+        "ea-modeling/SKILL.md": "99193b563c8a8a89d25dbff59c7c111a88f01bf67e94ddff2188c82726841f6f",
         "ea-modeling/references/class-modeling.md": "25db3027ad038312fec8268b2af7b5918fb4b70134fb708bb55d82c3e281214c",
         "ea-modeling/references/diagnostics_and_ui.md": "cfc1304b820bfe63fdb99602ad99ea0a411092aaf707a7795f99d2600a709645",
-        "ea-modeling/references/diagrams_and_connectors.md": "b3e2bb76a0dbf7d17ccfbd23b8d8327fd367af84ea501a00cf9ecfff15c3ba2a",
+        "ea-modeling/references/diagrams_and_connectors.md": "14c81a178cc3d2c74a5bb8667f1f8a74762a0f7a5d459221b656ba7e71296538",
         "ea-modeling/references/element_creation.md": "7593dd243bcdfc64efb202bb2086836e950b73236553e7d6dc2bc9f683649176",
         "ea-modeling/references/package_and_defects.md": "2caaada73b4a77d2b4fea6190ff4b66f4a565e4cd366b4c614d99b3ae34ee8b5",
         "ea-modeling/references/sql_schema.md": "b59d3c2407d6e47a73df63e6b12aeb81823cf23b4c3936496caa440fbeb5b7b6",
