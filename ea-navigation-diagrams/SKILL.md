@@ -37,7 +37,7 @@ ea_model("find_composite_diagram_mismatches", {"package_id": <pkg>, "recursive":
 
 It scans the whole package subtree (or just `package_id` itself with `recursive: false`) in one call and returns `{ok, package_id, recursive, checked_count, mismatches}`, where each mismatch is `{element_id, name, ntype, child_diagram_ids, problem}`. `problem` is `diagram_without_flag` (a child diagram exists but `NType <> 8` — looks navigable in the Browser, doesn't drill down) or `flag_without_diagram` (`NType = 8` but no child diagram — a marker that opens nothing). Both are the same defect class described above, in either direction.
 
-The equivalent raw SQL, kept here for reference and as a fallback against a server predating this operation:
+The equivalent raw SQL, for when you need to inspect the same thing by hand:
 
 ```sql
 SELECT o.Object_ID, o.Name, o.NType,
@@ -226,7 +226,7 @@ Build each element's `left`/`top`/`right`/`bottom` from the geometry above and e
 
 ### Phase 4 — flag the parents composite
 
-As of **APT-2026-0059**, use `set_composite_diagram` — it writes both halves of the mechanism (`t_diagram.ParentID` and `t_object.NType`) together in one call, so they cannot land out of sync the way two separate hand-written writes can:
+Use `set_composite_diagram` — it writes both halves of the mechanism (`t_diagram.ParentID` and `t_object.NType`) together in one call, so they cannot land out of sync the way two separate hand-written writes can:
 
 ```
 for parent_id, child_diagram_id in parent_diagram_pairs:
@@ -240,7 +240,7 @@ Call it once per parent, after Phase 2 has created that parent's child diagram �
 
 Leaves stay unflagged (`NType = 0`, no diagram). That is correct and meaningful: no marker tells the user there is nothing below.
 
-The equivalent raw SQL (`UPDATE t_object SET NType = 8 WHERE Object_ID IN (<every parent>)`) still works as a fallback against a server predating APT-2026-0059, but it only ever sets the `NType` half — you would still be relying on the Phase 2 `t_diagram.ParentID` write being correct, with nothing checking that the two halves agree the way `set_composite_diagram`'s `consistent` field does. Prefer the API call.
+Do not write `NType` with raw SQL. It sets only one half of the mechanism, leaving you to trust the Phase 2 `t_diagram.ParentID` write with nothing checking that the two agree — which is what `set_composite_diagram`'s `consistent` field is for.
 
 ### Phase 5 — verify, then refresh
 
@@ -262,9 +262,9 @@ EA caches diagrams it has already rendered, so a diagram written by SQL and prev
 
 ## Using `add_elements_to_diagram_bulk` for Phase 3
 
-As of **APT-2026-0050**, `add_elements_to_diagram_bulk` takes per-element position and style and an explicit layout opt-out, so it is now the right tool for Phase 3 — call it once per diagram with the container and its children in one list, instead of writing `t_diagramobjects` rows directly. Two flags must be set explicitly or the call reproduces the old tree-diagram result:
+`add_elements_to_diagram_bulk` takes per-element position and style and an explicit layout opt-out, so it is the right tool for Phase 3 — call it once per diagram with the container and its children in one list, instead of writing `t_diagramobjects` rows directly.
 
-- `"layout": "none"` — **required**. The default is `"Hierarchical"`, which re-runs EA's auto-layout after placement and overwrites the positions you just computed, destroying the container/nested arrangement. `"none"` (any case), `""`, or `null` all skip layout and leave your explicit `left`/`top`/`right`/`bottom` exactly as given.
+- `"layout": "none"` — **pass it explicitly.** The default, `"auto"`, already skips layout when any element carries explicit `left`/`top`/`right`/`bottom`, so it will usually do the right thing here. Passing `"none"` (any case), `""`, or `null` guarantees it: a layout pass would re-run EA's auto-layout after placement and overwrite the positions you computed, destroying the nested arrangement. Do not pass a named style — an explicit style always lays out.
 - `"auto_connectors": false` — **required**. The default (`true`) auto-draws every connector whose both endpoints are now on the diagram, reintroducing the tree this mechanism is meant to replace. (`auto_show_connectors` is the older name for the same flag; pass `auto_connectors` explicitly since it wins if both are given.)
 - per-element `style` — the `ObjectStyle` guidance above (DUID, BGR `BCol`) still applies; build the string exactly as before, but pass it as the entry's `style` key instead of writing it via a SQL `UPDATE`.
 

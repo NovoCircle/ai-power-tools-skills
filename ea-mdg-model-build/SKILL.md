@@ -27,25 +27,18 @@ Two ways exist to produce an MDG. This skill covers the model-driven one. `ea-md
 | Create stereotype, attribute, constraint | MCP API |
 | Duplicate a package | MCP API — `duplicate_package` (fresh GUIDs throughout; the API equivalent of Paste as New) |
 | Connector tagged value (Quick Linker constraint) | MCP API — `set_connector_tagged_value` / `get_connector_tags` / `list_connector_tagged_values` / `delete_connector_tagged_value` |
-| Element background color | COM — `Element.SetAppearance(Scope, Item, Value)`. No MCP operation yet (`APT-2026-0053`) |
-| Export a profile | COM — `Repository.SavePackageAsUMLProfile(pkgGUID, Filename)`. No MCP operation yet (`APT-2026-0055`) |
-| Build the MDG | COM — `Repository.GenerateMDGTechnology(mtsFilename)`. No MCP operation yet (`APT-2026-0055`) |
-| Reference data (tagged value types) | COM — `Project.ImportReferenceData` / `ExportReferenceData`, `Repository.PropertyTypes()`. No MCP operation yet |
+| Element background color | COM — `Element.SetAppearance(Scope, Item, Value)`. No MCP operation |
+| Export a profile | COM — `Repository.SavePackageAsUMLProfile(pkgGUID, Filename)`. No MCP operation |
+| Build the MDG | COM — `Repository.GenerateMDGTechnology(mtsFilename)`. No MCP operation |
+| Reference data (tagged value types) | COM — `Project.ImportReferenceData` / `ExportReferenceData`, `Repository.PropertyTypes()`. No MCP operation |
 | Verify anything | MCP API + parse the built XML, **and look at the UI** |
 
 The rule that keeps this efficient: **build with the API, verify with both.**
 
-> ### "No MCP operation" is not "impossible"
+> ### Three surfaces, not one
 >
-> An earlier version of this table listed the four rows above as "EA UI only", on the basis
-> that they were "confirmed against the live `ea_mcp_server/server.py` source". That
-> confirms the MCP server has no operation for them. It says nothing about what EA can do.
->
-> Checked against EA's own type library on 2026-09-24, **all four have COM routes**, and
-> `SavePackageAsUMLProfile` was verified writing a real profile document. None of them was
-> ever UI-only.
->
-> You have three ways to do anything in EA, and they are not ranked by preference alone:
+> "No MCP operation" does not mean "impossible". You have three ways to do anything in EA,
+> and they are not ranked by preference alone:
 >
 > | Route | Use it when |
 > |---|---|
@@ -53,29 +46,22 @@ The rule that keeps this efficient: **build with the API, verify with both.**
 > | **COM directly** (see **ea-com**) | EA exposes it but the MCP server does not wrap it yet — as with all four rows above |
 > | **EA's UI with computer use** | Neither of the above, *or* you need to see what actually happened |
 >
-> The last one is not a fallback. The API tells you a call returned; the UI shows you what
-> the model now looks like and surfaces the error dialogs EA raises instead of returning
-> errors. Use them together — see
+> The UI is not a fallback. The API tells you a call returned; the UI shows you what the
+> model now looks like and surfaces the error dialogs EA raises instead of returning errors.
+> Use them together — see
 > [`../_shared/references/ea-ui-verification.md`](../_shared/references/ea-ui-verification.md).
 >
-> Before recording anything here as impossible, read EA's type library. It takes two minutes:
+> Before concluding EA cannot do something, read its type library. It takes two minutes and
+> gives you the real method and parameter names:
 >
 > ```python
 > ti = repo.GetProjectInterface()._oleobj_.GetTypeInfo()
-> # walk GetFuncDesc / GetNames for the real method and parameter names
+> # walk GetFuncDesc / GetNames
 > ```
->
-> That check found `DoBaselineMerge`'s missing fourth argument after a three-argument call
-> had been failing silently, and it overturned every row in this table.
 
-> **Table current as of 2026-09-24.** Two of the rows changed because the operations shipped
-> (`duplicate_package`, `APT-2026-0054`; connector tagged values, `APT-2026-0052`). The rest
-> changed because the original check was against the wrong thing.
->
-> **Re-check this table against three surfaces, not one, before each release:** the MCP
-> operation list, EA's COM type library, and — for anything neither covers — the UI. The
-> previous note told readers to re-check "against the shipped tool surface", which is exactly
-> the narrow check that produced four wrong rows.
+> **Re-check this table against all three surfaces before each release** — the MCP operation
+> list, EA's COM type library, and the UI. Checking only the MCP operation list tells you
+> what we wrap, not what EA can do.
 
 ---
 
@@ -124,12 +110,10 @@ Model
 ```
 
 Duplicate with `ea_model(operation="duplicate_package", ...)`, which generates fresh GUIDs
-throughout — the API equivalent of Paste as New. (Earlier versions of this skill said there
-was no reliable API route, which stopped being true when `duplicate_package` shipped.) Note
-that it does not currently carry diagrams or diagram objects (`APT-2026-0066`); if the
-package holds diagrams you care about, use Paste as New in the UI instead, or copy them
-separately. XMI export/import is still not a substitute — it does not dependably strip
-GUIDs, and two packages claiming the same profile `id` is worse than a manual copy.
+throughout — the API equivalent of Paste as New. It does not carry diagrams or diagram
+objects; if the package holds diagrams you need, use Paste as New in the UI instead, or copy
+them separately. XMI export/import is not a substitute — it does not dependably strip GUIDs,
+and two packages claiming the same profile `id` is worse than a manual copy.
 
 **Verify the copy immediately** — element counts, attribute counts, connector counts and diagram populations against the source, and confirm no cross-package leakage back into the original's metaclasses.
 
@@ -155,7 +139,7 @@ Read from working stereotypes so new work matches. Every one of these is a model
 
 ⚠ **Namespace-qualify every constraint value.** `WBA::WBABusinessApplication`, never `WBABusinessApplication`. Unqualified constraints do not resolve and fail silently. Where `_strictness = profile` is set, enforcement is live against a rule that cannot resolve — the worst combination.
 
-**Connector tagged values are scriptable.** Use `set_connector_tagged_value`, and read them back with `get_connector_tags` or `list_connector_tagged_values`. Note that `update_connector` still ignores a tagged value passed as an ordinary property — use the dedicated operations, not a property write. (This was UI-only work before `APT-2026-0052` shipped; earlier copies of this skill budgeted manual time for it.)
+**Connector tagged values are scriptable.** Use `set_connector_tagged_value`, and read them back with `get_connector_tags` or `list_connector_tagged_values`. `update_connector` ignores a tagged value passed as an ordinary property — use the dedicated operations, not a property write.
 
 **Telling identical connectors apart.** Two reflexive connectors on the same element are indistinguishable in EA's Relationships grid, which shows no name and no stereotype column. Set a temporary name on the new one, do the work, then clear it — and verify the clear.
 
@@ -221,7 +205,7 @@ All UI. The sequence matters and several steps are easy to get subtly wrong. (Tr
 
 ⚠ **`Publish Diagram as UML Profile` is greyed out unless the diagram is open.** Selecting it in the Browser is not enough.
 
-⚠ **The wizard's Tagged Value Types page is a selection step, not an inclusion step.** Types not selected here do not ship, however completely they are defined. This is the usual cause of "the type exists but the field is still free text" — and because the omission is invisible in the model, it can persist across many releases. The wizard's own selection page has no MCP operation, but `Repository.GenerateMDGTechnology(mtsFilename)` exists and the `.mts` file controls which sections and tagged-value types are included — so this IS scriptable, it simply has not been wrapped yet (`APT-2026-0055`) — but the omission can now be *detected*: `ea-validation`'s `tagged_value_type_shipped` rule condition compares a profile's blank-`Type` tagged-value attributes against a built MDG file's RefData and flags anything defined but not shipped (`APT-2026-0057`, shipped). Run it as part of Phase 6 verification.
+⚠ **The wizard's Tagged Value Types page is a selection step, not an inclusion step.** Types not selected here do not ship, however completely they are defined. This is the usual cause of "the type exists but the field is still free text" — and because the omission is invisible in the model, it can persist across many releases. The wizard's own selection page has no MCP operation, but `Repository.GenerateMDGTechnology(mtsFilename)` exists and the `.mts` file controls which sections and tagged-value types are included, so this is scriptable through COM — but the omission can now be *detected*: `ea-validation`'s `tagged_value_type_shipped` rule condition compares a profile's blank-`Type` tagged-value attributes against a built MDG file's RefData and flags anything defined but not shipped (`APT-2026-0057`, shipped). Run it as part of Phase 6 verification.
 
 ⚠ **Match the Contents checkboxes to the shape of the current deployed file** rather than guessing. Parse the deployed file and tick to match:
 

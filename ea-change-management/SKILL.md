@@ -68,10 +68,9 @@ SELECT DocID, DocName, LENGTH(BinContent) AS bytes
 FROM t_document WHERE DocType = 'Baseline'
 ```
 
-**Verified in this environment:** `create_baseline` and `list_baselines` both work as documented.
-`list_baselines` returned the baseline this session created with its `version` and `notes` intact,
-but its `date` and `author` fields came back empty — don't build logic that depends on them being
-populated. If you need authoritative baseline metadata, query `t_document` directly.
+`list_baselines` returns `version` and `notes` intact, but `date` and `author` come back empty —
+don't build logic that depends on them being populated. If you need authoritative baseline
+metadata, query `t_document` directly.
 
 ---
 
@@ -88,14 +87,10 @@ attributes or tagged values changed. Read it as three buckets — **added**, **r
 that the element changed. A `criticality` flip from `Business-Critical` to `Standard` and a typo
 fix in `notes` both show up as "modified"; only the diff detail tells them apart.
 
-> **The timeout described in earlier versions of this skill is fixed.** `compare_baseline`
-> was not slow — it issued a SQL function the `.qea` backend does not implement, and EA
-> answered with a **modal dialog** that held the connection until someone clicked OK. Every
-> call after it appeared to hang too. Fixed in server 2.2.0; the baseline tests now complete
-> in seconds.
->
-> If you are on an older server, that is what you are seeing: look at EA's screen, dismiss
-> the dialog, and upgrade. Do not build a manual diff to work around it.
+> **If `compare_baseline` appears to hang, look at EA's screen.** EA reports an unrunnable
+> query as a modal dialog that holds the COM connection until someone clicks OK, so every
+> later call appears to hang too. See
+> [`../_shared/references/ea-ui-verification.md`](../_shared/references/ea-ui-verification.md).
 
 ---
 
@@ -130,10 +125,9 @@ have already taken the precaution below.
    rather than trusting the response alone. See §4: a failed-looking response is not proof nothing
    happened, and a success-looking one deserves the same read-back.
 
-**Verified in this environment:** an `apply_baseline` call made during verification failed outright
-with a raw COM error (`Type mismatch`) instead of applying or a clean EA-level message — see §4.
-A follow-up SQL check confirmed the package's content was unchanged (no partial application), but
-that had to be checked, not assumed from the error response.
+`apply_baseline` does not restore. It reports `baseline_restore_not_applied` and changes nothing
+— see §4 for what to do instead. Verify the package contents either way rather than trusting the
+response.
 
 ---
 
@@ -142,20 +136,15 @@ that had to be checked, not assumed from the error response.
 All four found while verifying this skill against a live, small (2-element) scratch package —
 not edge cases from a large or unusual repository.
 
-- **`compare_baseline` "timed out" on every attempt — FIXED in 2.2.0.** It was never a
-  timeout. The call issued `OCTET_LENGTH`, which SQLite (a `.qea`) does not implement, and
-  EA raised a **modal dialog** that blocked the COM connection. The retries all queued behind
-  the same dialog. **This is the general lesson: when an EA call appears to hang, look at the
-  screen before concluding anything** — see
+- **A call that appears to hang is usually a modal dialog**, not a slow operation. EA raises
+  one for any SQL its backend cannot run, and it holds the COM connection until dismissed.
+  Look at the screen before retrying — see
   [`../_shared/references/ea-ui-verification.md`](../_shared/references/ea-ui-verification.md).
-- **`apply_baseline` reported a raw COM `Type mismatch` — root cause found in 2.2.0.**
-  `DoBaselineMerge` takes four arguments and was being called with three, so an empty string
-  landed in `MergeInstructions`, which EA parses as XML and rejects. It no longer blocks EA,
-  and it no longer claims success it has not earned: it re-compares afterwards and returns
-  `baseline_restore_not_applied` if the package still differs.
-  **Restoring a baseline still works through EA's UI** — Package Control ▸ Baselines ▸
-  Restore — which is drivable with computer use. "No working API route" does not mean the
-  restore cannot be done (`APT-2026-0115`).
+- **`apply_baseline` does not currently restore.** It runs without error and reports
+  `baseline_restore_not_applied` when the package still differs from the baseline, rather
+  than claiming a success it did not achieve. **Restore through EA's UI instead** — right-click
+  the package ▸ Package Control ▸ Baselines ▸ select ▸ Restore — which is drivable with
+  computer use.
 - **`get_updates_in_range` / `get_user_activity` silently return zero rows for ISO-8601
   timestamps.** Both expect `start`/`end` as `YYYY-MM-DD HH:MM:SS`, matching how
   `t_object.CreatedDate`/`ModifiedDate` are actually stored — not `2026-09-23T00:00:00Z`. Passing

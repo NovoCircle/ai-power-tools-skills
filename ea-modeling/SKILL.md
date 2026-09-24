@@ -44,7 +44,7 @@ prevented a defect or fixed one.*
 > singular; `t_taggedvalue` uses `TagValue` not `Value`; connector endpoints are
 > `Start_Object_ID`/`End_Object_ID`). Call `ea_analyze("describe_table")` before writing any
 > non-trivial query, or consult [`references/sql_schema.md`](references/sql_schema.md), which
-> also carries the verification-query cookbook that used to live in this file's §9.
+> also carries the verification-query cookbook.
 
 ---
 
@@ -265,7 +265,7 @@ reserved-word gotcha) is in [`references/sql_schema.md`](references/sql_schema.m
 Confirm the MDG is loaded before tagging (query `t_document` for `DocType='MDGXml'` — empty
 means not imported; use `ea-mdg-deploy` first). Tag rule: base 6 apply to all 14 stereotypes,
 AI 4 apply only to the 3 AI stereotypes. Full verification SQL and a canon correction to a
-previously-wrong tag matrix: [`references/wba_mdg_reference.md`](references/wba_mdg_reference.md).
+tag matrix: [`references/wba_mdg_reference.md`](references/wba_mdg_reference.md).
 
 ---
 

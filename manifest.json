@@ -33,7 +33,7 @@
         "ea-com/SKILL.md": "bf7d985cea1a6001432edf122650c6961abcce1aa09a79baf43ae60b16ac0ce7",
         "ea-com/references/connecting-and-queries.md": "60bc09b368dee3c2e12de0955e7c59704b225253bba0eda766e79fd0e615dfad",
         "ea-com/references/mutating-elements.md": "abd7a926aec1e90bba50ef4e1c6fb494a81b5c8965077b4b52d23d7919adaf6d",
-        "ea-com/references/technology-and-lifecycle.md": "4b671ab26d65d129dc2fcfa59c289e0a5e2918c0eb75b7866688a708364c8d59"
+        "ea-com/references/technology-and-lifecycle.md": "c53a4ddf1c660a455cb211c38b280ce6082216c82b21bd732f82d6fbf542ae4d"
       }
     },
     {
@@ -55,8 +55,8 @@
         "ea-modeling/references/wba_mdg_reference.md"
       ],
       "sha256": {
-        "ea-modeling/SKILL.md": "f075433c04aebfac74a3aeba7bb2092d188f75075e8afa617cec7bae53ceda09",
-        "ea-modeling/references/class-modeling.md": "d4bb1b71b464ee6aef3a9b32fd0b9574242c70aa85e68ca3d057a897614a026a",
+        "ea-modeling/SKILL.md": "d1f4a579eb7786961a35e7226482d72499bc02c78c189b6c175a99c1fe3df684",
+        "ea-modeling/references/class-modeling.md": "c8b910057a52394c2224715db7bef772a45869d67fe518aa2c738d841a4fc130",
         "ea-modeling/references/diagnostics_and_ui.md": "cfc1304b820bfe63fdb99602ad99ea0a411092aaf707a7795f99d2600a709645",
         "ea-modeling/references/diagrams_and_connectors.md": "951a2823ca6f6ac06fb1d786ea6fd4a15e0f9b6f3f38903833792c5fd07063ae",
         "ea-modeling/references/element_creation.md": "bdf8430d4db3c3479857b9de7e2d86d567d6bb22c5dcd5c3aafb603148497452",
@@ -64,7 +64,7 @@
         "ea-modeling/references/sql_schema.md": "b59d3c2407d6e47a73df63e6b12aeb81823cf23b4c3936496caa440fbeb5b7b6",
         "ea-modeling/references/token_and_session_management.md": "a90be8a3a47ce10b8654e764b946ae175b554436898f83521f5f901c5f228d78",
         "ea-modeling/references/tool_quick_reference.md": "d98e101f4bf2185166c4d2a909ecdc2d9de25b136f9e2e2065a6e42ddc6e667c",
-        "ea-modeling/references/wba_mdg_reference.md": "60d38d4828e5f2b6e31386cf3d48fb642eb3d65eac7322702989493a4c37af41"
+        "ea-modeling/references/wba_mdg_reference.md": "8c2a716b0cc965c5c6cbe82237764327fc2fa42908dd22ae8afa05df0bc6a0ab"
       }
     },
     {
@@ -77,7 +77,7 @@
         "ea-navigation-diagrams/SKILL.md"
       ],
       "sha256": {
-        "ea-navigation-diagrams/SKILL.md": "129cde0c0a454c7aac6bd35a2c8246507217442eb4a56b39d3312229c30c63fc"
+        "ea-navigation-diagrams/SKILL.md": "d173b462f1fef4b17ee0c091fc438614ab297a23d667c6cd63ddf2974708d0af"
       }
     },
     {
@@ -128,7 +128,7 @@
         "ea-mdg-model-build/SKILL.md"
       ],
       "sha256": {
-        "ea-mdg-model-build/SKILL.md": "387b9b626d7afc07d18f8471a23a92568afdec5364419997bd27023454cffb19"
+        "ea-mdg-model-build/SKILL.md": "907cdbb8378e883e3128cf535ec5023d1bdceb5d5a10a90585d5812e8949432b"
       }
     },
     {
@@ -141,7 +141,7 @@
         "ea-validation/SKILL.md"
       ],
       "sha256": {
-        "ea-validation/SKILL.md": "43a706451ab487b934733de49aa5d96387f5b78e5f4fb4be1f3557d5a58fe2dd"
+        "ea-validation/SKILL.md": "4b9ce864f6769a4f746b3685f59af6bb4f5686ace384d7fe3bb10fd5bb09eb33"
       }
     },
     {
@@ -215,8 +215,8 @@
         "ea-change-management/references/worked-example.md"
       ],
       "sha256": {
-        "ea-change-management/SKILL.md": "73bf00d116827faa519655ccd85daa9909548ef38192a6065116bf0051ccffc2",
-        "ea-change-management/references/worked-example.md": "a1d2d6086cd3aef896f69817fd0b5c611c8f0c46680b5d9acd6bcefe12e7e669"
+        "ea-change-management/SKILL.md": "e16a715c964488c77993da26039fcc8797167b63b3cae603da2c38bfd0f8e2b1",
+        "ea-change-management/references/worked-example.md": "d7c58251a9bd5a7738374992b67b51f839613bf83e4d024ae9753d6719e9b523"
       }
     },
     {

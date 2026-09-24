@@ -27,11 +27,10 @@ enumerating.
 ## Technology mutation calls (not exercised here)
 
 `ActivateTechnology(id)`, `DeleteTechnology(id)`, and `repo.ImportTechnology(xml)`
-exist on `Repository` and mutate technology load/enable state. They were **not**
-called during this skill's verification pass: `DeleteTechnology` only takes effect
+exist on `Repository` and mutate technology load/enable state. Treat both as risky
+against a session someone else may be relying on: `DeleteTechnology` only takes effect
 after an EA restart, and `ActivateTechnology` can change what's available in the
-live session's toolboxes and diagrams while it's in active use — both are riskier to
-exercise against a session someone else may be relying on than the read-only checks
+live session's toolboxes and diagrams while it's in use — unlike the read-only checks
 above, and undoing a mistake reliably needs the same restart this pass could not
 perform. MDG deployment is `ea-mdg-deploy`'s subject; this skill only documents that
 these calls exist:

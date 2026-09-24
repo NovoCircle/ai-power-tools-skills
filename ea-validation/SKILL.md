@@ -97,12 +97,11 @@ no `t_propertytypes` entry at all is the *other* failure mode (never defined)
 and is out of scope for this rule.
 
 > **Schema note.** No built MDG file with a populated `<TaggedValueTypes>`
-> block was available to verify this parser against at authoring time — every
-> local fixture ships an always-empty `<TaggedValueTypes/>` stub. (That was
-> attributed to reference data being "EA-UI-only", which is wrong:
+> block was available to verify this parser against — every local fixture
+> ships an always-empty `<TaggedValueTypes/>` stub. A populated fixture can be
+> produced: reference data is reachable through
 > `Project.ImportReferenceData` / `ExportReferenceData` and
-> `Repository.PropertyTypes()` all exist on EA's COM surface, and the UI is
-> drivable with computer use regardless. A populated fixture can be produced.)
+> `Repository.PropertyTypes()`, and through the UI with computer use.
 > The parser accepts any child element under
 > `<TaggedValueTypes>` that carries a `name` attribute (written against the
 > commonly observed `<TagType name="..." detail="..."/>` shape), so it

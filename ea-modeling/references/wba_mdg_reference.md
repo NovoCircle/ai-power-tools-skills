@@ -35,11 +35,3 @@ applies **only** to the three AI stereotypes: `WBAAIGateway`, `WBAAIService`, `W
 See `_shared/references/westbrook-example.md` section 3 for the canonical list — this file
 does not repeat it so there is exactly one source of truth for tag names and enum values.
 
-> **Canon fix made during the 2026-09-23 split:** this section previously carried a
-> per-stereotype checkmark matrix covering only 6 of the 14 stereotypes, using the tag names
-> `humanInLoop` / `auditLogging` (canon: `humanInLoopRequired` / `auditLoggingEnabled`), and
-> incorrectly marking `modelGovernanceClass` as applicable to non-AI stereotypes
-> (`WBABusinessApplication`, `WBAVendorSystem`, `WBABusinessService`, `WBADataAsset`). It also
-> listed `vendor`, `product`, `pciScopeJustification`, and `pciControlOwner`, none of which are
-> part of the canonical 10-tag WBA set. That matrix has been replaced with the rule above, which
-> matches canon exactly. Nothing was silently dropped — the corrected content is captured here.

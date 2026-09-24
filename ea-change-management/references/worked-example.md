@@ -98,16 +98,21 @@ ea_repository(operation="compare_baseline", params={
 ```
 
 Expect a diff describing the new element as an addition and the `lifecycle` change as a
-modification on the pre-existing elements in the package. As noted in `SKILL.md` §2, the exact
-response shape was not observed during this skill's verification — every attempt timed out
-against a live package. If it times out for you too, fall back to the manual approach in step 5.
+modification on the pre-existing elements in the package. Confirm the exact field names against
+your own repository before scripting against them.
 
-## 5. Manual fallback — audit trail as a substitute diff
+If the call appears to hang, look at EA's screen — a modal dialog holds the COM connection until
+it is dismissed. See [`../../_shared/references/ea-ui-verification.md`](../../_shared/references/ea-ui-verification.md).
+
+## 5. Answering "what changed and who changed it" from the audit trail
+
+The baseline diff tells you how the package differs from a snapshot. These tell you when it
+happened and who did it — a different question, and often the more useful one.
 
 ```python
 ea_analyze(operation="get_updates_in_range", params={
-    "start": "2026-09-23 00:00:00",     # baseline creation time, space-separated — not ISO-8601
-    "end": "2026-09-23 23:59:59",
+    "start": "2026-09-23",              # ISO-8601 with T and Z is also accepted
+    "end": "2026-09-23",                # a bare end date covers the whole day
     "kind": "elements",
 })
 ```

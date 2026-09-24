@@ -242,18 +242,16 @@ regardless of what was requested.
    `(OperationID, Name)`, so EA overwrites in place rather than duplicating — confirmed by issuing
    two `add_parameter` calls for the same operation and parameter name and finding exactly one row
    afterward.
-5. The MCP `add_parameter` operation does not set a default value — but **EA does support it,
-   and the earlier advice here to use raw SQL was wrong.** COM sets it cleanly and it persists:
+5. The MCP `add_parameter` operation does not set a default value. EA does, through COM, and
+   it persists:
 
    ```python
    p = operation.Parameters.AddNew("count", "int"); p.Update()
-   p.Default = "42"; p.Update()        # verified: survives a fresh COM read
+   p.Default = "42"; p.Update()
    ```
 
-   Verified 2026-09-24 by setting a default, then reading it back both from
-   `t_operationparams` and through a newly fetched COM handle. Use this (see the **ea-com**
-   skill) rather than writing to the table directly — a supported API that works is always
-   preferable to raw SQL against EA's schema.
+   Use this (see the **ea-com** skill) rather than writing to `t_operationparams` directly —
+   a supported API is always preferable to raw SQL against EA's schema.
 
 ### 3c. `create_element_in_language` fails outright for stereotypes missing from the runtime table
 
