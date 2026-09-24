@@ -63,15 +63,30 @@ It routes through EA's COM `CreateElementInPackage` path which writes the stereo
 `t_xref` (the MDG profile application store) rather than only `t_object.Stereotype`, and
 sets the correct base metaclass automatically.
 
+`create_element_in_language` has no top-level `tagged_values` parameter — unlike
+`create_element`, it only takes `properties`. Apply governance tags with a follow-up
+`set_tagged_value` call per tag, keyed off the `element_id` the creation call returns:
+
 ```python
-ea_model(operation="create_element_in_language", params={
+result = ea_model(operation="create_element_in_language", params={
     "package_id": app_pkg_id,
     "name": "Customer Portal",
     "language_id": "WestbrookBankArchitecture",  # MDG Technology ID
     "language_type": "WBABusinessApplication",   # stereotype name within that MDG
     "properties": {"Note": "Internet banking front-end"},
-    "tagged_values": {"criticality": "Mission-Critical", "lifecycle": "Current"},
 })
+element_id = result["element_id"]
+
+# set_tagged_value is idempotent by tag name, so this is safe to re-run.
+for tag_name, tag_value in {
+    "criticality": "Mission-Critical",
+    "lifecycle": "Current",
+}.items():
+    ea_model(operation="set_tagged_value", params={
+        "element_id": element_id,
+        "name": tag_name,
+        "value": tag_value,
+    })
 ```
 
 **Bulk with MDG routing:** Pass `language_id` and `language_type` inside each spec in

@@ -19,13 +19,13 @@ ea_diagram(operation="create_diagram_in_language", params={
     "name": "Application Landscape",
     "package_id": <id>,
     "language_id": "ArchiMate3",              # MDG Technology ID
-    "language_type": "Application",           # diagram type within that MDG
+    "diagram_type": "Application",            # diagram type within that MDG
 })
 ```
 
-Common language_id / language_type pairs:
+Common language_id / diagram_type pairs:
 
-| Diagram | language_id | language_type |
+| Diagram | language_id | diagram_type |
 |---|---|---|
 | ArchiMate Application | `ArchiMate3` | `Application` |
 | ArchiMate Technology | `ArchiMate3` | `Technology` |

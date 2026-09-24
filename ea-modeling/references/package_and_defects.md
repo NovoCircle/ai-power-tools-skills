@@ -54,7 +54,7 @@ ea_analyze(operation="execute_sql", params={"sql": f"SELECT Name FROM t_package 
 # → will show "Operations &amp; Support"
 
 # 3. Fix immediately with update_package
-ea_model(operation="update_package", params={"package_id": pkg_id, "name": "Operations & Support"})
+ea_model(operation="update_package", params={"package_id": pkg_id, "properties": {"Name": "Operations & Support"}})
 
 # 4. Re-verify
 ea_analyze(operation="execute_sql", params={"sql": f"SELECT Name FROM t_package WHERE Package_ID = {pkg_id}"})
@@ -135,9 +135,10 @@ If a build session is interrupted mid-way:
 
 ### Fixing a wrong name
 
-Use `ea_model("update_package")` or `ea_model("update_element")` immediately:
+Use `ea_model("update_package")` or `ea_model("update_element")` immediately. Both take the
+new value inside `properties`, not as a top-level `name`:
 ```
-ea_model(operation="update_package", params={"package_id": <id>, "name": "Correct Name"})
+ea_model(operation="update_package", params={"package_id": <id>, "properties": {"Name": "Correct Name"}})
 ```
 Then re-verify with SQL.
 
@@ -149,8 +150,9 @@ There is no `move_package` tool in v1. Options:
 
 ### Fixing a connector stereotype
 
-To remove a stereotype from a connector:
+To remove a stereotype from a connector, clear it through `properties`, not a top-level
+`stereotype` key:
 ```
-ea_model(operation="update_connector", params={"connector_id": <id>, "stereotype": ""})
+ea_model(operation="update_connector", params={"connector_id": <id>, "properties": {"StereotypeEx": ""}})
 ```
 Then verify with SQL that `Stereotype` is blank in `t_connector`.
