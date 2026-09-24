@@ -53,7 +53,7 @@ technology actually declares; getting this wrong is the single most consequentia
 - `name=` — the stereotype identifier used in `WBA::WBABusinessApplication` toolbox references
 - `alias=` — display label shown in EA UI (can differ from name)
 - `metatype=` — used in EA's element type display; set to same as `name` unless you have a reason to differ
-- `bgcolor=` — COLORREF integer (see colour table in `references/diagrams-toolboxes.md`); `-1` = use EA theme default
+- `bgcolor=` — COLORREF integer (see color table in `references/diagrams-toolboxes.md`); `-1` = use EA theme default
 - `cx` / `cy` — default element width/height in pixels on diagram canvas
 - `Apply type=` options: `Class`, `Component`, `Node`, `Package`, `Interface`, `Dependency`, `Association`, `Realization`, etc.
 

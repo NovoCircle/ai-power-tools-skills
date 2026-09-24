@@ -38,7 +38,7 @@ These are choices the **user makes when prompting** — not server settings:
 | Ask for a summary (`ea_analyze("summarize_stereotype_usage")`) instead of "list all elements" | ~10–100× fewer tokens |
 | Avoid asking "show me the full element details" after every create | Saves ~75% per mutating response |
 | Ask Claude to plan the full build order before executing | Front-loads reasoning, reduces back-and-forth during execution |
-| Split large sessions: seed in VBScript, analyse/refine in MCP | Largest single saving for >50-element catalogs |
+| Split large sessions: seed in VBScript, analyze/refine in MCP | Largest single saving for >50-element catalogs |
 
 **What NOT to ask for in a large session:**
 - "List all elements in this package" on large packages (use SQL COUNT queries instead)

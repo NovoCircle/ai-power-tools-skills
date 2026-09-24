@@ -59,10 +59,10 @@
         "ea-modeling/references/class-modeling.md": "e7e1cb6f586462f2039375f2482816ed394047118dcce502fb02054eb6a3486e",
         "ea-modeling/references/diagnostics_and_ui.md": "cfc1304b820bfe63fdb99602ad99ea0a411092aaf707a7795f99d2600a709645",
         "ea-modeling/references/diagrams_and_connectors.md": "951a2823ca6f6ac06fb1d786ea6fd4a15e0f9b6f3f38903833792c5fd07063ae",
-        "ea-modeling/references/element_creation.md": "2cf6d94cfeecf883f653605af3345c2291e6373bba5509438dbdded144afa2e4",
+        "ea-modeling/references/element_creation.md": "bdf8430d4db3c3479857b9de7e2d86d567d6bb22c5dcd5c3aafb603148497452",
         "ea-modeling/references/package_and_defects.md": "f7e087a0d0e32e333b1653c49759e3a3dd743ccca6eca026d623c7a1588e3167",
         "ea-modeling/references/sql_schema.md": "b59d3c2407d6e47a73df63e6b12aeb81823cf23b4c3936496caa440fbeb5b7b6",
-        "ea-modeling/references/token_and_session_management.md": "91ba16a555c130163ce5875ed8f8f45663c5960ec791af82fbe7277c9eda7609",
+        "ea-modeling/references/token_and_session_management.md": "a90be8a3a47ce10b8654e764b946ae175b554436898f83521f5f901c5f228d78",
         "ea-modeling/references/tool_quick_reference.md": "d98e101f4bf2185166c4d2a909ecdc2d9de25b136f9e2e2065a6e42ddc6e667c",
         "ea-modeling/references/wba_mdg_reference.md": "60d38d4828e5f2b6e31386cf3d48fb642eb3d65eac7322702989493a4c37af41"
       }
@@ -77,7 +77,7 @@
         "ea-navigation-diagrams/SKILL.md"
       ],
       "sha256": {
-        "ea-navigation-diagrams/SKILL.md": "3db3703dd4123fc82dd40be43a85290659c8d70e88d0a9e3ee705aac34cccd57"
+        "ea-navigation-diagrams/SKILL.md": "5b6b91e0bedfe6f87834df75300cf5c792aa7b7ee756d6d2e60fecae0f847345"
       }
     },
     {
@@ -96,11 +96,11 @@
         "ea-mdg-author/references/xml-skeleton.md"
       ],
       "sha256": {
-        "ea-mdg-author/SKILL.md": "78ee239962734e7379b8f79ac93bc4d6fe4d248f6dae895fa207d0251214192e",
-        "ea-mdg-author/references/diagrams-toolboxes.md": "1d58436df8a9bf826d5738520fb163a2d979b71afd0d19b87d26f4984c0824c8",
-        "ea-mdg-author/references/post-install-migration.md": "e13916755c511ac113682a5c5aa494258d96eac529c205654d4d7ab6ab2ee8b5",
+        "ea-mdg-author/SKILL.md": "13c31ff69030c74b816cac83f30a39072184d46f2fee794a936ffab75fc358cc",
+        "ea-mdg-author/references/diagrams-toolboxes.md": "e81b5bff2094768ee93b73e5d33bb233057a1133434f773c4941c6328fc8d557",
+        "ea-mdg-author/references/post-install-migration.md": "b2e3f1a2f047042a917eea2b201ebb454df7886ef0136d316bc092f997dd3cec",
         "ea-mdg-author/references/quick-linker.md": "1b0e4e93230bce9138b650aa403f73e370cc6592807009949404b8f06ade232a",
-        "ea-mdg-author/references/stereotypes.md": "25fb7cc5ccd19ee6fdb5a99fce8ac54852e2b96e602222b04cac8121e6e73c75",
+        "ea-mdg-author/references/stereotypes.md": "fbaccd04bb4d61eb5daf3e3cbfe32d879103eb919b81fe217e4c4f246c4397f3",
         "ea-mdg-author/references/validation-sidecar.md": "1bf0e67a310bcc2bb7165f236cb3bff2d24ca2c2820fbc69c56bbc79ec25e96d",
         "ea-mdg-author/references/xml-skeleton.md": "8473e0e43432bd622673edf23e51ba11c3ee690655fc63b9c324b1428c3ecf69"
       }
@@ -128,7 +128,7 @@
         "ea-mdg-model-build/SKILL.md"
       ],
       "sha256": {
-        "ea-mdg-model-build/SKILL.md": "96e280c4d61d6a21926f075ab2a0e383a7459ae4d3f7fcafb94400206791fa7a"
+        "ea-mdg-model-build/SKILL.md": "53855aaa09e164186ca7578487909e7c0ab2c412886bc67ac0f835e3e758e74d"
       }
     },
     {
@@ -169,7 +169,7 @@
         "ea-diagnostic/SKILL.md"
       ],
       "sha256": {
-        "ea-diagnostic/SKILL.md": "b99058069f32bdef804f951ad56aa0caa5df1fced6b70b3f7e031c21f917de1b"
+        "ea-diagnostic/SKILL.md": "19c3f6debcb4e924368d529398ee843616654e3ae91737c53d3fbb94ea07ae19"
       }
     },
     {
@@ -199,7 +199,7 @@
         "ea-mdg-assess/references/verification-walkthrough.md"
       ],
       "sha256": {
-        "ea-mdg-assess/SKILL.md": "395e71c8aa8614d90bfffbc3c21813475f30b6cbbd7f542816422ad7c8e0b1ee",
+        "ea-mdg-assess/SKILL.md": "b0ce58afcee5e0d9e4a3cb88c521eb10e8830c8837f082dc63f0fc35ae59ac3c",
         "ea-mdg-assess/references/three-states.md": "b68e63592edf706bf85e2c7a1c36de9f851c381a661bdc824dce324e0fbfdecc",
         "ea-mdg-assess/references/verification-walkthrough.md": "a131e7265edd43e9febbd95d50542d496bd5c733f63eb1ad8f0a07c7e31a4585"
       }
@@ -231,7 +231,7 @@
         "ea-import-export/references/xmi-export-import.md"
       ],
       "sha256": {
-        "ea-import-export/SKILL.md": "e4f17c12e1c2eea29a1f2ac16051b29ff72e22dc7fe00ebf35c61dca134bfd07",
+        "ea-import-export/SKILL.md": "fc804c64c059b56bd1c38d9dd0f9eb5ffe4f5be33586543bcc79165b8cd484ec",
         "ea-import-export/references/generate-report.md": "8fc55ca353efc77748b712d9df1791227d452636acd0988255ad402f461b96b1",
         "ea-import-export/references/xmi-export-import.md": "fa826f01dcc3dfe20eda73a035f699b304370c5df28e631926db0a54e239c85f"
       }
@@ -250,7 +250,7 @@
       "sha256": {
         "ea-model-hygiene/SKILL.md": "bca0a290b07cc42dad5d6402625d35430ab1e1486b7f9a9a947336d0a9768779",
         "ea-model-hygiene/references/consistency-audits.md": "cb1081ce92e215680904659e4f743b9462dae1a7281c09491d330709fdc46521",
-        "ea-model-hygiene/references/pre-delete-safety.md": "2e47295a0f13e650eb5d85d0ae75f04745e1014c84a34eef0c983fdd3eefcf5d"
+        "ea-model-hygiene/references/pre-delete-safety.md": "1fde00e2f563b713e3ed92b3e71b430247d717ee5f0562743b49a61b04351bce"
       }
     },
     {

@@ -9,7 +9,7 @@ they want to migrate existing elements to use the new MDG's stereotypes and tagg
 
 > "The MDG is installed. Would you like to apply it to existing elements in the repository?
 > I can find all elements that match the base type(s) of your stereotypes and offer to update
-> their stereotype and initialise their tagged values."
+> their stereotype and initialize their tagged values."
 
 If yes, proceed with Steps 2–4. If no, stop.
 

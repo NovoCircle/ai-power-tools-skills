@@ -154,7 +154,7 @@ ea_analyze(operation="execute_sql", params={"sql": """
 
 Expect one row per tag. If a tag is missing, `ea_model(operation="set_tagged_value", ...)` did not persist — retry
 the call. This is rare but happens on the first call to a new MDG-enabled project while
-the tag schema is being initialised.
+the tag schema is being initialized.
 
 ---
 

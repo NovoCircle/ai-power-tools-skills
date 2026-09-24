@@ -1,4 +1,4 @@
-# Custom diagram types, toolbox pages, and colours
+# Custom diagram types, toolbox pages, and colors
 
 Back to [SKILL.md](../SKILL.md).
 
@@ -73,11 +73,11 @@ their toolbox. Treat that as a pitfall to avoid, not a pattern to copy.
 
 ---
 
-## COLORREF Colour Reference
+## COLORREF Color Reference
 
 Formula: `B × 65536 + G × 256 + R`
 
-| Colour | R | G | B | COLORREF |
+| Color | R | G | B | COLORREF |
 |--------|---|---|---|----------|
 | Light blue | 180 | 210 | 240 | **15782580** |
 | Light grey | 221 | 221 | 221 | **14540253** |

@@ -27,7 +27,7 @@ Two ways exist to produce an MDG. This skill covers the model-driven one. `ea-md
 | Create stereotype, attribute, constraint | MCP API |
 | Duplicate a package | **EA UI only** — Paste as New, new GUIDs |
 | Connector tagged value (Quick Linker constraint) | **EA UI only** — no API route |
-| Element background colour | **EA UI only** — `update_element` ignores `backcolor` |
+| Element background color | **EA UI only** — `update_element` ignores `backcolor` |
 | Export a profile | **EA UI only** — Publish Package as UML Profile |
 | Build the MDG | **EA UI only** — MDG Technology Wizard |
 | Reference data (tagged value types) | **EA UI only** — Settings ▸ Reference Data ▸ Project Types |
@@ -36,7 +36,7 @@ Two ways exist to produce an MDG. This skill covers the model-driven one. `ea-md
 The rule that keeps this efficient: **build with the API, finish in the UI, verify with the API.**
 
 > **Table current as of 2026-09-21.** Every "EA UI only" row above was confirmed against the
-> live `ea_mcp_server/server.py` source, not just observed behaviour. Several are the direct
+> live `ea_mcp_server/server.py` source, not just observed behavior. Several are the direct
 > target of in-flight backlog work in the same batch as this skill: package duplication
 > (`APT-2026-0054`), connector tagged values (`APT-2026-0052`), the wizard export/build step
 > (`APT-2026-0055`), and the `backcolor` no-op (`APT-2026-0044`, with a follow-up scoping item
@@ -100,7 +100,7 @@ Record the new package GUIDs and the toolbox **diagram** GUIDs. The profile `id`
 
 ## Phase 2 — Profile mechanics
 
-Read from working stereotypes so new work matches. Every one of these is a modelling convention, not an EA feature you can look up.
+Read from working stereotypes so new work matches. Every one of these is a modeling convention, not an EA feature you can look up.
 
 | Aspect | Mechanism |
 |---|---|

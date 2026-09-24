@@ -64,9 +64,9 @@ For every distinct problem encountered in the session, write one issue block usi
 **Severity:** <Critical | High | Medium | Low>
 **Affected component:** <MCP tool name | skill name | EA UI element | licensing service>
 
-### Observed behaviour
+### Observed behavior
 <Factual description of what happened. Include exact error messages, unexpected return values,
-or EA UI behaviour. No speculation here — only what was directly observed.>
+or EA UI behavior. No speculation here — only what was directly observed.>
 
 ### Root cause
 <If confirmed: state the confirmed cause and how it was established.>
@@ -193,7 +193,7 @@ A finished report always has these sections in this order:
 1. Header (auto-collected fields)
 2. One `## Issue N` block per problem, each containing:
    - Severity + Affected component
-   - `### Observed behaviour`
+   - `### Observed behavior`
    - `### Root cause`
    - `### Workaround applied`
    - `### Recommended fix`
@@ -206,9 +206,9 @@ A finished report always has these sections in this order:
 ## Format Rules
 
 - Use `##` (H2) for issue sections and the Summary, Reproduction, and Submission sections.
-- Use `###` (H3) for Observed behaviour, Root cause, Workaround applied, and Recommended fix.
+- Use `###` (H3) for Observed behavior, Root cause, Workaround applied, and Recommended fix.
 - Issue IDs are sequential integers starting at 1 — never skip or reuse.
-- **Observed behaviour** is factual only — no speculation, no interpretation.
+- **Observed behavior** is factual only — no speculation, no interpretation.
 - **Root cause** must distinguish confirmed cause (stated plainly) from suspected cause (prefixed with "Suspected:") from unknown (write "Under investigation").
 - **Workaround applied** must include the actual code or numbered steps, not a prose description alone.
 - **Recommended fix** must name the specific file, tool, or skill and the exact change needed — not just "fix the bug".

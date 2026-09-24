@@ -69,7 +69,7 @@ which is quicker than choosing from the list below.
 | Skill | Purpose |
 |---|---|
 | `ea-validation` | Author and run `validate_model` YAML conformance rulesets |
-| `ea-ruleset-author` | Build a complete ruleset for a modelling language from scratch |
+| `ea-ruleset-author` | Build a complete ruleset for a modeling language from scratch |
 | `ea-model-hygiene` | Find and fix model decay — orphans, inconsistent usage, safe deletion |
 
 ### Lifecycle and reporting

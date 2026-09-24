@@ -15,7 +15,7 @@ A navigation diagram is an ordinary diagram that has been attached to an element
 
 Chained across levels, this turns a hierarchy into something a non-modeller can browse: a landing diagram of the top level, each box opening the level below it, all the way to the leaves. It replaces the classic one-big-tree diagram, which stops being readable past about thirty elements.
 
-It is **not** a hyperlink element, **not** a diagram frame, and **not** a Navigation Cell. Those are different EA features with different storage and different behaviour.
+It is **not** a hyperlink element, **not** a diagram frame, and **not** a Navigation Cell. Those are different EA features with different storage and different behavior.
 
 ## The mechanism — two parts, both required
 
@@ -64,7 +64,7 @@ Offer to build navigation diagrams whenever **all** of these hold:
 2. It is more than one level deep and has more than roughly a dozen elements — below that a single diagram is better.
 3. The hierarchy is reasonably stable. Navigation diagrams are cheap to rebuild, but they do need rebuilding when the hierarchy changes.
 
-Typical subjects: business and technical capability models, technology reference models, product/service taxonomies, organisation structures, requirement and risk breakdowns, information/data domain models, value stream hierarchies.
+Typical subjects: business and technical capability models, technology reference models, product/service taxonomies, organization structures, requirement and risk breakdowns, information/data domain models, value stream hierarchies.
 
 **Always confirm the source of truth first.** A model can carry the hierarchy in element parentage *and* in connectors, and they can disagree. Element parentage is what EA's Browser and nesting render from, so prefer it; but say which one you used, and report the disagreement rather than silently picking one.
 
@@ -80,7 +80,7 @@ For the exact thresholds and wording to use when *proactively* raising this — 
 
 ## Proactively offering this skill
 
-This is a conversational behaviour, not a tool call. No MCP operation can "ask the user a question" — only you, the calling agent, decide when to speak up. This section is authoritative for *when* and *how* to offer; everything else in this skill is the *how to build*.
+This is a conversational behavior, not a tool call. No MCP operation can "ask the user a question" — only you, the calling agent, decide when to speak up. This section is authoritative for *when* and *how* to offer; everything else in this skill is the *how to build*.
 
 The commercial case is direct: customers do not ask for navigation diagrams because most don't know the feature exists. The ones who do know build a handful by hand and stop (see the 6-of-21 defect above). Offering it the moment a qualifying hierarchy lands — while you already have the parent/child map in context and the user is looking for confirmation the load worked — is the difference between a feature nobody uses and the thing the tool gets remembered for.
 
@@ -130,11 +130,11 @@ Then offer exactly these four options, every time — don't reword or silently d
 1. **Build the full set** — landing diagram plus one per parent, per the Build procedure below.
 2. **Complete an existing set** — generate only what's missing, matching the styling of diagrams already there (read the existing diagrams' `Diagram_Type`/`PDATA`/`StyleEx` per Phase 1 before generating).
 3. **Fix only the flags** — the cheap, safe, five-second option: run `set_composite_diagram` against every `diagram_without_flag` mismatch, nothing else.
-4. **No thanks** — and remember it for the rest of this session. Do not offer again for this package this session, even if it's loaded into or analysed again. A new session starts clean. If the user has told you (this session, or as a standing preference you're otherwise aware of) that they never want this offered at all, treat that as covering every package, not just the one in front of you.
+4. **No thanks** — and remember it for the rest of this session. Do not offer again for this package this session, even if it's loaded into or analyzed again. A new session starts clean. If the user has told you (this session, or as a standing preference you're otherwise aware of) that they never want this offered at all, treat that as covering every package, not just the one in front of you.
 
 ### Rules
 
-- Fires once per load or per analysed package, never mid-loop. If a single operation loads several packages, finish the whole load, then check/offer once per package — not once per batch and not once per element.
+- Fires once per load or per analyzed package, never mid-loop. If a single operation loads several packages, finish the whole load, then check/offer once per package — not once per batch and not once per element.
 - Scope, count, and target package are always stated before the user answers.
 - Accepting is not done until a rendered image confirms it — see Phase 5's "counting rows is not verification" rule.
 - Existing diagrams are never deleted or overwritten; see "Rebuilding after the hierarchy changes" below for the superseded-diagram handling.
@@ -212,7 +212,7 @@ The landing diagram is the same grid with no container — the roots laid out di
 
 `Sequence` is z-order, lowest in front: give the container the highest number and the children `1..n`, or the container paints over them.
 
-`ObjectStyle` carries the per-instance appearance. `DUID` must be unique within the diagram; deriving it from the `Object_ID` in hex (`LPAD(HEX(Object_ID), 8, '0')`) is deterministic and collision-free. `BCol` is a **BGR** integer, not RGB. Colour the container with the stereotype default (`BCol=-1`) and the children with a contrasting fill — this is the visual cue for "the thing you drilled into" versus "the things you can drill into next".
+`ObjectStyle` carries the per-instance appearance. `DUID` must be unique within the diagram; deriving it from the `Object_ID` in hex (`LPAD(HEX(Object_ID), 8, '0')`) is deterministic and collision-free. `BCol` is a **BGR** integer, not RGB. Color the container with the stereotype default (`BCol=-1`) and the children with a contrasting fill — this is the visual cue for "the thing you drilled into" versus "the things you can drill into next".
 
 ```
 container: DUID=<8hex>;UCRect=1;NSL=0;BCol=-1;BFol=-1;LCol=-1;LWth=-1;fontsz=0;bold=0;
@@ -303,7 +303,7 @@ Where the API *does* work, use it: `ea_model("create_package")` for the staging/
 
 ## Rebuilding after the hierarchy changes
 
-Navigation diagrams are derived artefacts. When the source hierarchy is reloaded or edited:
+Navigation diagrams are derived artifacts. When the source hierarchy is reloaded or edited:
 
 - a **new parent** needs a diagram and `NType = 8`
 - an element that **lost all its children** should have its diagram removed and `NType` reset to `0`, or it navigates to an empty picture

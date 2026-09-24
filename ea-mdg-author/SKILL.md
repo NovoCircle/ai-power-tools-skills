@@ -27,7 +27,7 @@ directly.
 | All `id=` attributes | **≤ 12 characters** (EA hard limit — silently fails if exceeded) |
 | File encoding | Must be `utf-8` |
 | UMLProfile `id` | Must match the technology `id` for toolbox namespace resolution |
-| `bgcolor` colour values | COLORREF integer: B×65536 + G×256 + R. `-1` = use EA theme default |
+| `bgcolor` color values | COLORREF integer: B×65536 + G×256 + R. `-1` = use EA theme default |
 | Tagged value type | Use `enumeration` (not `enum`) and `String` (capital S) |
 | Test after every structural change | Use `ea-mdg-deploy` skill |
 
@@ -120,7 +120,7 @@ Elements`, `WBA BPMN Elements`, `WBA UML Elements`. Full XML (including how a co
 page would be wired up) is in
 [references/diagrams-toolboxes.md](references/diagrams-toolboxes.md).
 
-The COLORREF colour formula and the `id=` mapping pattern for names over 12 characters are also in
+The COLORREF color formula and the `id=` mapping pattern for names over 12 characters are also in
 that reference file.
 
 ---

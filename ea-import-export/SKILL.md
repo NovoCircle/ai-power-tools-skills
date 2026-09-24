@@ -1,6 +1,6 @@
 ---
 name: ea-import-export
-description: Get content into and out of a Sparx EA repository — XMI package export/import, diagram export to PNG/SVG/Visio, and RTF report generation via ea_repository and ea_diagram. Use when a package or diagram needs to leave EA (another repository, a document, a stakeholder without an EA licence) or an XMI file needs to come back in.
+description: Get content into and out of a Sparx EA repository — XMI package export/import, diagram export to PNG/SVG/Visio, and RTF report generation via ea_repository and ea_diagram. Use when a package or diagram needs to leave EA (another repository, a document, a stakeholder without an EA license) or an XMI file needs to come back in.
 ---
 
 # Import / Export — Sparx EA
@@ -54,7 +54,7 @@ Verified against two diagrams — one with no connectors and one with 8 — and 
 response's `shape_count` and `connector_count` matched the source diagram exactly, and the
 `.vsdx` opened as a valid Office document (multi-part zip with `visio/document.xml`,
 `visio/pages/page1.xml`). This is the right hand-off for a stakeholder who needs to keep working
-with the diagram (move boxes, add annotations) but doesn't have an EA licence.
+with the diagram (move boxes, add annotations) but doesn't have an EA license.
 
 ```python
 ea_diagram(operation="export_diagram_to_visio", params={

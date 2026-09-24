@@ -93,7 +93,7 @@ ea_model(operation="traverse_element_subgraph", params={"element_id": 79, "depth
 ```
 
 Note the duplicate edge entries (`79 -> 140` and `79 -> 143` each appear twice) -- this is the
-"walks both directions at once" behaviour noted in `SKILL.md`; treat `edges` as a set of
+"walks both directions at once" behavior noted in `SKILL.md`; treat `edges` as a set of
 relationships to review, not a count of connectors.
 
 Also note the connector stereotype here is `realizes`, lower case, `Connector_Type: Realisation`
@@ -151,7 +151,7 @@ ea_model(operation="create_connector", params={"client_element_id": 9451, "suppl
 ```
 
 **`find_orphan_elements` on the scratch package** correctly separates connected from
-disconnected, and independently confirms the "package proxy object" behaviour from `SKILL.md`
+disconnected, and independently confirms the "package proxy object" behavior from `SKILL.md`
 Section 1 -- the sub-package itself (element_id 9454) is returned as an "orphan element":
 
 ```json

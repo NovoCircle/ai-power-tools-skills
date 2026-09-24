@@ -1,11 +1,11 @@
 ---
 name: ea-mdg-assess
-description: Work out what modelling-language situation a Sparx EA repository is actually in — ad hoc stereotypes vs. a client-built MDG, and whether a technology is installed, embedded, or actually loaded — before picking ea-mdg-author or ea-mdg-model-build. Use at the start of any MDG task, when a stereotype behaves inconsistently, or whenever assess_mdg_situation's recommendation needs a second opinion.
+description: Work out what modeling-language situation a Sparx EA repository is actually in — ad hoc stereotypes vs. a client-built MDG, and whether a technology is installed, embedded, or actually loaded — before picking ea-mdg-author or ea-mdg-model-build. Use at the start of any MDG task, when a stereotype behaves inconsistently, or whenever assess_mdg_situation's recommendation needs a second opinion.
 ---
 
 # Assessing an MDG situation
 
-`ea_mdg(operation="assess_mdg_situation", params={})` classifies the modelling-language state
+`ea_mdg(operation="assess_mdg_situation", params={})` classifies the modeling-language state
 of the connected repository so the next step is picked on evidence, not assumption. This skill
 covers that call, the three supporting reads that let you check its answer, and what to do when
 the answer and the model disagree.
