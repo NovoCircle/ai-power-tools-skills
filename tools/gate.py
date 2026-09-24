@@ -68,7 +68,11 @@ MAX_SKILL_LINES = 400
 
 SKIP_DIRS = {".git", "node_modules", "__pycache__", ".venv"}
 # tools/ holds this script, whose own patterns would trip it.
-SKIP_FILES = {"gate.py"}
+# gate.py holds the forbidden patterns themselves, and test_gate.py holds
+# the fixtures that prove they fire. Both are deliberately full of the
+# strings this gate exists to reject, and neither is shipped - the
+# manifest does not list tools/.
+SKIP_FILES = {"gate.py", "test_gate.py"}
 
 
 def iter_files(target: Path):
