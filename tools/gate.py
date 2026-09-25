@@ -3,7 +3,9 @@
 
 Enforces the standing rule in C:\\SparxServices\\CLAUDE.md: no real customer
 names, no absolute local paths, no personal identifiers in anything we ship.
-Westbrook Bank is the only permitted example organization.
+Westbrook Bank is the only permitted example organization. Also enforces that
+nothing from the Sparx diagram gallery — corpus image or example subject —
+reaches the bundle.
 
 Usage:
     python tools/gate.py            # check the whole library
@@ -75,6 +77,83 @@ MOJIBAKE = re.compile("â€|Ã¢|â†|Â |[ÂÃâ][^\x00-\x7f]")
 FENCE = re.compile(r"^```")
 CURLY = re.compile(r"[\u2018\u2019\u201c\u201d]")
 
+# --------------------------------------------------------------------------
+# Rule 4 — the Sparx diagram gallery must not leak into the bundle.
+#
+# The 147-image benchmark corpus under research/sparx-diagram-gallery/ is
+# Sparx Systems' copyrighted work. It is ours to measure against, not ours to
+# republish. The same goes for the gallery's example subjects: Hardware
+# Retailer, HSUV and Distiller are Sparx's inventions, so naming one in a
+# shipped skill would borrow their work *and* break the Westbrook-only rule in
+# CLAUDE.md. Our generated equivalents belong to Westbrook Bank and must be
+# named that way.
+#
+# Two halves, because the leak has two shapes.
+#
+# 1. An image file. The bundle ships no images at all — skills are text and
+#    the manifest lists only .md/.yaml — so "any image here" is the truer
+#    rule, and the only one that survives a corpus image being renamed on the
+#    way in. The catalog is read when it is reachable, purely to name *which*
+#    corpus image it is; when research/ is absent (a customer or CI checkout
+#    of the bundle alone) the image is still blocked, just described
+#    generically. Enforcement never depends on the catalog, so a catalog that
+#    rots cannot quietly disarm the rule.
+#
+# 2. A gallery example subject in bundle text or in a shipped path. Curated by
+#    hand rather than derived from the catalog, because deciding which of the
+#    147 filenames is Sparx's invention and which is ordinary industry
+#    vocabulary is a judgment call — a list generated from the filenames would
+#    have shipped `deployment-diagram` and `heat-map` as violations.
+#
+# Deliberately NOT caught. Each is a term a legitimate skill could reasonably
+# use, and a rule that cries wolf is a rule someone switches off:
+#   Travel Booking, Email Voting, Book Lending — gallery BPMN subjects, but
+#     ordinary business-process vocabulary industry-wide.
+#   Smart Home, Customer Login, Pedestrian Crossing, Manage Inventory, States
+#     of Water — textbook state-machine and use-case subjects, nobody's to own.
+#   Flip Flop, OpAmp, Liquid Tank, SysPhS — electronics and physics
+#     vocabulary; SysPhS is an OMG standard name.
+#   Connected Vehicle, Chef Automate — AWS and Chef reference architectures
+#     the gallery reproduces. Someone else's marks, and a different problem.
+#   Framework names (TOGAF, Zachman, ArchiMate viewpoint titles) — standards.
+#   Either half of a two-word subject on its own: "hardware requirements" and
+#     "book storage" are innocent, so the words must be adjacent. Inflections
+#     past a plural or a -y ending are not caught either.
+# --------------------------------------------------------------------------
+IMAGE_SUFFIXES = {".png", ".jpg", ".jpeg", ".gif", ".svg"}
+
+# Empty on purpose, and the only sanctioned way past the image rule. If a
+# skill ever has a real reason to ship an image, check its provenance and add
+# its bundle-relative path here: that is a one-line diff a reviewer can weigh,
+# which loosening the rule is not.
+ALLOWED_IMAGES: set[str] = set()
+
+# Where the corpus index lives, relative to the workspace root. Not required
+# to exist.
+CATALOG_REL = Path("research/sparx-diagram-gallery/catalog-rescored.tsv")
+
+
+def _subject(*words: str) -> re.Pattern:
+    """Match a gallery subject however it is spelled.
+
+    `Hardware Retailer` has to be caught as `hardware-retailer` in a filename
+    and `HardwareRetailer` in an identifier as readily as in prose, so the gap
+    between words matches a space, hyphen, underscore, or nothing at all. A
+    trailing plural or -y is absorbed so `Distillery` and `Bookstores` count.
+    """
+    return re.compile(r"\b" + r"[\s_-]*".join(words) + r"(?:s|es|y|ies)?\b", re.I)
+
+
+GALLERY_SUBJECTS = [
+    (_subject("Hardware", "Retailer"), "Hardware Retailer"),
+    (_subject("HSUV"), "HSUV"),
+    (_subject("Hybrid", "SUV"), "Hybrid SUV"),
+    (_subject("Distiller"), "Distiller"),
+    (_subject("Book", "store"), "Bookstore"),
+    (_subject("Nobel", "Prize"), "Nobel Prize"),
+]
+GALLERY_WHY = "Sparx's, not ours; convert to Westbrook Bank"
+
 MAX_SKILL_LINES = 400
 
 SKIP_DIRS = {".git", "node_modules", "__pycache__", ".venv"}
@@ -109,6 +188,11 @@ def check_file(path: Path) -> list[str]:
     text = raw.decode("utf-8", errors="replace")
     lines = text.splitlines()
 
+    for pattern, subject in GALLERY_SUBJECTS:
+        if pattern.search(rel.as_posix()):
+            out.append(f"{rel}: gallery example subject '{subject}' in the file path "
+                       f"— {GALLERY_WHY}")
+
     in_fence = False
     for n, line in enumerate(lines, 1):
         if FENCE.match(line.strip()):
@@ -121,6 +205,11 @@ def check_file(path: Path) -> list[str]:
             if why == "absolute local path" and PLACEHOLDER_PATH.search(line):
                 continue
             out.append(f"{rel}:{n}: {why} — convert to Westbrook Bank: {line.strip()[:90]}")
+
+        for pattern, subject in GALLERY_SUBJECTS:
+            if pattern.search(line):
+                out.append(f"{rel}:{n}: gallery example subject '{subject}' "
+                           f"— {GALLERY_WHY}: {line.strip()[:90]}")
 
         if MOJIBAKE.search(line):
             out.append(f"{rel}:{n}: mojibake — file was written as cp1252")
@@ -142,6 +231,72 @@ def check_file(path: Path) -> list[str]:
         out.append(f"{rel}: {len(lines)} lines — over the {MAX_SKILL_LINES}-line limit; "
                    f"move detail into references/")
 
+    return out
+
+
+def _find_catalog() -> Optional[Path]:
+    """Locate the corpus catalog by walking up from the library root.
+
+    The skills library sits inside the workspace that also holds research/; a
+    bundle-only checkout has no such parent to find, which is the expected
+    case for a customer and for CI.
+    """
+    for base in (ROOT, *ROOT.parents):
+        candidate = base / CATALOG_REL
+        if candidate.is_file():
+            return candidate
+    return None
+
+
+def corpus_image_names(catalog: Optional[Path] = None) -> set[str]:
+    """Lowercased basenames of the benchmark corpus images, read from the catalog.
+
+    Column 1 of the TSV is the image filename. Reading it beats pasting 147
+    filenames in here, which would rot the first time the corpus changed.
+
+    Returns an empty set when the catalog is not reachable. That degrades the
+    *description* of a finding, never the finding itself: check_images blocks
+    every image either way, and only says which corpus image it is when it can
+    prove it.
+    """
+    path = Path(catalog) if catalog is not None else _find_catalog()
+    if path is None or not path.is_file():
+        return set()
+
+    names: set[str] = set()
+    for n, line in enumerate(path.read_text(encoding="utf-8", errors="replace").splitlines()):
+        first = line.split("\t", 1)[0].strip()
+        if n == 0 or not first:
+            continue
+        if Path(first).suffix.lower() in IMAGE_SUFFIXES:
+            names.add(first.lower())
+    return names
+
+
+def check_images(target: Path, catalog: Optional[Path] = None) -> list[str]:
+    """No image ships from this library. See Rule 4.
+
+    `catalog` overrides where the corpus index is read from, so tests exercise
+    both the identified and the unidentified path on any machine.
+    """
+    corpus = corpus_image_names(catalog)
+    out: list[str] = []
+    for p in sorted(target.rglob("*")):
+        if not p.is_file() or p.suffix.lower() not in IMAGE_SUFFIXES:
+            continue
+        if any(part in SKIP_DIRS for part in p.parts):
+            continue
+        rel = p.relative_to(ROOT).as_posix()
+        if rel in ALLOWED_IMAGES:
+            continue
+        if p.name.lower() in corpus:
+            out.append(f"{rel}: benchmark corpus image '{p.name}' — Sparx Systems' "
+                       f"copyrighted reference image; it stays in research/ and "
+                       f"must not ship")
+        else:
+            out.append(f"{rel}: image file in the bundle — skills ship text only, so "
+                       f"this is unreviewed artwork or a renamed corpus image; check "
+                       f"its provenance and list it in ALLOWED_IMAGES if it is ours")
     return out
 
 
@@ -280,6 +435,16 @@ def check_op_drift(target: Path, server: Optional[Path] = None) -> list[str]:
     return out
 
 
+def is_blocking(finding: str) -> bool:
+    """Whether a finding stops the release. Everything does but the line limit.
+
+    Blocking is the default a new rule inherits, and the right one: a rule
+    nobody has classified should hold the release, not slide past in a wall of
+    warnings.
+    """
+    return "over the" not in finding
+
+
 def main() -> int:
     # Findings quote source lines that may contain em-dashes and smart quotes.
     # A cp1252 console would raise UnicodeEncodeError mid-report and truncate it.
@@ -296,6 +461,7 @@ def main() -> int:
     findings: list[str] = []
     for f in iter_files(target):
         findings.extend(check_file(f))
+    findings.extend(check_images(target))
     findings.extend(check_op_drift(target))
     if target == ROOT:
         findings.extend(check_manifest())
@@ -304,7 +470,7 @@ def main() -> int:
         print("GATE GREEN — no violations")
         return 0
 
-    blocking = [f for f in findings if "over the" not in f]
+    blocking = [f for f in findings if is_blocking(f)]
     print(f"GATE RED — {len(findings)} finding(s), {len(blocking)} blocking\n")
     for f in findings:
         print(f"  {f}")
