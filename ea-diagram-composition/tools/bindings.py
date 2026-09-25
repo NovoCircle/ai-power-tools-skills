@@ -118,9 +118,17 @@ IMPLEMENTED_GRAMMARS = frozenset(k for k, v in GRAMMARS.items() if v)
 
 # Route names as the server accepts them, from EA's own connector right-click >
 # Line Style submenu. SOURCE OF TRUTH is `_ROUTE_STYLES` / `_BEZIER_MODE` in
-# ea_mcp_server.server; this is a validation copy so a typo in a binding is
-# caught on load instead of at write time. `test_route_names_match_the_server`
-# pins the two together.
+# ea_mcp_server.server; this is a validation copy, so a typo in a binding is
+# caught on load instead of at write time.
+#
+# The skills bundle deliberately does NOT import the server -- it is a separate
+# product, and a customer install has no server source on the path -- so the copy
+# cannot be derived. `test_route_names_match_the_server` pins it against an
+# accidental edit HERE; it cannot see a rename on the server side, which would
+# leave both copies agreeing with each other and neither with EA. That drift is
+# caught by the server's own generation suite, which takes every route from a
+# binding and asserts EA holds it -- but only when that suite runs, since it
+# needs a live repository.
 ROUTE_NAMES = frozenset({
     "direct",
     "autorouting",
@@ -280,6 +288,24 @@ class PresentationProfile:
 
         The polarity flips: a profile says what it *shows*, EA is told what to
         *hide*. That inversion is worth doing in exactly one place.
+
+        WHAT `compartments` CAN AND CANNOT DO
+        -------------------------------------
+        `compartments: none` does NOT remove the attribute and operation
+        compartments. EA's `SuppressedCompartments` was measured through six
+        value shapes against a class with attributes and operations and changed
+        nothing every time, so there is no verified way to take a compartment
+        off. What IS available is reducing its detail to names: attributes read
+        as `balance` rather than `balance: Decimal`, operations as `getBalance`
+        rather than `getBalance(): Decimal`.
+
+        So `none` and any explicit list both mean "least detail EA will give
+        us", and `all` means full detail. That is a smaller promise than the
+        profile vocabulary suggests, and saying so here is better than emitting
+        a setting that silently does nothing.
+
+        Every key emitted below was verified by rendering against content it
+        could bite on. Nothing is emitted on faith.
         """
         out: dict[str, bool] = {}
         if "connector_labels" in self.settings:
@@ -287,6 +313,18 @@ class PresentationProfile:
         if "element_stereotypes" in self.settings:
             out["hide_element_stereotypes"] = (
                 not self.settings["element_stereotypes"])
+        if "connector_stereotypes" in self.settings:
+            out["hide_connector_stereotypes"] = (
+                not self.settings["connector_stereotypes"])
+        if "notes" in self.settings:
+            # A SHOW, not a hide: EA does not draw element notes by default, so
+            # this is the one setting whose polarity does not flip.
+            out["show_element_notes"] = bool(self.settings["notes"])
+        if "compartments" in self.settings:
+            full_detail = self.settings["compartments"] == "all"
+            for key in ("hide_attribute_types", "hide_operation_return_types",
+                        "hide_operation_brackets"):
+                out[key] = not full_detail
         return out
 
 
@@ -417,6 +455,35 @@ class Viewpoint:
 
     def admits_concept(self, concept: str) -> bool:
         return concept in self.admits
+
+    @property
+    def effective_grammar(self) -> str:
+        """This viewpoint's own grammar, or `""` to mean its diagram type's.
+
+        A viewpoint override is not decoration. ArchiMate's Capability and
+        Organization viewpoints are nested grids drawn on a `Business` diagram
+        type whose grammar is `layered-bands`, so a consumer that reads the
+        diagram type's grammar and ignores the override composes a capability
+        map as bands.
+        """
+        return self.grammar
+
+    @property
+    def grammar_is_implemented(self) -> Optional[bool]:
+        """Whether `compose.py` can compose THIS viewpoint's grammar.
+
+        `None` when the viewpoint states no grammar of its own -- ask the
+        diagram type instead. The distinction matters: `False` means "we know we
+        cannot", `None` means "this viewpoint has no opinion", and returning
+        `False` for both would make every ordinary viewpoint look unsupported.
+
+        Without this, the documented path -- rank viewpoints, take one, ask its
+        diagram type whether the grammar is implemented -- answers `True` for a
+        nested grid and composes it as bands.
+        """
+        if not self.grammar:
+            return None
+        return GRAMMARS.get(self.grammar, False)
 
 
 class Binding:
@@ -784,7 +851,6 @@ def _validate(doc: Any, source: str) -> dict:
     out: dict[str, Any] = {
         "technology": technology,
         "extends": data.get("extends") or None,
-        "stereotype_prefix": data.get("stereotype_prefix") or "",
         "diagram_types": {
             name: _validate_diagram_type(
                 name, body, f"{source}.diagram_types.{name}")
@@ -796,12 +862,21 @@ def _validate(doc: Any, source: str) -> dict:
         if out["extends"] == technology:
             raise BindingError(
                 f"{source}.extends: a binding cannot extend itself")
-    if data.get("stereotype_prefix") is not None:
-        prefix = data.get("stereotype_prefix") or ""
+    # Recorded ONLY when the document declares it, because `""` has to survive
+    # as a statement rather than as an absence. A child binding whose install
+    # carries an unprefixed build of its parent's technology says so by writing
+    # `stereotype_prefix: ""`, and `_merge` must not overwrite that with the
+    # parent's prefix. Checked before coercion: `data.get(...) or ""` would turn
+    # `0` and `[]` into `""` and pass a type check that never ran.
+    if "stereotype_prefix" in data:
+        prefix = data["stereotype_prefix"]
+        if prefix is None:
+            prefix = ""            # `stereotype_prefix: ~` means no prefix
         if not isinstance(prefix, str):
             raise BindingError(
                 f"{source}.stereotype_prefix: expected a string or omitted, "
                 f"got {prefix!r}")
+        out["stereotype_prefix"] = prefix
     for optional in ("display_name", "notes"):
         if data.get(optional):
             out[optional] = _text(data[optional], f"{source}.{optional}")
@@ -903,7 +978,11 @@ def _merge(parent: Binding, child: dict) -> dict:
         }
         inherited.update(child.get(catalog) or {})
         merged[catalog] = inherited
-    if not merged.get("stereotype_prefix"):
+    # `not merged.get(...)` cannot tell `""` from absent, and the difference is
+    # load-bearing: a child that declares `stereotype_prefix: ""` is stating that
+    # ITS technology has no prefix, and silently inheriting the parent's would
+    # make every stereotype lookup miss without complaining.
+    if "stereotype_prefix" not in merged:
         merged["stereotype_prefix"] = parent.stereotype_prefix
     return merged
 

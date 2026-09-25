@@ -156,7 +156,7 @@ GALLERY_WHY = "Sparx's, not ours; convert to Westbrook Bank"
 
 MAX_SKILL_LINES = 400
 
-SKIP_DIRS = {".git", "node_modules", "__pycache__", ".venv"}
+SKIP_DIRS = {".git", "node_modules", "__pycache__", ".venv", ".pytest_cache"}
 # tools/ holds this script, whose own patterns would trip it.
 # gate.py holds the forbidden patterns themselves, and test_gate.py holds
 # the fixtures that prove they fire. Both are deliberately full of the
@@ -343,6 +343,12 @@ def check_manifest() -> list[str]:
         if skill_dir.name.startswith((".", "_")) or skill_dir.name == "tools":
             continue
         for f in skill_dir.rglob("*"):
+            # Tool caches are not assets. `.pytest_cache/README.md` appears the
+            # moment anybody runs the skill's own tests, and reporting it turns
+            # the gate red for a reason nobody can act on -- which is how a
+            # release gate stops being read.
+            if any(part in SKIP_DIRS for part in f.parts):
+                continue
             if f.is_file() and f.suffix.lower() in {".md", ".yaml", ".yml"}:
                 rel = f.relative_to(ROOT).as_posix()
                 if rel not in listed:

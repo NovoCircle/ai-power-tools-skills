@@ -13,6 +13,10 @@
 # Where a number rests on a single diagram it was LEFT OUT rather than shipped
 # as a convention. A binding that states a convention it has not observed is
 # worse than one that falls back to the engine default.
+#
+# Band gutters are the case in point: the vertical space between one layer band
+# and the next was never separately measured, so `band_gap` is absent from every
+# diagram type below and the engine's own default stands.
 
 technology: ArchiMate3
 display_name: ArchiMate 3
@@ -55,9 +59,14 @@ diagram_types:
       # notation requires it to read as a point.
       Junction: {w: 20, h: 20}
     spacing:
+      # Each shipped value is a measured statistic rounded to the nearest 5 —
+      # item_gap_x from the median, item_gap_y from the mode. Spacing is a
+      # convention a person reproduces by hand, so a multiple of 5 is worth more
+      # than the extra unit of accuracy in 76 or 38, and shipping a gap to three
+      # significant figures would claim a precision 61 and 69 pairs do not
+      # carry.
       item_gap_x: 75          # measured: median 76, modal 78 across 61 pairs
       item_gap_y: 40          # measured: median 47, modal 38 across 69 pairs
-      band_gap: 40            # not separately measured; matched to item_gap_y
     routing:
       default: OrthogonalSquare
       trunk_for: [Realization, Aggregation, Composition, Specialization]
@@ -89,7 +98,6 @@ diagram_types:
     spacing:
       item_gap_x: 75
       item_gap_y: 40
-      band_gap: 40
     routing:
       default: OrthogonalSquare
       trunk_for: [Realization, Aggregation, Composition, Specialization]
@@ -112,7 +120,6 @@ diagram_types:
     spacing:
       item_gap_x: 75
       item_gap_y: 40
-      band_gap: 40
     routing:
       default: OrthogonalSquare
       trunk_for: [Realization, Aggregation, Composition, Specialization]
@@ -134,7 +141,6 @@ diagram_types:
     spacing:
       item_gap_x: 75
       item_gap_y: 40
-      band_gap: 40
     routing:
       default: OrthogonalSquare
       trunk_for: [Realization, Influence, Specialization]
@@ -162,7 +168,6 @@ diagram_types:
     spacing:
       item_gap_x: 75
       item_gap_y: 40
-      band_gap: 40
     routing:
       default: OrthogonalSquare
       trunk_for: [Realization, Aggregation, Composition]
@@ -307,7 +312,7 @@ viewpoints:
   ImplementationAndMigration:
     diagram_type: Implementation
     intent: [roadmap, migration plan, what is delivered when,
-             programme of work]
+             program of work]
     admits: [WorkPackage, Deliverable, ImplementationEvent, Plateau, Gap,
              BusinessRole, BusinessActor, Requirement, Goal]
 

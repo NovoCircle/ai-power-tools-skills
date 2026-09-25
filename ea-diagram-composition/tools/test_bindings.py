@@ -242,8 +242,14 @@ def test_the_pitch_key_from_the_original_sketch_names_what_to_use_instead():
     item is a layout the engine refuses. An author writing it deserves to be
     told which key they meant, not handed the engine's arithmetic complaint at
     generation time.
+
+    Matched on the hint's own wording, not on `item_gap_x`: every unknown-key
+    message ends in `Known keys: ..., item_gap_x, ...`, so matching the key name
+    would pass with the hints dict empty and this test would be evidence of
+    nothing. Remove the assertion and `pitch:` becomes a bare "unknown key"
+    again, which is the failure the hint exists to prevent.
     """
-    with pytest.raises(BindingError, match="item_gap_x"):
+    with pytest.raises(BindingError, match="includes the box it steps over"):
         load_binding_text(MINIMAL + "    spacing:\n      pitch: {h: 40}\n")
 
 
@@ -475,7 +481,16 @@ def test_a_profile_only_emits_settings_it_actually_states():
 
 
 def test_a_profile_written_in_hide_flags_is_corrected():
-    with pytest.raises(BindingError, match="connector_labels"):
+    """A profile states what it SHOWS; the hint says so rather than just
+    refusing the key.
+
+    Matched on the hint's wording, not on `connector_labels`: that substring
+    sits inside the rejected key itself (`hide_connector_labels`) and inside the
+    message's `Known keys:` list, so it passes with no hint at all. Remove this
+    assertion and an author who wrote the EA-facing polarity gets "unknown key"
+    and no indication that the schema has the same setting the other way up.
+    """
+    with pytest.raises(BindingError, match="profiles say what they SHOW"):
         load_binding_text(
             MINIMAL + "presentation_profiles:\n  odd:\n"
                       "    hide_connector_labels: true\n")
@@ -846,18 +861,73 @@ def test_both_pilots_define_the_same_three_presentation_profiles():
         assert profiles["detail"].collapses_parallel is False
 
 
+#: Every whole-diagram setting a profile is allowed to emit. Each was verified
+#: BY RENDERING against content it could bite on -- not by writing it and
+#: reading it back, which EA would echo regardless.
+#:
+#: `SuppressedCompartments` is deliberately absent. It was measured through six
+#: value shapes against a class with attributes and operations and changed
+#: nothing every time, so `compartments: none` cannot remove a compartment; it
+#: reduces one to names. A profile that emitted it would promise a suppression
+#: that silently does nothing.
+VERIFIED_DISPLAY_SETTINGS = {
+    "hide_connector_labels",
+    "hide_element_stereotypes",
+    "hide_connector_stereotypes",
+    "hide_attribute_types",
+    "hide_operation_return_types",
+    "hide_operation_brackets",
+    "show_element_notes",
+}
+
+
 def test_no_shipped_profile_promises_an_unverified_suppression():
-    """`display_settings()` emits only the two flags proven to change what EA
-    renders. `compartments`, `notes` and connector stereotypes are recorded as
-    the notation's intent but must not leak out as settings, or a profile would
-    promise a suppression that silently does nothing."""
+    """A profile must not emit a setting nobody has watched EA obey.
+
+    This list grew from two to seven once the six "unverified, not disproven"
+    keys were measured against content they could actually suppress -- five
+    worked, all through StyleEx. The seventh, `SuppressedCompartments`, did not,
+    and is the reason this allowlist exists rather than a blanket "emit whatever
+    the profile says".
+    """
     for technology in available_bindings():
         binding = find_binding(technology)
         for name, profile in binding.presentation_profiles.items():
             emitted = set(profile.display_settings())
-            assert emitted <= {"hide_connector_labels",
-                               "hide_element_stereotypes"}, (
-                f"{technology}::{name} emits {emitted}")
+            assert emitted <= VERIFIED_DISPLAY_SETTINGS, (
+                f"{technology}::{name} emits "
+                f"{emitted - VERIFIED_DISPLAY_SETTINGS}")
+
+
+def test_the_three_profiles_are_actually_different(): 
+    """A profile scheme whose profiles emit the same settings is decoration.
+
+    Asserted as strict progression on how much is hidden, which is the claim the
+    names make: detail hides nothing, executive hides the most.
+    """
+    for technology in available_bindings():
+        binding = find_binding(technology)
+        hidden = {}
+        for name in ("detail", "review", "executive"):
+            settings = binding.profile(name).display_settings()
+            hidden[name] = sum(1 for k, v in settings.items()
+                               if v and k.startswith("hide_"))
+        assert hidden["detail"] == 0, f"{technology}: detail hides something"
+        assert hidden["detail"] < hidden["review"] < hidden["executive"], (
+            f"{technology}: {hidden}")
+
+
+def test_notes_is_the_one_setting_whose_polarity_does_not_flip():
+    """EA does not draw element notes by default, so `notes: true` is a SHOW.
+
+    Pinned because every other setting in this translation inverts, and a reader
+    tidying the method for consistency would turn notes off in the detail
+    profile and on in the executive one -- exactly backwards.
+    """
+    binding = find_binding("ArchiMate3")
+    assert binding.profile("detail").display_settings()["show_element_notes"]         is True
+    assert binding.profile("executive").display_settings()[
+        "show_element_notes"] is False
 
 
 # ---------------------------------------------------------------------------
@@ -867,14 +937,27 @@ _TECHNOLOGY_WORDS = ("archimate", "bpmn", "sysml", "togaf", "uaf", "dmn",
                      "zachman", "arcgis", "niem")
 
 
-def _code_strings(path: Path) -> list[str]:
-    """Every string literal that is not a docstring, plus every identifier.
+def _code_strings_in(source: str) -> list[str]:
+    """Every string literal that is not a docstring, plus every name the code
+    declares or uses.
+
+    "Every name" has to mean every name, because the realistic leak is not
+    `if technology == "ArchiMate3"` - it is an import or a public function that
+    carries the notation in its own identifier. So the walk collects imported
+    module names and aliases, function, async-function and class names,
+    parameter names and keyword-argument names, not only `Name`, `Attribute`
+    and string constants. Restricted to those three, the scan reports zero
+    offenders for a module whose only leaks are `from archimate_tables import
+    SIZES` and `def compose_archimate_bands(...)` - the two most likely ones.
 
     Comments and docstrings are excluded deliberately: `compose.py` is allowed
     to *mention* ArchiMate while explaining why it does not branch on it. What
-    it may not do is act on the name.
+    it may not do is act on the name. Note the exclusion is BY VALUE, so a
+    function whose docstring were exactly `"ArchiMate3"` would also blank every
+    `"ArchiMate3"` literal in the file - contrived enough to record here rather
+    than engineer around.
     """
-    tree = ast.parse(path.read_text(encoding="utf-8"))
+    tree = ast.parse(source)
     docstrings = set()
     for node in ast.walk(tree):
         if isinstance(node, (ast.Module, ast.ClassDef, ast.FunctionDef,
@@ -891,20 +974,137 @@ def _code_strings(path: Path) -> list[str]:
             out.append(node.id)
         elif isinstance(node, ast.Attribute):
             out.append(node.attr)
+        elif isinstance(node, ast.alias):
+            out.append(node.name)
+            if node.asname:
+                out.append(node.asname)
+        elif isinstance(node, ast.ImportFrom):
+            if node.module:
+                out.append(node.module)
+        elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef,
+                               ast.ClassDef)):
+            out.append(node.name)
+        elif isinstance(node, ast.arg):
+            out.append(node.arg)
+        elif isinstance(node, ast.keyword):
+            if node.arg:
+                out.append(node.arg)
     return out
+
+
+def _code_strings(path: Path) -> list[str]:
+    return _code_strings_in(path.read_text(encoding="utf-8"))
+
+
+def _technology_offenders(strings: list[str]) -> list[str]:
+    """The filter both layer-boundary tests apply, in one place.
+
+    Shared so the synthetic-leak test below exercises the same predicate the
+    real files are scanned with, rather than a paraphrase of it that could pass
+    while the real one missed.
+    """
+    return [s for s in strings
+            if any(word in s.lower() for word in _TECHNOLOGY_WORDS)]
+
+
+def _imported_names(source: str) -> set[str]:
+    """Every module or name an import statement brings into a namespace.
+
+    Both halves of an import matter, and dotted paths are split. `from tools
+    import bindings` and `from . import bindings as _b` name the loader in the
+    *alias*, so reading only `ImportFrom.module` sees nothing; `import
+    tools.bindings` hides it in a path segment.
+    """
+    out: set[str] = set()
+    for node in ast.walk(ast.parse(source)):
+        if isinstance(node, (ast.Import, ast.ImportFrom)):
+            if isinstance(node, ast.ImportFrom) and node.module:
+                out.update(node.module.split("."))
+            for alias in node.names:
+                out.update(alias.name.split("."))
+                if alias.asname:
+                    out.add(alias.asname)
+    return out
+
+
+# A module that leaks a notation name in every shape the scan has to reach, and
+# also names notations in its docstrings, where they are allowed. Held as a
+# string on purpose: nothing about this test needs a file on disk.
+_LEAKY_MODULE = '''
+"""A docstring may mention ArchiMate all it likes."""
+from archimate_tables import SIZES
+from tables import dmn_sizes
+import bpmn_helpers
+import plain_helpers as zachman_helpers
+from .sysml_defaults import DEFAULTS
+
+
+def compose_archimate_bands(spec):
+    """A docstring may mention BPMN too."""
+    return _apply(spec, archimate_mode=True)
+
+
+def _apply(cfg, togaf_mode=False):
+    return cfg.uaf_layout
+
+
+async def load_niem_profile():
+    return None
+
+
+class BpmnLaneEngine:
+    pass
+
+
+TABLE = "zachman-grid"
+'''
+
+# Shape -> the name the scan must report for it. Keyed by the name so a miss
+# names the shape that is invisible rather than just failing a set comparison.
+_LEAK_SHAPES = {
+    "archimate_tables": "the module of a `from <tech> import ...`",
+    "dmn_sizes": "the name an import binds, from an innocent module",
+    "bpmn_helpers": "a plain `import <tech>`",
+    "zachman_helpers": "the alias an import is renamed to",
+    "sysml_defaults": "the module of a relative `from .<tech> import ...`",
+    "compose_archimate_bands": "a public function's own name",
+    "archimate_mode": "a keyword argument at a call site",
+    "togaf_mode": "a parameter in a signature",
+    "uaf_layout": "an attribute being read",
+    "load_niem_profile": "an async function's own name",
+    "BpmnLaneEngine": "a class's own name",
+    "zachman-grid": "a plain string literal",
+}
+
+
+def test_the_technology_name_scan_sees_every_shape_a_name_can_hide_in():
+    """The test that makes the two layer-boundary tests below mean something.
+
+    They assert an empty list. An empty list is also what a scan that looks in
+    the wrong places returns, so without this the acceptance criterion could be
+    "met" by a helper that sees nothing. `_LEAKY_MODULE` puts a notation name in
+    each shape a real leak would take and this pins that the scan reports every
+    one. Remove it and `_code_strings_in` can quietly stop visiting imports or
+    function names - the shapes it originally missed - with all three tests
+    still green.
+    """
+    offenders = set(_technology_offenders(_code_strings_in(_LEAKY_MODULE)))
+    missed = {name: shape for name, shape in _LEAK_SHAPES.items()
+              if name not in offenders}
+    assert not missed, f"the scan cannot see a technology name in: {missed}"
+    # And the deliberate exclusion still holds: docstrings may say the words.
+    assert not [s for s in offenders if "docstring" in s.lower()]
 
 
 def test_the_engine_contains_no_technology_name():
     """The acceptance criterion, as a test.
 
-    A single `if technology == "ArchiMate3"` in `compose.py` would undo the
-    whole design - new notations would become engineering tasks again - while
-    every other test in this suite still passed.
+    A single `if technology == "ArchiMate3"` in `compose.py` - or an import,
+    function or parameter named after a notation - would undo the whole design,
+    new notations becoming engineering tasks again, while every other test in
+    this suite still passed. The scan's reach is pinned separately above.
     """
-    offenders = [
-        s for s in _code_strings(_HERE / "compose.py")
-        if any(word in s.lower() for word in _TECHNOLOGY_WORDS)
-    ]
+    offenders = _technology_offenders(_code_strings(_HERE / "compose.py"))
     assert not offenders, f"compose.py acts on a technology name: {offenders}"
 
 
@@ -912,34 +1112,70 @@ def test_the_loader_contains_no_technology_name_in_its_code_either():
     """The loader is allowed to document what it measured about ArchiMate and
     BPMN; it is not allowed to special-case them. Otherwise "conventions as
     data" is only true of the files."""
-    offenders = [
-        s for s in _code_strings(_HERE / "bindings.py")
-        if any(word in s.lower() for word in _TECHNOLOGY_WORDS)
-    ]
+    offenders = _technology_offenders(_code_strings(_HERE / "bindings.py"))
     assert not offenders, f"bindings.py acts on a technology name: {offenders}"
 
 
+_LOADER_IMPORT_SHAPES = (
+    "import bindings",
+    "import tools.bindings",
+    "from bindings import load_binding",
+    "from tools import bindings",
+    "from . import bindings as _b",
+    "from .bindings import load_binding",
+)
+
+
+def test_the_import_check_sees_every_shape_the_import_could_take():
+    """Same reason as the scan test: `assert "bindings" not in imported` passes
+    trivially against a set built the wrong way.
+
+    The original built it from `alias.name` for `import` but only `node.module`
+    for `from ... import`, so `from tools import bindings` and `from . import
+    bindings as _b` - the two shapes this directory's own sys.path trick makes
+    likely - were both invisible. Remove this and the boundary test below can go
+    back to reading half the import.
+    """
+    for shape in _LOADER_IMPORT_SHAPES:
+        assert "bindings" in _imported_names(shape), shape
+
+
 def test_the_engine_does_not_import_the_loader():
-    """The dependency runs one way: a binding is data that feeds the engine."""
+    """The dependency runs one way: a binding is data that feeds the engine.
+
+    Remove this and `compose.py` could grow `from . import bindings` and start
+    resolving conventions itself, which is the same design failure as branching
+    on a technology id with an extra indirection in front of it.
+    """
     source = (_HERE / "compose.py").read_text(encoding="utf-8")
-    tree = ast.parse(source)
-    imported = set()
-    for node in ast.walk(tree):
-        if isinstance(node, ast.Import):
-            imported.update(alias.name for alias in node.names)
-        elif isinstance(node, ast.ImportFrom) and node.module:
-            imported.add(node.module)
-    assert "bindings" not in imported
+    assert "bindings" not in _imported_names(source)
 
 
 def test_route_names_match_the_server():
-    """A validation copy of the server's routing vocabulary, pinned.
+    """Pins this file's copy of the route vocabulary. It cannot see server drift.
 
-    `_ROUTE_STYLES` in `ea_mcp_server.server` is the source of truth. The copy
-    exists so a typo'd route in a binding is caught on load rather than at
-    write time, and this test is what stops the two drifting apart. Bezier is
-    included even though EA reaches it a different way - a binding author
-    should not have to know that.
+    `_ROUTE_STYLES` plus `_BEZIER_MODE` in `ea_mcp_server.server` are the source
+    of truth, and `bindings.py` holds a copy so a typo'd route in a binding is
+    caught on load rather than at write time. This test does NOT compare the
+    two, and deriving it is not available: the skills bundle must not import the
+    server, because a customer install has the bundle and no server source on
+    the path. The set below is a second copy, written here.
+
+    So what it catches is an edit on THIS side - a route dropped from or renamed
+    in `ROUTE_NAMES`, which would make bindings using it fail to load. What it
+    cannot catch is a rename on the server side, which would leave both copies
+    agreeing with each other and neither with EA.
+
+    That drift is caught in the server's own suite.
+    `tests/test_apt_2026_0144_binding_generation.py` takes every route it
+    applies from `find_binding(...)` rather than restating one, and asserts the
+    connector EA holds carries it - so a name this copy still lists that the
+    server's route table no longer resolves fails there, at generation. Those
+    tests need real EA and skip without it, so the protection lands when that
+    suite runs, not on every green run of this file.
+
+    Bezier is included even though EA reaches it a different way - a binding
+    author should not have to know that.
     """
     assert ROUTE_NAMES == {
         "direct", "autorouting", "customline", "treevertical",
@@ -948,13 +1184,40 @@ def test_route_names_match_the_server():
     }
 
 
+def _engine_grammars() -> set[str]:
+    """The grammars `compose.py` actually implements, read from `compose.py`.
+
+    One public `compose_<grammar>` function per grammar, with underscores
+    standing in for the hyphens the vocabulary uses. Read from the module rather
+    than from its `__all__`, so a grammar shipped without being exported still
+    counts - the question is what the engine can do, not what it advertises.
+    """
+    import compose
+
+    return {
+        name[len("compose_"):].replace("_", "-")
+        for name in dir(compose)
+        if name.startswith("compose_") and callable(getattr(compose, name))
+    }
+
+
 def test_the_grammar_vocabulary_matches_what_the_engine_implements():
-    """Four grammars, two composable. If `compose.py` gains one, this flags
-    that `GRAMMARS` needs updating rather than leaving a binding unable to say
-    what it now can do."""
+    """Four grammars; which of them are composable is read from `compose.py`.
+
+    The flag in `GRAMMARS` is what a consumer trusts before it composes, so it
+    has to be the engine's answer and not a remembered one. Comparing
+    `IMPLEMENTED_GRAMMARS` to a set written here would have stayed green the day
+    `compose_nested_grid` shipped - which is exactly the day a consumer should
+    stop falling back to a plain graph layout for capability maps. Remove this
+    and that lag becomes invisible.
+
+    The four names themselves stay a literal: "the variety of real diagrams
+    resolves into these four" is a finding, and a fifth appearing is a change to
+    review rather than a set to follow.
+    """
     assert set(GRAMMARS) == {"layered-bands", "lanes", "nested-grid",
                              "computed-geometry"}
-    assert IMPLEMENTED_GRAMMARS == {"layered-bands", "lanes"}
+    assert IMPLEMENTED_GRAMMARS == _engine_grammars()
     assert CHANNELS >= {"fill", "border", "opacity", "icon"}
 
 
@@ -995,15 +1258,41 @@ def test_every_behavioral_difference_between_the_pilots_is_data():
     assert len(archimate.diagram_type("Application").sizing) < len(
         bpmn.diagram_type("Business Process").sizing)
 
-    # 5. Spacing: ArchiMate is spaced more generously horizontally, BPMN
-    #    tighter and equally in both axes. Measured, not preferred.
-    archimate_spacing = archimate.diagram_type("Application").spacing
-    bpmn_spacing = bpmn.diagram_type("Business Process").spacing
-    assert archimate_spacing["item_gap_x"] > bpmn_spacing["item_gap_x"]
-    assert archimate_spacing["item_gap_x"] > archimate_spacing["item_gap_y"]
-    assert bpmn_spacing["item_gap_x"] == bpmn_spacing["item_gap_y"]
-    assert bpmn_spacing["lane_gap"] == 0   # pools abut; ArchiMate bands do not
-    assert archimate_spacing["band_gap"] > 0
+    # 5. Spacing. Asserted on the keys each grammar ACTUALLY READS, which is not
+    #    the same set. `compose_lanes` never reads `item_gap_x` or `item_gap_y`,
+    #    so comparing those two across the pilots -- which an earlier version of
+    #    this test did, calling it the headline difference -- compares numbers
+    #    that cannot affect a composed BPMN diagram. They are kept in the binding
+    #    as recorded measurements and the binding says so; they are not behavior.
+    archimate_dt = archimate.diagram_type("Application")
+    bpmn_dt = bpmn.diagram_type("Business Process")
+    #    Bands: ArchiMate's own two axes differ, measured at ~75 against ~40.
+    assert archimate_dt.spacing["item_gap_x"] > archimate_dt.spacing["item_gap_y"]
+    #    Lanes: the load-bearing key is the one along the flow.
+    assert bpmn_dt.spacing["item_gap_flow"] > 0
+    assert "item_gap_flow" not in archimate_dt.spacing
+    #    Pools abut; ArchiMate bands do not. Asserted on COMPOSED geometry,
+    #    because `archimate3.yaml` deliberately does not set `band_gap` -- band
+    #    gutters were never separately measured, so the engine default stands
+    #    rather than a number nobody observed. Neither `.spacing` (the raw
+    #    binding block) nor `.spec()` (which carries only what the binding
+    #    states, leaving the engine to fill the rest) reports it, so a constant
+    #    would be the wrong thing to read: what matters is that the bands come
+    #    out apart and the lanes come out touching.
+    assert bpmn_dt.spacing["lane_gap"] == 0
+    assert "band_gap" not in archimate_dt.spacing
+
+    two = [{"name": "Upper", "items": [{"id": 1}]},
+           {"name": "Lower", "items": [{"id": 2}]}]
+    bands = sorted(compose_layered_bands(two, archimate_dt.spec())["containers"],
+                   key=lambda c: -c["top"])
+    assert bands[0]["bottom"] > bands[1]["top"], (
+        "ArchiMate bands abut; they should have a gutter between them")
+
+    lanes = sorted(compose_lanes(two, bpmn_dt.spec())["containers"],
+                   key=lambda c: -c["top"])
+    assert lanes[0]["bottom"] == lanes[1]["top"], (
+        "BPMN pools have a gutter; they should abut")
 
     # 6. Trunking: ArchiMate fans relationships into a shared trunk; BPMN does
     #    not, because its gateways make branching an explicit node.

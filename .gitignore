@@ -3,3 +3,6 @@
 __pycache__/
 *.pyc
 .DS_Store
+
+# Tool caches. Not assets; the gate skips them too.
+.pytest_cache/

@@ -58,14 +58,36 @@ diagram_types:
       EndEvent: {w: 30, h: 30}
       IntermediateEvent: {w: 30, h: 30}
       Gateway: {w: 42, h: 42}
+      # DataObject: 35x50, the modal size in 28 of 34 measured data objects.
       DataObject: {w: 35, h: 50}
+      # DataStore was 50x50 in 4 of 4. TextAnnotation ships its MODE, 100x55
+      # across n=10, not its median of 114x76: an annotation is sized by the
+      # text inside it, so the median of ten different texts is a fact about
+      # those ten texts, while the mode is the box authors reach for. Said
+      # plainly because the two statistics disagree by a lot.
       DataStore: {w: 50, h: 50}
       TextAnnotation: {w: 100, h: 55}
     spacing:
       # BPMN flows are tighter than ArchiMate layouts in both axes. Measured
       # across 315 horizontal and 175 vertical nearest-neighbor gaps: median
       # 41 and 63, modal cluster 30-46 in both.
+      #
+      # The horizontal value is that median rounded to the nearest 5. The
+      # vertical value is a round number inside the modal cluster rather than
+      # the vertical median of 63, and the distance between the two statistics
+      # is the reason: in a lanes grammar the vertical distance between items
+      # is set by lane thickness and lane padding, so the vertical population
+      # mixes within-lane neighbors with pairs that have a lane boundary
+      # between them, and its median measures the lanes. The modal cluster is
+      # the within-lane spacing, which is what an item gap means.
       item_gap_flow: 40       # along the flow, which for lanes is the long axis
+      # RECORDED, NOT CONSUMED. `compose_lanes` reads item_gap_flow,
+      # flow_pitch, lane_pad, lane_gap, min_lane_thickness, label_width,
+      # label_height and the origins; it never reads item_gap_x or item_gap_y.
+      # Both are kept because they are real measurements a nested-grid or
+      # layered-bands rendering of a BPMN diagram would want, and the loader
+      # accepts any spec key regardless of grammar. See
+      # references/bindings.md §4.4.
       item_gap_x: 40
       item_gap_y: 40
       lane_gap: 0             # pools and lanes abut; a gutter between them is wrong
@@ -82,7 +104,6 @@ diagram_types:
         differently. Conventional rather than normative: the BPMN
         specification fixes the SHAPE, not the color, and 6 of 11 corpus
         diagrams use fill for kind while the rest leave everything white.
-        Treat it as claimed unless the diagram is deliberately monochrome.
       claimed:
         position: >
           Two things at once, which is what makes a BPMN diagram readable:
@@ -106,6 +127,8 @@ diagram_types:
       DataObject: {w: 35, h: 50}
     spacing:
       item_gap_flow: 40
+      # Recorded, not consumed by the lanes grammar; see the Business Process
+      # diagram type.
       item_gap_x: 40
       item_gap_y: 40
       lane_gap: 0
@@ -137,6 +160,8 @@ diagram_types:
       Gateway: {w: 42, h: 42}
     spacing:
       item_gap_flow: 40
+      # Recorded, not consumed by the lanes grammar; see the Business Process
+      # diagram type.
       item_gap_x: 40
       item_gap_y: 40
       lane_gap: 0

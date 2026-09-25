@@ -119,6 +119,25 @@ Any subset of `compose.DEFAULT_SPEC`'s keys — `item_gap_x`, `item_gap_y`, `ite
 `lane_gap`, `band_gap`, `wrap_width`, `align` and the rest — spelled the way the engine spells them.
 Values are copied into the spec verbatim. See §5.1.
 
+> **Each grammar reads its own keys, and nothing checks which ones you set.** `spacing` is validated
+> against the whole of `DEFAULT_SPEC` without regard to the diagram type's `grammar`, so a `lanes`
+> binding may carry band-only keys and a `layered-bands` binding may carry lane-only keys. Keys the
+> composer for that grammar never reads are inert, not refused, and nothing reports them.
+>
+> | Read by | Spec keys |
+> |---|---|
+> | both composers | `origin_left`, `origin_top`, `item_width`, `item_height`, `label_height` |
+> | `layered-bands` only | `item_gap_x`, `item_gap_y`, `h_pitch`, `row_pitch`, `wrap_width`, `align`, `band_pad_x`, `band_pad_y`, `band_gap`, `band_pitch`, `min_band_width` |
+> | `lanes` only | `item_gap_flow`, `flow_pitch`, `lane_pad`, `lane_gap`, `min_lane_thickness`, `label_width` |
+>
+> The label key depends on orientation in `lanes`: a horizontal lane reserves `label_width` down its
+> left, a vertical lane reserves `label_height` across its top. A band always uses `label_height`.
+>
+> **`compose_lanes` never reads `item_gap_x` or `item_gap_y`.** All three BPMN diagram types are
+> `grammar: lanes` and all three set both, so in `bpmn2.0.yaml` those two are recorded measurements
+> rather than layout input — kept for a future nested-grid or bands rendering, and labeled as such at
+> the point they are set.
+
 ### 4.5 `routing`
 
 | Key | Required | Validated against |
@@ -348,8 +367,23 @@ use several technologies nobody has bound. A caller should say so and fall back 
 layout rather than composing against the wrong binding — which is also why the declared `technology`
 is checked rather than the filename trusted.
 
-**`PresentationProfile.display_settings()` emits only `hide_connector_labels` and
-`hide_element_stereotypes`.** Those are the only two whole-diagram suppressions verified to change
-what EA renders. `compartments`, `notes` and connector stereotypes are recorded in a profile because
-they are the notation's intent, but they deliberately do not leak out as settings — a profile must not
-promise a suppression that silently does nothing.
+**`PresentationProfile.display_settings()` emits only settings verified to change what EA renders.**
+There are seven: `hide_connector_labels`, `hide_element_stereotypes`, `hide_connector_stereotypes`,
+`hide_attribute_types`, `hide_operation_return_types`, `hide_operation_brackets` and
+`show_element_notes`. Each was established by rendering the diagram and reading the markup, against
+content the setting could actually suppress — not by writing the value and reading it back, which EA
+would echo either way.
+
+**`compartments: none` does not remove a compartment.** EA's `SuppressedCompartments` was measured
+through six value shapes against a class with populated attribute and operation compartments and
+changed nothing every time, so there is no verified way to take a compartment off a diagram. What is
+available is reducing its detail to names: `balance` rather than `balance: Decimal`, `getBalance`
+rather than `getBalance(): Decimal`. So `none` and any explicit compartment list both mean "the least
+detail EA will give us", and `all` means full detail. That is a smaller promise than the profile
+vocabulary suggests, and it is stated rather than papered over — a profile must never promise a
+suppression that silently does nothing.
+
+**`notes` is the one setting whose polarity does not flip.** Everywhere else a profile says what it
+shows and EA is told what to hide. Element notes are hidden by EA *by default*, so `notes: true`
+becomes `show_element_notes: True` rather than a `hide_` flag set False. Tidying that for consistency
+turns notes off in the detail view and on in the executive one, which is exactly backwards.
