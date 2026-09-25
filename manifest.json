@@ -1,8 +1,8 @@
 {
   "manifest_version": "1.0",
-  "bundle_version": "2.0.0",
-  "released_at": "2026-09-23",
-  "min_server_version": "2.2.0",
+  "bundle_version": "2.3.0",
+  "released_at": "2026-09-25",
+  "min_server_version": "2.3.0",
   "skills": [
     {
       "name": "ea-start-here",
@@ -123,7 +123,7 @@
       "title": "ea-mdg-model-build",
       "description": "Build a Sparx EA MDG Technology from a source model inside a repository \u2014 profile packages, toolbox/diagram profiles, reference data, and the export/build/deploy procedure",
       "version": "1.0.1",
-      "min_server_version": "1.0.0",
+      "min_server_version": "2.3.0",
       "files": [
         "ea-mdg-model-build/SKILL.md"
       ],
@@ -228,7 +228,7 @@
       "title": "ea-change-management",
       "description": "Baselines and change history \u2014 create, list, compare and apply baselines, offer a baseline before a significant change, review and clean up accumulated baselines, and answer what changed, when and by whom",
       "version": "1.1.0",
-      "min_server_version": "2.2.0",
+      "min_server_version": "2.3.0",
       "files": [
         "ea-change-management/SKILL.md",
         "ea-change-management/references/offer-and-cleanup.md",
@@ -262,7 +262,7 @@
       "title": "ea-model-hygiene",
       "description": "Finding and fixing model decay \u2014 orphans, inconsistent stereotype and tagged-value usage, and safe deletion with pre-delete checks",
       "version": "1.0.0",
-      "min_server_version": "2.2.0",
+      "min_server_version": "2.3.0",
       "files": [
         "ea-model-hygiene/SKILL.md",
         "ea-model-hygiene/references/consistency-audits.md",
