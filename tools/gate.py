@@ -14,6 +14,7 @@ Exit code 0 = clean, 1 = violations found.
 from __future__ import annotations
 
 import re
+from typing import Optional
 import sys
 from pathlib import Path
 
@@ -185,7 +186,15 @@ def check_manifest() -> list[str]:
     return out
 
 
-def check_op_drift(target: Path) -> list[str]:
+_OP_DRIFT_RAN = True
+
+
+def op_drift_ran() -> bool:
+    """False when the last check_op_drift call could not read the server."""
+    return _OP_DRIFT_RAN
+
+
+def check_op_drift(target: Path, server: Optional[Path] = None) -> list[str]:
     """Every operation a skill names must exist in the server's dispatch tables.
 
     This is the drift that is invisible until a customer hits it: a skill
@@ -198,9 +207,14 @@ def check_op_drift(target: Path) -> list[str]:
     deliberately narrow — prose mentioning a name in backticks is not a call,
     and flagging it would train people to ignore the gate.
 
-    Skipped silently when the server source is not available (for example on a
-    machine that only has the skills repo checked out). A check that cannot
-    run must not masquerade as a check that passed, so this prints a notice.
+    `server` overrides where the dispatch tables are read from. It defaults to
+    the sibling server checkout; tests pass their own so the detection logic is
+    exercised everywhere, not only on a machine that happens to have both repos.
+
+    Skipped when the server source is not available (for example in CI, where
+    only this repo is checked out). A check that cannot run must not masquerade
+    as a check that passed, so the notice is loud and `op_drift_ran()` reports
+    whether the last call actually checked anything.
     """
     # Loaded by path: the filename contains a hyphen, so it is not importable
     # by name.
@@ -217,9 +231,15 @@ def check_op_drift(target: Path) -> list[str]:
         print(f"  (op-drift check skipped: {e})")
         return []
 
-    server = gen.DEFAULT_SERVER
+    server = Path(server) if server is not None else gen.DEFAULT_SERVER
     if not server.is_file():
-        print(f"  (op-drift check skipped: server source not found at {server})")
+        global _OP_DRIFT_RAN
+        _OP_DRIFT_RAN = False
+        print(
+            "  !! OP-DRIFT CHECK DID NOT RUN: no server source at "
+            f"{server}. Skills naming a renamed or invented operation will "
+            "NOT be caught by this run."
+        )
         return []
 
     try:

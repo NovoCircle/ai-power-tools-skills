@@ -205,18 +205,50 @@ class TestManifest:
 # ---------------------------------------------------------------------------
 
 class TestOperationDrift:
-    def test_an_invented_operation_is_caught(self, library):
-        f = _write(library, "s/SKILL.md",
-                   '# s\n\nCall `ea_model(operation="summon_the_kraken", params={})`\n')
-        findings = gate.check_op_drift(library)
+    """These supply their own server source.
+
+    Reading the real sibling checkout makes both tests depend on a machine
+    that happens to have both repos. In CI, where only this repo is checked
+    out, the check skips and returns [] -- so "an invented operation is
+    caught" failed, and "a real operation is not caught" passed for the wrong
+    reason, which is worse. A fake dispatch table exercises the detection
+    logic everywhere.
+    """
+
+    @staticmethod
+    def _fake_server(tmp_path):
+        src = tmp_path / "fake_server.py"
+        src.write_text(
+            'def create_element(package_id, name, type):\n'
+            '    return {}\n'
+            '\n'
+            'def ea_model(operation, params):\n'
+            '    return {"create_element": create_element}\n',
+            encoding="utf-8",
+        )
+        return src
+
+    def test_an_invented_operation_is_caught(self, library, tmp_path):
+        _write(library, "s/SKILL.md",
+               '# s\n\nCall `ea_model(operation="summon_the_kraken", params={})`\n')
+        findings = gate.check_op_drift(library, server=self._fake_server(tmp_path))
+        assert gate.op_drift_ran(), "the check must actually have run"
         assert any("summon_the_kraken" in x for x in findings), findings
 
-    def test_a_real_operation_is_not_caught(self, library):
-        f = _write(library, "s/SKILL.md",
-                   '# s\n\nCall `ea_model(operation="create_element", params={})`\n')
-        findings = gate.check_op_drift(library)
+    def test_a_real_operation_is_not_caught(self, library, tmp_path):
+        _write(library, "s/SKILL.md",
+               '# s\n\nCall `ea_model(operation="create_element", params={})`\n')
+        findings = gate.check_op_drift(library, server=self._fake_server(tmp_path))
+        assert gate.op_drift_ran(), "the check must actually have run"
         assert not any("create_element" in x for x in findings), findings
 
+    def test_a_missing_server_is_reported_not_silently_passed(self, library, tmp_path):
+        """The skip must be observable -- it reads as a pass otherwise."""
+        _write(library, "s/SKILL.md",
+               '# s\n\nCall `ea_model(operation="summon_the_kraken", params={})`\n')
+        findings = gate.check_op_drift(library, server=tmp_path / "nope.py")
+        assert findings == []
+        assert gate.op_drift_ran() is False
 
 # ---------------------------------------------------------------------------
 # The negative case that matters most
