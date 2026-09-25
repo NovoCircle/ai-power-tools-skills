@@ -61,7 +61,13 @@ MDG_NS = re.compile(r"\b([A-Z][A-Za-z0-9_]{1,30})::")
 # --------------------------------------------------------------------------
 # Rule 3 — encoding hygiene
 # --------------------------------------------------------------------------
-MOJIBAKE = re.compile(r"â€|Ã¢|â†|Â ")
+# The first four alternatives are the historical list, kept so nothing that
+# used to be caught stops being caught. The fifth is the general rule they
+# were special cases of: a double-encoding always leaves a lead character of
+# U+00C2 / U+00C3 / U+00E2 followed by another non-ASCII one. The old list
+# missed "â‰", which let a mangled >= through in the sibling repo's shipped
+# docs. Keep this in step with ea-mcp-server/build.py's _MOJIBAKE.
+MOJIBAKE = re.compile("â€|Ã¢|â†|Â |[ÂÃâ][^\x00-\x7f]")
 FENCE = re.compile(r"^```")
 CURLY = re.compile(r"[\u2018\u2019\u201c\u201d]")
 
