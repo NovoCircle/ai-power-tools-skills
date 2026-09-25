@@ -1,6 +1,6 @@
 ---
 name: ea-diagram-composition
-description: Compose Enterprise Architect diagrams that read as deliberate — choose a layout grammar, compute geometry, place and style elements and connectors, then verify and correct the result. Language-neutral; works with any modeling language. Use when building a diagram from model content rather than hand-placing elements, or when a generated diagram looks untidy and you need to know why.
+description: Compose Enterprise Architect diagrams that read as deliberate — choose a layout grammar, compute geometry, place and style elements and connectors, then verify and correct the result. Language-neutral; works with any modeling language, reading each notation's conventions from a data binding (ArchiMate 3 and BPMN 2.0 ship). Use when building a diagram from model content rather than hand-placing elements, or when a generated diagram looks untidy and you need to know why.
 ---
 
 # Composing diagrams that read well
@@ -26,10 +26,43 @@ between "I made a diagram" and "I made a diagram that works".
 Bound the loop — three correction passes is plenty. If it is still wrong after three, the grammar
 was the wrong choice, not the spacing. Say so rather than iterating forever, and say what you tried.
 
+## Step 0 — find the language binding
+
+Before choosing anything, ask whether the notation's conventions are already recorded. A **binding**
+holds one technology's diagram types, sizing, spacing, title convention, routing and standard views
+as data, so you are not guessing at what an ArchiMate or a BPMN diagram is supposed to look like.
+
+```python
+from bindings import find_binding
+
+binding = find_binding("ArchiMate3")          # or "BPMN2.0"; None if nothing is bound
+dt = binding.diagram_type("Application")      # this diagram type's conventions
+```
+
+For the diagram type you are building, it answers:
+
+| Question | From |
+|---|---|
+| which grammar | `dt.grammar`, and `dt.grammar_is_implemented` before relying on it |
+| what size, and how far apart | `dt.spec()`, ready for Step 2 |
+| how connectors route | `dt.default_route()`, `dt.route_for(relationship)` |
+| which visual channels are free | `dt.channel_is_free("fill")`, `dt.free_channels()` |
+| whether to draw a title | `dt.draws_its_own_title` |
+| which standard view fits the content | `binding.viewpoints_admitting([...])` |
+
+> `find_binding` returns `None` for a technology nobody has bound. That is normal — say so and fall
+> back to the judgment below. Composing against another notation's binding is worse than composing
+> against none.
+
+Two bindings ship: ArchiMate 3 and BPMN 2.0. [`references/bindings.md`](references/bindings.md) is
+the schema and the loader API.
+
 ## Step 1 — choose a grammar
 
 Analysis of 147 professionally-drawn diagrams found their variety resolves into **four**
-compositional grammars, not 147 special cases. Picking the right one is most of the quality.
+compositional grammars, not 147 special cases. Picking the right one is most of the quality — and
+when Step 0 found a binding, it has already been picked: the binding states the grammar for each of
+its diagram types.
 
 | Grammar | Use when the content is | Reads badly when |
 |---|---|---|
@@ -66,7 +99,9 @@ convention, plus its container and index; every container carries its own rect a
 vertical decision. The engine handles it; you only need to care when reading geometry yourself.
 
 `spec` carries sizing and spacing. An unknown `spec` key raises rather than being ignored, so a
-typo cannot silently produce a default layout.
+typo cannot silently produce a default layout. Where there is a binding, get the spec from it —
+`dt.spec({"align": "center"})` — rather than writing the numbers by hand; a binding's are measured
+from real diagrams, and yours are not.
 
 ## Step 3 — place and style
 
@@ -79,9 +114,9 @@ Place with `ea_diagram("add_elements_to_diagram_bulk")`, passing explicit
 Then style, in this order:
 
 1. **Elements** — `ea_diagram("set_diagram_object_appearance")`, or the bulk form for a palette.
-   Colours are `"#RRGGBB"` or a name.
+   Colors are `"#RRGGBB"` or a name.
 2. **Connectors** — `ea_diagram("add_connectors_to_diagram_bulk")` first, then
-   `ea_diagram("set_diagram_link")` / `set_diagram_links_bulk` for routing, colour and width.
+   `ea_diagram("set_diagram_link")` / `set_diagram_links_bulk` for routing, color and width.
 
 **A connector needs a stored link row before it can be styled.** EA draws the relationship between
 two placed elements whether or not a row exists, so a visible line is *not* evidence you can style
@@ -104,15 +139,15 @@ ea_diagram("verify_diagram", {"diagram_id": …})
 ```
 
 One call: it reloads, renders, and returns the image **with** the full placed geometry — rects,
-z-order, decoded connector routing and colour, canvas extents.
+z-order, decoded connector routing and color, canvas extents.
 
 **The reload is why this exists.** EA caches renders per diagram, so rendering after an
 out-of-band write returns a stale image that looks completely plausible. `verify_diagram` reloads
 unconditionally and has no flag to forget. Use it rather than `get_diagram_png` when the question
 is "is this right".
 
-For **"what colour did EA actually draw"**, pass `include_svg` and read `stroke=` / `fill=` from
-the markup. A colour property read back tells you nothing — EA echoes whatever was written, so a
+For **"what color did EA actually draw"**, pass `include_svg` and read `stroke=` / `fill=` from
+the markup. A color property read back tells you nothing — EA echoes whatever was written, so a
 round-trip check confirms your own input and would pass against something that stored the value
 and never drew with it.
 
@@ -123,7 +158,7 @@ Read the returned geometry and check:
 - **Overlaps** — two elements sharing space, where neither contains the other. Always wrong.
 - **Clipping** — an element too small for its label.
 - **Out of canvas** — placement beyond `cx`/`cy`; it renders but exports cut off.
-- **Uneven pitch** — gaps between neighbours in a row that should be even.
+- **Uneven pitch** — gaps between neighbors in a row that should be even.
 - **Inconsistent sizing** — elements in the same role at different sizes. This is the one people
   skip and it is the one that most makes a diagram look machine-made.
 - **Avoidable crossings** — connectors crossing where reordering would fix it.
@@ -131,16 +166,18 @@ Read the returned geometry and check:
 
 Then two that are about honesty rather than tidiness:
 
-- **Colour encoding without a legend.** If fill carries meaning, the reader needs the key.
-  Colour a reader cannot decode is a diagram that misleads.
+- **Color encoding without a legend.** If fill carries meaning, the reader needs the key.
+  Color a reader cannot decode is a diagram that misleads.
 - **A missing title** where the convention calls for a drawn one. Many diagrams correctly use
   EA's frame header instead — check which applies before adding one.
 
 ## Judgment that scripts cannot encode
 
-**Each notation already claims some visual channels.** ArchiMate's layer colours are spoken for;
-recolouring them by lifecycle destroys the notation while looking like a feature. Before using a
-channel, ask what it already means. If fill is taken, reach for border, opacity, or an icon.
+**Each notation already claims some visual channels.** ArchiMate's layer colors are spoken for;
+recoloring them by lifecycle destroys the notation while looking like a feature. Before using a
+channel, ask what it already means. If fill is taken, reach for border, opacity, or an icon. A
+binding mechanizes the question: `dt.claimed_channels()` says what the notation has spoken for and
+`dt.free_channels()` what is left, so the answer is recorded rather than recalled.
 
 **One variable per channel.** Fill = lifecycle, *or* fill = ownership. Never both.
 
@@ -164,4 +201,6 @@ useful. Quietly shipping something illegible is not.
 
 - [`references/grammars.md`](references/grammars.md) — the four grammars in detail, and EA's
   coordinate convention
+- [`references/bindings.md`](references/bindings.md) — the language-binding schema, key by key, and
+  the loader API in `tools/bindings.py`
 - `tools/compose.py` — the geometry engine. Pure arithmetic, no EA calls, unit-tested

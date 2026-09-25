@@ -93,7 +93,7 @@ ea_model(operation="traverse_element_subgraph", params={"element_id": <id>, "dep
 ```
 
 `traverse_element_subgraph` walks **both** directions at once (its own `direction` field reports
-`"both"`) and is the better call when you need the whole neighbourhood rather than one side of
+`"both"`) and is the better call when you need the whole neighborhood rather than one side of
 it -- e.g. before deleting a package, to see what the elements inside connect to outside it.
 Note it can list the same edge more than once when a node is reached by more than one path; treat
 the node and edge lists as a set, not a count.
@@ -267,7 +267,7 @@ Pick by the question, not by the name:
 | Just list this one element's connectors | `get_connectors_for_element_filtered` | `ea_model` |
 
 **`trace_connectors`** is the default. One bulk SQL pull, no per-element round trips, depth
-capped at 10. It returns a flat `{nodes, edges}` neighbourhood -- a bag of edges, not routes.
+capped at 10. It returns a flat `{nodes, edges}` neighborhood -- a bag of edges, not routes.
 This is what Section 2 Step 1 uses for blast radius.
 
 **`find_paths`** is the only operation that takes two element ids. Use it when the question
@@ -301,7 +301,7 @@ ea_analyze(operation="get_traceability_tree",
            params={"root_id": <id>, "connector_types": ["Realization"], "direction": "outbound"})
 ```
 
-`connector_types` is required -- an unfiltered tree is a neighbourhood graph in a tree costume,
+`connector_types` is required -- an unfiltered tree is a neighborhood graph in a tree costume,
 and `trace_connectors` does that better. `direction` accepts `outbound`/`inbound`, and also
 `downstream`/`upstream` and `outgoing`/`incoming`, because the other operations disagree on the
 word. Cycle handling is per-branch: an element is refused only if it already appears on the path
@@ -309,7 +309,7 @@ from the root down to here, so a diamond correctly shows the same element under 
 while a loop terminates with `"cycle": true` on the repeated node. **A node carrying `"cycle"`
 is a cut branch, not a leaf** -- do not report it as "nothing further downstream".
 
-**`traverse_element_subgraph`** also returns a neighbourhood, but resolves MDG stereotype aliases
+**`traverse_element_subgraph`** also returns a neighborhood, but resolves MDG stereotype aliases
 into display terms and walks the model element by element over COM. That makes it slower and
 caps it at depth 5. Reach for it when you want the language's own vocabulary in the answer, as
 Section 2 Step 2 does; reach for `trace_connectors` on anything large.

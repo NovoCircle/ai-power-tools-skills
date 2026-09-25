@@ -23,7 +23,7 @@ If the result is empty, the MDG has not been imported into the model. Import it 
 
 The first successful `ea_model(operation="set_tagged_value", ...)` response will include the fully-qualified tag name,
 e.g. `WestbrookBankArchitecture::WBAVendorSystem::criticality`. This confirms the MDG is
-active and the tag schema is being honoured.
+active and the tag schema is being honored.
 
 ## MDG stereotype → allowed tags
 

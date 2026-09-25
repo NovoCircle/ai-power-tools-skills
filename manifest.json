@@ -82,15 +82,25 @@
       "min_server_version": "3.0.0",
       "files": [
         "ea-diagram-composition/SKILL.md",
+        "ea-diagram-composition/bindings/archimate3.yaml",
+        "ea-diagram-composition/bindings/bpmn2.0.yaml",
+        "ea-diagram-composition/references/bindings.md",
         "ea-diagram-composition/references/grammars.md",
+        "ea-diagram-composition/tools/bindings.py",
         "ea-diagram-composition/tools/compose.py",
+        "ea-diagram-composition/tools/test_bindings.py",
         "ea-diagram-composition/tools/test_compose.py"
       ],
       "sha256": {
-        "ea-diagram-composition/SKILL.md": "ad35252339badfb30b8c86d36efa825fbe71f75438c89d584904168305fda2b5",
+        "ea-diagram-composition/SKILL.md": "0ef478da65a795aed63ddd7ca8f1067447ea2cef48a3e01940e6685e8ac04605",
+        "ea-diagram-composition/bindings/archimate3.yaml": "7e8d52e14c8488100d8162ff8ac74bb9dc4a211d62f83e87b2fcb66f5cf39b99",
+        "ea-diagram-composition/bindings/bpmn2.0.yaml": "942a35e9af4362f22a443e58970d2f3a5951ba921fa1416d816d736c8156581d",
+        "ea-diagram-composition/references/bindings.md": "a7f03b9a3eb2d885ff313d663f9f812e0186cc905221443ab77355fd6ebc9f77",
         "ea-diagram-composition/references/grammars.md": "9b85965fbc8ffdad620c8ccd70857786b8f659f7bce36aa793f98a444cf5f516",
+        "ea-diagram-composition/tools/bindings.py": "e365d2823ea1f52243f652382848c35a748413c933897633df56786e96a8c126",
         "ea-diagram-composition/tools/compose.py": "fd0734bd31a69aa63b0d0c7fed8adfb04b0c4a6a785dd85f6afab4a6122b5ba3",
-        "ea-diagram-composition/tools/test_compose.py": "9131f032404ca1a54f433d5fb124cc63a4e9b952190d77eba82fd53a4c2a444d"
+        "ea-diagram-composition/tools/test_bindings.py": "5898a08254eff81872f8499b8160ab510e0b90e7d58ecf7ecac778218964bd5d",
+        "ea-diagram-composition/tools/test_compose.py": "4e228c50af2dd442964fea587d18549c7c422dade1eadf23de239c12cd9d06c7"
       }
     },
     {
@@ -141,8 +151,8 @@
         "ea-mdg-assess/references/verification-walkthrough.md"
       ],
       "sha256": {
-        "ea-mdg-assess/SKILL.md": "fa6a10b512c4a6a2a82ee03cc2a9e0ff5d5d10e6c2872f61bc2a846e6551d79b",
-        "ea-mdg-assess/references/three-states.md": "de5db48052685e6008c30a89e9a704f3ab15a0942f16b97fce468945f6658d31",
+        "ea-mdg-assess/SKILL.md": "40c603412ea4ecd04ad1e87fcef3bb0cc8542c57bfcc385831d43662a2fb4fed",
+        "ea-mdg-assess/references/three-states.md": "b6cba289449191da6280975c5106ea94098d015d7d6f7f48fa4c30478edb7786",
         "ea-mdg-assess/references/verification-walkthrough.md": "a98249cc9934336eb9931ec52391df87fff2fae294354c722dab6ccee513b95f"
       }
     },
@@ -209,9 +219,9 @@
         "ea-model-hygiene/references/pre-delete-safety.md"
       ],
       "sha256": {
-        "ea-model-hygiene/SKILL.md": "e91a3191a75590b5c1fd1fb084a0aa4f19bd17a5cf4dbe7f4220d8ce632d463b",
+        "ea-model-hygiene/SKILL.md": "8e3c136a8a62968488ba739cab858086c4c2cd4aa2e255eab2207f979961fc5d",
         "ea-model-hygiene/references/consistency-audits.md": "cb1081ce92e215680904659e4f743b9462dae1a7281c09491d330709fdc46521",
-        "ea-model-hygiene/references/pre-delete-safety.md": "1fde00e2f563b713e3ed92b3e71b430247d717ee5f0562743b49a61b04351bce"
+        "ea-model-hygiene/references/pre-delete-safety.md": "663fbc1d6cd171049ad40f83990541c8bd8a4a8872e79d4df20e8b5894b9f810"
       }
     },
     {
@@ -242,7 +252,7 @@
         "ea-modeling/references/sql_schema.md": "b59d3c2407d6e47a73df63e6b12aeb81823cf23b4c3936496caa440fbeb5b7b6",
         "ea-modeling/references/token_and_session_management.md": "a90be8a3a47ce10b8654e764b946ae175b554436898f83521f5f901c5f228d78",
         "ea-modeling/references/tool_quick_reference.md": "d98e101f4bf2185166c4d2a909ecdc2d9de25b136f9e2e2065a6e42ddc6e667c",
-        "ea-modeling/references/wba_mdg_reference.md": "8c2a716b0cc965c5c6cbe82237764327fc2fa42908dd22ae8afa05df0bc6a0ab"
+        "ea-modeling/references/wba_mdg_reference.md": "87de6511c18bd520788d5bf46e77d8582c72d60197222d54ad09d6c79b6c05d1"
       }
     },
     {

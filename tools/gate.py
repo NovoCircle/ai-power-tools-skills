@@ -48,6 +48,10 @@ FORBIDDEN = [
 KNOWN_IDS = {
     # Westbrook Bank — the canonical example org
     "WBA", "WestbrookBankArchitecture", "WestbrookBank",
+    # Sparx-shipped sample model. Every EA install has it, so citing it is how
+    # a measurement in a shipped binding stays reproducible by the reader. It
+    # is a vendor file, not anybody's model.
+    "EAExample",
     # Sparx-shipped / standard technologies
     "ArchiMate", "ArchiMate2", "ArchiMate3", "BPMN", "BPMN2", "BPMN20",
     "UML", "SysML", "SysML15", "SysML16", "TOGAF", "DoDAF", "MODAF", "NIEM",

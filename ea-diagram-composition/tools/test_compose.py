@@ -103,12 +103,12 @@ def _items(*ids):
     return [{"id": i} for i in ids]
 
 
-def _centre_x2(r):
+def _center_x2(r):
     """Twice the horizontal center, so integer rounding stays visible."""
     return r["left"] + r["right"]
 
 
-def _centre_y2(r):
+def _center_y2(r):
     return r["top"] + r["bottom"]
 
 
@@ -319,7 +319,7 @@ def test_left_alignment_is_the_default_and_centering_is_opt_in():
     centered = compose_layered_bands(bands, {"align": "center"})
     wide, narrow = centered["containers"]
     assert wide["left"] == DEFAULT_SPEC["origin_left"]
-    assert _centre_x2(wide) == _centre_x2(narrow), "band centers must agree"
+    assert _center_x2(wide) == _center_x2(narrow), "band centers must agree"
     assert narrow["left"] > wide["left"]
     assert_result_sane(centered, "centered bands")
 
@@ -334,9 +334,9 @@ def test_centering_also_centers_a_short_row_inside_its_band():
         rows.setdefault(it["row"], []).append(it)
     full = rows[0]
     short = rows[1]
-    full_centre = full[0]["left"] + full[-1]["right"]
-    short_centre = short[0]["left"] + short[-1]["right"]
-    assert abs(full_centre - short_centre) <= 1
+    full_center = full[0]["left"] + full[-1]["right"]
+    short_center = short[0]["left"] + short[-1]["right"]
+    assert abs(full_center - short_center) <= 1
     assert_result_sane(result, "centered rows")
 
 
@@ -469,7 +469,7 @@ def test_alignment_holds_when_lanes_size_their_items_differently():
         assert len({i["slot_start"] for i in group}) == 1, f"index {idx} slots differ"
         assert len({i["slot_extent"] for i in group}) == 1
         assert {i["slot_extent"] for i in group} == {200}
-        centers = {_centre_x2(i) for i in group}
+        centers = {_center_x2(i) for i in group}
         assert max(centers) - min(centers) <= 1, f"index {idx} centers drift"
     assert_result_sane(result, "mixed lane item widths")
 

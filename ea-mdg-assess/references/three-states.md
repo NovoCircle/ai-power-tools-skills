@@ -139,4 +139,4 @@ Two further `source` values sit between those: `registered_not_loaded`, where th
 found but EA does not have the technology loaded right now, and `session_parse`, where the only
 definitions available are those `parse_mdg_xml` was handed this session — which is not necessarily
 what EA loaded. Both are still worth reading; neither is evidence of what the session is actually
-modelling with.
+modeling with.
