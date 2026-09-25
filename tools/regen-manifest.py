@@ -22,6 +22,19 @@ def sha256(p: Path) -> str:
     return hashlib.sha256(p.read_bytes()).hexdigest()
 
 
+# Anything a tool leaves behind rather than something we authored. Without
+# this, running a skill's tests and then regenerating quietly adds .pyc files
+# to the shipped bundle -- and because the manifest carries a hash per file,
+# every one of them becomes a thing install_skills must download and verify.
+_RESIDUE_DIRS = {"__pycache__", ".pytest_cache", ".ruff_cache", ".mypy_cache"}
+_RESIDUE_SUFFIXES = {".pyc", ".pyo"}
+
+
+def _is_build_residue(p: Path) -> bool:
+    return (any(part in _RESIDUE_DIRS for part in p.parts)
+            or p.suffix in _RESIDUE_SUFFIXES)
+
+
 def main() -> int:
     current = json.loads(MANIFEST.read_text(encoding="utf-8"))
     for entry in current["skills"]:
@@ -31,7 +44,8 @@ def main() -> int:
             print(f"Skill dir missing: {name}", file=sys.stderr)
             return 1
         files = sorted(str(p.relative_to(ROOT).as_posix())
-                       for p in skill_dir.rglob("*") if p.is_file())
+                       for p in skill_dir.rglob("*")
+                       if p.is_file() and not _is_build_residue(p))
         if not files:
             print(f"No files under: {name}", file=sys.stderr)
             return 1
