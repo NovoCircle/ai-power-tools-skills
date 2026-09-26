@@ -86,21 +86,27 @@
         "ea-diagram-composition/bindings/bpmn2.0.yaml",
         "ea-diagram-composition/references/bindings.md",
         "ea-diagram-composition/references/grammars.md",
+        "ea-diagram-composition/references/verification.md",
         "ea-diagram-composition/tools/bindings.py",
         "ea-diagram-composition/tools/compose.py",
+        "ea-diagram-composition/tools/lint.py",
         "ea-diagram-composition/tools/test_bindings.py",
-        "ea-diagram-composition/tools/test_compose.py"
+        "ea-diagram-composition/tools/test_compose.py",
+        "ea-diagram-composition/tools/test_lint.py"
       ],
       "sha256": {
-        "ea-diagram-composition/SKILL.md": "243b192e19a0802fee649935949328883257cdb9c5665f8233808e307c8b15a3",
+        "ea-diagram-composition/SKILL.md": "84d2b11f253cc24ab184ae63916bba33f65cd3bb7aa2b1c6faa0452f6818903f",
         "ea-diagram-composition/bindings/archimate3.yaml": "41c27d5473f1bf2cb2433ad014facb262c7e33c992b25a2ff8201ca75c0db086",
         "ea-diagram-composition/bindings/bpmn2.0.yaml": "f8bdf8ebbf4a91ac12a968bec6496a9d9854a2209315c68855c132e07a197e70",
         "ea-diagram-composition/references/bindings.md": "546c5af8a7e4e3b72eb967781eae7836807587f0c60f843047f2b4df55b6144a",
         "ea-diagram-composition/references/grammars.md": "f7c4e2790500bf03e87b6c8c90157eea715c93bd4c4672b28efe8eb23cd0f14f",
+        "ea-diagram-composition/references/verification.md": "d2b942105b2471e7a34e7aacfbf2f7a238516c4ab46a936c172c324aa3a63637",
         "ea-diagram-composition/tools/bindings.py": "5e79a38d7ac107f2fcea1a150779e3150cbe2d3e1a97c3eb7568b75ee73a6f34",
         "ea-diagram-composition/tools/compose.py": "68a8b84977839fe570ebe5fded135f803863c48395ad0eab6a27086a07951a9f",
+        "ea-diagram-composition/tools/lint.py": "7eb0b7b51d2e0ffbec6ed231dc297554dfc6d6f4f6f3c9614b778e06faf1181e",
         "ea-diagram-composition/tools/test_bindings.py": "81d766f7c64ed7fb82db0eae5d34a68806ee2b0a618572a0f3ccb283e121d8e6",
-        "ea-diagram-composition/tools/test_compose.py": "df0cdb579ac39363de5e321bd28b03738a0fcffcb91e82c3686d1d6eca2add4a"
+        "ea-diagram-composition/tools/test_compose.py": "df0cdb579ac39363de5e321bd28b03738a0fcffcb91e82c3686d1d6eca2add4a",
+        "ea-diagram-composition/tools/test_lint.py": "743b9ee7a6eed8ecc52f3abd3e478e2183e823ffacff851f5532bcfaeea8315c"
       }
     },
     {

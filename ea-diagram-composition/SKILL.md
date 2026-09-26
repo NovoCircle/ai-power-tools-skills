@@ -153,7 +153,32 @@ and never drew with it.
 
 ## Step 5 — lint, then correct
 
-Read the returned geometry and check:
+```python
+import lint
+
+report = lint.lint_diagram(verified, profile=profile, roles=roles, rows=rows)
+for finding in report.errors:
+    print(finding.rule, finding.subjects, "->", finding.correction)
+```
+
+`tools/lint.py` reads a `verify_diagram` result and nothing else. **Pass `roles` and `rows`** —
+which elements play the same role, which sit in one row. Those are composition facts you know and
+geometry alone does not; the linter will not guess them, and the rules that need them simply do not
+run without them.
+
+**The loop is bounded: three passes, then report what is left.** `lint.is_stalled(previous, report)`
+catches the other failure, a pass that changed nothing. Stop at the first stall.
+
+Under a presentation profile, pass it so the linter does not report what the view deliberately
+hides — `{**p.display_settings(), "collapses_parallel": p.collapses_parallel}`. A profile never
+suppresses a structural defect; overlaps are wrong under every profile.
+
+`report.clean` means **no errors**, not "nothing found", and it means "no defect this linter knows
+how to measure" — not "this diagram reads well". See
+[`references/verification.md`](references/verification.md) for the contract, the stale-render trap
+and an explicit list of what the linter cannot see.
+
+What it checks:
 
 - **Overlaps** — two elements sharing space, where neither contains the other. Always wrong.
 - **Clipping** — an element too small for its label.
@@ -203,4 +228,8 @@ useful. Quietly shipping something illegible is not.
   coordinate convention
 - [`references/bindings.md`](references/bindings.md) — the language-binding schema, key by key, and
   the loader API in `tools/bindings.py`
+- [`references/verification.md`](references/verification.md) — the verification contract, the
+  stale-render trap, the bounded correction loop, and what the linter cannot see
+- `tools/lint.py` — the linter. Consumes `verify_diagram` output, makes no repository calls, and
+  names no modeling language
 - `tools/compose.py` — the geometry engine. Pure arithmetic, no EA calls, unit-tested
