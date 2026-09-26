@@ -377,3 +377,111 @@ def test_histogram_key_order_does_not_change_the_answer(loaded):
     assert forward.technologies == backward.technologies
     assert ([r.kind for r in recommend(forward, loaded, "x")]
             == [r.kind for r in recommend(backward, loaded, "x")])
+
+# ---------------------------------------------------------------------------
+# Ambiguity, which must surface rather than be resolved by luck
+# ---------------------------------------------------------------------------
+class _StubBinding:
+    """Two languages that share a concept name and neither carries a prefix.
+
+    Stubs rather than shipped bindings on purpose: the two we ship cannot
+    collide, because one is prefixed. The behaviour under test is the tie rule,
+    and a real repository has several technologies loaded that DO share concept
+    names -- a subagent measured exactly that collision in a live model.
+    """
+
+    def __init__(self, technology, concepts, prefix=""):
+        self.technology = technology
+        self.stereotype_prefix = prefix
+        self.diagram_types = {}
+        self.viewpoints = {}
+        self._concepts = set(concepts)
+
+
+def _stub_pair():
+    a = _StubBinding("Alpha", {"Task"})
+    b = _StubBinding("Beta", {"Task"})
+    return [a, b]
+
+
+def _stub_vocabulary():
+    return {"Alpha": {"Task"}, "Beta": {"Task"}}
+
+
+def test_two_languages_claiming_one_name_is_reported_not_resolved():
+    """The original code returned whichever binding came first.
+
+    That is an answer indistinguishable from a correct one and wrong half the
+    time, decided by nothing more than the order the bindings arrived in.
+    """
+    profile = profile_scope({"Task": 7}, _stub_pair(),
+                            known_concepts=_stub_vocabulary())
+    assert profile.technologies == {advise.AMBIGUOUS: 7}
+    assert profile.ambiguous == 7
+    assert "Task" in profile.unattributed_stereotypes
+    assert profile.is_bound is False
+
+
+def test_binding_order_does_not_change_an_ambiguous_answer():
+    """The specific failure: an answer that depends on argument order."""
+    pair = _stub_pair()
+    forward = profile_scope({"Task": 7}, pair, known_concepts=_stub_vocabulary())
+    backward = profile_scope({"Task": 7}, list(reversed(pair)),
+                             known_concepts=_stub_vocabulary())
+    assert forward.technologies == backward.technologies
+
+
+def test_a_longer_prefix_still_wins_outright_rather_than_being_ambiguous():
+    """Ambiguity is a tie at the SAME prefix length. A prefixed language
+    beating an unprefixed one is a decision, not a coin toss."""
+    prefixed = _StubBinding("Alpha", {"Task"}, prefix="Alpha_")
+    bare = _StubBinding("Beta", {"Alpha_Task"})
+    profile = profile_scope(
+        {"Alpha_Task": 3}, [bare, prefixed],
+        known_concepts={"Alpha": {"Task"}, "Beta": {"Alpha_Task"}})
+    assert profile.technologies == {"Alpha": 3}
+
+
+def test_an_ambiguous_scope_is_not_offered_a_conformant_view():
+    profile = profile_scope({"Task": 7}, _stub_pair(),
+                            known_concepts=_stub_vocabulary())
+    options = recommend(profile, _stub_pair(), intent="the process")
+    assert all(o.kind != "standard" for o in options), [o.kind for o in options]
+
+def test_a_language_with_no_binding_is_named_rather_than_lost():
+    """"100 elements of a language you have no binding for" is a far more
+    useful answer than "100 elements of nothing", and it is the common case -
+    a customer's own MDG is exactly this.
+
+    `is_bound` stays False, because naming a technology and being able to
+    advise on it are separate facts.
+    """
+    profile = profile_scope(
+        {"HouseStyleApplication": 30, "Task": 2},
+        [_StubBinding("Alpha", {"Task"})],
+        known_concepts={"HouseStyle": {"HouseStyleApplication"}},
+    )
+    assert profile.technologies["HouseStyle"] == 30
+    assert profile.dominant == "HouseStyle"
+    assert profile.is_bound is False
+    assert "HouseStyleApplication" not in profile.unattributed_stereotypes
+
+
+def test_a_named_but_unbound_language_still_gets_a_neutral_recommendation():
+    profile = profile_scope(
+        {"HouseStyleApplication": 30},
+        [_StubBinding("Alpha", {"Task"})],
+        known_concepts={"HouseStyle": {"HouseStyleApplication"}},
+    )
+    kinds = [r.kind for r in recommend(profile, [_StubBinding("Alpha", {"Task"})],
+                                       intent="the estate")]
+    assert "neutral-custom" in kinds
+    assert "standard" not in kinds
+
+
+def test_a_stereotype_no_vocabulary_claims_is_still_unattributed():
+    profile = profile_scope({"SomethingNobodyOwns": 5},
+                            [_StubBinding("Alpha", {"Task"})],
+                            known_concepts={"HouseStyle": {"Other"}})
+    assert profile.unattributed_stereotypes == {"SomethingNobodyOwns": 5}
+    assert profile.technologies == {advise.UNATTRIBUTED: 5}

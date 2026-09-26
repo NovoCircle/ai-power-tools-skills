@@ -52,6 +52,7 @@ __all__ = [
     "profile_scope",
     "recommend",
     "HOMOGENEOUS_SHARE",
+    "AMBIGUOUS",
     "HOMOGENEOUS_SHARE",
     "UNATTRIBUTED",
 ]
@@ -68,6 +69,12 @@ HOMOGENEOUS_SHARE = 0.9
 # "most of this scope belongs to a language I do not know" is a finding, not a
 # gap to paper over.
 UNATTRIBUTED = "(unbound)"
+
+# The bucket for a stereotype that more than one language claims. Distinct from
+# UNATTRIBUTED: "several languages could own this" and "no language owns this"
+# lead to different conversations, and collapsing them would hide the one that
+# needs a human.
+AMBIGUOUS = "(ambiguous)"
 
 # Words shorter than this are dropped when matching a request against what a
 # view is for. "the", "of", "to" match everything and mean nothing.
@@ -109,14 +116,27 @@ class ScopeProfile:
         return bool(self.total) and self.dominant_share >= HOMOGENEOUS_SHARE
 
     @property
+    def ambiguous(self) -> int:
+        """Elements whose language could not be decided, not merely unknown."""
+        return self.technologies.get(AMBIGUOUS, 0)
+
+    # Technologies a binding exists for. A technology can be NAMED without
+    # being bound: the runtime reader knows a customer's own MDG owns a
+    # stereotype, while nothing here knows what views that MDG offers.
+    bound_technologies: frozenset = field(default_factory=frozenset)
+
+    @property
     def is_bound(self) -> bool:
         """Whether the dominant technology is one we have a binding for.
 
         False means the scope is mostly a language this installation cannot
         advise on - a customer's own MDG, most often. That is a different
-        answer from "mixed" and leads somewhere different.
+        answer from "mixed" and leads somewhere different, which is why naming
+        the technology and being able to advise on it are separate facts.
         """
-        return self.dominant not in (None, UNATTRIBUTED)
+        if self.dominant in (None, UNATTRIBUTED, AMBIGUOUS):
+            return False
+        return self.dominant in self.bound_technologies
 
     @property
     def spans(self) -> tuple:
@@ -159,6 +179,9 @@ def _attribute(stereotype: str, bindings: Sequence[Any],
         key=lambda b: len(getattr(b, "stereotype_prefix", "") or ""),
         reverse=True,
     )
+    bound_technologies = {b.technology for b in bindings}
+    claims: list[tuple] = []
+    best_prefix = None
     for binding in ordered:
         prefix = getattr(binding, "stereotype_prefix", "") or ""
         if prefix and not stereotype.startswith(prefix):
@@ -166,9 +189,43 @@ def _attribute(stereotype: str, bindings: Sequence[Any],
         concept = stereotype[len(prefix):] if prefix else stereotype
         vocabulary = set(_known_concepts(binding))
         vocabulary |= set((known_concepts or {}).get(binding.technology, ()))
-        if concept in vocabulary:
-            return binding.technology, concept
-    return UNATTRIBUTED, stereotype
+        if concept not in vocabulary:
+            continue
+        if best_prefix is None:
+            best_prefix = len(prefix)
+        if len(prefix) < best_prefix:
+            # A shorter prefix already lost to a longer one. An unprefixed
+            # language must not claim a prefixed language's concept: they share
+            # names, which is precisely why one of them carries a prefix.
+            break
+        claims.append((binding.technology, concept))
+
+    if not claims:
+        # A technology with no binding can still be NAMED, when the caller
+        # supplied its vocabulary from the runtime reader. Saying "this is
+        # 100 elements of a language you have no binding for" is far more
+        # useful than "100 elements of nothing", and it is the common case: a
+        # customer's own MDG is exactly this.
+        unbound_claims = [
+            (technology, stereotype)
+            for technology, vocabulary in (known_concepts or {}).items()
+            if technology not in bound_technologies
+            and stereotype in set(vocabulary)
+        ]
+        if len(unbound_claims) == 1:
+            return unbound_claims[0]
+        if len(unbound_claims) > 1:
+            return AMBIGUOUS, stereotype
+        return UNATTRIBUTED, stereotype
+    if len(claims) == 1:
+        return claims[0]
+    # TWO OR MORE LANGUAGES CLAIM IT AT THE SAME PREFIX LENGTH, and there is no
+    # honest way to choose between them from the stereotype alone. Returning
+    # the first was the original behaviour, and it resolved the tie by whatever
+    # order the bindings happened to arrive in -- an answer indistinguishable
+    # from a correct one and wrong half the time. A real repository has several
+    # technologies loaded that share concept names, so this is not hypothetical.
+    return AMBIGUOUS, stereotype
 
 
 def profile_scope(stereotype_counts: Mapping[str, int],
@@ -215,7 +272,8 @@ def profile_scope(stereotype_counts: Mapping[str, int],
         if count <= 0:
             continue
         technology, concept = _attribute(stereotype, bindings, known_concepts)
-        if technology == UNATTRIBUTED:
+
+        if technology in (UNATTRIBUTED, AMBIGUOUS):
             unattributed[stereotype] = unattributed.get(stereotype, 0) + count
         technologies[technology] = technologies.get(technology, 0) + count
         concepts[concept] = concepts.get(concept, 0) + count
@@ -226,6 +284,7 @@ def profile_scope(stereotype_counts: Mapping[str, int],
         concepts=dict(concepts),
         by_technology={k: tuple(sorted(v)) for k, v in by_technology.items()},
         unattributed_stereotypes=dict(unattributed),
+        bound_technologies=frozenset(b.technology for b in bindings),
         total=total,
     )
 

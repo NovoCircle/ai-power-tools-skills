@@ -29,27 +29,56 @@ a conformant view even exists.
 
 ## Step 1 — measure the scope
 
-Get the element set, then its stereotype histogram:
+**The three summary operations cannot be scoped.** `summarize_stereotype_usage`,
+`summarize_connector_patterns` and `summarize_observed_metaclasses` take no arguments and query the
+whole repository. They are useful for a model-wide picture and useless for a scope, so the histogram
+has to come from SQL.
 
+Three steps, all measured against a live repository:
+
+**1. Collect the packages in the scope**, walking `t_package.Parent_ID` down from the root package.
+
+**2. One query for the histogram**, keyed on the stereotype exactly as EA stores it:
+
+```sql
+SELECT Stereotype, Object_Type, COUNT(*) AS n
+FROM t_object
+WHERE Package_ID IN (<the ids>) AND Stereotype <> ''
+GROUP BY Stereotype, Object_Type
 ```
-ea_analyze("traverse_element_subgraph", {...})      # the set, when scope is a subtree
-ea_analyze("summarize_stereotype_usage", {...})     # the histogram
-```
 
-`summarize_stereotype_usage` gives stereotypes **as EA stores them** — prefixed or bare. That is
-exactly what the next step needs; do not normalize them.
+Two traps here, both measured:
 
-Also useful: `summarize_observed_metaclasses` for what base types are in play, and
-`summarize_connector_patterns` for whether the content is a graph, a flow or a hierarchy — which
-`ea-diagram-composition` needs later anyway.
+- **Every value comes back as a string.** Cast the counts.
+- **This total is not the scope size** — it excludes unstereotyped elements. If you want the scope
+  size, ask for it separately. Reporting "40% unattributed" against the wrong denominator is worse
+  than not reporting it.
 
-**Ask for the concept vocabulary too**, from `get_mdg_from_runtime(tech_id=...)`, and pass it in.
-Without it, attribution falls back to the concepts each binding happens to name — and a binding
-names only what departs from its defaults, so the commonest concept in a language is often the one
-it never lists. The advisor reports whatever it could not place rather than quietly absorbing it,
-but it is better not to create the gap.
+**3. Get each technology's vocabulary** from `get_mdg_from_runtime(tech_id=...)`, and pass it as
+`known_concepts`. Notes that cost time to learn:
 
----
+- `tech_id` is the **id**, not the display name. The display name returns `unknown_mdg`.
+- The reply's key set varies by outcome: `stereotypes` is `[]` for a technology that is loaded but
+  unreadable, and **absent entirely** for an unknown one. Use `.get("stereotypes") or []`.
+- A technology can be loaded and still expose nothing, so an empty vocabulary is not proof of an
+  empty technology.
+- **Neither discovery operation is reliable for a model-embedded MDG.** If a technology you can see
+  in the model is not listed, read the technology ids straight out of the repository rather than
+  concluding it is absent.
+
+`traverse_element_subgraph` is worth having for the element set, with one caveat: **it returns every
+interior edge twice**. Deduplicate on source, target, type and stereotype before counting anything,
+or every connector figure comes out roughly doubled.
+
+### Silent failures this step must not trust
+
+Measured, and each returns a plausible empty answer rather than an error:
+
+- A bad element id gives empty `nodes` with **no error key**.
+- A package id passed where an element id was wanted returns a `Package` node instead of failing.
+- An unknown stereotype gives `total_count: 0` with no error.
+
+So an empty profile means "check the scope", never "the scope is empty".
 
 ## Step 2 — profile, and ask the pivotal question
 
@@ -66,7 +95,8 @@ profile.technologies        # {technology: element count}
 profile.dominant            # the largest
 profile.dominant_share      # how much of the scope it holds
 profile.homogeneous         # dominant_share >= 90%
-profile.is_bound            # is the dominant language one we have a binding for?
+profile.is_bound            # is the dominant language one we have a BINDING for?
+profile.ambiguous           # elements whose language could not be decided
 profile.unattributed_stereotypes
 ```
 
@@ -76,7 +106,17 @@ Three answers, not two, and they lead to different places:
 |---|---|
 | homogeneous and bound | an ordinary, conformant view exists |
 | mixed | **no conformant view exists** — see step 4 |
-| dominant language unbound | most of this is a language with no binding here, usually a customer's own MDG. Not the same as mixed |
+| dominant language named but unbound | most of this is a language with no binding here, usually a customer's own MDG. Not the same as mixed |
+| dominant is `(ambiguous)` | more than one loaded language claims these stereotypes, and **the stereotype alone cannot settle it** |
+
+`(ambiguous)` is reported rather than resolved. Two languages sharing a concept name is ordinary in
+a repository with several technologies loaded, and picking one by whatever order the bindings
+arrived in gives an answer indistinguishable from a correct one and wrong half the time. Ask which
+language the content is meant to be, or narrow the scope.
+
+**Naming a technology and being able to advise on it are separate facts.** With a vocabulary
+supplied, a customer's own MDG is named in `technologies` while `is_bound` stays False — there is no
+view catalogue for it, so there is no conformant view to recommend.
 
 Look at `unattributed_stereotypes` before trusting anything. "I could not place 40% of this scope"
 is the most useful thing to know, and it changes what the recommendation is worth.

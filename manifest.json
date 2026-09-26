@@ -86,9 +86,9 @@
         "ea-diagram-advisor/tools/test_advise.py"
       ],
       "sha256": {
-        "ea-diagram-advisor/SKILL.md": "1d8544fd7b7cb6a15ff3cf1afeac3e22ac9ebd3dba83ccc299a51957325744ae",
-        "ea-diagram-advisor/tools/advise.py": "51ec4530501f47567df4111b7319cc131b99359819518d08c4c31535be1ed979",
-        "ea-diagram-advisor/tools/test_advise.py": "4db5e1cf55515f4301ef2e0babf84c725c01f2c4834c7261df3458b2832a8bc9"
+        "ea-diagram-advisor/SKILL.md": "6b148cc1af713b50c6616b3483201aec1ca68bae52d27313fad0f154b8ad7ca0",
+        "ea-diagram-advisor/tools/advise.py": "4f6288f8148a6f7ade090097f6848af3cc9dacaf32181d6697f4759d84ef59fa",
+        "ea-diagram-advisor/tools/test_advise.py": "e6c9377d41f9f3face641ffd8afaaf69f79dc1eed3bab5e77a18ccf092688d00"
       }
     },
     {
