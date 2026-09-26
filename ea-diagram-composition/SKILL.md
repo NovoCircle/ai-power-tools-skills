@@ -224,6 +224,8 @@ useful. Quietly shipping something illegible is not.
 
 ## Reference
 
+- [`ea-diagram-advisor`](../ea-diagram-advisor/SKILL.md) — the step BEFORE this one: which diagram
+  type and viewpoint to draw, from measured content. Use it when the diagram type was not given
 - [`references/grammars.md`](references/grammars.md) — the four grammars in detail, and EA's
   coordinate convention
 - [`references/bindings.md`](references/bindings.md) — the language-binding schema, key by key, and

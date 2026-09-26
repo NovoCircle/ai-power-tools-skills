@@ -75,6 +75,23 @@
       }
     },
     {
+      "name": "ea-diagram-advisor",
+      "title": "EA \u2014 diagram advisor",
+      "description": "Recommend which diagram type and viewpoint expresses what a user wants to understand, from their intent and the measured content of a scope. Handles the case where content spans several modeling languages and no conformant view exists.",
+      "version": "1.0.0",
+      "min_server_version": "3.0.0",
+      "files": [
+        "ea-diagram-advisor/SKILL.md",
+        "ea-diagram-advisor/tools/advise.py",
+        "ea-diagram-advisor/tools/test_advise.py"
+      ],
+      "sha256": {
+        "ea-diagram-advisor/SKILL.md": "1d8544fd7b7cb6a15ff3cf1afeac3e22ac9ebd3dba83ccc299a51957325744ae",
+        "ea-diagram-advisor/tools/advise.py": "51ec4530501f47567df4111b7319cc131b99359819518d08c4c31535be1ed979",
+        "ea-diagram-advisor/tools/test_advise.py": "4db5e1cf55515f4301ef2e0babf84c725c01f2c4834c7261df3458b2832a8bc9"
+      }
+    },
+    {
       "name": "ea-diagram-composition",
       "title": "EA \u2014 diagram composition",
       "description": "Compose EA diagrams that read as deliberate: choose a layout grammar, compute geometry, place and style, then verify and correct. Language-neutral.",
@@ -95,7 +112,7 @@
         "ea-diagram-composition/tools/test_lint.py"
       ],
       "sha256": {
-        "ea-diagram-composition/SKILL.md": "84d2b11f253cc24ab184ae63916bba33f65cd3bb7aa2b1c6faa0452f6818903f",
+        "ea-diagram-composition/SKILL.md": "9ac80a07a393529f1e065716ea4b29f16498e86fb6b00e88f2b79f70466720f4",
         "ea-diagram-composition/bindings/archimate3.yaml": "41c27d5473f1bf2cb2433ad014facb262c7e33c992b25a2ff8201ca75c0db086",
         "ea-diagram-composition/bindings/bpmn2.0.yaml": "f8bdf8ebbf4a91ac12a968bec6496a9d9854a2209315c68855c132e07a197e70",
         "ea-diagram-composition/references/bindings.md": "546c5af8a7e4e3b72eb967781eae7836807587f0c60f843047f2b4df55b6144a",
