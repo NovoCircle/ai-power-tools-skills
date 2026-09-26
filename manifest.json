@@ -92,15 +92,15 @@
         "ea-diagram-composition/tools/test_compose.py"
       ],
       "sha256": {
-        "ea-diagram-composition/SKILL.md": "0ef478da65a795aed63ddd7ca8f1067447ea2cef48a3e01940e6685e8ac04605",
+        "ea-diagram-composition/SKILL.md": "243b192e19a0802fee649935949328883257cdb9c5665f8233808e307c8b15a3",
         "ea-diagram-composition/bindings/archimate3.yaml": "41c27d5473f1bf2cb2433ad014facb262c7e33c992b25a2ff8201ca75c0db086",
         "ea-diagram-composition/bindings/bpmn2.0.yaml": "f8bdf8ebbf4a91ac12a968bec6496a9d9854a2209315c68855c132e07a197e70",
-        "ea-diagram-composition/references/bindings.md": "0b4450c323dcb77a7838c01942100966b9033735dd8ef5a30fc4f3546de87458",
-        "ea-diagram-composition/references/grammars.md": "9b85965fbc8ffdad620c8ccd70857786b8f659f7bce36aa793f98a444cf5f516",
-        "ea-diagram-composition/tools/bindings.py": "4a8a09a8100ae50b85f5aff11ef2b436fd20c4e1dd12911a7ae761dc6c200e14",
-        "ea-diagram-composition/tools/compose.py": "fd0734bd31a69aa63b0d0c7fed8adfb04b0c4a6a785dd85f6afab4a6122b5ba3",
-        "ea-diagram-composition/tools/test_bindings.py": "f14c1fbf56fab5958babcca8f78cbfb17efdd90a69a5d29c3d4af3655ced9f6b",
-        "ea-diagram-composition/tools/test_compose.py": "4e228c50af2dd442964fea587d18549c7c422dade1eadf23de239c12cd9d06c7"
+        "ea-diagram-composition/references/bindings.md": "546c5af8a7e4e3b72eb967781eae7836807587f0c60f843047f2b4df55b6144a",
+        "ea-diagram-composition/references/grammars.md": "f7c4e2790500bf03e87b6c8c90157eea715c93bd4c4672b28efe8eb23cd0f14f",
+        "ea-diagram-composition/tools/bindings.py": "5e79a38d7ac107f2fcea1a150779e3150cbe2d3e1a97c3eb7568b75ee73a6f34",
+        "ea-diagram-composition/tools/compose.py": "68a8b84977839fe570ebe5fded135f803863c48395ad0eab6a27086a07951a9f",
+        "ea-diagram-composition/tools/test_bindings.py": "81d766f7c64ed7fb82db0eae5d34a68806ee2b0a618572a0f3ccb283e121d8e6",
+        "ea-diagram-composition/tools/test_compose.py": "df0cdb579ac39363de5e321bd28b03738a0fcffcb91e82c3686d1d6eca2add4a"
       }
     },
     {

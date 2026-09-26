@@ -71,7 +71,7 @@ its diagram types.
 | **nested-grid** | containment — things live *inside* other things | nesting is deeper than about three levels |
 | **computed-geometry** | quantitative — size or angle carries meaning | the numbers do not vary enough to see |
 
-Two are implemented (`layered-bands`, `lanes`). See
+Three are implemented (`layered-bands`, `lanes`, `nested-grid`). See
 [`references/grammars.md`](references/grammars.md) for what each one is for, in detail, and for
 the EA coordinate convention.
 

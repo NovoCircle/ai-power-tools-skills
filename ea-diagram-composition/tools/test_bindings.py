@@ -179,17 +179,31 @@ def test_an_unknown_grammar_is_refused_and_the_four_are_named():
 
 
 def test_a_grammar_the_engine_cannot_compose_still_loads():
-    """`nested-grid` is a real grammar `compose.py` does not implement yet.
+    """A grammar the engine has not built yet still loads and says so.
 
-    Refusing it would force a binding author to record `layered-bands` for a
-    diagram type that is genuinely a nested grid - a lie stored as data. The
-    binding records the truth and `grammar_is_implemented` is how a consumer
+    Refusing it would force a binding author to record an implemented grammar
+    for a diagram type that is genuinely something else - a lie stored as data.
+    The binding records the truth and `grammar_is_implemented` is how a consumer
     finds out before composing rather than after.
+
+    The example grammar is DERIVED rather than named. This test previously named
+    `nested-grid`, and the day that grammar shipped the test failed for a reason
+    that had nothing to do with the property under test. What it is really
+    asserting is "whichever grammar is unbuilt, a binding may still name it",
+    so it now asks `GRAMMARS` which one that is.
     """
+    unbuilt = sorted(set(GRAMMARS) - IMPLEMENTED_GRAMMARS)
+    if not unbuilt:
+        pytest.skip(
+            "every grammar in the vocabulary is implemented, so there is no "
+            "unbuilt one to name; delete this test or add the next grammar to "
+            "GRAMMARS first"
+        )
+    grammar = unbuilt[0]
     dt = load_binding_text(
-        _doc(**{"grammar:__layered-bands": "grammar: nested-grid"})
+        _doc(**{"grammar:__layered-bands": f"grammar: {grammar}"})
     ).diagram_type("Overview")
-    assert dt.grammar == "nested-grid"
+    assert dt.grammar == grammar
     assert dt.grammar_is_implemented is False
 
 

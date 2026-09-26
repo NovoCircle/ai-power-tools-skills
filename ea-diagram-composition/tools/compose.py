@@ -44,13 +44,18 @@ than the wrap width.
 that flows along the lane. Items at the same sequence index across different
 lanes line up on the flow axis, which is what makes a handoff readable.
 
-Both take plain lists of dicts and return plain dicts. No classes to construct,
-nothing to subclass.
+`compose_nested_grid` - containers within containers, each laid out as a grid of
+its children. Containment is the only structure; there is no sequence and
+usually no connectors. This is the one that takes a recursive tree rather than a
+flat list of groups.
+
+All three take plain lists of dicts and return plain dicts. No classes to
+construct, nothing to subclass.
 
 Result shape
 ------------
     {
-      "grammar":    "layered_bands" | "lanes",
+      "grammar":    "layered_bands" | "lanes" | "nested_grid",
       "items":      [ {"id", "left", "top", "right", "bottom", ...}, ... ],
       "containers": [ {"id", "name", "kind", "index", "left", "top", "right",
                        "bottom", "label": {...}}, ... ],
@@ -59,6 +64,9 @@ Result shape
 
 `items` are nested inside their `containers` by design, so test the two sets for
 mutual disjointness separately - an item is supposed to sit inside its band.
+
+For `nested_grid`, containers nest inside CONTAINERS too, so even the container
+set is not mutually disjoint there: compare siblings, not the whole set.
 """
 from __future__ import annotations
 
@@ -70,6 +78,7 @@ __all__ = [
     "DEFAULT_SPEC",
     "compose_layered_bands",
     "compose_lanes",
+    "compose_nested_grid",
     "rect",
     "rect_width",
     "rect_height",
@@ -145,19 +154,35 @@ DEFAULT_SPEC: dict[str, Any] = {
     "item_gap_flow": 30,          # gap between successive slots along the flow
     "flow_pitch": None,           # optional MINIMUM slot-start to slot-start step
     "min_lane_thickness": None,   # None -> item cross extent + 2 * lane_pad
+
+    # Nested-grid containers. `grid_pad` is constant on every side; the top
+    # inset is `grid_pad + label_height`, so the title strip is cleared rather
+    # than being what the padding is made of.
+    #
+    # Same shape as the container arithmetic documented in the
+    # `ea-navigation-diagrams` skill (PAD_L/R, PAD_T "room for the container's
+    # own title", PAD_B), with the pads parameterized instead of fixed at
+    # 45/60/40 and PAD_T decomposed into `label_height + grid_pad`. If that
+    # skill's numbers are ever revised, these are the knobs that express them.
+    "grid_pad": 12,
+    "grid_columns": None,     # None -> ceil(sqrt(n)), which keeps a grid squarish
+    "max_grid_depth": 3,      # levels of containment allowed; deeper is REFUSED
 }
 
 _ANY_INT_KEYS = frozenset({"origin_left", "origin_top"})
 _POSITIVE_KEYS = frozenset({
     "item_width", "item_height", "wrap_width", "label_height", "label_width",
+    "max_grid_depth",
 })
 _NON_NEGATIVE_KEYS = frozenset({
     "item_gap_x", "item_gap_y", "item_gap_flow",
     "band_pad_x", "band_pad_y", "band_gap", "lane_pad", "lane_gap",
+    "grid_pad",
 })
 _OPTIONAL_POSITIVE_KEYS = frozenset({
     "h_pitch", "row_pitch", "band_pitch", "flow_pitch",
     "min_band_width", "min_lane_thickness",
+    "grid_columns",
 })
 _ALIGNMENTS = ("left", "center")
 _ORIENTATIONS = ("horizontal", "vertical")
@@ -169,6 +194,13 @@ _BAND_OVERRIDES = frozenset({
     "label_height",
 })
 _LANE_OVERRIDES = frozenset({"item_width", "item_height"})
+
+# What one nested-grid container may restate for its OWN DIRECT CHILDREN. It
+# does not cascade to grandchildren: each level states its own sizing, which is
+# what "levels may differ, siblings may not" means in practice.
+_GRID_OVERRIDES = frozenset({
+    "item_width", "item_height", "label_height", "grid_columns",
+})
 
 
 # ---------------------------------------------------------------------------
@@ -362,33 +394,45 @@ def _collect_items(
     items = _require_list(raw, where)
     out: list[Mapping[str, Any]] = []
     for j, raw_item in enumerate(items):
-        iwhere = f"{where}[{j}]"
-        item = _require_mapping(raw_item, iwhere)
-        item_id = item.get("id")
-        # Any hashable id is accepted and preserved VERBATIM -- ints as ints,
-        # strings as strings. The primary consumer maps these back onto EA
-        # element ids, which are integers, so demanding strings would force a
-        # str() at every call site and invite the classic "123" != 123 bug when
-        # the result is matched back against the model.
-        if item_id is None or (isinstance(item_id, str) and not item_id.strip()):
-            raise LayoutError(
-                f"{iwhere}.id: every item needs a non-empty id, got {item_id!r}"
-            )
-        try:
-            hash(item_id)
-        except TypeError:
-            raise LayoutError(
-                f"{iwhere}.id: item id must be hashable so it can be checked "
-                f"for uniqueness, got {type(item_id).__name__}"
-            ) from None
-        if item_id in seen:
-            raise LayoutError(
-                f"{iwhere}.id: duplicate item id {item_id!r}, already used at "
-                f"{seen[item_id]}"
-            )
-        seen[item_id] = iwhere
-        out.append(item)
+        out.append(_check_item(raw_item, f"{where}[{j}]", seen))
     return out
+
+
+def _check_item(
+    raw_item: Any, iwhere: str, seen: dict[str, str]
+) -> Mapping[str, Any]:
+    """Validate one item and claim its id. Shared by all three grammars.
+
+    Pulled out of `_collect_items` so the nested grid, which meets its items one
+    at a time while walking a tree rather than as a flat list, claims ids from
+    the same registry with the same messages. Two grammars enforcing id
+    uniqueness two ways is how one of them ends up not enforcing it.
+    """
+    item = _require_mapping(raw_item, iwhere)
+    item_id = item.get("id")
+    # Any hashable id is accepted and preserved VERBATIM -- ints as ints,
+    # strings as strings. The primary consumer maps these back onto EA
+    # element ids, which are integers, so demanding strings would force a
+    # str() at every call site and invite the classic "123" != 123 bug when
+    # the result is matched back against the model.
+    if item_id is None or (isinstance(item_id, str) and not item_id.strip()):
+        raise LayoutError(
+            f"{iwhere}.id: every item needs a non-empty id, got {item_id!r}"
+        )
+    try:
+        hash(item_id)
+    except TypeError:
+        raise LayoutError(
+            f"{iwhere}.id: item id must be hashable so it can be checked "
+            f"for uniqueness, got {type(item_id).__name__}"
+        ) from None
+    if item_id in seen:
+        raise LayoutError(
+            f"{iwhere}.id: duplicate item id {item_id!r}, already used at "
+            f"{seen[item_id]}"
+        )
+    seen[item_id] = iwhere
+    return item
 
 
 def _named(holder: Mapping[str, Any], where: str) -> str:
@@ -790,6 +834,329 @@ def compose_lanes(
     return {
         "grammar": "lanes",
         "orientation": orientation,
+        "items": out_items,
+        "containers": containers,
+        "bounds": _bounds([*containers, *out_items]),
+    }
+
+
+# ---------------------------------------------------------------------------
+# Grammar: nested_grid
+# ---------------------------------------------------------------------------
+def _grid_metrics(
+    node: Mapping[str, Any], spec: Mapping[str, Any], where: str
+) -> dict:
+    """Resolve the sizing one grid level applies to its own direct children.
+
+    Held on the PARENT, never on the child, which is what makes "uniform within
+    a level" structural rather than a rule a caller has to remember: a leaf has
+    nowhere to state a size of its own, so siblings cannot disagree.
+    """
+    return {
+        "item_width": _override(node, "item_width", spec, _GRID_OVERRIDES, where),
+        "item_height": _override(node, "item_height", spec, _GRID_OVERRIDES, where),
+        "label_height": _override(node, "label_height", spec, _GRID_OVERRIDES, where),
+        "grid_columns": _override(node, "grid_columns", spec, _GRID_OVERRIDES, where),
+    }
+
+
+def _near_square_columns(n: int) -> int:
+    """Columns for `n` cells so the grid comes out close to square.
+
+    `ceil(sqrt(n))`, computed with integers because floating point at the
+    boundary would make a 16-cell grid 5 columns wide on some machines and 4 on
+    others, and this module promises the same output everywhere.
+    """
+    c = 1
+    while c * c < n:
+        c += 1
+    return c
+
+
+def _plan_grid(
+    raw_children: Any,
+    where: str,
+    level: int,
+    s: Mapping[str, Any],
+    metrics: Mapping[str, Any],
+    seen_items: dict[str, str],
+    seen_groups: dict[str, str],
+) -> dict[str, Any]:
+    """Measure one grid bottom-up, returning its natural size and child plans.
+
+    Recursive: a child carrying `items` is a container, and its natural size is
+    whatever its own grid needs plus padding. Nothing is placed here - the tree
+    has to be measured from the leaves up before anything can be positioned,
+    because a container's size is its content's size.
+    """
+    children = _require_list(raw_children, where)
+    plans: list[dict[str, Any]] = []
+
+    for k, raw in enumerate(children):
+        cwhere = f"{where}[{k}]"
+        child = _require_mapping(raw, cwhere)
+        # The presence of the `items` KEY is the discriminator, not its
+        # truthiness: `items: []` is a deliberately empty container, and a
+        # container that collapsed into a leaf when its last child was removed
+        # would be a diagram that silently changed shape.
+        if "items" in child:
+            if level > s["max_grid_depth"]:
+                raise LayoutError(
+                    f"{cwhere}: nesting is {level} containers deep, and this "
+                    f"grammar refuses more than max_grid_depth "
+                    f"({s['max_grid_depth']}); past about three levels a reader "
+                    f"can no longer tell which box owns which. Split the "
+                    f"diagram, or raise spec.max_grid_depth deliberately"
+                )
+            name = _named(child, cwhere)
+            group_id = child.get("id")
+            if group_id is not None:
+                if group_id in seen_groups:
+                    raise LayoutError(
+                        f"{cwhere}.id: duplicate container id {group_id!r}, "
+                        f"already used at {seen_groups[group_id]}"
+                    )
+                if group_id in seen_items:
+                    raise LayoutError(
+                        f"{cwhere}.id: container id {group_id!r} is already "
+                        f"used by an item at {seen_items[group_id]}; containers "
+                        f"and items are both mapped back onto model elements, "
+                        f"so one id cannot mean both"
+                    )
+                seen_groups[group_id] = cwhere
+            cm = _grid_metrics(child, s, cwhere)
+            inner = _plan_grid(
+                child.get("items"), f"{cwhere}.items", level + 1, s, cm,
+                seen_items, seen_groups,
+            )
+            plans.append({
+                "kind": "container",
+                "node": child,
+                "name": name,
+                "index": k,
+                "metrics": cm,
+                "inner": inner,
+                "width": inner["grid_width"] + 2 * s["grid_pad"],
+                "height": (cm["label_height"] + inner["grid_height"]
+                           + 2 * s["grid_pad"]),
+            })
+        else:
+            item = _check_item(child, cwhere, seen_items)
+            plans.append({
+                "kind": "item",
+                "node": item,
+                "index": k,
+                "width": metrics["item_width"],
+                "height": metrics["item_height"],
+            })
+
+    n = len(plans)
+    if n:
+        columns = metrics["grid_columns"]
+        if columns is None:
+            columns = _near_square_columns(n)
+        columns = max(1, min(columns, n))
+        rows = _ceil_div(n, columns)
+        col_widths = [0] * columns
+        row_heights = [0] * rows
+        for k, p in enumerate(plans):
+            r, c = divmod(k, columns)
+            col_widths[c] = max(col_widths[c], p["width"])
+            row_heights[r] = max(row_heights[r], p["height"])
+        grid_width = sum(col_widths) + (columns - 1) * s["item_gap_x"]
+        grid_height = sum(row_heights) + (rows - 1) * s["item_gap_y"]
+    else:
+        # An empty container keeps one cell's worth of space, so it stays a
+        # visible labeled box that says "this grouping exists and is
+        # deliberately unpopulated" instead of collapsing to its title.
+        columns = rows = 0
+        col_widths = []
+        row_heights = []
+        grid_width = metrics["item_width"]
+        grid_height = metrics["item_height"]
+
+    return {
+        "plans": plans,
+        "columns": columns,
+        "rows": rows,
+        "col_widths": col_widths,
+        "row_heights": row_heights,
+        "grid_width": grid_width,
+        "grid_height": grid_height,
+    }
+
+
+def _place_grid(
+    grid: Mapping[str, Any],
+    left: int,
+    top: int,
+    s: Mapping[str, Any],
+    metrics: Mapping[str, Any],
+    depth: int,
+    parent_id: Any,
+    path: str,
+    containers: list[dict[str, Any]],
+    out_items: list[dict[str, Any]],
+) -> None:
+    """Place one already-measured grid with its content box at (`left`, `top`).
+
+    Column widths and row heights come from the measure pass, so a container
+    fills its cell and a leaf keeps its exact size centered in its cell. That
+    split is the whole quality decision here: stretching leaves to their
+    column's width would align the edges at the cost of the uniform-sizing rule,
+    and the rule wins.
+    """
+    columns = grid["columns"]
+    for k, p in enumerate(grid["plans"]):
+        r, c = divmod(k, columns)
+        cell_left = left + sum(grid["col_widths"][:c]) + c * s["item_gap_x"]
+        cell_top = top - (sum(grid["row_heights"][:r]) + r * s["item_gap_y"])
+        cell_w = grid["col_widths"][c]
+        cell_h = grid["row_heights"][r]
+
+        if p["kind"] == "container":
+            cm = p["metrics"]
+            child_path = f"{path}{k}"
+            group_id = p["node"].get("id") or f"group_{child_path}"
+            # A container keeps the size its CONTENTS need and is anchored at
+            # its cell's top-left; it does not stretch to fill the cell. That
+            # is the corpus's rule and it is worth the ragged edge it produces:
+            # containers sized alike make a grouping of two look as important
+            # as a grouping of twenty, which is the failure this grammar is
+            # most often accused of. Snapping every container to its cell drew
+            # a four-child capability and a two-child one at exactly the same
+            # 324x192 -- tidier, and wrong about the thing the diagram is for.
+            #
+            # Leaves are the opposite case and stay centered in their cells:
+            # they carry no content of their own to be sized by, so uniformity
+            # is the only honest size for them.
+            group_rect = rect(cell_left, cell_top, p["width"], p["height"])
+            containers.append({
+                "id": group_id,
+                "name": p["name"],
+                "kind": "group",
+                "index": p["index"],
+                "depth": depth,
+                "parent_id": parent_id,
+                "row": r,
+                "column": c,
+                "label": rect(cell_left, cell_top, p["width"],
+                              cm["label_height"]),
+                **group_rect,
+            })
+            _place_grid(
+                p["inner"],
+                cell_left + s["grid_pad"],
+                cell_top - cm["label_height"] - s["grid_pad"],
+                s, cm, depth + 1, group_id, f"{child_path}_",
+                containers, out_items,
+            )
+        else:
+            item_w = metrics["item_width"]
+            item_h = metrics["item_height"]
+            placed = rect(
+                cell_left + (cell_w - item_w) // 2,
+                cell_top - (cell_h - item_h) // 2,
+                item_w,
+                item_h,
+            )
+            record = {
+                "id": p["node"]["id"],
+                "container_id": parent_id,
+                "depth": depth,
+                "index": p["index"],
+                "row": r,
+                "column": c,
+                **placed,
+            }
+            if isinstance(p["node"].get("name"), str):
+                record["name"] = p["node"]["name"]
+            out_items.append(record)
+
+
+def compose_nested_grid(
+    nodes: Sequence[Mapping[str, Any]],
+    spec: Mapping[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Lay out containers within containers, each as a grid of its children.
+
+    `nodes` is the top level of a recursive tree. A node carrying `items` is a
+    container and needs a `name`; a node without `items` is a leaf and needs an
+    `id`:
+
+        [{"name": "Retail", "items": [
+            {"name": "Onboarding", "items": [{"id": 101}, {"id": 102}]},
+            {"id": 103}]},
+         {"name": "Payments", "items": [{"id": 104}]}]
+
+    Containment is the only structure this grammar expresses. There is no
+    sequence and usually no connectors - a nesting that also needs arrows to be
+    read is a graph, and one of the other grammars or EA's own layout will serve
+    it better.
+
+    Behavior worth knowing:
+
+    * **Grids come out close to square** - `ceil(sqrt(n))` columns - because a
+      grouping rendered as one long row reads as a list and loses the grouping.
+      Set `grid_columns` to fix a count; a container may set its own.
+    * **Cell sizing is uniform within a level and may differ between levels.**
+      Item size is stated by the PARENT (`item_width`, `item_height`, overridable
+      per container for its own direct children, not cascading), so sibling
+      leaves cannot disagree about their size - the one thing that most makes a
+      generated diagram look machine-made.
+    * **Containers are sized by their contents and nothing else.** A container
+      with twenty children is visibly bigger than one with two - which is the
+      whole point of drawing the grouping - so a container is NOT stretched to
+      fill its cell, and a row of containers can end at different depths. Cells
+      are still sized by the widest and tallest member of their column and row,
+      so siblings never collide; the slack simply stays empty. A leaf keeps its
+      exact size, centered in its cell.
+    * **Padding is constant** (`grid_pad`) on every side, with the title strip
+      (`label_height`) as an extra inset at the top, so a container's own name
+      never sits on top of its children.
+    * **Depth is bounded and a deeper tree is REFUSED**, not warned about:
+      `max_grid_depth` defaults to 3 levels of containment. A warning would need
+      a channel in the result that nothing reads; an error names the offending
+      path, and a caller who genuinely wants four levels raises the bound
+      deliberately. Leaves may sit at any level, including inside the deepest
+      container.
+    * An empty container keeps its label and one cell of space rather than
+      collapsing, so the emptiness is visible and the author has to mean it.
+
+    Item ids must be unique across the whole tree, as in the other grammars, and
+    a container `id` may not collide with another container's or with an item's -
+    both are mapped back onto model elements. Root-level leaves come back with
+    `container_id: None`, since nothing encloses them.
+
+    Returns the result dict described in the module docstring, with `depth`,
+    `row`, `column` and `parent_id` on containers and `depth`, `row`, `column`
+    and `container_id` on items. Raises `LayoutError` for any input that cannot
+    yield sane geometry.
+    """
+    s = _resolve_spec(spec)
+    raw_nodes = _require_list(nodes, "nodes")
+    if not raw_nodes:
+        raise LayoutError("nodes: at least one node is required, got an empty list")
+
+    root_metrics = {
+        "item_width": s["item_width"],
+        "item_height": s["item_height"],
+        "label_height": s["label_height"],
+        "grid_columns": s["grid_columns"],
+    }
+    seen_items: dict[str, str] = {}
+    seen_groups: dict[str, str] = {}
+    grid = _plan_grid(nodes, "nodes", 1, s, root_metrics, seen_items, seen_groups)
+
+    containers: list[dict[str, Any]] = []
+    out_items: list[dict[str, Any]] = []
+    _place_grid(
+        grid, s["origin_left"], s["origin_top"], s, root_metrics,
+        1, None, "", containers, out_items,
+    )
+
+    return {
+        "grammar": "nested_grid",
         "items": out_items,
         "containers": containers,
         "bounds": _bounds([*containers, *out_items]),

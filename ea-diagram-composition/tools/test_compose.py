@@ -19,6 +19,7 @@ Two conventions worth reading before editing:
 """
 from __future__ import annotations
 
+import math
 import sys
 from pathlib import Path
 
@@ -34,6 +35,7 @@ from compose import (  # noqa: E402
     bounding_box,
     compose_lanes,
     compose_layered_bands,
+    compose_nested_grid,
     rect,
     rect_height,
     rect_width,
@@ -870,3 +872,632 @@ def test_a_missing_id_is_still_an_error():
 def test_an_unhashable_id_is_rejected_with_a_clear_reason():
     with pytest.raises(LayoutError, match="hashable"):
         compose_layered_bands([{"name": "Band", "items": [{"id": ["a", "list"]}]}])
+
+
+# ===========================================================================
+# 6. Nested grid
+# ===========================================================================
+# `assert_result_sane` deliberately does NOT apply here. Two of its checks are
+# wrong for this grammar by design:
+#
+#   * it asserts no two containers overlap, and a subdomain inside a domain is
+#     supposed to overlap its parent;
+#   * it looks every item's `container_id` up in the container table, and a
+#     root-level leaf has none.
+#
+# So this grammar gets its own sanity helper, which is strictly stronger: it
+# checks no-overlap among SIBLINGS at every level and containment at every
+# level, rather than once over one flat set.
+def _tree_index(result):
+    """Group a nested-grid result by parent, so siblings can be compared.
+
+    Returns `{parent_id: [rect, ...]}` covering containers and items together,
+    because a leaf and a container sharing a parent are siblings and must not
+    overlap each other either.
+    """
+    by_parent = {}
+    for c in result["containers"]:
+        by_parent.setdefault(c["parent_id"], []).append(c)
+    for it in result["items"]:
+        by_parent.setdefault(it["container_id"], []).append(it)
+    return by_parent
+
+
+def assert_nested_result_sane(result, label=""):
+    """Every check that must hold for any nested grid, at every level."""
+    containers = {c["id"]: c for c in result["containers"]}
+    for c in result["containers"]:
+        assert_valid_rect(c, f"{label} container {c['id']}")
+        assert_valid_rect(c["label"], f"{label} label of {c['id']}")
+        assert_contains(c, c["label"], f"{label} label of {c['id']}")
+    for it in result["items"]:
+        assert_valid_rect(it, f"{label} item {it['id']}")
+
+    by_parent = _tree_index(result)
+    for parent_id, siblings in by_parent.items():
+        assert_no_overlaps(siblings, f"{label} siblings under {parent_id!r}")
+        if parent_id is not None:
+            for child in siblings:
+                assert_contains(
+                    containers[parent_id], child,
+                    f"{label} {child.get('id')} inside {parent_id!r}",
+                )
+
+    # Containment is transitive, but assert it against every ancestor anyway:
+    # a child that fits its parent while its parent overflows the grandparent
+    # is the failure this grammar is most likely to produce.
+    for c in result["containers"]:
+        ancestor = containers.get(c["parent_id"])
+        while ancestor is not None:
+            assert_contains(ancestor, c, f"{label} {c['id']} in {ancestor['id']}")
+            ancestor = containers.get(ancestor["parent_id"])
+
+    expected = bounding_box([*result["containers"], *result["items"]])
+    assert result["bounds"] == expected, f"{label}: bounds disagree with contents"
+
+
+def _group(name, children, **extra):
+    return {"name": name, "items": children, **extra}
+
+
+# A two-level tree used by several tests: three top-level groups of unequal
+# size, one of them nesting a further level, and one loose leaf at the top.
+def _sample_tree():
+    return [
+        _group("Customer", [
+            _group("Onboarding", _items(101, 102, 103)),
+            _group("Servicing", _items(104)),
+        ]),
+        _group("Payments", _items(105, 106, 107, 108)),
+        _group("Risk", _items(109)),
+    ]
+
+
+# ---------------------------------------------------------------------------
+# Structure: containment and no overlaps, at every level
+# ---------------------------------------------------------------------------
+def test_a_nested_grid_is_sane_at_every_level():
+    result = compose_nested_grid(_sample_tree())
+    assert result["grammar"] == "nested_grid"
+    assert_nested_result_sane(result, "sample tree")
+    assert len(result["items"]) == 9
+    assert {c["name"] for c in result["containers"]} == {
+        "Customer", "Onboarding", "Servicing", "Payments", "Risk",
+    }
+
+
+def test_every_leaf_sits_inside_the_container_that_declared_it():
+    """The mapping from `container_id` back to the declaring group must hold.
+
+    Geometry alone is not enough: a leaf could sit inside the RIGHT rect while
+    being reported under the wrong parent, and a caller building EA's ownership
+    relationships from `container_id` would then nest the element under the
+    wrong element while the picture looked correct.
+    """
+    result = compose_nested_grid(_sample_tree())
+    by_id = {c["id"]: c for c in result["containers"]}
+    declared = {
+        101: "Onboarding", 102: "Onboarding", 103: "Onboarding",
+        104: "Servicing",
+        105: "Payments", 106: "Payments", 107: "Payments", 108: "Payments",
+        109: "Risk",
+    }
+    for item in result["items"]:
+        parent = by_id[item["container_id"]]
+        assert parent["name"] == declared[item["id"]], item
+        assert_contains(parent, item, f"item {item['id']}")
+
+
+def test_depth_counts_grid_levels_from_one():
+    result = compose_nested_grid(_sample_tree())
+    depths = {c["name"]: c["depth"] for c in result["containers"]}
+    assert depths["Customer"] == 1
+    assert depths["Payments"] == 1
+    assert depths["Onboarding"] == 2
+    by_id = {c["id"]: c for c in result["containers"]}
+    for item in result["items"]:
+        assert item["depth"] == by_id[item["container_id"]]["depth"] + 1
+
+
+def test_a_root_level_leaf_has_no_container():
+    """A leaf at the top level is legitimate and comes back with no parent.
+
+    `container_id: None` rather than a sentinel string, so a caller that forgets
+    to handle it raises on the lookup instead of silently nesting the element
+    under a group called "None".
+    """
+    result = compose_nested_grid([
+        {"id": "loose"},
+        _group("Grouped", _items("inner")),
+    ])
+    loose = next(i for i in result["items"] if i["id"] == "loose")
+    assert loose["container_id"] is None
+    assert loose["depth"] == 1
+    assert_nested_result_sane(result, "root leaf")
+
+
+# ---------------------------------------------------------------------------
+# Sizing: uniform within a level, content-driven between containers
+# ---------------------------------------------------------------------------
+def test_every_leaf_in_one_grid_is_the_same_size():
+    result = compose_nested_grid(_sample_tree())
+    by_parent = {}
+    for item in result["items"]:
+        by_parent.setdefault(item["container_id"], []).append(item)
+    for parent, items in by_parent.items():
+        sizes = {(rect_width(i), rect_height(i)) for i in items}
+        assert len(sizes) == 1, f"{parent}: siblings disagree about size {sizes}"
+
+
+def test_a_leaf_has_nowhere_to_state_a_size_of_its_own():
+    """Sibling uniformity is structural, not a rule the caller must remember.
+
+    Item size is stated by the PARENT. A leaf carrying `item_width` is therefore
+    an unknown key on a leaf - and since the leaf's only recognized key is `id`,
+    the size is simply ignored rather than honoured. This test pins that it is
+    ignored, because the alternative - honouring it - is what lets two siblings
+    end up different sizes, the defect the grammar's own rule exists to prevent.
+    """
+    plain = compose_nested_grid([_group("G", [{"id": 1}, {"id": 2}])])
+    shouty = compose_nested_grid([_group("G", [
+        {"id": 1, "item_width": 400, "item_height": 400},
+        {"id": 2},
+    ])])
+    assert plain["items"] == shouty["items"]
+    assert plain["bounds"] == shouty["bounds"]
+
+
+def test_levels_may_size_their_items_differently():
+    """A container restates the size for its OWN children, not for its
+    grandchildren - so "levels may differ" is expressible and does not leak."""
+    result = compose_nested_grid([
+        _group("Outer", [
+            _group("Inner", _items(1, 2)),
+            {"id": 3},
+        ], item_width=200, item_height=90),
+    ])
+    by_id = {i["id"]: i for i in result["items"]}
+    # The direct child of Outer takes Outer's override.
+    assert rect_width(by_id[3]) == 200
+    assert rect_height(by_id[3]) == 90
+    # The grandchildren do NOT inherit it; they fall back to the spec default.
+    assert rect_width(by_id[1]) == DEFAULT_SPEC["item_width"]
+    assert rect_height(by_id[1]) == DEFAULT_SPEC["item_height"]
+    assert rect_width(by_id[1]) != 200
+    assert_nested_result_sane(result, "per-level sizing")
+
+
+def test_a_container_is_sized_by_its_contents():
+    """A group with many children is visibly bigger than one with few.
+
+    This is the property that keeps a nested grid honest: containers sized alike
+    would make a group holding two things look as significant as one holding
+    twenty.
+    """
+    result = compose_nested_grid([
+        _group("Big", _items(*range(1, 10))),
+        _group("Small", _items(99)),
+    ])
+    big = next(c for c in result["containers"] if c["name"] == "Big")
+    small = next(c for c in result["containers"] if c["name"] == "Small")
+    assert rect_width(big) > rect_width(small)
+
+
+def test_a_container_is_never_stretched_to_match_a_bigger_sibling():
+    """Content sizing beats edge alignment, deliberately, for this grammar.
+
+    The first implementation snapped every container to its cell, so a row of
+    containers shared one height and the edges lined up. It looked tidier and it
+    was wrong: a four-child capability and a two-child one came out at exactly
+    the same 324x192, which is the failure `references/grammars.md` names for
+    this grammar - "containers are sized alike so a container with two children
+    looks as significant as one with twenty".
+
+    The cost is a ragged bottom edge within a row, and that cost is accepted
+    here. It is NOT the same question as `APT-2026-0152`: a band is a full-width
+    strip whose raggedness reads as a mistake, while a grid of differently sized
+    groups is what a capability map is supposed to look like.
+    """
+    result = compose_nested_grid([
+        _group("Tall", [_group("A", _items(1, 2)), _group("B", _items(3, 4))]),
+        _group("Short", _items(5)),
+    ], spec={"grid_columns": 2})
+    tall = next(c for c in result["containers"] if c["name"] == "Tall")
+    short = next(c for c in result["containers"] if c["name"] == "Short")
+    assert tall["row"] == short["row"] == 0
+    assert tall["top"] == short["top"], "a row should still start level"
+    assert rect_height(tall) > rect_height(short), (
+        "the sparser container was stretched to match its sibling"
+    )
+    assert rect_width(tall) > rect_width(short)
+    # The slack left in the cell is empty space, not a collision.
+    assert_nested_result_sane(result, "ragged row")
+
+
+def test_more_children_never_means_a_smaller_container():
+    """The monotonic form of the rule, swept rather than spot-checked.
+
+    Spot-checking two shapes is how the previous version of this passed while
+    4-vs-2 children produced identical boxes: 9-vs-1 happened to differ.
+    """
+    areas = []
+    for n in range(1, 13):
+        result = compose_nested_grid([_group("G", _items(*range(n)))])
+        group = result["containers"][0]
+        areas.append(rect_width(group) * rect_height(group))
+    for smaller, bigger in zip(areas, areas[1:]):
+        assert bigger >= smaller, areas
+    assert areas[-1] > areas[0], "twelve children must not fit in one child's box"
+
+
+def test_a_leaf_is_centered_in_a_cell_taller_than_itself():
+    """Derived from a sibling that fills the same row, so no literal is needed."""
+    result = compose_nested_grid([
+        _group("Row", [_group("HasChildren", _items(1, 2, 3)), {"id": 4}]),
+    ], spec={"grid_columns": 2})
+    filler = next(c for c in result["containers"] if c["name"] == "HasChildren")
+    leaf = next(i for i in result["items"] if i["id"] == 4)
+    assert filler["row"] == leaf["row"] == 0
+    assert rect_height(leaf) < rect_height(filler), "no slack to center in"
+    assert _center_y2(leaf) == _center_y2(filler)
+
+
+# ---------------------------------------------------------------------------
+# Grid shape
+# ---------------------------------------------------------------------------
+@pytest.mark.parametrize("n", [1, 2, 3, 4, 5, 6, 9, 10, 16, 17])
+def test_grids_come_out_close_to_square(n):
+    """Columns are ceil(sqrt(n)), computed here independently of the engine."""
+    expected = math.isqrt(n - 1) + 1 if n > 1 else 1
+    result = compose_nested_grid([_group("G", _items(*range(n)))])
+    columns = max(i["column"] for i in result["items"]) + 1
+    rows = max(i["row"] for i in result["items"]) + 1
+    assert columns == expected, f"n={n}"
+    assert rows == -(-n // expected)
+    assert_nested_result_sane(result, f"square n={n}")
+
+
+def test_grid_columns_fixes_the_column_count():
+    result = compose_nested_grid(
+        [_group("G", _items(*range(6)))], spec={"grid_columns": 3}
+    )
+    assert max(i["column"] for i in result["items"]) + 1 == 3
+    assert max(i["row"] for i in result["items"]) + 1 == 2
+
+
+def test_a_container_may_fix_its_own_column_count():
+    result = compose_nested_grid([
+        _group("Wide", _items(*range(4)), grid_columns=4),
+        _group("Narrow", _items(*range(10, 14)), grid_columns=1),
+    ])
+    wide = [i for i in result["items"] if i["id"] < 10]
+    narrow = [i for i in result["items"] if i["id"] >= 10]
+    assert max(i["row"] for i in wide) == 0
+    assert max(i["column"] for i in narrow) == 0
+    assert_nested_result_sane(result, "per-container columns")
+
+
+def test_more_columns_than_children_does_not_leave_empty_columns():
+    """A column count above the child count collapses to the child count.
+
+    Otherwise the container would be padded out with the width of columns that
+    hold nothing, and a group of two would be drawn as wide as a group of ten.
+    """
+    tight = compose_nested_grid([_group("G", _items(1, 2))],
+                                spec={"grid_columns": 2})
+    loose = compose_nested_grid([_group("G", _items(1, 2))],
+                                spec={"grid_columns": 9})
+    assert tight["bounds"] == loose["bounds"]
+
+
+# ---------------------------------------------------------------------------
+# Whitespace between cells
+# ---------------------------------------------------------------------------
+# These exist because `assert_nested_result_sane` CANNOT see a missing gap.
+# `rects_overlap` exempts rects that merely touch - abutting swimlanes are
+# correct geometry - so a grid that dropped `item_gap_x` entirely and packed
+# every cell edge to edge passed every other test in this file. A no-overlap
+# rule never implies whitespace, and this grammar's whole job is whitespace.
+def test_adjacent_cells_are_separated_by_the_item_gap():
+    """Measured on an all-leaf grid, where a cell is exactly one item wide, so
+    the leaf-to-leaf gap IS the cell gap with no centering slack in between."""
+    gap_x, gap_y = 24, 18
+    result = compose_nested_grid(
+        [_group("G", _items(*range(6)))],
+        spec={"grid_columns": 3, "item_gap_x": gap_x, "item_gap_y": gap_y},
+    )
+    by_cell = {(i["row"], i["column"]): i for i in result["items"]}
+    assert len(by_cell) == 6
+    for (row, col), item in by_cell.items():
+        right = by_cell.get((row, col + 1))
+        if right is not None:
+            assert right["left"] - item["right"] == gap_x
+        below = by_cell.get((row + 1, col))
+        if below is not None:
+            assert item["bottom"] - below["top"] == gap_y
+
+
+def test_the_default_spec_leaves_real_whitespace_between_cells():
+    """The defaults have to be usable without a spec, and a grid with no
+    whitespace is not - it reads as one block, not as a set of things."""
+    assert DEFAULT_SPEC["item_gap_x"] > 0
+    assert DEFAULT_SPEC["item_gap_y"] > 0
+    result = compose_nested_grid([_group("G", _items(1, 2, 3, 4))])
+    by_cell = {(i["row"], i["column"]): i for i in result["items"]}
+    assert by_cell[(0, 1)]["left"] - by_cell[(0, 0)]["right"] > 0
+    assert by_cell[(0, 0)]["bottom"] - by_cell[(1, 0)]["top"] > 0
+
+
+def test_sibling_containers_are_separated_by_the_item_gap():
+    gap = 30
+    result = compose_nested_grid(
+        [_group("A", _items(1)), _group("B", _items(2))],
+        spec={"grid_columns": 2, "item_gap_x": gap},
+    )
+    a, b = sorted(result["containers"], key=lambda c: c["left"])
+    assert b["left"] - a["right"] == gap
+
+
+# ---------------------------------------------------------------------------
+# Padding and labels
+# ---------------------------------------------------------------------------
+def test_padding_is_constant_with_the_title_strip_as_an_extra_top_inset():
+    """Read off a single-child container, against DEFAULT_SPEC rather than
+    literals, so a change to the defaults cannot leave this test asserting a
+    number nobody ships any more."""
+    result = compose_nested_grid([_group("G", _items(1))])
+    group = result["containers"][0]
+    child = result["items"][0]
+    pad = DEFAULT_SPEC["grid_pad"]
+    assert child["left"] - group["left"] == pad
+    assert group["right"] - child["right"] == pad
+    assert group["bottom"] - child["bottom"] == -pad
+    assert group["top"] - child["top"] == DEFAULT_SPEC["label_height"] + pad
+
+
+def test_a_container_label_never_collides_with_its_children():
+    result = compose_nested_grid(_sample_tree())
+    for container in result["containers"]:
+        for child in _tree_index(result).get(container["id"], []):
+            assert not rects_overlap(container["label"], child), (
+                f"{container['name']} label overlaps {child.get('id')}"
+            )
+
+
+def test_an_empty_container_keeps_its_label_and_one_cell_of_space():
+    result = compose_nested_grid([_group("Planned", [])])
+    group = result["containers"][0]
+    assert result["items"] == []
+    assert rect_width(group) == (
+        DEFAULT_SPEC["item_width"] + 2 * DEFAULT_SPEC["grid_pad"]
+    )
+    assert rect_height(group) == (
+        DEFAULT_SPEC["label_height"] + DEFAULT_SPEC["item_height"]
+        + 2 * DEFAULT_SPEC["grid_pad"]
+    )
+    assert_nested_result_sane(result, "empty container")
+
+
+def test_an_items_key_makes_a_container_even_when_it_is_empty():
+    """`items: []` is a container, not a leaf that lost its children.
+
+    The discriminator is the presence of the KEY. If it were truthiness, a group
+    whose last child was removed would silently turn into a leaf - and a leaf
+    with no `id` is an error, so the diagram would start failing to build for a
+    reason unrelated to the edit that caused it.
+    """
+    result = compose_nested_grid([_group("Still A Group", [])])
+    assert [c["name"] for c in result["containers"]] == ["Still A Group"]
+    assert result["items"] == []
+
+
+# ---------------------------------------------------------------------------
+# The depth bound
+# ---------------------------------------------------------------------------
+def _nest(depth, leaf_id="leaf"):
+    """A chain of `depth` containers with one leaf at the bottom."""
+    node = {"id": leaf_id}
+    for level in range(depth, 0, -1):
+        node = _group(f"L{level}", [node])
+    return [node]
+
+
+def test_three_levels_of_containment_are_allowed_by_default():
+    result = compose_nested_grid(_nest(3))
+    assert max(c["depth"] for c in result["containers"]) == 3
+    assert result["items"][0]["depth"] == 4
+    assert_nested_result_sane(result, "three levels")
+
+
+def test_nesting_past_the_bound_is_refused_and_names_the_path():
+    with pytest.raises(LayoutError) as exc:
+        compose_nested_grid(_nest(4))
+    message = str(exc.value)
+    # Wording only this branch produces - the generic "unknown key" and
+    # "must be positive" messages would both match a bare "max_grid_depth".
+    assert "containers deep" in message
+    assert "nodes[0].items[0].items[0].items[0]" in message
+    assert str(DEFAULT_SPEC["max_grid_depth"]) in message
+
+
+def test_the_depth_bound_is_a_refusal_not_a_warning():
+    """Recorded as a decision, not an accident: the result dict has no channel
+    a warning could travel down that any caller reads, so a deeper tree raises.
+    A caller who genuinely wants four levels raises the bound and says so."""
+    deep = _nest(4)
+    with pytest.raises(LayoutError):
+        compose_nested_grid(deep)
+    result = compose_nested_grid(deep, spec={"max_grid_depth": 4})
+    assert max(c["depth"] for c in result["containers"]) == 4
+    assert_nested_result_sane(result, "four levels, asked for")
+
+
+def test_a_shallower_bound_refuses_what_the_default_allows():
+    two = _nest(3)
+    compose_nested_grid(two)  # fine by default
+    with pytest.raises(LayoutError, match="containers deep"):
+        compose_nested_grid(two, spec={"max_grid_depth": 2})
+
+
+# ---------------------------------------------------------------------------
+# Determinism
+# ---------------------------------------------------------------------------
+def test_nested_grid_is_deterministic():
+    tree = _sample_tree()
+    assert compose_nested_grid(tree) == compose_nested_grid(_sample_tree())
+    assert compose_nested_grid(tree) == compose_nested_grid(tree)
+
+
+def test_nested_grid_ignores_spec_key_insertion_order():
+    a = compose_nested_grid(_sample_tree(),
+                            spec={"grid_pad": 8, "grid_columns": 2})
+    b = compose_nested_grid(_sample_tree(),
+                            spec={"grid_columns": 2, "grid_pad": 8})
+    assert a == b
+
+
+# ---------------------------------------------------------------------------
+# Ids
+# ---------------------------------------------------------------------------
+def test_duplicate_item_ids_are_rejected_across_the_whole_tree():
+    """Across branches, not just among siblings - the same registry the other
+    two grammars use, which is why it is one shared helper."""
+    with pytest.raises(LayoutError, match="duplicate item id"):
+        compose_nested_grid([
+            _group("A", [{"id": "shared"}]),
+            _group("B", [_group("C", [{"id": "shared"}])]),
+        ])
+
+
+def test_a_duplicate_container_id_is_rejected():
+    with pytest.raises(LayoutError, match="duplicate container id"):
+        compose_nested_grid([
+            _group("A", _items(1), id="g"),
+            _group("B", _items(2), id="g"),
+        ])
+
+
+def test_a_container_id_may_not_collide_with_an_item_id():
+    """Both are mapped back onto model elements, so one id cannot mean both."""
+    with pytest.raises(LayoutError, match="already used by an item"):
+        compose_nested_grid([
+            _group("A", [{"id": "clash"}]),
+            _group("B", _items(2), id="clash"),
+        ])
+
+
+def test_explicit_container_ids_are_used_verbatim():
+    result = compose_nested_grid([
+        _group("A", _items(1), id=4242),
+        _group("B", _items(2)),
+    ])
+    ids = [c["id"] for c in result["containers"]]
+    assert 4242 in ids
+    generated = [i for i in ids if i != 4242]
+    assert len(generated) == 1
+    assert isinstance(generated[0], str)
+
+
+def test_generated_container_ids_are_unique_across_a_deep_tree():
+    result = compose_nested_grid([
+        _group("A", [_group("A1", _items(1)), _group("A2", _items(2))]),
+        _group("B", [_group("B1", _items(3)), _group("B2", _items(4))]),
+    ])
+    ids = [c["id"] for c in result["containers"]]
+    assert len(ids) == len(set(ids)) == 6
+
+
+# ---------------------------------------------------------------------------
+# Rejections
+# ---------------------------------------------------------------------------
+def test_a_container_needs_a_name():
+    with pytest.raises(LayoutError, match=r"nodes\[0\]\.name"):
+        compose_nested_grid([{"items": _items(1)}])
+
+
+def test_a_leaf_needs_an_id():
+    with pytest.raises(LayoutError, match=r"nodes\[0\]\.items\[1\]\.id"):
+        compose_nested_grid([_group("G", [{"id": 1}, {"name": "nameless"}])])
+
+
+def test_an_empty_node_list_is_an_error_not_an_empty_canvas():
+    with pytest.raises(LayoutError, match="at least one node"):
+        compose_nested_grid([])
+
+
+def test_grid_pad_rejects_a_negative_value():
+    with pytest.raises(LayoutError, match=r"spec\.grid_pad: must not be negative"):
+        compose_nested_grid([_group("G", _items(1))], spec={"grid_pad": -1})
+
+
+def test_grid_pad_of_zero_is_allowed():
+    """Zero padding is tight but legal - children touch the container edge, and
+    touching is not overlapping in this engine."""
+    result = compose_nested_grid([_group("G", _items(1))], spec={"grid_pad": 0})
+    assert_nested_result_sane(result, "zero pad")
+
+
+@pytest.mark.parametrize("value", [0, -3])
+def test_grid_columns_rejects_a_non_positive_count(value):
+    with pytest.raises(LayoutError, match=r"spec\.grid_columns: must be positive"):
+        compose_nested_grid([_group("G", _items(1))],
+                            spec={"grid_columns": value})
+
+
+def test_max_grid_depth_rejects_zero():
+    with pytest.raises(LayoutError, match=r"spec\.max_grid_depth: must be positive"):
+        compose_nested_grid([_group("G", _items(1))],
+                            spec={"max_grid_depth": 0})
+
+
+def test_a_bad_per_container_override_names_the_container():
+    with pytest.raises(LayoutError, match=r"nodes\[1\]\.item_width"):
+        compose_nested_grid([
+            _group("Fine", _items(1)),
+            _group("Broken", _items(2), item_width=0),
+        ])
+
+
+def test_a_leaf_where_a_list_was_expected_is_reported_with_its_path():
+    with pytest.raises(LayoutError, match=r"nodes\[0\]\.items"):
+        compose_nested_grid([{"name": "G", "items": "not a list"}])
+
+
+def test_a_non_mapping_node_is_reported_with_its_path():
+    with pytest.raises(LayoutError, match=r"nodes\[1\]"):
+        compose_nested_grid([_group("G", _items(1)), "not a dict"])
+
+
+# ---------------------------------------------------------------------------
+# Sweep
+# ---------------------------------------------------------------------------
+@pytest.mark.parametrize("spec", [
+    None,
+    {"grid_pad": 0},
+    {"grid_pad": 40},
+    {"grid_columns": 1},
+    {"grid_columns": 5},
+    {"item_width": 60, "item_height": 30},
+    {"item_gap_x": 0, "item_gap_y": 0},
+    {"label_height": 60},
+    {"origin_left": -500, "origin_top": 0},
+    {"max_grid_depth": 5},
+])
+def test_nested_grids_survive_a_wide_sweep_of_shapes(spec):
+    """Every shape the grammar is meant to take, against every sanity rule.
+
+    `origin_top: 0` is in the sweep on purpose: a composition starting at the
+    coordinate origin is the edge case where a sign error in EA's inverted y
+    axis stops cancelling out and starts producing rects with negative height.
+    """
+    trees = [
+        _sample_tree(),
+        _nest(3),
+        [_group("Only", [])],
+        [{"id": "flat"}],
+        _items(1, 2, 3, 4, 5),
+        [_group("Mixed", [{"id": 1}, _group("Sub", _items(2, 3)), {"id": 4}])],
+    ]
+    for i, tree in enumerate(trees):
+        result = compose_nested_grid(tree, spec=spec)
+        assert_nested_result_sane(result, f"sweep tree {i} spec {spec}")

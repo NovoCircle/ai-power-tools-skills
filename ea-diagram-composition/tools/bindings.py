@@ -111,7 +111,7 @@ class BindingError(ValueError):
 GRAMMARS: dict[str, bool] = {
     "layered-bands": True,
     "lanes": True,
-    "nested-grid": False,
+    "nested-grid": True,
     "computed-geometry": False,
 }
 IMPLEMENTED_GRAMMARS = frozenset(k for k, v in GRAMMARS.items() if v)

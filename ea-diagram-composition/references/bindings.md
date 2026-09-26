@@ -41,13 +41,13 @@ pip install pyyaml
 
 Four vocabularies are fixed. A value outside them is refused on load.
 
-**Grammars** — four, because the variety of real diagrams resolves into four. Two are implemented.
+**Grammars** — four, because the variety of real diagrams resolves into four. Three are implemented.
 
 | Grammar | `compose.py` |
 |---|---|
 | `layered-bands` | implemented — `compose_layered_bands` |
 | `lanes` | implemented — `compose_lanes` |
-| `nested-grid` | not implemented |
+| `nested-grid` | implemented — `compose_nested_grid` |
 | `computed-geometry` | not implemented |
 
 **Channels** — the ten visual channels a diagram can carry a variable in: `fill`, `border`,
@@ -258,9 +258,13 @@ on EA's diagram frame.
 
 ### 5.5 A binding may name a grammar that cannot be composed
 
-`nested-grid` and `computed-geometry` are valid values with no code behind them. That is deliberate:
-ArchiMate's Organization and Capability viewpoints really are nested grids, and recording
-`layered-bands` for a diagram type that is genuinely a nested grid would be a lie stored as data.
+`computed-geometry` is a valid value with no code behind it. That is deliberate: recording an
+implemented grammar for a diagram type that is genuinely something else would be a lie stored as
+data, and the lie would be believed precisely because it composes.
+
+`nested-grid` was in this position until it was implemented, which is what the arrangement is for:
+ArchiMate's Organization and Capability viewpoints had been recorded as the nested grids they are,
+so the day the grammar shipped they became composable without a single binding changing.
 
 `DiagramTypeBinding.grammar_is_implemented` is how a consumer finds out before it composes rather
 than after. `False` is a real answer, not an error — check it, say so, and fall back to a plain graph

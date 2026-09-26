@@ -74,18 +74,18 @@ should be taking one more parameter.
 
 ---
 
-## 3. Status — two of four are built
+## 3. Status — three of four are built
 
 | Grammar | Status |
 |---|---|
 | Layered bands | **Implemented** — `compose_layered_bands` |
 | Lanes | **Implemented** — `compose_lanes` |
-| Nested grid | **Not built.** Described here so the judgment is recorded; there is no code behind it |
-| Computed geometry | **Not built.** Same |
+| Nested grid | **Implemented** — `compose_nested_grid` |
+| Computed geometry | **Not built.** Described here so the judgment is recorded; there is no code behind it |
 
-Do not tell a user the last two are available, and do not improvise a call to them. If content
-plainly wants a nested grid, either compose it from the implemented grammars and say what you
-approximated, or hand the geometry over explicitly and say you did it by hand.
+Do not tell a user computed geometry is available, and do not improvise a call to it. If content
+plainly wants it, either compose it from the implemented grammars and say what you approximated, or
+hand the geometry over explicitly and say you did it by hand.
 
 ---
 
@@ -201,28 +201,82 @@ layered bands or a grid is clearer.
 
 ---
 
-## 6. Nested grid — *not built*
+## 6. Nested grid
 
 Containers within containers, each container laid out as a grid of its children: a domain holding
 subdomains holding applications.
 
-Recorded here because the judgment is worth capturing before the code exists, not because it can be
-called.
+`compose_nested_grid(nodes, spec=None)`. The input is a recursive tree rather than a flat list — a
+node carrying `items` is a container and needs a `name`; a node without `items` is a leaf and needs
+an `id`:
 
-**Would suit:** domain and subdomain maps, portfolio views grouped by owner, information models
-grouped by subject area, anything with two levels of grouping and no sequence.
+```python
+compose_nested_grid([
+    {"name": "Retail", "items": [
+        {"name": "Onboarding", "items": [{"id": 101}, {"id": 102}]},
+        {"id": 103}]},
+    {"name": "Payments", "items": [{"id": 104}]},
+])
+```
 
-**Would read well when:** nesting stops at two or three levels; sibling containers are sized by
-their contents rather than uniformly; each container's own label is legible at the zoom the reader
-will actually use; the grid within a container is close to square rather than one long row.
+Leaves and containers may sit side by side at any level, and a leaf at the top level comes back with
+`container_id: None`.
 
-**Would read badly when:** nesting runs four or more deep and the reader can no longer tell which
-box owns which; containers are sized alike so a container with two children looks as significant as
-one with twenty; the grouping is arbitrary — a grid of "other" is a confession, not a category.
+### What it suits
 
-**Note on the EA mechanism:** nesting in EA is not only geometric. A box drawn inside another box
-is not the same as an element genuinely owned by that container, and the two can disagree. Get the
-model relationship right first; the geometry is the easy half.
+Content where **containment is the whole structure** and there is no sequence: two or three levels of
+grouping, and usually no connectors at all.
+
+- Domain and subdomain maps; capability maps where the levels are genuine decomposition.
+- Portfolio views grouped by owner; application taxonomies.
+- Information models grouped by subject area.
+- Organization structures, where the nesting *is* the reporting line.
+
+The test: would an arrow between two of these boxes add anything? If the answer is yes, the content
+is a graph and this is the wrong grammar. A nesting that also needs arrows to be read is not a
+nesting.
+
+### What makes it read well
+
+- **Nesting stops at two or three levels.** Past three a reader can no longer tell which box owns
+  which, and the outermost container becomes a frame rather than a statement. The engine **refuses**
+  a fourth level rather than warning about it — `max_grid_depth` defaults to 3 and a caller who
+  genuinely wants more raises it deliberately.
+- **Containers sized by their contents.** A group holding twenty things should be visibly bigger than
+  one holding two. Sizing containers alike is the fastest way to make a portfolio view lie about
+  where the weight is.
+- **Grids close to square, not one long row.** A grouping rendered as a single row reads as a list
+  and the grouping disappears. The engine defaults to `ceil(sqrt(n))` columns; `grid_columns`
+  overrides it per composition or per container when the content has a real column meaning.
+- **Uniform cell size within a level.** Item size is stated by the *parent*, so sibling leaves
+  cannot disagree — varying sizes among siblings is what most makes a generated diagram look
+  machine-made. Levels may differ from each other; an override does not cascade to grandchildren.
+- **Each container's label legible at the zoom the reader will actually use.** The title strip is an
+  extra inset at the top of the container, above the padding, so a name never sits on its children.
+- **Real whitespace between cells.** A grid packed edge to edge reads as one block. Note that a
+  no-overlap check cannot see this: touching rects do not overlap, by design.
+
+### What makes it read badly
+
+- **Four or more levels deep.** See above; this is the one the grammar refuses outright.
+- **Containers sized alike.** A container with two children looking as significant as one with
+  twenty is a measurement error presented as a picture.
+- **Arbitrary grouping.** A grid of "Other" is a confession, not a category. If a third of the
+  content lands in it, the grouping is wrong.
+- **An empty container with no explanation.** Legitimate — it says "this grouping exists and is
+  deliberately unpopulated" — but only if that is meant. The engine keeps an empty container's label
+  and one cell of space rather than collapsing it, so the emptiness is visible and the author has to
+  own it.
+- **Connectors added to "clarify" the nesting.** They contradict it. If the relationships matter more
+  than the grouping, use a graph layout.
+
+### Note on the EA mechanism
+
+Nesting in EA is not only geometric. A box drawn inside another box is not the same as an element
+genuinely owned by that container, and the two can disagree. **Get the model relationship right
+first**; the geometry is the easy half. `container_id` on every item and `parent_id` on every
+container are returned precisely so the ownership can be built from the same structure the geometry
+came from, rather than inferred back out of the rectangles.
 
 ---
 
