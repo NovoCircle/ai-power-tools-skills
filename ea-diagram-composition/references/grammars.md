@@ -74,14 +74,20 @@ should be taking one more parameter.
 
 ---
 
-## 3. Status — three of four are built
+## 3. Status — four of five are built
+
+The analysis first resolved the corpus into **four** grammars. Measuring the rows grouped under
+"computed geometry" before building it showed they do not share an arithmetic: placing items on a
+circle, packing rectangles so their *areas* encode a number, and drawing a waveform against a time
+axis are three unrelated pieces of code. The polar one was split out and built.
 
 | Grammar | Status |
 |---|---|
 | Layered bands | **Implemented** — `compose_layered_bands` |
 | Lanes | **Implemented** — `compose_lanes` |
 | Nested grid | **Implemented** — `compose_nested_grid` |
-| Computed geometry | **Not built.** Described here so the judgment is recorded; there is no code behind it |
+| Radial | **Implemented** — `compose_radial` |
+| Computed geometry | **Not built.** What remains under the name: treemaps, and timing diagrams |
 
 Do not tell a user computed geometry is available, and do not improvise a call to it. If content
 plainly wants it, either compose it from the implemented grammars and say what you approximated, or
@@ -280,10 +286,57 @@ came from, rather than inferred back out of the rectangles.
 
 ---
 
+## 6a. Radial
+
+A hub and its spokes: items distributed on a ring around a center, optionally with a further ring
+hanging off each one.
+
+`compose_radial(nodes, spec=None, hub=None)`. The hub is an **item**, not a container — it is one
+of the things on the diagram rather than something enclosing them — and a node carrying `items`
+gets its own outer ring, which is what turns a hub-and-spoke into a radial tree.
+
+### What it suits
+
+Content with **one center and peers around it**, where the peers have no order among themselves
+that the reader needs. Capability wheels, service catalogs around an organization, a mind map, a
+stakeholder map, a cycle of four or five stages.
+
+The test: is there genuinely a center? A radial layout claims one. If every item is a peer and
+nothing sits at the middle, the ring is decoration and a grid says the same thing more plainly.
+
+### What makes it read well
+
+- **Square-ish items.** This matters more than it sounds. Items are centered on their point of the
+  circle, so a wide flat box reaches closer to the center at the top and bottom of the ring than at
+  the diagonals, and the spokes come out visibly unequal in length. A ring of 140x60 boxes reads as
+  slightly wrong for a reason most people cannot name. Circles or near-square boxes remove it.
+- **Few enough to see the circle.** Past about a dozen the ring reads as a crowd. The engine widens
+  the radius rather than letting items collide, so what you get is a very large circle rather than
+  an overlap — which is the honest failure, but still a failure.
+- **A hub that earns its place.** The center position is the most emphatic on the diagram.
+- **One ring, or two at most.** The engine refuses a third by default.
+
+### What makes it read badly
+
+- **No real center.** See above; this is the common misuse.
+- **A ring used to imply sequence.** A reader follows a cycle clockwise whether or not one is meant.
+  If the order is arbitrary, say so, or use a grid.
+- **Long labels.** A wide label forces a wide box, which is exactly what makes the spokes uneven.
+- **Arcs you cannot draw.** Reference radial diagrams commonly use curved connectors. The connector
+  vocabulary here has Direct, Auto, Custom, Tree, Lateral, Orthogonal and Bezier — **no arc**. A
+  generated equivalent is structurally right and visually not identical; say so rather than
+  reporting it as reproduced.
+
+---
+
 ## 7. Computed geometry — *not built*
 
 Positions derived from data rather than from structure: a two-axis placement where both coordinates
 come from element properties. A risk/value bubble chart, a technology radar, a time-phased roadmap.
+
+**What is left under this name is two unrelated things**, once the radial grammar was split out: a
+**treemap**, where area encodes a quantity, and a **timing diagram**, with a time axis and step
+waveforms. They are separate pieces of work and only the treemap looks worth building.
 
 **Would suit:** portfolio assessments with two scored dimensions, radars with a ring per horizon,
 roadmaps where horizontal position is a date.

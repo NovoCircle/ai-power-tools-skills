@@ -1225,12 +1225,20 @@ def test_the_grammar_vocabulary_matches_what_the_engine_implements():
     stop falling back to a plain graph layout for capability maps. Remove this
     and that lag becomes invisible.
 
-    The four names themselves stay a literal: "the variety of real diagrams
-    resolves into these four" is a finding, and a fifth appearing is a change to
-    review rather than a set to follow.
+    The names themselves stay a literal: "the variety of real diagrams resolves
+    into these" is a finding, and a new one appearing is a change to review
+    rather than a set to follow.
+
+    IT WENT FROM FOUR TO FIVE, which is the review this literal exists to force.
+    Measuring the rows grouped under `computed-geometry` before building it
+    showed they do not share an arithmetic: placing items on a circle, packing
+    rectangles so their AREAS encode a number, and drawing a waveform against a
+    time axis are three unrelated pieces of code. `radial` was split out and
+    built; the treemap and the timing diagram are what remain under the old
+    name. See `APT-2026-0161`.
     """
     assert set(GRAMMARS) == {"layered-bands", "lanes", "nested-grid",
-                             "computed-geometry"}
+                             "radial", "computed-geometry"}
     assert IMPLEMENTED_GRAMMARS == _engine_grammars()
     assert CHANNELS >= {"fill", "border", "opacity", "icon"}
 

@@ -59,7 +59,7 @@ the schema and the loader API.
 
 ## Step 1 — choose a grammar
 
-Analysis of 147 professionally-drawn diagrams found their variety resolves into **four**
+Analysis of 147 professionally-drawn diagrams found their variety resolves into a handful of
 compositional grammars, not 147 special cases. Picking the right one is most of the quality — and
 when Step 0 found a binding, it has already been picked: the binding states the grammar for each of
 its diagram types.
@@ -69,9 +69,12 @@ its diagram types.
 | **layered-bands** | stratified — things sit *above* or *below* other things | there is no real hierarchy, and the bands are arbitrary |
 | **lanes** | a flow with owners — who does what, in what order | the items do not actually sequence |
 | **nested-grid** | containment — things live *inside* other things | nesting is deeper than about three levels |
-| **computed-geometry** | quantitative — size or angle carries meaning | the numbers do not vary enough to see |
+| **radial** | one center with peers around it | there is no real center, or the ring implies an order that is not meant |
+| **computed-geometry** | quantitative — area or position carries a number | the numbers do not vary enough to see |
 
-Three are implemented (`layered-bands`, `lanes`, `nested-grid`). See
+Four are implemented (`layered-bands`, `lanes`, `nested-grid`, `radial`). The list was four until
+measurement showed "computed-geometry" held several unrelated arithmetics; the polar one was split
+out and built, and treemaps and timing diagrams are what remain under the old name. See
 [`references/grammars.md`](references/grammars.md) for what each one is for, in detail, and for
 the EA coordinate convention.
 

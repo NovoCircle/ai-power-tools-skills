@@ -49,13 +49,19 @@ its children. Containment is the only structure; there is no sequence and
 usually no connectors. This is the one that takes a recursive tree rather than a
 flat list of groups.
 
-All three take plain lists of dicts and return plain dicts. No classes to
+`compose_radial` - a hub and its spokes: items distributed on a ring around a
+center, optionally with a further ring hanging off each one. The one grammar
+here whose arithmetic is trigonometric, so it is also the one that has to be
+careful about rounding: coordinates are rounded once, at the end, so the same
+ring comes out identically on every machine.
+
+All four take plain lists of dicts and return plain dicts. No classes to
 construct, nothing to subclass.
 
 Result shape
 ------------
     {
-      "grammar":    "layered_bands" | "lanes" | "nested_grid",
+      "grammar":    "layered_bands" | "lanes" | "nested_grid" | "radial",
       "items":      [ {"id", "left", "top", "right", "bottom", ...}, ... ],
       "containers": [ {"id", "name", "kind", "index", "left", "top", "right",
                        "bottom", "label": {...}}, ... ],
@@ -67,11 +73,16 @@ mutual disjointness separately - an item is supposed to sit inside its band.
 
 For `nested_grid`, containers nest inside CONTAINERS too, so even the container
 set is not mutually disjoint there: compare siblings, not the whole set.
+
+`radial` returns no containers at all, and an item's `container_id` names the
+ITEM it hangs from - the hub, or the spoke it branches off. It also carries
+`center` and the `radius` actually used, which can exceed the one asked for.
 """
 from __future__ import annotations
 
+import math
 from collections.abc import Mapping, Sequence
-from typing import Any
+from typing import Any, Optional
 
 __all__ = [
     "LayoutError",
@@ -79,6 +90,7 @@ __all__ = [
     "compose_layered_bands",
     "compose_lanes",
     "compose_nested_grid",
+    "compose_radial",
     "rect",
     "rect_width",
     "rect_height",
@@ -167,12 +179,22 @@ DEFAULT_SPEC: dict[str, Any] = {
     "grid_pad": 12,
     "grid_columns": None,     # None -> ceil(sqrt(n)), which keeps a grid squarish
     "max_grid_depth": 3,      # levels of containment allowed; deeper is REFUSED
+
+    # Radial rings. `radius` is a FLOOR: a ring whose items would collide at
+    # that distance is widened until they do not, and the radius actually used
+    # comes back on the result.
+    "radius": 220,
+    "start_angle": 0,         # degrees clockwise from twelve o'clock
+    "sweep": 360,             # how much of the circle to use
+    "max_ring_depth": 2,      # rings allowed; deeper is REFUSED
 }
 
-_ANY_INT_KEYS = frozenset({"origin_left", "origin_top"})
+# `start_angle` may legitimately be negative or zero: it is a bearing, not a
+# size, and "start at ten o'clock" is -60.
+_ANY_INT_KEYS = frozenset({"origin_left", "origin_top", "start_angle"})
 _POSITIVE_KEYS = frozenset({
     "item_width", "item_height", "wrap_width", "label_height", "label_width",
-    "max_grid_depth",
+    "max_grid_depth", "radius", "sweep", "max_ring_depth",
 })
 _NON_NEGATIVE_KEYS = frozenset({
     "item_gap_x", "item_gap_y", "item_gap_flow",
@@ -201,6 +223,13 @@ _LANE_OVERRIDES = frozenset({"item_width", "item_height"})
 _GRID_OVERRIDES = frozenset({
     "item_width", "item_height", "label_height", "grid_columns",
 })
+
+# What one radial node may restate for its OWN ring.
+_RADIAL_OVERRIDES = frozenset({"item_width", "item_height", "radius"})
+
+# The widest arc a branch may occupy. Without a cap, a two-item ring gives each
+# branch 180 degrees and the outer items sweep back across the center.
+_MAX_BRANCH_SWEEP = 120.0
 
 
 # ---------------------------------------------------------------------------
@@ -1161,3 +1190,263 @@ def compose_nested_grid(
         "containers": containers,
         "bounds": _bounds([*containers, *out_items]),
     }
+
+
+# ---------------------------------------------------------------------------
+# Grammar: radial
+# ---------------------------------------------------------------------------
+def _ring_metrics(node: Mapping[str, Any], spec: Mapping[str, Any],
+                  where: str) -> dict:
+    """Resolve the sizing one ring applies to its own children."""
+    return {
+        "item_width": _override(node, "item_width", spec, _RADIAL_OVERRIDES, where),
+        "item_height": _override(node, "item_height", spec, _RADIAL_OVERRIDES, where),
+        "radius": _override(node, "radius", spec, _RADIAL_OVERRIDES, where),
+    }
+
+
+def _polar(center_x: int, center_y: int, radius: int, degrees: float) -> tuple:
+    """A point on a circle, rounded to whole EA units.
+
+    Angles run CLOCKWISE from twelve o'clock, because that is how a reader
+    describes one of these diagrams - "starting at the top and going round" -
+    and matching the description costs nothing here while saving an inversion
+    at every call site.
+
+    EA's vertical axis is inverted, so a point ABOVE the center has a LARGER
+    (less negative) y. Rounding is `int(round(...))`, applied once, to the
+    coordinate rather than to the angle: rounding the angle first would let a
+    ring of twelve drift visibly by the time it closed.
+    """
+    radians = math.radians(degrees - 90.0)
+    return (int(round(center_x + radius * math.cos(radians))),
+            int(round(center_y - radius * math.sin(radians))))
+
+
+def compose_radial(
+    nodes: Sequence[Mapping[str, Any]],
+    spec: Mapping[str, Any] | None = None,
+    hub: Optional[Mapping[str, Any]] = None,
+) -> dict[str, Any]:
+    """Lay out items on a ring around a center: a hub and its spokes.
+
+    `nodes` is the ring, in order. `hub`, when given, is the thing at the
+    center - `{"id": ..., "name": ...}` - and is placed as an item rather than
+    as a container, because it is one of the things on the diagram rather than
+    something enclosing them:
+
+        compose_radial(
+            [{"id": 1}, {"id": 2}, {"id": 3}, {"id": 4}],
+            hub={"id": 100, "name": "Customer"},
+        )
+
+    A node carrying `items` gets its own outer ring, laid out over the arc it
+    occupies, which is what turns a hub-and-spoke into a radial tree.
+
+    Behavior worth knowing:
+
+    * **Angles run clockwise from twelve o'clock**, which is how a reader
+      describes one of these. `start_angle` moves the first item.
+    * **`sweep` is how much of the circle to use**, 360 by default. A smaller
+      sweep gives a fan rather than a ring, and the items are spread across it
+      INCLUSIVE of both ends - a 180-degree sweep of three items puts one at
+      each end and one in the middle, which is what a half-circle of three is
+      meant to look like. A full circle does not repeat the first position.
+    * **Uniform sizing within a ring.** Stated by the parent, so siblings
+      cannot disagree - the same rule the other grammars follow.
+    * **The radius is a floor, not a promise.** If the items would collide at
+      the radius given, the ring is widened until they do not, and the radius
+      actually used comes back on the result. A grammar that produced a
+      deliberately overlapping ring because the caller passed a small number
+      would be obeying the letter of the spec and drawing a bad diagram.
+    * **Depth is bounded** by `max_ring_depth`, default 2, and a deeper tree is
+      REFUSED rather than warned about - the same decision the nested grid
+      makes, for the same reason: the result dict has no channel a warning
+      could travel down that anything reads.
+
+    THE CONNECTORS ARE NOT THIS GRAMMAR'S JOB, and for these diagrams that
+    matters more than usual. Reference radial diagrams commonly use curved or
+    arced connectors; the routing vocabulary available here has no arc, so a
+    generated equivalent will carry straight or Bezier lines. The geometry is
+    equivalent; the drawing is not identical, and saying so is part of using
+    this grammar honestly.
+
+    Returns the result dict described in the module docstring. Items carry
+    `angle` and `ring`, so a caller can reason about the arrangement without
+    recovering it from coordinates. Raises `LayoutError` for any input that
+    cannot yield sane geometry.
+    """
+    s = _resolve_spec(spec)
+    raw_nodes = _require_list(nodes, "nodes")
+    if not raw_nodes:
+        raise LayoutError("nodes: at least one node is required, got an empty list")
+
+    seen_ids: dict[str, str] = {}
+    out_items: list[dict[str, Any]] = []
+
+    hub_item = None
+    if hub is not None:
+        hub_item = _check_item(hub, "hub", seen_ids)
+
+    # The center is chosen after the outermost radius is known, so the whole
+    # composition can start at `origin_left`/`origin_top` like every other
+    # grammar rather than at a center the caller has to compute.
+    plan = _plan_ring(raw_nodes, "nodes", 1, s, seen_ids, float(s["sweep"]))
+    extent = plan["outer_radius"] + max(plan["max_item_w"], plan["max_item_h"])
+    center_x = s["origin_left"] + extent
+    center_y = s["origin_top"] - extent
+
+    if hub_item is not None:
+        record = {
+            "id": hub_item["id"],
+            "container_id": None,
+            "ring": 0,
+            "angle": 0.0,
+            "index": 0,
+            **rect(center_x - s["item_width"] // 2,
+                   center_y + s["item_height"] // 2,
+                   s["item_width"], s["item_height"]),
+        }
+        if isinstance(hub_item.get("name"), str):
+            record["name"] = hub_item["name"]
+        out_items.append(record)
+
+    _place_ring(plan, center_x, center_y, s, 1,
+                hub_item["id"] if hub_item else None,
+                s["start_angle"], s["sweep"], out_items)
+
+    return {
+        "grammar": "radial",
+        "items": out_items,
+        "containers": [],
+        "center": {"x": center_x, "y": center_y},
+        "radius": plan["radius"],
+        "bounds": _bounds(out_items),
+    }
+
+
+def _plan_ring(raw_nodes: Any, where: str, level: int, s: Mapping[str, Any],
+               seen_ids: dict, sweep: float) -> dict:
+    """Measure one ring and everything outside it, from the inside out.
+
+    The SWEEP has to be known here, not only at placement, because it decides
+    the angular step and therefore how far apart the items actually are. The
+    first version widened the radius using the full-circle step on the reasoning
+    that a closed ring is the tightest case. It is not: five items across a
+    90-degree fan step 22.5 degrees apart where a full circle would step 72, so
+    the fan collided while the ring was fine. Planning and placement now derive
+    the angles from one function so they cannot disagree.
+    """
+    if level > s["max_ring_depth"]:
+        raise LayoutError(
+            f"{where}: nesting is {level} rings deep, and this grammar refuses "
+            f"more than max_ring_depth ({s['max_ring_depth']}); a radial "
+            f"diagram past two rings stops being readable from the center. "
+            f"Split it, or raise spec.max_ring_depth deliberately"
+        )
+    children = _require_list(raw_nodes, where)
+    if not children:
+        raise LayoutError(f"{where}: a ring needs at least one node")
+
+    metrics = {
+        "item_width": s["item_width"],
+        "item_height": s["item_height"],
+        "radius": s["radius"],
+    }
+    plans = []
+    for k, raw in enumerate(children):
+        cwhere = f"{where}[{k}]"
+        node = _require_mapping(raw, cwhere)
+        raw_inner = node.get("items") if "items" in node else None
+        item = _check_item(node, cwhere, seen_ids)
+        plans.append({"node": item, "index": k, "inner": None,
+                      "raw_inner": raw_inner, "where": cwhere})
+
+    count = len(plans)
+    step = _angular_step(count, sweep)
+    branch_sweep = min(abs(step) or abs(sweep), _MAX_BRANCH_SWEEP)
+
+    # The radius is a floor. Widen it until neighbours on this ring cannot
+    # touch: the chord between two of them, at the step actually used, must
+    # clear the wider extent plus a gap.
+    need = max(metrics["item_width"], metrics["item_height"]) + s["item_gap_x"]
+    radius = metrics["radius"]
+    if count > 1 and step:
+        half = math.radians(abs(step) / 2.0)
+        if math.sin(half) > 0:
+            radius = max(radius, int(math.ceil(need / (2.0 * math.sin(half)))))
+
+    for entry in plans:
+        if entry["raw_inner"] is not None:
+            entry["inner"] = _plan_ring(
+                entry["raw_inner"], f"{entry['where']}.items",
+                level + 1, s, seen_ids, branch_sweep)
+
+    outer = radius
+    for entry in plans:
+        if entry["inner"]:
+            outer = max(outer, radius + entry["inner"]["outer_radius"])
+    return {
+        "plans": plans,
+        "radius": radius,
+        "outer_radius": outer,
+        "metrics": metrics,
+        "step": step,
+        "branch_sweep": branch_sweep,
+        "max_item_w": metrics["item_width"],
+        "max_item_h": metrics["item_height"],
+    }
+
+
+def _angular_step(count: int, sweep: float) -> float:
+    """Degrees between neighbours on a ring of `count` over `sweep`.
+
+    A closed ring divides by the count, so the last item does not land back on
+    the first. A partial sweep divides by one less, spreading the items
+    INCLUSIVE of both ends - a half circle of three is one at each end and one
+    in the middle, which is what a half circle of three should look like.
+    """
+    if count <= 1:
+        return 0.0
+    if abs(sweep) >= 360.0:
+        return sweep / count
+    return sweep / (count - 1)
+
+
+def _place_ring(plan: Mapping[str, Any], center_x: int, center_y: int,
+                s: Mapping[str, Any], ring: int, parent_id: Any,
+                start_angle: float, sweep: float,
+                out_items: list) -> None:
+    """Place one measured ring, then anything hanging off it."""
+    plans = plan["plans"]
+    metrics = plan["metrics"]
+    radius = plan["radius"]
+    # The step was decided during planning, because the radius depends on it.
+    step = plan["step"]
+
+    for entry in plans:
+        angle = start_angle + step * entry["index"]
+        x, y = _polar(center_x, center_y, radius, angle)
+        record = {
+            "id": entry["node"]["id"],
+            "container_id": parent_id,
+            "ring": ring,
+            "angle": round(angle % 360.0, 3),
+            "index": entry["index"],
+            **rect(x - metrics["item_width"] // 2,
+                   y + metrics["item_height"] // 2,
+                   metrics["item_width"], metrics["item_height"]),
+        }
+        if isinstance(entry["node"].get("name"), str):
+            record["name"] = entry["node"]["name"]
+        out_items.append(record)
+
+        if entry["inner"]:
+            # An outer ring is centered on its parent and occupies the arc the
+            # parent owns, so a radial tree's branches do not interleave.
+            own_sweep = plan["branch_sweep"]
+            inner_count = len(entry["inner"]["plans"])
+            branch_start = angle - own_sweep / 2.0 if inner_count > 1 else angle
+            _place_ring(entry["inner"], x, y, s, ring + 1,
+                        entry["node"]["id"], branch_start, own_sweep,
+                        out_items)

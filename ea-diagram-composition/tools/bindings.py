@@ -108,10 +108,17 @@ class BindingError(ValueError):
 # Motivation viewpoints really are trees, and saying `layered-bands` instead
 # would be a lie recorded as data. `is_implemented` is how a consumer finds out
 # before it tries, rather than after.
+# FIVE names, not the four the corpus analysis first resolved on. Measuring
+# the rows grouped under `computed-geometry` before building it showed they do
+# not share an arithmetic: placing items on a circle, packing rectangles so
+# their AREAS encode a number, and drawing a waveform against a time axis are
+# three unrelated pieces of code. `radial` is the polar one, built; what is
+# left under `computed-geometry` is the treemap and the timing diagram.
 GRAMMARS: dict[str, bool] = {
     "layered-bands": True,
     "lanes": True,
     "nested-grid": True,
+    "radial": True,
     "computed-geometry": False,
 }
 IMPLEMENTED_GRAMMARS = frozenset(k for k, v in GRAMMARS.items() if v)

@@ -112,17 +112,17 @@
         "ea-diagram-composition/tools/test_lint.py"
       ],
       "sha256": {
-        "ea-diagram-composition/SKILL.md": "9ac80a07a393529f1e065716ea4b29f16498e86fb6b00e88f2b79f70466720f4",
+        "ea-diagram-composition/SKILL.md": "8eb78054800dc99106c57de2c9e8507f1b815b283097d5ca769de7cd66992c81",
         "ea-diagram-composition/bindings/archimate3.yaml": "41c27d5473f1bf2cb2433ad014facb262c7e33c992b25a2ff8201ca75c0db086",
         "ea-diagram-composition/bindings/bpmn2.0.yaml": "f8bdf8ebbf4a91ac12a968bec6496a9d9854a2209315c68855c132e07a197e70",
         "ea-diagram-composition/references/bindings.md": "546c5af8a7e4e3b72eb967781eae7836807587f0c60f843047f2b4df55b6144a",
-        "ea-diagram-composition/references/grammars.md": "f7c4e2790500bf03e87b6c8c90157eea715c93bd4c4672b28efe8eb23cd0f14f",
+        "ea-diagram-composition/references/grammars.md": "e36c311ac661bca104a882a9af910510cc8aa7a77863d5c97741b7dd6daaf164",
         "ea-diagram-composition/references/verification.md": "17228e8f29de0fd9adba39c26a19fbf741fb9a80f792422486f0b1a37450b3c7",
-        "ea-diagram-composition/tools/bindings.py": "5e79a38d7ac107f2fcea1a150779e3150cbe2d3e1a97c3eb7568b75ee73a6f34",
-        "ea-diagram-composition/tools/compose.py": "68a8b84977839fe570ebe5fded135f803863c48395ad0eab6a27086a07951a9f",
+        "ea-diagram-composition/tools/bindings.py": "9cdcb481b7e775c9a34e62d1fe6c8b515e5c7e1e3bb11416733731e749d9b867",
+        "ea-diagram-composition/tools/compose.py": "4e5f80a84cc860f006e9de9699343d66c674adac352f2cea2f13fb3d6da186c7",
         "ea-diagram-composition/tools/lint.py": "a08fc9bf950e16675d7144e01e0b174330a5e1ec8cb6034de86aad40d2aff2b9",
-        "ea-diagram-composition/tools/test_bindings.py": "81d766f7c64ed7fb82db0eae5d34a68806ee2b0a618572a0f3ccb283e121d8e6",
-        "ea-diagram-composition/tools/test_compose.py": "df0cdb579ac39363de5e321bd28b03738a0fcffcb91e82c3686d1d6eca2add4a",
+        "ea-diagram-composition/tools/test_bindings.py": "0d9b05ab071ec973f1a07bae2b00e4f24e26b8ff958ace6c59f82dfec53946fc",
+        "ea-diagram-composition/tools/test_compose.py": "b1ed7c9b67d30323daf5d8f7768f8b3fc3946f2ebdef4e1dbf43a77206a5d85e",
         "ea-diagram-composition/tools/test_lint.py": "090035aee457bb7a5f33cd7324f367e2a4e15b7d5d1194f0f986f07ef7c39214"
       }
     },

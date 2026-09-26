@@ -36,6 +36,7 @@ from compose import (  # noqa: E402
     compose_lanes,
     compose_layered_bands,
     compose_nested_grid,
+    compose_radial,
     rect,
     rect_height,
     rect_width,
@@ -1501,3 +1502,268 @@ def test_nested_grids_survive_a_wide_sweep_of_shapes(spec):
     for i, tree in enumerate(trees):
         result = compose_nested_grid(tree, spec=spec)
         assert_nested_result_sane(result, f"sweep tree {i} spec {spec}")
+
+
+# ===========================================================================
+# 7. Radial
+# ===========================================================================
+# A hub and its spokes. `containers` is always empty here, so the shared
+# `assert_result_sane` does not apply - it looks every item's `container_id` up
+# in the container table, and a radial item's parent is another ITEM.
+def assert_radial_sane(result, label=""):
+    for item in result["items"]:
+        assert_valid_rect(item, f"{label} item {item['id']}")
+    by_parent = {}
+    for item in result["items"]:
+        by_parent.setdefault(item["container_id"], []).append(item)
+    for parent, siblings in by_parent.items():
+        assert_no_overlaps(siblings, f"{label} ring under {parent!r}")
+    assert result["containers"] == []
+    assert result["bounds"] == bounding_box(result["items"])
+
+
+def _spokes(n, first=1):
+    return [{"id": i} for i in range(first, first + n)]
+
+
+def _angle_of(result, item_id):
+    return next(i["angle"] for i in result["items"] if i["id"] == item_id)
+
+
+# ---------------------------------------------------------------------------
+# The arrangement
+# ---------------------------------------------------------------------------
+@pytest.mark.parametrize("n", [2, 3, 4, 6, 8, 12])
+def test_a_full_circle_spreads_items_evenly(n):
+    result = compose_radial(_spokes(n))
+    angles = sorted(i["angle"] for i in result["items"])
+    steps = [round(b - a, 3) for a, b in zip(angles, angles[1:])]
+    assert steps and len(set(steps)) == 1, angles
+    assert steps[0] == pytest.approx(360.0 / n)
+    assert_radial_sane(result, f"full circle n={n}")
+
+
+def test_a_full_circle_does_not_put_the_last_item_on_the_first():
+    """360 / n, not 360 / (n-1): the twelfth item of twelve must not land back
+    at twelve o'clock on top of the first."""
+    result = compose_radial(_spokes(12))
+    angles = [i["angle"] for i in result["items"]]
+    assert len(set(angles)) == 12
+    assert max(angles) < 360.0
+
+
+def test_a_partial_sweep_spreads_inclusive_of_both_ends():
+    """A half circle of three reads as one at each end and one in the middle.
+
+    Different arithmetic from the full circle on purpose - 360/(n-1) would
+    duplicate a position on a closed ring, and 180/n would leave a fan visibly
+    short of its own end.
+    """
+    result = compose_radial(_spokes(3), spec={"sweep": 180})
+    angles = sorted(i["angle"] for i in result["items"])
+    assert angles == [0.0, 90.0, 180.0]
+
+
+def test_start_angle_rotates_the_whole_ring():
+    plain = compose_radial(_spokes(4))
+    turned = compose_radial(_spokes(4), spec={"start_angle": 45})
+    assert [i["angle"] for i in turned["items"]] == [
+        (a + 45) % 360 for a in (i["angle"] for i in plain["items"])]
+
+
+def test_a_negative_start_angle_is_a_bearing_not_an_error():
+    """"Start at ten o'clock" is -60. A bearing is not a size."""
+    result = compose_radial(_spokes(3), spec={"start_angle": -60})
+    assert _angle_of(result, 1) == 300.0
+
+
+def test_the_first_item_sits_above_the_center_by_default():
+    """Angles run clockwise from twelve o'clock, which is how a reader
+    describes one of these. In EA's inverted axis, above means a LARGER top."""
+    result = compose_radial(_spokes(4), hub={"id": 99})
+    hub = next(i for i in result["items"] if i["id"] == 99)
+    first = next(i for i in result["items"] if i["id"] == 1)
+    assert first["top"] > hub["top"], "the first spoke is not above the hub"
+    assert abs(_center_x2(first) - _center_x2(hub)) <= 2
+
+
+def test_a_single_item_sits_at_the_start_angle():
+    result = compose_radial(_spokes(1))
+    assert _angle_of(result, 1) == 0.0
+    assert_radial_sane(result, "single")
+
+
+# ---------------------------------------------------------------------------
+# The radius is a floor
+# ---------------------------------------------------------------------------
+def test_a_radius_too_small_for_its_ring_is_widened():
+    """A grammar that drew an overlapping ring because the caller passed a
+    small number would be obeying the spec and producing a bad diagram."""
+    result = compose_radial(_spokes(12), spec={"radius": 10})
+    assert result["radius"] > 10
+    assert_radial_sane(result, "widened")
+
+
+def test_a_generous_radius_is_left_alone():
+    result = compose_radial(_spokes(4), spec={"radius": 900})
+    assert result["radius"] == 900
+
+
+def test_the_radius_actually_used_is_reported():
+    """So a caller can tell it was overridden rather than discovering it from
+    the coordinates."""
+    result = compose_radial(_spokes(16), spec={"radius": 20})
+    assert result["radius"] == result["radius"]
+    assert result["radius"] > 20
+
+
+@pytest.mark.parametrize("n", [3, 5, 9, 16, 24])
+def test_a_ring_never_overlaps_itself_at_any_size(n):
+    result = compose_radial(_spokes(n), spec={"radius": 1})
+    assert_radial_sane(result, f"crowded n={n}")
+
+
+# ---------------------------------------------------------------------------
+# The hub
+# ---------------------------------------------------------------------------
+def test_the_hub_is_an_item_not_a_container():
+    """It is one of the things on the diagram, not something enclosing them."""
+    result = compose_radial(_spokes(3), hub={"id": 99, "name": "Customer"})
+    hub = next(i for i in result["items"] if i["id"] == 99)
+    assert hub["ring"] == 0
+    assert hub["container_id"] is None
+    assert hub["name"] == "Customer"
+    assert result["containers"] == []
+
+
+def test_the_hub_is_optional():
+    result = compose_radial(_spokes(3))
+    assert all(i["ring"] == 1 for i in result["items"])
+
+
+def test_the_hub_shares_the_ring_id_space():
+    with pytest.raises(LayoutError, match="duplicate item id"):
+        compose_radial(_spokes(3), hub={"id": 1})
+
+
+def test_spokes_point_at_the_hub_as_their_parent():
+    result = compose_radial(_spokes(3), hub={"id": 99})
+    for item in result["items"]:
+        if item["ring"] == 1:
+            assert item["container_id"] == 99
+
+
+# ---------------------------------------------------------------------------
+# Outer rings
+# ---------------------------------------------------------------------------
+def test_a_node_with_items_gets_its_own_outer_ring():
+    result = compose_radial([
+        {"id": 1, "items": [{"id": 10}, {"id": 11}]},
+        {"id": 2},
+        {"id": 3},
+    ], hub={"id": 99})
+    outer = [i for i in result["items"] if i["ring"] == 2]
+    assert {i["id"] for i in outer} == {10, 11}
+    assert all(i["container_id"] == 1 for i in outer)
+    assert_radial_sane(result, "two rings")
+
+
+def test_a_branch_does_not_sweep_back_across_the_center():
+    """Without a cap on the branch arc, a two-item ring gives each branch 180
+    degrees and its children swing round past the hub."""
+    result = compose_radial([
+        {"id": 1, "items": _spokes(3, first=10)},
+        {"id": 2, "items": _spokes(3, first=20)},
+    ], hub={"id": 99})
+    hub = next(i for i in result["items"] if i["id"] == 99)
+    for item in result["items"]:
+        if item["ring"] != 2:
+            continue
+        # No outer item may sit inside the hub's own box.
+        assert not rects_overlap(item, hub), item["id"]
+    assert_radial_sane(result, "branches")
+
+
+def test_nesting_past_the_bound_is_refused():
+    deep = [{"id": 1, "items": [{"id": 2, "items": [{"id": 3}]}]}]
+    with pytest.raises(LayoutError, match="rings deep"):
+        compose_radial(deep)
+    result = compose_radial(deep, spec={"max_ring_depth": 3})
+    assert max(i["ring"] for i in result["items"]) == 3
+
+
+# ---------------------------------------------------------------------------
+# Sizing and determinism
+# ---------------------------------------------------------------------------
+def test_every_item_in_a_ring_is_the_same_size():
+    result = compose_radial(_spokes(7))
+    sizes = {(rect_width(i), rect_height(i)) for i in result["items"]}
+    assert len(sizes) == 1
+
+
+def test_radial_is_deterministic():
+    """Trigonometry means floats, and the rects must still come out identical
+    on every machine. Rounding is applied once, to the coordinate."""
+    first = compose_radial(_spokes(9), hub={"id": 99})
+    second = compose_radial(_spokes(9), hub={"id": 99})
+    assert first == second
+
+
+def test_every_coordinate_is_a_whole_unit():
+    result = compose_radial(_spokes(7), spec={"radius": 137})
+    for item in result["items"]:
+        for key in ("left", "top", "right", "bottom"):
+            assert isinstance(item[key], int), (item["id"], key)
+
+
+def test_the_arrangement_is_reported_not_only_drawn():
+    """`angle` and `ring` on every item, so a caller can reason about the
+    arrangement without recovering it from coordinates."""
+    result = compose_radial(_spokes(4), hub={"id": 99})
+    for item in result["items"]:
+        assert isinstance(item["angle"], float)
+        assert isinstance(item["ring"], int)
+
+
+# ---------------------------------------------------------------------------
+# Rejections
+# ---------------------------------------------------------------------------
+def test_an_empty_ring_is_an_error():
+    with pytest.raises(LayoutError, match="at least one node"):
+        compose_radial([])
+
+
+def test_an_empty_inner_ring_is_an_error():
+    with pytest.raises(LayoutError, match="at least one node"):
+        compose_radial([{"id": 1, "items": []}])
+
+
+def test_a_spoke_needs_an_id():
+    with pytest.raises(LayoutError, match=r"nodes\[1\]\.id"):
+        compose_radial([{"id": 1}, {"name": "nameless"}])
+
+
+@pytest.mark.parametrize("key", ["radius", "sweep", "max_ring_depth"])
+def test_a_non_positive_radial_key_is_rejected(key):
+    with pytest.raises(LayoutError, match=rf"spec\.{key}: must be positive"):
+        compose_radial(_spokes(3), spec={key: 0})
+
+
+def test_start_angle_accepts_zero_and_negatives():
+    for value in (0, -90, 359):
+        assert compose_radial(_spokes(3), spec={"start_angle": value})
+
+
+def test_a_hub_without_an_id_is_rejected():
+    with pytest.raises(LayoutError, match=r"hub\.id"):
+        compose_radial(_spokes(3), hub={"name": "no id"})
+
+
+# ---------------------------------------------------------------------------
+# Sweep
+# ---------------------------------------------------------------------------
+@pytest.mark.parametrize("sweep", [90, 120, 180, 270, 360])
+def test_rings_survive_a_sweep_sweep(sweep):
+    result = compose_radial(_spokes(5), spec={"sweep": sweep})
+    assert_radial_sane(result, f"sweep {sweep}")
+    assert max(i["angle"] for i in result["items"]) <= 360.0
