@@ -88,6 +88,11 @@ would blind it to the single mis-spaced element it exists to catch.
 
 ### Severity
 
+One rule is deliberately narrower than its name suggests. `missing-connector-labels` fires only on
+**inconsistent** labeling — some connectors named and others not. Uniformly unlabeled connectors are
+a convention in several notations, not an error, and a rule that reported every one of them would
+report correct diagrams as broken.
+
 - **error** — the diagram is wrong. Overlapping elements, a row with no whitespace, elements in one
   role at different sizes. `report.clean` is false.
 - **warning** — look at it. Often correct in context: out-of-canvas placement, an unset route, an
@@ -96,6 +101,51 @@ would blind it to the single mis-spaced element it exists to catch.
 
 `report.clean` means **no errors**, not "no findings". A bar nobody can clear is a bar nobody uses,
 and a linter that rejects every legitimate view gets switched off — after which it protects nothing.
+
+---
+
+## 3a. The drawn box is not always the stored rect
+
+Measured on EA 17.1, and it changes how much the geometry rules can be trusted:
+
+**EA grows the rendered element to fit a name it cannot break.** It wraps on spaces only, so a name
+with spaces wraps to fit. A name without them is never broken at any length — instead the drawn box
+gets wider. A 30-character unbreakable name in a 100-wide element renders **128px** wide; a
+49-character one renders **188px**. EA does not truncate, does not add an ellipsis, and does not
+shrink the font.
+
+`verify_diagram` keeps reporting the stored width of 100 throughout.
+
+So a diagram can draw an element half again as wide as its geometry says, and **every rule that
+reads the stored rects — overlap, pitch, canvas, uniform sizing — is blind to it.** Two elements
+with a comfortable gap in the geometry can sit on top of each other on the canvas.
+
+`render-exceeds-rect` is the rule for this, and it is an **error**: the diagram does not match its
+own geometry, so nothing downstream can be trusted about it. It is measured by comparing the SVG's
+own `<rect>` against the element's stored width, which is why it needs `include_svg=True`.
+
+The related rule, `label-cramped`, catches the subtler case: a name that DOES fit, with less than
+`LABEL_MARGIN` px to spare, so it reads as touching the border. That is what the first generated
+capability map did, on a diagram that scored clean on every other metric.
+
+`label-clipped` is kept for shapes that genuinely clip rather than grow. On ordinary elements it
+will not fire, and that is the correct behavior rather than a gap.
+
+### These rules refuse to guess, and that costs coverage on purpose
+
+They only judge a box whose text is **exactly one known element's name**, and whose width could
+plausibly be that element's outline. Both guards exist because of what happened without them:
+
+- EA draws MDG-stereotyped elements with a **shape script**, which emits paths rather than a
+  `<rect>`. On such a diagram the only rects are the drawn containers, so every element's text fell
+  to the band enclosing it and the "label" became five element names and two connector labels run
+  together — then reported as a spectacular overflow of a box it never belonged to.
+- A shape script also emits several rects per element, and judging a name against an icon box
+  reported a 37px overflow against a rectangle the name was never drawn inside.
+
+So on a shape-scripted notation these rules mostly stay silent, and `labels_unmatched` on the report
+says how much went unjudged. A quality warning that fires wrongly across a whole notation is how a
+linter gets switched off, and a missed cramped label costs far less than that.
 
 ---
 
@@ -168,6 +218,9 @@ two statements.
   content lints clean and is a confession.
 - **Whether the layout matches the reader's mental order.** Foundations at the top is a choice the
   linter cannot second-guess.
+- **A collision caused by a grown box, unless the render was supplied.** Without `include_svg=True`
+  the geometry rules read stored rects and cannot know the drawing is wider — see §3a. The report
+  lists this on `not_run` rather than staying quiet about it.
 
 When a rule *can* be built for something on this list, it should be. Until then, the honest report
 is "clean, and here is what clean does not cover" — which is why this section exists in a file the

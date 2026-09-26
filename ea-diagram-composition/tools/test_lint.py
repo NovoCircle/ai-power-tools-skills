@@ -24,6 +24,7 @@ but that it runs.
 from __future__ import annotations
 
 import ast
+import json
 import sys
 from pathlib import Path
 
@@ -401,3 +402,363 @@ def test_an_empty_diagram_lints_without_crashing():
     report = lint_diagram(verified([]))
     assert report.clean
     assert report.metrics["objects"] == 0
+
+
+# ===========================================================================
+# Rules that read identity, not only geometry
+# ===========================================================================
+# These are the rules that were INERT in the scorer this linter replaces: they
+# read `name`, `type`, `fill` and the link endpoints, and `verify_diagram` did
+# not return any of them. Their tests passed because the fixtures invented what
+# the rules wanted. So every test below that could be written against a real
+# captured payload is written against one - see `real_payload`.
+_REAL_PAYLOAD = (
+    Path(__file__).resolve().parents[3]
+    / "ai-power-tools" / "ea-mcp-server" / "tests" / "fixtures"
+    / "verify_diagram_real_payload.json"
+)
+
+
+def _load_real(name):
+    if not _REAL_PAYLOAD.is_file():
+        pytest.skip(f"real payload fixture not present at {_REAL_PAYLOAD}")
+    return json.loads(_REAL_PAYLOAD.read_text(encoding="utf-8"))[name]
+
+
+def test_the_hand_built_fixture_cannot_invent_a_field_production_lacks():
+    """The fix for the whole class of bug, not just the three rules.
+
+    A hand-built fixture that supplies a key `verify_diagram` never returns
+    makes a rule look like it works. Three rules were inert for exactly that
+    reason. This compares the keys `box()` produces against the keys a REAL
+    captured payload has, and fails if the helper can conjure one.
+
+    If this fails after a deliberate `verify_diagram` change, re-capture the
+    fixture - do not widen the allowance here, because the allowance is the
+    thing under test.
+    """
+    real = _load_real("FieldProbe")
+    real_object_keys = set(real["objects"][0])
+    sample = box(1, left=0, top=-40, name="X", type="Class", fill="#112233")
+    invented = set(sample) - real_object_keys
+    assert not invented, (
+        f"the test helper produces keys production never returns: {invented}"
+    )
+
+    real_link_keys = set(real["links"][0])
+    link_sample = {"connector_id": 1, "stored": True, "route": "Direct",
+                   "name": "uses", "source_element_id": 1,
+                   "target_element_id": 2}
+    invented_links = set(link_sample) - real_link_keys - {"stored"}
+    assert not invented_links, invented_links
+
+
+def test_a_real_payload_lints_without_crashing():
+    """Every rule, over geometry EA actually produced."""
+    real = _load_real("FieldProbe")
+    report = lint_diagram(real)
+    assert isinstance(report.metrics["objects"], int)
+    assert report.metrics["objects"] == 2
+    # The denominator matters: zero crossings over zero measurable links is not
+    # a result, and reporting it as one is what hid the inert rule for months.
+    assert report.metrics["crossings_measured_over"] == 1
+
+
+# ---------------------------------------------------------------------------
+# Crossings
+# ---------------------------------------------------------------------------
+def test_crossings_are_counted_between_link_endpoints():
+    objects = [box(1, left=0, top=-40), box(2, left=400, top=-40),
+               box(3, left=0, top=-240), box(4, left=400, top=-240)]
+    links = [
+        {"connector_id": 10, "stored": True, "route": "Direct",
+         "source_element_id": 1, "target_element_id": 4, "name": "a"},
+        {"connector_id": 11, "stored": True, "route": "Direct",
+         "source_element_id": 3, "target_element_id": 2, "name": "b"},
+    ]
+    report = lint_diagram(verified(objects, links))
+    assert report.metrics["crossings"] == 1
+    assert report.metrics["crossings_measured_over"] == 2
+    assert any(f.rule == "crossings" for f in report.findings)
+
+
+def test_crossings_are_info_because_some_are_unavoidable():
+    """A rule that called every crossing a defect would fire on correct
+    diagrams, and those are the rules that get a linter switched off."""
+    objects = [box(1, left=0, top=-40), box(2, left=400, top=-40),
+               box(3, left=0, top=-240), box(4, left=400, top=-240)]
+    links = [
+        {"connector_id": 10, "stored": True, "source_element_id": 1,
+         "target_element_id": 4, "name": "a"},
+        {"connector_id": 11, "stored": True, "source_element_id": 3,
+         "target_element_id": 2, "name": "b"},
+    ]
+    report = lint_diagram(verified(objects, links))
+    crossing = [f for f in report.findings if f.rule == "crossings"]
+    assert crossing and crossing[0].severity == "info"
+    assert report.clean
+
+
+def test_links_with_no_endpoints_are_reported_as_unmeasured():
+    """The exact failure that made this rule inert: links present, endpoints
+    absent, and a confident `crossings: 0` on every diagram."""
+    objects = [box(1, left=0, top=-40), box(2, left=400, top=-40)]
+    links = [{"connector_id": 10, "stored": True, "route": "Direct"}]
+    report = lint_diagram(verified(objects, links))
+    assert report.metrics["crossings_measured_over"] == 0
+    assert any("crossings" in note for note in report.not_run)
+
+
+def test_connectors_meeting_at_a_shared_element_do_not_cross():
+    objects = [box(1, left=0, top=-40), box(2, left=400, top=-40),
+               box(3, left=200, top=-240)]
+    links = [
+        {"connector_id": 10, "stored": True, "source_element_id": 1,
+         "target_element_id": 3, "name": "a"},
+        {"connector_id": 11, "stored": True, "source_element_id": 2,
+         "target_element_id": 3, "name": "b"},
+    ]
+    report = lint_diagram(verified(objects, links))
+    assert report.metrics["crossings"] == 0
+
+
+# ---------------------------------------------------------------------------
+# Color
+# ---------------------------------------------------------------------------
+def test_two_fills_with_nothing_explaining_them_is_a_warning():
+    objects = [box(1, left=0, top=-40, name="A", type="Class", fill="#cc3300"),
+               box(2, left=200, top=-40, name="B", type="Class", fill="#336699")]
+    report = lint_diagram(verified(objects))
+    assert any(f.rule == "unexplained-color" for f in report.findings)
+    assert report.clean, "unexplained color is a warning, not an error"
+
+
+def test_one_fill_carries_no_information():
+    objects = [box(1, left=0, top=-40, name="A", type="Class", fill="#cc3300"),
+               box(2, left=200, top=-40, name="B", type="Class", fill="#cc3300")]
+    report = lint_diagram(verified(objects))
+    assert not [f for f in report.findings if f.rule == "unexplained-color"]
+
+
+def test_a_named_container_explains_the_colors():
+    """A banded diagram's band names ARE its key; demanding a separate legend
+    on top would be noise, and noisy rules get ignored."""
+    objects = [box(1, left=0, top=-40, name="A", type="Class", fill="#cc3300"),
+               box(2, left=200, top=-40, name="B", type="Class", fill="#336699"),
+               box(9, left=0, top=-20, width=400, height=200,
+                   name="Channels", type="Boundary")]
+    report = lint_diagram(verified(objects))
+    assert not [f for f in report.findings if f.rule == "unexplained-color"]
+
+
+def test_an_unnamed_container_explains_nothing():
+    objects = [box(1, left=0, top=-40, name="A", type="Class", fill="#cc3300"),
+               box(2, left=200, top=-40, name="B", type="Class", fill="#336699"),
+               box(9, left=0, top=-20, width=400, height=200,
+                   name="", type="Boundary")]
+    report = lint_diagram(verified(objects))
+    assert any(f.rule == "unexplained-color" for f in report.findings)
+
+
+def test_a_legend_explains_the_colors():
+    objects = [box(1, left=0, top=-40, name="A", type="Class", fill="#cc3300"),
+               box(2, left=200, top=-40, name="B", type="Class", fill="#336699"),
+               box(9, left=0, top=-400, name="Legend", type="Text")]
+    report = lint_diagram(verified(objects))
+    assert not [f for f in report.findings if f.rule == "unexplained-color"]
+
+
+# ---------------------------------------------------------------------------
+# Title
+# ---------------------------------------------------------------------------
+def test_a_drawn_title_convention_with_no_title_is_reported():
+    objects = [box(1, left=0, top=-40, name="A", type="Class")]
+    report = lint_diagram(verified(objects), title_convention="drawn")
+    assert any(f.rule == "missing-title" for f in report.findings)
+
+
+def test_the_frame_header_convention_needs_no_drawn_title():
+    """Most diagrams correctly use EA's frame header. Firing unconditionally
+    would flag the majority of a real corpus for doing the right thing."""
+    objects = [box(1, left=0, top=-40, name="A", type="Class")]
+    report = lint_diagram(verified(objects), title_convention="frame-header")
+    assert not [f for f in report.findings if f.rule == "missing-title"]
+
+
+def test_no_stated_convention_means_no_title_rule():
+    objects = [box(1, left=0, top=-40, name="A", type="Class")]
+    report = lint_diagram(verified(objects))
+    assert not [f for f in report.findings if f.rule == "missing-title"]
+
+
+def test_a_text_element_satisfies_a_drawn_title():
+    objects = [box(1, left=0, top=-40, name="A", type="Class"),
+               box(2, left=0, top=-10, name="Landscape", type="Text")]
+    report = lint_diagram(verified(objects), title_convention="drawn")
+    assert not [f for f in report.findings if f.rule == "missing-title"]
+
+
+# ---------------------------------------------------------------------------
+# Connector labels, and the profile that makes them moot
+# ---------------------------------------------------------------------------
+def test_inconsistent_connector_labeling_is_reported():
+    """PARTIAL labeling is the defect, not absent labeling.
+
+    Rewritten after the first version fired on a real generated diagram whose
+    six sequence flows are deliberately unnamed -- which is that notation's
+    convention, not an error. A rule that reports a correct diagram every time
+    is the rule that gets the linter switched off.
+    """
+    links = [
+        {"connector_id": 5, "stored": True, "route": "Direct", "name": "uses"},
+        {"connector_id": 6, "stored": True, "route": "Direct", "name": ""},
+    ]
+    report = lint_diagram(verified([box(1, left=0, top=-40)], links))
+    finding = [f for f in report.findings
+               if f.rule == "missing-connector-labels"]
+    assert finding, [str(f) for f in report.findings]
+    assert finding[0].subjects == (6,), "only the blank one is the oversight"
+
+
+def test_uniformly_unlabeled_connectors_are_a_convention_not_a_defect():
+    links = [{"connector_id": 5, "stored": True, "route": "Direct", "name": ""},
+             {"connector_id": 6, "stored": True, "route": "Direct", "name": ""}]
+    report = lint_diagram(verified([box(1, left=0, top=-40)], links))
+    assert not [f for f in report.findings
+                if f.rule == "missing-connector-labels"]
+    assert report.metrics["connectors_unlabeled"] == 2, (
+        "the count is still reported; only the finding is withheld"
+    )
+
+
+def test_an_executive_profile_does_not_report_missing_connector_labels():
+    """The item's own example, and the reason profile-awareness is a
+    correctness requirement: a linter that rejects every executive view gets
+    switched off, and then it protects nothing."""
+    links = [{"connector_id": 5, "stored": True, "route": "Direct",
+              "name": "uses"},
+             {"connector_id": 6, "stored": True, "route": "Direct", "name": ""}]
+    report = lint_diagram(verified([box(1, left=0, top=-40)], links),
+                          profile={"hide_connector_labels": True})
+    assert not [f for f in report.findings
+                if f.rule == "missing-connector-labels"]
+    assert "missing-connector-labels" in report.suppressed
+
+
+def test_an_unstored_link_has_no_label_state_to_judge():
+    links = [{"connector_id": 5, "stored": False, "name": ""}]
+    report = lint_diagram(verified([box(1, left=0, top=-40)], links))
+    assert not [f for f in report.findings
+                if f.rule == "missing-connector-labels"]
+
+
+# ---------------------------------------------------------------------------
+# Collapsed connectors: the one rule a profile turns ON
+# ---------------------------------------------------------------------------
+def test_collapsing_without_saying_so_is_an_error():
+    links = [{"connector_id": 5, "stored": True, "route": "Direct",
+              "name": "uses"}]
+    report = lint_diagram(verified([box(1, left=0, top=-40, name="A")], links),
+                          profile={"collapses_parallel": True})
+    assert any(f.rule == "collapsed-connectors-unannotated"
+               for f in report.findings)
+    assert not report.clean
+
+
+def test_an_annotation_satisfies_the_collapse_rule():
+    objects = [box(1, left=0, top=-40, name="A", type="Class"),
+               box(2, left=0, top=-300, type="Note",
+                   name="Parallel relationships collapsed for readability")]
+    links = [{"connector_id": 5, "stored": True, "name": "uses"}]
+    report = lint_diagram(verified(objects, links),
+                          profile={"collapses_parallel": True})
+    assert not [f for f in report.findings
+                if f.rule == "collapsed-connectors-unannotated"]
+
+
+def test_the_collapse_rule_does_not_exist_without_a_collapsing_profile():
+    """The only rule here a profile turns ON. Without one it must be silent,
+    or every ordinary diagram is told to annotate something it did not do."""
+    links = [{"connector_id": 5, "stored": True, "name": "uses"}]
+    report = lint_diagram(verified([box(1, left=0, top=-40, name="A")], links))
+    assert not [f for f in report.findings
+                if f.rule == "collapsed-connectors-unannotated"]
+
+
+# ---------------------------------------------------------------------------
+# Label fit, measured from EA's own render
+# ---------------------------------------------------------------------------
+def _svg(boxes_and_text):
+    """Minimal EA-shaped SVG. The attribute ORDER matters to the parser, and
+    it is the order EA emits - checked against a real captured render."""
+    parts = ['<svg xmlns="http://www.w3.org/2000/svg">']
+    for (x, y, w, h), runs in boxes_and_text:
+        parts.append(f'<rect x="{x}" y="{y}" width="{w}" height="{h}" />')
+        for tx, ty, tl, text in runs:
+            parts.append(
+                f'<text x="{tx}" y="{ty}" textLength="{tl}" '
+                f'style="font-family:Calibri; font-size:10px;">{text}</text>'
+            )
+    parts.append("</svg>")
+    return "".join(parts)
+
+
+def test_a_label_that_leaves_its_box_is_an_error():
+    objects = [box(1, left=35, top=-40, width=100, height=70, name="Overlong")]
+    svg = _svg([((35, 40, 100, 70), [(20, 72, 130, "Overlong")])])
+    report = lint_diagram({**verified(objects), "svg_text": svg})
+    clipped = [f for f in report.findings if f.rule == "label-clipped"]
+    assert clipped, [str(f) for f in report.findings]
+    assert clipped[0].severity == "error"
+    assert clipped[0].subjects == (1,), "the finding must name its element"
+
+
+def test_a_label_hard_against_the_border_is_a_warning():
+    """Calibrated, not invented: on a real capability map this margin
+    separates exactly the two names that look wrong from the next box."""
+    objects = [box(1, left=35, top=-40, width=100, height=70, name="Snug")]
+    svg = _svg([((35, 40, 100, 70), [(40, 72, 90, "Snug")])])
+    report = lint_diagram({**verified(objects), "svg_text": svg})
+    cramped = [f for f in report.findings if f.rule == "label-cramped"]
+    assert cramped and cramped[0].severity == "warning"
+    assert report.clean, "cramped is legible; it must not block"
+
+
+def test_a_comfortable_label_is_not_reported():
+    objects = [box(1, left=35, top=-40, width=100, height=70, name="Fits")]
+    svg = _svg([((35, 40, 100, 70), [(56, 72, 58, "Fits")])])
+    report = lint_diagram({**verified(objects), "svg_text": svg})
+    assert not [f for f in report.findings if f.rule.startswith("label-")]
+    assert report.metrics["labels_measured"] == 1
+
+
+def test_the_label_rule_says_when_it_could_not_run():
+    """A check that quietly does nothing is worse than one that is absent."""
+    objects = [box(1, left=35, top=-40, name="A")]
+    report = lint_diagram(verified(objects))
+    assert report.metrics["labels_measured"] == 0
+    assert any("label-fit" in note for note in report.not_run)
+
+
+def test_label_fit_is_measured_on_a_real_render():
+    """The whole rule, against markup EA actually emitted.
+
+    `Payments Hub` in a 100-wide box: EA measured the string at 58px and
+    started it at x=56 in a box spanning 35..135, so it clears both borders by
+    21px. Nothing should be reported, and `labels_measured` proves the rule
+    ran rather than skipping the boxes silently.
+    """
+    real = _load_real("FieldProbe")
+    assert real.get("svg_text"), "the fixture lost its render"
+    report = lint_diagram(real)
+    assert report.metrics["labels_measured"] >= 2
+    assert not [f for f in report.findings if f.rule.startswith("label-")]
+
+
+def test_a_run_without_textlength_is_ignored_rather_than_guessed():
+    """EA supplies `textLength` on every run it draws. If one ever lacks it,
+    skipping is right - estimating the width would turn an exact rule into a
+    silent approximation, which is the thing this rule was built to avoid."""
+    svg = ('<svg><rect x="0" y="0" width="100" height="70" />'
+           '<text x="10" y="30">No length here</text></svg>')
+    assert lint._svg_text_runs(svg) == []
