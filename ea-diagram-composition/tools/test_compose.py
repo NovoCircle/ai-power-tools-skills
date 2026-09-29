@@ -115,6 +115,34 @@ def _center_y2(r):
     return r["top"] + r["bottom"]
 
 
+def _own_content_width(count, wrap=None, item_width=140, gap=20):
+    """What a band of `count` items demands for ITSELF, ignoring the other bands.
+
+    The width the engine used to draw each band at, before APT-2026-0152: the
+    widest row it actually uses, which stops growing once the row wraps. Written
+    out here rather than read back off the engine, so a test can state what a
+    band of two ought to differ from a band of three BY, and so a sweep can
+    prove its own inputs discriminate instead of assuming they do.
+    """
+    wrap = DEFAULT_SPEC["wrap_width"] if wrap is None else wrap
+    pitch = item_width + gap
+    per_row = max(1, (wrap - item_width) // pitch + 1)
+    on_widest_row = min(count, per_row)
+    return (on_widest_row - 1) * pitch + item_width if on_widest_row else 0
+
+
+def _band_stack(counts, **band_extra):
+    """A stack of bands holding `counts` items each, with unique ids throughout."""
+    bands = []
+    n = 0
+    for b, count in enumerate(counts):
+        bands.append({"name": f"Band {b}",
+                      "items": _items(*[f"e{n + k}" for k in range(count)]),
+                      **band_extra})
+        n += count
+    return bands
+
+
 # ===========================================================================
 # 1. The overlap helper itself, and the coordinate convention it rests on
 # ===========================================================================
@@ -311,20 +339,38 @@ def test_wrapping_never_places_a_row_wider_than_the_wrap_width():
         assert_result_sane(result, f"wrap_width={wrap}")
 
 
-def test_left_alignment_is_the_default_and_centering_is_opt_in():
+def test_alignment_places_the_rows_because_the_bands_already_agree():
+    """REPLACES a test that pinned the ragged right edge of APT-2026-0152.
+
+    What the old test asserted: that under `align: "center"` a band of one item
+    came out NARROWER than a band of four and was nudged right to center against
+    it - `narrow["left"] > wide["left"]`. That was the defect stated as a
+    requirement. Bands now share the widest band's width, so both edges of every
+    band agree whatever the alignment, and `align` is spent on the rows inside.
+    """
     bands = [
         {"name": "Wide", "items": _items("a", "b", "c", "d")},
         {"name": "Narrow", "items": _items("e")},
     ]
-    left = compose_layered_bands(bands)
-    assert {c["left"] for c in left["containers"]} == {DEFAULT_SPEC["origin_left"]}
+    for align in ("left", "center"):
+        result = compose_layered_bands(bands, {"align": align})
+        wide, narrow = result["containers"]
+        assert wide["left"] == narrow["left"] == DEFAULT_SPEC["origin_left"]
+        assert wide["right"] == narrow["right"], f"{align}: ragged right edge"
+        assert_result_sane(result, f"align={align}")
+
+    # What alignment still decides: where the sparse band's single row sits in
+    # the width it has been given. Flush left by default, centered on request.
+    pad_x = DEFAULT_SPEC["band_pad_x"]
+    flush = compose_layered_bands(bands, {"align": "left"})
+    lone = next(i for i in flush["items"] if i["id"] == "e")
+    assert lone["left"] == flush["containers"][1]["left"] + pad_x
 
     centered = compose_layered_bands(bands, {"align": "center"})
-    wide, narrow = centered["containers"]
-    assert wide["left"] == DEFAULT_SPEC["origin_left"]
-    assert _center_x2(wide) == _center_x2(narrow), "band centers must agree"
-    assert narrow["left"] > wide["left"]
-    assert_result_sane(centered, "centered bands")
+    lone = next(i for i in centered["items"] if i["id"] == "e")
+    band = centered["containers"][1]
+    assert abs(_center_x2(lone) - _center_x2(band)) <= 1, "row not centered"
+    assert lone["left"] > band["left"] + pad_x
 
 
 def test_centering_also_centers_a_short_row_inside_its_band():
@@ -358,17 +404,190 @@ def test_an_empty_band_keeps_its_label_row():
     assert_result_sane(result, "empty band")
 
 
-def test_min_band_width_widens_a_sparse_band_without_touching_a_full_one():
-    result = compose_layered_bands(
-        [{"name": "Sparse", "items": _items("a")},
-         {"name": "Full", "items": _items("b", "c", "d", "e", "f")}],
-        {"min_band_width": 700},
-    )
-    sparse, full = result["containers"]
-    assert rect_width(sparse) == 700
-    assert rect_width(full) == 5 * 140 + 4 * 20 + 2 * 12       # content decides
-    assert rect_width(full) > 700
-    assert_result_sane(result, "min_band_width")
+def test_min_band_width_is_a_floor_under_the_whole_stack():
+    """REPLACES a test that pinned the ragged right edge of APT-2026-0152.
+
+    What the old test asserted: that with `min_band_width: 700` a band of one
+    item came out at exactly 700 while its five-item neighbor came out at 804 -
+    two bands, two widths, which is the defect. `min_band_width` is still a
+    floor, but the thing it is a floor under is the stack's shared width, so it
+    bites only when it exceeds what the widest band demands.
+    """
+    content = 5 * 140 + 4 * 20 + 2 * 12                        # 804
+    bands = [{"name": "Sparse", "items": _items("a")},
+             {"name": "Full", "items": _items("b", "c", "d", "e", "f")}]
+
+    outvoted = compose_layered_bands(bands, {"min_band_width": 700})
+    assert {rect_width(c) for c in outvoted["containers"]} == {content}
+    assert_result_sane(outvoted, "min_band_width below content")
+
+    binding = compose_layered_bands(bands, {"min_band_width": 1000})
+    assert {rect_width(c) for c in binding["containers"]} == {1000}
+    assert_result_sane(binding, "min_band_width above content")
+
+
+def test_an_empty_band_is_widened_to_the_stack_even_with_a_huge_item_width():
+    """The per-band floor is `item_width + 2 * pad`, and an empty band can have
+    the widest `item_width` of all while holding nothing. Its floor then sets the
+    stack's width, rather than being the one band that sticks out."""
+    result = compose_layered_bands([
+        {"name": "Populated", "items": _items("a", "b")},
+        {"name": "Reserved", "items": [], "item_width": 900},
+    ])
+    widths = {rect_width(c) for c in result["containers"]}
+    assert widths == {900 + 2 * 12}, widths
+    assert_result_sane(result, "empty band sets the width")
+
+
+# ---------------------------------------------------------------------------
+# APT-2026-0152: bands take a common width, so the stack has a straight edge
+# ---------------------------------------------------------------------------
+def test_the_stack_that_scored_clean_and_looked_wrong_has_a_straight_edge():
+    """The first end-to-end render: bands of 3, 3 and 2 items.
+
+    It passed every metric - nothing overlapped, every rect was positive, the
+    bounding box agreed with its contents, item sizing was uniform within each
+    band - and it still looked wrong, because the third band stopped one item
+    short of the two above it and the stack had a ragged right edge. No
+    arithmetic check could see it; only a render could.
+    """
+    counts = [3, 3, 2]
+    # The guard. Sized band by band, this input really does come out unequal:
+    # the third band demands one h_pitch less than the other two. A stack whose
+    # bands all demanded the same width would pass this test against the old
+    # engine too, and prove nothing.
+    demands = [_own_content_width(c) for c in counts]
+    assert demands == [460, 460, 300], demands
+    assert len(set(demands)) > 1, "this input does not discriminate"
+
+    result = compose_layered_bands(_band_stack(counts))
+    rights = [c["right"] for c in result["containers"]]
+    widths = [rect_width(c) for c in result["containers"]]
+    assert len(set(rights)) == 1, f"ragged right edge at {rights}"
+    assert set(widths) == {max(demands) + 2 * DEFAULT_SPEC["band_pad_x"]}, widths
+
+    # Heights still follow contents - only the width is shared. The sparse band
+    # is the same height as the others here because it holds one row like they
+    # do; `test_a_taller_band_pushes_the_next_band_further_down` pins the case
+    # where they differ.
+    assert_result_sane(result, "3/3/2")
+
+
+def test_the_slack_in_a_sparse_band_is_real_whitespace_on_the_right():
+    """Where the shared width goes in the band that did not ask for it.
+
+    Measured as a GAP, deliberately. A no-overlap check cannot answer this:
+    `rects_overlap` exempts rects that merely touch, so an item flush against
+    its band's right edge would report no overlap and no whitespace would exist.
+    """
+    result = compose_layered_bands(_band_stack([4, 1]))
+    sparse_band = result["containers"][1]
+    lone = next(i for i in result["items"] if i["band_index"] == 1)
+    slack = sparse_band["right"] - lone["right"]
+    # Three h_pitches the sparse band did not use, plus its own right padding.
+    assert slack == 3 * 160 + DEFAULT_SPEC["band_pad_x"], slack
+    assert slack > 0, "no whitespace: the item is flush against the band edge"
+    assert_contains(sparse_band, lone, "sparse band")
+
+
+@pytest.mark.parametrize("counts", [
+    [3, 3, 2],            # the render that found it
+    [2, 3],
+    [3, 2],
+    [1, 5],
+    [5, 1],
+    [0, 3],
+    [3, 0],
+    [1, 2, 3],
+    [3, 2, 1],
+    [2, 1, 4, 1],
+    [1, 1, 1, 7],
+    [7, 1, 1, 1],
+    [4, 0, 4, 2, 1],
+    [6, 2, 9, 3],
+    [1, 12],
+    [12, 1],
+    [2, 8, 5, 11, 1, 4],
+])
+def test_bands_share_one_width_across_unequal_item_counts(counts):
+    """A SWEEP, not a spot-check. The defect is a content variation: it only
+
+    shows up when the bands hold different numbers of items, so one hand-picked
+    stack is exactly what let it ship. Every combination here is unequal, and
+    each asserts its own inputs are discriminating before judging the output.
+    """
+    demands = [_own_content_width(c) for c in counts]
+    assert len(set(demands)) > 1, f"{counts} does not discriminate"
+
+    result = compose_layered_bands(_band_stack(counts))
+    widths = {rect_width(c) for c in result["containers"]}
+    lefts = {c["left"] for c in result["containers"]}
+    rights = {c["right"] for c in result["containers"]}
+    assert len(widths) == 1, f"{counts}: bands at {sorted(widths)}"
+    assert len(lefts) == 1 and len(rights) == 1, f"{counts}: edges disagree"
+    assert widths == {max(demands) + 2 * DEFAULT_SPEC["band_pad_x"]}
+    # Every label strip spans its whole band, so the straight edge is drawn.
+    for c in result["containers"]:
+        assert rect_width(c["label"]) == rect_width(c)
+    assert_result_sane(result, f"counts {counts}")
+
+
+def test_the_shared_width_grows_monotonically_with_the_widest_band():
+    """Swept monotonically on purpose.
+
+    Comparing one crowded stack against one sparse stack can agree by luck -
+    wrapping can put two different item counts on rows of the same length, the
+    way a grid can give two different child counts the same column count. A
+    monotone sweep cannot: the width has to be non-decreasing in the widest
+    band's count, and has to stop growing exactly where wrapping starts.
+    """
+    wrap = 500                              # 140 wide, pitch 160 -> 3 per row
+    pad = 2 * DEFAULT_SPEC["band_pad_x"]
+    seen = []
+    for widest in range(1, 13):
+        result = compose_layered_bands(
+            _band_stack([widest, 1, 0]), {"wrap_width": wrap})
+        widths = {rect_width(c) for c in result["containers"]}
+        assert len(widths) == 1, f"widest={widest}: {sorted(widths)}"
+        width = widths.pop()
+        assert width == _own_content_width(widest, wrap=wrap) + pad
+        seen.append(width)
+        assert_result_sane(result, f"widest={widest}")
+
+    assert seen == sorted(seen), f"width is not monotone in the count: {seen}"
+    # Growth up to the wrap, then a plateau: a band of four wraps and so asks
+    # for no more width than a band of three.
+    assert seen[0] < seen[1] < seen[2] == seen[3] == seen[-1]
+
+
+@pytest.mark.parametrize("counts", [
+    [3, 3, 2], [1, 5], [0, 3, 1], [12, 1], [4, 0, 4, 2, 1], [2, 8, 5, 11, 1, 4],
+])
+def test_the_shipped_linter_agrees_the_stack_is_not_ragged(counts):
+    """THE OTHER SEAM. `lint.check_ragged_stack` judges this same defect.
+
+    The linter has a rule for a stack of containers whose cross-axis extents
+    disagree, written against the same render that produced APT-2026-0152 and
+    tolerating `lint.SIZE_TOLERANCE`. It measures the finished rectangles; this
+    engine produces them. Two independent statements of one rule drift apart
+    unless something compares them, and this is that something.
+    """
+    lint = pytest.importorskip("lint")
+    result = compose_layered_bands(_band_stack(counts))
+    objects = [{"element_id": 1000 + i, "name": c["name"],
+                "left": c["left"], "top": c["top"],
+                "right": c["right"], "bottom": c["bottom"]}
+               for i, c in enumerate(result["containers"])]
+    b = result["bounds"]
+    payload = {
+        "objects": objects, "links": [],
+        "canvas": {"left": b["left"] - 50, "top": b["top"] + 50,
+                   "right": b["right"] + 50, "bottom": b["bottom"] - 50},
+    }
+    report = lint.lint_diagram(payload, stacks=[("vertical", objects)])
+    fired = [f for f in report.findings if f.rule == "ragged-stack"]
+    assert not fired, f"{counts}: {[f.message for f in fired]}"
+    assert report.metrics["worst_stack_extent_spread"] == 0, counts
 
 
 def test_a_band_with_no_items_key_is_treated_as_empty():
@@ -1531,6 +1750,92 @@ def _angle_of(result, item_id):
 
 
 # ---------------------------------------------------------------------------
+# Measuring a spoke
+# ---------------------------------------------------------------------------
+# Written out here rather than imported from `compose`. A test that borrowed the
+# engine's own `_reach` would agree with it by construction, including on the day
+# both are wrong, and the point of these is to measure the finished rectangles
+# the way something downstream does. This is the same arithmetic
+# `lint.check_ring_spokes` applies to a diagram EA has already drawn, so the two
+# measures cannot drift apart without one of these failing.
+def _center_of(r):
+    return ((r["left"] + r["right"]) / 2.0, (r["top"] + r["bottom"]) / 2.0)
+
+
+def _reach_along(r, ux, uy):
+    """How far a rect's border sits from its center along the unit vector."""
+    along_x = ((r["right"] - r["left"]) / 2.0) / abs(ux) if ux else math.inf
+    along_y = ((r["top"] - r["bottom"]) / 2.0) / abs(uy) if uy else math.inf
+    return min(along_x, along_y)
+
+
+def _spoke_lengths(result):
+    """The DRAWN length of every spoke, grouped by the box it radiates from.
+
+    Center to center, less the stretch inside the box at the middle and the
+    stretch inside the item - the two parts of the line that are hidden under a
+    box and never seen. What is left is the ink a reader judges the ring by.
+
+    A ring with no hub radiates from the reported center POINT, which reaches
+    nowhere, so only the item's own stretch comes off.
+    """
+    by_id = {i["id"]: i for i in result["items"]}
+    groups = {}
+    for item in result["items"]:
+        if item["ring"] == 0:
+            continue
+        parent = by_id.get(item["container_id"])
+        px, py = (_center_of(parent) if parent is not None
+                  else (result["center"]["x"], result["center"]["y"]))
+        ix, iy = _center_of(item)
+        dx, dy = ix - px, iy - py
+        distance = math.hypot(dx, dy)
+        if distance == 0:
+            continue
+        ux, uy = dx / distance, dy / distance
+        length = distance - _reach_along(item, ux, uy)
+        if parent is not None:
+            length -= _reach_along(parent, ux, uy)
+        groups.setdefault(item["container_id"], []).append(length)
+    return groups
+
+
+def _spread_if_every_center_sat_on_one_circle(result):
+    """The spoke spread the PRE-FIX rule would have produced for this input.
+
+    Placing every item's center at one distance leaves each spoke shortened by
+    however far the two boxes reach along its own bearing, so the spread is the
+    spread of those reaches and the common distance cancels out of it entirely.
+
+    Used as a guard INSIDE the tests below: it proves the input is one the old
+    rule actually got wrong. A ring of circles would come out equal under either
+    rule and would prove nothing about the fix - and EA does not draw circles.
+    """
+    by_id = {i["id"]: i for i in result["items"]}
+    groups = {}
+    for item in result["items"]:
+        if item["ring"] == 0:
+            continue
+        radians = math.radians(item["angle"])
+        ux, uy = math.sin(radians), math.cos(radians)
+        hidden = _reach_along(item, ux, uy)
+        parent = by_id.get(item["container_id"])
+        if parent is not None:
+            hidden += _reach_along(parent, ux, uy)
+        groups.setdefault(item["container_id"], []).append(hidden)
+    return max((max(v) - min(v) for v in groups.values() if len(v) > 1),
+               default=0.0)
+
+
+# Coordinates are rounded to whole EA units once, at the end, so two spokes that
+# should be identical can differ by a fraction of a unit. Measured worst case
+# over the whole sweep below is 1.3. `lint.PITCH_TOLERANCE` allows 8; this file
+# holds itself to a tighter number so that a real regression cannot hide inside
+# the linter's allowance.
+SPOKE_TOLERANCE = 2.0
+
+
+# ---------------------------------------------------------------------------
 # The arrangement
 # ---------------------------------------------------------------------------
 @pytest.mark.parametrize("n", [2, 3, 4, 6, 8, 12])
@@ -1594,6 +1899,230 @@ def test_a_single_item_sits_at_the_start_angle():
 
 
 # ---------------------------------------------------------------------------
+# Equal spokes
+# ---------------------------------------------------------------------------
+def test_a_ring_of_flat_boxes_has_equal_spokes():
+    """The failing render: a ring of 140x60 boxes around a hub.
+
+    Centering each item on the circle is correct arithmetic and the wrong
+    picture. A 140x60 box reaches 30 back toward the hub at the top of the ring
+    and a full 70 at the side, and the hub reaches the same amounts outward, so
+    the drawn spoke came out 160 at the top and 80 at the side - twice as long at
+    twelve o'clock as at three o'clock, on a ring where every item was exactly
+    on the circle.
+    """
+    result = compose_radial(_spokes(8), hub={"id": 99}, spec={"radius": 220})
+
+    # The guard: under the old rule this very input spread by 80 units.
+    would_have = _spread_if_every_center_sat_on_one_circle(result)
+    assert would_have > 8, (
+        f"input does not discriminate: the old rule spread it by {would_have}")
+
+    lengths = _spoke_lengths(result)[99]
+    assert len(lengths) == 8
+    spread = max(lengths) - min(lengths)
+    assert spread <= SPOKE_TOLERANCE, f"spoke lengths {sorted(lengths)}"
+    # The gap is the radius that was asked for, measured as a gap rather than
+    # inferred from an overlap check that exempts touching boxes.
+    for length in lengths:
+        assert abs(length - result["radius"]) <= SPOKE_TOLERANCE
+    assert_radial_sane(result, "flat boxes")
+
+
+def test_square_items_were_never_enough_on_their_own():
+    """Square-ish items were the documented workaround. They do not fix it.
+
+    A square is not a circle: its border is half a side away along an axis and
+    half a diagonal away through a corner, which is 41% further. With a square
+    hub AND square items the old rule still spread the spokes by 41 units on a
+    ring of eight - both boxes varying together. The advice reduced the defect
+    in proportion to how square the caller was willing to be and never removed
+    it, which is why the engine now does the work instead.
+    """
+    result = compose_radial(_spokes(8), hub={"id": 99},
+                            spec={"item_width": 100, "item_height": 100,
+                                  "radius": 220})
+    would_have = _spread_if_every_center_sat_on_one_circle(result)
+    assert would_have > 40, would_have
+
+    lengths = _spoke_lengths(result)[99]
+    assert max(lengths) - min(lengths) <= SPOKE_TOLERANCE, sorted(lengths)
+
+
+def test_item_centers_are_not_all_the_same_distance_out_and_should_not_be():
+    """The mechanism, stated so a future edit cannot undo it by tidying.
+
+    Equal spokes REQUIRE unequal center distances: the item at the side has to
+    sit further out than the one at the top by exactly the difference in how far
+    the two boxes reach along those bearings. A change that put the centers back
+    on one circle would be reintroducing the defect, and this is the test that
+    says so.
+    """
+    result = compose_radial(_spokes(8), hub={"id": 99}, spec={"radius": 220})
+    cx, cy = result["center"]["x"], result["center"]["y"]
+    distances = {}
+    for item in result["items"]:
+        if item["ring"] == 0:
+            continue
+        ix, iy = _center_of(item)
+        distances[round(item["angle"])] = math.hypot(ix - cx, iy - cy)
+
+    assert distances[90] > distances[0] + 50, distances
+    assert distances[45] > distances[0], distances
+    assert distances[90] > distances[45], distances
+    # Opposite bearings are symmetric, so the ring is still a ring.
+    assert abs(distances[0] - distances[180]) <= 1
+    assert abs(distances[90] - distances[270]) <= 1
+
+
+@pytest.mark.parametrize("item_width,item_height", [
+    (100, 100),      # square
+    (90, 88),        # near square
+    (140, 60),       # the failing shape
+    (200, 60),       # wide
+    (400, 40),       # extremely wide
+    (60, 140),       # tall
+    (40, 400),       # extremely tall
+])
+@pytest.mark.parametrize("sweep", [60, 90, 120, 180, 270, 360])
+def test_spokes_stay_equal_across_counts_shapes_and_arcs(
+        item_width, item_height, sweep):
+    """A SWEEP, not a spot-check, over all three things that trigger it.
+
+    The defect is a content variation twice over: it needs an item that is not
+    square, AND it lands differently at every bearing, so which bearings a ring
+    actually uses decides how badly it shows. One ring of one shape over one arc
+    - which is what the suite had - can miss it completely. Counts vary the
+    bearings, aspect ratios vary the reach, and the partial arcs matter most of
+    all: a 60-degree fan never points along an axis, where the reach is at its
+    smallest, so a fix tuned to a closed ring can be wrong on every fan.
+    """
+    spec = {"item_width": item_width, "item_height": item_height,
+            "sweep": sweep, "radius": 220}
+    for n in (2, 3, 4, 5, 6, 7, 8, 9, 12, 16):
+        for hub in ({"id": "hub"}, None):
+            result = compose_radial(_spokes(n), spec=spec, hub=hub)
+            label = (f"{item_width}x{item_height} sweep={sweep} n={n} "
+                     f"hub={hub is not None}")
+            assert_radial_sane(result, label)
+            for parent, lengths in _spoke_lengths(result).items():
+                if len(lengths) < 2:
+                    continue
+                spread = max(lengths) - min(lengths)
+                assert spread <= SPOKE_TOLERANCE, (
+                    f"{label} under {parent!r}: spread {spread:.2f}, "
+                    f"lengths {[round(v, 1) for v in sorted(lengths)]}")
+                for length in lengths:
+                    assert abs(length - result["radius"]) <= SPOKE_TOLERANCE, (
+                        f"{label}: spoke {length:.1f} against reported radius "
+                        f"{result['radius']}")
+
+
+@pytest.mark.parametrize("item_width,item_height", [
+    (140, 60), (60, 140), (100, 100), (300, 50),
+])
+def test_the_sweep_would_have_caught_the_old_rule_at_every_shape(
+        item_width, item_height):
+    """The sweep's own guard, hoisted out so it is visible.
+
+    Each shape above has to be one the old rule got wrong, or the sweep is a
+    row of tests that would have passed before the fix. A square is included
+    precisely because it is the shape the old guidance called safe.
+    """
+    for n in (3, 5, 8, 12):
+        result = compose_radial(
+            _spokes(n), hub={"id": "hub"},
+            spec={"item_width": item_width, "item_height": item_height})
+        would_have = _spread_if_every_center_sat_on_one_circle(result)
+        assert would_have > SPOKE_TOLERANCE, (
+            f"{item_width}x{item_height} n={n}: the old rule spread this input "
+            f"by only {would_have:.2f}, so it proves nothing")
+
+
+def _verified_like(result):
+    """A `verify_diagram`-shaped payload built from composed rects.
+
+    Hand-built, and hermetic: the linter reads rectangles and does not care
+    whether EA or this module produced them. `element_id` has to survive `int()`,
+    which one of the linter's other rules requires.
+    """
+    objects = [{"element_id": item["id"], "name": f"E{item['id']}",
+                "left": item["left"], "top": item["top"],
+                "right": item["right"], "bottom": item["bottom"]}
+               for item in result["items"]]
+    b = result["bounds"]
+    return {
+        "objects": objects,
+        "links": [],
+        "canvas": {"left": b["left"] - 50, "top": b["top"] + 50,
+                   "right": b["right"] + 50, "bottom": b["bottom"] - 50},
+    }
+
+
+@pytest.mark.parametrize("item_width,item_height", [
+    (140, 60), (60, 140), (100, 100), (200, 60), (400, 40), (90, 88),
+])
+@pytest.mark.parametrize("sweep", [60, 90, 180, 360])
+def test_the_shipped_linter_agrees_the_spokes_are_even(
+        item_width, item_height, sweep):
+    """THE SEAM. Two measures of the same property, pinned against each other.
+
+    `lint.check_ring_spokes` measures a spoke along the spoke line - center to
+    center, less each box's reach along that bearing - and warns when the spread
+    exceeds `lint.PITCH_TOLERANCE`. This engine places the items. If the engine
+    equalized any OTHER distance - the gap to the item's nearest corner, say, or
+    the distance to the center point rather than to the hub's border - the two
+    would disagree on the diagonals and the linter would fire on output this
+    engine considers correct. Both measures are written out independently, in
+    their own module, so the only thing keeping them together is this test.
+
+    This is checked here rather than in the linter's own suite because it is the
+    engine's output that has to satisfy it, and the engine is what gets edited.
+    """
+    lint = pytest.importorskip("lint")
+    for n in (2, 3, 5, 8, 12):
+        result = compose_radial(
+            _spokes(n), hub={"id": 999, "name": "Hub"},
+            spec={"item_width": item_width, "item_height": item_height,
+                  "sweep": sweep, "radius": 220})
+        payload = _verified_like(result)
+        by_id = {o["element_id"]: o for o in payload["objects"]}
+        ring = [by_id[i["id"]] for i in result["items"] if i["ring"] == 1]
+        report = lint.lint_diagram(payload, rings=[(by_id[999], ring)])
+
+        label = f"{item_width}x{item_height} sweep={sweep} n={n}"
+        fired = [f for f in report.findings if f.rule == "uneven-spokes"]
+        assert not fired, f"{label}: {[f.message for f in fired]}"
+        if n > 1:
+            spread = report.metrics["worst_spoke_spread"]
+            assert spread <= SPOKE_TOLERANCE, f"{label}: lint saw {spread}"
+
+
+def test_an_outer_ring_measures_its_spokes_from_the_item_it_hangs_off():
+    """A radial tree's second ring radiates from a BOX, not from a point.
+
+    So the same correction applies twice: the branch items have to clear their
+    parent item's border by the same amount all the way round the arc they
+    occupy, and the parent's border is as unequal as the hub's was.
+    """
+    result = compose_radial(
+        [{"id": 1, "items": _spokes(4, first=10)},
+         {"id": 2, "items": _spokes(4, first=20)},
+         {"id": 3}],
+        hub={"id": 99}, spec={"item_width": 140, "item_height": 60},
+    )
+    groups = _spoke_lengths(result)
+    assert set(groups) == {99, 1, 2}, sorted(groups)
+    for parent in (1, 2):
+        lengths = groups[parent]
+        assert len(lengths) == 4
+        spread = max(lengths) - min(lengths)
+        assert spread <= SPOKE_TOLERANCE, (
+            f"branch off {parent}: {[round(v, 1) for v in lengths]}")
+    assert_radial_sane(result, "radial tree")
+
+
+# ---------------------------------------------------------------------------
 # The radius is a floor
 # ---------------------------------------------------------------------------
 def test_a_radius_too_small_for_its_ring_is_widened():
@@ -1621,6 +2150,41 @@ def test_the_radius_actually_used_is_reported():
 def test_a_ring_never_overlaps_itself_at_any_size(n):
     result = compose_radial(_spokes(n), spec={"radius": 1})
     assert_radial_sane(result, f"crowded n={n}")
+
+
+@pytest.mark.parametrize("n", [3, 4, 5, 6, 7, 8, 9, 12, 16])
+@pytest.mark.parametrize("sweep", [60, 90, 120, 180, 360])
+def test_widening_clears_a_nearly_square_item_too(n, sweep):
+    """A THIRD defect, found by the aspect-ratio sweep rather than by a render.
+
+    The widening asked for the centers to clear `max(width, height)` plus a gap.
+    Two axis-aligned boxes that are apart on the diagonal can satisfy that and
+    still overlap - they need a full width apart horizontally or a full height
+    vertically, and the distance that guarantees one of those is the DIAGONAL.
+    The error is invisible for a flat item, whose diagonal is barely longer than
+    its width, and severe for a nearly square one, whose diagonal is 41% longer
+    than either side.
+
+    A ring of 90x88 items over a 60-degree fan overlapped at every count from 3
+    up, and the promise that the radius gets widened until they do not made it
+    worse rather than better: the radius grew past 1500 while the neighbors
+    still touched, because each step was measured against a distance that could
+    never be enough. Nothing in the suite had a nearly square item, so nothing
+    saw it.
+    """
+    result = compose_radial(
+        _spokes(n), spec={"item_width": 90, "item_height": 88,
+                          "sweep": sweep, "radius": 220})
+    assert_radial_sane(result, f"90x88 sweep={sweep} n={n}")
+    # And the whitespace is there, measured as a gap. `assert_radial_sane` uses
+    # `rects_overlap`, which exempts boxes that merely touch, so on its own it
+    # would accept a ring whose items were flush against each other.
+    ring = sorted((i for i in result["items"]), key=lambda i: i["angle"])
+    for a, b in zip(ring, ring[1:]):
+        apart = max(b["left"] - a["right"], a["left"] - b["right"],
+                    a["bottom"] - b["top"], b["bottom"] - a["top"])
+        assert apart > 0, (
+            f"{a['id']} and {b['id']} touch: {_span(a)} {_span(b)}")
 
 
 # ---------------------------------------------------------------------------

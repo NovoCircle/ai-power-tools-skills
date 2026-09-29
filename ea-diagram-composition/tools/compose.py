@@ -77,6 +77,9 @@ set is not mutually disjoint there: compare siblings, not the whole set.
 `radial` returns no containers at all, and an item's `container_id` names the
 ITEM it hangs from - the hub, or the spoke it branches off. It also carries
 `center` and the `radius` actually used, which can exceed the one asked for.
+That radius is the CLEAR GAP between the box at the middle and the boxes on the
+ring, not the distance to an item's center: the items sit at whatever distance
+makes that gap equal for all of them, so do not expect them to share one.
 """
 from __future__ import annotations
 
@@ -180,9 +183,10 @@ DEFAULT_SPEC: dict[str, Any] = {
     "grid_columns": None,     # None -> ceil(sqrt(n)), which keeps a grid squarish
     "max_grid_depth": 3,      # levels of containment allowed; deeper is REFUSED
 
-    # Radial rings. `radius` is a FLOOR: a ring whose items would collide at
-    # that distance is widened until they do not, and the radius actually used
-    # comes back on the result.
+    # Radial rings. `radius` is the clear gap from the box at the middle out to
+    # the boxes on the ring - the drawn length of a spoke - and it is a FLOOR: a
+    # ring whose items would collide at that distance is widened until they do
+    # not, and the radius actually used comes back on the result.
     "radius": 220,
     "start_angle": 0,         # degrees clockwise from twelve o'clock
     "sweep": 360,             # how much of the circle to use
@@ -525,6 +529,36 @@ def _band_metrics(band: Mapping[str, Any], spec: Mapping[str, Any], where: str) 
     }
 
 
+def _common_band_width(plans: Sequence[Mapping[str, Any]]) -> int:
+    """One width for every band in the stack: the widest band's own demand.
+
+    A band of two items sized to its own two items is visibly narrower than the
+    band of three above it, and a stack of bands with a ragged right edge reads
+    as a mistake in the drawing rather than as a fact about the content. It is
+    the one defect that every arithmetic check passes: nothing overlaps, every
+    rect is positive, the bounding box is right, and the picture still looks
+    wrong. So the widest band's demand sets the width and the rest are drawn to
+    it, with the slack left empty inside them.
+
+    THIS IS THE OPPOSITE OF WHAT THE NESTED GRID DOES, and the difference is
+    deliberate - do not tidy the two into agreement. There, a container keeps
+    the size its contents need and is NOT stretched to fill its cell, because a
+    grouping of four SHOULD be drawn bigger than a grouping of two: the size is
+    the information, and snapping them to a common cell drew both at the same
+    size and lied about where the weight was. Here the size is not information.
+    A band is a full-width strip across the diagram, standing for a layer that
+    spans it; how many items happen to populate the layer is already shown by
+    the items, so spending the band's width on it says nothing and costs the
+    straight edge. The rule is per grammar because the meaning of the rect is
+    per grammar.
+
+    Note what is NOT shared: a band's HEIGHT still follows its own contents, so
+    a band of twelve wrapped over three rows is visibly taller than a band of
+    one. The vertical axis is where this grammar carries its meaning.
+    """
+    return max(p["natural_width"] for p in plans)
+
+
 def compose_layered_bands(
     bands: Sequence[Mapping[str, Any]],
     spec: Mapping[str, Any] | None = None,
@@ -546,12 +580,16 @@ def compose_layered_bands(
     * Items run left to right, stepping by `h_pitch`, wrapping to a further row
       once a row would exceed `wrap_width`.
     * Every item in a band is the same size. Different bands may differ.
-    * A band's height follows its contents. Bands step down by
+    * **Every band is the same WIDTH** - the widest band's - so the stack has one
+      straight right edge. See `_common_band_width` for why this grammar shares
+      a width where the nested grid deliberately does not.
+    * A band's HEIGHT still follows its contents. Bands step down by
       `band_height + band_gap`, or by `band_pitch` if that is larger - which is
       how a configurable vertical pitch and content-driven height coexist.
     * An empty band keeps its label row rather than collapsing to nothing.
-    * `align` is "left" (default) or "center". Centered bands are centered
-      against the widest band, and their rows are centered within them.
+    * `align` is "left" (default) or "center", and governs where a ROW sits
+      inside its band's content area. It no longer moves the bands themselves:
+      they share a width, so they already share both edges.
 
     Returns the result dict described in the module docstring. Raises
     `LayoutError` for any input that cannot yield sane geometry.
@@ -579,8 +617,10 @@ def compose_layered_bands(
         per_row = max(1, per_row)
         row_count = _ceil_div(len(items), per_row) if items else 0
 
-        # Width of the widest row actually used, so a band with two items is
-        # not padded out to the wrap width.
+        # Width of the widest row this band actually uses, so nothing is padded
+        # out to the wrap width - `wrap_width` is where a row breaks, never a
+        # width a band is entitled to. This is the band's OWN demand; the width
+        # it is finally drawn at is the whole stack's, resolved below.
         widest_row_items = min(len(items), per_row) if items else 0
         content_width = (
             (widest_row_items - 1) * m["h_pitch"] + m["item_width"]
@@ -591,11 +631,13 @@ def compose_layered_bands(
             (row_count - 1) * m["row_pitch"] + m["item_height"] if row_count else 0
         )
 
+        # The floor is per band, because `item_width` is: an empty band still
+        # has to be wide enough for the item it would hold.
         floor_width = (
             min_band_width if min_band_width is not None
             else m["item_width"] + 2 * pad_x
         )
-        band_width = max(content_width + 2 * pad_x, floor_width)
+        natural_width = max(content_width + 2 * pad_x, floor_width)
         # The label strip doubles as the band's top padding; pad_y is the gap
         # below the last row. An empty band therefore still stands label_height
         # + pad_y tall, which is the visible "label row" of an empty band.
@@ -609,30 +651,30 @@ def compose_layered_bands(
             "items": items,
             "per_row": per_row,
             "row_count": row_count,
-            "content_width": content_width,
-            "band_width": band_width,
+            "natural_width": natural_width,
             "band_height": band_height,
         })
 
-    widest = max(p["band_width"] for p in plans)
+    band_width = _common_band_width(plans)
+    content_width = band_width - 2 * pad_x
     containers: list[dict[str, Any]] = []
     out_items: list[dict[str, Any]] = []
 
     band_top = s["origin_top"]
     for p in plans:
         m = p["metrics"]
-        if s["align"] == "center":
-            band_left = s["origin_left"] + (widest - p["band_width"]) // 2
-        else:
-            band_left = s["origin_left"]
+        # Every band starts at the origin and ends at the same right edge. There
+        # is deliberately no per-band horizontal offset here: `align` is spent
+        # on the rows inside the band, not on the band.
+        band_left = s["origin_left"]
 
-        band_rect = rect(band_left, band_top, p["band_width"], p["band_height"])
+        band_rect = rect(band_left, band_top, band_width, p["band_height"])
         container = {
             "id": p["band"].get("id") or f"band_{p['index']}",
             "name": p["name"],
             "kind": "band",
             "index": p["index"],
-            "label": rect(band_left, band_top, p["band_width"], m["label_height"]),
+            "label": rect(band_left, band_top, band_width, m["label_height"]),
             **band_rect,
         }
         containers.append(container)
@@ -644,7 +686,7 @@ def compose_layered_bands(
             items_this_row = min(p["per_row"], len(p["items"]) - row * p["per_row"])
             row_width = (items_this_row - 1) * m["h_pitch"] + m["item_width"]
             if s["align"] == "center":
-                row_left = content_left + (p["content_width"] - row_width) // 2
+                row_left = content_left + (content_width - row_width) // 2
             else:
                 row_left = content_left
 
@@ -1205,7 +1247,7 @@ def _ring_metrics(node: Mapping[str, Any], spec: Mapping[str, Any],
     }
 
 
-def _polar(center_x: int, center_y: int, radius: int, degrees: float) -> tuple:
+def _polar(center_x: int, center_y: int, radius: float, degrees: float) -> tuple:
     """A point on a circle, rounded to whole EA units.
 
     Angles run CLOCKWISE from twelve o'clock, because that is how a reader
@@ -1217,10 +1259,75 @@ def _polar(center_x: int, center_y: int, radius: int, degrees: float) -> tuple:
     (less negative) y. Rounding is `int(round(...))`, applied once, to the
     coordinate rather than to the angle: rounding the angle first would let a
     ring of twelve drift visibly by the time it closed.
+
+    `radius` is a float because the distances this grammar computes no longer
+    come out whole: each item sits at its own distance, derived from where a
+    ray at `degrees` leaves the boxes at both ends. Rounding still happens once,
+    here, on the coordinate.
     """
     radians = math.radians(degrees - 90.0)
     return (int(round(center_x + radius * math.cos(radians))),
             int(round(center_y - radius * math.sin(radians))))
+
+
+def _reach(item_w: int, item_h: int, degrees: float) -> float:
+    """How far a box's own border sits from its center, along a ray at `degrees`.
+
+    THIS IS THE WHOLE OF THE UNEQUAL-SPOKE FIX, so it is worth being explicit
+    about what it computes and why that is the right quantity.
+
+    A ray leaving the box's center at `degrees` (clockwise from twelve o'clock,
+    as everywhere else here) leaves through either a horizontal or a vertical
+    side, whichever it reaches first. Scaling the half-extent by the ray's
+    component on that axis gives the distance to each candidate side, and the
+    nearer one is the side actually crossed:
+
+        horizontal sides, at half the height:  (h / 2) / |cos(degrees)|
+        vertical sides,   at half the width:   (w / 2) / |sin(degrees)|
+
+    For a 140x60 box that is 30 straight up, 70 straight out to the side, and
+    76.2 - the half diagonal - through a corner. Which is exactly the spread
+    that used to show up as unequal spokes: a box CENTERED on the ring pokes
+    only 30 back toward the hub at the top and a full 70 at the side, so it
+    stands off at the top and bottom and crowds the hub at the sides.
+
+    A ray exactly along an axis has a zero component on the other one, so that
+    candidate is dropped rather than divided by: at least one component of a
+    unit vector is non-zero, so there is always a side left to cross.
+
+    Note this measures along the RAY, which is not the same as the nearest point
+    of the box to the center - for a box crossed near a corner the corner itself
+    is closer. Along the ray is the right measure anyway, because a spoke is
+    drawn along the ray and that is where the reader sees it end.
+    """
+    ux = abs(math.sin(math.radians(degrees)))
+    uy = abs(math.cos(math.radians(degrees)))
+    candidates = []
+    if ux:
+        candidates.append((item_w / 2.0) / ux)
+    if uy:
+        candidates.append((item_h / 2.0) / uy)
+    return min(candidates)
+
+
+def _min_reach(item_w: int, item_h: int) -> float:
+    """The smallest `_reach` any ray can produce: half the shorter side.
+
+    Reached straight along the axis of the shorter side, so it holds for a full
+    circle. A partial sweep that never points that way reaches further, which
+    makes this a floor for every sweep rather than only for a closed ring.
+    """
+    return min(item_w, item_h) / 2.0
+
+
+def _max_reach(item_w: int, item_h: int) -> float:
+    """The largest `_reach` any ray can produce: the half diagonal.
+
+    The two candidates in `_reach` are equal along the corner ray, and that is
+    where the minimum of the pair peaks - the ray leaves through the corner, so
+    the distance is the corner's own.
+    """
+    return math.hypot(item_w / 2.0, item_h / 2.0)
 
 
 def compose_radial(
@@ -1254,6 +1361,14 @@ def compose_radial(
       meant to look like. A full circle does not repeat the first position.
     * **Uniform sizing within a ring.** Stated by the parent, so siblings
       cannot disagree - the same rule the other grammars follow.
+    * **Every spoke is the same length.** `radius` is the CLEAR GAP between the
+      box at the middle and the box on the ring - the part of a spoke that gets
+      drawn - not the distance to an item's center. Each item is pushed out by
+      however far its own border reaches along its own ray, and by however far
+      the box at the middle reaches along the same ray, so the gap between the
+      two comes out equal all the way round whatever shape the boxes are. Item
+      centers therefore do NOT all sit at one distance: see `_place_ring` and
+      `_reach`.
     * **The radius is a floor, not a promise.** If the items would collide at
       the radius given, the ring is widened until they do not, and the radius
       actually used comes back on the result. A grammar that produced a
@@ -1292,7 +1407,14 @@ def compose_radial(
     # composition can start at `origin_left`/`origin_top` like every other
     # grammar rather than at a center the caller has to compute.
     plan = _plan_ring(raw_nodes, "nodes", 1, s, seen_ids, float(s["sweep"]))
-    extent = plan["outer_radius"] + max(plan["max_item_w"], plan["max_item_h"])
+    hub_size = (s["item_width"], s["item_height"]) if hub_item is not None else None
+    # A hub box pushes its whole ring out by its own reach, so the margin has to
+    # allow for it or the composition would start left of `origin_left`.
+    hub_reach = _max_reach(*hub_size) if hub_size is not None else 0.0
+    extent = int(math.ceil(
+        plan["outer_radius"] + hub_reach
+        + max(plan["max_item_w"], plan["max_item_h"])
+    ))
     center_x = s["origin_left"] + extent
     center_y = s["origin_top"] - extent
 
@@ -1313,7 +1435,7 @@ def compose_radial(
 
     _place_ring(plan, center_x, center_y, s, 1,
                 hub_item["id"] if hub_item else None,
-                s["start_angle"], s["sweep"], out_items)
+                s["start_angle"], s["sweep"], out_items, hub_size)
 
     return {
         "grammar": "radial",
@@ -1366,15 +1488,46 @@ def _plan_ring(raw_nodes: Any, where: str, level: int, s: Mapping[str, Any],
     step = _angular_step(count, sweep)
     branch_sweep = min(abs(step) or abs(sweep), _MAX_BRANCH_SWEEP)
 
-    # The radius is a floor. Widen it until neighbours on this ring cannot
+    # The radius is a floor. Widen it until neighbors on this ring cannot
     # touch: the chord between two of them, at the step actually used, must
     # clear the wider extent plus a gap.
-    need = max(metrics["item_width"], metrics["item_height"]) + s["item_gap_x"]
+    #
+    # The chord is a distance between CENTERS, and `radius` is no longer one -
+    # it is the clear gap outside the boxes, and each item's center sits at that
+    # gap plus however far its own border reaches along its own ray. So the
+    # constraint is solved for the center distance first and the gap read back
+    # off it, using the SMALLEST reach any ray can produce. Using the smallest
+    # is what makes this a floor and not a guess: every item's actual center
+    # distance is at least the one the chord was solved for, never less, so a
+    # ring can come out slightly roomier than it strictly needs but never
+    # tighter. Sizing it off the reach an average item happens to have would put
+    # the items that reach least inside the clearance.
+    #
+    # The parent box's own reach is left out of this even though placement adds
+    # it, for the same reason: leaving it out can only push items further out.
+    # It also keeps the ring's clearance independent of whether a hub was
+    # supplied, so the same nodes do not get a different radius for it.
+    # What the centers have to clear is the DIAGONAL, not the longer side. Two
+    # axis-aligned boxes miss each other when they are apart by a full width
+    # horizontally or a full height vertically, so two that are still inside both
+    # of those are inside a box of w by h and therefore closer than its diagonal:
+    # separation >= hypot(w, h) is exactly the condition that rules that out.
+    # `max(w, h)` is not sufficient and is worst for a box that is nearly square,
+    # where the diagonal is 41% longer than either side. A ring of 90x88 items
+    # over a 60-degree fan overlapped at every count this way, and widening did
+    # not rescue it: the radius grew to over 1500 and neighbors still touched,
+    # because every widening step was measured against a distance that was never
+    # going to be enough. Found by the aspect-ratio sweep in the tests, not by
+    # the spoke work, and it predates it.
+    need = math.hypot(metrics["item_width"], metrics["item_height"])
+    need += s["item_gap_x"]
+    reach_floor = _min_reach(metrics["item_width"], metrics["item_height"])
     radius = metrics["radius"]
     if count > 1 and step:
         half = math.radians(abs(step) / 2.0)
         if math.sin(half) > 0:
-            radius = max(radius, int(math.ceil(need / (2.0 * math.sin(half)))))
+            need_centers = need / (2.0 * math.sin(half))
+            radius = max(radius, int(math.ceil(need_centers - reach_floor)))
 
     for entry in plans:
         if entry["raw_inner"] is not None:
@@ -1382,10 +1535,20 @@ def _plan_ring(raw_nodes: Any, where: str, level: int, s: Mapping[str, Any],
                 entry["raw_inner"], f"{entry['where']}.items",
                 level + 1, s, seen_ids, branch_sweep)
 
-    outer = radius
+    # How far from this ring's center any of its items can have its own center:
+    # the gap, plus the furthest its border can reach. An outer ring hangs off
+    # one of those items and is measured from ITS center, so it adds that item's
+    # reach once more - the same term placement adds for a parent box.
+    reach_ceiling = _max_reach(metrics["item_width"], metrics["item_height"])
+    centers_max = radius + reach_ceiling
+    outer = centers_max
     for entry in plans:
         if entry["inner"]:
-            outer = max(outer, radius + entry["inner"]["outer_radius"])
+            outer = max(
+                outer,
+                centers_max + reach_ceiling + entry["inner"]["outer_radius"],
+            )
+    outer = int(math.ceil(outer))
     return {
         "plans": plans,
         "radius": radius,
@@ -1399,7 +1562,7 @@ def _plan_ring(raw_nodes: Any, where: str, level: int, s: Mapping[str, Any],
 
 
 def _angular_step(count: int, sweep: float) -> float:
-    """Degrees between neighbours on a ring of `count` over `sweep`.
+    """Degrees between neighbors on a ring of `count` over `sweep`.
 
     A closed ring divides by the count, so the last item does not land back on
     the first. A partial sweep divides by one less, spreading the items
@@ -1416,17 +1579,44 @@ def _angular_step(count: int, sweep: float) -> float:
 def _place_ring(plan: Mapping[str, Any], center_x: int, center_y: int,
                 s: Mapping[str, Any], ring: int, parent_id: Any,
                 start_angle: float, sweep: float,
-                out_items: list) -> None:
-    """Place one measured ring, then anything hanging off it."""
+                out_items: list,
+                parent_size: Optional[tuple] = None) -> None:
+    """Place one measured ring, then anything hanging off it.
+
+    EVERY SPOKE THE SAME LENGTH is the property being built here, and it is not
+    what putting each item's center on a circle gives you. `radius` is the clear
+    gap a reader sees between the box at the middle and the box on the ring, and
+    an item's center goes wherever that gap requires:
+
+        center distance = parent's reach + radius + item's own reach
+
+    both reaches taken along that item's own ray, by `_reach`. The two terms are
+    the stretches of the spoke that fall INSIDE a box and so are never drawn, so
+    subtracting them is what leaves the visible part constant. Dropping the
+    parent term and keeping the item's would equalize the distance from the
+    center POINT to each near edge, which is a different quantity: with a
+    140x60 box in the middle it leaves the drawn spokes varying by the hub's own
+    46 units of reach, having removed the item's. The ink is what is looked at,
+    so the ink is what is held constant.
+
+    `parent_size` is the box at the middle, or None when there is no box there -
+    a ring with no hub is measured from a bare point, and a bare point reaches
+    nowhere. For an outer ring the box at the middle is the spoke item it hangs
+    off, so the same arithmetic serves both without a special case.
+    """
     plans = plan["plans"]
     metrics = plan["metrics"]
     radius = plan["radius"]
     # The step was decided during planning, because the radius depends on it.
     step = plan["step"]
+    own_size = (metrics["item_width"], metrics["item_height"])
 
     for entry in plans:
         angle = start_angle + step * entry["index"]
-        x, y = _polar(center_x, center_y, radius, angle)
+        centers = radius + _reach(*own_size, angle)
+        if parent_size is not None:
+            centers += _reach(*parent_size, angle)
+        x, y = _polar(center_x, center_y, centers, angle)
         record = {
             "id": entry["node"]["id"],
             "container_id": parent_id,
@@ -1449,4 +1639,4 @@ def _place_ring(plan: Mapping[str, Any], center_x: int, center_y: int,
             branch_start = angle - own_sweep / 2.0 if inner_count > 1 else angle
             _place_ring(entry["inner"], x, y, s, ring + 1,
                         entry["node"]["id"], branch_start, own_sweep,
-                        out_items)
+                        out_items, own_size)
