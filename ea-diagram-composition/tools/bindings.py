@@ -49,6 +49,51 @@ than estimated, and the measurements corrected the sketch more than once:
     vertically; BPMN flows are tighter than either. Both were measured from
     element rects, not eyeballed.
 
+THE BASE NOTATION IS THE ROOT OF THE TREE
+-----------------------------------------
+EA is a UML tool, and every MDG technology is a stereotype layer applied to
+UML rather than a peer notation beside it. The data says so: each MDG diagram
+type records the EA base diagram type it is drawn on in `base`, and every base
+the shipped MDG bindings name is a plain-UML diagram type - an ArchiMate view
+IS a Class diagram (`Logical`) with a technology tag on it, a BPMN process IS
+an `Analysis` diagram, a SysML requirement diagram IS a `Custom` canvas.
+
+So `extends` points a technology's binding at the notation underneath it, and
+`base` picks WHICH of that notation's diagram types each of its own diagram
+types is drawn on. Those are two different facts and neither is derivable from
+the other: one binding's diagram types can sit on several different bases, and
+a technology id cannot be read out of a diagram type name without searching
+the directory for whoever declares it.
+
+WHAT INHERITANCE IS FOR, AND WHAT IT MUST NOT DO
+------------------------------------------------
+The value is entirely in the slots a child does NOT state. A stereotyped
+element's size comes from its own MDG, its grammar is its own, and its
+`stereotype_prefix` is its own; all of those are statements, and a statement
+wins. What a child leaves unsaid used to fall back to the ENGINE's defaults -
+a 20-unit gap chosen to be inoffensive - when the measured value for the
+diagram type it is actually drawn on was sitting in the parent binding.
+
+Hence `sizing` and `spacing` merge per key against the substrate, and nothing
+else does. Those two are the only slots where silence means an engine default:
+`grammar`, `title`, `routing.default` and `channels.fill` are mandatory, so a
+child has already spoken, and inheriting a parent's `graph` over a child's
+`layered-bands` would flatten exactly the structure an MDG exists to add.
+`own_sizing` and `own_spacing` keep what the document itself said, so a test
+that pins a measurement reads the measurement rather than the inheritance.
+
+A CHILD DOES NOT ACQUIRE ITS PARENT'S DIAGRAM TYPE CATALOG
+----------------------------------------------------------
+Inheriting the parent's `diagram_types` wholesale - which is what merging one
+level into the catalog used to do - is wrong twice over once the parent is the
+base notation. A technology's diagram types are declared by its MDG and are a
+closed fact checked against the MDG data, so handing ArchiMate3 a diagram type
+named `Logical` invents one EA never declared; and `resolve_diagram` matches a
+diagram's `Diagram_Type` against bound diagram type NAMES, so five bindings all
+claiming `Logical` would make every plain Class diagram ambiguous. The parent's
+diagram types are the substrate a child's own types are measured against, not
+entries in the child's catalog.
+
 PyYAML
 ------
 Bindings are YAML, matching the shipped ArchiMate conformance ruleset, and
@@ -60,7 +105,7 @@ parser rather than by a check here.
 from __future__ import annotations
 
 import sys
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
 from typing import Any
 
@@ -68,6 +113,7 @@ _HERE = Path(__file__).resolve().parent
 if str(_HERE) not in sys.path:
     sys.path.insert(0, str(_HERE))
 
+import compose as _engine  # noqa: E402
 from compose import DEFAULT_SPEC  # noqa: E402
 
 __all__ = [
@@ -77,14 +123,30 @@ __all__ = [
     "Viewpoint",
     "PresentationProfile",
     "GRAMMARS",
+    "GRAMMAR_PLACEMENT",
+    "PLACED_BY_ENGINE",
+    "PLACED_BY_EA",
+    "PLACED_BY_DIAGRAM_TYPE",
+    "COMPOSED_GRAMMARS",
+    "EA_PLACED_GRAMMARS",
     "IMPLEMENTED_GRAMMARS",
+    "implemented_grammars",
+    "producible_grammars",
     "ROUTE_NAMES",
     "CHANNELS",
     "TITLE_CONVENTIONS",
+    "RESOLUTION_PATHS",
+    "RESOLVED_PATHS",
+    "MDG_STYLE_KEY",
+    "MDG_SEPARATOR",
+    "Resolution",
     "load_binding",
     "load_binding_text",
     "find_binding",
     "available_bindings",
+    "mdg_diagram_key",
+    "bindings_for_technologies",
+    "resolve_diagram",
 ]
 
 
@@ -103,25 +165,164 @@ class BindingError(ValueError):
 # ---------------------------------------------------------------------------
 # Closed vocabularies
 # ---------------------------------------------------------------------------
-# The four grammars, and whether `compose.py` can actually compose one. A
-# binding is allowed to name a grammar that is not implemented yet - ArchiMate's
-# Motivation viewpoints really are trees, and saying `layered-bands` instead
-# would be a lie recorded as data. `is_implemented` is how a consumer finds out
-# before it tries, rather than after.
-# FIVE names, not the four the corpus analysis first resolved on. Measuring
-# the rows grouped under `computed-geometry` before building it showed they do
-# not share an arithmetic: placing items on a circle, packing rectangles so
-# their AREAS encode a number, and drawing a waveform against a time axis are
-# three unrelated pieces of code. `radial` is the polar one, built; what is
-# left under `computed-geometry` is the treemap and the timing diagram.
-GRAMMARS: dict[str, bool] = {
-    "layered-bands": True,
-    "lanes": True,
-    "nested-grid": True,
-    "radial": True,
-    "computed-geometry": False,
+# The grammars, and WHO PLACES THE GEOMETRY of a diagram that has one. Seven
+# names in three placements, and the placement is what decides what a consumer
+# may do with a binding that names one.
+#
+# FIVE COMPOSED LAYOUTS - `layered-bands`, `lanes`, `nested-grid`, `radial`,
+# `computed-geometry` - are arrangements this library computes coordinates for.
+# Five, not the four the corpus analysis first resolved on: measuring the rows
+# grouped under `computed-geometry` before building it showed they do not share
+# an arithmetic - placing items on a circle, packing rectangles so their AREAS
+# encode a number, and drawing a waveform against a time axis are three
+# unrelated pieces of code. `radial` is the polar one, built; WHAT IS LEFT UNDER
+# `computed-geometry` IS THE TREEMAP ALONE - the timing diagram was moved to
+# `ea-semantic`, for the reason set out below.
+#
+# A composed grammar may be named before it is built. That is deliberate, and
+# `implemented_grammars()` is how a consumer finds out before it composes rather
+# than after. It is NOT a license to record a composed layout for a diagram type
+# that has none: the shipped binding that records a level-by-level tree as
+# `layered-bands` is honest because those levels really are drawn as registers,
+# one band per level, and its own `notes` say so. The dishonest version is
+# recording an unbuilt composed grammar to get a type into a file at all, and it
+# would be believed precisely because it eventually composes - the day the
+# treemap ships, a diagram type parked under `computed-geometry` starts
+# reporting itself composable.
+#
+# TWO WHERE WE PLACE NOTHING. That parking pressure was real: most diagram types
+# in most notations are graphs or trees, the five composed layouts have nothing
+# to say about them, and `grammar` is mandatory - so whole notations went unbound
+# for a schema reason rather than a real one, and an omitted diagram type is
+# indistinguishable from an oversight. Hence:
+#
+#   `graph`        a graph or a tree. We do not compute coordinates; EA's own
+#                  layout does, and we tidy afterwards. Everything else in the
+#                  binding still earns its place - element sizes, spacing (which
+#                  the layout call takes as layer and column spacing), routing,
+#                  title convention, claimed and free channels - so such a
+#                  binding is worth authoring and the diagram IS producible.
+#   `ea-semantic`  the diagram TYPE fixes the arrangement, so coordinates are
+#                  the WRONG OUTPUT - not coordinates we have not got round to.
+#                  Quality there is order rather than geometry, nothing here
+#                  judges or produces it, so this one is NOT producible. Recorded
+#                  rather than left out, so that "later design work" is visible
+#                  as data.
+#
+# THE PRINCIPLE, NOT THE EXAMPLES, DECIDES `ea-semantic`, and the difference is
+# not "behavioral". That intuition is what produced three wrong entries in this
+# comment, and the measurements corrected every one of them: lifelines with
+# messages ordered down the page are the real case - their horizontal pitch is an
+# even machine step no author produces by hand - while a state machine's states
+# and a collaboration's participants sit exactly where a modeler put them, in many
+# different sizes, with gap populations that look like a class diagram's. Both are
+# `graph`, and the shipped base-notation binding classifies them that way on
+# measured evidence. MEASURE BEFORE YOU CLASSIFY: a type that SOUNDS sequential is
+# not `ea-semantic` unless EA is doing the placing.
+#
+# A WAVEFORM AGAINST A TIME AXIS IS `ea-semantic` TOO, which is the opposite of
+# what this comment used to say. It reads like arithmetic nobody has written -
+# hence the first filing under `computed-geometry` - but the axis is dictated by
+# the type: every timeline spans the canvas, so two of them are never horizontal
+# neighbors and a horizontal gap is not a quantity the type has. The decisive
+# argument is the landmine above: parked under an unbuilt COMPOSED grammar, a
+# timing diagram would start reporting itself composable the day a treemap
+# composer shipped. `references/grammars.md` §7 and §9 carry the reasoning.
+#
+# ONE QUESTION PER ANSWER. `grammar_is_implemented` means "the engine has a
+# `compose_<grammar>` for this" and must keep meaning only that, because
+# consumers sweep the implemented grammars to pick a composer for each. Whether
+# a diagram can be produced at all is a second question with a second answer:
+# `graph` is producible with no composer, `computed-geometry` has a composer
+# pending and is neither, `ea-semantic` is neither and has nothing pending.
+PLACED_BY_ENGINE = "engine"
+PLACED_BY_EA = "ea"
+PLACED_BY_DIAGRAM_TYPE = "diagram-type"
+
+GRAMMAR_PLACEMENT: dict[str, str] = {
+    "layered-bands": PLACED_BY_ENGINE,
+    "lanes": PLACED_BY_ENGINE,
+    "nested-grid": PLACED_BY_ENGINE,
+    "radial": PLACED_BY_ENGINE,
+    "computed-geometry": PLACED_BY_ENGINE,
+    "graph": PLACED_BY_EA,
+    "ea-semantic": PLACED_BY_DIAGRAM_TYPE,
 }
-IMPLEMENTED_GRAMMARS = frozenset(k for k, v in GRAMMARS.items() if v)
+
+#: The vocabulary a binding's `grammar` is validated against. A frozenset rather
+#: than the `{grammar: is_implemented}` mapping this used to be: one boolean
+#: cannot answer both "do we compose this" and "can we produce this", and a
+#: consumer still reading a truth value out of this name should fail loudly here
+#: rather than quietly read `graph` as composable.
+GRAMMARS: frozenset[str] = frozenset(GRAMMAR_PLACEMENT)
+
+#: The grammars whose coordinates are ours to compute. Membership is not
+#: implementation - `computed-geometry` is ours and unbuilt.
+COMPOSED_GRAMMARS: frozenset[str] = frozenset(
+    grammar for grammar, placement in GRAMMAR_PLACEMENT.items()
+    if placement == PLACED_BY_ENGINE)
+
+#: The grammars EA's own layout engine places acceptably. Not composed by us,
+#: and producible - which is the pair of facts the single boolean could not hold.
+EA_PLACED_GRAMMARS: frozenset[str] = frozenset(
+    grammar for grammar, placement in GRAMMAR_PLACEMENT.items()
+    if placement == PLACED_BY_EA)
+
+
+def _engine_composers() -> frozenset[str]:
+    """The grammars the engine has a `compose_<grammar>` for, read from it.
+
+    Underscores stand in for the vocabulary's hyphens. Read from the module
+    rather than from its `__all__`, so a grammar shipped without being exported
+    still counts: the question is what the engine can do, not what it
+    advertises.
+
+    DERIVED ON EVERY CALL, NOT CACHED AND NOT WRITTEN DOWN. This was a flag per
+    grammar kept by hand with a test pinning it to the engine, which is two
+    copies of one fact agreeing with each other; the same shape once let a
+    measurement tool go on reporting a remembered reach figure for a grammar
+    that had already shipped. Reading the module each time is what makes
+    shipping a composer move every answer here at once.
+    """
+    return frozenset(
+        name[len("compose_"):].replace("_", "-")
+        for name in dir(_engine)
+        if name.startswith("compose_") and callable(getattr(_engine, name)))
+
+
+def implemented_grammars() -> frozenset[str]:
+    """Composed grammars the engine really has a composer for.
+
+    Intersected with `COMPOSED_GRAMMARS`, so a composer named outside the
+    vocabulary cannot smuggle a grammar into it. `test_bindings.py` asserts the
+    intersection loses nothing, which is how a composer shipped under a name the
+    vocabulary does not have is caught rather than silently dropped.
+
+    A grammar EA places is never in here. That is not a gap: there is no
+    composer to pick, and a consumer that sweeps this set to choose one would
+    crash on an entry that has none. Ask `producible_grammars()` instead.
+    """
+    return COMPOSED_GRAMMARS & _engine_composers()
+
+
+def producible_grammars() -> frozenset[str]:
+    """The grammars a diagram can be produced for today, by EITHER route.
+
+    The composed ones that are built, plus the ones EA's layout places for us.
+    Deliberately a second answer rather than a widening of the first: folding
+    them together would make a consumer sweeping for composers pick a grammar
+    that has none, and narrowing to the first would report a producible diagram
+    type as unreachable.
+    """
+    return implemented_grammars() | EA_PLACED_GRAMMARS
+
+
+#: `implemented_grammars()` as at import, for consumers that read a constant.
+#: Same meaning as it has always had - "the engine has a composer for this" -
+#: and, for the five composed values, the same value, so a reach figure derived
+#: from it does not move on the day the vocabulary grew. Code that mutates the
+#: engine after import (a test, a plugin) must call the function.
+IMPLEMENTED_GRAMMARS = implemented_grammars()
 
 # Route names as the server accepts them, from EA's own connector right-click >
 # Line Style submenu. SOURCE OF TRUTH is `_ROUTE_STYLES` / `_BEZIER_MODE` in
@@ -336,10 +537,22 @@ class PresentationProfile:
 
 
 class DiagramTypeBinding:
-    """One diagram type's conventions, ready to hand to the engine."""
+    """One diagram type's conventions, ready to hand to the engine.
+
+    `sizing` and `spacing` are RESOLVED: what this diagram type states, over
+    the measured values of the base diagram type it is drawn on. That is the
+    pair a consumer wants, because an unstated gap resolving to the substrate's
+    measured value is the whole point of the inheritance.
+
+    `own_sizing` and `own_spacing` are what this binding's own document said,
+    which is a different question and the one a provenance test asks: a figure
+    is only this technology's measurement if this technology stated it.
+    `substrate` names the diagram type the rest came from, or `""`.
+    """
 
     __slots__ = ("technology", "name", "base", "grammar", "title", "sizing",
-                 "spacing", "routing", "channels", "notes")
+                 "spacing", "routing", "channels", "notes",
+                 "own_sizing", "own_spacing", "substrate")
 
     def __init__(self, technology: str, name: str, data: Mapping[str, Any]):
         self.technology = technology
@@ -350,6 +563,12 @@ class DiagramTypeBinding:
         self.spacing = dict(data["spacing"])
         self.routing = dict(data["routing"])
         self.channels = dict(data["channels"])
+        # Default to the resolved values rather than to `{}`: a binding with no
+        # parent states everything it has, and a caller reading `own_spacing`
+        # must not see an empty mapping for the root of the tree.
+        self.own_sizing = dict(data.get("own_sizing", self.sizing))
+        self.own_spacing = dict(data.get("own_spacing", self.spacing))
+        self.substrate = data.get("substrate", "")
 
     def __repr__(self) -> str:  # pragma: no cover - debugging aid
         return f"DiagramTypeBinding({self.technology}::{self.name})"
@@ -360,18 +579,75 @@ class DiagramTypeBinding:
         return f"{self.technology}::{self.name}"
 
     @property
-    def grammar_is_implemented(self) -> bool:
-        """Whether `compose.py` can compose this grammar.
+    def grammar_placement(self) -> str:
+        """Who places this diagram type's geometry - see `GRAMMAR_PLACEMENT`."""
+        return GRAMMAR_PLACEMENT.get(self.grammar, "")
 
-        False is a real answer, not an error: the binding is recording what the
-        notation does. A consumer that finds False should say so and fall back
-        to a plain graph layout rather than composing the wrong shape.
+    @property
+    def geometry_is_composed(self) -> bool:
+        """Whether the coordinates are OURS to compute.
+
+        False does not mean unsupported. It means the positions come from EA -
+        either because its general-purpose layout handles this shape acceptably
+        and we tidy afterwards, or because the diagram type dictates the
+        arrangement itself. Which of those, and whether it can be produced at
+        all, is `grammar_is_producible`.
         """
-        return GRAMMARS.get(self.grammar, False)
+        return self.grammar in COMPOSED_GRAMMARS
+
+    @property
+    def grammar_is_implemented(self) -> bool:
+        """Whether the engine has a composer for this grammar.
+
+        Read from the engine on every call, so a composer that ships flips this
+        with no edit to a binding or to the vocabulary.
+
+        False is a real answer, not an error, and it now has two causes worth
+        telling apart: a composed grammar nobody has built yet, and a grammar
+        whose geometry was never ours to compute. Do NOT read False as "cannot
+        be produced" - that question is `grammar_is_producible`, and for a graph
+        the answers differ. A consumer that finds this False and producible True
+        should hand the diagram to EA's layout and tidy it, not give up.
+        """
+        return self.grammar in implemented_grammars()
+
+    @property
+    def grammar_is_producible(self) -> bool:
+        """Whether a diagram of this type can be produced at all today.
+
+        True by either route: a composed grammar whose composer exists, or a
+        grammar EA's own layout places acceptably. False means the shape is
+        recorded and nothing here can yet produce it - which is a statement
+        about us, not about the notation.
+        """
+        return self.grammar in producible_grammars()
 
     @property
     def draws_its_own_title(self) -> bool:
         return self.title == "drawn"
+
+    @property
+    def inherits(self) -> bool:
+        """Whether a substrate diagram type was found for this one.
+
+        False for the base notation itself, and false for a diagram type whose
+        `base` the parent leaves unbound - which is a real case rather than an
+        error, since a base notation may decline a diagram type for want of a
+        supportable figure. A caller that wants to know where a gap came from
+        asks `inherited_spacing()`; one that finds this False is holding a
+        diagram type whose unstated slots fall back to the engine.
+        """
+        return bool(self.substrate)
+
+    def inherited_sizing(self) -> dict[str, dict[str, int]]:
+        """The size entries that came from the substrate, not from this file."""
+        return {concept: size for concept, size in self.sizing.items()
+                if concept not in self.own_sizing}
+
+    def inherited_spacing(self) -> dict[str, Any]:
+        """The spacing keys that came from the substrate, not from this file."""
+        return {key: value for key, value in self.spacing.items()
+                if key not in self.own_spacing}
 
     def size_for(self, concept: str = "") -> tuple[int, int]:
         """Box size for a notation concept, falling back to `default`.
@@ -476,8 +752,8 @@ class Viewpoint:
         return self.grammar
 
     @property
-    def grammar_is_implemented(self) -> Optional[bool]:
-        """Whether `compose.py` can compose THIS viewpoint's grammar.
+    def grammar_is_implemented(self) -> bool | None:
+        """Whether the engine has a composer for THIS viewpoint's grammar.
 
         `None` when the viewpoint states no grammar of its own -- ask the
         diagram type instead. The distinction matters: `False` means "we know we
@@ -490,7 +766,28 @@ class Viewpoint:
         """
         if not self.grammar:
             return None
-        return GRAMMARS.get(self.grammar, False)
+        return self.grammar in implemented_grammars()
+
+    @property
+    def grammar_is_producible(self) -> bool | None:
+        """Whether a view of THIS viewpoint's grammar can be produced today.
+
+        `None` on the same terms as above. Both answers exist here for the same
+        reason the override exists: a viewpoint that overrides its diagram type's
+        composed grammar with one EA places is not unsupported, and a consumer
+        reading only `grammar_is_implemented` would drop it.
+        """
+        if not self.grammar:
+            return None
+        return self.grammar in producible_grammars()
+
+    @property
+    def geometry_is_composed(self) -> bool | None:
+        """Whether this viewpoint's own grammar is one we compute. `None` when it
+        states no grammar of its own."""
+        if not self.grammar:
+            return None
+        return self.grammar in COMPOSED_GRAMMARS
 
 
 class Binding:
@@ -737,10 +1034,14 @@ def _validate_diagram_type(name: str, block: Any, where: str) -> dict:
     grammar = _text(body.get("grammar"), f"{where}.grammar")
     if grammar not in GRAMMARS:
         raise BindingError(
-            f"{where}.grammar: {grammar!r} is not one of the four grammars. "
-            f"Known: {', '.join(sorted(GRAMMARS))}. The variety of real "
-            f"diagrams resolves into these four; if this diagram type "
-            f"genuinely needs a fifth, that is a finding, not a binding.")
+            f"{where}.grammar: {grammar!r} is not one of the {len(GRAMMARS)} "
+            f"grammars. Known: {', '.join(sorted(GRAMMARS))}. "
+            f"{len(COMPOSED_GRAMMARS)} of them are layouts this library "
+            f"computes coordinates for; 'graph' is for a graph or a tree that "
+            f"EA's own layout places and we tidy; 'ea-semantic' is for a "
+            f"diagram type that dictates its own arrangement. The variety of "
+            f"real diagrams resolves into these; if this diagram type genuinely "
+            f"needs another, that is a finding, not a binding.")
 
     title = _text(body.get("title"), f"{where}.title")
     if title not in TITLE_CONVENTIONS:
@@ -794,8 +1095,9 @@ def _validate_viewpoint(name: str, block: Any, where: str,
         grammar = _text(body["grammar"], f"{where}.grammar")
         if grammar not in GRAMMARS:
             raise BindingError(
-                f"{where}.grammar: {grammar!r} is not one of the four "
-                f"grammars. Known: {', '.join(sorted(GRAMMARS))}")
+                f"{where}.grammar: {grammar!r} is not one of the "
+                f"{len(GRAMMARS)} grammars. Known: "
+                f"{', '.join(sorted(GRAMMARS))}")
         out["grammar"] = grammar
     if body.get("notes"):
         out["notes"] = _text(body["notes"], f"{where}.notes")
@@ -936,10 +1238,11 @@ def load_binding(path: str | Path, _seen: frozenset[str] = frozenset()
                  ) -> Binding:
     """Load, validate and resolve a binding file.
 
-    `extends` is resolved against the same directory, child keys winning over
-    the parent's, so a house binding can restate one diagram type without
-    copying the rest. A cycle is refused by name rather than by recursion
-    depth.
+    `extends` is resolved against the same directory and names the notation
+    underneath this one, whose diagram types become the substrate each of this
+    binding's own diagram types is measured against - see `_merge`. Child
+    statements win throughout; only what a child leaves unstated is inherited. A
+    cycle is refused by name rather than by recursion depth.
     """
     path = Path(path)
     try:
@@ -967,21 +1270,30 @@ def load_binding(path: str | Path, _seen: frozenset[str] = frozenset()
 
 
 def _merge(parent: Binding, child: dict) -> dict:
-    """Child over parent, one level into each catalog.
+    """Child over parent: the substrate under each diagram type, catalogs added.
 
-    A diagram type the child restates replaces the parent's entirely rather
-    than merging field by field. Field-level merging would let a child inherit
-    half a convention - a parent's `channels` under a child's `grammar` - which
-    is harder to reason about than restating the type.
+    THE CHILD'S DIAGRAM TYPES STAY THE CHILD'S. Each one is placed on the
+    parent's diagram type it says it is drawn on and takes the measured values
+    it does not state for itself; none of the parent's diagram types joins the
+    child's catalog. See the module docstring for why the catalog union this
+    replaced is wrong once the parent is the base notation - it invents diagram
+    types the child's MDG never declared, and makes every diagram identified by
+    its base type ambiguous across every binding drawn on that base.
+
+    `viewpoints` and `presentation_profiles` DO merge one level as before, and
+    the asymmetry is the point: a viewpoint catalog and a presentation scheme
+    are not claims about what EA declares, so a technology that publishes none
+    of its own is better off with its parent's than with nothing.
     """
     merged = dict(child)
-    for catalog, attribute in (("diagram_types", "diagram_types"),
-                                 ("viewpoints", "viewpoints"),
-                                 ("presentation_profiles",
-                                  "presentation_profiles")):
+    merged["diagram_types"] = {
+        name: _on_substrate(name, body, parent)
+        for name, body in (child.get("diagram_types") or {}).items()
+    }
+    for catalog in ("viewpoints", "presentation_profiles"):
         inherited = {
             name: _unwrap(value)
-            for name, value in getattr(parent, attribute).items()
+            for name, value in getattr(parent, catalog).items()
         }
         inherited.update(child.get(catalog) or {})
         merged[catalog] = inherited
@@ -994,16 +1306,40 @@ def _merge(parent: Binding, child: dict) -> dict:
     return merged
 
 
+def _on_substrate(name: str, body: Mapping[str, Any],
+                  parent: Binding) -> dict:
+    """Fill one diagram type's unstated sizes and gaps from the one it is drawn on.
+
+    The substrate is the parent diagram type named by `base` - the same value
+    `create_diagram` is called with - or, for a child that states no `base`, the
+    parent's diagram type of the same name, which is how a house binding
+    refining its own technology keeps working.
+
+    PER KEY, CHILD WINS. A size the child states for a concept is the child's,
+    and so is `sizing.default`: a stereotyped element is the size its own MDG
+    draws it, not the size the substrate draws a plain one. Only concepts and
+    gap keys the child is silent about come from the substrate, which is where
+    the engine's own defaults used to answer instead.
+
+    A `base` the parent does not declare leaves the type unchanged and
+    `substrate` empty. That is not an error: a base notation may decline a
+    diagram type for want of a figure it can support, and inventing a fallback
+    here would state a value nobody measured.
+    """
+    substrate = parent.diagram_types.get(body.get("base") or name)
+    if substrate is None:
+        return dict(body)
+    out = dict(body)
+    out["own_sizing"] = dict(body["sizing"])
+    out["own_spacing"] = dict(body["spacing"])
+    out["sizing"] = {**substrate.sizing, **body["sizing"]}
+    out["spacing"] = {**substrate.spacing, **body["spacing"]}
+    out["substrate"] = substrate.mdg_diagram_type
+    return out
+
+
 def _unwrap(value: Any) -> Any:
     """Turn a parent's loaded object back into the dict form `Binding` takes."""
-    if isinstance(value, DiagramTypeBinding):
-        out = {"grammar": value.grammar, "title": value.title,
-               "sizing": value.sizing, "spacing": value.spacing,
-               "routing": value.routing, "channels": value.channels}
-        for optional in ("base", "notes"):
-            if getattr(value, optional):
-                out[optional] = getattr(value, optional)
-        return out
     if isinstance(value, Viewpoint):
         out = {"diagram_type": value.diagram_type}
         for name in ("intent", "admits", "grammar", "notes"):
@@ -1089,3 +1425,443 @@ def available_bindings(directory: str | Path | None = None) -> dict[str, str]:
             continue
         out[binding.technology] = path.name
     return out
+
+
+# ---------------------------------------------------------------------------
+# Resolution: from the technologies a repository has installed to a binding
+# ---------------------------------------------------------------------------
+# `find_binding` answers "is there a binding for this id", which is half the
+# question. The half a caller actually holds is "this repository has THESE
+# technologies installed, and this diagram identifies itself like THIS - which
+# binding applies, if any?"
+#
+# Two measured facts decide the shape of the answer:
+#
+#   * A diagram states its MDG diagram type in `t_diagram.StyleEx`, as
+#     `MDGDgm=<Tech>::<DiagramType>`, and that key carries a value on only
+#     about 47% of real diagrams - 526 of the 1129 in the example model
+#     shipped with EA 17.1. The other 603 carry the key EMPTY and identify
+#     themselves through `t_diagram.Diagram_Type` alone, which holds a base EA
+#     diagram type (Logical 209, Custom 143, Statechart 44, ...). A resolver
+#     keyed on the qualified value alone therefore fails on the majority of a
+#     real repository, which is why the `Diagram_Type` path below exists.
+#   * One repository holds many technologies - 24 in that same model - and two
+#     of them can claim the same diagram type. Which one EA renders a diagram
+#     with is a runtime matter the repository file does not record.
+#
+# So there are three answers that are not a binding, and a caller has to be
+# able to tell them apart:
+#
+#   `unbound`        nothing installed claims this diagram. The common case -
+#                    123 of the 147 catalogued diagrams - and not a failure:
+#                    the caller falls back to the engine's own defaults, which
+#                    renders correctly, just not conventionally.
+#   `ambiguous`      several installed technologies claim it, so no binding is
+#                    chosen. Deliberately NOT first-match: an answer decided by
+#                    the order the bindings arrived in is indistinguishable
+#                    from a correct one and wrong about as often as not. The
+#                    same mistake was made once in the diagram advisor's
+#                    stereotype attribution and is fixed there the same way.
+#   `not-installed`  the id named is not among this repository's technologies.
+#                    This is the failure mode the whole module is built
+#                    against: the ids are not guessable, and a lookup on a
+#                    guessed one otherwise resolves to nothing without
+#                    complaining.
+#
+# A resolution therefore reports how it was reached and how much that is worth,
+# and every unresolved answer carries a `reason` naming what was looked for.
+
+# EA's own key inside `t_diagram.StyleEx`, and the separator inside its value.
+MDG_STYLE_KEY = "MDGDgm"
+MDG_SEPARATOR = "::"
+
+# How a resolution was reached -> how much confidence it is worth. One dict, so
+# the two cannot drift: a path with no confidence, and a confidence attached to
+# no path, are both unrepresentable.
+#
+#   `qualified`      the diagram itself states `<Tech>::<DiagramType>`. The
+#                    technology wrote that value; nothing is inferred.
+#   `diagram-type`   `Diagram_Type` matched the NAME of a diagram type exactly
+#                    one installed binding declares. An inference, and a sound
+#                    one, but the diagram did not say so itself.
+#   `base-type`      `Diagram_Type` matched only the EA base type a binding
+#                    declares its diagram type is drawn on. Weak on purpose:
+#                    base types are shared - inside each shipped binding every
+#                    diagram type declares the same base as its siblings - so a
+#                    single match here means only that one installed binding
+#                    happens to use that base at all.
+RESOLUTION_PATHS: dict[str, str] = {
+    "qualified": "exact",
+    "diagram-type": "inferred",
+    "base-type": "weak",
+    "ambiguous": "none",
+    "unbound": "none",
+    "not-installed": "none",
+    "unidentified": "none",
+}
+RESOLVED_PATHS = frozenset(
+    path for path, confidence in RESOLUTION_PATHS.items()
+    if confidence != "none")
+
+
+class Resolution:
+    """Which binding applies to one diagram, how that was reached, and how much
+    it is worth.
+
+    An unresolved resolution is a first-class answer rather than an error:
+    `binding` and `diagram_type` are None, `path` says which kind of nothing it
+    is, and `reason` says what was looked for against what was on hand. A
+    caller that finds `resolved` False should compose with the engine's
+    defaults and report the diagram as unbound - never reach for a binding
+    anyway.
+    """
+
+    __slots__ = ("path", "reason", "technology", "diagram_type_name",
+                 "binding", "diagram_type", "candidates")
+
+    def __init__(self, path: str, reason: str, *, technology: str = "",
+                 diagram_type_name: str = "", binding: Binding | None = None,
+                 diagram_type: DiagramTypeBinding | None = None,
+                 candidates: Sequence[str] = ()):
+        if path not in RESOLUTION_PATHS:
+            raise BindingError(
+                f"resolution path {path!r} is not one of: "
+                f"{', '.join(sorted(RESOLUTION_PATHS))}")
+        self.path = path
+        self.reason = reason
+        self.technology = technology
+        self.diagram_type_name = diagram_type_name
+        self.binding = binding
+        self.diagram_type = diagram_type
+        # Sorted, always. Which diagram types claim a value is a fact about the
+        # repository; the order the bindings were handed over is not, and
+        # letting it show here would put argument order back into the answer.
+        self.candidates = tuple(sorted(candidates))
+
+    def __repr__(self) -> str:  # pragma: no cover - debugging aid
+        return (f"Resolution({self.path!r}, {self.key or '(none)'}, "
+                f"{self.confidence!r})")
+
+    @property
+    def confidence(self) -> str:
+        """`exact`, `inferred`, `weak` or `none`, derived from `path`."""
+        return RESOLUTION_PATHS[self.path]
+
+    @property
+    def resolved(self) -> bool:
+        """Whether a binding was decided. True implies both objects are set."""
+        return self.path in RESOLVED_PATHS
+
+    @property
+    def is_ambiguous(self) -> bool:
+        """Several installed diagram types claim this diagram.
+
+        Distinct from unbound, and the distinction is the point: "nothing
+        claims this" is answered by falling back, while "several claim this"
+        needs a human or an explicit choice by the caller. Collapsing the two
+        would hide the one that cannot be automated.
+        """
+        return self.path == "ambiguous"
+
+    @property
+    def key(self) -> str:
+        """The `<Tech>::<DiagramType>` this resolved to, or `""`."""
+        if self.technology and self.diagram_type_name:
+            return f"{self.technology}{MDG_SEPARATOR}{self.diagram_type_name}"
+        return ""
+
+
+def mdg_diagram_key(style_ex: str) -> str:
+    """Read the `<Tech>::<DiagramType>` a diagram states about itself.
+
+    `"MDGDgm=X::Y;DUID=A1B2;"` gives `"X::Y"`; anything else gives `""`.
+
+    `""` covers three cases a resolver treats identically: the key is absent,
+    the key is present but empty - which is the measured majority, 603 of 1129
+    diagrams - or its value holds no `::`. All three mean the diagram has not
+    named its MDG diagram type and the `Diagram_Type` path has to answer.
+
+    Pairs split on `;` and each partitions on its FIRST `=`, because this value
+    contains `::` and neighboring StyleEx values contain `=` inside nested
+    sub-lists. The authoritative StyleEx parser - the one that round-trips a
+    whole string without dropping the keys EA needs - lives in the server; the
+    skills bundle deliberately does not import the server, and what is needed
+    here is the read of one key, so this is that read rather than a second
+    parser to keep in step.
+    """
+    for part in str(style_ex or "").split(";"):
+        name, separator, value = part.partition("=")
+        if not separator or name.strip() != MDG_STYLE_KEY:
+            continue
+        value = value.strip()
+        return value if MDG_SEPARATOR in value else ""
+    return ""
+
+
+def _installed_ids(installed: Any) -> frozenset[str]:
+    """The technology ids a repository has, from ids or from a mapping of them.
+
+    A mapping is accepted because the natural thing a caller holds is the
+    runtime inventory keyed by technology id, whose values are each
+    technology's own definition; only the keys take part in resolving.
+
+    A bare string is refused rather than iterated. Passing one id as a string
+    would otherwise present three one-character technologies, match nothing,
+    and report the repository as having nothing installed - a wrong answer
+    delivered confidently, which is the outcome this module exists to prevent.
+    """
+    if isinstance(installed, str):
+        raise BindingError(
+            "installed technologies: expected a collection of technology ids "
+            "or a mapping keyed by them, got a single string. A bare string "
+            "iterates as characters, which would match nothing at all.")
+    if isinstance(installed, Mapping):
+        source: Iterable[Any] = installed.keys()
+    elif isinstance(installed, Iterable):
+        source = installed
+    else:
+        raise BindingError(
+            f"installed technologies: expected a collection of technology ids "
+            f"or a mapping keyed by them, got {type(installed).__name__}")
+    return frozenset(
+        str(entry).strip() for entry in source if str(entry).strip())
+
+
+def _declared_diagram_types(installed: Any) -> dict[str, frozenset[str]]:
+    """What each installed technology says its own diagram types are.
+
+    Read from the `diagram_types` list of a runtime MDG definition - the shape
+    the server's runtime technology reader returns, entries carrying `name`,
+    `alias` and `base`. Used ONLY to make a miss more informative: if a diagram
+    states a diagram type its own technology does not declare, the stated value
+    is misspelled rather than merely unbound, and which of those it is changes
+    what the reader does next.
+
+    Never used to resolve. A technology declaring a diagram type says nothing
+    about how to compose one, which is what a binding is for.
+    """
+    if not isinstance(installed, Mapping):
+        return {}
+    out: dict[str, frozenset[str]] = {}
+    for technology, definition in installed.items():
+        if not isinstance(definition, Mapping):
+            continue
+        entries = definition.get("diagram_types") or ()
+        names = {str(entry.get("name", "")).strip()
+                 for entry in entries if isinstance(entry, Mapping)}
+        out[str(technology).strip()] = frozenset(n for n in names if n)
+    return out
+
+
+def bindings_for_technologies(installed: Any,
+                              directory: str | Path | None = None
+                              ) -> dict[str, Binding]:
+    """`{technology id: binding}` for the installed technologies we can bind.
+
+    The intersection, and only the intersection. A binding on disk for a
+    technology this repository does not have is not a candidate for anything:
+    composing a diagram to the conventions of a technology EA has not loaded
+    produces a diagram that reads as that notation and is not one.
+
+    Load once and hand the result to `resolve_diagram` for every diagram -
+    resolution is per-diagram, never per-repository, and re-reading the YAML
+    once per diagram is the difference between a scan and a wait.
+    """
+    directory = _bindings_dir(directory)
+    out: dict[str, Binding] = {}
+    for technology in sorted(_installed_ids(installed)):
+        binding = find_binding(technology, directory)
+        if binding is not None:
+            out[technology] = binding
+    return out
+
+
+def _candidate_bindings(bindings: Any, ids: frozenset[str],
+                        directory: str | Path | None) -> dict[str, Binding]:
+    """The bindings in play, keyed by technology and filtered to the installed.
+
+    Sorted on the way in so that nothing downstream can depend on the order the
+    caller listed them.
+    """
+    if bindings is None:
+        return bindings_for_technologies(ids, directory)
+    supplied = (list(bindings.values()) if isinstance(bindings, Mapping)
+                else list(bindings))
+    return {binding.technology: binding
+            for binding in sorted(supplied, key=lambda b: b.technology)
+            if binding.technology in ids}
+
+
+def _bound_summary(ids: frozenset[str], catalog: Mapping[str, Binding]) -> str:
+    return (f"{len(catalog)} of the {len(ids)} installed "
+            f"technolog{'y' if len(ids) == 1 else 'ies'} "
+            f"{'has' if len(catalog) == 1 else 'have'} a binding"
+            + (f" ({', '.join(sorted(catalog))})" if catalog else ""))
+
+
+def _resolve_qualified(key: str, ids: frozenset[str],
+                       catalog: Mapping[str, Binding],
+                       declared: Mapping[str, frozenset[str]]) -> Resolution:
+    """The diagram stated `<Tech>::<DiagramType>` itself. Final either way.
+
+    There is no fall-through to the `Diagram_Type` path on a miss, and that is
+    a decision rather than an omission. A diagram stating a type we have no
+    binding for - each shipped binding leaves one of its technology's declared
+    types deliberately unbound - would fall through to its base type and
+    resolve to a SIBLING diagram type of the same technology: a plausible
+    binding for a diagram that had already said it was something else. The
+    honest answer to "I know what this is and I cannot bind it" is that it is
+    unbound.
+    """
+    technology, _, name = key.partition(MDG_SEPARATOR)
+    technology, name = technology.strip(), name.strip()
+    if technology not in ids:
+        return Resolution(
+            "not-installed", technology=technology, diagram_type_name=name,
+            reason=(
+                f"the diagram states {key!r}, whose technology id "
+                f"{technology!r} is not among the {len(ids)} this repository "
+                f"has installed. Check it against the installed inventory "
+                f"rather than against the notation's name - an id carries its "
+                f"own version and is not guessable, and a lookup on a guessed "
+                f"one resolves to nothing without complaining."))
+    binding = catalog.get(technology)
+    if binding is None:
+        misspelled = (technology in declared
+                      and name not in declared[technology])
+        return Resolution(
+            "unbound", technology=technology, diagram_type_name=name,
+            reason=(
+                f"{technology!r} is installed but has no binding on hand, so "
+                f"{key!r} resolves to no conventions; compose with the "
+                f"engine's defaults. " + (
+                    f"Note that {technology!r} does not declare a diagram type "
+                    f"named {name!r} either, so the stated value is misspelled "
+                    f"as well as unbound."
+                    if misspelled else _bound_summary(ids, catalog))))
+    bound = binding.diagram_types.get(name)
+    if bound is None:
+        return Resolution(
+            "unbound", technology=technology, diagram_type_name=name,
+            reason=(
+                f"the binding for {technology!r} does not bind the diagram "
+                f"type {name!r} that the diagram states. Bound: "
+                f"{', '.join(sorted(binding.diagram_types))}. A binding may "
+                f"leave a declared diagram type out on purpose, and where it "
+                f"does, falling back to the engine's defaults is the intended "
+                f"outcome rather than a gap."))
+    return Resolution(
+        "qualified", technology=technology, diagram_type_name=bound.name,
+        binding=binding, diagram_type=bound,
+        reason=(f"the diagram states {key!r} and the binding for "
+                f"{technology!r} binds that diagram type."))
+
+
+def _decide(matches: Mapping[str, tuple], path: str, looked_for: str,
+            how: str) -> Resolution:
+    """One claimant resolves; more than one is ambiguous and names them all."""
+    if len(matches) == 1:
+        found, (binding, bound) = next(iter(matches.items()))
+        return Resolution(
+            path, technology=binding.technology, diagram_type_name=bound.name,
+            binding=binding, diagram_type=bound,
+            reason=(f"{looked_for!r} {how}, and exactly one installed binding "
+                    f"claims it: {found}."))
+    return Resolution(
+        "ambiguous", diagram_type_name=looked_for, candidates=tuple(matches),
+        reason=(
+            f"{len(matches)} installed diagram types claim {looked_for!r}: "
+            f"{', '.join(sorted(matches))}. Which one EA renders this diagram "
+            f"with is a runtime matter the repository file does not record, so "
+            f"no binding is chosen. Choose one explicitly, or compose with the "
+            f"engine's defaults - taking the first would be an answer decided "
+            f"by the order the bindings were listed in."))
+
+
+def _resolve_by_diagram_type(diagram_type: str, ids: frozenset[str],
+                             catalog: Mapping[str, Binding]) -> Resolution:
+    """The 53% path: the diagram named no MDG type, only its `Diagram_Type`.
+
+    Name first, base second, never both at once. An exact diagram-type name is
+    a stronger statement than the base type it is drawn on, so a name match is
+    taken on its own; the base is consulted only when no installed binding
+    declares a diagram type by that name at all.
+    """
+    by_name = {}
+    for binding in catalog.values():
+        bound = binding.diagram_types.get(diagram_type)
+        if bound is not None:
+            by_name[bound.mdg_diagram_type] = (binding, bound)
+    if by_name:
+        return _decide(by_name, "diagram-type", diagram_type,
+                       "is the name of a bound diagram type")
+
+    by_base = {}
+    for binding in catalog.values():
+        for bound in binding.diagram_types.values():
+            if bound.base and bound.base == diagram_type:
+                by_base[bound.mdg_diagram_type] = (binding, bound)
+    if by_base:
+        return _decide(by_base, "base-type", diagram_type,
+                       "is the EA base type a bound diagram type is drawn on")
+
+    return Resolution(
+        "unbound", diagram_type_name=diagram_type,
+        reason=(
+            f"no installed binding declares a diagram type named "
+            f"{diagram_type!r}, or drawn on one, and the diagram states no MDG "
+            f"diagram type of its own. {_bound_summary(ids, catalog)}. This is "
+            f"the ordinary answer across most of a real repository: compose "
+            f"with the engine's defaults and report the diagram as unbound."))
+
+
+def resolve_diagram(installed: Any, *, style_ex: str = "",
+                    diagram_type: str = "", bindings: Any = None,
+                    directory: str | Path | None = None) -> Resolution:
+    """Which binding applies to one diagram, given what the repository has.
+
+    `installed` is the technology ids EA reports for this repository - or a
+    mapping from those ids to each technology's own runtime definition, which
+    lets a miss say whether a stated diagram type was misspelled. The ids are
+    authoritative: a binding for a technology that is not installed is never
+    used, however well it matches.
+
+    `style_ex` is the diagram's `t_diagram.StyleEx` and `diagram_type` its
+    `t_diagram.Diagram_Type`. Pass both; which of them can answer is precisely
+    what the caller cannot know in advance, and on most diagrams it is the
+    second.
+
+    `bindings` are pre-loaded bindings - from `bindings_for_technologies` - so
+    that resolving a whole repository reads the YAML once instead of once per
+    diagram. Omit it and they are loaded from `directory`.
+
+    The chain, in order, each step reporting its own confidence:
+
+      1. `MDGDgm=<Tech>::<DiagramType>` from `StyleEx`, where that technology is
+         installed and bound. Exact, and final whether or not it resolves.
+      2. `Diagram_Type` matching the name of exactly one bound diagram type.
+      3. `Diagram_Type` matching the EA base type of exactly one bound diagram
+         type. Weak.
+
+    Anything else is an unresolved `Resolution` that says which kind of nothing
+    it is - see `RESOLUTION_PATHS`. Note the registered-technology inventory is
+    not a step in the chain but the filter applied to every step of it, which is
+    the difference between "a binding exists" and "this repository can use it".
+    """
+    ids = _installed_ids(installed)
+    catalog = _candidate_bindings(bindings, ids, directory)
+    key = mdg_diagram_key(style_ex)
+    diagram_type = str(diagram_type or "").strip()
+
+    if key:
+        return _resolve_qualified(key, ids, catalog,
+                                  _declared_diagram_types(installed))
+    if diagram_type:
+        return _resolve_by_diagram_type(diagram_type, ids, catalog)
+    return Resolution(
+        "unidentified",
+        reason=(
+            "the diagram carries no MDG diagram type in its StyleEx and no "
+            "Diagram_Type, so there is nothing to resolve against. Distinct "
+            "from unbound: nothing was looked up, rather than looked up and "
+            "not found."))

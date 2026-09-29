@@ -57,7 +57,8 @@ own — so it runs anywhere you can carry the payload.
 ```python
 import lint
 
-report = lint.lint_diagram(verified, profile=..., roles=..., rows=..., expected_route=...)
+report = lint.lint_diagram(verified, profile=..., roles=..., rows=..., columns=...,
+                           stacks=..., rings=..., expected_route=...)
 if not report.clean:
     for finding in report.errors:
         print(finding.rule, finding.subjects, "->", finding.correction)
@@ -71,20 +72,72 @@ including docstrings. One linter therefore serves every modeling language, inclu
 written a binding for, because "these boxes overlap" is not a metamodel question.
 
 The consequence you have to live with: **the linter cannot know what two elements have in common.**
-That is why `roles` and `rows` are yours to supply.
+That is why `roles`, `rows`, `columns`, `stacks` and `rings` are yours to supply.
 
-### `roles` and `rows` are yours to supply, and omitting them is not free
+### The groupings are yours to supply, and omitting them is not free
 
 - `roles` maps a role name to the objects playing it. Uniform sizing is checked *within* a role,
   never across roles — two elements can share a container and legitimately differ in size.
-- `rows` is a list of rows, each a list of objects. Spacing is checked per row.
+- `rows` is a list of rows, each a list of objects. Spacing is checked per row, along **x**.
+- `columns` is the same thing turned ninety degrees: a list of columns, each a list of objects,
+  spacing checked along **y**. It is a separate argument rather than an axis on `rows` precisely so
+  that a caller who already passes `rows` does not have to restructure to declare a column — pass
+  both and both are judged, by the same rule, under the same id. Until `columns` existed the y axis
+  had no rule at all: a column passed as a row has every x gap equal to the same negative number,
+  so the spread was zero and uneven vertical spacing reported clean. The server's own distribute
+  operation shipped with exactly that defect, and it now does both axes because they are orthogonal.
+- `stacks` is a list of `(axis, containers)` pairs. `axis` is `"vertical"` (read top to bottom, so
+  the containers should share a **width** and a **left edge**) or `"horizontal"` (read left to
+  right, so they should share a **height** and a **top edge**). You state the axis as well as the
+  members: coordinates cannot tell a tall narrow vertical stack from a horizontal one. Rules
+  `ragged-stack` and `staggered-stack`.
+- `rings` is a list of `(hub, items)` pairs, or of `(hub, items, sweep)` triples with the sweep in
+  degrees. A radial tree is several rings, one per hub, and is passed as several. Rule
+  `uneven-spokes` from the pair; `uneven-ring-angles` needs the sweep as well, and see below for
+  why it cannot be inferred.
 
 Omit them and those rules **do not run**. They do not guess. Guessing which elements share a role
 from their coordinates would invent the metamodel the module refuses to have, and it would do it
 silently, which is worse than not checking.
 
+A stack or ring you do not declare is not judged, and a diagram that merely *looks* stacked or
+ringed gets no finding.
+
 A wrapped row is **two rows**. Pass it as two. The rule will not compensate, because compensating
 would blind it to the single mis-spaced element it exists to catch.
+
+### How to tell "did not run" from "ran and found nothing"
+
+Two signals, and you need both, because a clean report that never asked the question is the failure
+mode this whole file exists to prevent.
+
+**An absent metric key.** A rule that never got its grouping records nothing:
+`worst_stack_extent_spread`, `worst_stack_alignment_spread`, `worst_spoke_spread` and
+`worst_ring_angle_spread` are simply not in `report.metrics`.
+
+**`report.not_run`.** This is for a grouping you **did** declare and the rule could not judge — an
+axis outside `STACK_AXES`, a ring with no sweep, or groups that are all too small to compare
+anything within (a role of one, a row of two, a stack of one). Each of those looks exactly like a
+clean result in the findings, so each rule says it out loud.
+
+A grouping you did **not** supply says nothing on `not_run`, deliberately: an entry per unused
+grouping would put four lines on every ordinary diagram, and a list that is noisy on correct output
+is a list nobody reads — after which it cannot do its one job. An **empty** group is treated the
+same way and is not a declaration at all, which is what keeps a banded diagram drawn with
+`draw_band_labels=False` quiet: it has no container elements, its caller still hands over a stack,
+and that is deliberate, documented behavior rather than something to complain about.
+
+**Three rules record a count with no meaning on its own,** and each now carries a denominator beside
+it, the way `crossings` carries `crossings_measured_over`:
+
+| rule | the ambiguous count | the denominator that makes it readable |
+|---|---|---|
+| `uniform-sizing` | `roles_with_inconsistent_sizing` | `roles_measured` — roles holding two or more elements |
+| `pitch` | `worst_pitch_spread` | `pitch_groups_measured` — rows *and* columns holding three or more, summed |
+| `missing-title` | nothing at all | `title_convention_stated` — false when no drawn-title convention was stated, so the rule never ran |
+
+All five of those metric keys are always present. `roles_with_inconsistent_sizing: 0` is the same zero whether you
+passed clean roles or passed none, and a vacuous zero has already been quoted as a result here.
 
 ### Severity
 
@@ -93,14 +146,91 @@ One rule is deliberately narrower than its name suggests. `missing-connector-lab
 a convention in several notations, not an error, and a rule that reported every one of them would
 report correct diagrams as broken.
 
-- **error** — the diagram is wrong. Overlapping elements, a row with no whitespace, elements in one
-  role at different sizes. `report.clean` is false.
+- **error** — the diagram is wrong. Overlapping elements, a row or column with no whitespace,
+  elements in one role at different sizes. `report.clean` is false.
 - **warning** — look at it. Often correct in context: out-of-canvas placement, an unset route, an
-  unexplained set of fills. Does not block.
+  unexplained set of fills, a ragged stack, a staggered stack, uneven spokes, a bunched ring. Does
+  not block.
 - **info** — a measurement, not a judgment.
 
 `report.clean` means **no errors**, not "no findings". A bar nobody can clear is a bar nobody uses,
 and a linter that rejects every legitimate view gets switched off — after which it protects nothing.
+
+### Four rules about shape rather than about elements
+
+Every rule above is per-element or per-pair. These four are about a *group's* geometry, and each
+exists because a diagram passed everything else and looked wrong.
+
+- **`ragged-stack`** (warning). A band sized to its own contents is narrower when it holds fewer
+  items, so bands of three, three and two leave a ragged edge. Only the cross-axis extent is
+  compared, against `SIZE_TOLERANCE`. Bands of different *heights* in a vertical stack are normal
+  and are not reported. A deliberately tapering stack is a legitimate composition: do not declare it
+  a stack.
+- **`staggered-stack`** (warning). The other half of the same picture, and for a while the recorded
+  blind spot: containers of *identical* size at different offsets, so the edge the eye follows down
+  the stack zigzags. The leading edge is the left edge of a vertical stack and the top edge of a
+  horizontal one, judged against `SIZE_TOLERANCE` — alignment is the strictest claim here, boxes
+  either line up or they do not, so it takes the tightest tolerance already in the file. Reported
+  separately from `ragged-stack` because the two have different corrections: one says resize, the
+  other says align.
+- **`uneven-spokes`** (warning). Centering each item on a circle does not put its *edge* on it. A
+  wide flat item reaches toward the hub by half its height at the top and bottom and by half its
+  width at the sides, so it stands off from the hub at the top and bottom and crowds it at the
+  sides. The rule measures the spoke as drawn — center to center, less the stretch inside the hub
+  and inside the item — and flags a spread above `PITCH_TOLERANCE`. Place items by their near edge
+  and it is clean.
+- **`uneven-ring-angles`** (warning). A ring squeezed into a third of its circumference, with every
+  spoke the same length and nothing overlapping. What gives it away is the step from the last item
+  back to the first: the items' own steps can be perfectly even at 100 degrees apiece while the way
+  back is 160. The spread of the steps is judged against `ANGLE_TOLERANCE`.
+
+  **This rule needs the ring's `sweep` and does not run without it.** Three items bunched into 200
+  degrees and three items fanned evenly across 200 degrees *are the same geometry*; the only
+  difference is how far round the ring was meant to go, and only you know that. A rule that assumed
+  a full circle would report every deliberate fan, and a fan is what a partial sweep is for. Pass
+  `(hub, items, sweep)` and it is judged; pass `(hub, items)` and it lands on `not_run`. Only
+  whether the ring closes is read off the number — 360 or more closes it — because the spread of the
+  observed steps is what is judged, so the linter holds no copy of the engine's angular arithmetic
+  to drift away from.
+
+All four are warnings because an uneven stack or ring is a defect of appearance and never of
+correctness. Three of them reuse an existing tolerance rather than a new one: no real stack or ring
+has been measured to calibrate a separate number, and the claim — "these are the same size" and
+"these are evenly spaced" — is the one the existing constants already make.
+
+`ANGLE_TOLERANCE = 4` is the one new constant, and it is in **degrees**, which is why it could not
+reuse `PITCH_TOLERANCE` in layout units. It is calibrated, not picked. Over 6300 ring layouts the
+composition engine actually produces — counts 2 to 15, eight sweeps, four start angles, three radii,
+five item shapes — the worst spread of the angular steps is **0.78°**, which is the cost of placing a
+center on whole units. A `SIZE_TOLERANCE`-sized nudge of 4 units, at the tightest center-to-center
+distance any of those layouts produces (132 units), is **1.74°**, so two neighbors nudged opposite
+ways move one step by **3.47°**. The smallest measured defect is a spread of 60°. So the boundary
+sits anywhere in (3.5, 60) and 4 is taken from the noise end deliberately: a floor's job is to stay
+quiet on correct output.
+
+### A row or column with no whitespace, and why deliberate abutment is safe
+
+`pitch` judges the **spread** of the spacing, and the spread is blind to a row that has no spacing at
+all: eight equal boxes butted edge to edge have eight gaps of zero, and the spread of eight zeros is
+zero. `check_no_overlaps` does not catch it either — touching is exempt there **by design**, because
+a band and its contents legitimately share an edge. So a row with no whitespace anywhere in it used
+to score completely clean. That is the third time the touching exemption has hidden a spacing defect
+here, so the rule now carries a **floor on the gap itself**, an error, on both axes and whether or
+not the elements are uniformly sized.
+
+**Bands, lanes and pools abut on purpose, and this does not report them.** What keeps the floor off
+them is the *declaration*, not the geometry and not the element type:
+
+- A group you pass as a **row** or a **column** is a statement that its members are laid out with
+  spacing between them, so zero spacing in one is a defect.
+- Containers that abut deliberately reach the linter as a **`stacks`** grouping instead, and **no
+  rule here measures the gaps between a stack's members.**
+
+The same two boxes are therefore a defect as a row and correct as a stack, and only you know which
+they are. One consequence worth knowing: a column you pass as a `rows` group now comes back as "no
+whitespace" rather than as clean, because its members' x extents sit on top of each other. That is
+the mis-declaration being reported rather than a new defect — pass it as `columns` and you get the
+uneven-spacing finding you were after.
 
 ---
 
@@ -181,7 +311,8 @@ report overstates what was checked.
 previous = None
 for attempt in range(lint.MAX_CORRECTION_PASSES):
     verified = verify_diagram(diagram_id=..., include_svg=True)
-    report = lint.lint_diagram(verified, profile=profile, roles=roles, rows=rows)
+    report = lint.lint_diagram(verified, profile=profile, roles=roles, rows=rows,
+                               columns=columns, stacks=stacks, rings=rings)
     if report.clean:
         break
     if lint.is_stalled(previous, report):
@@ -216,6 +347,12 @@ two statements.
   rule here.
 - **Whether a container's grouping is honest.** A group called "Other" holding a third of the
   content lints clean and is a confession.
+- **Whether the declared grouping is the real one.** The stack and ring rules judge the stacks and
+  rings you pass, and cannot tell that you left one out or put a box in the wrong ring. A ring with
+  no `sweep` is not judged for its angles at all, and says so on `not_run`.
+- **How much of its sweep a ring should fill.** `uneven-ring-angles` judges evenness only. A fan
+  occupying a quarter of the sweep it declared, evenly, is clean — how wide a fan should open is a
+  composition choice, not a defect.
 - **Whether the layout matches the reader's mental order.** Foundations at the top is a choice the
   linter cannot second-guess.
 - **A collision caused by a grown box, unless the render was supplied.** Without `include_svg=True`
@@ -225,6 +362,31 @@ two statements.
 When a rule *can* be built for something on this list, it should be. Until then, the honest report
 is "clean, and here is what clean does not cover" — which is why this section exists in a file the
 skill points at rather than in a comment nobody reads.
+
+### A known limit, not a gap to close: a name colliding with a stereotype icon
+
+An element's name running into the icon drawn inside its own box, so the two overprint. There is no
+rule for it, and unlike the items above **this one is not reachable by adding one.** The mechanism,
+because a limit without its mechanism gets rediscovered as a bug:
+
+1. **`stereotype` is inert input.** No rule reads the field. It arrives in the payload and nothing
+   branches on it — which is the language-neutrality property working as intended, not an oversight.
+2. **The icon is not in the geometry.** It is drawn by a shape script, and an element drawn by a
+   shape script emits **paths rather than a `<rect>`**. There is nothing in either the stored rects
+   or the SVG rects to measure the name against.
+3. **The one rule that reads the render refuses to judge those diagrams.** On a shape-scripted
+   notation the only `<rect>`s are the drawn containers, so no box's text is exactly one element's
+   name, `labels_unmatched` rises, and `check_labels_fit` reports itself on `not_run`. When a shape
+   script *does* emit small rects — an icon box, a compartment divider — they are under `_MIN_BOX`
+   (20px) and discarded as decoration, which is exactly the size an icon is.
+
+Closing it needs a live EA and attribution of a shape script's output, and the linter's standing rule
+is to **refuse to judge what it cannot attribute**: three classes of false positive got through 63
+green hermetic tests by guessing, and were caught only by live diagrams. A quality warning that fires
+wrongly across a whole notation is how a linter gets switched off, and a missed icon collision costs
+far less than that.
+
+So: **render it and look.** That is the check for this one, and there is no substitute.
 
 ---
 

@@ -55,8 +55,10 @@ bands, a set of parallel sequences) and places boxes accordingly, by arithmetic 
 That restraint is the point. A grammar is deterministic and inspectable: given the same content and
 the same sizing you get the same diagram, every time, and you can reason about why a box is where
 it is. EA's own automatic layouts are the right tool when the content has no such structure — a
-dense dependency graph, for instance. Reach for a grammar when the content *does* have structure
-and you want the diagram to show it.
+dense dependency graph, for instance — and that case is a named choice here, `graph` (§8), not a
+failure to pick a grammar. Reach for a composed grammar when the content *does* have structure and
+you want the diagram to show it. One more value, `ea-semantic` (§9), records the diagram types whose
+own definition dictates the arrangement, so that computing coordinates for them would be wrong.
 
 The capability splits three ways, and each corner holds a different kind of knowledge:
 
@@ -74,24 +76,46 @@ should be taking one more parameter.
 
 ---
 
-## 3. Status — four of five are built
+## 3. Status — seven grammars, three placements
 
-The analysis first resolved the corpus into **four** grammars. Measuring the rows grouped under
-"computed geometry" before building it showed they do not share an arithmetic: placing items on a
-circle, packing rectangles so their *areas* encode a number, and drawing a waveform against a time
-axis are three unrelated pieces of code. The polar one was split out and built.
+The vocabulary has **seven** values. Five are layouts this library computes coordinates for; the
+other two are the cases where it computes none. What separates them is *who places the geometry*,
+because that decides what may be done with a diagram type that names the grammar.
 
-| Grammar | Status |
-|---|---|
-| Layered bands | **Implemented** — `compose_layered_bands` |
-| Lanes | **Implemented** — `compose_lanes` |
-| Nested grid | **Implemented** — `compose_nested_grid` |
-| Radial | **Implemented** — `compose_radial` |
-| Computed geometry | **Not built.** What remains under the name: treemaps, and timing diagrams |
+| Grammar | Who places the geometry | Status |
+|---|---|---|
+| Layered bands | Our arithmetic | **Implemented** — `compose_layered_bands` |
+| Lanes | Our arithmetic | **Implemented** — `compose_lanes` |
+| Nested grid | Our arithmetic | **Implemented** — `compose_nested_grid` |
+| Radial | Our arithmetic | **Implemented** — `compose_radial` |
+| Computed geometry | Our arithmetic, not yet written | **Not built.** What remains under the name: the treemap |
+| Graph | EA's own layout, which we tidy afterward | **Producible today**, with no composer behind it |
+| EA-semantic | The diagram type itself | **Not producible.** Recorded so the gap is visible as data |
+
+**How the list grew.** The analysis first resolved the corpus into **four** grammars. Measuring the
+rows grouped under "computed geometry" before building it showed they do not share an arithmetic:
+placing items on a circle, packing rectangles so their *areas* encode a number, and drawing a
+waveform against a time axis are three unrelated pieces of code. The polar one was split out and
+built. The waveform was not left behind as unfinished work of the same kind; it was moved to a
+different value altogether, and §7 records why.
+
+Two values were then added for a different reason. Most diagram types are graphs or trees, and the
+composed grammars have nothing to say about them, yet a binding must name a grammar. So whole
+families of diagram type went unrecorded for a schema reason rather than a real one, and an
+omitted diagram type is indistinguishable from an oversight. `graph` and `ea-semantic` exist so
+that every diagram type can be recorded honestly: one as "EA places it, and that is fine", the
+other as "classified, and not producible yet".
+
+**Composed and producible are different questions.** Whether the engine has a composer for a
+grammar is one fact. Whether a diagram of that type can be produced at all today is another, and
+the two only coincide for the composed grammars. `graph` is producible and has no composer;
+`computed-geometry` has a composer pending and is neither; `ea-semantic` is neither and has nothing
+pending. Do not answer one question with the other's answer.
 
 Do not tell a user computed geometry is available, and do not improvise a call to it. If content
 plainly wants it, either compose it from the implemented grammars and say what you approximated, or
-hand the geometry over explicitly and say you did it by hand.
+hand the geometry over explicitly and say you did it by hand. Do not tell a user an `ea-semantic`
+type can be produced either, and do not quietly lay it out as a graph (§9).
 
 ---
 
@@ -123,8 +147,18 @@ a flat set.
   of boxes at four different widths reads as four different kinds of thing even when it is one kind,
   and the reader spends attention decoding the variation instead of the content. Vary size
   *between* bands when the bands hold genuinely different kinds of thing; never within one.
+- **One width for every band, so the stack has a straight right edge.** A band is a full-width strip
+  standing for a layer that spans the diagram, so a band of two items drawn narrower than the band of
+  three above it reads as a mistake in the drawing rather than as a fact about the content. The engine
+  gives every band the widest band's width and leaves the slack empty inside the sparse ones. A
+  minimum band width, when one is set, is a floor under the width the whole stack ends up with; it
+  can widen the stack and never narrows it, so it cannot leave one band narrower than another. This
+  is **the opposite of the nested grid's rule** and the difference is deliberate — see §6, and do not
+  tidy the two into agreement: a band is a strip whose raggedness reads as a drawing error, while a
+  nested-grid container is sized by its contents because its size *is* the data.
 - **Band heights that follow their contents.** A band with two items should not be as tall as a band
-  with twelve. Fixed band heights leave holes that read as missing content.
+  with twelve. Fixed band heights leave holes that read as missing content. Height is where this
+  grammar carries its variation; width is not, which is why the two are treated differently.
 - **Wrapping rather than shrinking.** When a band holds more items than fit, run them onto a second
   row at the same size. Shrinking boxes to fit one row destroys the uniform-size rule and makes the
   crowded band look less important than the sparse one.
@@ -142,9 +176,12 @@ a flat set.
   is deliberately unpopulated" — but only if the label makes that claim on purpose. The engine keeps
   an empty band's label row rather than collapsing it silently, so the emptiness is visible and the
   author has to mean it.
-- **Centered bands with wildly different widths.** Centering looks tidy when band widths are
-  similar and looks like a Christmas tree when they are not. Left alignment is the safer default,
-  which is why it is the default.
+- **Reading anything into how much of a band is filled.** Bands share a width, so a sparse band has
+  empty space on its right that means nothing beyond "this layer has fewer things in it than the
+  busiest one". If the horizontal extent is supposed to carry a measure, this is the wrong grammar.
+  (`align` still chooses where a band's row sits inside the width it is given — flush left by default,
+  centered on request. It no longer moves the bands themselves, because they already share both
+  edges.)
 - **Bands used to carry two dimensions at once.** If the horizontal position within a band also
   means something (time, priority), say so in the diagram, or use a grammar where it is explicit.
   A reader will not guess.
@@ -250,7 +287,14 @@ nesting.
   genuinely wants more raises it deliberately.
 - **Containers sized by their contents.** A group holding twenty things should be visibly bigger than
   one holding two. Sizing containers alike is the fastest way to make a portfolio view lie about
-  where the weight is.
+  where the weight is. A container is therefore **not** stretched to fill its grid cell, and a row of
+  containers can end at different depths — the ragged edge is the price and it is worth paying.
+
+  **This is the opposite of the layered-bands rule (§4), on purpose. Do not reconcile them.** There,
+  every band takes a common width because a band is a full-width strip and raggedness reads as a
+  drawing error. Here, size *is* the information: snapping containers to uniform cells drew a
+  four-child grouping at exactly the same size as a two-child one, which is tidier and wrong about
+  the thing the diagram exists to show. The rule differs because what the rectangle *means* differs.
 - **Grids close to square, not one long row.** A grouping rendered as a single row reads as a list
   and the grouping disappears. The engine defaults to `ceil(sqrt(n))` columns; `grid_columns`
   overrides it per composition or per container when the content has a real column meaning.
@@ -306,10 +350,29 @@ nothing sits at the middle, the ring is decoration and a grid says the same thin
 
 ### What makes it read well
 
-- **Square-ish items.** This matters more than it sounds. Items are centered on their point of the
-  circle, so a wide flat box reaches closer to the center at the top and bottom of the ring than at
-  the diagonals, and the spokes come out visibly unequal in length. A ring of 140x60 boxes reads as
-  slightly wrong for a reason most people cannot name. Circles or near-square boxes remove it.
+- **Equal spokes, which the engine now guarantees and the caller used to have to engineer.** The
+  engine places each item so the *drawn* spoke — the gap between the hub's border and the item's
+  border, along the line between them — is the same length all the way round, whatever shape the
+  boxes are. `radius` means that gap. Item centers therefore do **not** all sit at one distance from
+  the hub, and should not: the item at the side has to sit further out than the one at the top by
+  exactly the amount the two boxes reach further along that bearing.
+
+  What this replaced, and what it was wrong about: this file used to tell you to prefer **square-ish
+  items**, on the reasoning that a wide flat box "reaches closer to the center at the top and bottom
+  of the ring than at the diagonals". That had the direction backwards. A box centered on the ring
+  reaches back toward the hub by half its *height* at the top and bottom and by half its *width* at
+  the sides, so a wide flat box **crowds the hub at the sides and stands off at the top and bottom** —
+  the opposite of what was written. Measured on a real ring of eight 140x60 boxes around a 140x60
+  hub at a radius of 220, the spokes came out 160 at the top and bottom, about 136 on the diagonals
+  and 80 at the sides.
+
+  The advice was also incomplete, in a way worth knowing even now. Square items were never enough:
+  a square is not a circle, and its border is 41% further from its center through a corner than
+  along an axis. With a square hub and square items on a ring of eight, that spread the spokes by
+  about 41% of the box's side — 41 units for 100x100 boxes, and more for bigger ones. Only a circle
+  would have removed it, and EA draws boxes. Item shape is now the engine's problem rather than
+  yours: the drawn gap comes out at the requested radius at every position, to within a unit of
+  rounding.
 - **Few enough to see the circle.** Past about a dozen the ring reads as a crowd. The engine widens
   the radius rather than letting items collide, so what you get is a very large circle rather than
   an overlap — which is the honest failure, but still a failure.
@@ -321,7 +384,11 @@ nothing sits at the middle, the ring is decoration and a grid says the same thin
 - **No real center.** See above; this is the common misuse.
 - **A ring used to imply sequence.** A reader follows a cycle clockwise whether or not one is meant.
   If the order is arbitrary, say so, or use a grid.
-- **Long labels.** A wide label forces a wide box, which is exactly what makes the spokes uneven.
+- **Long labels.** A wide label forces a wide box. That no longer makes the spokes uneven, but it
+  still costs you twice: the ring has to grow to keep wide boxes from colliding, and the items' outer
+  corners stick out by different amounts even though their inner edges line up, so the ring's outer
+  silhouette is the uneven thing instead. Shorter labels still read better; they are no longer
+  load-bearing.
 - **Arcs you cannot draw.** Reference radial diagrams commonly use curved connectors. The connector
   vocabulary here has Direct, Auto, Custom, Tree, Lateral, Orthogonal and Bezier — **no arc**. A
   generated equivalent is structurally right and visually not identical; say so rather than
@@ -334,12 +401,29 @@ nothing sits at the middle, the ring is decoration and a grid says the same thin
 Positions derived from data rather than from structure: a two-axis placement where both coordinates
 come from element properties. A risk/value bubble chart, a technology radar, a time-phased roadmap.
 
-**What is left under this name is two unrelated things**, once the radial grammar was split out: a
-**treemap**, where area encodes a quantity, and a **timing diagram**, with a time axis and step
-waveforms. They are separate pieces of work and only the treemap looks worth building.
+**What is left under this name is the treemap**, where area encodes a quantity. It was once two
+things, and the other is not here any more: the radial arrangement was split out and built, and the
+timing diagram was moved to `ea-semantic` (§9).
+
+**Why the timing diagram does not stay here.** A timing diagram draws a waveform per participant
+against a shared time axis. The measurement is what settled it: the horizontal axis *is* time, and
+every timeline spans the canvas to carry it, so no two timelines are ever horizontal neighbors —
+the horizontal gap between neighbors has no samples at all, because it is not a quantity that diagram
+type has. The type dictates the arrangement; coordinates are the wrong output for it, which is the
+definition of `ea-semantic`, not of a composed grammar we have yet to write.
+
+The move matters for a reason beyond tidiness. A diagram type recorded under a composed grammar that
+is not built starts reporting itself composable **the day that composer ships**. Left here, the
+timing diagram would have been reported as composable the moment a treemap composer arrived, and
+something would then have composed a waveform as a treemap. Recording it under a grammar that will
+never have a composer is what keeps that from happening. The same applies to any future type: do not
+park a diagram type under `computed-geometry` to get it into a file.
+
+A time-phased roadmap is a different case. There the arrangement is ours to choose and the dates are
+the data we position by; in a timing diagram the type itself has already fixed the arrangement.
 
 **Would suit:** portfolio assessments with two scored dimensions, radars with a ring per horizon,
-roadmaps where horizontal position is a date.
+roadmaps where horizontal position is a date, and the treemap.
 
 **Would read well when:** both axes are labeled and their units stated; the scale is honest — a
 linear axis for a linear measure, and no silent rescaling to fill the canvas; overlapping points
@@ -354,10 +438,141 @@ other grammars is the honest choice.
 
 ---
 
-## 8. Reviewing any composed diagram
+## 8. Graph — *EA places it*
 
-Whatever the grammar, these hold. The first three the engine guarantees arithmetically; the rest are
-judgment and need a human, or an author acting like one.
+A graph or a tree. **We compute no coordinates: EA's own layout places the elements and we tidy
+afterward.** This grammar is fully **producible**, and it has no composer because it needs none.
+
+### What it suits
+
+Content whose relationships *are* the structure, and where nothing about the content says where a
+box has to sit.
+
+- Dependency and interaction networks: components and what each depends on, services and their
+  consumers, systems and the flows between them.
+- Structural models: things and the associations between them, parts and how they connect.
+- Hierarchies and taxonomies drawn as trees, and decision structures that branch.
+- Flows that have no owners: steps and branches with no responsibility axis.
+- Most other diagram types. Each composed grammar assumes a particular shape — strata, owners,
+  containment, a center — and most diagram types have none of them. This is their honest home,
+  not a consolation prize.
+
+Two tests, and both should pass:
+
+1. **Would a general-purpose layout produce something a reviewer would accept?** If yes, this is the
+   grammar. Do not downgrade the type to `ea-semantic` merely because the result was not *composed*;
+   not-composed and not-producible are different facts.
+2. **Is there a structure a composed grammar would show?** Strata you can name, owners of steps,
+   genuine containment, a real center. If there is, that grammar serves the content better and this
+   one is the wrong choice. A graph of a layered architecture is a layered architecture with the
+   layers thrown away.
+
+### What we still contribute
+
+Everything except the coordinates. A `graph` binding carries the measured element sizes, the spacing
+(which the layout call reads as layer and column spacing, so the figures are not wasted on a grammar
+that computes nothing), the default and trunk routing, the title convention, and which visual channels
+the type already claims and which are free. That is the difference between a diagram that reads as
+the right kind of diagram and one that merely contains the right elements.
+
+### What makes it read well
+
+- **Sizes from the type, uniform by role.** EA's layout decides where boxes go, not how big they
+  are, so the same "same role, same size" rule as every other grammar applies and the tidy step is
+  where it is enforced.
+- **Spacing stated, not left at the layout's default.** The gaps come from the binding, so a diagram
+  of a given type looks like the others of its type.
+- **One routing style throughout**, the binding's default, with the trunk route only for the
+  relationship types the diagram habitually draws as a shared trunk. A mixture of routing styles on
+  one diagram reads as several diagrams pasted together.
+- **A title per the type's convention** — drawn on the canvas or supplied by EA's frame, never both
+  and never neither.
+- **The geometry checks run after the layout call.** EA placed the boxes, so the no-overlap,
+  positive-size and fits-the-canvas checks in §10 are things to verify, not things the engine
+  guarantees.
+
+### What makes it read badly
+
+- **Reaching for it because no other grammar came to mind**, when the content does have strata,
+  owners, containment or a center. See the second test above.
+- **Reading meaning into position.** The layout places boxes by connectivity, so where a box sits
+  says nothing. If horizontal or vertical position is supposed to carry a value, this is the wrong
+  grammar, and the diagram must not imply otherwise.
+- **Hand-nudging boxes after the layout** until connectors cross that did not before. Tidy the sizes
+  and routing; leave the placement.
+- **A graph too dense for any layout to untangle.** Split it, or filter it, before drawing it.
+
+### What it refuses
+
+It refuses to stand in for a composed grammar to make a coverage figure look better, and it refuses
+diagram types whose arrangement the type itself dictates. A message exchange laid out as a free
+graph has all its elements and is no longer a message exchange; that belongs in §9, not here.
+
+---
+
+## 9. EA-semantic — *not producible, recorded*
+
+The diagram **type** dictates the arrangement, and coordinates are the **wrong output**. Placing
+boxes on these is not tidying; it is fighting the editor, which derives the arrangement from the
+content.
+
+**This value is not producible**, and it is recorded rather than omitted precisely so that an omitted
+diagram type stops being indistinguishable from an oversight. "Classified, not producible yet" is a
+fact someone can plan against. A missing entry says nothing.
+
+### How it differs from computed geometry
+
+The two are easy to confuse, and confusing them is the expensive mistake, so plainly:
+
+- **`ea-semantic`** means *coordinates are the wrong output.* The arrangement belongs to the type.
+  Nothing is pending, because no coordinates we could write would be right.
+- **`computed-geometry`** means *the arithmetic exists but we have not written it.* Coordinates are
+  the right output, and one day a composer will produce them.
+
+A waveform drawn against a time axis is the instructive case. It looks like arithmetic we have not
+written, and it was first filed that way; but the axis is dictated by the type, so it is `ea-semantic`
+(§7 has the reasoning).
+
+### What it suits
+
+Diagram types whose quality is order, not geometry.
+
+- **Message exchanges**: participants each with a lifeline running down the page, and messages
+  between them ordered from top to bottom. The order across and down the page is derived from the
+  message sequence. Measured, the horizontal spacing is an even pitch no author produces by hand,
+  which is the signature of an editor doing the placing, and a lifeline's height is set by how many
+  messages it carries, so no element size is stable enough to state.
+- **Timing diagrams**: a waveform per participant against a shared time axis, where each timeline
+  spans the canvas and no two are horizontal neighbors.
+
+The test: **does the type itself say where things go, so that any coordinates we wrote would only
+restate its rule, and get it wrong as soon as the content changed?** And is the quality of the diagram
+something other than geometry — the order of the messages, the shape of the waveform?
+
+Measure before you classify. A type that *sounds* sequential is not necessarily `ea-semantic`: if
+authors place its elements at freely chosen positions, in many different sizes, with gap
+populations that look like an ordinary graph's rather than an even pitch, EA is not imposing the
+arrangement and the type is `graph`. Resemblance to a sequence is not the test; whether EA dictates
+the placement is.
+
+### What it refuses
+
+- **Composing it.** There is no composer and none is pending. A caller must not write coordinates
+  for one of these types.
+- **Being laid out as a graph** to make the diagram appear. Do not promote an `ea-semantic` type to
+  `graph` because it would raise the coverage figure; the elements would be present and the diagram
+  would no longer be of that kind. Say the type is recorded but not producible, and stop.
+- **Being judged by geometry.** The overlap and sizing checks in §10 say nothing about whether a
+  message order is right, so passing them proves nothing here.
+
+---
+
+## 10. Reviewing any composed diagram
+
+Whatever the grammar, these hold. For the composed grammars the first three are guaranteed
+arithmetically by the engine; for a `graph`, EA placed the boxes, so they are checks to run after
+the layout call rather than guarantees. The rest are judgment and need a human, or an author acting
+like one.
 
 1. **No two items overlap**, and no two containers overlap. Items sitting inside their own container
    is expected and is not an overlap — check items against items and containers against containers,

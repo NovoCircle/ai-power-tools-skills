@@ -19,9 +19,18 @@ The dependency runs one way only. `compose.py` contains no technology name and d
 loader: a binding is data that *feeds* the engine. A single `if technology == …` in the engine would
 quietly undo the whole design.
 
+**The bindings are a tree, not a flat set of peers.** EA is a UML tool, so one binding holds EA's base
+notation and every MDG binding declares `extends` to it and records in `base` which of its diagram
+types each of its own is drawn on. What that buys is the slots a binding does *not* state: they resolve
+to the value measured for the diagram type it is actually drawn on instead of to an engine default.
+§5.6 is the whole of it.
+
 ## 2. Where bindings live, and how one is found
 
-Bindings sit in `bindings/`, one file per technology. Two ship: `ArchiMate3` and `BPMN2.0`.
+Bindings sit in `bindings/`, one file per technology. **Ask `available_bindings()` which ones ship**
+rather than trusting a list in a document: this line read "two ship" for some time after the third
+one landed, and a stale inventory here is the one that sends a reader looking for a file that is not
+there — or worse, writing a second binding for a technology that already has one.
 
 The filename is a slug of the technology id — lowercased, with anything outside letters, digits, `.`,
 `_` and `-` flattened to `-`, so `BPMN2.0` becomes `bpmn2.0.yaml`. The **declared `technology` is
@@ -41,14 +50,43 @@ pip install pyyaml
 
 Four vocabularies are fixed. A value outside them is refused on load.
 
-**Grammars** — four, because the variety of real diagrams resolves into four. Three are implemented.
+**Grammars** — seven, in three placements. The placement is who computes the coordinates, and it
+decides what a consumer may do with a diagram type that names the grammar.
 
-| Grammar | `compose.py` |
-|---|---|
-| `layered-bands` | implemented — `compose_layered_bands` |
-| `lanes` | implemented — `compose_lanes` |
-| `nested-grid` | implemented — `compose_nested_grid` |
-| `computed-geometry` | not implemented |
+| Grammar | Placement | Geometry is ours | Producible today |
+|---|---|---|---|
+| `layered-bands` | composed by us | yes | yes — `compose_layered_bands` |
+| `lanes` | composed by us | yes | yes — `compose_lanes` |
+| `nested-grid` | composed by us | yes | yes — `compose_nested_grid` |
+| `radial` | composed by us | yes | yes — `compose_radial` |
+| `computed-geometry` | composed by us | yes | **no** — no composer yet |
+| `graph` | EA's layout places it | **no** | **yes** — via `layout_diagram`, then tidy |
+| `ea-semantic` | the diagram type dictates it | **no** | **no** — later design work |
+
+Five are compositional layouts this library computes coordinates for. `computed-geometry` is one of
+them and has no code behind it yet: **the treemap is all that remains under that name** after `radial`
+was split out and built, and the timing diagram was moved to `ea-semantic` — see §5.5.1 and
+`grammars.md` §7.
+
+The other two are the cases where we place nothing, and they are not layouts:
+
+- **`graph`** — a graph or a tree. We compute no coordinates; EA's own layout engine does, and we tidy
+  afterwards. The binding still carries everything else of value, and `spacing` is not wasted on it:
+  the layout call reads the same gaps as layer and column spacing. A `graph` diagram type is fully
+  **producible**, and the reference corpus audit already counts diagrams achieved this way.
+- **`ea-semantic`** — the diagram *type* fixes the arrangement, so coordinates are the **wrong
+  output**. The clear case is lifelines with messages ordered down the page, where the horizontal
+  pitch is an even machine step no author produces by hand. Quality there is order, not geometry.
+  Nothing here produces or judges one, so it is **not** producible. It is recorded anyway — see §5.5.
+  **It does not mean "behavioral"**: a state machine's states and a collaboration's participants sit
+  where a modeler put them and are `graph`. See §5.5.1, which is where that mistake was made and
+  corrected.
+
+> **Two questions, two answers, never one boolean.** `grammar_is_implemented` means *the engine has a
+> `compose_<grammar>` function for this* and nothing else — consumers sweep that set to pick a
+> composer, so an entry with no composer in it would crash them. *Can we produce this at all* is
+> `grammar_is_producible`. For the five composed grammars the two coincide; for `graph` they differ,
+> which is the whole reason there are two.
 
 **Channels** — the ten visual channels a diagram can carry a variable in: `fill`, `border`,
 `border_width`, `line_color`, `line_style`, `font_color`, `opacity`, `icon`, `size`, `position`.
@@ -76,7 +114,7 @@ mistakes are told what they probably meant.
 |---|---|---|
 | `technology` | yes | Non-empty string, and must not contain `::`. This is the part *before* the `::` in an `MDGDgm=<Tech>::<DiagramType>` value, and it has to match EA verbatim. |
 | `display_name` | no | Non-empty string. Defaults to `technology`. |
-| `extends` | no | Technology id of another binding in the same directory. Cannot be this binding's own id; cycles are refused by name. |
+| `extends` | no | Technology id of another binding in the same directory — **the notation this one is built on**. Cannot be this binding's own id; cycles are refused by name. Every shipped MDG binding names the base notation here; see §5.6. |
 | `stereotype_prefix` | no | String, `""` included. See §5.3 — `""` is a statement, not an omission. |
 | `notes` | no | Non-empty string. |
 | `diagram_types` | yes | Mapping, at least one entry. |
@@ -90,11 +128,11 @@ space.
 
 | Key | Required | Validated against |
 |---|---|---|
-| `base` | no | Non-empty string. The EA base diagram type this MDG diagram type is built on, which is what a caller passes to `create_diagram` to create one — `Logical` for `ArchiMate3::Application`, `Analysis` for `BPMN2.0::Business Process`. Nothing inside the skill consumes it; it is there for the call that makes the diagram. |
-| `grammar` | yes | One of the four grammars. |
+| `base` | no | Non-empty string. The EA base diagram type this MDG diagram type is built on, which is what a caller passes to `create_diagram` to create one — `Logical` for `ArchiMate3::Application`, `Analysis` for `BPMN2.0::Business Process`. **Consumed twice**: it picks the parent diagram type this one inherits its unstated sizes and gaps from (§5.6), and it is the resolver's weakest match when a diagram names no MDG diagram type of its own. State it on every diagram type — a missing `base` costs the substrate. |
+| `grammar` | yes | One of the seven grammars (§3). Mandatory, which is why `graph` and `ea-semantic` exist — see §5.5. |
 | `title` | yes | `drawn` or `frame-header`. |
 | `sizing` | yes | §4.3. |
-| `spacing` | no | §4.4. Omitted means the engine's own defaults. |
+| `spacing` | no | §4.4. Per key, an omitted gap now means **the value measured for the base diagram type this one is drawn on**, and the engine's own default only when there is no substrate to ask. See §5.6. |
 | `routing` | yes | §4.5. |
 | `channels` | yes | §4.6. |
 | `notes` | no | Non-empty string. |
@@ -169,7 +207,7 @@ branch per notation.
 | `diagram_type` | yes | Must be a diagram type this binding declares. |
 | `intent` | no | List of phrases a request might match. |
 | `admits` | no | List of concept names, no duplicates. Concept names, not stored stereotypes. |
-| `grammar` | no | One of the four. Overrides the diagram type's grammar for this viewpoint. |
+| `grammar` | no | One of the seven. Overrides the diagram type's grammar for this viewpoint. |
 | `notes` | no | Free text. |
 
 ### 4.8 `presentation_profiles.<name>`
@@ -267,16 +305,137 @@ ArchiMate's Organization and Capability viewpoints had been recorded as the nest
 so the day the grammar shipped they became composable without a single binding changing.
 
 `DiagramTypeBinding.grammar_is_implemented` is how a consumer finds out before it composes rather
-than after. `False` is a real answer, not an error — check it, say so, and fall back to a plain graph
-layout instead of composing the wrong shape.
+than after. `False` is a real answer, not an error — check it, say so, and act on
+`grammar_is_producible` instead of composing the wrong shape.
 
-### 5.6 `extends` replaces whole entries
+**This is not a license to park a diagram type under an unbuilt grammar.** `archimate3.yaml` records
+`Motivation` as `layered-bands` even though a motivation view reads as a tree, and that is honest,
+because the levels of intent really are drawn as registers — one band per level — which is what keeps
+siblings aligned; the binding's own `notes` say so. What would be dishonest is recording
+`computed-geometry` for a diagram type with no computed geometry, just to get it into a file: the day
+the treemap composer ships, that type starts reporting itself composable and something will compose
+it.
 
-`extends` names a technology id and resolves against the same directory. Merging goes one level into
-each catalog: a diagram type, viewpoint or profile the child restates **replaces the parent's
-entirely** rather than merging field by field. Field-level merging would let a child inherit half a
-convention — a parent's `channels` under a child's `grammar` — which is harder to reason about than
-restating the type. A child that leaves `stereotype_prefix` empty inherits the parent's.
+### 5.5.1 Choosing between `graph` and `ea-semantic`
+
+Both mean *we place nothing*. They differ on whether the result is any good, and therefore on whether
+the diagram type counts as producible.
+
+Ask the two questions in this order.
+
+1. **Would a general-purpose layout produce an acceptable diagram of this type?** If yes — because the
+   content is a graph or a tree and nothing about the diagram type says where a node must sit — the
+   grammar is **`graph`**. Hand it to EA's layout, then tidy: apply the binding's sizes, set the
+   routing it states, and add or omit a title per its convention. Class, component, deployment,
+   package, object, use case, internal block, parametric and plain activity diagrams are all this
+   case.
+2. **Does the diagram type itself dictate the arrangement, so that coordinates are the wrong output?**
+   Then the grammar is **`ea-semantic`**. A sequence diagram's quality is lifeline order and message
+   sequence, and the measurement shows the editor doing the placing: an even horizontal pitch no
+   author produces by hand, and no element size stable enough to state, because a lifeline's height is
+   set by how many messages it carries. Placing boxes on that is not "tidying", it is fighting the
+   editor. Sequence and timing diagrams are this case.
+
+> **MEASURE BEFORE YOU CLASSIFY.** This section named four types under `ea-semantic` — sequence, state
+> machine, communication and interaction overview — and three of them were wrong. The intuition behind
+> the mistake was *behavioral means the type owns the arrangement*, and it does not. Measured on the
+> example model, 43 plain state machine diagrams place 62 states at freely chosen positions in 20
+> distinct sizes, with gap populations (n=132 horizontal, n=107 vertical, the densest single diagram
+> supplying 8% and 10% of them) that look like a class diagram's rather than an even pitch — so EA imposes
+> nothing and the type is **`graph`**, which is how the shipped base-notation binding classifies it.
+> Communication and interaction overview are ordinary graphs on the same evidence; the sequence in a
+> communication diagram lives in the message *numbering*, not in coordinates. A type that *sounds*
+> sequential is not `ea-semantic` unless EA is doing the placing, and the way to find out is to
+> measure the positions and the sizes.
+
+**A timing diagram is `ea-semantic`, not `computed-geometry`** — the reverse of what this section
+used to say. Its x axis looks like arithmetic nobody has written, which is how it was first filed; but
+the axis is dictated by the type. Every timeline spans the canvas to carry the shared time axis, so
+no two timelines are ever horizontal neighbors and the horizontal gap has no samples at all, because
+it is not a quantity the type has. The decisive argument is the parking hazard in §5.5: under an
+unbuilt *composed* grammar, a timing diagram would start reporting itself composable the day the
+treemap composer shipped. The shipped binding classifies it `ea-semantic`, `grammars.md` §7 and §9
+carry the full reasoning, and **the treemap is now all that remains under `computed-geometry`**.
+
+The distinction the pair turns on is still worth holding: `ea-semantic` means *coordinates are the
+wrong output*, `computed-geometry` means *the coordinates are right and we have not written the
+arithmetic*.
+
+Test 1 first, and mean it. If EA's layout genuinely produces something a reviewer would accept, the
+type is `graph` and producible — do not downgrade it to `ea-semantic` because the result is not
+*composed*. Equally, do not promote an `ea-semantic` type to `graph` because it would raise the
+coverage figure: a sequence diagram laid out as a free graph is not a sequence diagram.
+
+**Record the type either way.** The reason these values exist at all is that `grammar` is mandatory,
+so before them the only ways to bind such a type were to record a composed layout it does not have or
+to leave it out — and an omitted diagram type is indistinguishable from an oversight. Recording it as
+`ea-semantic` says "classified, not producible yet", which is a fact someone can plan against. A
+missing entry says nothing.
+
+**A `graph` binding is worth authoring.** It carries the measured element sizes, the spacing the layout
+call consumes, the default and trunk routes, the title convention, and the claimed and free visual
+channels — everything except the coordinates. That is the difference between a diagram that reads as
+the notation and one that merely contains the right elements.
+
+### 5.6 The base notation is the root, and inheritance fills only what a binding does not state
+
+EA is a UML tool. Every MDG technology is a **stereotype layer applied to UML**, not a peer notation
+beside it, and the data says so: each MDG diagram type records in `base` the EA base diagram type it is
+drawn on, and every base the shipped MDG bindings name is a plain-UML diagram type. An ArchiMate view
+*is* a Class diagram (`Logical`) with a technology tag; a BPMN process *is* an `Analysis` diagram; a
+SysML requirement diagram *is* a `Custom` canvas. So one binding is the root of the tree and every
+other one declares `extends` to it.
+
+**Two keys, two facts, neither derivable from the other.** `extends` says which binding is the parent;
+`base` says which of the parent's diagram types each of this binding's own diagram types is drawn on.
+They are not one relationship stated twice: a single binding's diagram types can sit on *different*
+bases (one shipped binding sits on two), so there is no single value `base` could derive; and `base`
+names a diagram type rather than a technology, so deriving the parent from it needs a search of the
+directory whose answer changes with which files happen to be present — which is the silent-wrong-answer
+failure this whole module is built against. The duplication is made safe by a **test that derives the
+parent from `base` and asserts it matches the declared `extends` for every shipped binding**, which
+also catches the real hazard of a hand-written key: an author who forgets it.
+
+**What is inherited: `sizing` per concept and `spacing` per key, and nothing else.**
+
+| Slot | Inherited? | Why |
+|---|---|---|
+| `sizing` | per concept | A concept the child sizes keeps the child's size, `sizing.default` included — a stereotyped element is the size its own MDG draws it. Concepts the child says nothing about take the substrate's measured size. |
+| `spacing` | per key | The slot this exists for. A gap a child leaves unstated used to reach the engine's own default; it now reaches the value measured for the diagram type the child is actually drawn on. |
+| `grammar`, `title`, `routing`, `channels` | no | Each is mandatory or a statement in its own right. Letting a parent's `graph` win over a child's `layered-bands` or `lanes` would flatten the structure an MDG exists to add — ArchiMate's viewpoints genuinely impose bands on a base that is otherwise a graph. |
+| `notes` | no | Prose about one binding is not prose about another. |
+| `stereotype_prefix` | when the key is **absent** | See below. |
+| `viewpoints`, `presentation_profiles` | one level, child entries winning | Neither is a claim about what EA declares, so a technology publishing none of its own is better off with its parent's than with nothing. |
+
+**A child does not acquire its parent's diagram type catalog.** This is a change from an earlier merge
+that added the parent's diagram types to the child's, and that merge is wrong in two silent ways once
+the parent is the base notation. A technology's diagram types are declared by its MDG and are checked
+against the MDG data, so handing an MDG binding a diagram type named `Logical` invents one EA never
+declared and makes `mdg_diagram_type` build a qualified key no diagram can carry. Worse,
+`resolve_diagram` matches a diagram's `Diagram_Type` against bound diagram type **names**, so every
+binding drawn on a base would claim that base's own name and a plain diagram of it would come back
+ambiguous across all of them. The parent's diagram types are the **substrate**, not entries in the
+child's catalog.
+
+**A child refining its own technology still works.** When a child diagram type states no `base`, the
+substrate is the parent's diagram type of the **same name** — which is exactly the house-binding case:
+the same diagram type, refined, inheriting whatever it does not restate.
+
+**A `base` the parent does not bind is not an error.** A base notation may decline a diagram type for
+want of a figure it can support, so a child drawn on one has nothing to inherit and keeps its own
+values. `DiagramTypeBinding.inherits` is `False` there and `substrate` is `""`, so the condition is
+visible rather than silent. What is *not* acceptable is shipping it: a test asserts every base every
+shipped binding states is bound by the root, which is the check that would have caught two of the four
+shipped technologies declaring a parent and inheriting nothing from it.
+
+**The `stereotype_prefix` trap, which is live.** A child that **omits** the key inherits the parent's,
+and the base notation's is a measured `""` — 93.6% of the elements on plain diagrams carry no
+stereotype at all. That is right for a family drawn in plain UML and **wrong** for one whose MDG
+stereotypes its elements, so a derived family with a real prefix must state it. The loader
+distinguishes an absent key from a declared `""`, which is what makes the second form a statement
+rather than an absence: `not data.get("stereotype_prefix")` cannot tell them apart, and a child that
+declared `""` under a prefixed parent would silently acquire the prefix and send every stereotype
+lookup after a name nothing stores. Every shipped binding states its own.
 
 ---
 
@@ -291,6 +450,14 @@ document.
 | `load_binding(path)` | Load, validate and resolve one file, following `extends`. |
 | `load_binding_text(text, source)` | Validate and load from YAML text. No directory, so no `extends` resolution. |
 | `available_bindings(directory=None)` | `{technology id: filename}` for every valid binding on hand. An invalid file is omitted rather than raising, so one bad file does not make the whole catalog unreadable; load it directly to see why. |
+| `implemented_grammars()` | The grammars the engine has a `compose_<grammar>` for, **read from `compose.py` on every call**. Never a written-down set: a hand-kept flag pinned to the engine by a test is two copies of one fact, and that shape once let a measurement tool report a remembered reach figure for a grammar that had already shipped. |
+| `producible_grammars()` | `implemented_grammars()` plus the grammars EA's layout places — the answer to "can we produce this at all". |
+
+Module constants: `GRAMMARS` (the vocabulary, a frozenset), `GRAMMAR_PLACEMENT` (grammar → who places
+it, the one table the rest is derived from), `COMPOSED_GRAMMARS`, `EA_PLACED_GRAMMARS`, and
+`IMPLEMENTED_GRAMMARS`, which is `implemented_grammars()` as at import — the same meaning and, for the
+five composed grammars, the same value it has always had, so a reach figure derived from it does not
+move when the vocabulary grows. Code that changes the engine after import must call the function.
 
 On `Binding`:
 
@@ -308,7 +475,12 @@ On `DiagramTypeBinding`:
 
 | Member | Does |
 |---|---|
-| `spec(overrides=None)` | Build a `compose.py` spec: `sizing.default` becomes `item_width` and `item_height`, and `spacing` is copied across verbatim. Caller overrides win, and an override naming a key the engine does not have is refused here, where the message can mention the binding. |
+| `spec(overrides=None)` | Build a `compose.py` spec: `sizing.default` becomes `item_width` and `item_height`, and `spacing` is copied across verbatim — the **resolved** spacing, so an inherited gap reaches the engine. Caller overrides win, and an override naming a key the engine does not have is refused here, where the message can mention the binding. |
+| `sizing` / `spacing` | Attributes. **Resolved**: what this diagram type states, over the measured values of the base diagram type it is drawn on. This is the pair a consumer wants. |
+| `own_sizing` / `own_spacing` | Attributes. What this binding's own document stated, which is a different question and the one a provenance test asks — a figure is only this technology's measurement if this technology stated it. |
+| `inherited_sizing()` / `inherited_spacing()` | What came from the substrate rather than from this file: the resolved mapping minus the stated one. |
+| `substrate` | Attribute. The `<Tech>::<DiagramType>` the rest came from, or `""`. |
+| `inherits` | Property. Whether a substrate was found at all. `False` for the root of the tree, and for a diagram type whose `base` the parent leaves unbound — where unstated slots fall back to the engine, as they did everywhere before §5.6. |
 | `size_for(concept="")` | Box size for a concept, falling back to `default`. Takes the concept name, not the stored stereotype. |
 | `claimed_channels()` | Channel to what the notation already uses it for, `fill` included. |
 | `free_channels()` | Channels a second variable may legitimately use. |
@@ -316,11 +488,18 @@ On `DiagramTypeBinding`:
 | `default_route()` | The diagram type's default route. |
 | `route_for(relationship)` | The route for a relationship type: `trunk_route` for anything in `trunk_for`, otherwise the default. |
 | `draws_its_own_title` | Property. `True` when `title` is `drawn`. |
-| `grammar_is_implemented` | Property. Whether `compose.py` can compose this grammar. See §5.5. |
+| `grammar_is_implemented` | Property. Whether the engine has a composer for this grammar. See §5.5. **Not** the same question as producibility. |
+| `grammar_is_producible` | Property. Whether a diagram of this type can be produced at all today, by either route — a composed grammar that is built, or one EA's layout places. |
+| `geometry_is_composed` | Property. Whether the coordinates are ours to compute. `False` means they come from EA. |
+| `grammar_placement` | Property. Who places the geometry, as one of the three values in `GRAMMAR_PLACEMENT`. |
 | `mdg_diagram_type` | Property. The `<Tech>::<DiagramType>` string, to compare against a diagram's own `MDGDgm`. |
 
 On `Viewpoint`: `admits_concept(concept)`, plus `diagram_type`, `intent` and `admits` as read-only
-attributes.
+attributes, and `effective_grammar`, `grammar_is_implemented`, `grammar_is_producible` and
+`geometry_is_composed` — the last three returning `None` when the viewpoint states no grammar of its
+own. `None` is not `False`: "this viewpoint has no opinion, ask its diagram type" is a different
+answer from "we know we cannot", and returning `False` for both would make every ordinary viewpoint
+look unsupported.
 
 On `PresentationProfile`: `display_settings()`, which returns `set_diagram_display` keyword arguments
 (see §8), and `collapses_parallel`, a property saying whether to collapse parallel connectors between
@@ -340,10 +519,14 @@ if binding is None:
     ...        # nothing bound for this technology: say so, fall back to a plain graph layout
 
 dt = binding.diagram_type("Application")
-if not dt.grammar_is_implemented:
-    ...        # the binding records what the notation does; this one cannot be composed
+if not dt.grammar_is_producible:
+    ...        # recorded, and nothing here can produce one yet: say so and stop
+if not dt.geometry_is_composed:
+    ...        # EA places this one. Create the elements, call layout_diagram with the
+               # spacing from dt.spec(), then tidy: dt.size_for(), dt.route_for() and
+               # the title convention. Do NOT compute coordinates.
 
-result = compose_layered_bands(
+result = compose_layered_bands(       # reached only when the geometry is ours
     [
         {"name": "Channels", "items": [{"id": 13477}, {"id": 13478}]},
         {"name": "Business Applications", "items": [{"id": 13479}]},
@@ -351,6 +534,11 @@ result = compose_layered_bands(
     dt.spec({"align": "center"}),
 )
 ```
+
+The two checks are in that order on purpose. `grammar_is_producible` is the one that says whether to
+go on at all; `geometry_is_composed` is the one that picks the route. Reading
+`grammar_is_implemented` alone conflates them and drops every diagram type EA would have laid out
+perfectly well.
 
 Then place with `ea_diagram("add_elements_to_diagram_bulk")`, passing the returned
 `left`/`top`/`right`/`bottom` per element and `layout="none"`, and route connectors with
@@ -370,6 +558,14 @@ Three things the binding answers that the spec does not carry:
 use several technologies nobody has bound. A caller should say so and fall back to a plain graph
 layout rather than composing against the wrong binding — which is also why the declared `technology`
 is checked rather than the filename trusted.
+
+> **The fall-back-to-a-graph advice has one exception, and it is not optional.** `SKILL.md` says to
+> fall back to a plain graph layout when no grammar fits. That holds when no grammar fits **and the
+> diagram type is not `ea-semantic`**. An `ea-semantic` type must never be laid out as a free graph —
+> that is the entire point of the category. Hand a sequence diagram to a graph layout and you get the
+> participants placed and the message order ignored, which is worse than not generating it, because it
+> looks like a sequence diagram and is not one. Where the type is `ea-semantic`, say it is recorded and
+> not producible, and stop. See §5.5.1 and `grammars.md` §9.
 
 **`PresentationProfile.display_settings()` emits only settings verified to change what EA renders.**
 There are seven: `hide_connector_labels`, `hide_element_stereotypes`, `hide_connector_stereotypes`,

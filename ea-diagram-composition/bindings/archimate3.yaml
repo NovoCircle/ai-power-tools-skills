@@ -20,7 +20,19 @@
 
 technology: ArchiMate3
 display_name: ArchiMate 3
-extends: ~
+
+# UML IS UNDERNEATH THIS NOTATION, NOT BESIDE IT. All five diagram types below
+# declare `base: Logical`, which is EA's Class diagram: an ArchiMate view IS a
+# Class diagram with a technology tag on it. So the UML binding is the substrate,
+# and a size or a gap this file does not state resolves to the value measured on
+# plain Logical diagrams instead of to an engine default.
+#
+# What this file states still wins, every time. The 100x70 box below is
+# ArchiMate's, not UML's 90x70; `layered-bands` is ArchiMate's, not UML's
+# `graph`; and `stereotype_prefix` is restated below precisely BECAUSE omitting
+# it would inherit UML's measured `""` and send every stereotype lookup after an
+# unprefixed name.
+extends: UML
 
 # EA 17.1's built-in ArchiMate3 MDG names its stereotypes with this prefix, and
 # the prefixed form is what lands in `t_object.Stereotype`
@@ -65,6 +77,19 @@ diagram_types:
       # than the extra unit of accuracy in 76 or 38, and shipping a gap to three
       # significant figures would claim a precision 61 and 69 pairs do not
       # carry.
+      #
+      # PROVENANCE, RECORDED AS A DECISION. The figures above come from the
+      # historical population: each element's nearest neighbor with no regard
+      # for containers or intervening objects, which includes pairs that cross
+      # a group boundary (4 horizontal and 11 vertical of the 61 and 68). The
+      # gap an engine should leave between siblings INSIDE one container is
+      # measured by the strict rule (tools/measure_binding.py, the default):
+      # horizontal median 78 and modal 78 across 59 pairs, which rounds to 80;
+      # vertical median 46 and modal 38 across 60 pairs, which still rounds to
+      # 40. item_gap_x stays at 75 for now: 5 units on a 100-wide box is inside
+      # visual noise, and changing it means re-proving the live generation test
+      # against a running EA session. When that session is available, 80 is the
+      # better-supported value.
       item_gap_x: 75          # measured: median 76, modal 78 across 61 pairs
       item_gap_y: 40          # measured: median 47, modal 38 across 69 pairs
     routing:
