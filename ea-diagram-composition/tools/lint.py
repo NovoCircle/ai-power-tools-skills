@@ -37,6 +37,7 @@ else works in the conventional top-left-origin space it returns.
 """
 from __future__ import annotations
 
+import math
 import re
 from dataclasses import dataclass, field
 from typing import Any, Iterable, Mapping, Optional, Sequence
@@ -49,11 +50,17 @@ __all__ = [
     "MAX_CORRECTION_PASSES",
     "SIZE_TOLERANCE",
     "PITCH_TOLERANCE",
+    "ANGLE_TOLERANCE",
+    "STACK_AXES",
     "lint_diagram",
     "check_no_overlaps",
     "check_within_canvas",
     "check_uniform_sizing",
     "check_pitch_consistency",
+    "check_stack_extents",
+    "check_stack_alignment",
+    "check_ring_spokes",
+    "check_ring_angles",
     "check_routing",
     "check_crossings",
     "check_color_is_explained",
@@ -63,7 +70,6 @@ __all__ = [
     "check_labels_fit",
     "is_stalled",
     "LABEL_MARGIN",
-    "LABEL_MARGIN",
 ]
 
 # A size difference under this many units is not an inconsistency - EA nudges
@@ -72,6 +78,42 @@ SIZE_TOLERANCE = 4
 
 # Likewise for spacing, judged on the SPREAD rather than on exact equality.
 PITCH_TOLERANCE = 8
+
+# The same claim - "these are evenly spaced" - made about an ANGLE, and it needs
+# a constant of its own because it is in DEGREES. Reusing PITCH_TOLERANCE would
+# be a unit confusion that happens to run.
+#
+# CALIBRATED, NOT PICKED. Two measurements bound it, both taken over the ring
+# layouts the composition engine actually produces - 6300 of them, counts 2 to
+# 15, eight sweeps, four start angles, three radii, five item shapes:
+#
+# * ROUNDING puts the worst spread of the angular steps between neighbors at
+#   0.78 degrees. That is the cost of placing a center on whole units.
+# * A NUDGE is larger. EA moves geometry by a few units, and 4 units is the
+#   nudge this file already tolerates as a size (SIZE_TOLERANCE). The tightest
+#   center-to-center distance any of those layouts produces is 132 units, where
+#   4 units across the ray is 1.74 degrees - so two neighbors nudged opposite
+#   ways move one step by 3.47.
+#
+# 4 covers the nudge with the rounding inside it. The defects this exists for
+# are tens of degrees: the smallest measured one is a spread of 60. So the
+# boundary sits anywhere in (3.5, 60), and 4 is taken from the noise end
+# deliberately - a floor's job is to stay quiet on correct output, and there is
+# no measured defect anywhere near the bottom of that interval to argue for
+# more room.
+ANGLE_TOLERANCE = 4
+
+# The two directions a group can be read in, and the vocabulary for both the
+# stack rules and the spacing rule. "vertical" is read top to bottom and
+# "horizontal" left to right, in both cases - so a vertical STACK's members
+# should share a width, and a vertical spacing group is a column whose spacing
+# is measured down the y axis.
+#
+# An axis is the CALLER's to state, not something read off the coordinates:
+# three bands that happen to be tall and narrow look like a horizontal stack and
+# are a vertical one, and inferring it would be guessing at what the diagram is
+# for.
+STACK_AXES = ("vertical", "horizontal")
 
 # How close a label may come to its element's border before it reads as
 # touching it. Calibrated against a real generated diagram rather than chosen:
@@ -342,11 +384,26 @@ def check_uniform_sizing(roles: Mapping[str, Sequence[Mapping[str, Any]]],
     answer language questions. Two elements can share a container and still be
     different roles - a small round event beside a wide rectangular step - and
     requiring those to be one size would be requiring a 110x60 circle.
+
+    `roles_measured` IS THE DENOMINATOR, and it is what makes the count beside
+    it readable. `roles_with_inconsistent_sizing` is 0 both for a caller who
+    passed clean roles and for one who passed none at all, and a vacuous zero
+    has already been quoted as a result in this programme - see
+    `crossings_measured_over`, which was added for exactly that. Both keys are
+    always present, as those two are, so the pair can be read without knowing
+    which rules ran.
     """
     inconsistent = []
+    declared = 0
+    measured = 0
     for role, members in (roles or {}).items():
+        members = list(members)
+        if not members:
+            continue
+        declared += 1
         if len(members) < 2:
             continue
+        measured += 1
         widths = {_width(o) for o in members}
         heights = {_height(o) for o in members}
         if (max(widths) - min(widths) > SIZE_TOLERANCE
@@ -360,71 +417,581 @@ def check_uniform_sizing(roles: Mapping[str, Sequence[Mapping[str, Any]]],
                 correction=f"give every {role} the same width and height",
             ))
     report.metrics["roles_with_inconsistent_sizing"] = len(inconsistent)
+    report.metrics["roles_measured"] = measured
+    if declared and not measured:
+        report.not_run.append(
+            f"uniform-sizing: {declared} role(s) were declared and none holds "
+            f"two elements, so no size was compared against another"
+        )
 
 
-def check_pitch_consistency(rows: Iterable[Sequence[Mapping[str, Any]]],
-                            report: LintReport) -> None:
-    """Spacing between neighbors in a row should be even.
+def check_pitch_consistency(groups: Iterable[Sequence[Mapping[str, Any]]],
+                            report: LintReport,
+                            axis: str = "horizontal") -> None:
+    """Spacing between neighbors in a row or a column should be even.
 
     Judged on the SPREAD, against `PITCH_TOLERANCE`, rather than on exact
     equality - EA nudges geometry and exact equality would be noise.
 
-    WHAT IS MEASURED DEPENDS ON WHETHER THE ROW IS UNIFORMLY SIZED
-    ---------------------------------------------------------------
-    For a row of equally sized elements, the edge-to-edge GAP is measured.
+    BOTH AXES, BECAUSE THEY ARE THE SAME QUESTION TURNED NINETY DEGREES
+    -------------------------------------------------------------------
+    `axis` is one of `STACK_AXES`: `"horizontal"` is a row read left to right,
+    whose spacing is measured along x, and `"vertical"` is a column read top to
+    bottom, whose spacing is measured along y. `lint_diagram` supplies it from
+    which of its own two arguments the group arrived in - `rows=` or `columns=` -
+    so a caller states a column by passing one, never by an axis string.
 
-    For a row whose elements differ in size, the CENTER-TO-CENTER pitch is
-    measured instead. That is not a loosening: a flow that puts a 30-wide event
-    next to a 110-wide activity has a rhythm the reader perceives as the even
-    spacing of centers, and both the edge gaps and the leading edges necessarily
-    vary around it. The two measures are identical for equal sizes.
+    For a long time only x was measured, and the cost was exact: a column passed
+    as a row has every x gap equal to the same negative number, so the spread is
+    zero and a column at wildly uneven vertical spacing reported clean. The
+    server's own distribute operation shipped with the same defect and for the
+    same reason, and it now does both axes because they are orthogonal.
 
-    A MIXED-SIZE ROW ALSO GETS A FLOOR ON THE GAP ITSELF
-    -----------------------------------------------------
-    Even center pitch says nothing about whether the boxes touch. Widths
-    alternating `a, b, a, b` with `a + b = 2 * pitch` drive EVERY edge gap to
-    zero while the center spread stays at zero - a row with no whitespace
-    anywhere, reported clean. Leaning on `check_no_overlaps` to bound that does
-    not work, because touching is exempt from the overlap rule by design.
+    WHAT IS MEASURED DEPENDS ON WHETHER THE GROUP IS UNIFORMLY SIZED
+    ----------------------------------------------------------------
+    For a group of equally sized elements, the edge-to-edge GAP is measured.
+
+    For a group whose elements differ in size ALONG THE READING AXIS, the
+    CENTER-TO-CENTER pitch is measured instead. That is not a loosening: a flow
+    that puts a 30-wide event next to a 110-wide activity has a rhythm the
+    reader perceives as the even spacing of centers, and both the edge gaps and
+    the leading edges necessarily vary around it. The two measures are identical
+    for equal sizes. Size is taken along the reading axis - widths for a row,
+    heights for a column - because that is the dimension that makes the gaps
+    vary.
+
+    EVERY GROUP GETS A FLOOR ON THE GAP ITSELF
+    ------------------------------------------
+    Even spacing says nothing about whether the boxes touch, and the floor is
+    the rule for that. It applies on BOTH paths, which it did not always:
+
+    * Mixed sizes. Widths alternating `a, b, a, b` with `a + b = 2 * pitch`
+      drive EVERY edge gap to zero while the center spread stays at zero.
+    * Uniform sizes. Eight equal boxes butted edge to edge have eight gaps of
+      zero, and the spread of eight zeros is zero. This is the case the floor
+      used to miss, and it is the THIRD time the touching exemption has hidden a
+      spacing defect here: a whole row with no whitespace in it scored
+      completely clean.
+
+    Leaning on `check_no_overlaps` to bound either one does not work, because
+    touching is exempt from the overlap rule by design - a band and its contents
+    legitimately share an edge.
+
+    WHY THAT DOES NOT PUNISH DELIBERATE ABUTMENT
+    --------------------------------------------
+    Bands, lanes and pools abut on purpose, and a rule forbidding all touching
+    would be wrong. The floor is not that rule: it judges only a group the
+    caller PASSED AS A ROW OR A COLUMN, and declaring one is the statement that
+    its members are laid out with spacing between them. Containers that abut
+    deliberately reach this module as a `stacks=` grouping instead, and no rule
+    here measures the gaps between a stack's members. So the scope is the
+    declaration, not the geometry and not the element type: the same two boxes
+    are a defect as a row and correct as a stack, and only the caller knows
+    which they are.
 
     A wrapped row is TWO rows and the caller passes it as two. Compensating
     here would paper over that and lose the single mis-spaced element this rule
     exists to catch.
+
+    `pitch_groups_measured` IS THE DENOMINATOR for `worst_pitch_spread`, which
+    is 0 both for evenly spaced rows and for no rows at all. Both accumulate
+    across the two axes, so calling this twice on one report - which is what
+    `lint_diagram` does - reports the worst of both and counts all of them.
     """
-    worst = 0
-    for row in rows or []:
-        ordered = sorted(row, key=lambda o: _normalize_rect(o)[0])
+    if axis not in STACK_AXES:
+        report.not_run.append(
+            f"pitch: unknown axis {axis!r}; expected one of {list(STACK_AXES)}, "
+            f"so these groups were not judged"
+        )
+        return
+    vertical = axis == "vertical"
+    lead, trail = (1, 3) if vertical else (0, 2)
+    along = _height if vertical else _width
+    label = "column" if vertical else "row"
+
+    declared = 0
+    measured = 0
+    worst = report.metrics.get("worst_pitch_spread", 0)
+    for group in groups or []:
+        ordered = sorted(group, key=lambda o: _normalize_rect(o)[lead])
+        if not ordered:
+            continue
+        declared += 1
         if len(ordered) < 3:
             continue
-        widths = {_width(o) for o in ordered}
-        uniform = max(widths) - min(widths) <= SIZE_TOLERANCE
-        gaps = [_normalize_rect(b)[0] - _normalize_rect(a)[2]
+        measured += 1
+        sizes = {along(o) for o in ordered}
+        uniform = max(sizes) - min(sizes) <= SIZE_TOLERANCE
+        gaps = [_normalize_rect(b)[lead] - _normalize_rect(a)[trail]
                 for a, b in zip(ordered, ordered[1:])]
         if uniform:
             measure, spacings = "gaps", gaps
         else:
             measure = "center pitches"
-            spacings = [int(_center(b)[0] - _center(a)[0])
+            spacings = [int(_center(b)[1 if vertical else 0]
+                            - _center(a)[1 if vertical else 0])
                         for a, b in zip(ordered, ordered[1:])]
-            if gaps and min(gaps) <= 0:
-                report.add(Finding(
-                    rule="pitch", severity="error",
-                    message=(f"elements in a row touch or overlap their "
-                             f"neighbors (gaps {gaps}); even center spacing "
-                             f"does not make a row with no whitespace readable"),
-                    subjects=tuple(o["element_id"] for o in ordered),
-                    correction="increase the slot pitch for this row",
-                ))
-        spread = max(spacings) - min(spacings) if spacings else 0
+        if min(gaps) <= 0:
+            report.add(Finding(
+                rule="pitch", severity="error",
+                message=(f"elements in a {label} touch or overlap their "
+                         f"neighbors (gaps {gaps}); a {label} with no "
+                         f"whitespace anywhere in it does not read as a "
+                         f"{label}, and even spacing does not make it one"),
+                subjects=tuple(o["element_id"] for o in ordered),
+                correction=f"increase the slot pitch for this {label}",
+            ))
+        spread = max(spacings) - min(spacings)
         worst = max(worst, spread)
         if spread > PITCH_TOLERANCE:
             report.add(Finding(
                 rule="pitch", severity="warning",
-                message=f"uneven spacing within a row ({measure} {spacings})",
+                message=f"uneven spacing within a {label} ({measure} {spacings})",
                 subjects=tuple(o["element_id"] for o in ordered),
-                correction="space elements in a row evenly",
+                correction=f"space elements in a {label} evenly",
             ))
     report.metrics["worst_pitch_spread"] = worst
+    report.metrics["pitch_groups_measured"] = (
+        report.metrics.get("pitch_groups_measured", 0) + measured)
+    if declared and not measured:
+        report.not_run.append(
+            f"pitch: {declared} {label}(s) were declared and none holds three "
+            f"elements, so there was no second gap to compare a first against"
+        )
+
+
+def check_stack_extents(
+        stacks: Iterable[tuple[str, Sequence[Mapping[str, Any]]]],
+        report: LintReport) -> None:
+    """Containers stacked one after another should share a cross-axis extent.
+
+    `stacks` is a list of `(axis, members)` pairs, both stated BY THE CALLER.
+    `axis` is one of `STACK_AXES`: `"vertical"` is a stack read top to bottom,
+    whose members should share a WIDTH, and `"horizontal"` is a stack read left
+    to right, whose members should share a HEIGHT. This module does not decide
+    which boxes form a stack or which way it runs - that is a composition fact
+    the generator knows, and a rule that inferred a stack from coordinates would
+    fire on any diagram that merely happens to look stacked.
+
+    THE DEFECT NO OTHER RULE SEES
+    -----------------------------
+    A band sized to its own contents is narrower when it holds fewer items, so
+    bands of three, three and two leave the stack with a ragged edge. Every
+    per-element and per-pair rule passes: nothing overlaps, every row is evenly
+    spaced, every item matches its role. This is the first rule about a
+    container's EXTENT rather than about its members.
+
+    Judged against `SIZE_TOLERANCE` and not a constant of its own, because it is
+    the same claim - "these are one size" - made about containers rather than
+    items, and EA nudges a container's geometry exactly as it nudges an
+    element's. No calibration against a real stack exists to justify a
+    different number, and inventing one would be a claim this file cannot back.
+
+    A WARNING, not an error. A stack whose extents differ is not wrong the way
+    an overlap is: a tapering stack is a legitimate composition. But it is the
+    caller who declares a stack, and declaring one is the statement that its
+    members are peers, so a difference is worth a look.
+
+    WHAT IT REFUSES TO JUDGE
+    ------------------------
+    Only the extent is compared. Members that agree on width but start at
+    different left edges are staggered rather than ragged, and that is
+    `check_stack_alignment`, not this rule. Nor does this say anything about the
+    gaps between members, which is a spacing question. A stack of fewer than two
+    is skipped, and an axis outside `STACK_AXES` is reported on `not_run` rather
+    than guessed at.
+    """
+    measured = False
+    declared = 0
+    worst = 0
+    for axis, members in stacks or []:
+        members = list(members)
+        if not members:
+            # An empty stack is not a declaration. A banded diagram drawn
+            # without band labels has no container elements at all, and the
+            # caller still builds it a stack; saying so on `not_run` would
+            # complain about deliberate, documented behavior.
+            continue
+        if axis not in STACK_AXES:
+            report.not_run.append(
+                f"ragged-stack: unknown axis {axis!r}; expected one of "
+                f"{list(STACK_AXES)}, so this stack was not judged"
+            )
+            continue
+        declared += 1
+        if len(members) < 2:
+            continue
+        measured = True
+        measure = _width if axis == "vertical" else _height
+        label = "width" if axis == "vertical" else "height"
+        extents = [measure(o) for o in members]
+        spread = max(extents) - min(extents)
+        worst = max(worst, spread)
+        if spread > SIZE_TOLERANCE:
+            report.add(Finding(
+                rule="ragged-stack", severity="warning",
+                message=(f"containers in a {axis} stack differ in {label} "
+                         f"({label}s {extents}), leaving the stack a ragged "
+                         f"edge"),
+                subjects=tuple(o["element_id"] for o in members),
+                correction=(f"give every container in this stack the same "
+                            f"{label}, the largest ({max(extents)}) so that "
+                            f"nothing has to shrink"),
+            ))
+    if measured:
+        report.metrics["worst_stack_extent_spread"] = worst
+    elif declared:
+        report.not_run.append(
+            f"ragged-stack: {declared} stack(s) were declared and none holds "
+            f"two containers, so no extent was compared against another"
+        )
+
+
+def check_stack_alignment(
+        stacks: Iterable[tuple[str, Sequence[Mapping[str, Any]]]],
+        report: LintReport) -> None:
+    """Containers in a stack should start at the same leading edge.
+
+    `stacks` is the same `(axis, members)` grouping `check_stack_extents` reads,
+    stated BY THE CALLER for the same reason. The LEADING EDGE is the one the
+    reader's eye follows down the stack: for a `"vertical"` stack, read top to
+    bottom, that is the left edge; for a `"horizontal"` one, read left to right,
+    the top edge.
+
+    THE DEFECT NO OTHER RULE SEES
+    -----------------------------
+    Containers of identical size, at different offsets across the stack, so the
+    edge the eye follows zigzags. `check_stack_extents` says in as many words
+    that it compares the extent only and does not judge this, and nothing else
+    looks at a declared stack at all - so a staggered stack of three identical
+    bands scored completely clean. Every per-element and per-pair rule passes:
+    nothing overlaps, every extent matches, every item matches its role.
+
+    Judged against `SIZE_TOLERANCE` and not a constant of its own. Alignment is
+    the strictest of the claims this file makes - boxes either line up or they do
+    not - so it takes the tightest tolerance already here, which is the one that
+    exists to absorb EA's own few units of nudge. No real staggered stack has
+    been measured to argue for a different number, and inventing one would be a
+    claim this file cannot back.
+
+    A WARNING, for the reason `ragged-stack` is one: a deliberate indent - an
+    inset band, a stack that steps - is a legitimate composition. But declaring a
+    stack is the statement that its members are peers, so an offset is worth a
+    look.
+
+    WHAT IT REFUSES TO JUDGE
+    ------------------------
+    Only the leading edge. Where a member ENDS is its extent, which is
+    `check_stack_extents`, and the gaps between members are a spacing question no
+    rule about a stack asks. An unknown axis is reported on `not_run` rather than
+    guessed at - separately from `check_stack_extents`, because each rule has to
+    be honest when it is the only one called.
+    """
+    measured = False
+    declared = 0
+    worst = 0
+    for axis, members in stacks or []:
+        members = list(members)
+        if not members:
+            continue
+        if axis not in STACK_AXES:
+            report.not_run.append(
+                f"staggered-stack: unknown axis {axis!r}; expected one of "
+                f"{list(STACK_AXES)}, so this stack was not judged"
+            )
+            continue
+        declared += 1
+        if len(members) < 2:
+            continue
+        measured = True
+        vertical = axis == "vertical"
+        edge = 0 if vertical else 1
+        label = "left" if vertical else "top"
+        edges = [_normalize_rect(o)[edge] for o in members]
+        spread = max(edges) - min(edges)
+        worst = max(worst, spread)
+        if spread > SIZE_TOLERANCE:
+            report.add(Finding(
+                rule="staggered-stack", severity="warning",
+                message=(f"containers in a {axis} stack start at different "
+                         f"{label} edges ({label} edges {edges}), so the edge "
+                         f"the eye follows down the stack zigzags"),
+                subjects=tuple(o["element_id"] for o in members),
+                correction=(f"align every container in this stack on one "
+                            f"{label} edge, the smallest ({min(edges)}) so that "
+                            f"nothing moves further from the rest"),
+            ))
+    if measured:
+        report.metrics["worst_stack_alignment_spread"] = worst
+    elif declared:
+        report.not_run.append(
+            f"staggered-stack: {declared} stack(s) were declared and none holds "
+            f"two containers, so no leading edge was compared against another"
+        )
+
+
+def _edge_distance(obj: Mapping[str, Any], ux: float, uy: float) -> float:
+    """How far from a rect's center to its border, along the unit vector."""
+    x0, y0, x1, y1 = _normalize_rect(obj)
+    along_x = ((x1 - x0) / 2.0) / abs(ux) if ux else float("inf")
+    along_y = ((y1 - y0) / 2.0) / abs(uy) if uy else float("inf")
+    return min(along_x, along_y)
+
+
+def _ring_parts(entry: Sequence[Any]) -> tuple:
+    """`(hub, items, sweep)` from one caller-supplied ring.
+
+    A ring is `(hub, items)` or `(hub, items, sweep)`. The sweep is optional
+    because it was not always asked for, and widening the tuple rather than
+    changing its shape means a caller who already passes rings keeps passing
+    them - it just gets no angular judgment until it says how far round the ring
+    is meant to go. See `check_ring_angles`.
+    """
+    if len(entry) == 3:
+        hub, items, sweep = entry
+        return hub, list(items), sweep
+    hub, items = entry
+    return hub, list(items), None
+
+
+def check_ring_spokes(
+        rings: Iterable[tuple[Mapping[str, Any], Sequence[Mapping[str, Any]]]],
+        report: LintReport) -> None:
+    """Items around a hub should sit the same distance from its edge.
+
+    `rings` is a list of `(hub, items)` pairs, stated BY THE CALLER: which box
+    is the hub and which boxes are its ring. Geometry cannot say, for the same
+    reason it cannot say which boxes form a stack - see `check_stack_extents`.
+    A radial tree is several rings, one per hub, and is passed as several.
+
+    THE DEFECT NO OTHER RULE SEES
+    -----------------------------
+    Placing each item's CENTER on a circle around the hub does not place its
+    EDGE there. A wide flat item at the top or bottom of the ring reaches
+    toward the hub by only half its height; the same item at the side reaches
+    by half its width. So a flat item stands off from the hub at the top and
+    bottom and crowds it at the sides - unequal spokes - while every item is
+    correctly on the circle, nothing overlaps, and every per-element rule
+    passes.
+
+    WHAT IS MEASURED
+    ----------------
+    The length of the spoke as the reader sees it: the straight line from the
+    hub's center to the item's center, less the stretch inside the hub and the
+    stretch inside the item. Both stretches are found by running that line out
+    to each box's border, so a diagonal spoke is measured on the diagonal, not
+    on one axis. A hub that is not square gets its own unequal reach for the
+    same reason an item does, and that is counted too.
+
+    The SPREAD, largest minus smallest, is judged against `PITCH_TOLERANCE`
+    rather than against equality. It is the same claim `check_pitch_consistency`
+    makes about a row - evenly spaced - made about a ring, and it has the same
+    reason to tolerate a nudge. No calibration against a real ring exists to
+    justify a separate constant.
+
+    A WARNING. Unequal spokes make a ring look uneven and are never a
+    correctness problem; a diagram can be read perfectly well from one.
+
+    WHAT IT REFUSES TO JUDGE
+    ------------------------
+    Angular spacing - whether the items are evenly spread around the ring - is a
+    different question, and it is `check_ring_angles`, not this rule. Neither
+    rule says whether the ring is circular, or whether the spokes cross other
+    items. An item whose center coincides with the hub's has no direction, so it
+    is left out rather than given one; a ring with fewer than two measurable
+    items has no spread.
+    """
+    measured = False
+    declared = 0
+    worst = 0.0
+    for entry in rings or []:
+        hub, items, _sweep = _ring_parts(entry)
+        if not items:
+            continue
+        declared += 1
+        hx, hy = _center(hub)
+        spokes: list[tuple[Any, float]] = []
+        for item in items:
+            ix, iy = _center(item)
+            dx, dy = ix - hx, iy - hy
+            distance = (dx * dx + dy * dy) ** 0.5
+            if distance == 0:
+                continue
+            ux, uy = dx / distance, dy / distance
+            length = (distance - _edge_distance(hub, ux, uy)
+                      - _edge_distance(item, ux, uy))
+            spokes.append((item["element_id"], length))
+        if len(spokes) < 2:
+            continue
+        measured = True
+        lengths = [length for _, length in spokes]
+        spread = max(lengths) - min(lengths)
+        worst = max(worst, spread)
+        if spread > PITCH_TOLERANCE:
+            report.add(Finding(
+                rule="uneven-spokes", severity="warning",
+                message=(f"items around a hub sit unequal distances from its "
+                         f"edge (spoke lengths "
+                         f"{[int(round(n)) for n in lengths]}, spread "
+                         f"{int(round(spread))})"),
+                subjects=(hub["element_id"], *(i for i, _ in spokes)),
+                correction=("place each item by its NEAR EDGE rather than by "
+                            "its center, so every spoke is the same length"),
+            ))
+    if measured:
+        report.metrics["worst_spoke_spread"] = int(round(worst))
+    elif declared:
+        report.not_run.append(
+            f"uneven-spokes: {declared} ring(s) were declared and none holds "
+            f"two items away from its hub's center, so no spoke was compared "
+            f"against another"
+        )
+
+
+def _bearings(hub: Mapping[str, Any],
+              items: Sequence[Mapping[str, Any]]) -> list:
+    """Each item's bearing from the hub, in degrees, sorted around the circle.
+
+    An item on the hub's own center has no bearing and is left out, exactly as
+    `check_ring_spokes` leaves it out of the spokes.
+    """
+    hx, hy = _center(hub)
+    out = []
+    for item in items:
+        ix, iy = _center(item)
+        dx, dy = ix - hx, iy - hy
+        if dx == 0 and dy == 0:
+            continue
+        out.append((math.degrees(math.atan2(dy, dx)) % 360.0,
+                    item["element_id"]))
+    out.sort()
+    return out
+
+
+def _steps_without_the_opening(steps: Sequence[float]) -> list:
+    """A partial ring's own steps: every gap except the one that is its opening.
+
+    WHICH gap is the opening cannot be read off the angles, and guessing wrong
+    would report a correct fan. It is not simply the largest: a fan of three
+    across 350 degrees steps 175 at a time and has an opening of 10, so there
+    the opening is the SMALLEST of the three.
+
+    So every gap is tried as the opening and the most charitable reading is
+    kept - the removal that leaves the remaining steps looking most even. That
+    is quiet on a legitimate fan at ANY sweep, and it cannot rescue a fan whose
+    steps are genuinely uneven, because then every removal leaves a wide spread.
+    """
+    best = None
+    for k in range(len(steps)):
+        rest = list(steps[:k]) + list(steps[k + 1:])
+        spread = max(rest) - min(rest)
+        if best is None or spread < best[0]:
+            best = (spread, rest)
+    return best[1]
+
+
+def check_ring_angles(
+        rings: Iterable[tuple[Mapping[str, Any], Sequence[Mapping[str, Any]]]],
+        report: LintReport) -> None:
+    """Items around a hub should be evenly spread around it, not bunched.
+
+    THE DEFECT NO OTHER RULE SEES
+    -----------------------------
+    A ring squeezed into a third of its circumference. Every spoke is the same
+    length, nothing overlaps, every item matches its role, and
+    `check_ring_spokes` says in as many words that the angle is not its question
+    - so a ring of three at 0, 100 and 200 degrees, which should be at 0, 120
+    and 240, scored completely clean.
+
+    THE SWEEP IS THE CALLER'S TO STATE, AND WITHOUT IT THIS DOES NOT RUN
+    --------------------------------------------------------------------
+    A ring is passed as `(hub, items, sweep)`, with `sweep` in degrees. Three
+    items bunched into 200 degrees and three items fanned evenly across 200
+    degrees ARE THE SAME GEOMETRY; the only difference is how far round the ring
+    was meant to go, and that is a composition fact the generator holds. A rule
+    that assumed a full circle would report every deliberate fan, and a fan is
+    what a partial sweep is for. So a ring passed as a plain `(hub, items)` pair
+    lands on `not_run` and is not judged.
+
+    Only whether the ring CLOSES is read off the number - a sweep of 360 or more
+    closes it - because the spread of the observed steps is what is judged, and
+    that needs no expected step. This module therefore holds no copy of the
+    engine's angular arithmetic to drift away from.
+
+    WHAT IS MEASURED
+    ----------------
+    The bearing of each item's center from the hub's, sorted around the circle,
+    then the step from each item to the next. A closed ring's steps include the
+    one from the last item back to the first, which is what makes a bunched ring
+    show up: the items' own steps can be perfectly even while the way back is
+    half the circle. A partial ring has an opening instead of that step, and
+    `_steps_without_the_opening` drops it.
+
+    The SPREAD is judged against `ANGLE_TOLERANCE`, which is in degrees and is
+    calibrated against the layouts the engine produces - see the constant. A
+    WARNING: a bunched ring looks lopsided and is never a correctness problem.
+
+    WHAT IT REFUSES TO JUDGE
+    ------------------------
+    Evenness only. A fan that fills a quarter of the sweep it declared, evenly,
+    is clean - how much of its sweep a ring should occupy is a composition
+    choice, not a defect. Spoke length is `check_ring_spokes`. A closed ring
+    needs two measurable items and a partial one needs three, because the first
+    step it can compare against is the one the opening is not.
+    """
+    measured = False
+    declared = 0
+    unstated = 0
+    worst = 0.0
+    for entry in rings or []:
+        hub, items, sweep = _ring_parts(entry)
+        if not items:
+            continue
+        declared += 1
+        if sweep is None:
+            # Counted rather than reported here, so that a diagram of six
+            # sweepless rings gets one line and not six.
+            unstated += 1
+            continue
+        bearings = _bearings(hub, items)
+        if len(bearings) < 2:
+            continue
+        around = [degrees for degrees, _ in bearings]
+        steps = [b - a for a, b in zip(around, around[1:])]
+        steps.append(360.0 - sum(steps))
+        if abs(float(sweep)) < 360.0:
+            if len(steps) < 3:
+                continue
+            steps = _steps_without_the_opening(steps)
+        measured = True
+        spread = max(steps) - min(steps)
+        worst = max(worst, spread)
+        if spread > ANGLE_TOLERANCE:
+            report.add(Finding(
+                rule="uneven-ring-angles", severity="warning",
+                message=(f"items around a hub are unevenly spread around it "
+                         f"(steps {[int(round(n)) for n in steps]} degrees, "
+                         f"spread {int(round(spread))}), so the ring reads as "
+                         f"bunched to one side"),
+                subjects=(hub["element_id"], *(i for _, i in bearings)),
+                correction=("step each item the same number of degrees from the "
+                            "last: divide the sweep by the number of items when "
+                            "the ring closes, and by one less when it does not"),
+            ))
+    if unstated:
+        report.not_run.append(
+            f"uneven-ring-angles: {unstated} ring(s) were declared without a "
+            f"sweep, so whether their items should close the circle or fan "
+            f"across part of it is unstated and their angles were not judged"
+        )
+    if measured:
+        report.metrics["worst_ring_angle_spread"] = int(round(worst))
+    elif declared > unstated:
+        report.not_run.append(
+            f"uneven-ring-angles: {declared} ring(s) were declared and none "
+            f"holds enough items away from its hub's center to compare one step "
+            f"against another"
+        )
 
 
 def check_routing(links: Sequence[Mapping[str, Any]],
@@ -583,8 +1150,15 @@ def check_title_present(objects: Sequence[Mapping[str, Any]],
     at all, so firing unconditionally would flag the majority of a real corpus
     for doing the right thing. `title_convention` is the caller's to supply: it
     is a convention, not something the geometry knows.
+
+    `title_convention_stated` IS THE DENOMINATOR, and it is always present.
+    Silence from this rule meant two different things and recorded neither: a
+    diagram that has its drawn title, and a diagram nobody said anything about.
+    False says the question was never asked.
     """
-    if (title_convention or "").strip().lower() != "drawn":
+    stated = (title_convention or "").strip().lower() == "drawn"
+    report.metrics["title_convention_stated"] = stated
+    if not stated:
         return
     if not any(_kind_of(o) in _TITLE_TYPES for o in objects):
         report.add(Finding(
@@ -907,6 +1481,11 @@ def lint_diagram(
     profile: Optional[Mapping[str, Any]] = None,
     roles: Optional[Mapping[str, Sequence[Mapping[str, Any]]]] = None,
     rows: Optional[Iterable[Sequence[Mapping[str, Any]]]] = None,
+    columns: Optional[Iterable[Sequence[Mapping[str, Any]]]] = None,
+    stacks: Optional[
+        Iterable[tuple[str, Sequence[Mapping[str, Any]]]]] = None,
+    rings: Optional[
+        Iterable[tuple[Mapping[str, Any], Sequence[Mapping[str, Any]]]]] = None,
     expected_route: Optional[str] = None,
     title_convention: Optional[str] = None,
 ) -> LintReport:
@@ -917,11 +1496,30 @@ def lint_diagram(
     rule ids come back on the report so that a suppression is visible rather
     than silent.
 
-    `roles` and `rows` are the caller's grouping: which elements play the same
-    role, which sit in the same row. Those are composition facts the generator
-    knows and geometry alone does not, and guessing them here would invent the
-    metamodel this module deliberately does not have. Omit them and the rules
-    that need them simply do not run.
+    `roles`, `rows`, `columns`, `stacks` and `rings` are the caller's grouping:
+    which elements play the same role, which sit in the same row, which sit in
+    the same column, which containers form a stack and which way it runs, which
+    boxes ring which hub. Those are composition facts the generator knows and
+    geometry alone does not, and guessing them here would invent the metamodel
+    this module deliberately does not have. Omit them and the rules that need
+    them simply do not run.
+
+    `rows` and `columns` are both lists of groups and are judged by the same
+    rule on the two axes - a caller who already passes `rows` does not have to
+    restructure to declare a column, it passes `columns` as well. `stacks` is
+    `[(axis, containers), ...]` with `axis` in `STACK_AXES`. `rings` is
+    `[(hub, items), ...]`, or `[(hub, items, sweep), ...]` to have the angular
+    spacing judged too; see `check_ring_angles` for why the sweep cannot be
+    inferred.
+
+    WHEN A GROUPING IS OMITTED, NOTHING IS SAID ON `not_run`, and that is
+    deliberate: an entry per unused grouping would put three lines on every
+    ordinary diagram, and a list that is noisy on correct output is a list
+    nobody reads. The absent metric key is the signal there. `not_run` is for a
+    grouping the caller DID declare and the rule could not judge - an unknown
+    axis, a ring with no sweep, or groups that are all too small to compare
+    anything within - because that is the case where a clean report has checked
+    less than it looks.
     """
     report = LintReport()
     objects = list(verified.get("objects") or [])
@@ -936,6 +1534,11 @@ def lint_diagram(
     check_within_canvas(objects, verified.get("canvas") or {}, report)
     check_uniform_sizing(roles or {}, report)
     check_pitch_consistency(rows or [], report)
+    check_pitch_consistency(columns or [], report, axis="vertical")
+    check_stack_extents(stacks or [], report)
+    check_stack_alignment(stacks or [], report)
+    check_ring_spokes(rings or [], report)
+    check_ring_angles(rings or [], report)
     check_routing(links, expected_route, report)
     check_crossings(objects, links, report)
     check_color_is_explained(objects, report)
