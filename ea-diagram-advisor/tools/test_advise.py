@@ -485,3 +485,269 @@ def test_a_stereotype_no_vocabulary_claims_is_still_unattributed():
                             known_concepts={"HouseStyle": {"Other"}})
     assert profile.unattributed_stereotypes == {"SomethingNobodyOwns": 5}
     assert profile.technologies == {advise.UNATTRIBUTED: 5}
+
+
+# ---------------------------------------------------------------------------
+# How a recommended view would actually get drawn
+#
+# One boolean used to answer this, and it conflated two routes that lead
+# opposite ways: a view the drawing tool lays out for us - which is the intended
+# route and produces a good diagram - and a view that cannot be produced at all,
+# where "compose it another way" is precisely the wrong advice.
+#
+# THE GRAMMARS ARE CHOSEN FROM THE BINDING LAYER'S OWN SETS, never named here.
+# `audit.py` once decided implemented-ness from a hardcoded pair of names while
+# its test asserted the same pair, so shipping a layout moved the reported figure
+# by zero and every test stayed green. A test that names the grammar it expects
+# is the same trap with the halves swapped: it would keep passing against an
+# advisor that had hardcoded the same name.
+# ---------------------------------------------------------------------------
+def _a_grammar(*, composed: bool, producible: bool) -> str:
+    """A grammar from the shipped vocabulary with the answers asked for.
+
+    Skips rather than guesses when the vocabulary has no such grammar - a real
+    possibility, since the composed-but-unbuilt case disappears on the day its
+    composer ships. A skip says so; a fabricated grammar name would quietly test
+    something the library does not have.
+    """
+    producible_now = bindings.producible_grammars()
+    found = sorted(
+        grammar for grammar in bindings.GRAMMARS
+        if (grammar in bindings.COMPOSED_GRAMMARS) is composed
+        and (grammar in producible_now) is producible
+    )
+    if not found:
+        pytest.skip(
+            f"the vocabulary has no grammar with composed={composed}, "
+            f"producible={producible}")
+    return found[0]
+
+
+def _binding_with(grammar: str, override: str = "") -> list:
+    """One technology, one diagram type, one viewpoint - the point being that
+    the single candidate cannot be truncated out of the ranking.
+
+    Loaded for real, so the answers under test are the shipped binding layer's
+    and not a fixture's idea of them.
+    """
+    own = f"\n    grammar: {override}" if override else ""
+    return [bindings.load_binding_text(f"""
+technology: WBA
+display_name: WestbrookBankArchitecture
+stereotype_prefix: WBA
+diagram_types:
+  Landscape:
+    grammar: {grammar}
+    title: frame-header
+    sizing:
+      default: {{w: 100, h: 60}}
+    routing:
+      default: Direct
+    channels:
+      fill: ~
+viewpoints:
+  ApplicationLandscape:
+    diagram_type: Landscape
+    admits: [BusinessApplication]{own}
+""", "westbrook.yaml")]
+
+
+def _best_for(grammar: str, override: str = ""):
+    loaded = _binding_with(grammar, override)
+    profile = profile_scope({"WBABusinessApplication": 10}, loaded)
+    options = recommend(profile, loaded, intent="the application landscape")
+    return options[0], " ".join(options[0].reasons)
+
+
+def test_a_viewpoint_with_no_grammar_of_its_own_takes_its_diagram_types():
+    """`None` from a viewpoint means "ask the diagram type", never False.
+
+    The advisor asked only the viewpoint, which answers None to every one of
+    these questions unless it overrides its diagram type's grammar - so for the
+    ordinary viewpoint, which overrides nothing, no grammar was resolved at all
+    and nothing was said about whether the view could be drawn. Silence read as
+    approval.
+    """
+    for composed in (True, False):
+        for producible in (True, False):
+            grammar = _a_grammar(composed=composed, producible=producible)
+            best, _ = _best_for(grammar)
+            assert best.candidate.grammar == grammar, grammar
+            assert best.candidate.geometry_is_composed is composed, grammar
+            assert best.candidate.grammar_is_producible is producible, grammar
+
+
+def test_a_view_the_drawing_tool_lays_out_is_not_reported_as_unimplemented():
+    """The largest family of diagram types, and the one most damaged.
+
+    Its geometry is not ours and never will be; handing it to the drawing tool's
+    layout IS the design. Reporting that as an unimplemented layout attaches a
+    limitation to the normal, fully-producible path.
+    """
+    ea_placed = _a_grammar(composed=False, producible=True)
+    reached_by = [
+        _best_for(ea_placed),
+        # The same grammar reached the other way: a viewpoint overriding a
+        # composed diagram type with this one. THAT path produced the wrong
+        # caveat, where the path above produced no answer at all.
+        _best_for(_a_grammar(composed=True, producible=True),
+                  override=ea_placed),
+    ]
+    for best, joined in reached_by:
+        # The prose first, deliberately: it is what the customer reads, and it
+        # is what the old code got wrong - silence on one path and a
+        # non-implementation caveat on the other.
+        assert "not implemented" not in joined
+        assert "composed another way" not in joined
+        assert "layout operation" in joined, "the route is not named"
+        assert best.candidate.generation_route == advise.ROUTE_TOOL_LAYOUT
+        assert best.candidate.can_be_generated is True
+
+
+def test_a_view_whose_diagram_type_dictates_its_arrangement_says_it_cannot():
+    """"Composed another way" is exactly the wrong advice here.
+
+    The diagram type fixes the arrangement, so placing coordinates would
+    position the elements and not the thing those positions are supposed to
+    carry - which is the content. Far too weak a caveat for a view that cannot
+    be produced at all.
+    """
+    grammar = _a_grammar(composed=False, producible=False)
+    best, joined = _best_for(grammar)
+    assert "CANNOT BE GENERATED" in joined
+    assert "composed another way" not in joined
+    assert best.candidate.generation_route == advise.ROUTE_NOT_PRODUCIBLE
+    assert best.candidate.can_be_generated is False
+
+
+def test_a_view_that_cannot_be_generated_is_still_offered():
+    """Deliberate, and the opposite choice is defensible - so it is pinned.
+
+    Producibility is a statement about this toolchain, not about the notation.
+    Suppressing the view would report our gap as the content's, and would
+    silently start recommending it the day a composer shipped, with the user
+    never told a better view had existed all along.
+    """
+    grammar = _a_grammar(composed=False, producible=False)
+    loaded = _binding_with(grammar)
+    profile = profile_scope({"WBABusinessApplication": 10}, loaded)
+    options = recommend(profile, loaded, intent="the application landscape")
+    offered = [o for o in options if o.viewpoint == "ApplicationLandscape"]
+    assert offered, "a view that cannot be generated was suppressed"
+    assert any("CANNOT BE GENERATED" in r for r in offered[0].reasons)
+
+
+def test_a_composed_grammar_with_no_composer_keeps_the_original_advice():
+    """The one case the original message was written for, and it still fits:
+    the geometry IS ours, nobody has built it, so falling back is real advice."""
+    grammar = _a_grammar(composed=True, producible=False)
+    best, joined = _best_for(grammar)
+    assert "is not implemented" in joined
+    assert repr(grammar) in joined
+    assert "CANNOT BE GENERATED" not in joined
+    assert best.candidate.generation_route == advise.ROUTE_COMPOSER_PENDING
+
+
+def test_a_built_composed_view_carries_no_layout_caveat():
+    """Unchanged behavior, guarded: the new branches must not fire on the
+    ordinary case."""
+    grammar = _a_grammar(composed=True, producible=True)
+    best, joined = _best_for(grammar)
+    assert best.candidate.generation_route == advise.ROUTE_COMPOSED
+    assert "not implemented" not in joined
+    assert "CANNOT BE GENERATED" not in joined
+    assert "layout operation" not in joined
+
+
+class _HalfAnsweringBinding:
+    """A binding object from before the vocabulary grew: it knows whether a
+    layout is implemented and has never heard of the other two questions."""
+
+    class _Viewpoint:
+        diagram_type = "Landscape"
+        intent = ()
+        admits = ("BusinessApplication",)
+        effective_grammar = "house-arrangement"
+        grammar_is_implemented = False
+
+    technology = "WBA"
+    stereotype_prefix = "WBA"
+    diagram_types = {}
+    viewpoints = {"ApplicationLandscape": _Viewpoint()}
+
+
+def test_a_binding_that_does_not_answer_producibility_is_not_read_as_silence():
+    """A missing property is a missing ANSWER, not "no opinion".
+
+    `getattr(..., None)` cannot tell the two apart, and the difference decides
+    whether the advisor promises a diagram it has no grounds to promise.
+    """
+    loaded = [_HalfAnsweringBinding()]
+    profile = profile_scope({"WBABusinessApplication": 10}, loaded,
+                            known_concepts={"WBA": {"BusinessApplication"}})
+    best = recommend(profile, loaded, intent="the application landscape")[0]
+    joined = " ".join(best.reasons)
+    assert "no statement of whether" in joined
+    assert "not implemented" not in joined
+    assert best.candidate.generation_route == advise.ROUTE_UNANSWERED
+    assert best.candidate.can_be_generated is None
+
+
+def _second_binding() -> list:
+    return [bindings.load_binding_text("""
+technology: OTHER
+stereotype_prefix: OTH
+diagram_types:
+  Estate:
+    grammar: graph
+    title: frame-header
+    sizing:
+      default: {w: 100, h: 60}
+    routing:
+      default: Direct
+    channels:
+      fill: ~
+viewpoints:
+  Estate:
+    diagram_type: Estate
+    admits: [Widget]
+""", "other.yaml")]
+
+
+def test_a_dominant_language_option_also_says_it_cannot_be_generated():
+    """The same defect one branch down.
+
+    A mixed scope gets a dominant-language view, which names a viewpoint and a
+    diagram type exactly as the conformant path does. Saying nothing about its
+    producibility there while saying it here would leave the bug in place for
+    every scope that spans two languages.
+    """
+    grammar = _a_grammar(composed=False, producible=False)
+    loaded = _binding_with(grammar) + _second_binding()
+    profile = profile_scope({"WBABusinessApplication": 10, "OTHWidget": 8},
+                            loaded)
+    assert not profile.homogeneous and profile.is_bound
+    options = recommend(profile, loaded, intent="everything")
+    dominant = next(o for o in options if o.kind == "dominant-language")
+    assert "CANNOT BE GENERATED" in " ".join(dominant.reasons)
+
+
+def test_the_advisor_holds_no_grammar_name_of_its_own():
+    """The standing rule, earned twice, in the form that can catch it.
+
+    A module deciding producibility from its own literal list would report the
+    same answer on the day a layout shipped. Exact matches rather than
+    substrings, so ordinary prose cannot trip it while a lookup table, a
+    comparison or a membership test cannot hide.
+    """
+    tree = ast.parse((_HERE / "advise.py").read_text(encoding="utf-8"))
+    literals = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Constant) and isinstance(node.value, str):
+            literals.add(node.value)
+        elif isinstance(node, ast.Name):
+            literals.add(node.id)
+        elif isinstance(node, ast.Attribute):
+            literals.add(node.attr)
+    leaked = sorted(literals & set(bindings.GRAMMARS))
+    assert not leaked, f"advise.py names the grammar(s) {leaked}"

@@ -33,6 +33,17 @@ conformant and which languages it spans, and `will_be_flagged` names the
 elements a conformance check will object to, so they can be scoped out or
 annotated as accepted rather than discovered later.
 
+CAN IT BE DRAWN IS A SEPARATE QUESTION FROM WHICH VIEW IS RIGHT
+---------------------------------------------------------------
+A recommended view is an argument to make about content; whether this toolchain
+can generate it is a statement about the toolchain. So both are reported, and
+neither is allowed to stand in for the other. `Candidate.generation_route` says
+how a diagram of the view would actually be drawn - composed here, handed to the
+drawing tool's own layout, or not producible at all - and a view that cannot be
+generated is still ranked and still recommended, with that said plainly. It is
+suppressed from neither the ranking nor the reasons, because what the content
+wants to be shown as does not depend on what we have built yet.
+
 WHAT THIS MODULE REFUSES TO DO
 -------------------------------
 It does not pick. `recommend` returns a ranked list with reasons; a caller that
@@ -55,6 +66,11 @@ __all__ = [
     "AMBIGUOUS",
     "HOMOGENEOUS_SHARE",
     "UNATTRIBUTED",
+    "ROUTE_COMPOSED",
+    "ROUTE_TOOL_LAYOUT",
+    "ROUTE_COMPOSER_PENDING",
+    "ROUTE_NOT_PRODUCIBLE",
+    "ROUTE_UNANSWERED",
 ]
 
 # A scope is homogeneous when one technology holds at least this share of the
@@ -79,6 +95,69 @@ AMBIGUOUS = "(ambiguous)"
 # Words shorter than this are dropped when matching a request against what a
 # view is for. "the", "of", "to" match everything and mean nothing.
 _MIN_INTENT_WORD = 4
+
+# HOW A RECOMMENDED VIEW WOULD ACTUALLY GET DRAWN. Four routes, and telling
+# them apart is the difference between a useful recommendation and a misleading
+# one. There used to be one question here - "is the layout implemented" - and a
+# single boolean answering it conflated two routes that lead opposite ways: a
+# view whose positions the drawing tool supplies (which is the intended route
+# and produces a perfectly good diagram) and a view that cannot be produced at
+# all (where "compose it another way" is exactly the wrong advice).
+#
+# THESE ARE DERIVED, NEVER MATCHED. Nothing in this module holds a grammar name
+# or a list of them. Each route is worked out from the answers the binding layer
+# gives about a view - is the geometry ours to compute, can it be produced - so
+# the day a layout ships, every answer here moves with it. The alternative has
+# already cost us once: a measurement tool decided implementation from its own
+# hardcoded pair of names while its test asserted the same pair, so shipping a
+# layout moved the reported figure by zero and every test stayed green.
+ROUTE_COMPOSED = "composed"
+ROUTE_TOOL_LAYOUT = "tool-layout"
+ROUTE_COMPOSER_PENDING = "composer-pending"
+ROUTE_NOT_PRODUCIBLE = "not-producible"
+# Not a fifth route: the binding object did not answer, so no route is known.
+# Distinct from `""`, which means no layout grammar is stated anywhere - a view
+# with nothing to say about its layout and a view whose data we cannot read are
+# different findings, and the second one needs saying out loud.
+ROUTE_UNANSWERED = "unanswered"
+
+# What each route obliges the recommendation to say. A mapping rather than a
+# chain of conditionals in `recommend`, so the prose and the classification
+# cannot drift apart: a route with nothing to add says nothing, and that is
+# stated here as an empty tuple rather than by omission.
+_ROUTE_ADVICE: Mapping[str, tuple] = {
+    # Ours to compute, and built. The ordinary case, and it needs no caveat.
+    ROUTE_COMPOSED: (),
+    ROUTE_TOOL_LAYOUT: (
+        "its geometry is not composed here, and that is the design rather "
+        "than a limitation: place the elements, call the drawing tool's own "
+        "layout operation, then tidy the result and check it looks right",
+    ),
+    ROUTE_COMPOSER_PENDING: (
+        "its grammar {grammar} is not implemented, so the layout will have to "
+        "be composed another way or handed to the tool's own layout",
+    ),
+    ROUTE_NOT_PRODUCIBLE: (
+        "CANNOT BE GENERATED: the diagram type itself dictates this view's "
+        "arrangement, so composing coordinates cannot produce it - the "
+        "elements would be placed and the meaning their positions are "
+        "supposed to carry would not follow. Draw it by hand in the tool, or "
+        "choose a view whose layout is ours to place",
+        "it is ranked and listed anyway, because what the content wants to be "
+        "shown as is worth knowing whether or not this tool can draw it",
+    ),
+    ROUTE_UNANSWERED: (
+        "its layout grammar {grammar} comes with no statement of whether a "
+        "diagram of it can be produced, so confirm that before promising a "
+        "generated diagram",
+    ),
+}
+
+# Distinct from None, which a binding object uses to mean "no opinion of my
+# own, ask the diagram type". A property that is not there at all is a missing
+# ANSWER, and `getattr(..., None)` cannot tell the two apart - it would report
+# an object this module cannot read as an object with nothing to say.
+_MISSING = object()
 
 
 @dataclass(frozen=True)
@@ -301,7 +380,41 @@ class Candidate:
     coverage: float            # share of the scope's ELEMENTS it admits
     intent_hits: tuple         # intent words that matched
     grammar: str = ""
+    # THREE ANSWERS, NOT ONE, and every consumer wants a different pair of
+    # them. `grammar_is_implemented` alone is the bug this trio replaces: a
+    # caller reading only that value sees False both for a layout nobody has
+    # built and for a view whose geometry was never ours to compute, and those
+    # two lead to opposite advice. `None` here means the question went
+    # unanswered - see `_grammar_answers`.
     grammar_is_implemented: Optional[bool] = None
+    geometry_is_composed: Optional[bool] = None
+    grammar_is_producible: Optional[bool] = None
+
+    @property
+    def generation_route(self) -> str:
+        """How a diagram of this view would be drawn - one of the ROUTE names.
+
+        Derived on every read from the answers above, so it cannot disagree
+        with them, and `""` when no layout grammar is stated at all.
+
+        An unanswered question does not fall through to a route. Reading a
+        missing answer as False is how "the tool places this, correctly" became
+        indistinguishable from "we cannot do this".
+        """
+        if not self.grammar:
+            return ""
+        if self.grammar_is_producible is None or self.geometry_is_composed is None:
+            return ROUTE_UNANSWERED
+        if self.grammar_is_producible:
+            return ROUTE_COMPOSED if self.geometry_is_composed else ROUTE_TOOL_LAYOUT
+        return (ROUTE_COMPOSER_PENDING if self.geometry_is_composed
+                else ROUTE_NOT_PRODUCIBLE)
+
+    @property
+    def can_be_generated(self) -> Optional[bool]:
+        """Whether a diagram of this view can be produced today, or None if
+        the binding did not say. Not a synonym for the layout being composed."""
+        return self.grammar_is_producible
 
     @property
     def score(self) -> tuple:
@@ -372,6 +485,75 @@ def _intent_hits(intent: str, name: str, viewpoint: Any) -> tuple:
     return tuple(sorted(wanted & offered))
 
 
+def _answer(source: Any, question: str) -> Optional[bool]:
+    """One boolean property off a binding object, or None when it has none.
+
+    `getattr(source, question, None)` is the wrong default and the reason this
+    helper exists: it cannot tell an object that never exposed the property
+    from one that answered None, and the second means "no opinion". A missing
+    property is a missing answer, and the caller reports that rather than
+    letting it read as agreement.
+    """
+    value = getattr(source, question, _MISSING)
+    if value is _MISSING or value is None:
+        return None
+    return bool(value)
+
+
+def _grammar_answers(viewpoint: Any, binding: Any) -> tuple:
+    """The layout grammar in force for a viewpoint, and the answers about it.
+
+    Returns `(grammar, is_composed, is_implemented, is_producible)`.
+
+    A VIEWPOINT'S `None` IS NOT `False`. The binding layer answers None to each
+    of these questions when the viewpoint states no grammar of its own, meaning
+    "ask the diagram type" - so an unstated grammar is resolved against the
+    diagram type here. Reading the viewpoint alone is how a view whose diagram
+    type cannot be produced at all got recommended with nothing said about it:
+    the questions were asked of the only object that had no answer, and silence
+    came back looking like approval.
+
+    A viewpoint that DOES state its own grammar is asked itself, because an
+    override is the whole point: a view arranged as a grid on a diagram type
+    arranged as bands is neither of the other's answers.
+
+    No grammar name appears here or anywhere else in this module. Every answer
+    is asked of the binding objects, so a layout that ships moves this without
+    an edit - which a literal list of names would not.
+    """
+    grammar = getattr(viewpoint, "effective_grammar", "") or ""
+    source: Any = viewpoint
+    if not grammar:
+        catalog = getattr(binding, "diagram_types", None) or {}
+        diagram_type = catalog.get(getattr(viewpoint, "diagram_type", ""))
+        if diagram_type is None:
+            return "", None, None, None
+        source = diagram_type
+        grammar = getattr(source, "grammar", "") or ""
+        if not grammar:
+            return "", None, None, None
+    return (
+        grammar,
+        _answer(source, "geometry_is_composed"),
+        _answer(source, "grammar_is_implemented"),
+        _answer(source, "grammar_is_producible"),
+    )
+
+
+def _route_advice(candidate: Candidate) -> tuple:
+    """What this candidate's generation route obliges the reasons to say.
+
+    Every recommendation naming a viewpoint gets this, not only the conformant
+    ones: a dominant-language view is as capable of being unproducible as a
+    standard one, and saying nothing about it in one branch while saying it in
+    the other is the same defect one level down.
+    """
+    return tuple(
+        advice.format(grammar=repr(candidate.grammar))
+        for advice in _ROUTE_ADVICE.get(candidate.generation_route, ())
+    )
+
+
 def _candidates(profile: ScopeProfile, binding: Any,
                 intent: str) -> list[Candidate]:
     """Every viewpoint of one binding, scored against the scope."""
@@ -385,6 +567,8 @@ def _candidates(profile: ScopeProfile, binding: Any,
         admitted = tuple(sorted(held & admits))
         foreign = tuple(sorted(held - admits))
         covered = sum(counts.get(c, 0) for c in admitted)
+        grammar, composed, implemented, producible = _grammar_answers(
+            viewpoint, binding)
         out.append(Candidate(
             technology=binding.technology,
             viewpoint=name,
@@ -393,9 +577,10 @@ def _candidates(profile: ScopeProfile, binding: Any,
             foreign=foreign,
             coverage=covered / in_scope_total,
             intent_hits=_intent_hits(intent, name, viewpoint),
-            grammar=getattr(viewpoint, "effective_grammar", "") or "",
-            grammar_is_implemented=getattr(
-                viewpoint, "grammar_is_implemented", None),
+            grammar=grammar,
+            grammar_is_implemented=implemented,
+            geometry_is_composed=composed,
+            grammar_is_producible=producible,
         ))
     out.sort(key=lambda c: (c.score, c.viewpoint), reverse=True)
     return out
@@ -471,11 +656,7 @@ def recommend(profile: ScopeProfile, bindings: Sequence[Any],
                     + (" ranks" if len(others) == 1 else " rank")
                     + " equally on coverage and intent. Choose on what the "
                       "diagram is for, which this ranking cannot see")
-            if candidate.grammar and candidate.grammar_is_implemented is False:
-                reasons.append(
-                    f"its grammar {candidate.grammar!r} is not implemented, so "
-                    f"the layout will have to be composed another way or "
-                    f"handed to the tool's own layout")
+            reasons.extend(_route_advice(candidate))
             out.append(Recommendation(
                 kind="standard",
                 technology=candidate.technology,
@@ -525,7 +706,7 @@ def recommend(profile: ScopeProfile, bindings: Sequence[Any],
                     "its view carries the majority and the rest appears as "
                     "foreign content, which is the least surprising of the "
                     "non-standard options",
-                ),
+                ) + _route_advice(best),
                 spans=spans,
                 non_conformance=non_conformance,
                 will_be_flagged=tuple(sorted(
