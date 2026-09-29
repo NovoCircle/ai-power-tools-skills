@@ -109,10 +109,12 @@
         "ea-diagram-composition/references/verification.md",
         "ea-diagram-composition/tools/bindings.py",
         "ea-diagram-composition/tools/compose.py",
+        "ea-diagram-composition/tools/fidelity.py",
         "ea-diagram-composition/tools/lint.py",
         "ea-diagram-composition/tools/measure_binding.py",
         "ea-diagram-composition/tools/test_bindings.py",
         "ea-diagram-composition/tools/test_compose.py",
+        "ea-diagram-composition/tools/test_fidelity.py",
         "ea-diagram-composition/tools/test_lint.py",
         "ea-diagram-composition/tools/test_measure_binding.py"
       ],
@@ -128,10 +130,12 @@
         "ea-diagram-composition/references/verification.md": "155372edef6a82a9c3d7e3a4d9cc2cc62d0577951e7d9000134482c6df8a6a59",
         "ea-diagram-composition/tools/bindings.py": "e922f58cadaa64379ac542d06ad3b3ef30b2bb696fb7783738a80806ceda984e",
         "ea-diagram-composition/tools/compose.py": "461ed3cacc1ffae4153d105c221bcf2a66f4263e73a6b22dcd39bfc6e6902fb8",
+        "ea-diagram-composition/tools/fidelity.py": "f5de3a9e94eca8fabd786b0d3bf75a314a59ff04cd7ed070746414999d3f8759",
         "ea-diagram-composition/tools/lint.py": "9db124639f7ed98524bd7585abee520357e7ee6a48fecaf7d122deb9a6f5fc84",
         "ea-diagram-composition/tools/measure_binding.py": "6f687917834a5431bdad07c8ed0bd4a4fbc270b61c4cc6b63c350620862bf289",
         "ea-diagram-composition/tools/test_bindings.py": "2d9797f219c77f5352abb3d79f8261b27ebf01488e9bc95a121733de2e084373",
         "ea-diagram-composition/tools/test_compose.py": "6f7db5ff7d68cc942e6cb6c691c5ea7fc5c7a7f648c0425a35af10230ef98406",
+        "ea-diagram-composition/tools/test_fidelity.py": "d6d60f6439347b07c46397a74756cf110258496696d622e25e41bba3e0ec128a",
         "ea-diagram-composition/tools/test_lint.py": "9f69e65db2babedd66ef2e696cf77d1c90d4bddada4e2f82ea23219fc6376bac",
         "ea-diagram-composition/tools/test_measure_binding.py": "835c948f6ba9ab106a399b6b2fe05c27427ebcc2080646b5cbb6bfa7a0baf5a2"
       }
