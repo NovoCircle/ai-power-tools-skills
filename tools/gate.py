@@ -60,6 +60,23 @@ KNOWN_IDS = {
     "UPDM", "SPEM", "SOMF", "BPEL", "XSD", "WSDL", "ERD", "DMN", "CMMN",
     "MDG", "EA", "XMI", "SQL", "COM", "API", "XML", "YAML", "JSON", "HTML",
     "PNG", "SVG", "CSV", "UTF", "BOM", "URL", "ID", "OK", "NOT", "AND", "OR",
+    # UAF/UPDM. EA ships this as EIGHT separate technology ids, one per
+    # viewpoint, not as one "UAF" — read from the loaded MDG, not guessed.
+    # A binding names them because a binding binds exactly one id.
+    "UAF", "UAFP", "UAFP_Framework", "UAFP_AV", "UAFP_AcV", "UAFP_OV",
+    "UAFP_SOV", "UAFP_SV", "UAFP_SvcV", "UAFP_StV", "UAFP_CV", "UAFP_PV",
+    "UAFP_TV", "UAFP_StdV",
+    # UAF/DoDAF/MODAF viewpoint abbreviations. Standard framework vocabulary
+    # (Services, Capability, Project, Operational, Strategic, Acquisition,
+    # Technical/Standards), not anybody's project code.
+    "AV", "AcV", "OV", "SOV", "SV", "SvcV", "StV", "CV", "PV", "TV", "StdV",
+    # Deliberately generic test stubs. Two or three interchangeable
+    # technologies are needed to test ambiguity and override behavior, and
+    # naming them after a real notation would imply the test says something
+    # about that notation. No customer is involved.
+    "Alpha", "Beta", "Overlay",
+    # Generic placeholder model filenames in tests. Not anybody's model.
+    "model", "missing",
 }
 QEA_FILE = re.compile(r"\b([A-Za-z][A-Za-z0-9_-]*)\.(?:qea|eapx|eap|feap)\b")
 MDG_NS = re.compile(r"\b([A-Z][A-Za-z0-9_]{1,30})::")
