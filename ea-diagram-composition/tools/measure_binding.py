@@ -85,7 +85,7 @@ Elements whose size is fixed by the notation - a stereotype with at least
 events, gateways and junctions look like - are excluded from that pool,
 because otherwise 173 BPMN events (30x30) outvote the 212 activities that are
 the box a diagram is made of. If that leaves nothing (every stereotype is
-fixed), the pool is everything. This is a heuristic and it is labelled as one.
+fixed), the pool is everything. This is a heuristic and it is labeled as one.
 
 ADJACENCY - THE DEFINITION THE GAP NUMBERS REST ON
 --------------------------------------------------
