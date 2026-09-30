@@ -131,6 +131,16 @@ widened and why - and leaves everything else alone. Nothing here is per
 notation: what has to fit is a string, and a string is the same width whatever
 notation is eventually drawn around it.
 
+AND IT IS NOT THIS MODULE'S CALL WHICH WAY THAT GOES. Widening the box and
+letting the text overlap the border are both legitimate drawings of the same
+content, and which one a diagram wants is the user's judgment about that diagram.
+So the misfit is reported as a `compose.FitConflict` on `SpecFit.conflicts`,
+saying what did not fit, what each option costs and which was applied; widening
+is what happens when nobody answers, because it is the safe direction, and
+`on_misfit="overlap"` is how a caller relays the answer when the user wants the
+width kept. An agent that finds a conflict is supposed to ASK - the skill's own
+guidance says so - not to pick.
+
 THE ENGINE IS NOT THE PLACE FOR THIS, and it would be nine places if it were.
 Nine grammars resolve `item_width`, each its own way, and each would need the
 same arithmetic and its own way of reporting it. They all take a spec, and on
@@ -171,6 +181,18 @@ from compose import DEFAULT_SPEC  # noqa: E402
 # stop being a rule about geometry.
 from lint import LABEL_MARGIN  # noqa: E402
 
+# The widen-or-overlap vocabulary, re-exported rather than restated. A caller
+# holding a binding should not have to import the engine to name the answer it is
+# relaying, and a second copy of the two strings is how the two halves of one
+# mechanism drift apart.
+from compose import (  # noqa: E402
+    DEFAULT_FIT_ANSWER,
+    FIT_ANSWERS,
+    FIT_OVERLAP,
+    FIT_WIDEN,
+    FitConflict,
+)
+
 __all__ = [
     "BindingError",
     "Binding",
@@ -196,6 +218,11 @@ __all__ = [
     "MDG_SEPARATOR",
     "HEADER_ADVANCE_PX",
     "SpecFit",
+    "FitConflict",
+    "FIT_WIDEN",
+    "FIT_OVERLAP",
+    "FIT_ANSWERS",
+    "DEFAULT_FIT_ANSWER",
     "width_to_fit",
     "Resolution",
     "load_binding",
@@ -708,27 +735,43 @@ class SpecFit(dict):
 
     It IS the spec - a plain `dict` subclass, equal to the dict it would have
     been, passable straight to any composer - so nothing downstream has to know
-    this type exists. What it adds is the report: `widened`, `requested_width`,
-    `driver` and a one-line `note`.
+    this type exists. What it adds is the report: `conflicts`, `widened`,
+    `requested_width`, `driver` and a one-line `note`.
 
     THE REPORT IS NOT OPTIONAL DECORATION. `sizing.default` is measured off real
     diagrams of the notation and `default_size_provenance` names whose
     measurement it is; an override is a figure the caller chose on purpose.
     Quietly substituting a third number for either of those would leave a caller
-    reading a measured convention that was not the one used. So the widening is
-    applied and then declared.
+    reading a measured convention that was not the one used. So the width used is
+    declared, and where the two could not both be honored the CHOICE is declared
+    with it.
+
+    `conflicts` is the machine-readable half and the one to branch on: a tuple of
+    `compose.FitConflict`, each naming what did not fit, both options, and which
+    was applied. A conflict whose `answered` is False is the default standing in
+    for an answer nobody gave - ASK THE USER, then pass `on_misfit` back. The
+    other four fields are the human-readable half and describe the width only:
+    under `on_misfit="overlap"` nothing widened, so `widened` is False while
+    `conflicts` is not empty, and that pair is the point rather than an
+    inconsistency.
     """
 
-    __slots__ = ("requested_width", "driver")
+    __slots__ = ("requested_width", "driver", "conflicts")
 
     def __init__(self, spec: Mapping[str, Any], requested_width: int,
-                 driver: str = "") -> None:
+                 driver: str = "",
+                 conflicts: Sequence[FitConflict] = ()) -> None:
         super().__init__(spec)
         #: The `item_width` that was asked for, before any widening: the
         #: binding's measured default, or the caller's override of it.
         self.requested_width = int(requested_width)
-        #: The name that forced the widest box, or "" if nothing widened.
+        #: The name that would not fit the requested width, or "" if every name
+        #: fitted. Set whichever answer was applied, because which name caused
+        #: the conflict is the same fact either way.
         self.driver = driver
+        #: The misfits, as `compose.FitConflict` records. Empty when the names
+        #: fitted the width that was asked for.
+        self.conflicts = tuple(conflicts)
 
     @property
     def item_width(self) -> int:
@@ -740,17 +783,38 @@ class SpecFit(dict):
         return self.item_width > self.requested_width
 
     @property
+    def conflict(self) -> FitConflict | None:
+        """The one width misfit, or `None`. There is at most one per spec.
+
+        `item_width` is a single number, so the names resolve to a single
+        question about it - the widest of them. `conflicts` is still the plural
+        because it is the shape every consumer of this mechanism reads.
+        """
+        return self.conflicts[0] if self.conflicts else None
+
+    @property
+    def unanswered_conflicts(self) -> tuple[FitConflict, ...]:
+        """The conflicts still owed an answer from the user.
+
+        A caller that wants one test for "must I ask about this diagram?" asks
+        this rather than reading `answered` out of each record.
+        """
+        return tuple(c for c in self.conflicts if not c["answered"])
+
+    @property
     def note(self) -> str:
-        """One sentence for a report or a log, or "" when nothing widened."""
-        if not self.widened:
+        """One sentence for a report or a log, or "" when nothing conflicted.
+
+        Reads the conflict rather than recomputing it, so the prose and the
+        machine-readable record cannot disagree about which name or which
+        numbers. Non-empty whenever a name did not fit, INCLUDING under
+        `overlap`, where no width moved but a choice was still made.
+        """
+        if not self.conflicts:
             return ""
-        run = _longest_unbroken_run(self.driver)
-        return (
-            f"item_width widened from {self.requested_width} to "
-            f"{self.item_width} so every box fits its name: {self.driver!r} "
-            f"has a {len(run)}-character run with no space in it to break on, "
-            f"which needs {width_to_fit(self.driver)}px. The width asked for "
-            f"would have been drawn wider than it measures."
+        return " ".join(
+            " ".join(part for part in (c["note"], c["detail"]) if part)
+            for c in self.conflicts
         )
 
 
@@ -953,7 +1017,8 @@ class DiagramTypeBinding:
         return self.routing["default"]
 
     def spec(self, overrides: Mapping[str, Any] | None = None,
-             names: Iterable[str] = ()) -> SpecFit:
+             names: Iterable[str] = (),
+             on_misfit: str | None = None) -> SpecFit:
         """Build a `compose.py` spec from this diagram type's conventions.
 
         `sizing.default` becomes `item_width`/`item_height`; `spacing` is
@@ -970,8 +1035,29 @@ class DiagramTypeBinding:
         measures, and every check that reads the stored rect reads a rect EA does
         not paint.
 
-        There is no flag to turn the fitting off, because supplying the names IS
-        the request. A knob would only exist to be left at the wrong setting.
+        WHEN THE WIDTH AND THE NAME CANNOT BOTH BE HONORED, SAY SO RATHER THAN
+        SETTLE IT. This used to read "there is no flag to turn the fitting off,
+        because supplying the names IS the request; a knob would only exist to be
+        left at the wrong setting." That was right that a caller supplying names
+        wants them to fit, and wrong about whose call the conflict is. Widening
+        the box and letting the text overlap the border are both legitimate
+        drawings of the same content, and which one a diagram wants depends on
+        the diagram - so the conflict is reported and the user is asked.
+
+        `on_misfit` is where their answer goes, and it is an ANSWER, not a
+        setting: `None` means nobody has answered, `"widen"` and `"overlap"` are
+        the two things they can say. Widening is what happens when nobody
+        answered, unchanged and for the same reason as before - EA grows a box it
+        cannot fit whatever the stored rect says, so it is the only answer under
+        which the geometry every later check reads is the geometry EA paints.
+        What is new is that it is no longer silent: the returned `SpecFit`
+        carries the misfit on `conflicts`, with both options, which was applied,
+        and whether anybody chose it.
+
+        `on_misfit="overlap"` keeps the width that was asked for. That is not a
+        return to the old behavior, because the conflict is still reported - the
+        difference between the two is a choice on the record and a default nobody
+        saw.
 
         ITEM names, not group names. A band's or lane's title is drawn across a
         strip whose width comes from the band, not from `item_width`; feeding it
@@ -996,10 +1082,19 @@ class DiagramTypeBinding:
                     f"Known keys: {', '.join(sorted(_SPEC_KEYS))}")
             spec[key] = value
 
-        # Fitted LAST, over the width that is actually in effect. An override is
+        # Refused here rather than by the engine, for the same reason an unknown
+        # override key is: the engine's message would be about a layout spec and
+        # would not mention the binding, sending the reader to the wrong file.
+        if on_misfit is not None and on_misfit not in FIT_ANSWERS:
+            raise BindingError(
+                f"on_misfit must be one of "
+                f"{', '.join(repr(a) for a in FIT_ANSWERS)} - the user's answer "
+                f"to the widen-or-overlap question - got {on_misfit!r}")
+
+        # Measured LAST, over the width that is actually in effect. An override is
         # exactly as capable of being too narrow for the content as a measured
         # default is - the live defect was found on a caller-chosen 60 - so
-        # fitting before the override would leave the commoner case unfixed.
+        # measuring before the override would leave the commoner case unfixed.
         requested = int(spec["item_width"])
         driver = ""
         needed = requested
@@ -1011,8 +1106,29 @@ class DiagramTypeBinding:
             want = width_to_fit(name)
             if want > needed:
                 needed, driver = want, name
-        spec["item_width"] = needed
-        return SpecFit(spec, requested, driver)
+
+        detail = ""
+        if driver:
+            run = _longest_unbroken_run(driver)
+            detail = (
+                f"{driver!r} has a {len(run)}-character run with no space in it "
+                f"to break on, which needs {width_to_fit(driver)}px. Under "
+                f"{FIT_OVERLAP!r} the stored rect keeps the width asked for and "
+                f"EA draws the name past it, so every check that reads the rect "
+                f"reads a narrower box than the one on screen."
+            )
+        width, conflict = _engine.resolve_width_misfit(
+            "spec.item_width",
+            requested_width=requested,
+            required_width=needed,
+            driver=driver,
+            driver_kind="item_name",
+            on_misfit=on_misfit,
+            detail=detail,
+        )
+        spec["item_width"] = width
+        return SpecFit(spec, requested, driver,
+                       (conflict,) if conflict is not None else ())
 
 
 class Viewpoint:

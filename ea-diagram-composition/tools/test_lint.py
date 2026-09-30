@@ -747,6 +747,78 @@ def test_connectors_meeting_at_a_shared_element_do_not_cross():
     assert report.metrics["crossings"] == 0
 
 
+def _composed(result, links=()):
+    """A composition as `verify_diagram` would hand it back, IDS UNTOUCHED.
+
+    What this helper does NOT do is the point of it. The linter seam in each
+    grammar's own test file renumbers every box to an integer on the way in,
+    and that renumbering is precisely what kept the ids a composer invents out
+    of the linter until one of them crashed it.
+    """
+    objects = [{
+        "element_id": placed["id"],
+        "name": placed.get("name") or "",
+        "left": placed["left"], "top": placed["top"],
+        "right": placed["right"], "bottom": placed["bottom"],
+    } for placed in [*result["containers"], *result["items"]]]
+    bounds = result["bounds"]
+    return verified(objects, links,
+                    cx=bounds["width"] + 100, cy=bounds["height"] + 100)
+
+
+def test_ids_a_composer_invented_for_a_container_do_not_crash_the_linter():
+    """Real compositions, because the claim is that the grammars produce these.
+
+    A caller who does not care what a blank cell or an unnamed group is called
+    states no id for it, and the composer invents one - a label, not a number.
+    Every other object on the payload carries the caller's numeric model id, so
+    the two shapes arrive TOGETHER, which is the case the crossings rule used to
+    coerce and die on.
+
+    A hand-built payload carrying the string `cell_0_0` would test the linter
+    against this test's own guess. These layouts are composed, and the invented
+    ids are asserted to be there, so the day a grammar starts numbering its own
+    containers this test says so instead of passing on a fixture nobody reads.
+
+    The real link is not decoration either: `crossings_measured_over` proves the
+    rule still measured the endpoints it is for while the invented ids sat in
+    its index, rather than being made crash-proof by measuring nothing.
+    """
+    pytest.importorskip("compose")      # the grammars import through it
+    compose_matrix = pytest.importorskip("compose_matrix").compose_matrix
+    compose_treemap = pytest.importorskip("compose_treemap").compose_treemap
+
+    # Cells are stated at one address only, so the other three are invented.
+    matrix = compose_matrix(
+        [{"name": "Retail"}, {"name": "Commercial"}],
+        [{"name": "Current"}, {"name": "Target"}],
+        [{"row": "Retail", "column": "Current",
+          "items": [{"id": 1000, "name": "Payments"},
+                    {"id": 1001, "name": "Ledger"}]}],
+    )
+    # A group with no id of its own: the group rect and its header are invented.
+    treemap = compose_treemap([{"name": "Retail", "tiles": [
+        {"id": 2000, "name": "Payments", "weight": 3},
+        {"id": 2001, "name": "Ledger", "weight": 1}]}])
+
+    for label, result in (("matrix", matrix), ("treemap", treemap)):
+        invented = [c["id"] for c in result["containers"]
+                    if not str(c["id"]).lstrip("-").isdigit()]
+        assert invented, (
+            f"{label}: nothing was invented, so this test is not exercising "
+            f"what it claims to")
+
+        first, second = [item["id"] for item in result["items"]]
+        link = {"connector_id": 1, "stored": True, "route": "Direct",
+                "name": "settles", "source_element_id": first,
+                "target_element_id": second}
+        report = lint_diagram(_composed(result, [link]))
+        assert report.metrics["crossings_measured_over"] == 1, (
+            f"{label}: the invented ids stopped the rule from measuring the "
+            f"one link that does have endpoints")
+        assert report.metrics["crossings"] == 0, label
+
+
 # ---------------------------------------------------------------------------
 # Color
 # ---------------------------------------------------------------------------

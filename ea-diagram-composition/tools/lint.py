@@ -1071,6 +1071,22 @@ def _segments_cross(p1, p2, p3, p4) -> bool:
     return o1 != o2 and o3 != o4
 
 
+def _element_key(element_id: Any) -> Any:
+    """Index key for an element id: the number if it is one, else the id itself.
+
+    Element ids arrive in two shapes. A placed model element has a numeric id,
+    which `verify_diagram` sometimes reports as a string, so a numeric-looking
+    id is normalized to `int` and one payload's `"1234"` matches another's
+    `1234`. A composer also INVENTS an id for a container the caller did not
+    name - `cell_0_0`, `group_0_header` - and that id is an opaque label with no
+    number in it. It is kept exactly as given.
+    """
+    try:
+        return int(element_id)
+    except (TypeError, ValueError):
+        return element_id
+
+
 def check_crossings(objects: Sequence[Mapping[str, Any]],
                     links: Sequence[Mapping[str, Any]],
                     report: LintReport) -> int:
@@ -1090,7 +1106,22 @@ def check_crossings(objects: Sequence[Mapping[str, Any]],
     the payload, so every diagram scored zero. A count without its denominator
     is how that stayed invisible.
     """
-    by_id = {int(o["element_id"]): o for o in objects}
+    # THE DECISION ON A SYNTHETIC ID, recorded so it is not re-litigated: an id
+    # a composer invented for an unnamed container is INDEXED AS ITSELF. It is
+    # neither coerced nor dropped.
+    #
+    # This line used to read `int(o["element_id"])`, which raised ValueError on
+    # the first such id and took the whole report down with it. The coercion was
+    # only ever normalization - so that an object stating "1234" matches a link
+    # stating 1234 - and never a claim that every id is a number, so it now
+    # applies where it means something and nowhere else.
+    #
+    # Synthetic ids stay IN the index rather than being filtered out, because a
+    # caller may legitimately connect to a container, and silently omitting its
+    # rect would lower `crossings_measured_over` without saying so. A count that
+    # quietly measures less than it appears to is the exact failure this rule
+    # already carries a denominator for.
+    by_id = {_element_key(o["element_id"]): o for o in objects}
     segments = []
     for link in links:
         src, tgt = link.get("source_element_id"), link.get("target_element_id")

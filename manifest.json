@@ -137,8 +137,8 @@
         "ea-diagram-composition/tools/test_measure_binding.py"
       ],
       "sha256": {
-        "ea-diagram-composition/SKILL.md": "d8cb856d94fcae5853bcbdef52e81620a98790b460f62f8461fcebc88a8b59ca",
-        "ea-diagram-composition/bindings/archimate3.yaml": "0bb466b66c4d9d073429e360978efdd470de5d54c7f234615f7c7171329bc541",
+        "ea-diagram-composition/SKILL.md": "0bd451d904fe3f5d678e45b49b7d8f9b4caefd74a93e58fc6f1e55c373a86075",
+        "ea-diagram-composition/bindings/archimate3.yaml": "f086c3aa2da838f1bf48c4ea2ec4816a408bfcd683f21181d85afc336f711e7c",
         "ea-diagram-composition/bindings/bpmn2.0.yaml": "5b044b8f62b66718d1546a19525452654801005caedbe56941f96d9bc0d16c6c",
         "ea-diagram-composition/bindings/dmn1.1.yaml": "42bd997bb570271beed0e6c34c617804bbebc62d21f6372641d0455bdbcddac6",
         "ea-diagram-composition/bindings/erd_dp.yaml": "d4bfa176cb030e36bb182e91f6500a70178da58bfafbeb78d6e18dbcabab7d60",
@@ -149,30 +149,30 @@
         "ea-diagram-composition/bindings/uafp_framework.yaml": "9ed24f58624db793817cb0ab035b3bcba544dddcfd466790545d82b02e1ac61c",
         "ea-diagram-composition/bindings/uml.yaml": "a0086610d95fb0789e207e78a84a9bfd73ca1623fbdf010af2d1df4f02ea3cad",
         "ea-diagram-composition/bindings/zf-interface.yaml": "53f0a02b4929a4863915461cd486a02e65ef6d935ae01d4064c99714bad35f8d",
-        "ea-diagram-composition/references/bindings.md": "6acb274134f7aa5a1022b9fc5fbb80a577f452ae97f6d83504e03cb2efa7da6d",
-        "ea-diagram-composition/references/grammars.md": "c2260d7c5126c2d1a4cdf1fb99f67e784df96ef27bab2ba7392345231896184d",
-        "ea-diagram-composition/references/verification.md": "155372edef6a82a9c3d7e3a4d9cc2cc62d0577951e7d9000134482c6df8a6a59",
-        "ea-diagram-composition/tools/bindings.py": "235a29bb2abfa7fca6ce68a5663b48b20e04f7a9b4f79e0dc5def4fc8a6e1d2b",
-        "ea-diagram-composition/tools/compose.py": "f0f9026707ab1f687db5ec72d4b77fd80cf8941c78d4964e9b380f07403f166d",
+        "ea-diagram-composition/references/bindings.md": "680c256cb3f4dc0ff30448cc83506900e254d4e952e0e4357433b7ee193602be",
+        "ea-diagram-composition/references/grammars.md": "57b28deb01afc620b15cd296cd4eba4a994116b3a86accb308e53d43e3e4fcc9",
+        "ea-diagram-composition/references/verification.md": "3c25b098ed861812284a14fa3da5c474bae8d28b10a133c95b2bb5cb75dc05ad",
+        "ea-diagram-composition/tools/bindings.py": "9e60b33c32664bb2fce14a59e63e49b557d81944062e29c23c0c65b09a6bb690",
+        "ea-diagram-composition/tools/compose.py": "92e67a8ba270c4fd7930dcb302c677faadd7fdc4ad0ce85dacc69cebfa7139ea",
         "ea-diagram-composition/tools/compose_chevron.py": "efa2d78dcf81d1fbac64494fc8a7fdafe2006bf315224f34086c5e43a0a0369c",
         "ea-diagram-composition/tools/compose_matrix.py": "59ebfc259141af65a5a8bf4516ab16513df86fadf11b86a6d4619a307ee58ef5",
         "ea-diagram-composition/tools/compose_radial_tree.py": "d328bd2f3e23b989022da74422a776774e0dfcd0e2be722a5a2048871a0d53a2",
         "ea-diagram-composition/tools/compose_treemap.py": "a508338553d5b8e5ea9857775c195748ce06eba768d30a9741de0a5f9bd6c3a8",
         "ea-diagram-composition/tools/fidelity.py": "3bdda20149d3f007a8a68a5a35612ac1ec2086b1aaaaf04c480a684c3534b0dc",
-        "ea-diagram-composition/tools/lint.py": "c201cf656b2cd8d840887b51feabacab424277f2cd0b985c81ac5bdde7772053",
+        "ea-diagram-composition/tools/lint.py": "a97d54079f609dd1e07669965afa35a2ce8d1f4858857901928004335f772fe6",
         "ea-diagram-composition/tools/measure_binding.py": "6f687917834a5431bdad07c8ed0bd4a4fbc270b61c4cc6b63c350620862bf289",
-        "ea-diagram-composition/tools/test_bindings.py": "806cbeb60cef8289855c3805e1ebeea553c10b165d5fe46843353cea7bdfa6cb",
+        "ea-diagram-composition/tools/test_bindings.py": "0b4751b3bbf34cf33717f99e3bd355530b821039866b86b568ebf28558a8286a",
         "ea-diagram-composition/tools/test_bindings_data.py": "37649590476f80a129d20886818424bbdcc3ca708d7ae8e0681a20ad38a88d21",
         "ea-diagram-composition/tools/test_bindings_frameworks.py": "54be09e9626f98cdc3631f173014f3c3004e0759de3d1113aa1e0bc831b35be2",
         "ea-diagram-composition/tools/test_bindings_strategy.py": "ea576f938a38c417021e0e5f87425ee656f1f738ad9094b21a871d0fe56ec4d8",
         "ea-diagram-composition/tools/test_bindings_sysphs.py": "2b3718335bfcd65c46bf9a3c120aa6d195318b5d6302f384549be4fd41d29a0a",
-        "ea-diagram-composition/tools/test_compose.py": "f8b8f01174e904ac01f45ae61fca9923172fb7b2a176daa0fe768d9d09294aaf",
+        "ea-diagram-composition/tools/test_compose.py": "43480631103abf61d2522149ff50737319ffad7152acb10f6948858dc8c05589",
         "ea-diagram-composition/tools/test_compose_chevron.py": "bd5254d0a1f270e74213f85312deddc154c0c679b0cb1074b4f545dde508e31a",
         "ea-diagram-composition/tools/test_compose_matrix.py": "0cc258cea3773899ac23ad2d615397251f3f2abb4598983950c993f2ec63a5a1",
         "ea-diagram-composition/tools/test_compose_radial_tree.py": "7aacb1f6ac463d682f1ab255f47fef738947a4990aedb665ce75443355472b08",
         "ea-diagram-composition/tools/test_compose_treemap.py": "e741fe2f99db04bd19b915e5d610703a3e3ae108620e3caac85479c0b411d89b",
         "ea-diagram-composition/tools/test_fidelity.py": "2e9de4ddb150869d7c67ac458b5f49a0968f868fe550f56723a637ec780499f2",
-        "ea-diagram-composition/tools/test_lint.py": "f0ffa1a5a9053d00502d926e8652bcf950f62e35edcfd2c9b02d0c716febf605",
+        "ea-diagram-composition/tools/test_lint.py": "13c55c71055f8955bc38b21aed97cebcc357299d0bb6f06451f345f7c93c5ec3",
         "ea-diagram-composition/tools/test_measure_binding.py": "835c948f6ba9ab106a399b6b2fe05c27427ebcc2080646b5cbb6bfa7a0baf5a2"
       }
     },
@@ -345,15 +345,15 @@
       "name": "ea-ruleset-author",
       "title": "ea-ruleset-author",
       "description": "Build a YAML validation ruleset for a modeling language (ArchiMate, BPMN, UML, SysML, custom MDG), consumed by validate_model. Covers research, rule-category planning, YAML authoring, and testing.",
-      "version": "1.0.1",
+      "version": "1.1.0",
       "min_server_version": "1.2.0",
       "files": [
         "ea-ruleset-author/SKILL.md",
         "ea-ruleset-author/references/rule-grammar.md"
       ],
       "sha256": {
-        "ea-ruleset-author/SKILL.md": "a372c01f5667bc6787757675a43dd6e5cc19bfbceb6c4fa7dbaf331306de986e",
-        "ea-ruleset-author/references/rule-grammar.md": "5d4e556c2b44c246719e8b618f2b85687b3e44c02cb42c2e603064617487f381"
+        "ea-ruleset-author/SKILL.md": "44ee799ea211de9d4eb7dbfcacd30b29dde20b82b048aae668eff8b03fd88a2b",
+        "ea-ruleset-author/references/rule-grammar.md": "3445cebb547a6c648c4e8ef5fb2b478adfdb7212004767d651724e299d92ac27"
       }
     },
     {
@@ -400,14 +400,16 @@
     {
       "name": "ruleset-archimate31",
       "title": "ArchiMate 3.1 Validation Ruleset",
-      "description": "ArchiMate 3.1 conformance validation ruleset for use with validate_model. Covers relationship endpoint validity, cross-layer rules, collaboration structure, interaction assignment, and well-formedness completeness. 27 rules across 6 categories.",
-      "version": "1.0.0",
+      "description": "ArchiMate 3.1 conformance validation ruleset for use with validate_model. Covers relationship endpoint validity, cross-layer rules, collaboration structure, interaction assignment, and well-formedness completeness. 27 rules across 6 categories. Stereotype names carry EA's ArchiMate_ prefix, measured on EA 17.1.",
+      "version": "1.1.0",
       "min_server_version": "1.2.0",
       "files": [
-        "ruleset-archimate31/archimate31_rules.yaml"
+        "ruleset-archimate31/archimate31_rules.yaml",
+        "ruleset-archimate31/tools/test_ruleset_archimate31.py"
       ],
       "sha256": {
-        "ruleset-archimate31/archimate31_rules.yaml": "695b06a73ce95eb09d513971e64d817fb3b246ebb8872dbbc05d7d0907b33032"
+        "ruleset-archimate31/archimate31_rules.yaml": "8e2bc0d0c46c319d7d54a8af11c21d1a3052f8f1bc92efcf9084eef3e7bc518e",
+        "ruleset-archimate31/tools/test_ruleset_archimate31.py": "567548f02366f3a5a0b16b406827cde2a0592ddf6ddc3eb2fb09869c54ab9eff"
       }
     }
   ]

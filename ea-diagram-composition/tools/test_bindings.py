@@ -60,6 +60,9 @@ from bindings import (  # noqa: E402
     BindingError,
     Resolution,
     SpecFit,
+    FIT_ANSWERS,
+    FIT_OVERLAP,
+    FIT_WIDEN,
     available_bindings,
     bindings_for_technologies,
     find_binding,
@@ -321,6 +324,137 @@ def test_a_name_that_is_not_a_string_is_refused():
     dt = load_binding_text(MINIMAL).diagram_type("Overview")
     with pytest.raises(BindingError, match=r"names\[1\]"):
         dt.spec(names=["Hub", 13477])
+
+
+# ---------------------------------------------------------------------------
+# APT-2026-0187: widen or overlap is the user's call, so the conflict is surfaced
+#
+# The position this replaces was that supplying the names IS the request, so
+# there was nothing to ask and no flag to offer. That was right about the intent
+# and wrong about the conflict: widening the box and letting the text overlap the
+# border are both legitimate drawings, and which one a diagram wants is a
+# judgment about that diagram. Widening stays the default, because EA grows a box
+# it cannot fit whatever the stored rect says - so it is the only answer under
+# which the stored geometry is the geometry EA paints. What these tests pin is
+# that it is no longer SILENT, and that an answer to the contrary binds.
+# ---------------------------------------------------------------------------
+def test_a_name_that_does_not_fit_is_reported_as_a_conflict():
+    """Machine-readable, because an agent has to act on it rather than read it.
+
+    A one-line note was already there, and prose is not something to branch on.
+    The record names what did not fit, what each option costs, which was applied
+    and - the field that matters - that nobody chose it.
+    """
+    dt = load_binding_text(MINIMAL).diagram_type("Overview")
+    fitted = dt.spec(names=["Hub", _UNBREAKABLE_36])
+
+    assert len(fitted.conflicts) == 1
+    c = fitted.conflict
+    assert c is fitted.conflicts[0]
+    assert c["conflict"] == "width_does_not_fit_content"
+    assert c["where"] == "spec.item_width"
+    assert c["driver"] == _UNBREAKABLE_36
+    assert c["driver_kind"] == "item_name"
+    assert c["requested_width"] == 100
+    assert c["required_width"] == width_to_fit(_UNBREAKABLE_36)
+    assert [o["answer"] for o in c["options"]] == [FIT_WIDEN, FIT_OVERLAP]
+    assert [o["width"] for o in c["options"]] == [c["required_width"], 100]
+    assert _UNBREAKABLE_36 in c["question"]
+    assert "36-character" in c["detail"]
+    assert fitted.unanswered_conflicts == (c,)
+
+
+def test_the_default_when_nobody_answers_is_still_the_widening():
+    """The safe direction, unchanged - and now on the record as a default.
+
+    Changing what happens by default would move every existing caller, and the
+    direction it would move them in is the one where the stored rect stops
+    matching the render. So the width is exactly what it was; `answered` is what
+    is new, and False is it saying the question is still open.
+    """
+    dt = load_binding_text(MINIMAL).diagram_type("Overview")
+    fitted = dt.spec(names=["Hub", _UNBREAKABLE_36])
+    assert fitted.item_width == width_to_fit(_UNBREAKABLE_36)
+    assert fitted.item_width >= _DRAWN_WIDTH_OF_UNBREAKABLE_36
+    assert fitted.widened
+    assert fitted.conflict["applied"] == FIT_WIDEN
+    assert fitted.conflict["answered"] is False
+
+    answered = dt.spec(names=["Hub", _UNBREAKABLE_36], on_misfit=FIT_WIDEN)
+    assert answered.item_width == fitted.item_width, "same geometry"
+    assert answered.conflict["answered"] is True, "different provenance"
+
+
+def test_the_user_choosing_overlap_keeps_the_width_they_asked_for():
+    """The answer has to bind, or the conflict report is decoration.
+
+    `overlap` is not a return to the old behavior: the width is the same one the
+    old code produced, and the conflict is still reported, so the choice is on
+    the record rather than being a default nobody saw. Note `widened` is False
+    here while `conflicts` is not empty - nothing moved, and something was still
+    decided.
+    """
+    dt = load_binding_text(MINIMAL).diagram_type("Overview")
+    chosen = dt.spec(names=["Hub", _UNBREAKABLE_36], on_misfit=FIT_OVERLAP)
+
+    assert chosen.item_width == chosen.requested_width == 100
+    assert not chosen.widened
+    assert chosen.driver == _UNBREAKABLE_36, "which name it was is the same fact"
+    assert chosen.conflict["applied"] == FIT_OVERLAP
+    assert chosen.conflict["width_applied"] == 100
+    assert chosen.conflict["answered"] is True
+    assert chosen.unanswered_conflicts == ()
+    assert chosen.note, "a choice that was made still gets said out loud"
+
+
+def test_a_spec_whose_names_all_fit_reports_no_conflict():
+    """Silence has to mean something, so it only happens when nothing conflicted.
+
+    Three ways for there to be nothing to report - names that fit, no names at
+    all, and an override wide enough for them - and all three come back with an
+    empty tuple rather than a conflict whose `applied` nobody should read.
+    """
+    dt = load_binding_text(MINIMAL).diagram_type("Overview")
+    for label, fitted in (
+        ("names that fit", dt.spec(names=["Hub", "Payments"])),
+        ("no names", dt.spec()),
+        ("an override wide enough",
+         dt.spec({"item_width": 400}, names=[_UNBREAKABLE_36])),
+    ):
+        assert fitted.conflicts == (), label
+        assert fitted.conflict is None, label
+        assert fitted.unanswered_conflicts == (), label
+        assert fitted.note == "", label
+        assert not fitted.widened, label
+
+
+def test_an_answer_that_is_not_one_of_the_two_is_refused_by_the_binding():
+    """Refused here, and as a `BindingError`, for the reason an unknown override
+    key is: the engine's message would be about a layout spec and would not
+    mention the binding, sending the reader to the wrong file. Refused whether or
+    not this call turns out to have a conflict, because a caller relaying an
+    answer has already asked the user and a typo must not read as silence.
+    """
+    dt = load_binding_text(MINIMAL).diagram_type("Overview")
+    for names in ([_UNBREAKABLE_36], ["Hub"], []):
+        with pytest.raises(BindingError, match="on_misfit"):
+            dt.spec(names=names, on_misfit="wider")
+    assert FIT_ANSWERS == (FIT_WIDEN, FIT_OVERLAP)
+
+
+def test_the_conflict_travels_as_plain_json_data():
+    """It has to cross a tool boundary, so it must not need this module to read.
+
+    A `FitConflict` IS a dict and every value in it is a str, int, bool or list
+    of those, which is what makes it reportable by an MCP tool and readable by an
+    agent that never imported anything from here.
+    """
+    import json
+
+    dt = load_binding_text(MINIMAL).diagram_type("Overview")
+    conflict = dt.spec(names=[_UNBREAKABLE_36]).conflict
+    assert isinstance(conflict, dict)
+    assert json.loads(json.dumps(conflict)) == conflict
 
 
 # ---------------------------------------------------------------------------

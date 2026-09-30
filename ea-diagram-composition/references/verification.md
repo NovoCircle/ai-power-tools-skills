@@ -340,6 +340,33 @@ Kept here on purpose. A clean report means *no defect this linter knows how to m
 a claim that the diagram reads well, and the list of what it misses is the difference between those
 two statements.
 
+### The inventory is the denominator
+
+The list below is written by hand. The **defect-class inventory** is its derived counterpart, and
+it is what a clean score needs in order to mean anything. It lives with the server's benchmark
+suite, in the `ea-mcp-server` repository, as `tests/benchmark/defect_corpus.py`, and prints itself:
+
+```
+PYTHONPATH=. python -m tests.benchmark.defect_corpus
+```
+
+Each entry is one defect class, the perturbation that produces it from a **real captured
+`verify_diagram` payload**, the rule that should fire, and whether it actually does. Its companion
+test reads the rule ids from the linter's own registry, so a rule added here with no corpus entry
+turns that suite red rather than quietly widening the gap between what the linter checks and what
+the inventory claims.
+
+**As of 2026-09-30 it records 22 defect classes: 21 detected, across 18 rules, and one that is
+perturbed, linted, and provably fires nothing** (a name colliding with the stereotype icon drawn
+inside its own box — see the known limit at the end of this section). So **a clean score is not
+proof of a good diagram**: it excludes those 21, says nothing about that one, and says nothing at
+all about the eight classes listed below, which no rule reaches. The report also names the six
+causes a rule puts on `not_run`, and the five shapes the captured payloads do not contain, each of
+which bounds what the corpus can claim without a fresh capture.
+
+Read it before quoting a score to anybody. And it decays: it is a claim about this linter as of a
+date, so re-run it rather than repeating the figures above.
+
 - **Whether the grammar was the right choice.** A capability model laid out as swimlanes will lint
   clean. It is still the wrong diagram.
 - **Whether the content belongs on one diagram at all.** Forty elements can be spaced perfectly.

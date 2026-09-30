@@ -181,6 +181,41 @@ and never inside a word, so a multi-word name breaks itself. Omit `names` and no
 which is the old behavior and the defect with it. See
 [`references/bindings.md`](references/bindings.md) §5.7.
 
+### When the width and the content conflict, ask the user
+
+A width stated on purpose and content wider than it are both facts, and there are two legitimate
+drawings of them: **extend the box, or keep the width and let the text overlap the border.** Which
+one a diagram wants is a judgment about that diagram, so it is **not yours to make**. The spec and
+the composition both report the conflict, and the report carries the question ready to put:
+
+```python
+spec = dt.spec({"align": "center"}, names=[e["name"] for e in elements])
+for conflict in spec.unanswered_conflicts:
+    print(conflict["question"])          # ask the user - verbatim will do
+```
+
+Then compose with their answer, and only then:
+
+```python
+spec = dt.spec({"align": "center"}, names=[e["name"] for e in elements],
+               on_misfit="overlap")     # "the user said keep the width"
+```
+
+- **`on_misfit` is an answer, not a setting.** `"widen"` and `"overlap"` are the only two values;
+  omitting it means nobody has answered yet.
+- **Widening is what happens when nobody answers**, because it is the safe direction: EA grows a box
+  it cannot fit whatever the stored rect says, so widening is the only answer under which the stored
+  geometry is the geometry EA paints. A conflict whose `answered` is `False` is that default standing
+  in for an answer - **a question you still owe the user**, not a resolution.
+- **Do not skip the asking because the default looks fine.** A conflict reported and never raised
+  with the user is the old silent behavior with a log line in front of it.
+- **`compose_layered_bands` reports the same way**, in `result["conflicts"]`, when an explicit
+  `min_band_width` is narrower than the bands' contents - same two answers, same `on_misfit`
+  argument. See [`references/grammars.md`](references/grammars.md) §4.
+- **Each conflict is plain JSON**: `where`, `driver`, `requested_width`, `required_width`, the two
+  `options` with the width and effect of each, `applied`, `answered`, `question`, `note`. Branch on
+  the fields, quote the `question`.
+
 ## Step 3 — place and style
 
 Place with `ea_diagram("add_elements_to_diagram_bulk")`, passing explicit
@@ -287,8 +322,9 @@ suppresses a structural defect; overlaps are wrong under every profile.
 
 `report.clean` means **no errors**, not "nothing found", and it means "no defect this linter knows
 how to measure" — not "this diagram reads well". See
-[`references/verification.md`](references/verification.md) for the contract, the stale-render trap
-and an explicit list of what the linter cannot see.
+[`references/verification.md`](references/verification.md) for the contract, the stale-render trap,
+an explicit list of what the linter cannot see, and the defect-class inventory that is the
+denominator of a clean score.
 
 What it checks:
 
@@ -351,7 +387,8 @@ useful. Quietly shipping something illegible is not.
 - [`references/bindings.md`](references/bindings.md) — the language-binding schema, key by key, and
   the loader API in `tools/bindings.py`
 - [`references/verification.md`](references/verification.md) — the verification contract, the
-  stale-render trap, the bounded correction loop, and what the linter cannot see
+  stale-render trap, the bounded correction loop, what the linter cannot see, and where the
+  defect-class inventory lives
 - `tools/lint.py` — the linter. Consumes `verify_diagram` output, makes no repository calls, and
   names no modeling language
 - `tools/compose.py` — the geometry engine. Pure arithmetic, no EA calls, unit-tested

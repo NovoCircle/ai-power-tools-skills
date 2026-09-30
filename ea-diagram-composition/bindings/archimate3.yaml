@@ -39,6 +39,35 @@ extends: UML
 # (`ArchiMate_ApplicationComponent`, measured in EAExample.qea). Concepts below
 # are written the way the ArchiMate specification names them; the prefix is
 # applied to get what EA stores.
+#
+# DO NOT SET THIS TO "". It has been challenged once already, by
+# `ruleset-archimate31/archimate31_rules.yaml`, which shipped a header note
+# asserting the opposite -- that EA 16+ dropped the prefix and only EA <=15
+# carried it. That note was wrong, and the ruleset it governed matched zero
+# elements in any model built with EA's own ArchiMate MDG. Re-measured on EA 17.1
+# build 1716 while correcting it:
+#
+#   - All three ArchiMate MDG generations EA ships declare the prefixed form:
+#     `MDGTechnologies/Archimate.xml`, `Archimate2.xml` and `ArchiMate3.xml`.
+#     73 of the 94 distinct `<Stereotype name="...">` values in ArchiMate3.xml
+#     are `ArchiMate_`-prefixed; the other 21 are toolbox page names. There is no
+#     EA generation that shipped the unprefixed form.
+#   - Each stereotype ALSO carries `metatype="<Concept>"` without the prefix.
+#     That attribute is the notation's concept name, not the stored stereotype.
+#     Reading it as the latter is the likeliest way this gets flipped back.
+#   - EAExample.qea stores the prefixed form: 123 elements over 32 distinct
+#     stereotypes, 116 connectors over 10.
+#   - The unprefixed names that DO occur in that model belong to other
+#     notations -- 20 `BusinessProcess` and 34 `DataObject` from BPMN2.0, 1
+#     `BusinessService` from TOGAF, 1 `CourseOfAction` from BMM. So an empty
+#     prefix here would not merely miss ArchiMate elements, it would collide
+#     with three other technologies' stereotype names.
+#
+# `t_object.Stereotype` is unqualified (`ArchiMate_Capability`). The qualified
+# form (`ArchiMate3::ArchiMate_Capability`) lives in `t_xref` rows named
+# `Stereotypes` and surfaces through the API's `StereotypeEx`, which is a
+# property and not a column. This field is the unqualified prefix, matching the
+# column.
 stereotype_prefix: ArchiMate_
 
 notes: >

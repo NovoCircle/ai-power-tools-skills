@@ -158,11 +158,20 @@ a flat set.
   standing for a layer that spans the diagram, so a band of two items drawn narrower than the band of
   three above it reads as a mistake in the drawing rather than as a fact about the content. The engine
   gives every band the widest band's width and leaves the slack empty inside the sparse ones. A
-  minimum band width, when one is set, is a floor under the width the whole stack ends up with; it
-  can widen the stack and never narrows it, so it cannot leave one band narrower than another. This
-  is **the opposite of the nested grid's rule** and the difference is deliberate — see §6, and do not
-  tidy the two into agreement: a band is a strip whose raggedness reads as a drawing error, while a
-  nested-grid container is sized by its contents because its size *is* the data.
+  `min_band_width` above what the contents demand is a floor under the width the whole stack ends up
+  with; it widens the stack and never narrows it, so it cannot leave one band narrower than another.
+  This is **the opposite of the nested grid's rule** and the difference is deliberate — see §6, and
+  do not tidy the two into agreement: a band is a strip whose raggedness reads as a drawing error,
+  while a nested-grid container is sized by its contents because its size *is* the data.
+- **A `min_band_width` NARROWER than the contents is a conflict to raise with the user, not to
+  settle.** It used to be outvoted in silence: the stack came back at the width the contents needed
+  and nothing said the explicit figure had been ignored. Both answers are legitimate drawings —
+  extend the bands to fit, or hold the width and let the items run past the right edge — so
+  `compose_layered_bands` reports the clash in `result["conflicts"]` and takes the user's answer as
+  `on_misfit="widen"` or `on_misfit="overlap"`. Widening is what happens when nobody answers, because
+  it is the only one of the two that keeps every item inside its band. **Ask; do not take the
+  default as agreement.** This is the same mechanism, the same record and the same two answers as a
+  name too long for its box — see [`bindings.md`](bindings.md) §5.7.1.
 - **Band heights that follow their contents.** A band with two items should not be as tall as a band
   with twelve. Fixed band heights leave holes that read as missing content. Height is where this
   grammar carries its variation; width is not, which is why the two are treated differently.
@@ -346,6 +355,14 @@ hanging off each one.
 of the things on the diagram rather than something enclosing them — and a node carrying `items`
 gets its own outer ring, which is what turns a hub-and-spoke into a radial tree.
 
+**Sizing comes from the spec, for every ring.** `item_width`, `item_height` and `radius` are stated
+once and apply to the whole composition. There is **no per-node sizing in this grammar**, and a
+sizing key on a node or on the hub is **refused** with an error naming it — not accepted and
+ignored, which is what it used to be. Per-ring sizing does exist in the engine: `compose_radial_tree`
+resolves those same three keys per node, and it also gives a branch angular room in proportion to
+what that branch carries instead of handing every branch the same wedge, which is what makes
+per-ring sizing worth having. Reach for that grammar when the rings must differ.
+
 ### What it suits
 
 Content with **one center and peers around it**, where the peers have no order among themselves
@@ -381,8 +398,22 @@ nothing sits at the middle, the ring is decoration and a grid says the same thin
   yours: the drawn gap comes out at the requested radius at every position, to within a unit of
   rounding.
 - **Few enough to see the circle.** Past about a dozen the ring reads as a crowd. The engine widens
-  the radius rather than letting items collide, so what you get is a very large circle rather than
-  an overlap — which is the honest failure, but still a failure.
+  the radius rather than letting items collide, and that widening is **bounded**. It has to be:
+  fitting *n* boxes into a fixed sweep needs a radius that grows about in proportion to *n* and
+  inversely to the sweep, so a narrow fan asked to hold enough items widens without limit. The
+  engine stops at `max_radius` — default **900**, the same number `wrap_width` uses for the widest a
+  composition's content may get — and **refuses** past it, naming the count, the box size, the arc,
+  the radius that would have been needed, and the four ways out: fewer items on the ring, a wider
+  sweep, smaller items, or `max_radius` raised deliberately.
+
+  Measured, at 90x88 items over a 60-degree fan: 238 units of radius at three items, 654 at six, and
+  a refusal from eight upward — where the unbounded engine returned 932 at eight, 2046 at sixteen and
+  3161 at twenty-four — the last of those a composition measuring 2873 x 1687 units, most of it the
+  empty middle of a 60-degree fan. An **inner** ring runs further still, because its arc is a
+  fraction of the outer step: twelve spokes of three branches over a 180-degree sweep settled ring
+  one at 576 and demanded 1178 on every inner ring, a figure the result dict never reported. A very large circle was the old outcome and it was called the honest
+  failure; a refusal that says which input to change is the honest outcome, and it is a failure the
+  caller can act on.
 - **A hub that earns its place.** The center position is the most emphatic on the diagram.
 - **One ring, or two at most.** The engine refuses a third by default.
 
@@ -392,7 +423,8 @@ nothing sits at the middle, the ring is decoration and a grid says the same thin
 - **A ring used to imply sequence.** A reader follows a cycle clockwise whether or not one is meant.
   If the order is arbitrary, say so, or use a grid.
 - **Long labels.** A wide label forces a wide box. That no longer makes the spokes uneven, but it
-  still costs you twice: the ring has to grow to keep wide boxes from colliding, and the items' outer
+  still costs you twice: the ring has to grow to keep wide boxes from colliding — far enough, on a
+  partial arc, to be refused outright — and the items' outer
   corners stick out by different amounts even though their inner edges line up, so the ring's outer
   silhouette is the uneven thing instead. Shorter labels still read better; they are no longer
   load-bearing.

@@ -74,7 +74,13 @@ Result shape
       "containers": [ {"id", "name", "kind", "index", "left", "top", "right",
                        "bottom", "label": {...}}, ... ],
       "bounds":     {"left", "top", "right", "bottom", "width", "height"},
+      "conflicts":  [ FitConflict, ... ],      # layered_bands; usually empty
     }
+
+`conflicts` holds the decisions the arithmetic could not make on the caller's
+behalf - today, a width that was asked for which the content does not fit. Each
+entry states both options and which one was applied. An entry whose `answered` is
+False is a question still owed to the user: see `FitConflict`.
 
 `items` are nested inside their `containers` by design, so test the two sets for
 mutual disjointness separately - an item is supposed to sit inside its band.
@@ -84,7 +90,8 @@ set is not mutually disjoint there: compare siblings, not the whole set.
 
 `radial` returns no containers at all, and an item's `container_id` names the
 ITEM it hangs from - the hub, or the spoke it branches off. It also carries
-`center` and the `radius` actually used, which can exceed the one asked for.
+`center` and the `radius` actually used, which can exceed the one asked for -
+up to `max_radius`, past which the composition is refused rather than widened.
 That radius is the CLEAR GAP between the box at the middle and the boxes on the
 ring, not the distance to an item's center: the items sit at whatever distance
 makes that gap equal for all of them, so do not expect them to share one.
@@ -103,6 +110,14 @@ from typing import Any, Optional
 __all__ = [
     "LayoutError",
     "DEFAULT_SPEC",
+    "FitConflict",
+    "FIT_WIDEN",
+    "FIT_OVERLAP",
+    "FIT_ANSWERS",
+    "DEFAULT_FIT_ANSWER",
+    "WIDTH_MISFIT",
+    "check_misfit_answer",
+    "resolve_width_misfit",
     "compose_layered_bands",
     "compose_lanes",
     "compose_nested_grid",
@@ -124,6 +139,186 @@ class LayoutError(ValueError):
     caller's own path into the input - `bands[2].items[0].id`, `spec.h_pitch` -
     so the caller can find it without guessing.
     """
+
+
+# ---------------------------------------------------------------------------
+# A width that was asked for, and content that does not fit in it
+# ---------------------------------------------------------------------------
+# Two things can be true at once: a width was stated on purpose, and the content
+# is wider than it. Widening the box and letting the text run past the border are
+# both legitimate drawings, and which one is wanted is a judgment about THAT
+# diagram - a reference model whose straight edge is the whole point may want the
+# overlap, a landscape whose stored rects have to match the render must have the
+# widening.
+#
+# So neither is decided here. The conflict is REPORTED, in a shape a caller can
+# read without parsing prose, and a caller that has asked its user relays the
+# answer back as `on_misfit`. Widening is still what happens when nobody answers,
+# because it is the safe direction: EA grows a box it cannot fit whatever the
+# stored rect says, so widening is the only answer under which the geometry every
+# later check reads is the geometry EA paints. What changed is that it is no
+# longer silent.
+#
+# ONE MECHANISM, NOT ONE PER SITE. Two places had the same disagreement and
+# settled it two different ways without saying so: `item_width` against an
+# element name too long for it, and `min_band_width` against a band whose
+# contents are wider than the width asked for. Both come through here now, so a
+# caller learns of them in one shape and answers them with one vocabulary. A
+# third site that acquires the same problem should join them rather than grow a
+# flag of its own.
+FIT_WIDEN = "widen"
+FIT_OVERLAP = "overlap"
+
+#: The answers `on_misfit` accepts, and the only two to put to a user.
+FIT_ANSWERS = (FIT_WIDEN, FIT_OVERLAP)
+
+#: What is applied when nobody answered. See above for why it is the widening.
+DEFAULT_FIT_ANSWER = FIT_WIDEN
+
+#: The `conflict` tag every `FitConflict` carries, so a consumer branches on a
+#: constant rather than on a sentence.
+WIDTH_MISFIT = "width_does_not_fit_content"
+
+
+class FitConflict(dict):
+    """A stated width and the content in it disagree - stated, not settled.
+
+    A plain `dict` subclass, so it serializes as JSON with nothing to import and
+    nothing to teach a consumer. Every field is machine-readable:
+
+    ``conflict``        always `WIDTH_MISFIT`. Branch on this, not on prose.
+    ``where``           the key whose value could not be honored, spelled the
+                        way a caller writes it: `spec.item_width`,
+                        `spec.min_band_width`.
+    ``driver``          the name, or the band, that did not fit. `""` when the
+                        content that did not fit has no name.
+    ``driver_kind``     what `driver` is: `item_name` or `band_contents`.
+    ``requested_width`` the width that was asked for.
+    ``required_width``  the width the content needs.
+    ``options``         the two answers, each with the `width` it produces and
+                        the `effect` it has. This is the list to read out.
+    ``applied``         which answer is in the geometry: `widen` or `overlap`.
+    ``width_applied``   the width that is in the geometry.
+    ``answered``        whether a caller supplied the answer. False means the
+                        default was applied and the question is still open.
+    ``question``        the question to put to the user, ready to ask.
+    ``note``            one line for a log or a report.
+    ``detail``          optional extra from the site that raised it, naming what
+                        about the content would not fit.
+
+    `answered` is the field that matters most and the easiest to skip. A caller
+    holding one that is False is holding a decision nobody made.
+    """
+
+    def __init__(self, *, where: str, requested_width: int,
+                 required_width: int, applied: str, answered: bool,
+                 driver: str = "", driver_kind: str = "",
+                 detail: str = "") -> None:
+        width = required_width if applied == FIT_WIDEN else requested_width
+        subject = repr(driver) if driver else "the content"
+        super().__init__(
+            conflict=WIDTH_MISFIT,
+            where=where,
+            driver=driver,
+            driver_kind=driver_kind,
+            requested_width=int(requested_width),
+            required_width=int(required_width),
+            options=[
+                {
+                    "answer": FIT_WIDEN,
+                    "width": int(required_width),
+                    "effect": (
+                        f"widen to {required_width}px - "
+                        f"{required_width - requested_width}px more than was "
+                        f"asked for - so the content fits inside the border"
+                    ),
+                },
+                {
+                    "answer": FIT_OVERLAP,
+                    "width": int(requested_width),
+                    "effect": (
+                        f"keep the {requested_width}px that was asked for and "
+                        f"let the content be drawn past the border"
+                    ),
+                },
+            ],
+            applied=applied,
+            width_applied=int(width),
+            answered=bool(answered),
+            question=(
+                f"{where}: {subject} does not fit the {requested_width}px that "
+                f"was asked for - it needs {required_width}px. Ask the user "
+                f"which they want for this diagram: widen to {required_width}px, "
+                f"or keep {requested_width}px and let the content overlap the "
+                f"border. Then pass their answer back as "
+                f"on_misfit={FIT_WIDEN!r} or on_misfit={FIT_OVERLAP!r}."
+            ),
+            note=(
+                f"{where}: {requested_width}px was asked for and "
+                f"{required_width}px is needed to fit {subject}; applied "
+                f"{applied!r}, so the width used is {width}px."
+                + ("" if answered else
+                   " Nobody answered, so that is the default rather than a"
+                   " choice.")
+            ),
+            detail=detail,
+        )
+
+    @property
+    def width(self) -> int:
+        """The width that is in the geometry this conflict came back with."""
+        return int(self["width_applied"])
+
+
+def check_misfit_answer(where: str, on_misfit: Optional[str]) -> None:
+    """Refuse an `on_misfit` that is not one of the two answers.
+
+    Separate from `resolve_width_misfit` so it can run on EVERY call rather than
+    only on the calls that turn out to have a conflict. A misspelled answer and
+    nobody answering are opposite states - one is a decision, the other is a
+    question still owed - and letting a typo fall through to the default would
+    merge them, on exactly the diagrams where the content happened to fit.
+    """
+    if on_misfit is not None and on_misfit not in FIT_ANSWERS:
+        raise LayoutError(
+            f"{where}: on_misfit must be one of "
+            f"{', '.join(repr(a) for a in FIT_ANSWERS)} - the user's answer to "
+            f"the widen-or-overlap question - got {on_misfit!r}"
+        )
+
+
+def resolve_width_misfit(
+    where: str,
+    requested_width: int,
+    required_width: int,
+    driver: str = "",
+    driver_kind: str = "",
+    on_misfit: Optional[str] = None,
+    detail: str = "",
+) -> tuple[int, Optional[FitConflict]]:
+    """The width to use, and the conflict to report - `None` when there is none.
+
+    `on_misfit` is the USER'S ANSWER, relayed by the caller; `None` means nobody
+    has answered. It is validated whether or not it turns out to matter, so a
+    misspelled answer is refused rather than quietly ignored on every diagram
+    where the content happened to fit.
+    """
+    check_misfit_answer(where, on_misfit)
+    requested = int(requested_width)
+    required = int(required_width)
+    if required <= requested:
+        return requested, None
+    conflict = FitConflict(
+        where=where,
+        requested_width=requested,
+        required_width=required,
+        applied=on_misfit or DEFAULT_FIT_ANSWER,
+        answered=on_misfit is not None,
+        driver=driver,
+        driver_kind=driver_kind,
+        detail=detail,
+    )
+    return conflict.width, conflict
 
 
 # ---------------------------------------------------------------------------
@@ -202,6 +397,22 @@ DEFAULT_SPEC: dict[str, Any] = {
     # ring whose items would collide at that distance is widened until they do
     # not, and the radius actually used comes back on the result.
     "radius": 220,
+
+    # How far that widening may go. It has to be bounded from outside, because
+    # the widening is not self-limiting: fitting n boxes into a FIXED angular
+    # sweep needs a radius that grows about in proportion to n and inversely to
+    # the sweep, and nothing in that arithmetic ever stops. Measured on 90x88
+    # items over a 60-degree fan: 238 units at three items, 2046 at sixteen,
+    # 3161 at twenty-four. Past this the composition is REFUSED rather than
+    # widened further - see `_plan_ring`.
+    #
+    # WHY 900: it is `wrap_width`, the number this module already uses for the
+    # widest a composition's content may get before it has to be broken up.
+    # Borrowing it as a RADIUS is generous rather than tight, since a full circle
+    # at radius 900 is already about 2000 units across. A caller who genuinely
+    # wants a wall-sized ring raises this deliberately, the way
+    # `max_ring_depth` is raised.
+    "max_radius": 900,
     "start_angle": 0,         # degrees clockwise from twelve o'clock
     "sweep": 360,             # how much of the circle to use
     "max_ring_depth": 2,      # rings allowed; deeper is REFUSED
@@ -212,7 +423,7 @@ DEFAULT_SPEC: dict[str, Any] = {
 _ANY_INT_KEYS = frozenset({"origin_left", "origin_top", "start_angle"})
 _POSITIVE_KEYS = frozenset({
     "item_width", "item_height", "wrap_width", "label_height", "label_width",
-    "max_grid_depth", "radius", "sweep", "max_ring_depth",
+    "max_grid_depth", "radius", "max_radius", "sweep", "max_ring_depth",
 })
 _NON_NEGATIVE_KEYS = frozenset({
     "item_gap_x", "item_gap_y", "item_gap_flow",
@@ -241,9 +452,6 @@ _LANE_OVERRIDES = frozenset({"item_width", "item_height"})
 _GRID_OVERRIDES = frozenset({
     "item_width", "item_height", "label_height", "grid_columns",
 })
-
-# What one radial node may restate for its OWN ring.
-_RADIAL_OVERRIDES = frozenset({"item_width", "item_height", "radius"})
 
 # The widest arc a branch may occupy. Without a cap, a two-item ring gives each
 # branch 180 degrees and the outer items sweep back across the center.
@@ -543,7 +751,12 @@ def _band_metrics(band: Mapping[str, Any], spec: Mapping[str, Any], where: str) 
     }
 
 
-def _common_band_width(plans: Sequence[Mapping[str, Any]]) -> int:
+def _common_band_width(
+    plans: Sequence[Mapping[str, Any]],
+    pad_x: int,
+    min_band_width: Optional[int],
+    on_misfit: Optional[str],
+) -> tuple[int, Optional[FitConflict]]:
     """One width for every band in the stack: the widest band's own demand.
 
     A band of two items sized to its own two items is visibly narrower than the
@@ -569,13 +782,46 @@ def _common_band_width(plans: Sequence[Mapping[str, Any]]) -> int:
     Note what is NOT shared: a band's HEIGHT still follows its own contents, so
     a band of twelve wrapped over three rows is visibly taller than a band of
     one. The vertical axis is where this grammar carries its meaning.
+
+    AN EXPLICIT `min_band_width` IS A REQUEST, NOT A VOTE. Without one the floor
+    is derived per band from its own `item_width`, and taking the widest demand
+    is all there is to decide. With one, a caller has stated a width on purpose -
+    and a stated width narrower than the contents used to be outvoted in silence,
+    which is the same defect as a box silently widened to fit a name. So it comes
+    through `resolve_width_misfit`: widening still happens when nobody answers,
+    the conflict is reported either way, and a caller relaying the user's
+    `on_misfit="overlap"` gets the width it asked for with the items drawn past
+    the band's right edge.
+
+    Returns the width and the conflict, or `None` when there was none.
     """
-    return max(p["natural_width"] for p in plans)
+    demanded = max(plan["content_demand"] for plan in plans)
+    if min_band_width is None:
+        derived_floor = max(plan["floor_width"] for plan in plans)
+        return max(demanded, derived_floor), None
+
+    widest = max(plans, key=lambda plan: plan["content_demand"])
+    return resolve_width_misfit(
+        "spec.min_band_width",
+        requested_width=min_band_width,
+        required_width=demanded,
+        driver=widest["name"],
+        driver_kind="band_contents",
+        on_misfit=on_misfit,
+        detail=(
+            f"the {widest['name']!r} band's widest row is "
+            f"{widest['content_demand'] - 2 * pad_x}px of items, which needs "
+            f"{widest['content_demand']}px once its own {pad_x}px of padding "
+            f"each side is added. Under {FIT_OVERLAP!r} the items keep that "
+            f"size and are drawn past the band's right edge."
+        ),
+    )
 
 
 def compose_layered_bands(
     bands: Sequence[Mapping[str, Any]],
     spec: Mapping[str, Any] | None = None,
+    on_misfit: Optional[str] = None,
 ) -> dict[str, Any]:
     """Lay out horizontal bands stacked top to bottom.
 
@@ -604,10 +850,18 @@ def compose_layered_bands(
     * `align` is "left" (default) or "center", and governs where a ROW sits
       inside its band's content area. It no longer moves the bands themselves:
       they share a width, so they already share both edges.
+    * An explicit `min_band_width` NARROWER than the contents is a conflict the
+      result reports rather than settles. `on_misfit` is the user's answer to it:
+      `"widen"` (the default when nobody answers) takes the width the contents
+      need, `"overlap"` keeps the width that was asked for and lets the items be
+      drawn past the band's right edge. Either way the conflict comes back in
+      `result["conflicts"]`. **Ask the user which they want for that diagram** -
+      see `FitConflict`, whose `question` field is the question to put.
 
     Returns the result dict described in the module docstring. Raises
     `LayoutError` for any input that cannot yield sane geometry.
     """
+    check_misfit_answer("spec.min_band_width", on_misfit)
     s = _resolve_spec(spec)
     raw_bands = _require_list(bands, "bands")
     if not raw_bands:
@@ -645,13 +899,15 @@ def compose_layered_bands(
             (row_count - 1) * m["row_pitch"] + m["item_height"] if row_count else 0
         )
 
-        # The floor is per band, because `item_width` is: an empty band still
-        # has to be wide enough for the item it would hold.
-        floor_width = (
-            min_band_width if min_band_width is not None
-            else m["item_width"] + 2 * pad_x
-        )
-        natural_width = max(content_width + 2 * pad_x, floor_width)
+        # Kept apart, because they answer different questions. `content_demand`
+        # is what this band's own contents need and is the figure an explicit
+        # `min_band_width` is measured against. `floor_width` is the DERIVED
+        # floor, per band because `item_width` is: an empty band still has to be
+        # wide enough for the item it would hold. An explicit `min_band_width`
+        # replaces that derived floor - it does not stack with it - and is
+        # resolved once for the whole stack in `_common_band_width`.
+        content_demand = content_width + 2 * pad_x
+        floor_width = m["item_width"] + 2 * pad_x
         # The label strip doubles as the band's top padding; pad_y is the gap
         # below the last row. An empty band therefore still stands label_height
         # + pad_y tall, which is the visible "label row" of an empty band.
@@ -665,11 +921,13 @@ def compose_layered_bands(
             "items": items,
             "per_row": per_row,
             "row_count": row_count,
-            "natural_width": natural_width,
+            "content_demand": content_demand,
+            "floor_width": floor_width,
             "band_height": band_height,
         })
 
-    band_width = _common_band_width(plans)
+    band_width, conflict = _common_band_width(
+        plans, pad_x, min_band_width, on_misfit)
     content_width = band_width - 2 * pad_x
     containers: list[dict[str, Any]] = []
     out_items: list[dict[str, Any]] = []
@@ -734,6 +992,10 @@ def compose_layered_bands(
         "items": out_items,
         "containers": containers,
         "bounds": _bounds([*containers, *out_items]),
+        # Always present, so a consumer reads a list rather than testing for a
+        # key. Empty is the answer "nothing had to be decided", which is a
+        # different statement from "this engine does not report".
+        "conflicts": [conflict] if conflict is not None else [],
     }
 
 
@@ -1251,14 +1513,47 @@ def compose_nested_grid(
 # ---------------------------------------------------------------------------
 # Grammar: radial
 # ---------------------------------------------------------------------------
-def _ring_metrics(node: Mapping[str, Any], spec: Mapping[str, Any],
-                  where: str) -> dict:
-    """Resolve the sizing one ring applies to its own children."""
-    return {
-        "item_width": _override(node, "item_width", spec, _RADIAL_OVERRIDES, where),
-        "item_height": _override(node, "item_height", spec, _RADIAL_OVERRIDES, where),
-        "radius": _override(node, "radius", spec, _RADIAL_OVERRIDES, where),
-    }
+def _refuse_radial_sizing(holder: Mapping[str, Any], where: str) -> None:
+    """Refuse a spec key stated on a radial node, instead of ignoring it.
+
+    THE DECISION THIS RECORDS: radial per-node sizing was DELETED, not wired up.
+
+    A resolver helper and an allow-list of three keys used to sit here, between
+    them making `item_width`, `item_height` and `radius` look settable per node.
+    Nothing ever called the resolver. `_plan_ring` built every ring's sizing
+    straight from the spec, so a caller who put `item_width` on a node got a
+    composition that succeeded, reported nothing, and was byte-identical to the
+    one without the key. Three keys accepted and discarded in silence. (Both
+    names are deliberately not repeated here: a test asserts that nothing in the
+    tools directory or the reference docs still mentions them.)
+
+    WIRING THEM UP WAS THE ALTERNATIVE, AND IT WAS REJECTED, because the
+    capability already exists next door and is better there.
+    `compose_radial_tree` resolves exactly these three keys per node, and it
+    also allocates angular room to a branch by the WEIGHT of what that branch
+    carries rather than giving every branch the same wedge - which is the thing
+    that makes per-ring sizing worth having, since a ring you can size but not
+    give room to is a ring you have only half controlled. Wiring a second,
+    weaker version in here would give callers two ways to size a radial tree, of
+    which this one crowds its busiest branch. This grammar is a hub and its
+    spokes: one ring of peers, sized by the spec, plus an optional outer ring.
+
+    So the keys are gone, and stating one is an error. Accepting input and
+    discarding it costs the caller a wrong diagram they believe is right;
+    refusing it costs them one retry. `_cycle_item_height` makes the same call
+    for the same reason, and states it at more length.
+    """
+    for key in holder:
+        if key in DEFAULT_SPEC:
+            raise LayoutError(
+                f"{where}.{key}: this grammar sizes every ring from the spec, "
+                f"so {key!r} cannot be stated per node - a ring of peers whose "
+                f"members disagreed about their own size would read as several "
+                f"kinds of thing. It was accepted and silently ignored until "
+                f"now, which is why it is an error rather than a no-op. Move it "
+                f"to the spec, or use compose_radial_tree, which does resolve "
+                f"item_width, item_height and radius per node"
+            )
 
 
 def _polar(center_x: int, center_y: int, radius: float, degrees: float) -> tuple:
@@ -1373,8 +1668,12 @@ def compose_radial(
       INCLUSIVE of both ends - a 180-degree sweep of three items puts one at
       each end and one in the middle, which is what a half-circle of three is
       meant to look like. A full circle does not repeat the first position.
-    * **Uniform sizing within a ring.** Stated by the parent, so siblings
-      cannot disagree - the same rule the other grammars follow.
+    * **Uniform sizing, stated by the SPEC.** Every ring in the composition
+      takes `item_width`, `item_height` and `radius` from the spec, so siblings
+      cannot disagree and neither can rings. A sizing key on a node - or on the
+      hub - is REFUSED rather than ignored; `_refuse_radial_sizing` records why
+      per-node sizing is not wired up here, and `compose_radial_tree` is the
+      grammar to use when rings really must differ.
     * **Every spoke is the same length.** `radius` is the CLEAR GAP between the
       box at the middle and the box on the ring - the part of a spoke that gets
       drawn - not the distance to an item's center. Each item is pushed out by
@@ -1383,11 +1682,15 @@ def compose_radial(
       two comes out equal all the way round whatever shape the boxes are. Item
       centers therefore do NOT all sit at one distance: see `_place_ring` and
       `_reach`.
-    * **The radius is a floor, not a promise.** If the items would collide at
-      the radius given, the ring is widened until they do not, and the radius
-      actually used comes back on the result. A grammar that produced a
-      deliberately overlapping ring because the caller passed a small number
-      would be obeying the letter of the spec and drawing a bad diagram.
+    * **The radius is a floor, not a promise - and the widening is BOUNDED.**
+      If the items would collide at the radius given, the ring is widened until
+      they do not, and the radius actually used comes back on the result. A
+      grammar that produced a deliberately overlapping ring because the caller
+      passed a small number would be obeying the letter of the spec and drawing
+      a bad diagram. But the widening does not limit itself - fitting n boxes
+      into a fixed sweep needs a radius that grows with n and shrinks with the
+      sweep - so it stops at `max_radius`, default 900, and REFUSES past it
+      rather than returning a ring thousands of units across. See `_plan_ring`.
     * **Depth is bounded** by `max_ring_depth`, default 2, and a deeper tree is
       REFUSED rather than warned about - the same decision the nested grid
       makes, for the same reason: the result dict has no channel a warning
@@ -1416,6 +1719,10 @@ def compose_radial(
     hub_item = None
     if hub is not None:
         hub_item = _check_item(hub, "hub", seen_ids)
+        # The box at the middle is sized by the spec like everything else, so a
+        # sizing key on it is the same silent discard `_refuse_radial_sizing`
+        # exists to end, one call earlier.
+        _refuse_radial_sizing(hub_item, "hub")
 
     # The center is chosen after the outermost radius is known, so the whole
     # composition can start at `origin_left`/`origin_top` like every other
@@ -1493,6 +1800,7 @@ def _plan_ring(raw_nodes: Any, where: str, level: int, s: Mapping[str, Any],
     for k, raw in enumerate(children):
         cwhere = f"{where}[{k}]"
         node = _require_mapping(raw, cwhere)
+        _refuse_radial_sizing(node, cwhere)
         raw_inner = node.get("items") if "items" in node else None
         item = _check_item(node, cwhere, seen_ids)
         plans.append({"node": item, "index": k, "inner": None,
@@ -1542,6 +1850,60 @@ def _plan_ring(raw_nodes: Any, where: str, level: int, s: Mapping[str, Any],
         if math.sin(half) > 0:
             need_centers = need / (2.0 * math.sin(half))
             radius = max(radius, int(math.ceil(need_centers - reach_floor)))
+
+    # AND THE WIDENING IS BOUNDED, because on its own it never stops.
+    #
+    # The chord solved above is `need / (2 * sin(step / 2))` and `step` is the
+    # sweep divided by the count, so the radius a ring demands grows about in
+    # proportion to the number of items and inversely to the sweep it is given.
+    # There is no count at which that arithmetic settles. Measured on 90x88
+    # items over a 60-degree fan: 238 units at three items, 2046 at sixteen,
+    # 3161 at twenty-four. At twenty-four the whole composition measures
+    # 2873 x 1687 units, most of it the empty middle of a 60-degree fan. An
+    # INNER ring is worse, because its branch sweep is itself a
+    # fraction of the step: twelve spokes of three branches over a 90-degree fan
+    # demanded 2384 on every inner ring, a number the result dict does not even
+    # report. "Widen until they do not collide" was honest about the overlap and
+    # silent about the size, and the size is what made the diagram unusable.
+    #
+    # THE ANSWER IS A REFUSAL, not a clamp and not an extra ring.
+    #
+    # A clamp would draw the overlap the widening exists to prevent, and draw it
+    # silently: the caller would get touching neighbors and no signal. Wrapping
+    # the overflow into a second ring would invent structure nobody asked for -
+    # in this grammar ring 2 hangs off a NAMED ring-1 node and `container_id`
+    # says which, so an engine-made ring would have to choose which items to
+    # demote and nominate a parent the caller never chose. What is actually true
+    # is that the sweep cannot hold this many boxes of this size, and only the
+    # caller can decide which of the four inputs to give up. So say it.
+    #
+    # `compose_radial_tree` refuses the same failure, in the same words, once
+    # its own widening budget is spent, so this is the engine's existing answer
+    # to "too crowded for the sweep given" rather than a new one.
+    #
+    # A radius the CALLER stated is honored even past the bound: it is their own
+    # number, in their own spec, and the defect being fixed is an engine-computed
+    # radius they could not predict. The ceiling is therefore the larger of the
+    # two, which leaves the radius bounded by the inputs either way.
+    allowance = max(metrics["radius"], s["max_radius"])
+    if radius > allowance:
+        raise LayoutError(
+            f"{where}: {count} items of "
+            f"{metrics['item_width']}x{metrics['item_height']} spread over a "
+            f"{abs(sweep):g}-degree sweep have to stand {radius} units clear of "
+            f"the box at the middle before they stop colliding, and this "
+            f"grammar refuses a ring past {allowance} (the larger of "
+            f"spec.radius {metrics['radius']} and spec.max_radius "
+            f"{s['max_radius']}); at {radius} every spoke would be "
+            f"{radius} units of empty space. The sweep cannot hold this many "
+            f"boxes "
+            f"of this size, and which input to give up is yours: fewer items on "
+            f"the ring, a wider sweep, smaller items, or spec.max_radius raised "
+            f"deliberately. A tree whose branches carry unequal numbers of "
+            f"children fits in far less room under compose_radial_tree, which "
+            f"allocates the angular room by weight instead of giving every "
+            f"branch the same wedge"
+        )
 
     for entry in plans:
         if entry["raw_inner"] is not None:

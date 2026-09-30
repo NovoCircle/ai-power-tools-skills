@@ -56,6 +56,11 @@ KNOWN_IDS = {
     "EAExample",
     # Sparx-shipped / standard technologies
     "ArchiMate", "ArchiMate2", "ArchiMate3", "BPMN", "BPMN2", "BPMN20",
+    # BMM is the OMG Business Motivation Model, shipped by Sparx as
+    # InternalTechnologies/BMM.xml, with bmm_* model patterns beside it.
+    # Proof it is nobody's project code: EAExample.qea itself stores an
+    # element whose stereotype FQName is `BMM::CourseOfAction`.
+    "BMM",
     "UML", "SysML", "SysML15", "SysML16", "TOGAF", "DoDAF", "MODAF", "NIEM",
     "UPDM", "SPEM", "SOMF", "BPEL", "XSD", "WSDL", "ERD", "DMN", "CMMN",
     "MDG", "EA", "XMI", "SQL", "COM", "API", "XML", "YAML", "JSON", "HTML",

@@ -144,10 +144,17 @@ your first rule.
 - **Count rules** (`condition.type: connector_count`): `direction: incoming` means the
   edge ends AT this element (element is the target); `direction: outgoing` means the
   edge starts here (element is the source).
-- **EA stereotype names:** EA stores stereotypes as bare names without namespace
-  prefix. The selector `connector_stereotype: Assignment` matches connectors whose
-  stereotype is `Assignment`, regardless of whether EA shows it as
-  `ArchiMate3::Assignment` internally. Use the bare name everywhere in the YAML.
+- **EA stereotype names:** write the name UNQUALIFIED but otherwise EXACTLY as EA
+  stores it, measured against a real model. `validate_model` selects with
+  `Stereotype IN (...)` -- exact comparison, no normalization, no prefix stripping --
+  so a name one character off selects nothing, and a rule that selects nothing
+  reports no violations, which reads exactly like a clean model. Leave the
+  technology NAMESPACE off (`ArchiMate3::...`), but do not strip a prefix that is
+  part of the stereotype's own name: EA's built-in ArchiMate MDG stores
+  `ArchiMate_Assignment`, so the selector is
+  `connector_stereotype: ArchiMate_Assignment` and `Assignment` matches nothing,
+  while EA's BPMN2.0 MDG stores a bare `BusinessProcess`. Per-technology
+  measurement, never a guess -- see `references/rule-grammar.md`.
 
 ---
 
@@ -238,8 +245,8 @@ and leave the source unrestricted, rather than enumerate 50 source stereotypes.
 
 **Quoting vs unquoting stereotype names.** Both work in YAML:
 ```yaml
-any_of: [BusinessActor]           # OK — YAML bare string
-any_of: ["BusinessActor"]         # OK — explicitly quoted
+any_of: [ArchiMate_BusinessActor]     # OK — YAML bare string
+any_of: ["ArchiMate_BusinessActor"]   # OK — explicitly quoted
 ```
 Use quotes when a stereotype name contains special YAML characters (`:`, `#`, `&`, etc.).
 

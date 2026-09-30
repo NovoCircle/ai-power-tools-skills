@@ -31,6 +31,9 @@ if str(_HERE) not in sys.path:
 
 from compose import (  # noqa: E402
     DEFAULT_SPEC,
+    FIT_OVERLAP,
+    FIT_WIDEN,
+    WIDTH_MISFIT,
     LayoutError,
     bounding_box,
     compose_lanes,
@@ -405,7 +408,18 @@ def test_an_empty_band_keeps_its_label_row():
     assert_result_sane(result, "empty band")
 
 
-def test_min_band_width_is_a_floor_under_the_whole_stack():
+#: The width two bands of one and five items demand between them: the five-item
+#: band's row, plus the band's own padding either side. Written out so every test
+#: below argues about the same number.
+_STACK_CONTENT_WIDTH = 5 * 140 + 4 * 20 + 2 * 12               # 804
+
+
+def _misfit_stack():
+    return [{"name": "Sparse", "items": _items("a")},
+            {"name": "Full", "items": _items("b", "c", "d", "e", "f")}]
+
+
+def test_min_band_width_above_the_content_is_a_floor_under_the_whole_stack():
     """REPLACES a test that pinned the ragged right edge of APT-2026-0152.
 
     What the old test asserted: that with `min_band_width: 700` a band of one
@@ -413,18 +427,107 @@ def test_min_band_width_is_a_floor_under_the_whole_stack():
     two bands, two widths, which is the defect. `min_band_width` is still a
     floor, but the thing it is a floor under is the stack's shared width, so it
     bites only when it exceeds what the widest band demands.
+
+    A floor ABOVE the content is the uncontroversial half and the only half this
+    test still covers: nothing is in conflict, so nothing is reported.
     """
-    content = 5 * 140 + 4 * 20 + 2 * 12                        # 804
-    bands = [{"name": "Sparse", "items": _items("a")},
-             {"name": "Full", "items": _items("b", "c", "d", "e", "f")}]
+    result = compose_layered_bands(_misfit_stack(), {"min_band_width": 1000})
+    assert {rect_width(c) for c in result["containers"]} == {1000}
+    assert result["conflicts"] == []
+    assert_result_sane(result, "min_band_width above content")
 
-    outvoted = compose_layered_bands(bands, {"min_band_width": 700})
-    assert {rect_width(c) for c in outvoted["containers"]} == {content}
-    assert_result_sane(outvoted, "min_band_width below content")
 
-    binding = compose_layered_bands(bands, {"min_band_width": 1000})
-    assert {rect_width(c) for c in binding["containers"]} == {1000}
-    assert_result_sane(binding, "min_band_width above content")
+def test_min_band_width_below_the_content_is_reported_not_outvoted():
+    """APT-2026-0187, the surviving half of APT-2026-0152.
+
+    REPLACES the half of the old test that asserted the silence. It pinned that
+    `min_band_width: 700` against 804px of content came back as 804 and said
+    nothing about it - an explicit instruction overridden without a word, which
+    is the same defect as a box silently widened to fit a name.
+
+    The width is unchanged, because widening is still the safe default and
+    changing it would move every existing caller. What is new is the second
+    assertion: the conflict comes back, with both options, whose content forced
+    it, and the fact that nobody chose.
+    """
+    result = compose_layered_bands(_misfit_stack(), {"min_band_width": 700})
+    assert {rect_width(c) for c in result["containers"]} == {_STACK_CONTENT_WIDTH}
+    assert_result_sane(result, "min_band_width below content")
+
+    assert len(result["conflicts"]) == 1
+    c = result["conflicts"][0]
+    assert c["conflict"] == WIDTH_MISFIT
+    assert c["where"] == "spec.min_band_width"
+    assert c["driver"] == "Full", "the band whose contents forced it"
+    assert c["driver_kind"] == "band_contents"
+    assert c["requested_width"] == 700
+    assert c["required_width"] == _STACK_CONTENT_WIDTH
+    assert c["applied"] == FIT_WIDEN
+    assert c["width_applied"] == _STACK_CONTENT_WIDTH
+    assert c["answered"] is False, "nobody chose; this is the default"
+    assert [o["answer"] for o in c["options"]] == [FIT_WIDEN, FIT_OVERLAP]
+    assert [o["width"] for o in c["options"]] == [_STACK_CONTENT_WIDTH, 700]
+    assert "700" in c["question"] and str(_STACK_CONTENT_WIDTH) in c["question"]
+
+
+def test_the_users_answer_to_keep_the_width_is_honored():
+    """`overlap` is the other half of the decision, and it has to actually bind.
+
+    A mechanism that reports the conflict and then widens anyway has only moved
+    the silence into a log. So the requested width is what comes back, and the
+    items keep the size the band's own metrics give them - which means they run
+    PAST the band's right edge. That is the overlap the user asked for, and it is
+    why `assert_result_sane` is deliberately not called here: its containment
+    check is exactly the thing being overridden.
+    """
+    result = compose_layered_bands(_misfit_stack(), {"min_band_width": 700},
+                                   on_misfit=FIT_OVERLAP)
+    assert {rect_width(c) for c in result["containers"]} == {700}
+
+    c = result["conflicts"][0]
+    assert c["applied"] == FIT_OVERLAP
+    assert c["width_applied"] == 700
+    assert c["answered"] is True, "the choice is on the record, not a default"
+
+    full = [it for it in result["items"] if it["band"] == "Full"]
+    band = next(b for b in result["containers"] if b["name"] == "Full")
+    assert max(it["right"] for it in full) > band["right"], (
+        "overlap was asked for and nothing overlapped")
+    # Still real geometry: every rect positive, nothing on top of anything else,
+    # and the bounds account for the items that escaped their band.
+    for it in result["items"]:
+        assert_valid_rect(it, "overlap item")
+    assert_no_overlaps(result["items"], "overlap items")
+    assert result["bounds"] == bounding_box([*result["containers"],
+                                            *result["items"]])
+
+
+def test_a_stack_whose_content_fits_reports_no_conflict():
+    """Silence has to mean something, so it only happens when nothing was decided.
+
+    Two ways for there to be nothing to decide: no explicit width at all, and an
+    explicit width the content fits. Both come back with an empty list rather
+    than a missing key, so a consumer reads the same shape either way.
+    """
+    for spec in (None, {"min_band_width": 1000}):
+        result = compose_layered_bands(_misfit_stack(), spec)
+        assert result["conflicts"] == [], spec
+        assert_result_sane(result, f"no conflict at {spec}")
+
+
+def test_an_answer_that_is_not_one_of_the_two_is_refused():
+    """A misspelled answer must not read as "nobody answered".
+
+    Those are opposite states - one is a decision, the other is a question still
+    owed - so a typo has to fail rather than silently fall through to the
+    default. Refused whether or not this particular stack turns out to have a
+    conflict, because a caller relaying an answer has already asked.
+    """
+    with pytest.raises(LayoutError, match="on_misfit"):
+        compose_layered_bands(_misfit_stack(), {"min_band_width": 700},
+                              on_misfit="wider")
+    with pytest.raises(LayoutError, match="on_misfit"):
+        compose_layered_bands(_misfit_stack(), on_misfit="wider")
 
 
 def test_an_empty_band_is_widened_to_the_stack_even_with_a_huge_item_width():
@@ -1835,6 +1938,23 @@ def _spread_if_every_center_sat_on_one_circle(result):
 # the linter's allowance.
 SPOKE_TOLERANCE = 2.0
 
+# A `max_radius` far past the shipped bound, for the tests that are measuring
+# something OTHER than the bound.
+#
+# The engine refuses a ring it would have to widen past `spec.max_radius` (900
+# by default), and the crowded corner of the matrices below - sixteen boxes over
+# a 60-degree fan, or twelve 400x40 boxes over any fan - is exactly what that
+# bound exists to refuse. Those cases still have to be swept, because what they
+# are being asked about is whether the SPOKES come out equal and whether the
+# shipped linter agrees, and a bound that silently dropped the crowded end of
+# the matrix would leave the spoke arithmetic untested where it is hardest.
+#
+# So the tests that measure spokes opt out of the bound explicitly, and the
+# bound gets its own tests: `test_the_widened_radius_is_bounded` and the three
+# below it. Opting out here is not a claim that a 6000-unit ring is fine; it is
+# a claim that this test is not the one asking.
+NO_RADIUS_BOUND = 20000
+
 
 # ---------------------------------------------------------------------------
 # The arrangement
@@ -1999,7 +2119,9 @@ def test_spokes_stay_equal_across_counts_shapes_and_arcs(
     smallest, so a fix tuned to a closed ring can be wrong on every fan.
     """
     spec = {"item_width": item_width, "item_height": item_height,
-            "sweep": sweep, "radius": 220}
+            "sweep": sweep, "radius": 220,
+            # See `NO_RADIUS_BOUND`: this test measures spokes, not ring size.
+            "max_radius": NO_RADIUS_BOUND}
     for n in (2, 3, 4, 5, 6, 7, 8, 9, 12, 16):
         for hub in ({"id": "hub"}, None):
             result = compose_radial(_spokes(n), spec=spec, hub=hub)
@@ -2085,7 +2207,9 @@ def test_the_shipped_linter_agrees_the_spokes_are_even(
         result = compose_radial(
             _spokes(n), hub={"id": 999, "name": "Hub"},
             spec={"item_width": item_width, "item_height": item_height,
-                  "sweep": sweep, "radius": 220})
+                  "sweep": sweep, "radius": 220,
+                  # See `NO_RADIUS_BOUND`: this seam is about spoke equality.
+                  "max_radius": NO_RADIUS_BOUND})
         payload = _verified_like(result)
         by_id = {o["element_id"]: o for o in payload["objects"]}
         ring = [by_id[i["id"]] for i in result["items"] if i["ring"] == 1]
@@ -2175,7 +2299,13 @@ def test_widening_clears_a_nearly_square_item_too(n, sweep):
     """
     result = compose_radial(
         _spokes(n), spec={"item_width": 90, "item_height": 88,
-                          "sweep": sweep, "radius": 220})
+                          "sweep": sweep, "radius": 220,
+                          # See `NO_RADIUS_BOUND`. This guard has to keep
+                          # covering the crowded end of the fan, because that is
+                          # where the old `max(w, h)` rule failed worst; whether
+                          # the ring that results is a SANE SIZE is asserted
+                          # separately, in `test_the_widened_radius_is_bounded`.
+                          "max_radius": NO_RADIUS_BOUND})
     assert_radial_sane(result, f"90x88 sweep={sweep} n={n}")
     # And the whitespace is there, measured as a gap. `assert_radial_sane` uses
     # `rects_overlap`, which exempts boxes that merely touch, so on its own it
@@ -2186,6 +2316,222 @@ def test_widening_clears_a_nearly_square_item_too(n, sweep):
                     a["bottom"] - b["top"], b["bottom"] - a["top"])
         assert apart > 0, (
             f"{a['id']} and {b['id']} touch: {_span(a)} {_span(b)}")
+
+
+# ---------------------------------------------------------------------------
+# The widening is bounded
+# ---------------------------------------------------------------------------
+# THE OTHER HALF OF THE SAME DEFECT, and the half that stayed broken after the
+# clearance was fixed.
+#
+# `hypot(w, h)` made the widening correct about overlap. It did nothing about
+# SIZE, and because `hypot >= max` it could only ever widen further than the
+# rule it replaced. Measured at 90x88 over a 60-degree fan, with the clearance
+# fix in place and nothing bounding the result: 238 units at three items, 932 at
+# eight, 2046 at sixteen, 3161 at twenty-four. The item that recorded the
+# clearance defect called 1576 a runaway; the fixed engine went twice past it,
+# and no test said anything, because every test asked only whether the ring
+# overlapped.
+#
+# The bound is `spec.max_radius`, and going past it is a REFUSAL rather than a
+# clamp: a clamp would draw the overlap the widening exists to prevent and say
+# nothing. See `compose._plan_ring` for why a refusal rather than a second ring.
+_NEAR_SQUARE_FAN = {"item_width": 90, "item_height": 88, "sweep": 60}
+
+
+@pytest.mark.parametrize("n,radius", [(3, 238), (4, 377), (5, 515), (6, 654)])
+def test_a_ring_the_sweep_can_hold_keeps_the_radius_it_had(n, radius):
+    """The bound refuses; it does not tighten.
+
+    These four are the counts a 60-degree fan of 90x88 boxes can actually hold,
+    and the numbers are the ones the unbounded engine produced for them. A bound
+    that changed any of these would have moved geometry that was already right.
+    """
+    result = compose_radial(_spokes(n), spec=dict(_NEAR_SQUARE_FAN))
+    assert result["radius"] == radius
+    assert result["radius"] <= DEFAULT_SPEC["max_radius"]
+    assert_radial_sane(result, f"90x88 sweep=60 n={n}")
+
+
+@pytest.mark.parametrize("n,needed", [(8, 932), (16, 2046), (24, 3161)])
+def test_a_ring_the_sweep_cannot_hold_is_refused_not_widened(n, needed):
+    """The runaway counts, and the refusal has to be usable.
+
+    `needed` is what the unbounded engine returned for that count. The message
+    is asserted rather than only the exception type, because the whole argument
+    for refusing over clamping is that the caller is told which input to give
+    up - so it has to name the count, the box, the arc, the radius that would
+    have been needed, the bound, and a way out.
+    """
+    with pytest.raises(LayoutError) as caught:
+        compose_radial(_spokes(n), spec=dict(_NEAR_SQUARE_FAN))
+    message = str(caught.value)
+    for fragment in (f"{n} items", "90x88", "60-degree", str(needed),
+                     "spec.max_radius", str(DEFAULT_SPEC["max_radius"]),
+                     "wider sweep", "smaller items"):
+        assert fragment in message, (fragment, message)
+
+
+@pytest.mark.parametrize("sweep", [60, 90, 120, 180, 270, 360])
+def test_every_radius_this_engine_returns_is_inside_the_bound(sweep):
+    """The claim, swept: no input produces a ring past `max_radius`.
+
+    Twelve counts against six arcs, 72 compositions, counted before they are
+    run as `APT-2026-0168` asks. Each one either composes inside the bound or is
+    refused for the bound by name - a refusal for any OTHER reason fails the
+    test, and so does an arc on which nothing composes at all, which would make
+    the row vacuous.
+    """
+    counts = (2, 3, 4, 5, 6, 7, 8, 9, 12, 16, 20, 24)
+    assert len(counts) == 12
+    composed = refused = 0
+    for n in counts:
+        spec = {"item_width": 90, "item_height": 88, "sweep": sweep}
+        try:
+            result = compose_radial(_spokes(n), spec=spec)
+        except LayoutError as exc:
+            assert "spec.max_radius" in str(exc), str(exc)
+            refused += 1
+            continue
+        composed += 1
+        assert result["radius"] <= DEFAULT_SPEC["max_radius"], (n, result)
+        assert_radial_sane(result, f"90x88 sweep={sweep} n={n}")
+    assert composed + refused == len(counts)
+    assert composed >= 4, (sweep, composed, refused)
+
+
+def test_an_inner_rings_widening_is_bounded_too():
+    """THE WORSE HALF, and the one nothing could see.
+
+    An inner ring gets `min(step, 120)` degrees, and `step` is itself the sweep
+    divided by the outer count - so an inner ring on a crowded fan is planned
+    over a few degrees and demands far more radius than the ring it hangs off.
+    Twelve spokes of three branches over a 180-degree sweep: ring one settles at
+    576, every inner ring demanded 1178. The result dict reports ring one's
+    radius and not the inner ones, so that figure was invisible to the caller as
+    well as to the suite.
+
+    The refusal has to name the RING, not only the composition, or the caller
+    cannot tell which of the two is the problem.
+    """
+    nodes = [{"id": i, "items": _spokes(3, first=100 + 10 * i)}
+             for i in range(1, 13)]
+    with pytest.raises(LayoutError) as caught:
+        compose_radial(nodes, hub={"id": 99}, spec={"sweep": 180})
+    message = str(caught.value)
+    assert "nodes[0].items" in message, message
+    assert "1178" in message, message
+    # And the same tree over a full circle stays inside the bound, so it is the
+    # crowding that is refused and not the second ring itself.
+    result = compose_radial(nodes, hub={"id": 99}, spec={"sweep": 360})
+    assert result["radius"] <= DEFAULT_SPEC["max_radius"]
+    assert_radial_sane(result, "12 spokes of 3 over a full circle")
+
+
+def test_raising_max_radius_lets_a_wide_ring_through_deliberately():
+    """The bound is a bound, not a new collision rule.
+
+    A caller who raises it gets exactly the ring the unbounded engine produced -
+    3161 units of radius for twenty-four 90x88 boxes over a 60-degree fan - and
+    it is still overlap-free. The refusal is about whether that is a diagram
+    worth drawing, which is the caller's call to make explicitly.
+    """
+    result = compose_radial(
+        _spokes(24), spec={**_NEAR_SQUARE_FAN, "max_radius": 4000})
+    assert result["radius"] == 3161
+    assert_radial_sane(result, "24 of 90x88 over a 60-degree fan")
+
+
+def test_a_radius_the_caller_states_raises_the_ceiling_with_it():
+    """A radius the caller states is theirs; the bound is on what the ENGINE adds.
+
+    So the ceiling is the larger of `spec.radius` and `spec.max_radius`, which
+    leaves the radius determined by the inputs either way. Twelve 90x88 boxes
+    over a 60-degree fan need 1489: stated as a floor of 1600 that is a ring the
+    caller asked for, and at 1200 it is still the engine overruling them.
+    """
+    generous = compose_radial(
+        _spokes(12), spec={**_NEAR_SQUARE_FAN, "radius": 1600})
+    assert generous["radius"] == 1600
+    assert_radial_sane(generous, "caller-stated 1600")
+    with pytest.raises(LayoutError, match="refuses a ring past 1200"):
+        compose_radial(_spokes(12), spec={**_NEAR_SQUARE_FAN, "radius": 1200})
+
+
+# ---------------------------------------------------------------------------
+# Per-node sizing: refused, not ignored
+# ---------------------------------------------------------------------------
+# A dead helper and a dead allow-list made `item_width`, `item_height` and
+# `radius` look settable per node. They were not: nothing called the helper, and
+# a node carrying one of those keys composed successfully, raised nothing, and
+# produced output BYTE-IDENTICAL to the same tree without it. They are deleted,
+# and stating one of those keys on a node is now an error.
+#
+# A test that only checked "the call does not raise" would have passed against
+# the ignored version too, which is why these assert the refusal and its text.
+@pytest.mark.parametrize("key,value", [
+    ("item_width", 200), ("item_height", 200), ("radius", 400),
+])
+def test_a_sizing_key_on_a_ring_owner_is_refused(key, value):
+    """All three of the old allow-list, on the node that owns an inner ring."""
+    plain = [{"id": 1, "items": _spokes(3, first=10)}, {"id": 2}]
+    assert compose_radial(plain, hub={"id": 99})["items"], "baseline must compose"
+    with pytest.raises(LayoutError, match=rf"nodes\[0\]\.{key}"):
+        compose_radial([{"id": 1, key: value, "items": _spokes(3, first=10)},
+                        {"id": 2}], hub={"id": 99})
+
+
+@pytest.mark.parametrize("key", ["item_width", "item_height", "radius"])
+def test_a_sizing_key_on_a_leaf_node_is_refused(key):
+    """A leaf owns no ring, so even a wired-up override would have ignored it.
+
+    This is the case that would still have been silent under the other choice,
+    and it is the likelier mistake: a caller sizes the box they can see.
+    """
+    with pytest.raises(LayoutError, match=rf"nodes\[1\]\.{key}"):
+        compose_radial([{"id": 1}, {"id": 2, key: 200}, {"id": 3}])
+
+
+def test_a_sizing_key_on_the_hub_is_refused():
+    """The box at the middle is sized by the spec like every other box."""
+    with pytest.raises(LayoutError, match=r"hub\.item_width"):
+        compose_radial(_spokes(3), hub={"id": 99, "item_width": 200})
+
+
+def test_the_refusal_says_where_the_capability_actually_lives():
+    """A refusal that does not say what to do instead is only half a refusal.
+
+    Per-node sizing is not missing from the engine: `compose_radial_tree`
+    resolves the same three keys per node and allocates angular room by weight,
+    which is what makes them worth having. The message has to point there.
+    """
+    with pytest.raises(LayoutError) as caught:
+        compose_radial([{"id": 1, "item_width": 200}])
+    message = str(caught.value)
+    assert "compose_radial_tree" in message, message
+    assert "item_width, item_height and radius" in message, message
+
+
+def test_the_dead_radial_override_helpers_are_referenced_nowhere():
+    """Deleted code that something still names is not deleted.
+
+    Checked across the tools directory and the reference docs, not only against
+    the module, because the helper was documented as a capability in prose as
+    well as being defined in code.
+    """
+    import compose as compose_module
+
+    names = ("_ring" + "_metrics", "_RADIAL" + "_OVERRIDES")
+    for name in names:
+        assert not hasattr(compose_module, name), name
+    stale = []
+    for root in (_HERE, _HERE.parent / "references"):
+        for path in sorted(root.glob("*.py")) + sorted(root.glob("*.md")):
+            if path.name == Path(__file__).name:
+                continue
+            text = path.read_text(encoding="utf-8")
+            stale += [f"{path.name}: {n}" for n in names if n in text]
+    assert not stale, stale
 
 
 # ---------------------------------------------------------------------------
@@ -2308,7 +2654,8 @@ def test_a_spoke_needs_an_id():
         compose_radial([{"id": 1}, {"name": "nameless"}])
 
 
-@pytest.mark.parametrize("key", ["radius", "sweep", "max_ring_depth"])
+@pytest.mark.parametrize(
+    "key", ["radius", "max_radius", "sweep", "max_ring_depth"])
 def test_a_non_positive_radial_key_is_rejected(key):
     with pytest.raises(LayoutError, match=rf"spec\.{key}: must be positive"):
         compose_radial(_spokes(3), spec={key: 0})

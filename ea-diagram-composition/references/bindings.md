@@ -463,17 +463,57 @@ if fitted.widened:
   keep one width and a text-fit fix cannot become an `inconsistent-sizing` finding. A per-band or
   per-node `item_width` in the layout input still wins, and is not fitted — `spec()` never sees it.
 - **Item names, not group names.** A band's or lane's title is drawn across a strip sized by the band.
-- **It reports.** `spec()` returns a `SpecFit`, which *is* the spec dict and also carries `widened`,
-  `requested_width`, `driver` and `note`. A measured convention that was not the figure used has to
-  be visible, not inferred.
-- **Without `names` nothing is measured** and the width is the convention's, exactly as before. There
-  is no flag to disable the fitting: supplying the names is the request.
+- **It reports.** `spec()` returns a `SpecFit`, which *is* the spec dict and also carries
+  `conflicts`, `widened`, `requested_width`, `driver` and `note`. A measured convention that was not
+  the figure used has to be visible, not inferred.
+- **And where the two cannot both be honored, it asks rather than deciding** — see §5.7.1.
+- **Without `names` nothing is measured** and the width is the convention's, exactly as before.
 - **What it does not promise.** EA's wrap is greedy, so a *multi-word* name can still read as cramped
   at a width that leaves it fitting one line with 5px each side. Guaranteeing clearance there means
   sizing the box to the whole name — a 58-character title would demand a 335-wide box — which
   overrides the notation's measured convention for content that renders perfectly well today. The
   live sweep found no findings at all from multi-word names and every one from unbreakable ones.
   `label-cramped` stays the backstop, and it measures rather than predicts.
+
+#### 5.7.1 Widening the box is not the only answer, so the conflict is surfaced
+
+This section used to end "there is no flag to disable the fitting: supplying the names is the
+request." That was right about the intent and wrong about whose call the conflict is. **Extending
+the box and keeping the width while the text overlaps the border are both legitimate drawings of the
+same content**, and which one a diagram wants depends on the diagram. So the misfit is reported and
+the **user** decides.
+
+```python
+spec = dt.spec({"item_width": 60}, names=[e["name"] for e in elements])
+for conflict in spec.unanswered_conflicts:
+    ask_the_user(conflict["question"])
+spec = dt.spec({"item_width": 60}, names=[e["name"] for e in elements],
+               on_misfit="overlap")        # their answer, relayed
+```
+
+| | Value |
+|---|---|
+| `on_misfit=None` (omitted) | nobody has answered; the default is applied and the conflict says so |
+| `on_misfit="widen"` | the user chose the wider box |
+| `on_misfit="overlap"` | the user chose to keep the width asked for |
+
+- **Widening remains the default**, for the reason it was unconditional before: EA grows a box it
+  cannot fit whatever the stored rect says, so it is the only answer under which the stored geometry
+  is the geometry EA paints. What changed is that it is no longer silent.
+- **`on_misfit` is an answer, not a setting.** A misspelled value is refused as a `BindingError`
+  rather than falling through to the default, because "the user chose wrong" and "nobody answered"
+  are opposite states.
+- **`overlap` is not a return to the old behavior.** The width is the same one the old code produced
+  and the conflict is still reported — the difference between the two is a choice on the record
+  versus a default nobody saw. Under `overlap`, `widened` is `False` while `conflicts` is not empty:
+  nothing moved, and something was still decided.
+- **Each conflict is a `compose.FitConflict`** — a plain dict, so it crosses a tool boundary as
+  JSON with nothing to import. Fields: `conflict`, `where`, `driver`, `driver_kind`,
+  `requested_width`, `required_width`, `options` (each with its `width` and `effect`), `applied`,
+  `width_applied`, `answered`, `question`, `note`, `detail`.
+- **One mechanism, two sites.** `compose_layered_bands` reports the same record, in
+  `result["conflicts"]`, when an explicit `min_band_width` is narrower than the bands' contents. Same
+  two answers, same `on_misfit` argument. A caller handles both with one branch.
 
 ---
 
