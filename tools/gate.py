@@ -60,12 +60,26 @@ KNOWN_IDS = {
     "UPDM", "SPEM", "SOMF", "BPEL", "XSD", "WSDL", "ERD", "DMN", "CMMN",
     "MDG", "EA", "XMI", "SQL", "COM", "API", "XML", "YAML", "JSON", "HTML",
     "PNG", "SVG", "CSV", "UTF", "BOM", "URL", "ID", "OK", "NOT", "AND", "OR",
+    # EA's strategic-modeling and mind-mapping MDGs, read from the reference
+    # model's own `MDGDgm` values rather than guessed. Both look like a made-up
+    # name to this rule precisely because neither spells a standard notation, and
+    # both are Sparx-shipped: `StrategyMap` declares six diagram types
+    # (StrategyMap, BalancedScorecard, ValueChain, DecisionTree, OrgChart,
+    # FlowChart) and `MindMapping` declares one of its own name.
+    "StrategyMap", "MindMapping",
     # UAF/UPDM. EA ships this as EIGHT separate technology ids, one per
     # viewpoint, not as one "UAF" — read from the loaded MDG, not guessed.
     # A binding names them because a binding binds exactly one id.
     "UAF", "UAFP", "UAFP_Framework", "UAFP_AV", "UAFP_AcV", "UAFP_OV",
     "UAFP_SOV", "UAFP_SV", "UAFP_SvcV", "UAFP_StV", "UAFP_CV", "UAFP_PV",
     "UAFP_TV", "UAFP_StdV",
+    # TOGAF and Zachman, the two FRAMEWORK overlays. Same lesson as UAF: EA does
+    # not ship one id per framework. TOGAF is two (`TOGAF Diagrams` and
+    # `TOGAF_DataArchitecture`) and Zachman is seven (`ZF` plus one per framework
+    # row), read from the loaded MDG rather than guessed. Only the ones without a
+    # space belong here; the rest are in KNOWN_SPACED_IDS below, because MDG_NS
+    # cannot see a space.
+    "TOGAF_DataArchitecture", "ZF", "ZF_Interface", "TOGAF_Interface",
     # UAF/DoDAF/MODAF viewpoint abbreviations. Standard framework vocabulary
     # (Services, Capability, Project, Operational, Strategic, Acquisition,
     # Technical/Standards), not anybody's project code.
@@ -78,6 +92,18 @@ KNOWN_IDS = {
     # Generic placeholder model filenames in tests. Not anybody's model.
     "model", "missing",
 }
+
+# Sparx-shipped technology ids that CONTAIN A SPACE, which `MDG_NS` cannot see:
+# it captures the last word only, so `TOGAF Diagrams::TOGAF_Interface` arrives as
+# `Diagrams` and `ZF Owner::OwnerTime` as `Owner`. Putting those bare words into
+# KNOWN_IDS would whitelist `Acme Diagrams::` and `Contoso Owner::` along with
+# them, which is the opposite of what this rule is for, so the FULL id is matched
+# against the line instead and the bare word stays unknown.
+KNOWN_SPACED_IDS = (
+    "TOGAF Diagrams",
+    "ZF Interface", "ZF Owner", "ZF Designer", "ZF Planner", "ZF Builder",
+    "ZF Subcontractor",
+)
 QEA_FILE = re.compile(r"\b([A-Za-z][A-Za-z0-9_-]*)\.(?:qea|eapx|eap|feap)\b")
 MDG_NS = re.compile(r"\b([A-Z][A-Za-z0-9_]{1,30})::")
 
@@ -240,9 +266,14 @@ def check_file(path: Path) -> list[str]:
                            f"if this is a real customer model, convert it")
         for m in MDG_NS.finditer(line):
             ident = m.group(1)
-            if ident not in KNOWN_IDS and not ident.startswith("WBA"):
-                out.append(f"{rel}:{n}: unrecognized MDG namespace '{ident}::' — "
-                           f"if this is a real customer technology, convert it")
+            if ident in KNOWN_IDS or ident.startswith("WBA"):
+                continue
+            # A known id with a space in it: the capture is only its last word,
+            # so the check is whether the text ending there IS the whole id.
+            if any(line[:m.end(1)].endswith(full) for full in KNOWN_SPACED_IDS):
+                continue
+            out.append(f"{rel}:{n}: unrecognized MDG namespace '{ident}::' — "
+                       f"if this is a real customer technology, convert it")
 
     if path.name == "SKILL.md" and len(lines) > MAX_SKILL_LINES:
         out.append(f"{rel}: {len(lines)} lines — over the {MAX_SKILL_LINES}-line limit; "

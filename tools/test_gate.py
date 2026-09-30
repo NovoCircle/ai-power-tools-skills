@@ -106,6 +106,35 @@ class TestUnknownIdentifiers:
         f = _write(library, "s/SKILL.md", "# s\n\nUse ArchiMate3::ArchiMate_Node\n")
         assert "unrecognized" not in _findings(f)
 
+    def test_a_sparx_id_containing_a_space_is_not_reported(self, library):
+        """`MDG_NS` cannot see a space, so these need their own allowance.
+
+        The pattern captures only the last word before `::`, so
+        `TOGAF Diagrams::TOGAF_Interface` arrives as `Diagrams` and
+        `ZF Owner::OwnerTime` as `Owner` - both real Sparx-shipped ids, and both
+        were blocking honest bindings until the full id was matched instead.
+        """
+        for text in ("Use TOGAF Diagrams::TOGAF_Interface here",
+                     "Use ZF Owner::OwnerTime here",
+                     "Use ZF Planner::PlannerData here"):
+            f = _write(library, "s/SKILL.md", "# s\n\n" + text + "\n")
+            assert "unrecognized" not in _findings(f), text
+
+    def test_the_bare_word_before_the_space_is_still_unknown(self, library):
+        """THE REASON THE FULL ID IS MATCHED RATHER THAN THE BARE WORD.
+
+        Adding `Diagrams` and `Owner` to `KNOWN_IDS` would have been the one-line
+        fix, and it would have whitelisted every customer whose technology
+        happens to end in one of those words - the exact opposite of what this
+        rule exists for. This fails if anyone ever takes that shortcut.
+        """
+        for text in ("Use Acme Diagrams::AcmeThing here",
+                     "Use Contoso Owner::ContosoThing here",
+                     "Use Diagrams::Thing here"):
+            f = _write(library, "s/SKILL.md", "# s\n\n" + text + "\n")
+            assert "unrecognized MDG namespace" in _findings(f), text
+
+
 
 # ---------------------------------------------------------------------------
 # Encoding — the class that broke v1.4.1
