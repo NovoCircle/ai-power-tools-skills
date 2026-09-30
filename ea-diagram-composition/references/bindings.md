@@ -438,6 +438,43 @@ rather than an absence: `not data.get("stereotype_prefix")` cannot tell them apa
 declared `""` under a prefixed parent would silently acquire the prefix and send every stereotype
 lookup after a name nothing stores. Every shipped binding states its own.
 
+### 5.7 A measured box size does not know the content's names
+
+`sizing.default` is measured off real diagrams of the notation, so it is the right box for a typical
+name. It knows nothing about the names in front of it, and a customer's element names come from their
+model and are whatever they are.
+
+**EA does not clip a name it cannot fit — it grows the drawn box and leaves the stored geometry
+alone.** Measured live on EA 17.1: a 36-character name with no space in it was drawn 169px wide
+against a stored width of 60. Nothing announces it. Every other check — overlap, pitch, containment —
+reads the stored rect, so from that point on they are all reading a rect EA does not paint.
+
+Pass the item names to `spec()` and the width is fitted before it reaches the engine:
+
+```python
+fitted = dt.spec({"align": "center"}, names=[e["name"] for e in elements])
+if fitted.widened:
+    print(fitted.note)   # "item_width widened from 100 to 214 so every box fits its name: ..."
+```
+
+- **What must fit is the longest space-free run**, not the whole name. EA wraps on **spaces only** and
+  never inside a word, so a multi-word name breaks itself and only its longest word has to fit.
+- **The widening lands on `item_width`**, which is the value every grammar falls back to, so peers
+  keep one width and a text-fit fix cannot become an `inconsistent-sizing` finding. A per-band or
+  per-node `item_width` in the layout input still wins, and is not fitted — `spec()` never sees it.
+- **Item names, not group names.** A band's or lane's title is drawn across a strip sized by the band.
+- **It reports.** `spec()` returns a `SpecFit`, which *is* the spec dict and also carries `widened`,
+  `requested_width`, `driver` and `note`. A measured convention that was not the figure used has to
+  be visible, not inferred.
+- **Without `names` nothing is measured** and the width is the convention's, exactly as before. There
+  is no flag to disable the fitting: supplying the names is the request.
+- **What it does not promise.** EA's wrap is greedy, so a *multi-word* name can still read as cramped
+  at a width that leaves it fitting one line with 5px each side. Guaranteeing clearance there means
+  sizing the box to the whole name — a 58-character title would demand a 335-wide box — which
+  overrides the notation's measured convention for content that renders perfectly well today. The
+  live sweep found no findings at all from multi-word names and every one from unbreakable ones.
+  `label-cramped` stays the backstop, and it measures rather than predicts.
+
 ---
 
 ## 6. The loader API
@@ -477,7 +514,8 @@ On `DiagramTypeBinding`:
 
 | Member | Does |
 |---|---|
-| `spec(overrides=None)` | Build a `compose.py` spec: `sizing.default` becomes `item_width` and `item_height`, and `spacing` is copied across verbatim — the **resolved** spacing, so an inherited gap reaches the engine. Caller overrides win, and an override naming a key the engine does not have is refused here, where the message can mention the binding. |
+| `spec(overrides=None, names=())` | Build a `compose.py` spec: `sizing.default` becomes `item_width` and `item_height`, and `spacing` is copied across verbatim — the **resolved** spacing, so an inherited gap reaches the engine. Caller overrides win, and an override naming a key the engine does not have is refused here, where the message can mention the binding. **Pass `names`** — the item names — and `item_width` is widened until the longest word in the widest of them clears the border. See §5.7. |
+| `width_to_fit(name)` | Module function. The narrowest box width at which that one name reads as fitting: its longest space-free run at the measured advance, plus `lint.LABEL_MARGIN` of clearance each side. |
 | `sizing` / `spacing` | Attributes. **Resolved**: what this diagram type states, over the measured values of the base diagram type it is drawn on. This is the pair a consumer wants. |
 | `own_sizing` / `own_spacing` | Attributes. What this binding's own document stated, which is a different question and the one a provenance test asks — a figure is only this technology's measurement if this technology stated it. |
 | `inherited_sizing()` / `inherited_spacing()` | What came from the substrate rather than from this file: the resolved mapping minus the stated one. |
@@ -533,9 +571,13 @@ result = compose_layered_bands(       # reached only when the geometry is ours
         {"name": "Channels", "items": [{"id": 13477}, {"id": 13478}]},
         {"name": "Business Applications", "items": [{"id": 13479}]},
     ],
-    dt.spec({"align": "center"}),
+    dt.spec({"align": "center"}, names=["Channel Portal", "Mobile Channel",
+                                       "PaymentsInitiationService"]),
 )
 ```
+
+`names` is the item names, in any order. It widens `item_width` when a name will not fit the
+notation's measured box, and the returned spec says so - §5.7.
 
 The two checks are in that order on purpose. `grammar_is_producible` is the one that says whether to
 go on at all; `geometry_is_composed` is the one that picks the route. Reading

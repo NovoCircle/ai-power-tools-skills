@@ -47,6 +47,7 @@ from bindings import (  # noqa: E402
     EA_PLACED_GRAMMARS,
     GRAMMAR_PLACEMENT,
     GRAMMARS,
+    HEADER_ADVANCE_PX,
     IMPLEMENTED_GRAMMARS,
     PLACED_BY_DIAGRAM_TYPE,
     PLACED_BY_EA,
@@ -58,6 +59,7 @@ from bindings import (  # noqa: E402
     Binding,
     BindingError,
     Resolution,
+    SpecFit,
     available_bindings,
     bindings_for_technologies,
     find_binding,
@@ -67,7 +69,9 @@ from bindings import (  # noqa: E402
     mdg_diagram_key,
     producible_grammars,
     resolve_diagram,
+    width_to_fit,
 )
+from lint import LABEL_MARGIN  # noqa: E402
 from compose import (  # noqa: E402
     DEFAULT_SPEC,
     compose_lanes,
@@ -159,6 +163,164 @@ def test_a_spec_override_naming_an_unknown_key_is_refused():
     dt = load_binding_text(MINIMAL).diagram_type("Overview")
     with pytest.raises(BindingError, match="item_wdith"):
         dt.spec({"item_wdith": 200})
+
+
+# ---------------------------------------------------------------------------
+# Sizing to fit the content's names
+#
+# Measured live against EA 17.1 and recorded in the diagram-gallery research
+# note: EA never clips a name and never shrinks the font. It GROWS THE DRAWN
+# BOX and leaves the stored geometry alone, so a diagram stops matching the
+# rects every other check reads. The numbers pinned below are that note's, not
+# this file's.
+# ---------------------------------------------------------------------------
+#: A name with no space in it, 36 characters long, which EA drew 169px wide
+#: against a stored width of 60 in the live content sweep. Kept as one constant
+#: so every test below is arguing about the same measured case.
+_UNBREAKABLE_36 = "WestbrookCorporateTreasuryLiquidity1"
+_DRAWN_WIDTH_OF_UNBREAKABLE_36 = 169
+
+#: Per-character advance measured off live renders, over the SPACE-FREE runs -
+#: what has to fit on one line, because EA breaks on spaces and never inside a
+#: word. `(characters, measured pixels)`.
+_MEASURED_RUNS = ((4, 17), (8, 39), (10, 48), (12, 54), (10, 55), (31, 152))
+
+
+def test_a_name_too_long_for_the_convention_widens_the_box():
+    """The defect, as a test.
+
+    `sizing.default` is measured for a typical name and knows nothing about the
+    one in front of it. Give it a name it cannot hold and the width has to move,
+    because the alternative is EA moving it silently in the render.
+    """
+    dt = load_binding_text(MINIMAL).diagram_type("Overview")
+    fitted = dt.spec(names=[_UNBREAKABLE_36])
+    assert fitted.item_width > dt.spec().item_width
+    assert fitted.item_width >= _DRAWN_WIDTH_OF_UNBREAKABLE_36
+
+
+def test_the_width_that_was_asked_for_is_a_floor_and_not_the_answer():
+    """An override is as capable of being too narrow as a measured default is.
+
+    The live sweep found this on a caller-chosen 60, not on a binding's figure,
+    so fitting before the override would have left the case that was actually
+    reported unfixed.
+    """
+    dt = load_binding_text(MINIMAL).diagram_type("Overview")
+    fitted = dt.spec({"item_width": 60}, names=[_UNBREAKABLE_36])
+    assert fitted.requested_width == 60
+    assert fitted.item_width >= _DRAWN_WIDTH_OF_UNBREAKABLE_36
+
+
+def test_a_spec_that_widened_says_what_it_widened_and_why():
+    """A measured convention that was not used has to be visible.
+
+    `sizing.default` is somebody's measurement of real diagrams and
+    `default_size_provenance` names whose. Substituting a third number for it in
+    silence would leave a caller reading a figure that was not the one used.
+    """
+    dt = load_binding_text(MINIMAL).diagram_type("Overview")
+    fitted = dt.spec(names=["Hub", _UNBREAKABLE_36])
+    assert fitted.widened
+    assert fitted.driver == _UNBREAKABLE_36
+    assert "100" in fitted.note and str(fitted.item_width) in fitted.note
+    assert _UNBREAKABLE_36 in fitted.note
+
+
+def test_a_spec_that_did_not_have_to_widen_reports_nothing():
+    """Silence has to mean something, so it only happens when nothing moved."""
+    dt = load_binding_text(MINIMAL).diagram_type("Overview")
+    fitted = dt.spec(names=["Hub", "Payments"])
+    assert not fitted.widened
+    assert fitted.driver == ""
+    assert fitted.note == ""
+    assert fitted.item_width == fitted.requested_width == 100
+
+
+def test_a_spec_given_no_names_measures_none_and_is_still_a_plain_spec():
+    """No names, no fitting, and the same dict as before.
+
+    Nothing can fit text it was not given, so this is the one case where the
+    convention's width stands unexamined. It is also every existing caller, and
+    a `SpecFit` has to be indistinguishable from the dict they were getting.
+    """
+    dt = load_binding_text(MINIMAL).diagram_type("Overview")
+    fitted = dt.spec()
+    assert isinstance(fitted, SpecFit)
+    assert fitted == {"item_width": 100, "item_height": 60}
+    assert dict(fitted) == fitted
+
+
+def test_only_the_run_ea_cannot_break_has_to_fit():
+    """EA wraps on SPACES ONLY, so a multi-word name breaks itself.
+
+    Measured: the same name with spaces came back as one text run per line at a
+    13px pitch, and without them as a single line running 52px past both
+    borders. Sizing a box to a whole multi-word name would widen every ordinary
+    diagram to fit a line EA was never going to draw.
+    """
+    words = "Westbrook Bank Corporate Treasury and Liquidity Management"
+    assert width_to_fit(words) == width_to_fit("Management")
+    assert width_to_fit(words) < width_to_fit(words.replace(" ", ""))
+
+
+def test_the_advance_is_the_measured_maximum_because_a_mean_under_predicts():
+    """The constant's own calibration, as a test.
+
+    Under-prediction is the failure being prevented: a box that is nearly wide
+    enough is a box EA still grows. So the estimate has to bound every measured
+    run, and the mean of the same population does not - which is the reason the
+    maximum is taken and the reason this test exists rather than a comment
+    saying so.
+    """
+    for chars, measured in _MEASURED_RUNS:
+        assert chars * HEADER_ADVANCE_PX >= measured, (chars, measured)
+    mean_advance = 4.9
+    assert any(chars * mean_advance < measured
+               for chars, measured in _MEASURED_RUNS)
+
+
+def test_the_width_it_fits_to_is_the_clearance_the_linter_asks_for():
+    """Prevention and detection have to aim at one number.
+
+    `LABEL_MARGIN` is imported rather than restated, so recalibrating the rule
+    moves the composer with it. This pins the arithmetic that consumes it: a
+    fitted box leaves a full margin on each side, which also clears the narrower
+    threshold at which EA stops growing the box.
+    """
+    assert width_to_fit("Management") == 55 + 2 * LABEL_MARGIN
+    assert width_to_fit("") == 0
+
+
+def test_every_peer_keeps_one_width_when_one_name_forces_a_wider_box():
+    """Uniform across the role, or the fix trades one finding for another.
+
+    The widening lands on `item_width`, which is the value every grammar falls
+    back to, so a band of boxes stays a band of boxes at one size. Widening only
+    the box whose name is long would satisfy the text-fit rules and fail
+    `inconsistent-sizing`, which is the same diagram read as a different kind of
+    wrong.
+    """
+    dt = load_binding_text(MINIMAL).diagram_type("Overview")
+    fitted = dt.spec(names=["Hub", _UNBREAKABLE_36, "Payments"])
+    result = compose_layered_bands([
+        {"name": "Upper", "items": [{"id": 1, "name": "Hub"},
+                                    {"id": 2, "name": _UNBREAKABLE_36}]},
+        {"name": "Lower", "items": [{"id": 3, "name": "Payments"}]},
+    ], fitted)
+    widths = {item["right"] - item["left"] for item in result["items"]}
+    assert widths == {fitted.item_width}
+
+
+def test_a_name_that_is_not_a_string_is_refused():
+    """An element id passed where a name belongs would measure as zero.
+
+    `len()` of the wrong thing either raises somewhere less informative or,
+    worse, succeeds - so it is refused here, naming the position.
+    """
+    dt = load_binding_text(MINIMAL).diagram_type("Overview")
+    with pytest.raises(BindingError, match=r"names\[1\]"):
+        dt.spec(names=["Hub", 13477])
 
 
 # ---------------------------------------------------------------------------

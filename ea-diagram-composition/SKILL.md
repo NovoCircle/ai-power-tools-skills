@@ -98,7 +98,7 @@ For the diagram type you are building, it also answers:
 
 | Question | From |
 |---|---|
-| what size, and how far apart | `dt.spec()`, ready for Step 2 |
+| what size, and how far apart | `dt.spec(names=...)`, ready for Step 2 |
 | how connectors route | `dt.default_route()`, `dt.route_for(relationship)` |
 | which visual channels are free | `dt.channel_is_free("fill")`, `dt.free_channels()` |
 | whether to draw a title | `dt.draws_its_own_title` |
@@ -143,9 +143,11 @@ Only where `dt.geometry_is_composed` (Step 0). EA places a `graph` type; do not 
 from compose import compose_layered_bands, compose_lanes
 
 result = compose_layered_bands([
-    {"name": "Channels",     "items": [{"id": 13477}, {"id": 13478}]},
-    {"name": "Applications", "items": [{"id": 13479}]},
-], {"align": "center"})
+    {"name": "Channels",     "items": [{"id": 13477, "name": "Channel Portal"},
+                                       {"id": 13478, "name": "Mobile Channel"}]},
+    {"name": "Applications", "items": [{"id": 13479, "name": "PaymentsInitiationService"}]},
+], dt.spec({"align": "center"}, names=["Channel Portal", "Mobile Channel",
+                                      "PaymentsInitiationService"]))
 ```
 
 Plain data in, plain data out. Item ids are preserved verbatim — pass EA element ids as the
@@ -160,6 +162,24 @@ vertical decision. The engine handles it; you only need to care when reading geo
 typo cannot silently produce a default layout. Where there is a binding, get the spec from it —
 `dt.spec({"align": "center"})` — rather than writing the numbers by hand; a binding's are measured
 from real diagrams, and yours are not.
+
+**Pass the item names to `spec()`.** A binding's box size is measured for a typical name and knows
+nothing about the ones in your model. **EA does not clip a name it cannot fit — it grows the drawn
+box and leaves the stored geometry alone**: measured live, a 36-character name with no space in it
+was drawn 169px wide against a stored 60, silently, and every check that reads the stored rect then
+reads a rect EA does not paint. With `names` the width is widened before the engine sees it, the
+same width for every peer, and the returned spec says what it widened:
+
+```python
+spec = dt.spec({"align": "center"}, names=[e["name"] for e in elements])
+if spec.widened:
+    print(spec.note)     # the measured convention was not the figure used — say which was
+```
+
+What has to fit is a name's **longest space-free run**, not the whole name: EA wraps on spaces only
+and never inside a word, so a multi-word name breaks itself. Omit `names` and nothing is measured,
+which is the old behavior and the defect with it. See
+[`references/bindings.md`](references/bindings.md) §5.7.
 
 ## Step 3 — place and style
 

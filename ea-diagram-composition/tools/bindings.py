@@ -112,6 +112,33 @@ claiming `Logical` would make every plain Class diagram ambiguous. The parent's
 diagram types are the substrate a child's own types are measured against, not
 entries in the child's catalog.
 
+SIZING TO FIT THE CONTENT'S NAMES
+---------------------------------
+A binding's `sizing.default` is measured off real diagrams of that notation, so
+it is the right box for a typical name. It knows nothing about the names in
+front of it, and a customer's element names come from their model and are
+whatever they are. EA does not clip a name it cannot fit: it GROWS THE DRAWN
+BOX, silently, while the repository keeps reporting the width that was stored.
+Measured live: a 36-character name with no spaces in it was drawn 169 px wide
+against a stored 60. Every other check - overlap, pitch, containment - reads the
+stored rect, so from that point on they are all reading a rect that is not the
+one EA paints.
+
+`spec(names=...)` is where that is prevented. Given the names that will go in
+the boxes it widens `item_width` until the longest word in the widest of them
+clears the border, returns a `SpecFit` - a spec dict that also says what it
+widened and why - and leaves everything else alone. Nothing here is per
+notation: what has to fit is a string, and a string is the same width whatever
+notation is eventually drawn around it.
+
+THE ENGINE IS NOT THE PLACE FOR THIS, and it would be nine places if it were.
+Nine grammars resolve `item_width`, each its own way, and each would need the
+same arithmetic and its own way of reporting it. They all take a spec, and on
+the documented path every spec comes from here. One site, upstream of all nine,
+and the widening lands on `item_width` - which is the spec-level fallback every
+grammar shares - so peers keep a common width and no grammar trades a text-fit
+finding for an inconsistent-sizing one.
+
 PyYAML
 ------
 Bindings are YAML, matching the shipped ArchiMate conformance ruleset, and
@@ -122,6 +149,7 @@ parser rather than by a check here.
 """
 from __future__ import annotations
 
+import math
 import sys
 from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
@@ -133,6 +161,15 @@ if str(_HERE) not in sys.path:
 
 import compose as _engine  # noqa: E402
 from compose import DEFAULT_SPEC  # noqa: E402
+
+# The clearance a label needs from its border, taken from the rule that judges
+# it rather than restated here. Prevention and detection have to agree on one
+# number or the composer produces boxes the linter then complains about, and a
+# second copy of a calibrated figure is how they stop agreeing. The dependency
+# runs this way round on purpose: the linter must not import this module (a test
+# in `test_lint.py` pins that), because a rule that reached for a binding would
+# stop being a rule about geometry.
+from lint import LABEL_MARGIN  # noqa: E402
 
 __all__ = [
     "BindingError",
@@ -157,6 +194,9 @@ __all__ = [
     "RESOLVED_PATHS",
     "MDG_STYLE_KEY",
     "MDG_SEPARATOR",
+    "HEADER_ADVANCE_PX",
+    "SpecFit",
+    "width_to_fit",
     "Resolution",
     "load_binding",
     "load_binding_text",
@@ -569,6 +609,151 @@ class PresentationProfile:
         return out
 
 
+# ---------------------------------------------------------------------------
+# Text fit - the one estimate in this file, and why it is a maximum
+# ---------------------------------------------------------------------------
+# Per-character advance of the header font, in pixels. It exists ONLY to predict
+# a width before anything has been drawn. DETECTION needs no estimate at all:
+# EA's SVG carries `textLength`, its own measured advance, on every rendered run,
+# so the linter compares EA's numbers with EA's rects. A composer has no render
+# to read, which is the whole reason a number is needed here.
+#
+# CALIBRATED AS A MAXIMUM, NOT A MEAN, and that is the point of it. Read off live
+# renders (EA 17.1, the header font at its default size), per character over the
+# SPACE-FREE runs - which is what has to fit on one line, because EA breaks on
+# spaces and never inside a word:
+#
+#      4 chars /  17 px = 4.25
+#      8 chars /  39 px = 4.88
+#     10 chars /  48 px = 4.80
+#     12 chars /  54 px = 4.50
+#     10 chars /  55 px = 5.50   <- the maximum
+#     31 chars / 152 px = 4.90
+#
+# The mean of that population is 4.9 and taking it would UNDER-PREDICT the
+# widest measured string by 6%. Under-prediction is precisely the failure being
+# prevented: a box that is nearly wide enough is a box EA still grows, and the
+# render then disagrees with the geometry every other check reads. So the
+# interval is [5.50, inf) - below 5.5 a measured string is known to be
+# under-predicted, above it the only cost is width - and the bottom of that
+# interval is taken, because a prevention floor should be the smallest figure
+# that is not known to be wrong.
+#
+# Over-prediction is cheap and self-correcting. At 5.5 the 36-character name
+# from the live sweep is predicted at 198 px where EA drew 169, so the box comes
+# out about 30 px wider than it strictly had to be - and the next verify
+# measures the truth exactly rather than inheriting the estimate.
+#
+# NOT VALIDATED FOR: any font other than the one measured (the measurement
+# varied neither the size nor a per-element style override), and non-Latin or
+# full-width glyphs. A run of wide capitals is the case that could still exceed
+# it. The linter stays the backstop for all of those, because it measures
+# instead of predicting.
+HEADER_ADVANCE_PX = 5.5
+
+
+def _longest_unbroken_run(name: str) -> str:
+    """The longest run in a name that EA cannot break - what must fit one line.
+
+    EA WRAPS ON SPACES ONLY. Measured: a 31-character name with no spaces in a
+    100-wide box was drawn as a single unwrapped line running 52 px past both
+    borders, and the same name with spaces in it came back as one text run per
+    line at a 13 px pitch. So a multi-word name breaks itself and only its
+    longest word has to fit; a name with no spaces has to fit whole.
+
+    Split on the space character alone, not on whitespace generally. A tab or a
+    newline inside an element name was never measured, and treating one as a
+    break would predict a narrower box on no evidence - keeping the run joined
+    predicts a wider one, which is the safe direction.
+    """
+    return max(name.split(" "), key=len, default="")
+
+
+def width_to_fit(name: str) -> int:
+    """The narrowest box width at which this name reads as fitting.
+
+    `longest unbroken run x HEADER_ADVANCE_PX`, plus `LABEL_MARGIN` of clearance
+    on each side. Two thresholds are in play and the wider one is targeted:
+
+    * EA stops growing the drawn box once the text fits the usable inner width,
+      measured at `w - 6` for the narrower of the two shapes probed and `w - 5`
+      for the other, +/-1. Call it `w - 7` to cover both with the tolerance.
+    * The label stops reading as touching the border at `LABEL_MARGIN` px of
+      clearance per side, so `w - 2 * LABEL_MARGIN`.
+
+    `2 * LABEL_MARGIN` is 16, which is wider than 7, so aiming at the clearance
+    satisfies the growth threshold as well. Aiming at 7 instead would trade the
+    error for the warning and call it fixed.
+
+    WHAT THIS DOES NOT PROMISE, because EA's wrap is greedy. It packs as many
+    words onto a line as the break width holds, so a MULTI-WORD name can still
+    come out reading as cramped: at a width that leaves the whole name fitting
+    one line with only 5 px each side, EA puts it on one line rather than
+    breaking it, and nothing here moves that. Guaranteeing clearance for a
+    multi-word name means sizing the box to the WHOLE name - a 58-character
+    title would demand a 335-wide box - which overrides the notation's own
+    measured convention for content that renders perfectly well today. Measured
+    live: multi-word names produced no findings at all, and unbreakable ones
+    produced every one. So this fits the run EA cannot break and leaves the rest
+    to the rule that measures rather than predicts.
+    """
+    run = _longest_unbroken_run(name)
+    if not run:
+        return 0
+    return math.ceil(len(run) * HEADER_ADVANCE_PX) + 2 * LABEL_MARGIN
+
+
+class SpecFit(dict):
+    """A `compose.py` spec that also says what the content's names cost it.
+
+    It IS the spec - a plain `dict` subclass, equal to the dict it would have
+    been, passable straight to any composer - so nothing downstream has to know
+    this type exists. What it adds is the report: `widened`, `requested_width`,
+    `driver` and a one-line `note`.
+
+    THE REPORT IS NOT OPTIONAL DECORATION. `sizing.default` is measured off real
+    diagrams of the notation and `default_size_provenance` names whose
+    measurement it is; an override is a figure the caller chose on purpose.
+    Quietly substituting a third number for either of those would leave a caller
+    reading a measured convention that was not the one used. So the widening is
+    applied and then declared.
+    """
+
+    __slots__ = ("requested_width", "driver")
+
+    def __init__(self, spec: Mapping[str, Any], requested_width: int,
+                 driver: str = "") -> None:
+        super().__init__(spec)
+        #: The `item_width` that was asked for, before any widening: the
+        #: binding's measured default, or the caller's override of it.
+        self.requested_width = int(requested_width)
+        #: The name that forced the widest box, or "" if nothing widened.
+        self.driver = driver
+
+    @property
+    def item_width(self) -> int:
+        """The width actually used - widened, or the one that was asked for."""
+        return int(self["item_width"])
+
+    @property
+    def widened(self) -> bool:
+        return self.item_width > self.requested_width
+
+    @property
+    def note(self) -> str:
+        """One sentence for a report or a log, or "" when nothing widened."""
+        if not self.widened:
+            return ""
+        run = _longest_unbroken_run(self.driver)
+        return (
+            f"item_width widened from {self.requested_width} to "
+            f"{self.item_width} so every box fits its name: {self.driver!r} "
+            f"has a {len(run)}-character run with no space in it to break on, "
+            f"which needs {width_to_fit(self.driver)}px. The width asked for "
+            f"would have been drawn wider than it measures."
+        )
+
+
 class DiagramTypeBinding:
     """One diagram type's conventions, ready to hand to the engine.
 
@@ -767,7 +952,8 @@ class DiagramTypeBinding:
             return self.routing.get("trunk_route", "OrthogonalSquare")
         return self.routing["default"]
 
-    def spec(self, overrides: Mapping[str, Any] | None = None) -> dict:
+    def spec(self, overrides: Mapping[str, Any] | None = None,
+             names: Iterable[str] = ()) -> SpecFit:
         """Build a `compose.py` spec from this diagram type's conventions.
 
         `sizing.default` becomes `item_width`/`item_height`; `spacing` is
@@ -776,6 +962,29 @@ class DiagramTypeBinding:
         binding - but an override naming a key the engine does not have is
         refused here rather than by the engine, where the message would not
         mention the binding.
+
+        PASS THE ITEM NAMES. `names` is the names that will go in the boxes, and
+        with them `item_width` is widened until the longest word in the widest of
+        them clears the border. Without them the width is the convention's, which
+        is what it always was: a name too long for it is then drawn wider than it
+        measures, and every check that reads the stored rect reads a rect EA does
+        not paint.
+
+        There is no flag to turn the fitting off, because supplying the names IS
+        the request. A knob would only exist to be left at the wrong setting.
+
+        ITEM names, not group names. A band's or lane's title is drawn across a
+        strip whose width comes from the band, not from `item_width`; feeding it
+        in here would widen every item to fit a label that is not in one.
+
+        The widening lands on `item_width`, which is the value every grammar
+        falls back to, so the whole composition keeps one item width and peers
+        stay the same size as each other. A per-band or per-node `item_width`
+        stated in the layout input still wins over it - that is the caller
+        sizing one group deliberately - and is not fitted here, because this
+        method never sees it.
+
+        The result is a `SpecFit`: a spec dict that also reports the widening.
         """
         width, height = self.size_for()
         spec: dict[str, Any] = {"item_width": width, "item_height": height}
@@ -786,7 +995,24 @@ class DiagramTypeBinding:
                     f"spec override {key!r} is not a layout spec key. "
                     f"Known keys: {', '.join(sorted(_SPEC_KEYS))}")
             spec[key] = value
-        return spec
+
+        # Fitted LAST, over the width that is actually in effect. An override is
+        # exactly as capable of being too narrow for the content as a measured
+        # default is - the live defect was found on a caller-chosen 60 - so
+        # fitting before the override would leave the commoner case unfixed.
+        requested = int(spec["item_width"])
+        driver = ""
+        needed = requested
+        for i, name in enumerate(names):
+            if not isinstance(name, str):
+                raise BindingError(
+                    f"names[{i}]: item names must be strings, got "
+                    f"{type(name).__name__}")
+            want = width_to_fit(name)
+            if want > needed:
+                needed, driver = want, name
+        spec["item_width"] = needed
+        return SpecFit(spec, requested, driver)
 
 
 class Viewpoint:
