@@ -599,3 +599,23 @@ def test_a_reading_that_records_neither_says_nothing_about_them():
     report = fidelity.compare(READING, drawn(), LINKS)
     assert report.metrics["content_judged"] == 0
     assert "fills_judged" not in report.metrics
+
+
+def test_a_reading_says_what_it_did_not_read():
+    """Partial is allowed; partial and SILENT is not.
+
+    A comparison only knows about what it was told, so a reading that skipped a
+    whole category of element would otherwise report a perfect score for a
+    diagram missing every one of them. That is the same failure as the blank
+    notes, one level up.
+    """
+    reading = {**READING, "not_read": ["ports on block borders"]}
+    report = fidelity.compare(reading, drawn(), LINKS)
+    assert report.faithful
+    assert report.metrics["not_read"] == ["ports on block borders"]
+    assert any("ports on block borders" in e for e in report.not_run)
+
+
+def test_a_reading_that_read_everything_says_nothing_extra():
+    report = fidelity.compare(READING, drawn(), LINKS)
+    assert report.metrics["not_read"] == []

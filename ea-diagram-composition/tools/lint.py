@@ -352,10 +352,25 @@ def check_no_overlaps(objects: Sequence[Mapping[str, Any]],
 def check_within_canvas(objects: Sequence[Mapping[str, Any]],
                         canvas: Mapping[str, Any],
                         report: LintReport) -> None:
-    """Placement outside the canvas renders, but exports clipped.
+    """How much of the composition falls outside the diagram's PAGE size.
 
-    A warning rather than an error: EA grows the canvas on some paths, so this
-    is "look at it", not "this is broken".
+    THIS RULE USED TO CLAIM THAT SUCH A DIAGRAM "EXPORTS CLIPPED", AND IT DOES
+    NOT. Measured rather than reasoned about: three elements were placed on a
+    diagram whose `cx`/`cy` was EA's default 800x1100, one of them spanning to
+    x 1600 and another to y -1460, and the image export came back **2219x2031**
+    - aspect 1.093 against the content's 1.099 and the canvas's 0.727. The
+    export followed the CONTENT. Nothing was clipped, nothing was missing.
+
+    That matters because the claim was not merely imprecise, it was load
+    bearing: `cx`/`cy` is one printed page, so a diagram of any size at all
+    exceeds it, and a rule that fires on every non-trivial diagram in every
+    grammar is worse than no rule. It failed six of the first nineteen cases of
+    the live content sweep, and in all six the composition was correct.
+
+    So this is INFO. The count is still worth having - it is what a caller
+    needs if they are going to PRINT, where the page size does govern and the
+    diagram paginates - but it is not a defect, and it does not make a report
+    unclean.
     """
     cx, cy = int(canvas.get("cx") or 0), int(canvas.get("cy") or 0)
     if not cx or not cy:
@@ -368,10 +383,14 @@ def check_within_canvas(objects: Sequence[Mapping[str, Any]],
     report.metrics["outside_canvas"] = len(outside)
     if outside:
         report.add(Finding(
-            rule="out-of-canvas", severity="warning",
-            message=f"{len(outside)} element(s) fall outside the {cx}x{cy} canvas",
+            rule="out-of-canvas", severity="info",
+            message=(f"{len(outside)} element(s) fall outside the {cx}x{cy} "
+                     f"page size; image export is unaffected and follows the "
+                     f"content"),
             subjects=tuple(outside),
-            correction="grow the diagram's cx/cy, or tighten the layout",
+            correction="nothing, unless this diagram will be PRINTED - then "
+                       "grow the diagram's cx/cy so it fits one page, or "
+                       "accept that it paginates",
         ))
 
 

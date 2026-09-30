@@ -871,6 +871,20 @@ def compare(reading: Mapping[str, Any],
     precision = _precision(reading)
     report.metrics["precision"] = precision
 
+    # A READING IS ALLOWED TO BE PARTIAL. It is not allowed to be partial
+    # SILENTLY, which is a different thing and is the failure this whole module
+    # keeps rediscovering: a comparison that only knows about what it was told
+    # reports a perfect score for a diagram missing everything it was not told
+    # about. So a reading names what it deliberately did not read, and those
+    # names come out as unanswered questions rather than as nothing at all.
+    for omission in reading.get("not_read") or []:
+        report.not_run.append(
+            f"not read from the reference: {omission}. Anything in that "
+            f"category is outside this comparison entirely - it is neither "
+            f"checked nor counted, and a faithful verdict says nothing "
+            f"about it.")
+    report.metrics["not_read"] = list(reading.get("not_read") or [])
+
     ref_rects = reference_rects(reading)
     report.metrics["reference_elements"] = len(ref_rects)
 

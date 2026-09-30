@@ -306,10 +306,31 @@ def test_touching_elements_do_not_overlap_but_nothing_else_may_rely_on_that():
     assert report.metrics["overlaps"] == 0
 
 
-def test_an_element_outside_the_canvas_is_a_warning():
+def test_an_element_outside_the_page_size_is_info_and_not_a_defect():
+    """Measured, not assumed, and this test is the guard on that measurement.
+
+    The rule used to say such a diagram "exports clipped". It does not: content
+    spanning 1550x1410 on an 800x1100 canvas exported at 2219x2031 - the
+    CONTENT's aspect, not the canvas's - with nothing missing. Since `cx`/`cy`
+    is one printed page, any diagram of consequence exceeds it, so a warning
+    here fires on almost everything and means nothing. It failed six of the
+    first nineteen live sweep cases, all six of them correct compositions.
+
+    Demoting it is therefore a correction, not a convenience. If someone
+    promotes it again, they need a new measurement, and this says so.
+    """
     report = lint_diagram(verified([box(1, left=5000, top=-40)], cx=800, cy=600))
     assert [f.rule for f in report.findings] == ["out-of-canvas"]
-    assert report.clean, "out-of-canvas is a warning; EA grows some canvases"
+    assert [f.severity for f in report.findings] == ["info"]
+    assert report.clean
+    assert report.metrics["outside_canvas"] == 1
+
+
+def test_the_page_size_count_is_still_reported_for_callers_who_print():
+    """Demoted, not deleted - it is exactly what a caller printing needs."""
+    inside = lint_diagram(verified([box(1, left=10, top=-40)], cx=800, cy=600))
+    assert inside.metrics["outside_canvas"] == 0
+    assert not [f for f in inside.findings if f.rule == "out-of-canvas"]
 
 
 def test_inconsistent_sizing_within_a_role_is_an_error():
