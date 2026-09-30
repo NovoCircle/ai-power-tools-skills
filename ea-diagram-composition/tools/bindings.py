@@ -82,6 +82,24 @@ child has already spoken, and inheriting a parent's `graph` over a child's
 `own_sizing` and `own_spacing` keep what the document itself said, so a test
 that pins a measurement reads the measurement rather than the inheritance.
 
+A DIAGRAM TYPE MAY THEREFORE OMIT `sizing` ENTIRELY
+---------------------------------------------------
+`sizing.default` is mandatory in the RESOLVED diagram type and optional in the
+document, and the split matters. It used to be checked per document, before
+`_merge` ran, so no diagram type could ever inherit the one figure every diagram
+of it needs - and three notations went unbound for that reason alone, each with
+a measured base notation sitting underneath it whose default was exactly the
+right answer. The check now runs in `Binding.__init__`, on the merged values.
+
+INHERITING GOT EASIER; INVENTING DID NOT. Those are different acts and the
+schema keeps them apart. Omitting the block says "the figure is the substrate's",
+names the substrate in `base`, and leaves `default_size_is_inherited` True
+forever after, so a resolution reports the borrowed figure as borrowed. Typing a
+number in says "we measured this", and nothing downstream can tell a measured
+number from a guessed one - which is why the refusal message offers inheriting
+and fixing `base:` as the only two ways out of a missing default, and says
+plainly that copying a figure from another notation is not a third.
+
 A CHILD DOES NOT ACQUIRE ITS PARENT'S DIAGRAM TYPE CATALOG
 ----------------------------------------------------------
 Inheriting the parent's `diagram_types` wholesale - which is what merging one
@@ -165,13 +183,20 @@ class BindingError(ValueError):
 # ---------------------------------------------------------------------------
 # Closed vocabularies
 # ---------------------------------------------------------------------------
-# The grammars, and WHO PLACES THE GEOMETRY of a diagram that has one. Seven
+# The grammars, and WHO PLACES THE GEOMETRY of a diagram that has one. Eight
 # names in three placements, and the placement is what decides what a consumer
 # may do with a binding that names one.
 #
-# FIVE COMPOSED LAYOUTS - `layered-bands`, `lanes`, `nested-grid`, `radial`,
-# `computed-geometry` - are arrangements this library computes coordinates for.
-# Five, not the four the corpus analysis first resolved on: measuring the rows
+# SIX COMPOSED LAYOUTS - `layered-bands`, `lanes`, `nested-grid`, `radial`,
+# `two-column-cycle`, `computed-geometry` - are arrangements this library
+# computes coordinates for. `two-column-cycle` was the last row of the corpus
+# audit still waiting on engine code: a cycle drawn as two columns, flow down one
+# and back up the other. It is its own grammar rather than a radial variant
+# because its arithmetic is a pitch and a split, not a bearing, and because its
+# boxes are deliberately DIFFERENT HEIGHTS - the one composed layout where that
+# is true, and the reason a composer for it could not be a parameter on another.
+#
+# Six, not the four the corpus analysis first resolved on: measuring the rows
 # grouped under `computed-geometry` before building it showed they do not share
 # an arithmetic - placing items on a circle, packing rectangles so their AREAS
 # encode a number, and drawing a waveform against a time axis are three
@@ -191,7 +216,7 @@ class BindingError(ValueError):
 # reporting itself composable.
 #
 # TWO WHERE WE PLACE NOTHING. That parking pressure was real: most diagram types
-# in most notations are graphs or trees, the five composed layouts have nothing
+# in most notations are graphs or trees, the composed layouts have nothing
 # to say about them, and `grammar` is mandatory - so whole notations went unbound
 # for a schema reason rather than a real one, and an omitted diagram type is
 # indistinguishable from an oversight. Hence:
@@ -244,7 +269,14 @@ GRAMMAR_PLACEMENT: dict[str, str] = {
     "lanes": PLACED_BY_ENGINE,
     "nested-grid": PLACED_BY_ENGINE,
     "radial": PLACED_BY_ENGINE,
+    "two-column-cycle": PLACED_BY_ENGINE,
     "computed-geometry": PLACED_BY_ENGINE,
+    # Each of these lives in its own module and is re-exported by `compose.py`;
+    # see the note at the bottom of that file for why the import sits there.
+    "matrix": PLACED_BY_ENGINE,
+    "radial-tree": PLACED_BY_ENGINE,
+    "chevron-stack": PLACED_BY_ENGINE,
+    "treemap": PLACED_BY_ENGINE,
     "graph": PLACED_BY_EA,
     "ea-semantic": PLACED_BY_DIAGRAM_TYPE,
 }
@@ -319,9 +351,10 @@ def producible_grammars() -> frozenset[str]:
 
 #: `implemented_grammars()` as at import, for consumers that read a constant.
 #: Same meaning as it has always had - "the engine has a composer for this" -
-#: and, for the five composed values, the same value, so a reach figure derived
-#: from it does not move on the day the vocabulary grew. Code that mutates the
-#: engine after import (a test, a plugin) must call the function.
+#: and, for the composed values that were already built, the same value, so a
+#: reach figure derived from it does not move on the day the vocabulary grew.
+#: Code that mutates the engine after import (a test, a plugin) must call the
+#: function.
 IMPLEMENTED_GRAMMARS = implemented_grammars()
 
 # Route names as the server accepts them, from EA's own connector right-click >
@@ -548,6 +581,15 @@ class DiagramTypeBinding:
     which is a different question and the one a provenance test asks: a figure
     is only this technology's measurement if this technology stated it.
     `substrate` names the diagram type the rest came from, or `""`.
+
+    A diagram type may omit `sizing` altogether, or state per-concept sizes and
+    omit `default`, and inherit the missing figures from its substrate. It may
+    NOT end up without a `default`: `Binding.__init__` refuses that once the
+    chain is merged, because a fallback box size is the one thing every diagram
+    of the type needs. `default_size_is_inherited` and
+    `default_size_provenance` are how a consumer tells an inherited figure from
+    one this technology measured, and a report that prints a size should print
+    which it is.
     """
 
     __slots__ = ("technology", "name", "base", "grammar", "title", "sizing",
@@ -648,6 +690,40 @@ class DiagramTypeBinding:
         """The spacing keys that came from the substrate, not from this file."""
         return {key: value for key, value in self.spacing.items()
                 if key not in self.own_spacing}
+
+    @property
+    def default_size_is_inherited(self) -> bool:
+        """Whether `size_for()`'s fallback figure came from the substrate.
+
+        `inherited_sizing()` answers this for every concept, but `default` is
+        worth a name of its own for two reasons. It is the slot that decides the
+        size of every concept the notation does not name, so a consumer that
+        prints one box size is printing this one. And it is the only slot where
+        the alternative to inheriting is a figure somebody typed in: a notation
+        with too few diagrams to measure can now say so by staying silent, and
+        this is what makes the silence visible afterwards rather than
+        indistinguishable from a measurement.
+
+        `inherited_sizing()` is also noisier than it looks here: the substrate's
+        PER-CONCEPT sizes merge in too, so a diagram type ends up carrying
+        concepts its own notation does not have. Those are harmless - nothing
+        asks for a size for a concept the notation cannot hold - while an
+        inherited `default` is asked for on every diagram.
+        """
+        return "default" not in self.own_sizing
+
+    @property
+    def default_size_provenance(self) -> str:
+        """The `<Tech>::<DiagramType>` whose measurement `sizing.default` is.
+
+        The substrate's when the figure was inherited, this diagram type's own
+        when it states one. Never empty and never a guess: a diagram type that
+        neither states a default nor inherits one is refused on load, so this
+        always names a diagram type somebody measured - which is what makes it
+        printable in a report.
+        """
+        return self.substrate if self.default_size_is_inherited \
+            else self.mdg_diagram_type
 
     def size_for(self, concept: str = "") -> tuple[int, int]:
         """Box size for a notation concept, falling back to `default`.
@@ -804,10 +880,23 @@ class Binding:
         self.extends = data.get("extends") or None
         self.stereotype_prefix = data.get("stereotype_prefix", "") or ""
         self.notes = data.get("notes", "")
-        self.diagram_types = {
-            name: DiagramTypeBinding(self.technology, name, body)
-            for name, body in data["diagram_types"].items()
-        }
+        # THE ONE VALIDATION THAT CANNOT LIVE IN `_validate`. Everything else a
+        # binding must say, it says in its own document, so `_validate` can ask
+        # for it. `sizing.default` is different: after `extends` it is a property
+        # of the RESOLVED chain, and `_validate` runs on each document before
+        # `_merge` has put the substrate underneath it. Asking here - the single
+        # point every load path reaches, with the merge already done - is what
+        # lets a diagram type inherit a measured default while still refusing one
+        # that resolves to nothing. A parent is fully constructed before it is
+        # used as a substrate, so a substrate that was found always carries a
+        # default and only an unfound one can reach the raise.
+        self.diagram_types = {}
+        for name, body in data["diagram_types"].items():
+            bound = DiagramTypeBinding(self.technology, name, body)
+            if "default" not in bound.sizing:
+                raise BindingError(
+                    _no_resolved_default(source, self.extends, bound))
+            self.diagram_types[name] = bound
         self.viewpoints = {
             name: Viewpoint(self.technology, name, body)
             for name, body in (data.get("viewpoints") or {}).items()
@@ -956,11 +1045,23 @@ def _validate_channels(block: Any, where: str) -> dict:
 
 
 def _validate_sizing(block: Any, where: str) -> dict:
+    """Shape only: every entry is `{w, h}` and both are positive whole numbers.
+
+    `default` IS STILL REQUIRED, but not here, and that is the one rule this
+    function used to own. A fallback box size is a property of the RESOLVED
+    chain rather than of one document: a diagram type drawn on a measured
+    substrate inherits the substrate's default, which is the whole point of
+    `extends`. This function runs on the raw document, BEFORE `_merge`, so it
+    cannot see what the substrate supplies and asking here could only ever
+    refuse a diagram type that in fact resolves to a measured figure. The
+    question is asked once, of the merged values, in `Binding.__init__`.
+
+    Nothing was relaxed by the move. An unmeasured technology still cannot ship
+    a diagram type with no default; what it can now do is INHERIT one, which is
+    traceable to the diagram type the figure was measured on in a way a number
+    typed into a YAML file is not.
+    """
     sizing = _mapping(block, where)
-    if "default" not in sizing:
-        raise BindingError(
-            f"{where}.default: required. Every diagram type needs a fallback "
-            f"box size; per-concept entries are refinements of it.")
     out = {}
     for concept, entry in sizing.items():
         path = f"{where}.{concept}"
@@ -973,6 +1074,46 @@ def _validate_sizing(block: Any, where: str) -> dict:
         out[concept] = {"w": _positive_int(size["w"], f"{path}.w"),
                         "h": _positive_int(size["h"], f"{path}.h")}
     return out
+
+
+def _no_resolved_default(source: str, extends: str | None,
+                         bound: "DiagramTypeBinding") -> str:
+    """The message for a diagram type whose `sizing.default` nothing supplies.
+
+    Worth a function because "required" on its own is the least useful thing
+    this failure can say. An author who omitted `sizing` was trying to inherit,
+    so what they need is WHICH SUBSTRATE was looked at - which is also the only
+    thing that reveals a `base:` pointing at a diagram type the immediate parent
+    does not declare, the case a deeper chain hits.
+
+    The message names exactly two ways out, and copying a figure in from another
+    notation is not one of them. That asymmetry is the point of allowing the
+    omission at all: an inherited default traces to a measurement of the diagram
+    type it was measured on, while a number typed into a YAML file traces to
+    nobody and reads identically to a measured one forever after.
+    """
+    where = f"{source}.diagram_types.{bound.name}.sizing.default"
+    if not extends:
+        looked = (
+            f"{bound.name} has no substrate to inherit one from: this binding "
+            f"declares no `extends`, so there is no notation underneath it.")
+    elif bound.base:
+        looked = (
+            f"{bound.name} says it is drawn on base {bound.base!r}, but "
+            f"{extends} declares no diagram type of that name, so the "
+            f"substrate looked for was not found.")
+    else:
+        looked = (
+            f"{bound.name} states no `base`, so the substrate looked for was "
+            f"{extends}{MDG_SEPARATOR}{bound.name}, which {extends} does not "
+            f"declare.")
+    return (
+        f"{where}: required, and nothing in the chain supplies it. {looked} "
+        f"There are two ways out and only two: state a default here that you "
+        f"have MEASURED on diagrams of this type, or point `base:` at a diagram "
+        f"type whose binding already measures one. Do not copy a figure in from "
+        f"another notation - an inherited default traces to the diagram type it "
+        f"was measured on, and a borrowed one traces to nobody.")
 
 
 def _validate_spacing(block: Any, where: str) -> dict:
@@ -1051,8 +1192,14 @@ def _validate_diagram_type(name: str, block: Any, where: str) -> dict:
             f"default - the corpus splits by notation, so a diagram with two "
             f"titles and a diagram with none are equally likely mistakes.")
 
-    if "sizing" not in body:
-        raise BindingError(f"{where}.sizing: required")
+    # `sizing` is the one required-looking block a diagram type may omit, and
+    # the asymmetry with `routing` and `channels` below is deliberate. Those two
+    # are STATEMENTS a child has to make for itself - a notation's routing habit
+    # and the channel its own shape script claims are not the substrate's - so
+    # silence there is an oversight. A box size is a MEASUREMENT, and the
+    # measurement of the diagram type this one is drawn on is the honest answer
+    # for a notation that has too few diagrams of its own to measure. Whether
+    # the chain in fact supplies one is checked after `_merge`, in `Binding`.
     if "routing" not in body:
         raise BindingError(f"{where}.routing: required")
     if "channels" not in body:
@@ -1061,7 +1208,10 @@ def _validate_diagram_type(name: str, block: Any, where: str) -> dict:
     out = {
         "grammar": grammar,
         "title": title,
-        "sizing": _validate_sizing(body["sizing"], f"{where}.sizing"),
+        # `or {}` so an omitted block and an explicitly empty one mean the same
+        # thing - inherit all of it - the way `spacing` already treats them.
+        "sizing": _validate_sizing(body.get("sizing") or {},
+                                   f"{where}.sizing"),
         "spacing": _validate_spacing(body.get("spacing"), f"{where}.spacing"),
         "routing": _validate_routing(body["routing"], f"{where}.routing"),
         "channels": _validate_channels(body["channels"], f"{where}.channels"),
@@ -1754,7 +1904,27 @@ def _resolve_qualified(key: str, ids: frozenset[str],
         "qualified", technology=technology, diagram_type_name=bound.name,
         binding=binding, diagram_type=bound,
         reason=(f"the diagram states {key!r} and the binding for "
-                f"{technology!r} binds that diagram type."))
+                f"{technology!r} binds that diagram type."
+                + _inherited_default_note(binding, bound)))
+
+
+def _inherited_default_note(binding: Binding,
+                            bound: DiagramTypeBinding) -> str:
+    """The sentence a resolution adds when the box size is not this technology's.
+
+    A RESOLUTION THAT INHERITS ITS DEFAULT SIZE SAYS SO. `sizing.default` may be
+    inherited from the substrate, which is the honest answer for a notation with
+    too few diagrams of its own to measure - but the figure a caller is about to
+    lay out with is then a measurement of a different diagram type, and nothing
+    downstream could tell that from the number. Appended to the reason of every
+    resolved answer, so both resolution paths report it and neither can drift
+    from the other; empty when the technology measured its own.
+    """
+    if not bound.default_size_is_inherited:
+        return ""
+    return (f" Its default box size is inherited from "
+            f"{bound.default_size_provenance}, not measured by "
+            f"{binding.technology}.")
 
 
 def _decide(matches: Mapping[str, tuple], path: str, looked_for: str,
@@ -1766,7 +1936,8 @@ def _decide(matches: Mapping[str, tuple], path: str, looked_for: str,
             path, technology=binding.technology, diagram_type_name=bound.name,
             binding=binding, diagram_type=bound,
             reason=(f"{looked_for!r} {how}, and exactly one installed binding "
-                    f"claims it: {found}."))
+                    f"claims it: {found}."
+                    + _inherited_default_note(binding, bound)))
     return Resolution(
         "ambiguous", diagram_type_name=looked_for, candidates=tuple(matches),
         reason=(

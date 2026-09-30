@@ -55,13 +55,21 @@ here whose arithmetic is trigonometric, so it is also the one that has to be
 careful about rounding: coordinates are rounded once, at the end, so the same
 ring comes out identically on every machine.
 
-All four take plain lists of dicts and return plain dicts. No classes to
+`compose_two_column_cycle` - a cycle drawn as two columns: the flow runs down
+one and back up the other, closing the loop across the top. The one grammar here
+whose items may be different HEIGHTS, because on the content it is for the height
+is the number of lines inside the box; the width is shared so that the cycle
+still has a straight outline. Its row pitch is a floor, widened to clear the
+tallest box, and the pitch used comes back on the result.
+
+All five take plain lists of dicts and return plain dicts. No classes to
 construct, nothing to subclass.
 
 Result shape
 ------------
     {
-      "grammar":    "layered_bands" | "lanes" | "nested_grid" | "radial",
+      "grammar":    "layered_bands" | "lanes" | "nested_grid" | "radial"
+                    | "two_column_cycle",
       "items":      [ {"id", "left", "top", "right", "bottom", ...}, ... ],
       "containers": [ {"id", "name", "kind", "index", "left", "top", "right",
                        "bottom", "label": {...}}, ... ],
@@ -80,6 +88,11 @@ ITEM it hangs from - the hub, or the spoke it branches off. It also carries
 That radius is the CLEAR GAP between the box at the middle and the boxes on the
 ring, not the distance to an item's center: the items sit at whatever distance
 makes that gap equal for all of them, so do not expect them to share one.
+
+`two_column_cycle` returns no containers either, and its items' `container_id` is
+None: a cycle is a ring of peers with nothing enclosing them, and nothing it
+places hangs off anything else. It carries `rows`, `columns`, `row_pitch`,
+`column_pitch` and `item_width` - the pitch is a floor and may have been widened.
 """
 from __future__ import annotations
 
@@ -94,6 +107,7 @@ __all__ = [
     "compose_lanes",
     "compose_nested_grid",
     "compose_radial",
+    "compose_two_column_cycle",
     "rect",
     "rect_width",
     "rect_height",
@@ -1640,3 +1654,296 @@ def _place_ring(plan: Mapping[str, Any], center_x: int, center_y: int,
             _place_ring(entry["inner"], x, y, s, ring + 1,
                         entry["node"]["id"], branch_start, own_sweep,
                         out_items, own_size)
+
+# ---------------------------------------------------------------------------
+# Grammar: two_column_cycle
+# ---------------------------------------------------------------------------
+# What ONE ITEM may restate for itself here. This is the only grammar in this
+# module that lets an item state any part of its own size, and the asymmetry is
+# deliberate - see `_cycle_item_height` for the argument.
+_CYCLE_ITEM_OVERRIDES = frozenset({"item_height"})
+
+
+def _cycle_item_height(item: Mapping[str, Any], spec: Mapping[str, Any],
+                       where: str) -> int:
+    """One item's own height, falling back to the spec's.
+
+    THE ONE PLACE IN THIS MODULE WHERE AN ITEM SIZES ITSELF, and the reason is
+    not convenience.
+
+    Every other grammar here refuses per-item sizing, on the rule stated in
+    `_band_metrics`: a row of boxes at four different sizes reads as four
+    different kinds of thing even when it is one kind. That rule is about
+    variation that means NOTHING. A state carrying four lines of entry behavior
+    is taller than a state carrying none because it holds more, exactly as a
+    nested-grid container holding twenty children is bigger than one holding
+    two, and forcing those to one height either clips the content or pads every
+    box to the worst case. So the height here is content and is per item.
+
+    The WIDTH is the opposite case and is shared by the whole cycle - see
+    `compose_two_column_cycle`. Width carries nothing: a compartment wraps, and
+    two columns of unequal width give the cycle a bent outline for no reason a
+    reader could decode. Uniform where the size says nothing, per item where it
+    says something, which is the same test `_common_band_width` applies and not
+    a relaxation of it.
+
+    A caller that states any OTHER spec key on an item is refused rather than
+    ignored: `item_width` on an item is a plausible mistake, and silently
+    dropping it would leave someone hunting for why their sizing had no effect.
+    """
+    for key in item:
+        if key in DEFAULT_SPEC and key not in _CYCLE_ITEM_OVERRIDES:
+            raise LayoutError(
+                f"{where}.{key}: only "
+                f"{', '.join(sorted(_CYCLE_ITEM_OVERRIDES))} may be stated per "
+                f"item in this grammar. The width is shared by the whole cycle "
+                f"so that both columns have one straight edge; set "
+                f"spec.{key} to change it for every item"
+            )
+    if "item_height" not in item:
+        return int(spec["item_height"])
+    height = _as_int(item["item_height"], f"{where}.item_height")
+    if height <= 0:
+        raise LayoutError(
+            f"{where}.item_height: must be positive, got {height}"
+        )
+    return height
+
+
+def _cycle_split(count: int) -> int:
+    """How many of `count` items run DOWN the first column.
+
+    `ceil(count / 2)`, so an odd cycle spends its extra step on the way down.
+    The first column then occupies rows 0..k-1 and the second occupies the
+    BOTTOM `count - k` rows, reading upward - which is what keeps the FOLD, the
+    step from the bottom of one column across to the bottom of the other, a
+    horizontal hop at every count. For an odd count the empty cell is therefore
+    the TOP of the return column, and the step that closes the loop is the
+    diagonal one.
+
+    That is a choice between two diagonals and it is worth recording which way
+    it went, because both are defensible and nothing else in the code says so.
+    One of the two turns HAS to be diagonal at an odd count: anchor the return
+    column at the top instead and the closing step comes out horizontal while
+    the fold comes out diagonal. The fold is an ordinary step in the sequence
+    and wants to read as "and now across"; the closing step is already
+    understood as "and back to the beginning" and survives being drawn at an
+    angle. So the diagonal is spent on the edge whose meaning the reader already
+    has.
+
+    Integer arithmetic, not `math.ceil(count / 2)`: this module promises the
+    same output on every machine and a float division at the boundary is how
+    that promise gets broken.
+    """
+    return _ceil_div(count, 2)
+
+
+def compose_two_column_cycle(
+    items: Sequence[Mapping[str, Any]],
+    spec: Mapping[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Lay out a cycle as two columns: down one, back up the other.
+
+    `items` is the cycle IN ORDER, first item at the top left:
+
+        compose_two_column_cycle([
+            {"id": 1, "name": "Idle"},
+            {"id": 2, "name": "Requested", "item_height": 120},
+            {"id": 3, "name": "Crossing", "item_height": 160},
+            {"id": 4, "name": "Clearing"},
+        ])
+
+    The first `ceil(n / 2)` items run down the left column; the rest run up the
+    right column, so the last item ends beside the first and the loop closes
+    across the top. There are no containers - a cycle is a ring of peers and
+    nothing encloses them - so `containers` comes back empty and every item's
+    `container_id` is None.
+
+    WHAT IT GUARANTEES, GIVEN THAT THE BOXES ARE DIFFERENT HEIGHTS
+    --------------------------------------------------------------
+    Variable heights are the point of this grammar rather than an awkwardness it
+    tolerates: the diagrams it is for put multi-line entry and do behavior
+    inside a box, and a box with four lines of it is taller than a box with
+    none. A grammar that assumed one height would either clip that content or
+    pad every box to the worst case. So three things are promised and a fourth
+    is deliberately not:
+
+    * **One WIDTH for every item**, `item_width`, and one column pitch. Both
+      columns therefore have a straight left and a straight right edge, and the
+      cycle has a rectangular outline. Width carries no information here - a
+      compartment wraps - so spending it on content would be variation a reader
+      has to decode for nothing. This is `_common_band_width`'s argument applied
+      to the other axis.
+    * **One row PITCH for the whole composition**, the tallest item plus
+      `item_gap_y`. Equal pitch is the property a reader sees as rhythm, and it
+      is the property the shipped linter measures: its spacing rule judges a
+      column of unequal boxes on its CENTER-to-center pitch, so a scheme whose
+      pitch followed each row's own tallest member would report as unevenly
+      spaced however tidy it looked.
+    * **Aligned CENTERS, not aligned tops.** Each item is centered in its row's
+      slot, which is the pitch less the gap. Centers are what makes the pitch
+      uniform - see the derivation below - and what makes the fold and the
+      closing step come out horizontal, since row r in the left column and row r
+      in the right column share a center line to within a unit of integer
+      rounding. Aligning TOPS instead would leave the center pitch varying by
+      half the difference between successive heights, which on the content this
+      grammar is for is tens of units.
+    * **NOT one size.** Two items of different heights are different sizes, so
+      do not hand the whole cycle to the linter's uniform-sizing rule as a
+      single role: that rule compares heights as well as widths and would read
+      the content as a defect. Declare a role per height - the rule is explicit
+      that the caller decides what a role is, and that two elements can share a
+      place on the diagram and still be different roles. The shared width is the
+      uniformity this grammar promises, and it is the part worth checking.
+
+    THE CLEARANCE CONDITION, DERIVED RATHER THAN EYEBALLED
+    ------------------------------------------------------
+    Write `P` for the row pitch, `g` for `item_gap_y`, `S = P - g` for the slot
+    height, and `h`, `h'` for the heights of two items in adjacent rows of one
+    column. `S` is at least the tallest item by construction. An item is
+    centered in its slot, so its top sits `(S - h) // 2` below the slot top, and
+    the vertical clearance between the two is
+
+        P - h - (S - h) // 2 + (S - h') // 2
+          = g + ceil(a / 2) + floor(b / 2)       where a = S - h, b = S - h'
+
+    which is **never less than `g`** whatever heights sit next to each other,
+    and grows when either box is shorter than the slot. Non-adjacent rows are
+    further apart again by at least one pitch. Across the columns the clearance
+    is `h_pitch - item_width` at every row, so two items in different columns
+    never overlap on the horizontal axis and their rows do not matter.
+
+    That is the whole condition: two exact inequalities rather than a margin.
+    Note which of the three ways of seating an item in its slot the derivation
+    picked and why - top-aligned gives `g + a` and bottom-aligned gives exactly
+    `g`, so all three clear, and centering was chosen for the PITCH property
+    above and not for clearance. Getting that backwards is how a clearance rule
+    ends up justified by the wrong quantity.
+
+    Behavior worth knowing:
+
+    * **`row_pitch` is a FLOOR, not a promise.** The tallest item is content,
+      not spec, so a caller cannot be expected to state a pitch that clears it.
+      A pitch too small for the tallest box is widened and the pitch actually
+      used comes back on the result, the way `compose_radial` reports the radius
+      it used. `h_pitch` is NOT treated that way: it and `item_width` are both
+      spec values, so a pitch narrower than the width is the caller
+      contradicting themselves and is refused.
+    * **An odd count leaves the TOP of the return column empty**, so the fold at
+      the bottom is horizontal and the closing step is the diagonal one. See
+      `_cycle_split`.
+    * **A cycle of one or two composes.** One item is a self-loop and two is a
+      pair, both of which are real if unusual; neither is worth an error, and
+      `columns` on the result says which happened.
+    * The connectors are not this grammar's job, and that is worth saying out
+      loud for a cycle: the arrangement is what makes the loop legible, but
+      nothing here draws the loop. Route the vertical steps down each column,
+      the fold across the bottom and the closing step back to the first item.
+
+    Returns the result dict described in the module docstring, plus `rows`,
+    `columns`, `row_pitch`, `column_pitch` and `item_width` - what it actually
+    did, since the pitch may have been widened. Items carry `index` (position in
+    the cycle), `column`, `row` and `leg` ("descent" or "return"). Raises
+    `LayoutError` for any input that cannot yield sane geometry.
+    """
+    s = _resolve_spec(spec)
+    raw_items = _require_list(items, "items")
+    if not raw_items:
+        raise LayoutError("items: at least one item is required, got an empty list")
+
+    item_w = s["item_width"]
+    gap_y = s["item_gap_y"]
+
+    seen_ids: dict[str, str] = {}
+    entries: list[dict[str, Any]] = []
+    for i, raw_item in enumerate(raw_items):
+        where = f"items[{i}]"
+        item = _check_item(raw_item, where, seen_ids)
+        entries.append({
+            "item": item,
+            "index": i,
+            "height": _cycle_item_height(item, s, where),
+        })
+
+    column_pitch = s["h_pitch"]
+    if column_pitch is None:
+        column_pitch = item_w + s["item_gap_x"]
+    if column_pitch < item_w:
+        raise LayoutError(
+            f"spec.h_pitch: {column_pitch} is smaller than item_width "
+            f"({item_w}); the two columns would overlap"
+        )
+
+    tallest = max(e["height"] for e in entries)
+    row_pitch = s["row_pitch"]
+    if row_pitch is None:
+        row_pitch = s["item_height"] + gap_y
+    # The floor. Unlike `h_pitch` this is not the caller contradicting
+    # themselves: the tallest box came from the content, so the pitch is widened
+    # rather than refused, and the result says which pitch was used.
+    row_pitch = max(row_pitch, tallest + gap_y)
+    slot_height = row_pitch - gap_y
+
+    descent = _cycle_split(len(entries))
+    rows = descent
+
+    out_items: list[dict[str, Any]] = []
+    for e in entries:
+        i = e["index"]
+        if i < descent:
+            column, row, leg = 0, i, "descent"
+        else:
+            # The return column is anchored at the BOTTOM row and read upward,
+            # so the fold is always a horizontal hop. `_cycle_split` argues it.
+            column, row, leg = 1, rows - 1 - (i - descent), "return"
+        slot_top = s["origin_top"] - row * row_pitch
+        record = {
+            "id": e["item"]["id"],
+            "container_id": None,
+            "index": i,
+            "column": column,
+            "row": row,
+            "leg": leg,
+            **rect(
+                s["origin_left"] + column * column_pitch,
+                slot_top - (slot_height - e["height"]) // 2,
+                item_w,
+                e["height"],
+            ),
+        }
+        if isinstance(e["item"].get("name"), str):
+            record["name"] = e["item"]["name"]
+        out_items.append(record)
+
+    return {
+        "grammar": "two_column_cycle",
+        "items": out_items,
+        "containers": [],
+        "rows": rows,
+        "columns": 1 if len(entries) == 1 else 2,
+        "row_pitch": row_pitch,
+        "column_pitch": column_pitch,
+        "item_width": item_w,
+        "bounds": _bounds(out_items),
+    }
+
+
+# ---------------------------------------------------------------------------
+# Grammars that live in their own modules
+# ---------------------------------------------------------------------------
+# THE IMPORT IS AT THE BOTTOM ON PURPOSE, AND MOVING IT UP BREAKS THE BUILD.
+# Each of these modules imports this one's public primitives (`LayoutError`,
+# `rect`, `bounding_box`), so importing them at the top would be a cycle: this
+# module would still be executing and those names would not exist yet. Down
+# here everything this file defines is already bound, so the cycle resolves -
+# `compose` is in `sys.modules` and complete enough for them to read.
+#
+# They are re-exported rather than left standalone because `bindings.py` derives
+# what is IMPLEMENTED by reading `dir()` on this module for `compose_*` names.
+# A grammar in its own file and not named here is a composer that exists and
+# that nothing can find - which is exactly the "existing and reachable are
+# different properties" trap this programme has hit four times.
+from compose_matrix import compose_matrix          # noqa: E402,F401
+from compose_radial_tree import compose_radial_tree  # noqa: E402,F401
+from compose_chevron import compose_chevron_stack  # noqa: E402,F401
+from compose_treemap import compose_treemap        # noqa: E402,F401

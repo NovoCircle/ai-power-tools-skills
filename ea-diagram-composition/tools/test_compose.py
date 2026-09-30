@@ -37,6 +37,7 @@ from compose import (  # noqa: E402
     compose_layered_bands,
     compose_nested_grid,
     compose_radial,
+    compose_two_column_cycle,
     rect,
     rect_height,
     rect_width,
@@ -2331,3 +2332,648 @@ def test_rings_survive_a_sweep_sweep(sweep):
     result = compose_radial(_spokes(5), spec={"sweep": sweep})
     assert_radial_sane(result, f"sweep {sweep}")
     assert max(i["angle"] for i in result["items"]) <= 360.0
+
+# ---------------------------------------------------------------------------
+# Grammar: two_column_cycle
+# ---------------------------------------------------------------------------
+# WHY THIS SECTION IS A MATRIX AND NOT A WORKED EXAMPLE
+#
+# Every visible layout defect this engine has shipped was a CONTENT-VARIATION
+# sensitivity that one hand-picked case passed: a ragged band edge that needed
+# unequal sibling counts, a name collision that needed long names, unequal radial
+# spokes that needed non-square boxes, and a ring clearance derived from
+# `max(w, h)` where the condition is `hypot(w, h)`, which overlapped at every
+# count of three or more. So the properties below are swept over item counts,
+# height profiles, box widths and gaps rather than demonstrated once.
+#
+# The height profiles are the axis that matters here, because variable heights
+# are what this grammar is for. `odd-parity` exists for the integer rounding:
+# seating a box in its slot divides an odd difference, and a profile whose
+# differences were all even would never exercise it.
+_CYCLE_BASE = 60
+
+_CYCLE_HEIGHT_PROFILES = {
+    "uniform": lambda n, base: [base] * n,
+    "one-tall": lambda n, base: [base * 4 if i == n // 2 else base
+                                 for i in range(n)],
+    "graded": lambda n, base: [base + 30 * i for i in range(n)],
+    "alternating": lambda n, base: [base if i % 2 else base * 3
+                                    for i in range(n)],
+    "all-short": lambda n, base: [max(1, base // 3)] * n,
+    "extreme": lambda n, base: [1 if i % 3 else 400 for i in range(n)],
+    "odd-parity": lambda n, base: [base + i for i in range(n)],
+}
+
+_CYCLE_COUNTS = tuple(range(1, 14))          # odd and even, 1 through 13
+_CYCLE_WIDTHS = (140, 60, 400, 20)
+_CYCLE_GAPS = (20, 40, 5)
+
+#: Integer coordinates cannot center an odd difference exactly, so a center may
+#: sit half a unit off and two of them a whole unit apart. Everything this file
+#: asserts about centers allows exactly that and no more - `lint.PITCH_TOLERANCE`
+#: allows 8, so the engine is well inside the linter's own allowance.
+CYCLE_CENTER_ROUNDING = 1
+
+
+def _cycle_items(heights, first=1):
+    """Items for the cycle, one per height. A None height is left unstated."""
+    out = []
+    for k, h in enumerate(heights):
+        item = {"id": first + k, "name": f"State {first + k}"}
+        if h is not None:
+            item["item_height"] = h
+        out.append(item)
+    return out
+
+
+def _cycle_case(n, profile, base=_CYCLE_BASE):
+    return _cycle_items(_CYCLE_HEIGHT_PROFILES[profile](n, base))
+
+
+def _cycle_columns(result):
+    """`{column: [items, top row first]}`, read off the composition's own keys."""
+    columns = {}
+    for item in result["items"]:
+        columns.setdefault(item["column"], []).append(item)
+    for members in columns.values():
+        members.sort(key=lambda i: i["row"])
+    return columns
+
+
+def assert_cycle_sane(result, label=""):
+    """What must hold for any two-column cycle, whatever the content.
+
+    Deliberately not `assert_result_sane`: that helper looks every item's
+    container up by id, and this grammar has no containers at all - a cycle is a
+    ring of peers. The checks it shares are restated here against items alone.
+    """
+    assert result["grammar"] == "two_column_cycle", label
+    assert result["containers"] == [], f"{label}: a cycle has no containers"
+
+    items = result["items"]
+    for it in items:
+        assert_valid_rect(it, f"{label} item {it['id']}")
+        assert it["container_id"] is None, f"{label}: {it['id']} claims an owner"
+        for edge in ("left", "top", "right", "bottom"):
+            assert isinstance(it[edge], int), f"{label}: {edge} is not an int"
+        # EA's convention: the visual top of a diagram is the coordinate
+        # nearest zero, and this grammar starts at a negative origin.
+        assert it["top"] <= 0, f"{label}: {it['id']} has a positive top"
+    assert_no_overlaps(items, f"{label} items")
+
+    assert result["bounds"] == bounding_box(items), f"{label}: bounds disagree"
+
+    # One width for the whole cycle: the guarantee, restated as an assertion.
+    widths = {rect_width(i) for i in items}
+    assert widths == {result["item_width"]}, f"{label}: widths {sorted(widths)}"
+
+    assert result["columns"] == (1 if len(items) == 1 else 2), label
+    assert result["rows"] == max(i["row"] for i in items) + 1, label
+
+
+# ---------------------------------------------------------------------------
+# The arrangement: down one column, back up the other
+# ---------------------------------------------------------------------------
+@pytest.mark.parametrize("n", _CYCLE_COUNTS)
+def test_the_flow_runs_down_the_first_column_and_up_the_second(n):
+    result = compose_two_column_cycle(_cycle_case(n, "graded"))
+    assert_cycle_sane(result, f"n={n}")
+
+    descent = [i for i in result["items"] if i["leg"] == "descent"]
+    ret = [i for i in result["items"] if i["leg"] == "return"]
+    assert len(descent) == -(-n // 2), f"n={n}: descent {len(descent)}"
+    assert len(ret) == n - len(descent)
+
+    # The descent is the first items, in order, reading DOWN: successive rows.
+    assert [i["index"] for i in descent] == list(range(len(descent)))
+    assert [i["row"] for i in descent] == list(range(len(descent)))
+    assert {i["column"] for i in descent} == {0}
+
+    # The return is the rest, reading UP: successive rows, decreasing.
+    if ret:
+        assert [i["index"] for i in ret] == list(range(len(descent), n))
+        assert [i["row"] for i in ret] == list(
+            range(result["rows"] - 1, result["rows"] - 1 - len(ret), -1))
+        assert {i["column"] for i in ret} == {1}
+
+
+@pytest.mark.parametrize("n", _CYCLE_COUNTS)
+def test_the_fold_at_the_bottom_is_a_horizontal_hop_at_every_count(n):
+    """The step from the bottom of one column across to the other.
+
+    `_cycle_split` spends the odd count's diagonal on the CLOSING step instead,
+    so this one is horizontal whatever the count - which is the half of that
+    decision a reader sees. Swept over every count because the split is where an
+    off-by-one would live, and an even-only check would never see it.
+    """
+    result = compose_two_column_cycle(_cycle_case(n, "alternating"))
+    bottom_row = result["rows"] - 1
+    on_the_bottom = [i for i in result["items"] if i["row"] == bottom_row]
+    if n == 1:
+        assert len(on_the_bottom) == 1
+        return
+    assert len(on_the_bottom) == 2, f"n={n}: the fold has no second box"
+    a, b = sorted(on_the_bottom, key=lambda i: i["column"])
+    assert a["index"] + 1 == b["index"], f"n={n}: the fold is not consecutive"
+    assert abs(_center_y2(a) - _center_y2(b)) <= 2 * CYCLE_CENTER_ROUNDING, (
+        f"n={n}: the fold is not horizontal")
+
+
+@pytest.mark.parametrize("n", _CYCLE_COUNTS)
+def test_where_the_loop_closes_and_where_the_empty_cell_falls(n):
+    """An even cycle closes across the top; an odd one closes on the diagonal.
+
+    Pinned in both directions rather than only for the tidy case, because the
+    odd case is the one a reader will ask about and the answer has to be a
+    decision rather than an accident. See `_cycle_split`.
+    """
+    result = compose_two_column_cycle(_cycle_case(n, "one-tall"))
+    last = max(result["items"], key=lambda i: i["index"])
+    first = min(result["items"], key=lambda i: i["index"])
+    assert first["row"] == 0 and first["column"] == 0
+
+    occupied = {(i["column"], i["row"]) for i in result["items"]}
+    if n == 1:
+        assert last is first
+    elif n % 2 == 0:
+        assert (last["column"], last["row"]) == (1, 0), n
+        assert len(occupied) == 2 * result["rows"], n
+    else:
+        # The return column is bottom-anchored, so the cell left empty is the
+        # TOP of it and the closing step is the diagonal one.
+        assert (1, 0) not in occupied, n
+        assert last["row"] == min(i["row"] for i in result["items"]
+                                  if i["column"] == 1), n
+
+
+def test_a_cycle_of_one_or_two_composes_rather_than_raising():
+    """Degenerate but real: a self-loop, and a pair that swaps back and forth.
+
+    Neither is worth an error - the result says which happened - and refusing
+    them would make a caller special-case a count it cannot always control.
+    """
+    one = compose_two_column_cycle(_cycle_items([None]))
+    assert one["columns"] == 1 and one["rows"] == 1
+    assert_cycle_sane(one, "n=1")
+
+    two = compose_two_column_cycle(_cycle_items([None, 200]))
+    assert two["columns"] == 2 and two["rows"] == 1
+    assert [i["column"] for i in two["items"]] == [0, 1]
+    assert_cycle_sane(two, "n=2")
+
+
+def test_names_are_passed_through_and_an_unnamed_item_carries_no_name_key():
+    result = compose_two_column_cycle(
+        [{"id": 1, "name": "Idle"}, {"id": 2}])
+    by_id = {i["id"]: i for i in result["items"]}
+    assert by_id[1]["name"] == "Idle"
+    assert "name" not in by_id[2]
+
+
+@pytest.mark.parametrize("profile", sorted(_CYCLE_HEIGHT_PROFILES))
+def test_the_same_input_composes_identically_twice(profile):
+    items = _cycle_case(7, profile)
+    assert (compose_two_column_cycle(items)
+            == compose_two_column_cycle(items))
+
+
+# ---------------------------------------------------------------------------
+# What variable heights are allowed to change, and what they are not
+# ---------------------------------------------------------------------------
+@pytest.mark.parametrize("profile", sorted(_CYCLE_HEIGHT_PROFILES))
+@pytest.mark.parametrize("n", _CYCLE_COUNTS)
+def test_every_item_keeps_the_shared_width_however_the_heights_vary(n, profile):
+    """The grammar's first guarantee, swept over the whole matrix.
+
+    A per-item height is content; a per-item width would be variation a reader
+    has to decode for nothing, and it would cost the cycle its straight outline.
+    So the widths must be ONE number no matter what the heights do.
+    """
+    for width in _CYCLE_WIDTHS:
+        result = compose_two_column_cycle(
+            _cycle_case(n, profile), {"item_width": width})
+        assert_cycle_sane(result, f"n={n} {profile} w={width}")
+        assert {rect_width(i) for i in result["items"]} == {width}
+        lefts = {i["column"]: {i2["left"] for i2 in result["items"]
+                               if i2["column"] == i["column"]}
+                 for i in result["items"]}
+        for column, edges in lefts.items():
+            assert len(edges) == 1, (
+                f"n={n} {profile} w={width}: column {column} has a ragged left "
+                f"edge at {sorted(edges)}")
+
+
+@pytest.mark.parametrize("profile", sorted(_CYCLE_HEIGHT_PROFILES))
+@pytest.mark.parametrize("n", _CYCLE_COUNTS)
+def test_the_heights_are_the_callers_own(n, profile):
+    heights = _CYCLE_HEIGHT_PROFILES[profile](n, _CYCLE_BASE)
+    result = compose_two_column_cycle(_cycle_items(heights))
+    by_index = {i["index"]: i for i in result["items"]}
+    for k, wanted in enumerate(heights):
+        assert rect_height(by_index[k]) == wanted, (n, profile, k)
+
+
+@pytest.mark.parametrize("profile", sorted(_CYCLE_HEIGHT_PROFILES))
+@pytest.mark.parametrize("n", _CYCLE_COUNTS)
+def test_the_centers_are_evenly_pitched_down_each_column(n, profile):
+    """The second guarantee: one pitch for the whole composition.
+
+    Measured on CENTERS because that is what the shipped linter measures for a
+    group of unequal boxes, and because it is the quantity a reader perceives as
+    rhythm. Allowed to differ by one unit, which is integer rounding and nothing
+    else - see `CYCLE_CENTER_ROUNDING`.
+    """
+    for gap in _CYCLE_GAPS:
+        result = compose_two_column_cycle(
+            _cycle_case(n, profile), {"item_gap_y": gap})
+        pitch = result["row_pitch"]
+        for column, members in _cycle_columns(result).items():
+            steps = [(_center_y2(a) - _center_y2(b)) / 2.0
+                     for a, b in zip(members, members[1:])]
+            for step in steps:
+                assert abs(step - pitch) <= CYCLE_CENTER_ROUNDING, (
+                    f"n={n} {profile} gap={gap} column {column}: step {step} "
+                    f"against pitch {pitch}")
+
+
+@pytest.mark.parametrize("profile", sorted(_CYCLE_HEIGHT_PROFILES))
+@pytest.mark.parametrize("n", _CYCLE_COUNTS)
+def test_the_two_columns_share_a_center_line_row_by_row(n, profile):
+    """The third guarantee. It is what makes the fold and the close horizontal.
+
+    Aligned CENTERS, not aligned tops: with tops aligned this assertion would
+    fail by half the difference between the two boxes' heights, which on this
+    grammar's content is tens of units.
+    """
+    result = compose_two_column_cycle(_cycle_case(n, profile))
+    by_row = {}
+    for item in result["items"]:
+        by_row.setdefault(item["row"], []).append(item)
+    for row, members in by_row.items():
+        if len(members) < 2:
+            continue
+        centers = [_center_y2(m) for m in members]
+        assert max(centers) - min(centers) <= 2 * CYCLE_CENTER_ROUNDING, (
+            f"n={n} {profile} row {row}: centers {centers}")
+
+
+# ---------------------------------------------------------------------------
+# The clearance condition, tested as the inequality it was derived as
+# ---------------------------------------------------------------------------
+@pytest.mark.parametrize("profile", sorted(_CYCLE_HEIGHT_PROFILES))
+@pytest.mark.parametrize("n", _CYCLE_COUNTS)
+def test_the_vertical_clearance_is_never_less_than_the_gap(n, profile):
+    """The derivation, checked as arithmetic rather than eyeballed on one case.
+
+    Seating a box centered in a slot of the pitch less the gap gives a clearance
+    of `g + ceil(a / 2) + floor(b / 2)` between adjacent rows, where `a` and `b`
+    are how far short of the slot the two boxes fall. Both terms are
+    non-negative, so the clearance is never less than `g` - and the exact figure
+    is asserted too, not just the floor, because a bound that happens to hold
+    for the wrong reason is how the radial clearance shipped with `max(w, h)`
+    where the condition is `hypot(w, h)`.
+
+    `item_gap_y: 0` is included on purpose: the floor then permits touching, and
+    a caller who asks for no gap gets none. Nothing here quietly inserts one.
+    """
+    for gap in (*_CYCLE_GAPS, 0):
+        result = compose_two_column_cycle(
+            _cycle_case(n, profile), {"item_gap_y": gap})
+        slot = result["row_pitch"] - gap
+        for column, members in _cycle_columns(result).items():
+            for upper, lower in zip(members, members[1:]):
+                clearance = upper["bottom"] - lower["top"]
+                a = slot - rect_height(upper)
+                b = slot - rect_height(lower)
+                expected = gap + -(-a // 2) + b // 2
+                assert clearance == expected, (
+                    f"n={n} {profile} gap={gap} column {column}: clearance "
+                    f"{clearance} against the derived {expected}")
+                assert clearance >= gap, (
+                    f"n={n} {profile} gap={gap}: clearance {clearance} is "
+                    f"under the gap")
+
+
+@pytest.mark.parametrize("profile", sorted(_CYCLE_HEIGHT_PROFILES))
+@pytest.mark.parametrize("n", _CYCLE_COUNTS)
+def test_the_horizontal_clearance_is_the_column_pitch_less_the_width(n, profile):
+    """The other half of the condition, and the only one that separates columns.
+
+    Items in different columns are apart on the x axis by this much at EVERY
+    row, which is why their rows never have to be compared: two rects overlap
+    only when they overlap on both axes.
+    """
+    for width in _CYCLE_WIDTHS:
+        for gap_x in _CYCLE_GAPS:
+            result = compose_two_column_cycle(
+                _cycle_case(n, profile),
+                {"item_width": width, "item_gap_x": gap_x})
+            columns = _cycle_columns(result)
+            if len(columns) < 2:
+                continue
+            left = {i["right"] for i in columns[0]}
+            right = {i["left"] for i in columns[1]}
+            assert len(left) == 1 and len(right) == 1
+            assert right.pop() - left.pop() == gap_x, (n, profile, width, gap_x)
+            assert result["column_pitch"] - width == gap_x
+
+
+@pytest.mark.parametrize("n", _CYCLE_COUNTS)
+def test_nothing_overlaps_across_the_whole_matrix(n):
+    """The blunt check, over every profile, width and gap combination.
+
+    `assert_cycle_sane` runs the overlap test; this is the one that runs it over
+    the product of the content axes rather than one point of it. Three of the
+    four defects this engine has shipped were invisible at one point and obvious
+    over the product.
+    """
+    for profile in sorted(_CYCLE_HEIGHT_PROFILES):
+        for width in _CYCLE_WIDTHS:
+            for gap in _CYCLE_GAPS:
+                result = compose_two_column_cycle(
+                    _cycle_case(n, profile),
+                    {"item_width": width, "item_gap_x": gap,
+                     "item_gap_y": gap})
+                assert_cycle_sane(result, f"n={n} {profile} {width} {gap}")
+
+
+# ---------------------------------------------------------------------------
+# The pitch is a floor
+# ---------------------------------------------------------------------------
+def test_a_row_pitch_too_small_for_the_tallest_box_is_widened_and_reported():
+    """The tallest box is CONTENT, so a small pitch is widened, not refused.
+
+    The opposite decision from `compose_layered_bands`, which raises when its
+    `row_pitch` is under its `item_height` - there both numbers are the caller's
+    own spec and disagreeing with yourself is an error. Here the caller cannot
+    be expected to know how tall the content made the tallest box.
+    """
+    items = _cycle_items([60, 300, 60, 60])
+    result = compose_two_column_cycle(items, {"row_pitch": 80})
+    assert result["row_pitch"] == 300 + DEFAULT_SPEC["item_gap_y"]
+    assert_cycle_sane(result, "widened")
+
+    # And a pitch that already clears the tallest box is honored exactly.
+    roomy = compose_two_column_cycle(items, {"row_pitch": 500})
+    assert roomy["row_pitch"] == 500
+    assert_cycle_sane(roomy, "roomy")
+
+
+def test_the_derived_pitch_still_clears_a_box_shorter_than_the_spec_default():
+    """Every item shorter than `item_height` must not tighten the pitch below
+    what the spec derived, or a caller's stated spacing would change with the
+    content."""
+    result = compose_two_column_cycle(
+        _cycle_items([20, 20, 20]), {"item_height": 60, "item_gap_y": 20})
+    assert result["row_pitch"] == 80
+    assert_cycle_sane(result, "short items")
+
+
+def test_a_column_pitch_narrower_than_the_item_width_is_refused():
+    """Both numbers are spec, so this is the caller contradicting themselves."""
+    with pytest.raises(LayoutError, match="spec.h_pitch"):
+        compose_two_column_cycle(
+            _cycle_items([None, None]), {"item_width": 140, "h_pitch": 100})
+
+
+@pytest.mark.parametrize("profile", sorted(_CYCLE_HEIGHT_PROFILES))
+def test_the_composition_never_shrinks_as_the_cycle_grows(profile):
+    """A series over every count, not two points: the wrapped-band width once
+    agreed between two counts by luck, and two points cannot tell."""
+    widths, heights = [], []
+    for n in _CYCLE_COUNTS:
+        b = compose_two_column_cycle(_cycle_case(n, profile))["bounds"]
+        widths.append(b["width"])
+        heights.append(b["height"])
+    assert widths == sorted(widths), (profile, widths)
+    assert heights == sorted(heights), (profile, heights)
+
+
+# ---------------------------------------------------------------------------
+# Refusals
+# ---------------------------------------------------------------------------
+def test_an_empty_cycle_is_an_error():
+    with pytest.raises(LayoutError, match="at least one item"):
+        compose_two_column_cycle([])
+
+
+def test_an_item_needs_an_id():
+    with pytest.raises(LayoutError, match=r"items\[1\]\.id"):
+        compose_two_column_cycle([{"id": 1}, {"name": "nameless"}])
+
+
+def test_a_duplicate_id_is_refused():
+    with pytest.raises(LayoutError, match="duplicate item id"):
+        compose_two_column_cycle([{"id": 1}, {"id": 1}])
+
+
+@pytest.mark.parametrize("height", [0, -40])
+def test_a_non_positive_item_height_is_refused(height):
+    with pytest.raises(LayoutError, match=r"items\[0\]\.item_height"):
+        compose_two_column_cycle([{"id": 1, "item_height": height}])
+
+
+def test_a_non_numeric_item_height_is_refused():
+    with pytest.raises(LayoutError, match=r"items\[0\]\.item_height"):
+        compose_two_column_cycle([{"id": 1, "item_height": "tall"}])
+
+
+@pytest.mark.parametrize("key", ["item_width", "row_pitch", "h_pitch",
+                                "item_gap_y"])
+def test_a_spec_key_other_than_the_height_is_refused_on_an_item(key):
+    """Refused rather than ignored. `item_width` on an item is the plausible
+    mistake, and a silently dropped size is an afternoon of hunting."""
+    with pytest.raises(LayoutError, match=rf"items\[0\]\.{key}"):
+        compose_two_column_cycle([{"id": 1, key: 200}])
+
+
+def test_an_unknown_non_spec_key_on_an_item_is_left_alone():
+    """The refusal above is scoped to SPEC keys. A caller threading its own
+    bookkeeping through an item - a stereotype, a source path - is not making
+    the mistake that check exists for."""
+    result = compose_two_column_cycle(
+        [{"id": 1, "stereotype": "WBA::WBABusinessApplication"}])
+    assert len(result["items"]) == 1
+
+
+# ---------------------------------------------------------------------------
+# The seam: the shipped linter, over the same matrix
+# ---------------------------------------------------------------------------
+def _cycle_verified_like(result):
+    """A `verify_diagram`-shaped payload from composed rects. Hermetic."""
+    objects = [{"element_id": int(i["id"]), "name": i.get("name", ""),
+                "type": "Class",
+                "left": i["left"], "top": i["top"],
+                "right": i["right"], "bottom": i["bottom"]}
+               for i in result["items"]]
+    b = result["bounds"]
+    return {
+        "objects": objects,
+        "links": [],
+        "canvas": {"cx": b["right"] + 100, "cy": -b["bottom"] + 100},
+    }
+
+
+def _cycle_groupings(result, payload):
+    """The grouping the linter cannot infer, as this grammar means it.
+
+    `columns` are the two legs of the cycle, which is what the spacing rule
+    should judge. `roles` are grouped BY HEIGHT rather than as one role for the
+    whole cycle: the uniform-sizing rule compares heights as well as widths, and
+    a content-driven height difference is not a defect. That is the caller's call
+    to make - the rule says so - and this is the caller making it.
+    """
+    by_id = {o["element_id"]: o for o in payload["objects"]}
+    columns = [[by_id[int(i["id"])] for i in members]
+               for _, members in sorted(_cycle_columns(result).items())]
+    roles = {}
+    for item in result["items"]:
+        roles.setdefault(f"h{rect_height(item)}", []).append(
+            by_id[int(item["id"])])
+    return {"columns": columns, "roles": roles}
+
+
+@pytest.mark.parametrize("profile", sorted(_CYCLE_HEIGHT_PROFILES))
+@pytest.mark.parametrize("n", _CYCLE_COUNTS)
+def test_the_shipped_linter_finds_nothing_across_the_content_matrix(n, profile):
+    """THE SEAM, and the reason this grammar is not signed off on one example.
+
+    The engine places the rects; `lint.py` judges them, independently written and
+    in its own module. Nothing keeps the two together except a test that runs the
+    second over the first's output, and it has to run over the MATRIX: the
+    grammar's whole difficulty is that a scheme which looks right at one height
+    profile drifts at another.
+
+    Warnings count as failures here, as they do in the sweep harness: `pitch` and
+    `ragged-stack` are warnings by design, so asserting only on errors would test
+    none of the rules this exists for.
+    """
+    lint = pytest.importorskip("lint")
+    for width in _CYCLE_WIDTHS:
+        for gap in _CYCLE_GAPS:
+            result = compose_two_column_cycle(
+                _cycle_case(n, profile),
+                {"item_width": width, "item_gap_x": gap, "item_gap_y": gap})
+            payload = _cycle_verified_like(result)
+            grouped = _cycle_groupings(result, payload)
+            report = lint.lint_diagram(
+                payload, roles=grouped["roles"], columns=grouped["columns"])
+            blocking = [f for f in report.findings
+                        if f.severity in ("error", "warning")]
+            label = f"n={n} {profile} w={width} gap={gap}"
+            assert not blocking, (
+                f"{label}: " + "; ".join(
+                    f"{f.rule} [{f.severity}] {f.message}" for f in blocking))
+
+
+def test_the_linter_run_above_actually_measures_the_spacing():
+    """The vacuous-zero guard. A clean report from rules that never ran is what
+    a harness ignoring its own input produces, and this programme has already
+    quoted one - hence `roles_measured` and `crossings_measured_over` existing at
+    all. So the denominators are asserted, not just the findings."""
+    lint = pytest.importorskip("lint")
+    result = compose_two_column_cycle(_cycle_case(9, "graded"))
+    payload = _cycle_verified_like(result)
+    grouped = _cycle_groupings(result, payload)
+    report = lint.lint_diagram(
+        payload, roles=grouped["roles"], columns=grouped["columns"])
+    assert report.metrics["pitch_groups_measured"] == 2, report.metrics
+    assert report.metrics["objects"] == 9
+
+
+def test_declaring_the_whole_cycle_one_role_is_what_the_linter_objects_to():
+    """The control for the role advice, which is otherwise just a claim.
+
+    Grouped by height the uniform-sizing rule is silent; grouped as one role it
+    fires. Both halves are asserted, because "declare a role per height" is only
+    worth writing down if the other way round is genuinely caught - and because a
+    caller who ignores it gets a defect report on correct output.
+    """
+    lint = pytest.importorskip("lint")
+    result = compose_two_column_cycle(_cycle_case(6, "alternating"))
+    payload = _cycle_verified_like(result)
+    every_item = list(payload["objects"])
+
+    one_role = lint.lint_diagram(payload, roles={"state": every_item})
+    assert [f.rule for f in one_role.findings if f.rule == "uniform-sizing"]
+
+    per_height = lint.lint_diagram(
+        payload, roles=_cycle_groupings(result, payload)["roles"])
+    assert not [f for f in per_height.findings
+                if f.rule == "uniform-sizing"], per_height.metrics
+
+
+def _top_aligned_payload(result):
+    """The same items in the same slots, seated at the TOP instead of centered.
+
+    The obvious implementation, and the one a reader of the engine would assume:
+    a row's slot top is `origin_top - row * pitch` and the box hangs from it.
+    """
+    pitch = result["row_pitch"]
+    origin_top = DEFAULT_SPEC["origin_top"]
+    objects = []
+    for item in result["items"]:
+        top = origin_top - item["row"] * pitch
+        objects.append({"element_id": int(item["id"]), "name": "",
+                        "type": "Class",
+                        "left": item["left"], "right": item["right"],
+                        "top": top, "bottom": top - rect_height(item)})
+    by_id = {o["element_id"]: o for o in objects}
+    columns = [[by_id[int(i["id"])] for i in members]
+               for _, members in sorted(_cycle_columns(result).items())]
+    return {"objects": objects, "links": [], "canvas": {}}, columns
+
+
+@pytest.mark.parametrize("profile", ["alternating", "extreme", "one-tall"])
+@pytest.mark.parametrize("n", [6, 9])
+def test_top_aligning_the_boxes_would_have_failed_the_same_linter(profile, n):
+    """THE CONTROL that makes the centering decision load-bearing.
+
+    The linter judges a column of unequal boxes on its center pitch, so the
+    top-aligned variant reports uneven spacing by tens of units. Without this
+    test, "centers, not tops" is an assertion in a docstring that nothing
+    checks; with it, a future edit that switches to top alignment fails here
+    rather than shipping.
+
+    Three profiles, not all seven, and which three is itself a measurement -
+    see `test_a_linear_height_ramp_hides_the_top_alignment_defect` for the two
+    that cannot serve as a control and why.
+    """
+    lint = pytest.importorskip("lint")
+    result = compose_two_column_cycle(_cycle_case(n, profile))
+    payload, columns = _top_aligned_payload(result)
+
+    report = lint.lint_diagram(payload, columns=columns)
+    fired = [f for f in report.findings if f.rule == "pitch"]
+    assert fired, (
+        f"{profile} n={n}: top-aligning the boxes did not trip the spacing "
+        f"rule, so this control proves nothing about why the engine centers "
+        f"them")
+    assert report.metrics["worst_pitch_spread"] > 8, report.metrics
+
+
+@pytest.mark.parametrize("profile", ["graded", "odd-parity"])
+def test_a_linear_height_ramp_hides_the_top_alignment_defect(profile):
+    """A blind spot in the seam, recorded because it was nearly trusted.
+
+    The control above was first written over `graded` and came out SILENT. A
+    linear ramp of heights makes the top-aligned center pitch deviate by a
+    CONSTANT - half the step - at every pair, and the spacing rule measures the
+    SPREAD of the pitches, which stays zero. So a defect that the same rule
+    catches at 90 to 399 units on an irregular profile is completely invisible
+    on a regular one.
+
+    Two things follow, and both are the reason this is a test rather than a
+    comment. A control has to be chosen against content that discriminates, and
+    a green spacing report on smoothly graded content is weaker evidence than
+    the same report on irregular content. The equally sized profiles are silent
+    for a different and uninteresting reason - top and center coincide - so they
+    are not listed here.
+    """
+    lint = pytest.importorskip("lint")
+    result = compose_two_column_cycle(_cycle_case(9, profile))
+    payload, columns = _top_aligned_payload(result)
+    report = lint.lint_diagram(payload, columns=columns)
+    assert not [f for f in report.findings if f.rule == "pitch"], (
+        f"{profile} now discriminates; it can be promoted into the control "
+        f"above and this test deleted")

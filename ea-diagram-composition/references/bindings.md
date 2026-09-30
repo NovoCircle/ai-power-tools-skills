@@ -50,7 +50,7 @@ pip install pyyaml
 
 Four vocabularies are fixed. A value outside them is refused on load.
 
-**Grammars** — seven, in three placements. The placement is who computes the coordinates, and it
+**Grammars** — eight, in three placements. The placement is who computes the coordinates, and it
 decides what a consumer may do with a diagram type that names the grammar.
 
 | Grammar | Placement | Geometry is ours | Producible today |
@@ -59,11 +59,12 @@ decides what a consumer may do with a diagram type that names the grammar.
 | `lanes` | composed by us | yes | yes — `compose_lanes` |
 | `nested-grid` | composed by us | yes | yes — `compose_nested_grid` |
 | `radial` | composed by us | yes | yes — `compose_radial` |
+| `two-column-cycle` | composed by us | yes | yes — `compose_two_column_cycle` |
 | `computed-geometry` | composed by us | yes | **no** — no composer yet |
 | `graph` | EA's layout places it | **no** | **yes** — via `layout_diagram`, then tidy |
 | `ea-semantic` | the diagram type dictates it | **no** | **no** — later design work |
 
-Five are compositional layouts this library computes coordinates for. `computed-geometry` is one of
+Six are compositional layouts this library computes coordinates for. `computed-geometry` is one of
 them and has no code behind it yet: **the treemap is all that remains under that name** after `radial`
 was split out and built, and the timing diagram was moved to `ea-semantic` — see §5.5.1 and
 `grammars.md` §7.
@@ -85,7 +86,7 @@ The other two are the cases where we place nothing, and they are not layouts:
 > **Two questions, two answers, never one boolean.** `grammar_is_implemented` means *the engine has a
 > `compose_<grammar>` function for this* and nothing else — consumers sweep that set to pick a
 > composer, so an entry with no composer in it would crash them. *Can we produce this at all* is
-> `grammar_is_producible`. For the five composed grammars the two coincide; for `graph` they differ,
+> `grammar_is_producible`. For the composed grammars the two coincide; for `graph` they differ,
 > which is the whole reason there are two.
 
 **Channels** — the ten visual channels a diagram can carry a variable in: `fill`, `border`,
@@ -129,7 +130,7 @@ space.
 | Key | Required | Validated against |
 |---|---|---|
 | `base` | no | Non-empty string. The EA base diagram type this MDG diagram type is built on, which is what a caller passes to `create_diagram` to create one — `Logical` for `ArchiMate3::Application`, `Analysis` for `BPMN2.0::Business Process`. **Consumed twice**: it picks the parent diagram type this one inherits its unstated sizes and gaps from (§5.6), and it is the resolver's weakest match when a diagram names no MDG diagram type of its own. State it on every diagram type — a missing `base` costs the substrate. |
-| `grammar` | yes | One of the seven grammars (§3). Mandatory, which is why `graph` and `ea-semantic` exist — see §5.5. |
+| `grammar` | yes | One of the eight grammars (§3). Mandatory, which is why `graph` and `ea-semantic` exist — see §5.5. |
 | `title` | yes | `drawn` or `frame-header`. |
 | `sizing` | yes | §4.3. |
 | `spacing` | no | §4.4. Per key, an omitted gap now means **the value measured for the base diagram type this one is drawn on**, and the engine's own default only when there is no substrate to ask. See §5.6. |
@@ -207,7 +208,7 @@ branch per notation.
 | `diagram_type` | yes | Must be a diagram type this binding declares. |
 | `intent` | no | List of phrases a request might match. |
 | `admits` | no | List of concept names, no duplicates. Concept names, not stored stereotypes. |
-| `grammar` | no | One of the seven. Overrides the diagram type's grammar for this viewpoint. |
+| `grammar` | no | One of the eight. Overrides the diagram type's grammar for this viewpoint. |
 | `notes` | no | Free text. |
 
 ### 4.8 `presentation_profiles.<name>`
@@ -456,8 +457,9 @@ document.
 Module constants: `GRAMMARS` (the vocabulary, a frozenset), `GRAMMAR_PLACEMENT` (grammar → who places
 it, the one table the rest is derived from), `COMPOSED_GRAMMARS`, `EA_PLACED_GRAMMARS`, and
 `IMPLEMENTED_GRAMMARS`, which is `implemented_grammars()` as at import — the same meaning and, for the
-five composed grammars, the same value it has always had, so a reach figure derived from it does not
-move when the vocabulary grows. Code that changes the engine after import must call the function.
+composed grammars that were already built, the same value it has always had, so a reach figure
+derived from it does not move when the vocabulary grows. Code that changes the engine after import
+must call the function.
 
 On `Binding`:
 

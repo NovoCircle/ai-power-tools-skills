@@ -121,12 +121,13 @@ its diagram types.
 | **lanes** | a flow with owners — who does what, in what order | the items do not actually sequence |
 | **nested-grid** | containment — things live *inside* other things | nesting is deeper than about three levels |
 | **radial** | one center with peers around it | there is no real center, or the ring implies an order that is not meant |
+| **two-column-cycle** | a closed sequence whose steps carry content of their own — down one column, back up the other | the sequence does not actually close, or the boxes are empty |
 | **computed-geometry** | quantitative — area or position carries a number (treemaps, timing diagrams) | the numbers do not vary enough to see |
 | **graph** | a graph or tree where nothing dictates where a node sits — EA places it, you tidy | the content is really stratified, sequenced or nested, which a general layout ignores |
 | **ea-semantic** | the diagram type itself dictates the arrangement — lifelines and message order, a waveform against a time axis | you place boxes on it: coordinates are the wrong output |
 
-That is the full set, `bindings.GRAMMARS`: seven. Four have a composer (`layered-bands`, `lanes`,
-`nested-grid`, `radial`). `computed-geometry` is ours to compute and not built yet. For the last two
+That is the full set, `bindings.GRAMMARS`: eight. Five have a composer (`layered-bands`, `lanes`,
+`nested-grid`, `radial`, `two-column-cycle`). `computed-geometry` is ours to compute and not built yet. For the last two
 we place nothing: `graph` is fully producible through EA's layout, `ea-semantic` is not producible.
 See [`references/grammars.md`](references/grammars.md) for what each one is for, in detail, and for
 the EA coordinate convention.

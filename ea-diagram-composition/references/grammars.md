@@ -76,9 +76,9 @@ should be taking one more parameter.
 
 ---
 
-## 3. Status — seven grammars, three placements
+## 3. Status — eight grammars, three placements
 
-The vocabulary has **seven** values. Five are layouts this library computes coordinates for; the
+The vocabulary has **eight** values. Six are layouts this library computes coordinates for; the
 other two are the cases where it computes none. What separates them is *who places the geometry*,
 because that decides what may be done with a diagram type that names the grammar.
 
@@ -88,6 +88,7 @@ because that decides what may be done with a diagram type that names the grammar
 | Lanes | Our arithmetic | **Implemented** — `compose_lanes` |
 | Nested grid | Our arithmetic | **Implemented** — `compose_nested_grid` |
 | Radial | Our arithmetic | **Implemented** — `compose_radial` |
+| Two-column cycle | Our arithmetic | **Implemented** — `compose_two_column_cycle` |
 | Computed geometry | Our arithmetic, not yet written | **Not built.** What remains under the name: the treemap |
 | Graph | EA's own layout, which we tidy afterward | **Producible today**, with no composer behind it |
 | EA-semantic | The diagram type itself | **Not producible.** Recorded so the gap is visible as data |
@@ -105,6 +106,12 @@ families of diagram type went unrecorded for a schema reason rather than a real 
 omitted diagram type is indistinguishable from an oversight. `graph` and `ea-semantic` exist so
 that every diagram type can be recorded honestly: one as "EA places it, and that is fine", the
 other as "classified, and not producible yet".
+
+**Then a sixth layout.** `two-column-cycle` was the last row of the corpus audit still waiting on
+engine code — everything else unproducible was waiting on artwork or on a decision. It is its own
+grammar rather than a radial variant because its arithmetic is a split and a pitch rather than a
+bearing, and because its boxes are deliberately different heights, which no other composed layout
+allows. §6b.
 
 **Composed and producible are different questions.** Whether the engine has a composer for a
 grammar is one fact. Whether a diagram of that type can be produced at all today is another, and
@@ -396,6 +403,102 @@ nothing sits at the middle, the ring is decoration and a grid says the same thin
 
 ---
 
+## 6b. Two-column cycle
+
+A cycle drawn as two columns: the flow runs down one and back up the other, closing the loop across
+the top.
+
+`compose_two_column_cycle(items, spec=None)`. `items` is the cycle **in order**, first item at the
+top left. There are no containers — a cycle is a ring of peers and nothing encloses them — so an
+item's `container_id` is always `None`.
+
+This is the one composed grammar whose boxes are deliberately **different heights**, and that is the
+whole reason it is a grammar of its own rather than a parameter on the radial one.
+
+### What it suits
+
+A closed sequence of a handful of steps or states where **each step carries content of its own** —
+entry, do and exit behavior, a couple of lines of code, a short description — and where the reader
+needs to see that the sequence returns to its start.
+
+A state machine drawn as a cycle is the case it was built for: pedestrian crossing, order
+lifecycle, an approval loop, a shift rotation. Anything where the answer to "and then?" for the last
+item is "the first one".
+
+The test: is it genuinely closed, and does the order matter? If the items are unordered peers around
+a center, that is §6a and a ring says it better. If the order matters and it does not close, that is
+a lane (§5) or a plain graph (§8) — a cycle layout drawn on a non-cycle is a promise the content
+does not keep, and a reader will hunt for the missing closing step.
+
+### What makes it read well
+
+- **Content in the boxes.** The layout exists to make room for it. A cycle of five empty boxes is a
+  ring with corners; use §6a.
+- **A count you can see round.** Four to eight. Above about twelve the columns are taller than a
+  screen and the closing step stops being a step.
+- **Ordered content, ordered items.** The composer places by list position and nothing else. Hand it
+  the cycle in the order it is read.
+- **Connectors you add yourself.** The arrangement is what makes the loop legible; nothing in the
+  composer draws it. Route the steps down each column, the fold across the bottom and the closing
+  step back to the first item.
+
+### What it guarantees, given variable heights
+
+This is the part worth reading before using it, because "two columns" is the easy half and the
+heights are where a layout that assumes uniform boxes drifts out of alignment.
+
+- **One width for every item.** Both columns have a straight left and a straight right edge, so the
+  cycle has a rectangular outline. Width carries nothing here — a compartment wraps — so varying it
+  would be variation a reader has to decode for no gain. Same argument as §4's shared band width,
+  applied to the other axis.
+- **One row pitch for the whole composition**, the tallest item plus the vertical gap. Not per row:
+  a pitch that followed each row's own tallest member would make the spacing uneven, and the §10
+  spacing check judges a column of unequal boxes on its **center-to-center** pitch, so it would say
+  so.
+- **Aligned centers, not aligned tops.** Each item is centered in its row's slot. That is what keeps
+  the pitch even, and what makes the fold and the closing step come out horizontal: row *r* in the
+  left column and row *r* in the right share a center line, to within a unit of integer rounding.
+  Aligning tops instead leaves the center pitch varying by half the difference between successive
+  heights — tens of units on this grammar's content.
+- **The row pitch is a floor, not a promise.** The tallest box comes from the content, so a pitch too
+  small for it is widened rather than refused, and the pitch actually used comes back on the result —
+  the same contract as the radial radius. The **column** pitch is not treated that way: a column
+  pitch narrower than the item width is the caller contradicting their own spec, and it is refused.
+- **Not one size.** Two boxes of different heights are different sizes. Do not hand the whole cycle
+  to the uniform-sizing check in §10 as a single role: it compares heights as well as widths and will
+  report the content as a defect. Declare a role per height. The shared width is the uniformity this
+  grammar promises, and it is the part worth checking.
+
+### Where the odd count puts the gap
+
+With an odd number of items one cell is empty, and which one is a decision rather than an accident.
+The first `ceil(n / 2)` items run down the left column and the rest run up the right, **anchored at
+the bottom row** — so the fold at the bottom is a horizontal hop at every count, the empty cell is
+the **top of the return column**, and the step that closes the loop is the diagonal one.
+
+One of the two turns has to be diagonal at an odd count. Anchoring the return column at the top
+instead gives a horizontal closing step and a diagonal fold. The fold is an ordinary step in the
+sequence and wants to read as "and now across"; the closing step is already understood as "and back
+to the beginning" and survives being drawn at an angle. So the diagonal is spent on the edge whose
+meaning the reader already has.
+
+### What makes it read badly
+
+- **A sequence that does not close.** The commonest misuse, and the one the layout cannot rescue: the
+  shape says "cycle" whether or not the content does.
+- **Uniform empty boxes.** Nothing is wrong with the output; it is just a worse ring. Use §6a.
+- **One box very much taller than the rest.** The pitch is set by the tallest, so a single 400-unit
+  box spaces every other row 400 apart and the cycle becomes mostly whitespace. Split the long
+  content into a note, or accept the spacing — do not fix it by shortening the pitch, which is what
+  the floor exists to prevent.
+- **Too many items.** Twelve is the point at which the columns stop being readable together. Split
+  the cycle or summarize a run of steps into one.
+- **Reading the two columns as two groups.** They are one sequence folded, not a left-hand set and a
+  right-hand set. If a reader could plausibly take them as two categories, label the fold or use
+  lanes.
+
+---
+
 ## 7. Computed geometry — *not built*
 
 Positions derived from data rather than from structure: a two-axis placement where both coordinates
@@ -581,7 +684,10 @@ like one.
 3. **The composition fits the canvas.** Check the returned bounding box against the space available
    before placing anything.
 4. **Uniform sizing within a role.** Same band, same size. Same lane, same size. A box that is
-   bigger for no stated reason will be read as more important.
+   bigger for no stated reason will be read as more important. *For no stated reason* is the whole
+   rule: a two-column cycle's boxes differ in height because they hold different amounts of
+   content, and a nested-grid container is sized by its contents, so in both cases the role is
+   narrower than "everything on the diagram" — see §6b and §6.
 5. **The axes mean something, and the diagram says what.** If the vertical axis is a layering, the
    band labels carry it. If the horizontal axis is a sequence, something on the diagram says so.
 6. **A reader who was not in the room can name the structure.** If they cannot say why the boxes are

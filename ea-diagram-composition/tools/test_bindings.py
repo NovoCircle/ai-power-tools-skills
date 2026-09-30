@@ -430,6 +430,20 @@ def test_a_missing_title_convention_is_refused():
 
 
 def test_sizing_without_a_default_is_refused():
+    """Still refused, for a narrower reason than when this was written.
+
+    `sizing.default` used to be required of every DOCUMENT. It is now required of
+    the resolved diagram type, checked after `_merge`, so that a diagram type
+    drawn on a measured substrate can inherit the figure instead of inventing
+    one. `MINIMAL` declares no `extends`, so there is nothing underneath it and
+    the answer is unchanged: a root binding states every default it uses.
+
+    Kept here rather than folded into the inheritance tests because the rule it
+    pins is the one this file has always pinned - a diagram type cannot end up
+    without a fallback box size. What supersedes it is only WHERE that is asked;
+    `test_the_resolved_default_is_checked_after_the_merge_and_not_before` pins
+    that, and the surrounding section pins the cases it now admits.
+    """
     with pytest.raises(BindingError, match=r"sizing\.default"):
         load_binding_text(_doc(**{"default:__{w:__100,__h:__60}":
                                   "Widget: {w: 100, h: 60}"}))
@@ -1044,6 +1058,292 @@ diagram_types:
     assert dt.size_for() == (200, 80)
     assert dt.size_for("Package") == (148, 90)
     assert dt.spacing == {"item_gap_x": 56, "item_gap_y": 50}
+
+
+# ---------------------------------------------------------------------------
+# Inheriting `sizing.default`, and the line between inheriting and inventing
+# ---------------------------------------------------------------------------
+# `sizing.default` is mandatory in the RESOLVED diagram type and optional in the
+# document. It used to be mandatory in the document, checked before `_merge` ran,
+# so no diagram type could inherit the one figure every diagram of it needs -
+# and notations with a measured base notation underneath them went unbound for
+# that reason alone rather than for want of evidence.
+#
+# THE RISK THE RELAXATION CARRIES IS THE THING THESE TESTS ARE ABOUT. A
+# mandatory default is the one thing standing between an unmeasured technology
+# and a borrowed figure, so the tests below assert both halves of the trade:
+# inheriting works and is REPORTED as inheriting, and a chain that supplies
+# nothing is still refused - with a message that offers inheriting and fixing
+# `base:` as the only two ways out and rules out copying a number in.
+#
+# `_SUBSTRATE_CHILD` with its `sizing` block removed is the fixture: a diagram
+# type that states everything only it can know - its grammar, its title, its
+# routing, the channel its own shape script claims - and stays silent about the
+# one slot that is a measurement of the canvas underneath it.
+_SILENT_SIZING_CHILD = """
+technology: WBA-Overlay
+extends: WBA
+stereotype_prefix: WBO_
+diagram_types:
+  Overview:
+    base: Logical
+    grammar: layered-bands
+    title: drawn
+    spacing: {item_gap_x: 75}
+    routing: {default: OrthogonalSquare}
+    channels:
+      fill: Layer
+      free: [border]
+"""
+
+
+def test_a_diagram_type_that_omits_sizing_inherits_the_substrates_default(
+        tmp_path):
+    """The blocker this change removes, at its smallest.
+
+    Nothing about the child's own statements changes; the one slot it is silent
+    about now resolves to the figure the substrate measured instead of refusing
+    the document. `size_for()` with no concept is the call every composer makes,
+    so this is the figure a diagram of this type is actually laid out with.
+    """
+    dt = _substrate_pair(tmp_path, _SILENT_SIZING_CHILD).diagram_type("Overview")
+    assert dt.size_for() == (90, 70)
+    assert dt.substrate == "WBA::Logical" and dt.inherits
+    assert dt.spec()["item_width"] == 90 and dt.spec()["item_height"] == 70
+    # The child's own statements are untouched by the inheritance.
+    assert dt.grammar == "layered-bands" and dt.title == "drawn"
+    assert dt.routing["default"] == "OrthogonalSquare"
+    assert dt.spacing["item_gap_x"] == 75
+
+
+def test_an_explicitly_empty_sizing_block_means_the_same_as_an_omitted_one(
+        tmp_path):
+    """`sizing: {}` and no `sizing` at all are one case, as for `spacing`.
+
+    An author who writes the key and leaves it empty has said what an author who
+    left the key out said. Treating them differently would make the schema turn
+    on a formatting choice.
+    """
+    for block in ("    sizing: {}\n", "    sizing: ~\n"):
+        child = _SILENT_SIZING_CHILD.replace("    spacing:", block + "    spacing:")
+        dt = _substrate_pair(tmp_path, child).diagram_type("Overview")
+        assert dt.size_for() == (90, 70), block
+        assert dt.own_sizing == {}, block
+
+
+def test_a_diagram_type_that_states_a_default_keeps_it_over_the_substrates(
+        tmp_path):
+    """A statement still wins, which is what makes the silence meaningful.
+
+    Asserted in both directions from one parent: the child that states 100x70
+    keeps it although the substrate measures 90x70, and the child that states
+    nothing takes the substrate's. If the stating child lost, the relaxation
+    would have flattened every measured MDG size into its base canvas's.
+    """
+    stating = _substrate_pair(tmp_path).diagram_type("Overview")
+    silent = _substrate_pair(tmp_path, _SILENT_SIZING_CHILD).diagram_type(
+        "Overview")
+    assert stating.size_for() == (100, 70)
+    assert silent.size_for() == (90, 70)
+    assert stating.substrate == silent.substrate == "WBA::Logical"
+
+
+def test_a_default_may_be_inherited_while_per_concept_sizes_are_stated(
+        tmp_path):
+    """The half-stated case: `sizing` present, `default` absent.
+
+    A notation can have enough diagrams to measure one concept and not enough to
+    measure the canvas it sits on - Data Modeling's table is the real example,
+    where the box size IS the column list it prints and there is no convention
+    size to find. Per-concept refinement and an inherited fallback have to be
+    able to coexist, or such a notation is back to inventing a default.
+    """
+    child = _SILENT_SIZING_CHILD.replace(
+        "    spacing:", "    sizing:\n      Table: {w: 170, h: 120}\n    spacing:")
+    dt = _substrate_pair(tmp_path, child).diagram_type("Overview")
+    assert dt.size_for("Table") == (170, 120)
+    assert dt.size_for() == (90, 70)
+    assert dt.own_sizing == {"Table": {"w": 170, "h": 120}}
+    assert dt.default_size_is_inherited
+
+
+def test_an_inherited_default_is_distinguishable_from_a_stated_one(tmp_path):
+    """The provenance question, and the reason the omission is allowed at all.
+
+    Inheriting and inventing produce the same kind of value - a pair of numbers -
+    and nothing downstream can tell a measured figure from a typed-in one by
+    looking at it. So the binding has to carry which it is. A diagram type that
+    inherited its default says so forever after, and names the diagram type the
+    figure was measured on; one that states its own names itself.
+    """
+    silent = _substrate_pair(tmp_path, _SILENT_SIZING_CHILD).diagram_type(
+        "Overview")
+    stating = _substrate_pair(tmp_path).diagram_type("Overview")
+    assert silent.default_size_is_inherited is True
+    assert silent.default_size_provenance == "WBA::Logical"
+    assert stating.default_size_is_inherited is False
+    assert stating.default_size_provenance == "WBA-Overlay::Overview"
+    # Never empty on either side: a diagram type that neither states a default
+    # nor inherits one does not load, so this always names a real measurement.
+    for dt in (silent, stating):
+        assert "::" in dt.default_size_provenance
+
+
+def test_a_root_binding_has_no_substrate_so_it_states_its_own_default(tmp_path):
+    """The base notation cannot inherit, and must not appear to.
+
+    `own_sizing` defaults to the resolved values for a binding with no parent, so
+    the root of the tree reports its default as its own - which it is, and which
+    is what keeps `default_size_is_inherited` a statement about provenance rather
+    than about whether a `substrate` happened to be found.
+    """
+    (tmp_path / "parent.yaml").write_text(_SUBSTRATE_PARENT, encoding="utf-8")
+    root = load_binding(tmp_path / "parent.yaml").diagram_type("Logical")
+    assert not root.inherits and root.substrate == ""
+    assert root.default_size_is_inherited is False
+    assert root.default_size_provenance == "WBA::Logical"
+
+
+#: Each entry is a diagram type nothing in the chain supplies a default for, and
+#: the phrase whose presence proves the message named the substrate it looked at.
+#: That phrase is the whole difference between an actionable failure and
+#: `sizing.default: required`, which tells an author who was trying to inherit
+#: nothing they did not already know.
+_NO_DEFAULT_CASES = {
+    "no extends at all": (
+        "technology: Orphan\ndiagram_types:\n  X:\n    grammar: graph\n"
+        "    title: drawn\n    routing: {default: Direct}\n"
+        "    channels: {fill: ~}\n",
+        "declares no `extends`"),
+    "base the parent does not declare": (
+        "technology: WrongBase\nextends: WBA\ndiagram_types:\n  X:\n"
+        "    grammar: graph\n    title: drawn\n    base: Sequence\n"
+        "    routing: {default: Direct}\n    channels: {fill: ~}\n",
+        "'Sequence'"),
+    "no base and no diagram type of the same name": (
+        "technology: NoBase\nextends: WBA\ndiagram_types:\n  X:\n"
+        "    grammar: graph\n    title: drawn\n"
+        "    routing: {default: Direct}\n    channels: {fill: ~}\n",
+        "WBA::X"),
+}
+
+
+@pytest.mark.parametrize("case", sorted(_NO_DEFAULT_CASES))
+def test_a_default_nothing_in_the_chain_supplies_is_still_refused(case,
+                                                                  tmp_path):
+    """The refusal that has to survive the relaxation.
+
+    Three ways a chain can supply nothing, and all three are refused. The
+    message is asserted on as hard as the refusal, because a message that says
+    only `required` pushes the author who was trying to inherit towards the one
+    thing this schema must not make easy: typing in a figure from a notation
+    somebody else measured. So it must name the diagram type, name the substrate
+    it looked at - which is also how a `base` pointing somewhere unreachable is
+    diagnosed rather than guessed at - and offer inheriting and fixing `base:`
+    as the two ways out.
+    """
+    document, names_substrate = _NO_DEFAULT_CASES[case]
+    (tmp_path / "parent.yaml").write_text(_SUBSTRATE_PARENT, encoding="utf-8")
+    (tmp_path / "child.yaml").write_text(document, encoding="utf-8")
+    with pytest.raises(BindingError) as exc:
+        load_binding(tmp_path / "child.yaml")
+    message = str(exc.value)
+    assert "child.yaml.diagram_types.X.sizing.default" in message
+    assert names_substrate in message
+    assert "base:" in message and "MEASURED" in message
+    assert "Do not copy a figure in from another notation" in message
+
+
+def test_the_resolved_default_is_checked_after_the_merge_and_not_before(
+        tmp_path):
+    """WHERE the check happens, pinned by the one document that shows it.
+
+    The same child text is refused on its own and accepted with the parent
+    underneath it. Nothing about the document changed between the two loads, so
+    a validator that ran on the document could not have told them apart - which
+    is why the question moved to `Binding.__init__`, after `_merge`. Move it back
+    and this test fails on the second load rather than the first.
+    """
+    standalone = _SILENT_SIZING_CHILD.replace("extends: WBA\n", "")
+    with pytest.raises(BindingError, match=r"sizing\.default"):
+        load_binding_text(standalone, "lonely.yaml")
+    assert _substrate_pair(tmp_path, _SILENT_SIZING_CHILD).diagram_type(
+        "Overview").size_for() == (90, 70)
+
+
+def test_inheriting_a_default_works_through_a_chain_of_its_own_bindings(
+        tmp_path):
+    """Depth is not assumed to work, and is not required to.
+
+    A grandchild inherits through two levels only because each level is fully
+    resolved before it is used as a substrate: the middle binding's `Overview`
+    already carries the root's default by the time the grandchild is placed on
+    it. What does NOT work is a `base` naming a diagram type only the GRANDparent
+    declares, because `base` is looked up in the IMMEDIATE parent's catalog - a
+    separate defect, deliberately not fixed here. Both halves are asserted so
+    that this change cannot come to depend on the broken one: the reachable case
+    inherits, and the unreachable one is refused by name rather than resolving to
+    something invented.
+    """
+    (tmp_path / "parent.yaml").write_text(_SUBSTRATE_PARENT, encoding="utf-8")
+    (tmp_path / "child.yaml").write_text(_SILENT_SIZING_CHILD, encoding="utf-8")
+    (tmp_path / "grandchild.yaml").write_text("""
+technology: WBA-Deep
+extends: WBA-Overlay
+diagram_types:
+  Overview:
+    grammar: layered-bands
+    title: drawn
+    routing: {default: Direct}
+    channels: {fill: ~}
+""", encoding="utf-8")
+    dt = load_binding(tmp_path / "grandchild.yaml").diagram_type("Overview")
+    assert dt.substrate == "WBA-Overlay::Overview"
+    assert dt.size_for() == (90, 70)
+    assert dt.default_size_provenance == "WBA-Overlay::Overview"
+    # And the grandparent's own diagram type is NOT reachable through `base`.
+    (tmp_path / "reaching.yaml").write_text("""
+technology: WBA-Reaching
+extends: WBA-Overlay
+diagram_types:
+  Overview:
+    base: Logical
+    grammar: layered-bands
+    title: drawn
+    routing: {default: Direct}
+    channels: {fill: ~}
+""", encoding="utf-8")
+    with pytest.raises(BindingError) as exc:
+        load_binding(tmp_path / "reaching.yaml")
+    assert "'Logical'" in str(exc.value)
+    assert "WBA-Overlay declares no diagram type of that name" in str(exc.value)
+
+
+def test_a_resolution_says_when_the_default_box_size_is_inherited(tmp_path):
+    """A binding that inherits says so in what it reports.
+
+    `Resolution.reason` is what a consumer prints, and the figure it is about to
+    lay out with is not this technology's measurement. Nothing downstream could
+    tell from the number, so the resolution names where the number came from. The
+    stating binding's resolution stays silent about provenance, which is what
+    makes the sentence mean something when it does appear.
+    """
+    installed = ["WBA", "WBA-Overlay"]
+    # BOTH resolution paths, because they build their reasons separately and a
+    # note on one of them would leave the majority path - `Diagram_Type`, which
+    # answers for 53% of real diagrams - reporting a borrowed figure as measured.
+    for kwargs in ({"style_ex": "MDGDgm=WBA-Overlay::Overview;"},
+                   {"diagram_type": "Overview"}):
+        silent = resolve_diagram(
+            installed,
+            bindings=[_substrate_pair(tmp_path, _SILENT_SIZING_CHILD)],
+            **kwargs)
+        assert silent.resolved, kwargs
+        assert "inherited from WBA::Logical" in silent.reason, kwargs
+        assert "not measured by WBA-Overlay" in silent.reason, kwargs
+        stating = resolve_diagram(
+            installed, bindings=[_substrate_pair(tmp_path)], **kwargs)
+        assert stating.resolved and "inherited" not in stating.reason, kwargs
 
 
 # ---------------------------------------------------------------------------
@@ -1863,7 +2163,7 @@ def _engine_grammars() -> set[str]:
 
 
 def test_the_grammar_vocabulary_matches_what_the_engine_implements():
-    """Seven grammars; which of them are composable is read from `compose.py`.
+    """Eight grammars; which of them are composable is read from `compose.py`.
 
     What a consumer trusts before it composes has to be the engine's answer and
     not a remembered one. Comparing `IMPLEMENTED_GRAMMARS` to a set written here
@@ -1890,6 +2190,60 @@ def test_the_grammar_vocabulary_matches_what_the_engine_implements():
     leave the type out - and most diagram types in most notations are graphs. See
     `APT-2026-0176`.
 
+    THEN FROM SEVEN TO EIGHT, which is a layout again: `two-column-cycle`, a cycle
+    drawn as two columns with the flow running down one and back up the other. It
+    was the last row of the corpus audit waiting on engine code. Reviewing it
+    against the existing five, which is what this literal is for: its arithmetic
+    is a split and a pitch rather than a bearing, so it is not radial with an
+    argument; and its boxes are deliberately different HEIGHTS, which no other
+    composed layout allows, so it could not have been a parameter on one of them.
+
+    THEN FROM EIGHT TO ELEVEN, three at once, and reviewing them against the
+    existing set is exactly what this literal is for:
+
+    * `matrix` is a lattice addressed by row and column, with one cell size for
+      the whole grid. It is NOT `nested-grid` with headers: the nested grid
+      sizes a container by its contents because there the size IS the data,
+      while here the ADDRESS is the data and a wandering boundary destroys it.
+      The two answer opposite questions and neither is a parameter on the other.
+    * `radial-tree` is not `radial` with nesting, and that was checked rather
+      than assumed. `radial` splits its sweep EVENLY, so a branch with eight
+      children gets the same arc as a branch with one; it also caps at two
+      rings. Measured on twelve branches with one carrying eight children:
+      `radial` produced 1746x3399 and `radial-tree` 2122x2134. The difference is
+      structural - room allocated by leaf count - not a tuning parameter.
+    * `chevron-stack` earns its place on an equality no other grammar has. Its
+      pitch EQUALS the item width exactly, because the interlock is drawn
+      outside the rect by the element's own shape script and the notch fraction
+      cancels. Every other grammar treats its pitch as a floor, and widening
+      this one opens a sliver that every shipped lint rule stays quiet about -
+      so the constraint could not be expressed as a spec value on an existing
+      layout.
+
+    THEN FROM ELEVEN TO TWELVE: `treemap`, an area-proportional tiling, which
+    partitions a region so tiles share boundaries exactly and there is
+    deliberately NO gap between them - whitespace would be area subtracted from
+    the very number the reader is comparing, and taken from small tiles
+    proportionally more. Reviewing it against the existing set:
+
+    * Both corpus references were measured pixel by pixel, and they are two
+      different algorithms. `heat-map.png` is genuinely SQUARIFIED - the
+      signature is that tile orientation changes inside a single group (one tile
+      taking the full body height on the left, two stacked beside it on the
+      right), which neither a grid nor plain slice-and-dice can produce.
+      `heat-maps.png` is slice-and-dice, and its narrowest strip sits at aspect
+      0.21 - exactly the sliver squarifying exists to prevent. One engine
+      subsumes both, so this is one grammar rather than two.
+    * It could not have been a parameter on `matrix`: that grammar's cells are
+      uniform and gapped BY REQUIREMENT, because there the cell ADDRESS is the
+      information. These tiles are unequal by construction and gapless by
+      design, because here the AREA is the information. Opposite requirements,
+      not a setting.
+    * Its correctness condition is of a different KIND from every other grammar
+      here. Nothing is placed at a distance, so neither `max(w, h)` nor
+      `hypot(w, h)` applies at all: separation is combinatorial - interval
+      disjointness on one axis - and exact, with no margin term.
+
     The second assertion is the one that keeps the split honest. Because
     `implemented_grammars()` is the vocabulary's composed half INTERSECTED with
     the engine's `compose_*` functions, it can only equal the engine's own answer
@@ -1898,7 +2252,9 @@ def test_the_grammar_vocabulary_matches_what_the_engine_implements():
     from every reach figure otherwise.
     """
     assert set(GRAMMARS) == {"layered-bands", "lanes", "nested-grid",
-                             "radial", "computed-geometry",
+                             "radial", "two-column-cycle", "matrix",
+                             "radial-tree", "chevron-stack", "treemap",
+                             "computed-geometry",
                              "graph", "ea-semantic"}
     assert IMPLEMENTED_GRAMMARS == _engine_grammars()
     assert _engine_grammars() <= COMPOSED_GRAMMARS
@@ -2903,7 +3259,9 @@ _UML_GRAPH = ("Logical", "Statechart", "Activity", "Package", "Deployment",
 _UML_EA_SEMANTIC = ("Timing",)
 _UML_BOUND = _UML_GRAPH + _UML_EA_SEMANTIC
 #: Classified (c) and not keyed: no supportable `sizing.default` exists for it,
-#: and `sizing` is mandatory.
+#: and a resolved diagram type must have one. Inheriting is not a way out HERE -
+#: this is the root binding, so there is no substrate underneath it to inherit
+#: from. A technology drawn on one of the types above has that option.
 _UML_UNBOUND_EA_SEMANTIC = ("Sequence",)
 #: Classified (b) and not keyed: every figure is below the threshold.
 _UML_UNBOUND_THIN = ("Collaboration", "InteractionOverview")
@@ -3303,7 +3661,9 @@ def test_the_figures_the_notes_record_for_the_unbound_types_are_recomputable(
     sequence = _uml_gap(uml_plain["Sequence"], "h")[0]
     assert f"{sequence.mode} in {sequence.mode_count} of n={sequence.n}" in notes
     # And no element type on a sequence diagram has a modal size at all, which
-    # is the other half of why it cannot be keyed: `sizing` is mandatory.
+    # is the other half of why it cannot be keyed: a resolved diagram type must
+    # have a `sizing.default`, and the root binding has nothing to inherit one
+    # from.
     for st in _uml_sizes(uml_plain["Sequence"]).values():
         assert st.mode is None or st.low_n
     # The two thin types have nothing statable either.
