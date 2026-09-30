@@ -237,9 +237,15 @@ def test_each_framework_binding_loads_and_is_found_by_its_declared_id(
 def test_each_framework_binding_declares_a_measured_empty_prefix(technology):
     """`""` is a statement here, not an absence.
 
-    Both technologies store their stereotypes bare, so the empty prefix is the
-    measured fact. The loader distinguishes a declared `""` from an absent key,
-    and silently inheriting UML's would make it look like an omission.
+    Both technologies store their stereotypes bare AT TECHNOLOGY SCOPE, so the
+    empty prefix is the measured fact. The loader distinguishes a declared `""`
+    from an absent key, and silently inheriting UML's would make it look like an
+    omission.
+
+    The regex is anchored at column zero, which is what keeps this test honest now
+    that a diagram type may state a prefix of its own: TOGAF's `TOGAF_Interface`
+    declares `ADM_` indented under it, and matching that here would let the
+    technology-scope statement disappear unnoticed.
     """
     binding = find_binding(technology)
     assert binding.stereotype_prefix == ""
@@ -595,27 +601,49 @@ def test_no_unbound_zachman_perspective_id_has_a_supportable_default(
 
 
 @needs_model
-def test_the_togaf_adm_prefix_is_real_and_cannot_be_stated_by_this_schema(
+def test_the_togaf_adm_prefix_is_stated_at_the_scope_it_was_measured_at(
         togaf_measured):
-    """The finding the schema has no slot for, pinned in both directions.
+    """A PREFIX ON ONE DIAGRAM TYPE INSIDE A TECHNOLOGY THAT HAS NONE.
 
-    Measured at diagram-type scope the prefix is `ADM_` on 10 of 10 elements;
-    measured at technology scope - which is the scope `stereotype_prefix` has -
-    there is none, across 36. The binding states the technology-wide fact and
-    says so at length. If a per-diagram-type prefix is ever added to the schema,
-    this test is where the change lands.
+    Pinned in both directions, because both are true and each would be a lie at
+    the other's scope. Measured at diagram-type scope the prefix is `ADM_` on 10
+    of 10 elements; measured at technology scope there is none, across 36. So
+    `TOGAF_Interface` states `ADM_` and the technology states `""`, and the round
+    trip is asserted at each - including that the technology-scope answer for an
+    ADM phase is the UNPREFIXED name, which is what makes the two statements
+    distinguishable rather than interchangeable.
     """
     assert togaf_measured.stereotype_prefix == "ADM_"
     assert togaf_measured.prefix_share == (10, 10)
     technology_wide = mb.measure_binding(_MODEL, _TOGAF)
     assert technology_wide.stereotype_prefix == ""
     assert technology_wide.prefix_share == (0, 36)
-    assert find_binding(_TOGAF).stereotype_prefix == ""
-    assert "ADM_" in _TOGAF_TEXT
-    # Nothing in the file depends on the prefix, which is what makes the
-    # technology-wide answer free to state.
-    assert set(find_binding(_TOGAF).diagram_type(_TOGAF_TYPE).own_sizing) == \
-        {"default"}
+
+    binding = find_binding(_TOGAF)
+    assert binding.stereotype_prefix == ""
+    adm = binding.diagram_type(_TOGAF_TYPE)
+    assert adm.own_stereotype_prefix == "ADM_"
+    assert not adm.stereotype_prefix_is_inherited
+    assert adm.stereotype_prefix_provenance == f"{_TOGAF}::{_TOGAF_TYPE}"
+
+    # Every stereotype the model stores on that diagram, round tripped.
+    for stereotype in sorted(togaf_measured.sizes):
+        assert stereotype.startswith("ADM_"), stereotype
+        concept = adm.concept_for(stereotype)
+        assert concept != stereotype
+        assert adm.stereotype_for(concept) == stereotype
+        assert binding.stereotype_for(concept, _TOGAF_TYPE) == stereotype
+        # The technology's own bare stereotypes still resolve to themselves, and
+        # an ADM concept asked at technology scope does NOT acquire the prefix.
+        assert binding.stereotype_for(concept) == concept
+    for bare in ("Mission", "Principle", "OrganizationUnit"):
+        assert binding.stereotype_for(bare) == bare
+        assert binding.concept_for(bare) == bare
+
+    # No per-concept `sizing` key depends on the prefix here - the ADM hub's own
+    # size is n=1 and refused - so the prefix earns its place through lookup
+    # rather than through this file's keys.
+    assert set(adm.own_sizing) == {"default"}
 
 
 @needs_model

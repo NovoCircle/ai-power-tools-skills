@@ -48,6 +48,7 @@ if str(_HERE) not in sys.path:
 import measure_binding as mb  # noqa: E402
 from bindings import (  # noqa: E402
     GRAMMARS,
+    BindingError,
     find_binding,
     load_binding,
     resolve_diagram,
@@ -78,8 +79,12 @@ STATED_SIZES = {
     (STRATEGY, "StrategyMap"): {"default": (90, 60)},
     (STRATEGY, "DecisionTree"): {"default": (90, 50)},
     (STRATEGY, "OrgChart"): {"default": (90, 54)},
+    # `PrimaryActivity`, not `VC_PrimaryActivity`: the diagram type states
+    # `stereotype_prefix: VC_`, so a `sizing` key is a CONCEPT name here as it is
+    # in every other binding. `test_every_stated_number_is_the_measured_one`
+    # prefixes it back to look the measurement up, which is the round trip.
     (STRATEGY, "ValueChain"): {"default": (400, 50),
-                               "VC_PrimaryActivity": (80, 100)},
+                               "PrimaryActivity": (80, 100)},
     (MINDMAP, "MindMapping"): {"default": (90, 40)},
 }
 STATED_GAPS = {
@@ -255,7 +260,12 @@ def test_every_stated_number_is_the_measured_one(model, strategy, mindmap, key):
     for concept, expected in STATED_SIZES[key].items():
         if concept == "default":
             continue
-        stat = m.sizes[concept]
+        # `m.sizes` is keyed by the STORED stereotype and the binding's key is the
+        # concept name, so the lookup has to go through the diagram type's own
+        # prefix. That makes this line the provenance check AND the round trip: a
+        # prefix stated at the wrong scope, or a key left spelled with the prefix
+        # on it, raises KeyError here rather than passing quietly.
+        stat = m.sizes[bound.stereotype_for(concept)]
         assert stat.mode == expected, concept
         assert not stat.low_n, concept
 
@@ -548,41 +558,110 @@ def test_the_composed_grammars_used_here_all_have_a_composer(strategy, mindmap):
 # ---------------------------------------------------------------------------
 # 6. The prefix decision, and resolution
 # ---------------------------------------------------------------------------
+#: The prefix each of the six diagram types carries, measured. This is the table
+#: `APT-2026-0183` was filed to make statable, and four of the six are now stated
+#: in the binding - the two unbound types are measured here and nowhere else.
+MEASURED_PREFIXES = {
+    "StrategyMap": "SM_", "DecisionTree": "DT_", "OrgChart": "OC_",
+    "ValueChain": "VC_", "BalancedScorecard": "BS_", "FlowChart": "FC_",
+}
+
+
 @needs_model
 def test_strategy_map_has_a_prefix_per_diagram_type_not_per_technology(model):
-    """WHY `stereotype_prefix` IS EMPTY IN A FILE WHOSE STEREOTYPES ARE PREFIXED.
+    """SIX DIAGRAM TYPES, SIX DIFFERENT PREFIXES, AND NOTHING SHARED.
 
-    Six diagram types, six different prefixes, one slot in the schema. Any single
-    value would make every lookup on the other five miss - silently. So the
-    prefix is the empty statement and the `sizing` keys are spelled as EA stores
-    them. This test is the evidence for that choice; if the schema ever grows a
-    per-diagram-type prefix, this is the test that says what to fill it with.
+    The measurement that made one slot per technology wrong. Any single value
+    stated for the technology would make every lookup on the other five types miss
+    - silently, which is what the slot exists to prevent - so the technology
+    states the `""` that is true of it and each diagram type states its own.
     """
     prefixes = {}
     for name in tuple(STRATEGY_BOUND) + tuple(STRATEGY_UNBOUND):
         prefixes[name] = measure(model, STRATEGY, name).stereotype_prefix
-    assert prefixes == {
-        "StrategyMap": "SM_", "DecisionTree": "DT_", "OrgChart": "OC_",
-        "ValueChain": "VC_", "BalancedScorecard": "BS_", "FlowChart": "FC_",
-    }
+    assert prefixes == MEASURED_PREFIXES
     assert len(set(prefixes.values())) == 6
+
+    # And nothing at technology scope: 0 of 204 stereotyped elements share a
+    # prefix, which is what the binding's `stereotype_prefix: ""` records.
+    pooled = measure(model, STRATEGY, None)
+    assert pooled.stereotype_prefix == ""
+    assert pooled.prefix_share == (0, 204)
 
     # The mind map is the opposite case and is stated for the ordinary reason:
     # its stereotypes really are bare, so `""` is a measurement there.
     assert measure(model, MINDMAP, "MindMapping").stereotype_prefix == ""
 
 
-def test_the_empty_prefix_round_trips_the_stored_names(strategy, mindmap):
-    """The combination that makes the choice above correct rather than merely
-    harmless: with no prefix, a `sizing` key spelled as EA stores it maps to
-    itself in both directions."""
+def test_each_bound_diagram_type_states_the_prefix_that_was_measured_for_it(
+        strategy):
+    """The binding now carries the table above, per type, and not one value.
+
+    `own_stereotype_prefix` rather than the resolved slot: a figure is this diagram
+    type's statement only if this diagram type stated it, and resolving to the
+    technology's `""` would otherwise read the same as declaring nothing.
+    """
     assert strategy.stereotype_prefix == ""
-    for concept in strategy.diagram_types["ValueChain"].own_sizing:
-        if concept == "default":
-            continue
-        assert strategy.stereotype_for(concept) == concept
-        assert strategy.concept_for(concept) == concept
-    assert mindmap.stereotype_prefix == ""
+    for name in STRATEGY_BOUND:
+        dt = strategy.diagram_type(name)
+        assert dt.own_stereotype_prefix == MEASURED_PREFIXES[name], name
+        assert not dt.stereotype_prefix_is_inherited, name
+        assert dt.stereotype_prefix_provenance == f"{STRATEGY}::{name}", name
+
+
+def test_the_per_type_prefix_round_trips_every_stored_stereotype(model,
+                                                                 strategy):
+    """THE ROUND TRIP, ON REAL STORED NAMES, PER DIAGRAM TYPE.
+
+    Every stereotype the model stores on a bound type's diagrams goes concept ->
+    stereotype -> concept and comes back, under that type's own prefix. Derived
+    from the model rather than from a list here, so a prefix stated at the wrong
+    scope fails on the notation's own vocabulary and not on an example.
+
+    The negative half is what makes it mean something: the SAME lookup at
+    technology scope, where `""` is in force, leaves the prefix on the front of
+    the concept name. That is the miss `APT-2026-0183` was filed about, and it is
+    asserted rather than described.
+    """
+    checked = 0
+    for name in STRATEGY_BOUND:
+        dt = strategy.diagram_type(name)
+        stored = sorted(measure(model, STRATEGY, name).sizes)
+        assert stored, name
+        for stereotype in stored:
+            if not stereotype.startswith(dt.stereotype_prefix):
+                # EA's own NavigationCell tiles belong to no notation. 3 of the
+                # 86 elements on the strategy maps are these, which is why the
+                # measured share is 83 of 86 rather than unanimous.
+                assert stereotype == "NavigationCell", (name, stereotype)
+                continue
+            concept = dt.concept_for(stereotype)
+            assert concept != stereotype, (name, stereotype)
+            assert dt.stereotype_for(concept) == stereotype, (name, concept)
+            # Through the binding, naming the diagram type: the same answer.
+            assert strategy.stereotype_for(concept, name) == stereotype
+            assert strategy.concept_for(stereotype, name) == concept
+            # And at technology scope, the miss.
+            assert strategy.stereotype_for(concept) == concept
+            assert strategy.concept_for(stereotype) == stereotype
+            checked += 1
+    assert checked >= 20, "too few stereotypes to have proved anything"
+
+
+def test_an_unknown_diagram_type_raises_rather_than_answering_at_the_wrong_scope(
+        strategy):
+    """A typo in the diagram type must not fall back to the technology.
+
+    Falling back would return `Objective` for `stereotype_for("Objective",
+    "StrategyMapp")` - a plausible-looking string that matches nothing - which is
+    the exact failure this slot exists to make impossible.
+    """
+    with pytest.raises(BindingError):
+        strategy.stereotype_for("Objective", "StrategyMapp")
+    with pytest.raises(BindingError):
+        strategy.concept_for("SM_Objective", "StrategyMapp")
+    with pytest.raises(BindingError):
+        strategy.prefix_for("BalancedScorecard")   # measured, but not bound
 
 
 @needs_model

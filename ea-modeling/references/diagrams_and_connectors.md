@@ -283,3 +283,106 @@ sequence. Write the note once, after that sequence completes, from that context.
 from an unrelated update (a rename, a `StyleEx` fix) never clears or overwrites it. Re-set
 `Notes` only when the diagram's purpose or contents changed enough to make the old note
 wrong.
+
+---
+
+## 6. Custom element images — drawing an element as an icon
+
+Iconography (a cloud-vendor glyph, a device picture, a logo) is two rows, not one. The
+artwork lives in `t_image`, which EA calls the Image Manager; each **placement** points at
+it through `t_diagramobjects.ObjectStyle`'s `ImageID=` token. Setting one without the other
+does nothing visible.
+
+```python
+# 1. Get the artwork into the model. PNG, EMF or WMF. Idempotent on content:
+#    re-adding the same file returns the existing id with status "skipped".
+img = ea_diagram(operation="add_image", params={
+    "path": r"<icon-dir>\core-banking.png",
+    "name": "WBA Core Banking",            # optional; defaults to the file name
+})
+
+# 2. Point a PLACED element at it. Other diagrams are untouched.
+ea_diagram(operation="set_element_image", params={
+    "diagram_id": <id>,
+    "element_id": <id>,
+    "image_id": img["image_id"],           # or image_name="WBA Core Banking"
+    "name_under_image": True,              # caption below the icon
+})
+
+# 3. See it. The token being stored is not the same as EA drawing it.
+ea_diagram(operation="verify_diagram", params={"diagram_id": <id>,
+                                               "include_svg": True})
+```
+
+### Rules that save a debugging cycle
+
+| Rule | Why |
+|---|---|
+| The element must already be placed on the diagram | The image rides on the placement row, not the element; an unplaced element returns `element_not_on_diagram` |
+| `add_image` needs a `.qea`/`.qeax` project | EA's COM API has no route to the image library at all, so this writes SQL, and a binary literal has no portable syntax. On other backends load the artwork through EA's own Image Manager — `list_images` and `set_element_image` then work normally |
+| PNG, EMF and WMF only | EA re-encodes raster artwork to PNG when it takes it in. A JPEG, GIF or BMP is refused with the conversion named, rather than stored under a type that would draw blank |
+| `ok: true` means the token is stored, not that the picture renders | Both operations re-read after writing and report `verified`. Rendering is `verify_diagram`'s job |
+| Clearing keeps the artwork | `clear_element_image` writes `ImageID=0` on that one placement. The `t_image` row survives, so other placements using it are unaffected |
+
+### EA's shipped icon libraries are NOT image-library rows
+
+Importing one of EA's cloud-icon pattern files (AWS, Azure, Google Cloud) adds nothing to
+`list_images`. In those files each icon is an **Artifact element** carrying the `Image`
+stereotype from EA's own built-in profile, with its PNG as an attached document, so it
+imports as elements plus documents. `ImageID=` resolves against `t_image`, which is a separate store — EA's own
+example model has 56 of those elements and 143 image-library rows, and the two name sets do
+not intersect. If a customer already has the icon files on disk, `add_image` each file; the
+library import is an element gallery and does not substitute for it.
+
+---
+
+## 7. Custom Style — shape, opacity, alignment, rotation, border, stack
+
+These are EA's Custom Style levers: how one **placement** is drawn. They live in
+`t_diagram.StyleEx` under `OPTIONS_<DUID>=`. Callers never handle DUIDs — pass
+`diagram_id` and `element_id` and the server resolves the placement's own.
+
+```python
+ea_diagram(operation="set_custom_style", params={
+    "diagram_id": <id>, "element_id": <id>,
+    "shape": "round rectangle",      # rectangle | round rectangle | ellipse
+                                     # | diamond | triangle
+    "opacity": 50,                   # 0 | 25 | 50 | 75 | 100
+    "text_align": "top center",      # top/bottom + left/center/right, or
+                                     # left center | center | right center
+    "border_style": "dash",          # solid | dash | dot | dash-dot | none
+})
+
+# Styling a whole diagram: one call, one write, one reload.
+ea_diagram(operation="set_custom_styles_bulk", params={
+    "diagram_id": <id>,
+    "objects": [{"element_id": a, "shape": "ellipse"},
+                {"element_id": b, "shape": "ellipse", "opacity": 25}],
+})
+```
+
+Also available: `rotation` (`clockwise` | `counterclockwise` | `none`), `stack_count`
+(1 or more — draws the element as that many stacked cards) and `stack_direction`
+(`NE` | `SE` | `SW` | `NW`).
+
+### Three things to know
+
+**Omitting a lever leaves it alone; `"default"` resets it.** A reset REMOVES the key rather
+than writing a value, because that is how EA records a default — it writes nothing at all
+for one. `shape="rectangle"`, `opacity=100`, `text_align="center"`, `border_style="solid"`,
+`rotation="none"`, `stack_count=1` and `stack_direction="NE"` are each their lever's default
+and behave the same way.
+
+**A value EA does not recognize is refused, not written.** EA ignores a number it does not
+know, so writing one leaves the element unchanged while the call looks like it worked.
+Spelling is forgiving on the accepted values: `"Round Rectangle"`, `"round-rectangle"` and
+`"roundrect"` are the same value.
+
+**These are not the color levers.** Fill, border and font color are
+`set_diagram_object_appearance` (per diagram) or `set_element_appearance` (model-wide). An
+element drawn as a picture is `set_element_image`, §6.
+
+The response reports `sibling_keys_preserved`. Every other placement's style block lives in
+the same `StyleEx` string, along with `MDGDgm=`, which attaches the diagram to its modeling
+language — so a write that lost one of those is reported as a failure and the lost keys are
+named, rather than left for someone to find later.

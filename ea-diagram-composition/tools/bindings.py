@@ -44,7 +44,8 @@ than estimated, and the measurements corrected the sketch more than once:
     form is what lands in `t_object.Stereotype`. BPMN2.0 uses no prefix.
     Hence `stereotype_prefix` as data: a binding lists notation concepts the
     way the notation's own specification names them, and the prefix is applied
-    to get what EA stores.
+    to get what EA stores. And it is data at TWO scopes, because measurement
+    found technologies where one value cannot be true - see below.
   * ArchiMate diagrams are spaced more generously horizontally than
     vertically; BPMN flows are tighter than either. Both were measured from
     element rects, not eyeballed.
@@ -81,6 +82,46 @@ child has already spoken, and inheriting a parent's `graph` over a child's
 `layered-bands` would flatten exactly the structure an MDG exists to add.
 `own_sizing` and `own_spacing` keep what the document itself said, so a test
 that pins a measurement reads the measurement rather than the inheritance.
+
+`stereotype_prefix` IS PER TECHNOLOGY *AND* PER DIAGRAM TYPE
+------------------------------------------------------------
+One slot per technology was wrong, measured, for two shipped technologies, and
+wrong in the silent direction the prefix exists to prevent:
+
+  * `StrategyMap` has SIX prefixes, one per diagram type, each at or near 100%
+    within its own type - `SM_` on StrategyMap (83 of 86 stereotyped elements),
+    `DT_` on DecisionTree (30 of 30), `OC_` on OrgChart (29 of 29), `VC_` on
+    ValueChain (20 of 20), `BS_` on BalancedScorecard (4 of 4), `FC_` on
+    FlowChart (28 of 28). No single value is true for the technology.
+  * `TOGAF Diagrams` has `ADM_` on 10 of 10 elements of its `TOGAF_Interface`
+    diagram type and NO prefix across the technology, whose other stereotypes
+    are stored bare (`Mission`, `Principle`, `OrganizationUnit`).
+
+Before this, both bindings stated `""` and spelled their `sizing` keys the way
+EA stores them. That round trips - `stereotype_for` and `concept_for` are both
+the identity under an empty prefix - but it means neither binding can offer
+prefix-based lookup at all, and a caller holding the notation's own concept name
+gets a miss rather than an answer.
+
+So a diagram type may state its own `stereotype_prefix`, and what it does not
+state falls back to the TECHNOLOGY's. That direction matters both ways round: a
+technology with one prefix states it once and every diagram type resolves to it,
+which is why ArchiMate3, ERD_dp and the eight bindings with `""` needed no edit;
+and a technology whose prefix is per type states `""` once - the measured
+technology-wide fact - and overrides it where the measurement differs.
+
+THE PREFIX IS NEVER INHERITED FROM THE SUBSTRATE, only from the technology. A
+substrate is a diagram type in the PARENT technology, and a prefix is a fact
+about whose MDG named the stereotype: inheriting UML's `Logical` prefix into
+ArchiMate's `Business` would be the same category error as inheriting UML's
+`graph` over ArchiMate's `layered-bands`. `_on_substrate` merges `sizing` and
+`spacing` and nothing else, which is already the rule; this is the second slot
+where a reader has to be told that silence means the technology rather than the
+canvas.
+
+`own_stereotype_prefix` is `None` when the diagram type says nothing, which is
+how `stereotype_prefix_is_inherited` tells a fallback from a declared `""` -
+exactly the distinction `_merge` keeps at technology scope, for the same reason.
 
 A DIAGRAM TYPE MAY THEREFORE OMIT `sizing` ENTIRELY
 ---------------------------------------------------
@@ -518,7 +559,7 @@ _TOP_LEVEL_KEYS = frozenset({
 })
 _DIAGRAM_TYPE_KEYS = frozenset({
     "grammar", "title", "sizing", "spacing", "routing", "channels", "notes",
-    "base",
+    "base", "stereotype_prefix",
 })
 _VIEWPOINT_KEYS = frozenset({
     "diagram_type", "intent", "admits", "grammar", "notes",
@@ -925,6 +966,23 @@ class SpecFit(dict):
         return " ".join(parts)
 
 
+def _apply_prefix(prefix: str, concept: str) -> str:
+    """`ApplicationComponent` -> `ArchiMate_ApplicationComponent`.
+
+    One implementation for both scopes that have a prefix. Two copies of a
+    two-line rule is how the technology-scope and diagram-type-scope answers
+    would eventually differ for the same input.
+    """
+    return f"{prefix}{concept}"
+
+
+def _strip_prefix(prefix: str, stereotype: str) -> str:
+    """The inverse of `_apply_prefix`. Unprefixed input comes back unchanged."""
+    if prefix and stereotype.startswith(prefix):
+        return stereotype[len(prefix):]
+    return stereotype
+
+
 class DiagramTypeBinding:
     """One diagram type's conventions, ready to hand to the engine.
 
@@ -946,15 +1004,33 @@ class DiagramTypeBinding:
     `default_size_provenance` are how a consumer tells an inherited figure from
     one this technology measured, and a report that prints a size should print
     which it is.
+
+    `stereotype_prefix` is RESOLVED the same way and from a different place: this
+    diagram type's own value if it states one, otherwise the TECHNOLOGY's, never
+    the substrate's. `own_stereotype_prefix` is `None` when it states nothing,
+    which is what separates a fallback from a declared `""`. See the module
+    docstring for the two shipped technologies that forced the second scope.
     """
 
     __slots__ = ("technology", "name", "base", "grammar", "title", "sizing",
                  "spacing", "routing", "channels", "notes",
-                 "own_sizing", "own_spacing", "substrate")
+                 "own_sizing", "own_spacing", "substrate",
+                 "own_stereotype_prefix", "stereotype_prefix")
 
-    def __init__(self, technology: str, name: str, data: Mapping[str, Any]):
+    def __init__(self, technology: str, name: str, data: Mapping[str, Any],
+                 technology_prefix: str = ""):
         self.technology = technology
         self.name = name
+        # PRESENCE, not truth: `None` means the document said nothing and the
+        # technology's value answers, while `""` is this diagram type's own
+        # statement that its stereotypes are stored bare. A technology that
+        # prefixes and a diagram type inside it that does not is a measured case -
+        # see the module docstring - and `or` here would erase it.
+        self.own_stereotype_prefix = (
+            data["stereotype_prefix"] if "stereotype_prefix" in data else None)
+        self.stereotype_prefix = (technology_prefix
+                                  if self.own_stereotype_prefix is None
+                                  else self.own_stereotype_prefix)
         for slot in ("base", "grammar", "title", "notes"):
             setattr(self, slot, data.get(slot, ""))
         self.sizing = dict(data["sizing"])
@@ -1081,12 +1157,51 @@ class DiagramTypeBinding:
         return self.substrate if self.default_size_is_inherited \
             else self.mdg_diagram_type
 
+    @property
+    def stereotype_prefix_is_inherited(self) -> bool:
+        """Whether `stereotype_prefix` came from the technology.
+
+        True for every diagram type of a technology with one prefix, which is
+        most of them. False means this diagram type stated its own - including a
+        declared `""` inside a technology that prefixes, which `TOGAF Diagrams`
+        is the inverse of and `StrategyMap` would be if a bare type turned up.
+        """
+        return self.own_stereotype_prefix is None
+
+    @property
+    def stereotype_prefix_provenance(self) -> str:
+        """Which scope `stereotype_prefix` was read from.
+
+        The technology id when the figure was inherited, `<Tech>::<DiagramType>`
+        when this diagram type stated one. Printable in a report for the same
+        reason `default_size_provenance` is: a lookup that silently missed is the
+        failure mode this slot exists to prevent, so a reader should be able to
+        see which scope answered.
+        """
+        return (self.technology if self.stereotype_prefix_is_inherited
+                else self.mdg_diagram_type)
+
+    def stereotype_for(self, concept: str) -> str:
+        """`Objective` -> `SM_Objective`, under THIS diagram type's prefix.
+
+        `Binding.stereotype_for` with no diagram type answers at technology
+        scope, which is the right answer for a technology with one prefix and the
+        wrong one for `StrategyMap`, whose six diagram types have six.
+        """
+        return _apply_prefix(self.stereotype_prefix, concept)
+
+    def concept_for(self, stereotype: str) -> str:
+        """The inverse. A stereotype without this type's prefix is unchanged."""
+        return _strip_prefix(self.stereotype_prefix, stereotype)
+
     def size_for(self, concept: str = "") -> tuple[int, int]:
         """Box size for a notation concept, falling back to `default`.
 
         Takes the concept name (`ApplicationComponent`), not the stored
-        stereotype (`ArchiMate_ApplicationComponent`); use
-        `Binding.concept_for` if you are holding the latter.
+        stereotype (`ArchiMate_ApplicationComponent`); use `concept_for` here or
+        `Binding.concept_for` if you are holding the latter. Where the prefix is
+        per diagram type, THIS object's `concept_for` is the one to use: the
+        technology-scope answer would leave `SM_` on the front of the key.
         """
         entry = self.sizing.get(concept) or self.sizing["default"]
         return int(entry["w"]), int(entry["h"])
@@ -1350,7 +1465,8 @@ class Binding:
         # default and only an unfound one can reach the raise.
         self.diagram_types = {}
         for name, body in data["diagram_types"].items():
-            bound = DiagramTypeBinding(self.technology, name, body)
+            bound = DiagramTypeBinding(self.technology, name, body,
+                                       technology_prefix=self.stereotype_prefix)
             if "default" not in bound.sizing:
                 raise BindingError(
                     _no_resolved_default(source, self.extends, bound))
@@ -1395,27 +1511,42 @@ class Binding:
             ) from None
 
     # -- the prefix problem -------------------------------------------------
-    def stereotype_for(self, concept: str) -> str:
+    def prefix_for(self, diagram_type: str | None = None) -> str:
+        """The prefix in force, at technology scope or for one diagram type.
+
+        `None` asks the technology, which is what a caller who does not know
+        which diagram type it is holding can honestly ask for. Naming a diagram
+        type this binding does not declare raises, as every other lookup here
+        does, rather than quietly answering at the wrong scope.
+        """
+        if diagram_type is None:
+            return self.stereotype_prefix
+        return self.diagram_type(diagram_type).stereotype_prefix
+
+    def stereotype_for(self, concept: str,
+                       diagram_type: str | None = None) -> str:
         """`ApplicationComponent` -> `ArchiMate_ApplicationComponent`.
 
-        What EA stores in `t_object.Stereotype`. The prefix is per-technology
-        data because it is not guessable: EA 17.1's built-in ArchiMate3 MDG
-        prefixes, BPMN2.0 does not, and an install carrying a differently built
-        MDG can differ again.
-        """
-        return f"{self.stereotype_prefix}{concept}"
+        What EA stores in `t_object.Stereotype`. The prefix is data because it is
+        not guessable: EA 17.1's built-in ArchiMate3 MDG prefixes, BPMN2.0 does
+        not, and an install carrying a differently built MDG can differ again.
 
-    def concept_for(self, stereotype: str) -> str:
+        `diagram_type` resolves it at the scope that technology measured at.
+        Omitting it answers at technology scope and keeps every single-prefix
+        binding working unchanged; passing it is how `StrategyMap`, whose six
+        diagram types have six different prefixes, gets a true answer at all.
+        """
+        return _apply_prefix(self.prefix_for(diagram_type), concept)
+
+    def concept_for(self, stereotype: str,
+                    diagram_type: str | None = None) -> str:
         """The inverse. A stereotype without the prefix is returned unchanged.
 
         Unchanged rather than rejected: models contain elements stereotyped
         from other technologies, or from none, and a lookup helper is the wrong
-        place to have an opinion about that.
+        place to have an opinion about that. `diagram_type` scopes it as above.
         """
-        if self.stereotype_prefix and stereotype.startswith(
-                self.stereotype_prefix):
-            return stereotype[len(self.stereotype_prefix):]
-        return stereotype
+        return _strip_prefix(self.prefix_for(diagram_type), stereotype)
 
     def diagram_type_for_mdgdgm(self, mdgdgm: str) -> DiagramTypeBinding | None:
         """Resolve an `MDGDgm=<Tech>::<DiagramType>` value against this binding.
@@ -1445,6 +1576,33 @@ class Binding:
 # ---------------------------------------------------------------------------
 # Validation
 # ---------------------------------------------------------------------------
+def _validate_prefix(block: Mapping[str, Any], where: str) -> dict:
+    """`{"stereotype_prefix": ...}` when the document declares it, else `{}`.
+
+    PRESENCE IS THE RECORD, at both the scopes that have this slot, because `""`
+    has to survive as a STATEMENT rather than as an absence. A binding whose
+    install carries an unprefixed build of its parent's technology says so by
+    writing `stereotype_prefix: ""` and `_merge` must not overwrite that with the
+    parent's; a diagram type whose own stereotypes are bare inside a technology
+    that prefixes says so the same way, and the technology's value must not
+    overwrite that either. Returning a dict rather than a value is what carries
+    "said nothing" through to the loader without a sentinel string.
+
+    The type check runs BEFORE any coercion: `block.get(...) or ""` would turn
+    `0` and `[]` into `""` and pass a check that never ran.
+    """
+    if "stereotype_prefix" not in block:
+        return {}
+    prefix = block["stereotype_prefix"]
+    if prefix is None:
+        prefix = ""            # `stereotype_prefix: ~` means no prefix
+    if not isinstance(prefix, str):
+        raise BindingError(
+            f"{where}.stereotype_prefix: expected a string or omitted, "
+            f"got {prefix!r}")
+    return {"stereotype_prefix": prefix}
+
+
 def _validate_channels(block: Any, where: str) -> dict:
     channels = _mapping(block, where)
     _reject_unknown(channels, _CHANNEL_BLOCK_KEYS, where)
@@ -1677,6 +1835,9 @@ def _validate_diagram_type(name: str, block: Any, where: str) -> dict:
     for optional in ("base", "notes"):
         if body.get(optional):
             out[optional] = _text(body[optional], f"{where}.{optional}")
+    # Recorded only when stated, so that a declared `""` overrides a prefixed
+    # technology instead of reading as silence. See `_validate_prefix`.
+    out.update(_validate_prefix(body, where))
     return out
 
 
@@ -1779,21 +1940,10 @@ def _validate(doc: Any, source: str) -> dict:
         if out["extends"] == technology:
             raise BindingError(
                 f"{source}.extends: a binding cannot extend itself")
-    # Recorded ONLY when the document declares it, because `""` has to survive
-    # as a statement rather than as an absence. A child binding whose install
-    # carries an unprefixed build of its parent's technology says so by writing
-    # `stereotype_prefix: ""`, and `_merge` must not overwrite that with the
-    # parent's prefix. Checked before coercion: `data.get(...) or ""` would turn
-    # `0` and `[]` into `""` and pass a type check that never ran.
-    if "stereotype_prefix" in data:
-        prefix = data["stereotype_prefix"]
-        if prefix is None:
-            prefix = ""            # `stereotype_prefix: ~` means no prefix
-        if not isinstance(prefix, str):
-            raise BindingError(
-                f"{source}.stereotype_prefix: expected a string or omitted, "
-                f"got {prefix!r}")
-        out["stereotype_prefix"] = prefix
+    # Recorded ONLY when the document declares it - `_validate_prefix` holds the
+    # whole reason, and a diagram type's own prefix goes through the same helper
+    # so the two scopes cannot drift apart.
+    out.update(_validate_prefix(data, source))
     for optional in ("display_name", "notes"):
         if data.get(optional):
             out[optional] = _text(data[optional], f"{source}.{optional}")
@@ -1933,6 +2083,15 @@ def _on_substrate(name: str, body: Mapping[str, Any],
     `substrate` empty. That is not an error: a base notation may decline a
     diagram type for want of a figure it can support, and inventing a fallback
     here would state a value nobody measured.
+
+    `stereotype_prefix` IS NOT IN THAT LIST AND MUST NOT JOIN IT. A prefix says
+    whose MDG named the stereotype, so the substrate - a diagram type belonging
+    to the PARENT technology - is the wrong place to fall back to; the right one
+    is this technology, which `DiagramTypeBinding` resolves against. Copying
+    UML's `Logical` prefix onto ArchiMate's `Business` would be the same category
+    error as copying its `graph` over `layered-bands`, and would land in
+    `own_sizing`'s blast radius: a provenance report would then call the parent's
+    prefix this diagram type's own statement.
     """
     substrate = parent.diagram_types.get(body.get("base") or name)
     if substrate is None:

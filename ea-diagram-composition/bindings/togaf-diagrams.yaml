@@ -8,6 +8,16 @@
 #   TOGAF Diagrams          23 diagrams, 6 diagram types — bound here
 #   TOGAF_DataArchitecture   1 diagram,  TOGAF_DataMap  — not bound
 #
+# AND A THIRD ID EXISTS THAT THE MODEL DOES NOT CARRY AT ALL. `FEAF Diagrams` is
+# the technology behind the `togaf-trm` corpus row, whose diagram type is
+# `TechnicalReferenceModel`. The reference model tags no diagram with it — n=0 for
+# every size, every gap and every base type — so there is nothing to measure and
+# nothing that could be stated without copying it from a neighbor. That is the same
+# refusal `test_bindings_sysphs.py` records as its first reason, and it is pinned
+# in `test_bindings_datamodel.py` rather than restated as a belief here. Only new
+# data changes it: a model in which an FEAF technical reference model is drawn and
+# tagged.
+#
 # `TOGAF_DataArchitecture::TOGAF_DataMap` is left out for two reasons worth
 # recording. Its one diagram holds 3 stereotyped elements, so it has no figure
 # that clears the ten-observation threshold; and its EA base diagram type is
@@ -43,26 +53,26 @@ display_name: TOGAF 9 (TOGAF Diagrams MDG)
 # TOGAF publishes none of its own.
 extends: UML
 
-# MEASURED AT TECHNOLOGY SCOPE, WHICH IS THE SCOPE THIS SLOT HAS: no prefix is
-# shared by the 36 stereotyped elements across the six diagram types. The
-# stereotypes are stored bare — `Mission`, `Principle`, `OrganizationUnit`,
-# `ModelView`, `ArchitectureContinuum`.
+# MEASURED AT TECHNOLOGY SCOPE: no prefix is shared by the 36 stereotyped elements
+# across the six diagram types — 0 of 36. The stereotypes are stored bare —
+# `Mission`, `Principle`, `OrganizationUnit`, `ModelView`,
+# `ArchitectureContinuum`. So `""` here is the measured technology-wide fact, and
+# `stereotype_for("Mission")` correctly returns `Mission`.
 #
-# THE ONE BOUND DIAGRAM TYPE IS THE EXCEPTION, AND THE SCHEMA CANNOT SAY SO.
-# All ten elements on the TOGAF_Interface diagram carry an `ADM_` prefix
+# THE ONE BOUND DIAGRAM TYPE IS THE EXCEPTION, AND IT NOW SAYS SO ITSELF. All ten
+# elements on the TOGAF_Interface diagram carry an `ADM_` prefix
 # (`ADM_Preliminary`, `ADM_ArchitectureVision`, ...) — 10 of 10, which clears the
 # measurement tool's own prefix threshold when it is asked about that diagram type
-# alone. So `ADM_` is a real prefix for one stereotype FAMILY inside a technology
-# that has none, and `stereotype_prefix` is per technology. Declaring `ADM_` here
-# would be a true statement about the bound type and a false one about the
-# technology: `stereotype_for("Mission")` would return `ADM_Mission`, which exists
-# nowhere.
+# alone. `ADM_` is a real prefix for one stereotype FAMILY inside a technology that
+# has none, so it belongs on the diagram type and NOT here: declaring it at this
+# scope would be a true statement about the bound type and a false one about the
+# technology, and `stereotype_for("Mission")` would return `ADM_Mission`, which
+# exists nowhere.
 #
-# So `""` is stated, it is the measured technology-wide fact, and NOTHING in this
-# file depends on it — no per-concept `sizing` key is stated, so no lookup here
-# goes through the prefix. A caller holding an ADM phase must use the stored form
-# with the `ADM_` already on it. A per-diagram-type prefix would fix this
-# properly, and that is a finding rather than a binding.
+# That split is the whole point of the two scopes. This line is also the FALLBACK
+# for the five diagram types that are not keyed: if any of them is bound later and
+# says nothing, it resolves to `""`, which the measurement above says is right for
+# all five.
 stereotype_prefix: ""
 
 notes: >
@@ -161,6 +171,19 @@ diagram_types:
     # 1 of 1 diagrams tagged `TOGAF Diagrams::TOGAF_Interface` is based on
     # `Logical`, read from `t_diagram.Diagram_Type`.
     base: Logical
+    # 10 of 10 stereotyped elements on the one diagram of this type carry `ADM_`,
+    # against 0 of 36 across the technology — so the prefix is stated HERE and the
+    # technology keeps its measured `""`. This makes
+    # `stereotype_for("ArchitectureVision", "TOGAF_Interface")` return
+    # `ADM_ArchitectureVision`, which is what a caller composing the ADM wheel
+    # needs, while `stereotype_for("Mission")` still returns `Mission`.
+    #
+    # n=10 is exactly the ten-observation threshold and every one of the ten comes
+    # from a single diagram, the same population the refused `spacing` figures come
+    # from. The difference is what is being counted: a prefix is a naming fact about
+    # the stereotypes an MDG declares, not a statistic over authors' choices, and it
+    # is unanimous. State the second ADM diagram's evidence the day one exists.
+    stereotype_prefix: ADM_
     # A hub and eight spokes on a ring, plus one element outside it. See `notes`
     # for the radii and bearings this rests on.
     grammar: radial

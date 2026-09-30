@@ -61,6 +61,10 @@ KNOWN_IDS = {
     # Proof it is nobody's project code: EAExample.qea itself stores an
     # element whose stereotype FQName is `BMM::CourseOfAction`.
     "BMM",
+    # EA's extended diagram set -- Data Modeling, Dashboard, Requirements
+    # and others. A Sparx-shipped technology id, verified from the
+    # reference model's own MDGDgm tokens, not a project code.
+    "Extended",
     "UML", "SysML", "SysML15", "SysML16", "TOGAF", "DoDAF", "MODAF", "NIEM",
     "UPDM", "SPEM", "SOMF", "BPEL", "XSD", "WSDL", "ERD", "DMN", "CMMN",
     "MDG", "EA", "XMI", "SQL", "COM", "API", "XML", "YAML", "JSON", "HTML",
@@ -106,6 +110,10 @@ KNOWN_IDS = {
 # against the line instead and the bare word stays unknown.
 KNOWN_SPACED_IDS = (
     "TOGAF Diagrams",
+    # Sparx-shipped, and the technology behind the corpus row whose
+    # diagram type is TechnicalReferenceModel -- which was being counted
+    # under TOGAF until it was measured.
+    "FEAF Diagrams",
     "ZF Interface", "ZF Owner", "ZF Designer", "ZF Planner", "ZF Builder",
     "ZF Subcontractor",
 )

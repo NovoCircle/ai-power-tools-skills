@@ -36,8 +36,10 @@
 #                      ZERO connectors on both diagrams. The corpus row is a
 #                      value chain with no connectors and overlapping chevrons.
 #
-# SIX PREFIXES, ONE SLOT - AND THAT IS WHY `stereotype_prefix` IS EMPTY HERE.
-# See the note on the key itself. Read it before adding a per-concept size.
+# SIX PREFIXES, ONE PER DIAGRAM TYPE. The schema now has a slot at each scope, so
+# each bound diagram type states its own below and the technology states the `""`
+# that is true of it. See the note on the technology-scope key, and read it before
+# adding a per-concept size: `sizing` keys here are CONCEPT names now.
 #
 # MEASURED WITH `tools/measure_binding.py` (strict rule) AGAINST THE REFERENCE
 # MODEL, per diagram type. Grammar, title, routing and the color encoding come
@@ -65,26 +67,32 @@ technology: StrategyMap
 # grandchild's `substrate` came back empty and its `spacing` stayed `{}`.
 extends: UML
 
-# EMPTY, AND NOT BECAUSE THE STEREOTYPES ARE BARE - THEY ARE NOT.
-#
-# Every one of this technology's stereotypes carries a prefix, and the prefix is
-# per DIAGRAM TYPE rather than per technology. Measured share of the stereotyped
-# elements on each type's diagrams:
+# EMPTY AT TECHNOLOGY SCOPE, AND NOT BECAUSE THE STEREOTYPES ARE BARE - THEY ARE
+# NOT. Every one of this technology's stereotypes carries a prefix, and the prefix
+# is per DIAGRAM TYPE. Measured share of the stereotyped elements on each type's
+# diagrams, re-measured 2026-09-30:
 #
 #   StrategyMap       SM_   83 of 86        OrgChart      OC_   29 of 29
 #   DecisionTree      DT_   30 of 30        ValueChain    VC_   20 of 20
 #   BalancedScorecard BS_    4 of 4         FlowChart     FC_   28 of 28
 #
-# The schema has ONE `stereotype_prefix` for a whole binding, so no single value
-# is true here. Writing `SM_` would make every lookup on the other three diagram
-# types miss - silently, which is the failure mode this schema exists to prevent.
+# Pooled over the technology the shared prefix is 0 of 204, which is what this
+# line records: there is no technology-wide prefix, so any single value stated
+# here would make every lookup on five of the six diagram types miss - silently,
+# which is the failure mode the slot exists to prevent.
 #
-# So the prefix is declared as the empty statement and the `sizing` keys below are
-# spelled as EA STORES THEM, prefix included: `VC_PrimaryActivity`, not
-# `PrimaryActivity`. `stereotype_for("VC_PrimaryActivity")` then returns
-# `VC_PrimaryActivity` and `concept_for` returns it unchanged, so the round trip
-# is correct - it is the one combination that is. A per-diagram-type prefix would
-# be a schema change and is recorded as a finding, not worked around here.
+# THIS IS A STATEMENT, NOT AN ABSENCE, and it is also the FALLBACK for a diagram
+# type that says nothing. All four bound types below state their own, so nothing
+# here reaches them today; a fifth added without one would resolve to `""`, which
+# is wrong for every diagram type this technology declares. Whoever binds
+# BalancedScorecard or FlowChart must state `BS_` or `FC_` on it.
+#
+# THE `sizing` KEYS BELOW ARE CONCEPT NAMES. They used to be spelled as EA stores
+# them - `VC_PrimaryActivity` - because an empty prefix made that the only
+# combination that round trips. With `stereotype_prefix: VC_` on ValueChain the
+# concept name is the key, `stereotype_for("PrimaryActivity", "ValueChain")`
+# returns `VC_PrimaryActivity`, and `concept_for` takes the stored form back to
+# the key. Leaving a key prefixed would now double the prefix on the way out.
 stereotype_prefix: ""
 
 notes: >
@@ -140,6 +148,11 @@ diagram_types:
   StrategyMap:
     # 6 of 6 diagrams tagged StrategyMap::StrategyMap are based on Logical.
     base: Logical
+    # 83 of the 86 stereotyped elements on these 6 diagrams carry `SM_`; the other
+    # 3 are EA's own NavigationCell tiles, which belong to no notation. This
+    # overrides the technology's `""` - see the note on that key for why the
+    # technology cannot state a prefix at all.
+    stereotype_prefix: SM_
     # The notation genuinely imposes this. Four ActivityPartition bands, one per
     # perspective, and which band an objective sits in is what the diagram says
     # about it - so `layered-bands` passes its own test ("can you name what
@@ -232,6 +245,9 @@ diagram_types:
     # NOT Logical, unlike the rest of this technology. This is why `base` is per
     # diagram type and a single `extends` cannot carry it.
     base: Analysis
+    # 30 of 30 stereotyped elements on these 4 diagrams carry `DT_`: DT_Test,
+    # DT_Decision, DT_OutcomeActivity, DT_OutcomeObject. Unanimous.
+    stereotype_prefix: DT_
     # `graph`. The corpus row calls this `tree-lr` and that name is not in the
     # vocabulary; a left-to-right tree is a shape EA's own layout places and we
     # tidy, so `graph` is producible and honest. `layered-bands` was considered
@@ -291,6 +307,9 @@ diagram_types:
   OrgChart:
     # 3 of 3 diagrams tagged StrategyMap::OrgChart are based on Logical.
     base: Logical
+    # 29 of 29 stereotyped elements carry `OC_`, and all 29 are OC_Role - the only
+    # concept on these diagrams. Unanimous, on one concept.
+    stereotype_prefix: OC_
     # `graph`. The corpus row calls this `tree-td`, which is not in the
     # vocabulary; a top-down tree is placed acceptably by EA's own layout.
     grammar: graph
@@ -352,6 +371,12 @@ diagram_types:
   ValueChain:
     # 2 of 2 diagrams tagged StrategyMap::ValueChain are based on Logical.
     base: Logical
+    # 20 of 20 stereotyped elements carry `VC_`: VC_PrimaryActivity,
+    # VC_SupportActivity, VC_GrossSales. Unanimous. This is the one diagram type
+    # in the file with a per-concept `sizing` key, so it is the one where the
+    # prefix is load-bearing rather than merely true - the key below is
+    # `PrimaryActivity` and `stereotype_for` puts the `VC_` back.
+    stereotype_prefix: VC_
     # The notation imposes this one and the grammar exists for it. A value chain
     # is a row of interlocking arrow stages with full-width support strips, which
     # is what `compose_chevron_stack` draws; EA's own layout would scatter the
@@ -359,6 +384,9 @@ diagram_types:
     grammar: chevron-stack
     title: drawn
     sizing:
+      # KEYS ARE CONCEPT NAMES UNDER `stereotype_prefix: VC_` ABOVE. `PrimaryActivity`,
+      # not `VC_PrimaryActivity`; the stored form is what `stereotype_for` returns.
+      #
       # 400x50, 8 of n=10 (80%), 2 distinct sizes. IT IS VC_SupportActivity'S
       # SIZE, not a convention across concepts: that stereotype supplies 8 of the
       # 8 elements at this size. Stated because the default is mandatory and this
@@ -370,7 +398,7 @@ diagram_types:
       # a shape FIXED by the notation rather than chosen by the author - which is
       # what a chevron is - and therefore excludes it from the default pool. The
       # strongest per-concept figure in this file.
-      VC_PrimaryActivity: {w: 80, h: 100}
+      PrimaryActivity: {w: 80, h: 100}
       # Left out:
       #   VC_SupportActivity  400x50, 8 of n=8 (100%) - LOW-N, and EQUALS the
       #                       default it supplied.

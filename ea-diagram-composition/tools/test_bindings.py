@@ -1972,6 +1972,16 @@ def test_every_shipped_binding_still_resolves_what_its_own_document_states(
         where = f"{technology}::{name}"
         assert dt.grammar == body["grammar"], where
         assert dt.title == body["title"], where
+        # The second prefix scope, read from the document the same way: a type
+        # that states one keeps it, and one that stays silent resolves to the
+        # technology's and never to the substrate's.
+        if "stereotype_prefix" in body:
+            assert dt.own_stereotype_prefix == (
+                body["stereotype_prefix"] or ""), where
+            assert dt.stereotype_prefix == dt.own_stereotype_prefix, where
+        else:
+            assert dt.own_stereotype_prefix is None, where
+            assert dt.stereotype_prefix == binding.stereotype_prefix, where
         assert dt.routing["default"] == body["routing"]["default"], where
         stated_sizes = {concept: {"w": size["w"], "h": size["h"]}
                         for concept, size in body["sizing"].items()}
@@ -2015,6 +2025,60 @@ def test_every_shipped_binding_states_its_own_prefix_rather_than_inheriting_one(
         binding = find_binding(technology)
         assert binding.stereotype_for("Thing") == f"{prefix}Thing"
         assert binding.concept_for(f"{prefix}Thing") == "Thing"
+
+
+def test_every_shipped_prefix_round_trips_at_the_scope_that_declares_it():
+    """The round trip, over both scopes, derived from the shipped documents.
+
+    One assertion per prefix actually in force, whichever scope stated it, so a
+    binding that grows a per-diagram-type prefix is covered the day it does
+    without an edit here. The two counters at the end are what stop this passing
+    vacuously: `StrategyMap` and `TOGAF Diagrams` supply the diagram-type scope
+    and `ArchiMate3` and `ERD_dp` the technology scope, and if either group
+    disappeared the remaining lines would still all pass.
+    """
+    at_type, at_technology = 0, 0
+    for technology in available_bindings():
+        binding = find_binding(technology)
+        for name, dt in binding.diagram_types.items():
+            where = f"{technology}::{name}"
+            prefix = dt.stereotype_prefix
+            assert dt.stereotype_for("Thing") == f"{prefix}Thing", where
+            assert dt.concept_for(f"{prefix}Thing") == "Thing", where
+            assert binding.stereotype_for("Thing", name) == f"{prefix}Thing"
+            assert binding.concept_for(f"{prefix}Thing", name) == "Thing"
+            if not prefix:
+                continue
+            if dt.stereotype_prefix_is_inherited:
+                at_technology += 1
+                assert prefix == binding.stereotype_prefix, where
+            else:
+                at_type += 1
+                # The point of the second scope: the technology's answer differs.
+                assert prefix != binding.stereotype_prefix, where
+    assert at_type, "no shipped diagram type states its own prefix"
+    assert at_technology, "no shipped diagram type inherits a real prefix"
+
+
+def test_no_shipped_sizing_key_carries_the_prefix_that_is_in_force_for_it():
+    """`sizing` KEYS ARE CONCEPT NAMES, checked against the resolved prefix.
+
+    This is the mistake the second scope made possible and then had to close. When
+    `StrategyMap` stated `""` its keys were spelled `VC_PrimaryActivity`, which was
+    correct under an empty prefix and becomes a doubled prefix the moment the
+    diagram type declares `VC_`. Asserted over every shipped key rather than that
+    one, because the same trap is waiting in any binding that gains a prefix.
+    """
+    for technology in available_bindings():
+        binding = find_binding(technology)
+        for name, dt in binding.diagram_types.items():
+            prefix = dt.stereotype_prefix
+            if not prefix:
+                continue
+            for concept in dt.own_sizing:
+                assert not concept.startswith(prefix), (
+                    f"{technology}::{name} sizes {concept!r}; the key is a "
+                    f"concept name and {prefix!r} is added by stereotype_for")
 
 
 def test_an_unstated_slot_resolves_to_a_measured_value_not_an_engine_default():
@@ -4018,6 +4082,135 @@ def test_an_empty_uml_prefix_is_not_inherited_from_a_prefixed_parent(tmp_path):
     assert stated.stereotype_for("Class") == "Class"
     assert silent.stereotype_prefix == "Parent_"
     assert silent.stereotype_for("Class") == "Parent_Class"
+
+
+#: One diagram type, valid, with the prefix line left for a caller to fill in.
+#: Used by the per-diagram-type prefix tests below so each one states only the
+#: thing it is about.
+_PREFIX_TYPE = ("diagram_types:\n  T:\n    grammar: graph\n"
+                "    title: drawn\n    sizing: {{default: {{w: 10, h: 10}}}}\n"
+                "    routing: {{default: Direct}}\n    channels: {{fill: ~}}\n"
+                "{prefix}")
+
+
+def _prefix_doc(technology_prefix: str = "", type_prefix: str = "") -> str:
+    head = f"technology: WBA\n{technology_prefix}"
+    return head + _PREFIX_TYPE.format(prefix=type_prefix)
+
+
+def test_a_diagram_type_inherits_the_technologys_prefix_when_it_states_none():
+    """The case every shipped single-prefix binding is: one statement, every type.
+
+    This is what keeps `ArchiMate3` working unchanged after the schema grew a
+    second scope - all five of its diagram types resolve to `ArchiMate_` without
+    any of them saying so - and `own_stereotype_prefix` is `None`, which is how a
+    report tells that fallback from a declared value.
+    """
+    binding = load_binding_text(_prefix_doc('stereotype_prefix: WBA_\n'))
+    dt = binding.diagram_type("T")
+    assert dt.stereotype_prefix == "WBA_"
+    assert dt.own_stereotype_prefix is None
+    assert dt.stereotype_prefix_is_inherited
+    assert dt.stereotype_prefix_provenance == "WBA"
+    assert dt.stereotype_for("Thing") == "WBA_Thing"
+    assert dt.concept_for("WBA_Thing") == "Thing"
+    # And through the binding, with and without the diagram type named.
+    assert binding.stereotype_for("Thing") == "WBA_Thing"
+    assert binding.stereotype_for("Thing", "T") == "WBA_Thing"
+
+
+def test_a_diagram_types_own_prefix_wins_over_the_technologys():
+    """`StrategyMap`'s case, reduced to the schema: the type's statement wins."""
+    binding = load_binding_text(
+        _prefix_doc('stereotype_prefix: WBA_\n',
+                    "    stereotype_prefix: SM_\n"))
+    dt = binding.diagram_type("T")
+    assert dt.own_stereotype_prefix == "SM_"
+    assert dt.stereotype_prefix == "SM_"
+    assert not dt.stereotype_prefix_is_inherited
+    assert dt.stereotype_prefix_provenance == "WBA::T"
+    assert binding.stereotype_for("Objective", "T") == "SM_Objective"
+    assert binding.concept_for("SM_Objective", "T") == "Objective"
+    # The technology's own statement is untouched by the override.
+    assert binding.stereotype_for("Objective") == "WBA_Objective"
+
+
+def test_a_diagram_type_declaring_an_empty_prefix_is_not_given_the_technologys():
+    """The presence check, at the second scope. `""` is a STATEMENT here too.
+
+    A technology that prefixes can hold a diagram type whose stereotypes are
+    stored bare - `TOGAF Diagrams` is this case inverted - and `or` in the
+    resolution would silently hand it the technology's prefix, sending every
+    lookup after a name that exists nowhere. `~` means the same thing as `""`,
+    for the same reason it does at technology scope.
+    """
+    for spelling in ('    stereotype_prefix: ""\n', "    stereotype_prefix: ~\n"):
+        binding = load_binding_text(
+            _prefix_doc('stereotype_prefix: WBA_\n', spelling))
+        dt = binding.diagram_type("T")
+        assert dt.own_stereotype_prefix == "", spelling
+        assert dt.stereotype_prefix == "", spelling
+        assert not dt.stereotype_prefix_is_inherited, spelling
+        assert dt.stereotype_for("Mission") == "Mission", spelling
+        assert binding.stereotype_for("Mission", "T") == "Mission", spelling
+        assert binding.stereotype_for("Mission") == "WBA_Mission", spelling
+
+
+def test_a_diagram_types_prefix_is_rejected_when_it_is_not_a_string():
+    """Checked before coercion, at both scopes, for the reason `_validate_prefix`
+    records: `or ""` would turn `0` into a pass."""
+    for bad in ("    stereotype_prefix: 3\n", "    stereotype_prefix: [a]\n"):
+        with pytest.raises(BindingError, match="stereotype_prefix"):
+            load_binding_text(_prefix_doc(type_prefix=bad))
+
+
+def test_a_diagram_type_never_inherits_its_substrates_prefix(tmp_path):
+    """THE ASYMMETRY, AS A TEST. Silence means the TECHNOLOGY, not the canvas.
+
+    A prefix says whose MDG named the stereotype, so a substrate - a diagram type
+    in the PARENT technology - is the wrong place to fall back to. Here the parent
+    prefixes and the child does not: the child's diagram type must resolve to the
+    CHILD's `""`, not to `Parent_`, even though it takes the parent's sizing and
+    spacing through `base` in the same breath. Both halves are asserted, because a
+    merge that picked up the prefix would otherwise look like working inheritance.
+    """
+    parent = ("technology: WBA\nstereotype_prefix: WBA_\n"
+              "diagram_types:\n  Logical:\n    grammar: graph\n"
+              "    title: drawn\n"
+              "    sizing: {default: {w: 90, h: 70}}\n"
+              "    spacing: {item_gap_x: 56}\n"
+              "    routing: {default: Direct}\n    channels: {fill: ~}\n")
+    child = ('technology: WBA-Overlay\nstereotype_prefix: ""\nextends: WBA\n'
+             "diagram_types:\n  View:\n    base: Logical\n"
+             "    grammar: layered-bands\n    title: drawn\n"
+             "    sizing: {}\n"
+             "    routing: {default: Direct}\n    channels: {fill: ~}\n")
+    (tmp_path / "wba.yaml").write_text(parent, encoding="utf-8")
+    (tmp_path / "wba-overlay.yaml").write_text(child, encoding="utf-8")
+    dt = load_binding(tmp_path / "wba-overlay.yaml").diagram_type("View")
+    # The substrate WAS found, so the sizing and spacing really did come across.
+    assert dt.substrate == "WBA::Logical"
+    assert dt.sizing["default"] == {"w": 90, "h": 70}
+    assert dt.spacing["item_gap_x"] == 56
+    # And the prefix did not.
+    assert dt.stereotype_prefix == ""
+    assert dt.stereotype_for("Thing") == "Thing"
+    assert dt.stereotype_prefix_provenance == "WBA-Overlay"
+
+
+def test_naming_an_undeclared_diagram_type_in_a_prefix_lookup_raises():
+    """It must not answer at technology scope instead.
+
+    Answering would return the unprefixed concept name - a plausible string that
+    matches nothing - for what is really a typo, which is the silent miss this
+    slot exists to prevent. Every other lookup on `Binding` raises; so does this.
+    """
+    binding = load_binding_text(_prefix_doc('stereotype_prefix: WBA_\n'))
+    for call in (lambda: binding.stereotype_for("Thing", "Nope"),
+                 lambda: binding.concept_for("WBA_Thing", "Nope"),
+                 lambda: binding.prefix_for("Nope")):
+        with pytest.raises(BindingError, match="no diagram type"):
+            call()
 
 
 @needs_uml_model
