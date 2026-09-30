@@ -41,6 +41,7 @@ _HERE = Path(__file__).resolve().parent
 if str(_HERE) not in sys.path:
     sys.path.insert(0, str(_HERE))
 
+import bindings  # noqa: E402
 from bindings import (  # noqa: E402
     CHANNELS,
     COMPOSED_GRAMMARS,
@@ -281,6 +282,71 @@ def test_the_advance_is_the_measured_maximum_because_a_mean_under_predicts():
     mean_advance = 4.9
     assert any(chars * mean_advance < measured
                for chars, measured in _MEASURED_RUNS)
+
+
+# APT-2026-0193. The constant's "NOT VALIDATED FOR" paragraph is now enforced
+# rather than merely written: a stated population with no guard is the same defect
+# one layer down. `unvalidated_glyphs` is the guard, `SpecFit.extrapolated` is where
+# it surfaces, and it reports rather than raising - a model whose element names are
+# in Japanese or Russian must still compose.
+_CYRILLIC = "Клиент"          # 6 letters, narrow
+_FULL_WIDTH = "顧客口座"                        # 4 full-width glyphs
+
+
+def test_a_name_inside_the_calibrated_repertoire_carries_no_guard():
+    assert bindings.unvalidated_glyphs("WestbrookBankArchitecture") == ()
+    assert bindings.unvalidated_glyphs("") == ()
+    assert set("Westbrook Bank 42!") <= bindings.CALIBRATED_REPERTOIRE
+
+
+def test_the_guard_names_every_glyph_the_constant_never_measured():
+    assert bindings.unvalidated_glyphs(_CYRILLIC) == tuple(sorted(set(_CYRILLIC)))
+    # De-duplicated and sorted, so the report does not depend on the name's order.
+    assert bindings.unvalidated_glyphs(_CYRILLIC * 3) ==         bindings.unvalidated_glyphs(_CYRILLIC)
+
+
+def test_a_narrow_out_of_repertoire_glyph_is_charged_the_calibrated_advance():
+    """There is nothing better to charge it, and no reason to think it is wider.
+
+    That is exactly why the prediction has to be FLAGGED rather than trusted: the
+    number is the same one Latin gets, on no evidence that it should be.
+    """
+    assert width_to_fit(_CYRILLIC) == width_to_fit("abcdef")
+    assert bindings.unvalidated_glyphs(_CYRILLIC)
+
+
+def test_a_full_width_glyph_is_charged_two_cells_because_that_is_derived():
+    """Unicode East Asian Width W/F means two character cells, and no cell in the
+    calibrated population was wider than HEADER_ADVANCE_PX. So two cells cannot be
+    narrower than twice it: a floor, not a second estimate, and it errs wide."""
+    assert bindings.FULL_WIDTH_CELLS == 2
+    assert width_to_fit(_FULL_WIDTH) == width_to_fit("a" * (4 * 2))
+    assert width_to_fit(_FULL_WIDTH) > width_to_fit("a" * 4)
+
+
+def test_the_fit_report_says_which_widths_were_extrapolated():
+    dt = find_binding("UML").diagram_type("Logical")
+    fit = dt.spec(names=[_FULL_WIDTH + _FULL_WIDTH + _FULL_WIDTH, "Plain"])
+    assert set(fit.extrapolated) == {_FULL_WIDTH * 3}
+    assert fit.extrapolated[_FULL_WIDTH * 3] == bindings.unvalidated_glyphs(_FULL_WIDTH)
+    assert "WIDTH EXTRAPOLATED" in fit.note
+
+
+def test_a_name_that_fits_is_still_reported_as_extrapolated():
+    """Every name, not just the widest: the caller deciding whether to verify the
+    rendered diagram needs all of them, and a short one can still be out of
+    population."""
+    dt = find_binding("UML").diagram_type("Logical")
+    fit = dt.spec(names=["x", _CYRILLIC])
+    assert not fit.widened and fit.conflicts == ()
+    assert set(fit.extrapolated) == {_CYRILLIC}
+    assert "WIDTH EXTRAPOLATED" in fit.note
+
+
+def test_an_all_ascii_composition_reports_no_extrapolation():
+    dt = find_binding("UML").diagram_type("Logical")
+    fit = dt.spec(names=["Westbrook", "Bank"])
+    assert fit.extrapolated == {} and fit.note == ""
 
 
 def test_the_width_it_fits_to_is_the_clearance_the_linter_asks_for():
@@ -1175,6 +1241,128 @@ def test_an_extends_cycle_is_refused_by_name(tmp_path):
         encoding="utf-8")
     with pytest.raises(BindingError, match="cycle"):
         load_binding(tmp_path / "a.yaml")
+
+
+# ---------------------------------------------------------------------------
+# One id, one file: a shadowed technology is refused, not ranked
+# ---------------------------------------------------------------------------
+# Three readers used to disagree about a duplicate id in one directory, and every
+# one of them was silent: `available_bindings` kept the LAST file in sorted order,
+# `_binding_path` (so `find_binding` and every `extends`) took the FIRST, and the
+# benchmark's index MERGED both files' diagram types. So the catalog could name one
+# file for a technology while the composer drew with another.
+
+def _two_claimants(tmp_path, technology="WBA", names=("aaa-shadow", "zzz-real")):
+    for name in names:
+        (tmp_path / f"{name}.yaml").write_text(
+            MINIMAL.replace("technology: WBA", f"technology: {technology}"),
+            encoding="utf-8")
+    return tmp_path
+
+
+def test_two_files_claiming_one_technology_id_are_refused_by_name(tmp_path):
+    _two_claimants(tmp_path)
+    with pytest.raises(bindings.DuplicateTechnology) as exc:
+        available_bindings(tmp_path)
+    message = str(exc.value)
+    assert "'WBA'" in message
+    assert "aaa-shadow.yaml" in message and "zzz-real.yaml" in message
+
+
+def test_the_resolver_and_the_catalog_refuse_the_same_duplicate(tmp_path):
+    """Both readers, because agreeing to be silent was the actual defect."""
+    _two_claimants(tmp_path)
+    with pytest.raises(bindings.DuplicateTechnology):
+        find_binding("WBA", tmp_path)
+    with pytest.raises(bindings.DuplicateTechnology):
+        available_bindings(tmp_path)
+
+
+def test_a_duplicate_is_refused_whichever_file_is_named_like_the_slug(tmp_path):
+    """`_binding_path` short-circuits on `<slug>.yaml`; the check precedes it.
+
+    The realistic duplicate is a second, descriptively named file beside the
+    slug-named one, which is exactly the case the short-circuit would hide.
+    """
+    _two_claimants(tmp_path, names=("wba", "wba-house-revision"))
+    with pytest.raises(bindings.DuplicateTechnology):
+        find_binding("WBA", tmp_path)
+
+
+def test_the_conflict_does_not_depend_on_filesystem_enumeration_order(tmp_path,
+                                                                     monkeypatch):
+    """Sorting made the old outcome deterministic and still silent.
+
+    Both enumeration orders are forced and the reported conflict is identical,
+    filenames included, so the same checkout cannot resolve differently on two
+    machines - and cannot resolve at all until it is fixed.
+    """
+    _two_claimants(tmp_path)
+    real_glob = Path.glob
+    seen = []
+    for reverse in (False, True):
+        def fake_glob(self, pattern, _reverse=reverse):
+            return iter(sorted(real_glob(self, pattern), reverse=_reverse))
+        monkeypatch.setattr(Path, "glob", fake_glob)
+        seen.append(bindings.binding_conflicts(tmp_path))
+        with pytest.raises(bindings.DuplicateTechnology):
+            available_bindings(tmp_path)
+        monkeypatch.undo()
+    assert seen[0] == seen[1] == {"WBA": ("aaa-shadow.yaml", "zzz-real.yaml")}
+
+
+def test_three_files_claiming_one_id_name_all_three(tmp_path):
+    _two_claimants(tmp_path, names=("one", "two", "three"))
+    with pytest.raises(bindings.DuplicateTechnology) as exc:
+        available_bindings(tmp_path)
+    for name in ("one.yaml", "two.yaml", "three.yaml"):
+        assert name in str(exc.value)
+
+
+def test_a_claim_in_a_file_that_does_not_validate_still_conflicts(tmp_path):
+    """Skipping a bad file that claims a taken id is not skipping, it is choosing.
+
+    A valid file is still skipped when it is merely invalid - that is unchanged -
+    but the id it claimed has to be resolved by a person, not by load order.
+    """
+    (tmp_path / "real.yaml").write_text(MINIMAL, encoding="utf-8")
+    (tmp_path / "broken.yaml").write_text(
+        "technology: WBA\ndiagram_types:\n  Overview:\n    grammar: no-such-grammar\n",
+        encoding="utf-8")
+    assert bindings.binding_conflicts(tmp_path) == {
+        "WBA": ("broken.yaml", "real.yaml")}
+    with pytest.raises(bindings.DuplicateTechnology):
+        available_bindings(tmp_path)
+
+
+def test_an_invalid_file_claiming_an_unused_id_is_still_only_skipped(tmp_path):
+    """The old promise survives: one bad file does not make the catalog unreadable."""
+    (tmp_path / "real.yaml").write_text(MINIMAL, encoding="utf-8")
+    (tmp_path / "broken.yaml").write_text(
+        "technology: WestbrookBankArchitecture\ndiagram_types:\n  Overview:\n"
+        "    grammar: no-such-grammar\n", encoding="utf-8")
+    assert available_bindings(tmp_path) == {"WBA": "real.yaml"}
+    assert bindings.binding_conflicts(tmp_path) == {}
+
+
+def test_a_shadowed_parent_cannot_be_inherited_from(tmp_path):
+    """Inheritance raises the stakes: a shadowed base is inherited by its children."""
+    _two_claimants(tmp_path)
+    (tmp_path / "child.yaml").write_text(
+        MINIMAL.replace("technology: WBA",
+                        "technology: WestbrookBankArchitecture\nextends: WBA"),
+        encoding="utf-8")
+    with pytest.raises(bindings.DuplicateTechnology):
+        load_binding(tmp_path / "child.yaml")
+
+
+def test_the_shipped_catalog_declares_each_technology_exactly_once():
+    """The acceptance the shipped tree has to keep meeting."""
+    assert bindings.binding_conflicts() == {}
+    declared = bindings.declared_technologies()
+    assert declared, "the shipped bindings directory should not be empty"
+    assert all(len(files) == 1 for files in declared.values())
+    assert set(declared) == set(available_bindings())
 
 
 # ---------------------------------------------------------------------------

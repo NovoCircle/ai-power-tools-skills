@@ -33,6 +33,7 @@ than loosening a bound until it passes.
 """
 from __future__ import annotations
 
+import collections
 import hashlib
 import re
 import sqlite3
@@ -1256,10 +1257,10 @@ def test_uml_state_node_agrees_with_the_default_and_is_listed():
     m = mb.measure_binding(MODEL, mb.BASE_NOTATION)
     assert m.default_size.mode == (20, 20)
     assert m.sizes["StateNode"].mode == (20, 20)
-    assert m.default_supply == {"StateNode": 115}
+    assert m.default_supply == {"StateNode": 113}
     line = next(l for l in mb.format_binding_yaml(m).splitlines()
                 if re.match(r"\s*StateNode:", l))
-    assert "n=199" in line and "agrees with the default" in line
+    assert "n=194" in line and "agrees with the default" in line
 
 
 # -- distortion 3 ------------------------------------------------------------
@@ -1286,62 +1287,305 @@ def test_only_the_uaf_framework_diagram_is_promoted_anywhere_in_the_example_mode
 
 # -- the base notation -------------------------------------------------------
 
+# -- the documentation-page filter, on synthetic diagrams ---------------------
+# Composition, never type. Each case below fixes the composition and varies the
+# Diagram_Type, or fixes the type and varies the composition.
+
+def _doc_page(left=0):
+    """8 `Text` objects and one `Package`: the item's own example."""
+    return ([box("", left + i * 140, -10, otype="Text") for i in range(8)]
+            + [box("", left, -300, otype="Package")])
+
+
+def _real_diagram(left=0, n=6):
+    return [box("", left + i * 140, -10, otype="Class") for i in range(n)]
+
+
+@pytest.mark.parametrize("dtype", ["Custom", "Logical", "Package", "Use Case"])
+def test_a_documentation_page_is_dropped_whatever_its_diagram_type(tmp_path, dtype):
+    path = build_model(tmp_path, [(1, dtype, "", _doc_page(), "Page"),
+                                  (2, dtype, "", _real_diagram(), "Real")])
+    m = mb.measure_binding(path, mb.BASE_NOTATION)
+    assert m.base_before_filter == 2
+    assert m.documentation_pages == ((dtype, "Page"),)
+    assert m.diagrams == 1 and m.diagram_types == {dtype: 1}
+    assert "Class" in m.sizes and "Package" not in m.sizes
+
+
+@pytest.mark.parametrize("dtype", ["Custom", "Logical", "Package", "Use Case"])
+def test_a_real_diagram_is_kept_whatever_its_diagram_type(tmp_path, dtype):
+    """Custom holds documentation pages AND real content; the type is not the test."""
+    path = build_model(tmp_path, [(1, dtype, "", _real_diagram(), "Real")])
+    m = mb.measure_binding(path, mb.BASE_NOTATION)
+    assert m.documentation_pages == () and m.diagrams == 1
+    assert "none of the 1 selected diagrams is more than 50% furniture" \
+        in mb.format_binding_yaml(m)
+
+
+def test_the_filter_is_aggregate_not_one_furniture_type_at_a_time(tmp_path):
+    """4 Text + 4 Note + 1 Package is 89% furniture and has no majority TYPE.
+
+    `furniture_majority()` sees nothing here, which is why it is the wrong test
+    for this question and the filter does not reuse it.
+    """
+    objs = ([box("", i * 140, -10, otype="Text") for i in range(4)]
+            + [box("", i * 140, -200, otype="Note") for i in range(4)]
+            + [box("", 0, -400, otype="Package")])
+    path = build_model(tmp_path, [(1, "Logical", "", objs, "Mixed Page")])
+    with mb.open_model_copy(path) as conn:
+        diagrams = mb._load_diagrams(conn)
+    loaded = diagrams[1].items
+    assert mb.furniture_majority(loaded) == frozenset(), "no ONE type is a majority"
+    assert mb.furniture_share(loaded) == 8 / 9
+    assert mb.is_documentation_page(loaded)
+    m = mb.measure_binding(path, mb.BASE_NOTATION)
+    assert m.documentation_pages == (("Logical", "Mixed Page"),)
+    assert m.documentation_pages_type_majority == 0, "reconciles: the per-type test " \
+        "would have dropped none of this one"
+
+
+def test_exactly_half_furniture_is_not_more_than_half(tmp_path):
+    """The threshold is MORE than `BASE_FURNITURE_SHARE`, and the boundary is pinned."""
+    objs = ([box("", i * 140, -10, otype="Text") for i in range(3)]
+            + [box("", i * 140, -200, otype="Class") for i in range(3)])
+    path = build_model(tmp_path, [(1, "Logical", "", objs, "Half")])
+    with mb.open_model_copy(path) as conn:
+        loaded = mb._load_diagrams(conn)[1].items
+    assert mb.furniture_share(loaded) == mb.BASE_FURNITURE_SHARE == 0.5
+    assert not mb.is_documentation_page(loaded)
+    assert mb.measure_binding(path, mb.BASE_NOTATION).documentation_pages == ()
+
+
+def test_the_report_states_the_content_the_filter_took_away(tmp_path):
+    """A majority-furniture diagram can hold real content; the cost is not hidden."""
+    objs = ([box("", i * 140, -10, otype="Text") for i in range(6)]
+            + [box("", i * 140, -200, otype="Node") for i in range(5)])
+    path = build_model(tmp_path, [(1, "Deployment", "", objs, "Annotated"),
+                                  (2, "Logical", "", _real_diagram(), "Real")])
+    m = mb.measure_binding(path, mb.BASE_NOTATION)
+    assert m.documentation_pages == (("Deployment", "Annotated"),)
+    assert m.documentation_page_elements == 5
+    assert m.documentation_page_worst == (5, "Deployment", "Annotated")
+    text = mb.format_binding_yaml(m)
+    assert "carried 5 non-furniture element(s)" in text
+    assert 'being 5 on Deployment "Annotated"' in text
+
+
+def test_declaring_the_annotation_type_content_keeps_the_diagram(tmp_path):
+    """The lever for a diagram wrongly dropped is --content-type, not the threshold."""
+    path = build_model(tmp_path, [(1, "Logical", "", _doc_page(), "Page")])
+    assert mb.measure_binding(path, mb.BASE_NOTATION).documentation_pages == (
+        ("Logical", "Page"),)
+    kept = mb.measure_binding(path, mb.BASE_NOTATION, content_types={"Text"})
+    assert kept.documentation_pages == () and kept.diagrams == 1
+
+
+def test_list_base_notation_reports_the_pages_it_dropped(tmp_path):
+    path = build_model(tmp_path, [(1, "Custom", "", _doc_page(), "Page"),
+                                  (2, "Custom", "", _real_diagram(), "Real")])
+    with mb.open_model_copy(path) as conn:
+        diagrams = mb._load_diagrams(conn)
+    kept, excluded, pages = mb.list_base_notation(diagrams)
+    assert kept == {"Custom": 1} and excluded == {} and pages == {"Custom": 1}
+
+
+# -- the base notation, against the example model -----------------------------
+
 @exact
-def test_the_base_notation_population_is_330_diagrams_2406_elements_15_types():
-    """Nothing excluded: this is what the selection admits, and the answer."""
+def test_the_base_notation_population_is_265_diagrams_2070_elements_15_types():
+    """Nothing excluded BY TYPE: this is what the selection admits, and the answer.
+
+    The plain-UML tests admit 330; the documentation-page filter drops 65 of them.
+    Both numbers are on the result, because a population change that is not
+    written down is how a measurement stops being reproducible.
+    """
     m = mb.measure_binding(MODEL, mb.BASE_NOTATION)
-    assert m.diagrams == 330 and len(m.diagram_types) == 15
+    assert m.base_before_filter == 330
+    assert len(m.documentation_pages) == 65
+    assert m.diagrams == 265 and len(m.diagram_types) == 15
     assert m.excluded_base_types == {}
-    assert sum(st.n for st in m.sizes.values()) == 2406
-    assert m.unstereotyped == (2251, 2406)
-    assert m.diagram_types["Analysis"] == 4 and m.diagram_types["Custom"] == 25
+    assert sum(st.n for st in m.sizes.values()) == 2070
+    assert m.unstereotyped == (1930, 2070)
+    assert m.diagram_types["Analysis"] == 4 and m.diagram_types["Custom"] == 12
     assert m.concept_column == "Object_Type"
+
+
+@exact
+def test_the_documentation_page_filter_names_every_diagram_it_dropped():
+    """65 of 330, reconciled against the per-type count, with the cost stated."""
+    m = mb.measure_binding(MODEL, mb.BASE_NOTATION)
+    by_type = collections.Counter(t for t, _ in m.documentation_pages)
+    assert dict(sorted(by_type.items())) == {
+        "Collaboration": 2, "Component": 1, "CompositeStructure": 10, "Custom": 13,
+        "Deployment": 9, "Logical": 17, "Package": 8, "Statechart": 4, "Use Case": 1,
+    }
+    assert sum(by_type.values()) == 65
+    # Every dropped page was selectable before the filter, and none survives it.
+    assert m.diagrams + len(m.documentation_pages) == m.base_before_filter == 330
+    assert m.furniture_majority_diagrams == 0
+
+    # The per-type test `furniture_majority()` counted 32 of these same 65; the
+    # other 33 are furniture only with the types counted together, which is the
+    # whole reason the filter is aggregate. This is the reconciliation.
+    assert m.documentation_pages_type_majority == 32
+
+    # It costs real content, and the report says how much and where.
+    assert m.documentation_page_elements == 336
+    assert m.documentation_page_worst == (24, "Deployment", "Government Agency")
+
+    text = mb.format_binding_yaml(m)
+    assert "65 of 330 selected diagram(s) dropped" in text
+    assert "32 of the 65 have ONE furniture type as a majority" in text
+    assert "WHAT THE FILTER COST" in text
+    for raw_type, name in m.documentation_pages:
+        assert f'"{name}"' in text, f"{raw_type} {name} dropped but not named"
+    # A documentation page in a type that also holds real content, and the real
+    # content of that same type, both named in the item's own evidence.
+    assert ("Custom", "Gap Analysis") in m.documentation_pages
+    assert ("Custom", "Design Patterns") not in m.documentation_pages
+    assert ("Custom", "Account") not in m.documentation_pages
 
 
 @exact
 def test_the_recorded_2266_figure_is_a_301_diagram_subset_not_the_330_reported():
     """The UML binding records "330 diagrams, 13 types, 2,266 elements".
 
-    Those are two selections. 2,266 elements and 13 types are what remains after
-    dropping Analysis (4) and Custom (25) from the 330, which is 301 diagrams.
-    This pins the discrepancy; it is not a target the tool aims at.
+    Those are two selections, and NEITHER is what the tool reports now. 2,266
+    elements and 13 types are what remained after dropping Analysis (4) and Custom
+    (25) from the 330, which is 301 diagrams, BEFORE the documentation-page filter.
+    The same request now gives 249 diagrams and 1,969 elements: the 301 less the 52
+    pages that sit in the types the caller kept. This pins the discrepancy and the
+    movement; neither is a target the tool aims at.
     """
     m = mb.measure_binding(MODEL, mb.BASE_NOTATION,
                            exclude_base_types={"Analysis", "Custom"})
-    assert m.diagrams == 301 and len(m.diagram_types) == 13
+    # The caller's type exclusion is counted BEFORE the composition filter, so it
+    # still reports every diagram the caller asked to leave out.
     assert m.excluded_base_types == {"Analysis": 4, "Custom": 25}
-    assert sum(st.n for st in m.sizes.values()) == 2266
-    assert m.unstereotyped == (2138, 2266)
+    assert m.base_before_filter == 301
+    assert len(m.documentation_pages) == 52
+    assert m.diagrams == 249 and len(m.diagram_types) == 13
+    assert sum(st.n for st in m.sizes.values()) == 1969
+    assert m.unstereotyped == (1851, 1969)
 
 
 @exact
 def test_analysis_and_custom_are_not_a_separable_non_uml_population():
-    """The evidence for not excluding them.
+    """The evidence for filtering on composition and not on type.
 
     Analysis diagrams hold ordinary UML elements and none is mostly furniture.
-    Custom is mixed. Mostly-furniture (documentation-page) diagrams are spread
-    across the types, so excluding two types would not isolate them.
+    Custom is mixed. Documentation pages are spread across the types, so excluding
+    two types would discard real content and still leave most pages in.
     """
     with mb.open_model_copy(MODEL) as conn:
         diagrams = mb._load_diagrams(conn)
-    selected, _, _ = mb._select_base(diagrams, (), frozenset())
+    selected, _, _, pages = mb._select_base(diagrams, (), frozenset())
+    admitted = selected + pages
+    assert len(admitted) == 330 and len(pages) == 65
 
-    def mostly_furniture(d):
-        objs = diagrams[d.diagram_id].items
-        return 2 * sum(1 for it in objs if it.is_furniture) > len(objs)
-
-    analysis = [d for d in selected if d.raw_type == "Analysis"]
-    custom = [d for d in selected if d.raw_type == "Custom"]
-    assert not any(mostly_furniture(d) for d in analysis)
+    analysis = [d for d in admitted if d.raw_type == "Analysis"]
+    custom = [d for d in admitted if d.raw_type == "Custom"]
+    dropped = {(d.raw_type, d.diagram_id) for d in pages}
+    assert not any(("Analysis", d.diagram_id) in dropped for d in analysis)
     kinds = {it.object_type for d in analysis for it in diagrams[d.diagram_id].items}
     assert {"Activity", "Actor", "Object", "Event"} <= kinds
-    assert sum(mostly_furniture(d) for d in custom) == 13 and len(custom) == 25
-    others = [d for d in selected if d.raw_type not in ("Analysis", "Custom")]
-    assert sum(mostly_furniture(d) for d in others) == 52
+    assert len(custom) == 25
+    assert sum(1 for d in custom if ("Custom", d.diagram_id) in dropped) == 13
+    others = [d for d in admitted if d.raw_type not in ("Analysis", "Custom")]
+    assert sum(1 for d in others
+               if (d.raw_type, d.diagram_id) in dropped) == 52, \
+        "52 of the 65 pages sit outside those two types: no type exclusion reaches them"
 
 
 @exact
 def test_the_base_notation_uses_ea_diagram_type_strings():
     m = mb.measure_binding(MODEL, mb.BASE_NOTATION)
     assert {"Logical", "Statechart", "Collaboration", "Use Case"} <= set(m.diagram_types)
-    assert mb.measure_binding(MODEL, mb.BASE_NOTATION, "Use Case").diagrams == 16
+    use_case = mb.measure_binding(MODEL, mb.BASE_NOTATION, "Use Case")
+    assert use_case.diagrams == 15, "16 before the documentation-page filter"
+    assert use_case.documentation_pages == (("Use Case", "Use Case Model"),)
+    assert use_case.base_before_filter == 16
+
+
+# ---------------------------------------------------------------------------
+# The sample floors, and the guard on the one that is too low
+# ---------------------------------------------------------------------------
+# APT-2026-0193. `MIN_SAMPLE` had no provenance; it now has a derivation, and the
+# same derivation says a gap MEDIAN needs about four times as many observations.
+# The floor is not raised - that would move every authored gap - so the guard is
+# what fires. These pin the guard and the relationship between the two numbers.
+
+def test_the_gap_floor_is_far_above_the_size_floor():
+    """The finding, as an assertion: one number cannot gate both statistics."""
+    assert mb.MIN_SAMPLE == 10
+    assert mb.MIN_SAMPLE_GAP == 38
+    assert mb.MIN_SAMPLE_GAP > 3 * mb.MIN_SAMPLE
+
+
+def test_a_gap_population_over_the_low_n_floor_is_still_thin_for_a_median():
+    """`low_n` False and `thin_median` True is the common case, and the point."""
+    gaps = list(range(20, 40))          # n=20: clears MIN_SAMPLE, under MIN_SAMPLE_GAP
+    stat = mb.gap_stat(gaps)
+    assert stat.n == 20 and not stat.low_n and stat.thin_median
+
+
+def test_a_gap_population_over_the_derived_floor_is_not_thin():
+    stat = mb.gap_stat([30] * mb.MIN_SAMPLE_GAP)
+    assert not stat.low_n and not stat.thin_median
+    assert mb.gap_stat([30] * (mb.MIN_SAMPLE_GAP - 1)).thin_median
+
+
+def test_an_empty_gap_population_is_both_thin_and_low_n():
+    stat = mb.gap_stat([])
+    assert stat.n == 0 and stat.low_n and stat.thin_median
+
+
+def test_the_guard_fires_on_the_line_it_qualifies(tmp_path):
+    """A stated gap whose sample is under the derived floor says so, and is still
+    stated: the guard annotates rather than suppressing, because raising the
+    suppression floor would move every gap already authored against this tool."""
+    # 4 diagrams of 5 elements: 16 gaps, over MIN_SAMPLE and well under
+    # MIN_SAMPLE_GAP, spread widely enough that concentration does not fire first.
+    path = build_model(tmp_path, [
+        (d, "Logical", tag("T", "D"), [box("S", i * 130, -10) for i in range(5)])
+        for d in range(1, 5)])
+    m = mb.measure_binding(path, "T", "D")
+    assert m.h_gap.n >= mb.MIN_SAMPLE and m.h_gap.thin_median
+    line = next(l for l in mb.format_binding_yaml(m).splitlines()
+                if "item_gap_x:" in l)
+    assert "THIN FOR A MEDIAN" in line
+    assert f"MIN_SAMPLE_GAP={mb.MIN_SAMPLE_GAP}" in line
+    assert line.lstrip().startswith("item_gap_x:"), "still stated, not commented out"
+
+
+def test_a_low_n_gap_is_not_also_told_it_is_thin(tmp_path):
+    """One complaint per line. `low_n` already comments the value out."""
+    objs = [box("S", i * 130, -10) for i in range(4)]
+    path = build_model(tmp_path, [(1, "Logical", tag("T", "D"), objs)])
+    m = mb.measure_binding(path, "T", "D")
+    assert m.h_gap.low_n and m.h_gap.thin_median
+    line = next(l for l in mb.format_binding_yaml(m).splitlines()
+                if "item_gap_x:" in l)
+    assert "LOW-N" in line and "THIN FOR A MEDIAN" not in line
+
+
+@exact
+def test_the_guard_fires_on_shipped_technologies_and_is_not_dead_code():
+    """It must catch something real, or it is decoration.
+
+    No count is asserted - adding a binding must not break this - only that the
+    guard discriminates: at least one technology clears `low_n` and trips the
+    median guard, and at least one clears both.
+    """
+    with mb.open_model_copy(MODEL) as conn:
+        known = mb.list_technologies(conn)
+        diagrams = mb._load_diagrams(conn)
+    thin = wide = 0
+    for technology in known:
+        m = mb.measure_diagrams(diagrams, known, technology, None)
+        for gap in (m.h_gap, m.v_gap):
+            if gap.low_n:
+                continue
+            thin += gap.thin_median
+            wide += not gap.thin_median
+    assert thin and wide, f"guard does not discriminate: thin={thin} wide={wide}"

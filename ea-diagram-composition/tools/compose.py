@@ -122,6 +122,7 @@ __all__ = [
     "compose_lanes",
     "compose_nested_grid",
     "compose_radial",
+    "reach_spread",
     "compose_two_column_cycle",
     "rect",
     "rect_width",
@@ -1608,6 +1609,39 @@ def _reach(item_w: int, item_h: int, degrees: float) -> float:
     of the box to the center - for a box crossed near a corner the corner itself
     is closer. Along the ray is the right measure anyway, because a spoke is
     drawn along the ray and that is where the reader sees it end.
+
+    A DELIBERATE APPROXIMATION: EVERY BORDER IS AN AXIS-ALIGNED RECTANGLE
+    --------------------------------------------------------------------
+    EA stores a rect per element and this reads that rect, so an element EA draws
+    as a CIRCLE, an ellipse, a diamond or a rounded box is treated as the
+    rectangle it is stored in. For a circle the true reach is CONSTANT - the
+    radius, in every direction - and this returns the rectangle's, which varies.
+    So a ring of circular elements, equalized by this function, bulges outward at
+    the diagonals by exactly the spread of the rectangular reach:
+
+        reach_spread(w, h) = (hypot(w, h) - min(w, h)) / 2
+
+    Half a diagonal at the corner against half the shorter side on the axis. It is
+    taken off BOTH ends of a spoke, so the center-to-center distance moves by twice
+    it. For a square item of side d that is `d * (sqrt(2) - 1) / 2` per end and
+    `d * (sqrt(2) - 1)` between centers - about 0.414 d - and NOT a percentage: the
+    percentage depends on the radius the ring is drawn at. Measured on this
+    composer, 8 square 120x120 items at `radius=300`: 420.0 center-to-center on the
+    axes against 469.5 on the diagonals, a bulge of 49.5 units, 11.8% of the
+    on-axis distance. The same items at `radius=229` with `d=150` give 379.0
+    against 441.2, 16.4% - same 0.414 d, different share of a smaller radius.
+
+    IT IS NOT FIXED HERE because nothing in the layout input says an element is a
+    circle: the spec carries `item_width` and `item_height` and no shape, so this
+    function cannot know. Fixing it means giving the composer a shape, which is a
+    feature and not a correction.
+
+    AND `lint.check_ring_spokes` IS NOT THE GUARD FOR IT. That rule measures the
+    drawn spokes with this same rectangular model, so on a ring of circles it
+    agrees with this function by construction and reports an even ring. So
+    `reach_spread` is exported, and `compose_radial`'s result carries it, to state
+    the error with the layout it applies to rather than leave it for a reader of
+    the diagram to notice.
     """
     ux = abs(math.sin(math.radians(degrees)))
     uy = abs(math.cos(math.radians(degrees)))
@@ -1617,6 +1651,24 @@ def _reach(item_w: int, item_h: int, degrees: float) -> float:
     if uy:
         candidates.append((item_h / 2.0) / uy)
     return min(candidates)
+
+
+def reach_spread(item_w: int, item_h: int) -> float:
+    """The measured error in `_reach`'s rectangular border model, per spoke end.
+
+    Largest reach (half the diagonal, at the corner) less smallest (half the
+    shorter side, on its axis). For an element EA draws as a RECTANGLE this is not
+    an error at all - it is the real shape, and equalizing it is what `_reach` is
+    for. For one EA draws as a CIRCLE, whose true reach is constant, it is exactly
+    how far the ring bulges at the diagonals, per end; the center-to-center
+    distance moves by twice it.
+
+    This is the guard on that approximation: it makes the error a number a caller
+    can read and a test can pin, rather than a paragraph. `compose_radial` reports
+    it as `reach_spread` on every result. See `_reach` for the derivation and the
+    measured figures.
+    """
+    return (math.hypot(item_w, item_h) - min(item_w, item_h)) / 2.0
 
 
 def _min_reach(item_w: int, item_h: int) -> float:
@@ -1764,6 +1816,12 @@ def compose_radial(
         "containers": [],
         "center": {"x": center_x, "y": center_y},
         "radius": plan["radius"],
+        # The measured error in the rectangular border model, per spoke end. Zero
+        # only for an item as tall as it is wide would be wrong - see `_reach`: a
+        # SQUARE has the largest spread relative to its size. It is here so the
+        # approximation travels with the layout it applies to; a caller placing
+        # circular elements reads the bulge instead of discovering it on screen.
+        "reach_spread": reach_spread(int(s["item_width"]), int(s["item_height"])),
         "bounds": _bounds(out_items),
     }
 

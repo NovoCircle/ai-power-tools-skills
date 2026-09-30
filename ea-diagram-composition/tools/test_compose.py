@@ -29,6 +29,7 @@ _HERE = Path(__file__).resolve().parent
 if str(_HERE) not in sys.path:
     sys.path.insert(0, str(_HERE))
 
+import compose  # noqa: E402
 from compose import (  # noqa: E402
     DEFAULT_SPEC,
     FIT_OVERLAP,
@@ -3324,3 +3325,70 @@ def test_a_linear_height_ramp_hides_the_top_alignment_defect(profile):
     assert not [f for f in report.findings if f.rule == "pitch"], (
         f"{profile} now discriminates; it can be promoted into the control "
         f"above and this test deleted")
+
+
+# ---------------------------------------------------------------------------
+# `_reach` models every border as a rectangle, and the error is stated
+# ---------------------------------------------------------------------------
+# APT-2026-0193. Not a bug to be fixed here: nothing in the layout input says an
+# element is a circle, so `_reach` cannot know. What it must not be is unrecorded.
+# These pin the error itself, so it cannot drift without a failure, and they pin
+# the figures the item quoted so the claim is reproducible rather than remembered.
+
+def test_reach_spread_is_half_the_diagonal_less_half_the_shorter_side():
+    assert compose.reach_spread(120, 120) == pytest.approx(
+        (math.hypot(120, 120) - 120) / 2)
+    # A square has the largest spread relative to its own size, and for a square
+    # of side d it is exactly d * (sqrt(2) - 1) / 2 per spoke end.
+    for d in (60, 120, 150, 400):
+        assert compose.reach_spread(d, d) == pytest.approx(d * (math.sqrt(2) - 1) / 2)
+    # A circle's TRUE reach is constant, so the spread is entirely the error.
+    assert compose.reach_spread(150, 150) == pytest.approx(31.066, abs=1e-3)
+
+
+def test_reach_spread_is_the_gap_between_the_largest_and_smallest_reach():
+    """Derived from `_reach` itself by sampling, not from the formula.
+
+    Finely, because the maximum is at the CORNER and a non-square box puts that
+    at a fractional angle - whole degrees miss it and understate the spread.
+    """
+    for w, h in ((120, 120), (140, 60), (90, 70)):
+        reaches = [compose._reach(w, h, a / 50.0) for a in range(360 * 50)]
+        assert compose.reach_spread(w, h) == pytest.approx(
+            max(reaches) - min(reaches), abs=0.02)
+
+
+def test_a_ring_of_square_items_bulges_by_twice_the_reach_spread():
+    """The measured error, taken off both ends of every spoke.
+
+    Reproduces APT-2026-0193's figures exactly: 150x150 items at radius 229 give
+    379.0 on the axes against 441.2 on the diagonals, which is 16.4% - and the
+    16.4% is a property of THAT radius, while the 62.1 units is a property of the
+    item size alone.
+    """
+    out = compose.compose_radial([{"id": i} for i in range(8)],
+                                 {"item_width": 150, "item_height": 150,
+                                  "radius": 229},
+                                 hub={"id": 99})
+    center = out["center"]
+    distance = {}
+    for item in out["items"]:
+        if item["id"] == 99:
+            continue
+        cx, cy = _center_of(item)
+        distance[item["angle"]] = math.hypot(cx - center["x"], cy - center["y"])
+    on_axis, diagonal = distance[0.0], distance[45.0]
+    assert on_axis == pytest.approx(379.0, abs=0.5)
+    assert diagonal == pytest.approx(441.2, abs=0.5)
+    assert diagonal - on_axis == pytest.approx(2 * compose.reach_spread(150, 150),
+                                               abs=0.5)
+    assert (diagonal / on_axis - 1) == pytest.approx(0.164, abs=0.002)
+    # The guard: the result STATES the error rather than leaving it to be found.
+    assert out["reach_spread"] == pytest.approx(compose.reach_spread(150, 150))
+
+
+def test_every_ring_result_carries_the_approximations_error():
+    for w, h in ((120, 120), (140, 60)):
+        out = compose.compose_radial([{"id": i} for i in range(4)],
+                                     {"item_width": w, "item_height": h})
+        assert out["reach_spread"] == pytest.approx(compose.reach_spread(w, h))

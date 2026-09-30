@@ -73,6 +73,7 @@ from compose import DEFAULT_SPEC, LayoutError, bounding_box, rect
 __all__ = [
     "DEFAULT_TREE_SPEC",
     "compose_radial_tree",
+    "reach_spread",
 ]
 
 
@@ -272,6 +273,14 @@ def _reach(item_w: int, item_h: int, degrees: float) -> float:
 
     A ray exactly along an axis has a zero component on the other one, so that
     candidate is dropped rather than divided by.
+
+    A DELIBERATE APPROXIMATION: every border is an axis-aligned RECTANGLE, because
+    a rect per element is what EA stores and all this can read. An element EA draws
+    as a circle has a CONSTANT true reach, so a ring of circles equalized by this
+    function bulges at the diagonals by `reach_spread`, per spoke end. The full
+    derivation, the measured figures and why it is not fixed here are in
+    `compose._reach`; this copy exists because this grammar is self-contained, and
+    the two must not drift.
     """
     ux = abs(math.sin(math.radians(degrees)))
     uy = abs(math.cos(math.radians(degrees)))
@@ -281,6 +290,18 @@ def _reach(item_w: int, item_h: int, degrees: float) -> float:
     if uy:
         candidates.append((item_h / 2.0) / uy)
     return min(candidates)
+
+
+def reach_spread(item_w: int, item_h: int) -> float:
+    """The measured error in `_reach`'s rectangular border model, per spoke end.
+
+    Half the diagonal, at the corner, less half the shorter side, on its axis. For
+    a rectangular element that is the real shape and no error; for a circular one,
+    whose true reach is constant, it is how far the ring bulges at the diagonals.
+    The guard on the approximation `_reach` documents: a number a caller can read
+    and a test can pin. `compose_radial_tree` reports it as `reach_spread`.
+    """
+    return (math.hypot(item_w, item_h) - min(item_w, item_h)) / 2.0
 
 
 def _min_reach(item_w: int, item_h: int) -> float:
@@ -708,5 +729,8 @@ def compose_radial_tree(
         "center": {"x": dx, "y": dy},
         "radius": root["gap_used"],
         "gap_scale": round(scale, 6),
+        # The rectangular-border approximation's error, per spoke end, stated with
+        # the layout it applies to. See `_reach`.
+        "reach_spread": reach_spread(int(s["item_width"]), int(s["item_height"])),
         "bounds": bounding_box(items),
     }

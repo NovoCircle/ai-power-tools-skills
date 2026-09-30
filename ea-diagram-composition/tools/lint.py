@@ -1400,13 +1400,35 @@ def check_labels_fit(objects: Sequence[Mapping[str, Any]],
     runs = _svg_text_runs(svg_text)
     boxes = [b for b in _svg_boxes(svg_text)
              if b[2] >= _MIN_BOX and b[3] >= _MIN_BOX]
-    by_name: dict[str, Any] = {}
+    # A NAME TWO ELEMENTS SHARE IDENTIFIES NEITHER. This used to keep the
+    # FIRST element carrying a name and drop the rest, which reads as a
+    # tie-break and is a mis-attribution: the finding then names whichever
+    # element happened to be placed first, not the one whose box was measured.
+    #
+    # Measured live on EA 17.1, two elements given the same 46-character name
+    # on one diagram - one shape-scripted from a bound MDG, one a plain Class.
+    # Only the plain Class emits a rect, so only its box grew; the overflow was
+    # real and the `render-exceeds-rect` error was raised against the OTHER
+    # element. Renaming one of them moved the finding onto the right element,
+    # which is how the shared name was established as the cause. A modeler
+    # following that correction widens a box that was never too narrow and
+    # leaves the broken one broken.
+    #
+    # So a duplicated name is counted as unmatched, which is what this rule's
+    # own contract already says - "exactly one known element's name". The cost
+    # is that an element sharing its name with another is not label-checked;
+    # that is the same trade this rule makes everywhere else, and is recorded
+    # in `references/verification.md`.
+    _ids_by_name: dict[str, list] = {}
     _stored_width: dict[Any, int] = {}
     for obj in objects:
         name = " ".join((obj.get("name") or "").split())
-        if name and name not in by_name:
-            by_name[name] = obj["element_id"]
+        if name:
+            _ids_by_name.setdefault(name, []).append(obj["element_id"])
         _stored_width[obj["element_id"]] = _width(obj)
+    by_name: dict[str, Any] = {name: ids[0]
+                               for name, ids in _ids_by_name.items()
+                               if len(ids) == 1}
 
     grouped = _assign_runs_to_boxes(boxes, runs)
     measured = 0

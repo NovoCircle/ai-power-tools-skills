@@ -168,6 +168,16 @@ YAML formatter comments the value out and says so rather than emitting it as a
 convention. It does not raise: three of three is real information, it is just
 not enough to promote to a default.
 
+`MIN_SAMPLE` IS DERIVED, AND IT IS DERIVED FOR A SIZE. Its constant carries the
+population, the criterion and the result; the short version is that 10 is the
+round number above the point where a subsample recovers a dominant modal size 95%
+of the time. The same measurement over the gap populations says a gap MEDIAN needs
+about four times that - `MIN_SAMPLE_GAP`, 38 - and that at 10 a gap median is
+within 10% of the notation's median only 39% of the time. So `low_n` is not the
+whole of the sample question, and `GapStat.thin_median` is the guard that fires on
+the rest of it. It annotates rather than suppresses, because raising the
+suppression floor would move every gap already authored against this tool.
+
 CONCENTRATION - ONE DIAGRAM MUST NOT SPEAK FOR THE NOTATION
 -----------------------------------------------------------
 Gaps from every diagram are pooled into one population, and a pool is only as
@@ -253,27 +263,80 @@ constant `BASE_NOTATION`) takes the base-notation path instead:
   no opinion about which types are "really" UML. The population is whatever the
   selection above admits, and MDG technologies sit on `Analysis` and `Custom`
   bases, so a binding that measures those types needs them present.
-* Automatic content promotion is off: an untagged diagram that is mostly Text is a
-  documentation page, not evidence of UML content. `content_types` still applies.
+* Automatic content promotion is off: an untagged diagram that is mostly furniture
+  is a documentation page, not evidence of UML content. `content_types` still
+  applies.
+* A diagram whose objects are MOSTLY FURNITURE is then dropped, whatever its type.
+  See "DOCUMENTATION PAGES" below.
 
-On EAExample this selects 330 diagrams, 2,406 non-furniture elements, 15
-`Diagram_Type` values; 2,251 of the elements carry no stereotype.
+On EAExample the plain-UML tests admit 330 diagrams; the documentation-page filter
+drops 65 of them, leaving 265 diagrams, 2,070 non-furniture elements and 15
+`Diagram_Type` values, of which 1,930 elements carry no stereotype.
 
-The 29 `Analysis` (4) and `Custom` (25) diagrams were characterized before this was
-decided, and the data does not support excluding them. The 4 Analysis diagrams are
-UML content: activities, events, actors and objects (two are process models), none
-mostly furniture. `Custom` is mixed: 13 of its 25 are mostly Text (documentation
-pages), and the other 12 hold Class, UseCase, Actor, Requirement and Package
-elements. Mostly-furniture diagrams are not a property of the type: 65 of the 330
-are mostly Note/Text/Boundary and 52 of those are in other types (Logical 17,
-CompositeStructure 10, Deployment 9, Package 8). Excluding the two types would
-remove some pages and real content together, and leave most pages in.
+The 29 `Analysis` (4) and `Custom` (25) diagrams among the 330 were characterized
+before this was decided, and the data does not support excluding them BY TYPE. The 4
+Analysis diagrams are UML content: activities, events, actors and objects (two are
+process models), none mostly furniture. `Custom` is mixed: 13 of its 25 are mostly
+furniture and the other 12 hold Class, UseCase, Actor, Requirement and Package
+elements - for example `Account` (2 Class, 1 Note) and `Design Patterns` (5 Class, 4
+Text), which the filter keeps. Excluding the type would discard those 12 to reach
+the 13.
+
+Nor would it reach most of them: of the 65 mostly-furniture diagrams in the 330,
+only 13 are `Custom` and 52 sit in other types - Logical 17, CompositeStructure 10,
+Deployment 9, Package 8, Statechart 4, Collaboration 2, Component 1, Use Case 1.
+Being a documentation page is a property of the diagram's composition, not of its
+`Diagram_Type`, so the filter tests composition and names no type.
 
 A figure recorded elsewhere as "330 diagrams, 13 types, 2,266 elements" is not one
-selection. It is 301 diagrams: 330 less Analysis and Custom, which is also what
-yields 13 types and 2,266 elements (2,138 unstereotyped). Passing
-`exclude_base_types={"Analysis", "Custom"}` reproduces it. It is a subset chosen by
-the author, and the 330 that was reported was the count before that choice.
+selection, and neither figure is what the tool now reports. It is the 301 diagrams
+that remain when `Analysis` and `Custom` are dropped from the 330, before the
+documentation-page filter existed, which is also what yielded 13 types and 2,266
+elements (2,138 unstereotyped). Passing `exclude_base_types={"Analysis", "Custom"}`
+now gives 249 diagrams, 13 types and 1,969 elements (1,851 unstereotyped): the same
+301 less the 52 pages in those types. It was a subset chosen by the author, and the
+330 that was reported was the count before that choice.
+
+DOCUMENTATION PAGES
+-------------------
+The plain-UML tests above ask "is this diagram made of plain, unstereotyped
+things?". They do not ask "is it made of real things at all?". Furniture is left out
+of the unstereotyped ratio, so a page of 8 `Text` objects and one `Package` is
+admitted on that one `Package`: the ratio is computed over it alone, it carries no
+stereotype, and the diagram passes. Its `Package` is then sized as if it were a
+`Package` on a working diagram, and it contributes almost no gaps, so the pollution
+lands on the size side without diluting on the gap side.
+
+So `_select_base` drops a diagram when furniture is MORE than `BASE_FURNITURE_SHARE`
+of its objects. Two things about that test:
+
+* It is AGGREGATE, over `FURNITURE_TYPES` together, not one type at a time.
+  `furniture_majority()` is per-type, because it is the counterpart of promotion
+  rule 1 - it names the type that would have been promoted and was not. Per-type is
+  the wrong test here and demonstrably lets pages through: `Venn Diagram` (3 Class, 5
+  Text, 2 Note) and `Use Case Model` (2 Package, 3 Text, 3 Note) are 70% and 75%
+  furniture and no single type is a majority of either. On EAExample the aggregate
+  test drops 65 diagrams and the per-type test would drop 32 of the same 65, so the
+  two reconcile as a superset and `documentation_pages_type_majority` states the 32.
+* It NAMES NO DIAGRAM TYPE, and a type-level exclusion was tried and reversed on
+  2026-09-29 for the reason in the paragraph above.
+
+IT COSTS SOMETHING, AND THE REPORT SAYS SO. A majority-furniture diagram can still
+hold real content: on EAExample the 65 dropped pages carry 336 non-furniture
+elements, the most on any one of them being 24, on the `Deployment` diagram
+`Government Agency`. A heavily annotated real diagram - boundaries and text labels
+around genuine nodes - is dropped by the same test that drops a page of text. That
+is a deliberate trade, not an oversight: `documentation_page_elements` and
+`documentation_page_worst` carry the cost, `format_binding_yaml` prints it with the
+name of every dropped diagram, and the lever for a diagram wrongly dropped is
+`--content-type` on its annotation types, not a nudge to the threshold.
+
+This filter MOVED THE MEASURED BASE CONVENTION, which is the point of it. Against
+the 330-diagram population: `item_gap_x` median 60.5 to 56 (n 996 to 871) and
+`item_gap_y` median 47 to 48.5 (n 961 to 874). The default size is 20x20 in both,
+still `StateNode`'s. The MDG reproductions are untouched, because this path selects
+only untagged diagrams: ArchiMate3 historical is still 61 and 68 pairs, medians 76
+and 47.5, modes 78 and 38, and BPMN2.0 `Gateway` is still 42x42 in 61 of 61.
 
 THE DEFAULT SIZE BELONGS TO SOMEBODY
 ------------------------------------
@@ -303,7 +366,46 @@ from typing import Collection, Iterator, Optional, Sequence
 MODEL_ENV_VAR = "EA_EXAMPLE_MODEL"
 
 #: Below this many observations a figure is reported as low-n.
+#:
+#: DERIVED, 2026-09-30, and it was not before: it entered this module in its first
+#: commit with the one line above it and no measurement. This is the derivation,
+#: and it is a derivation of the SIZE gate only - see `MIN_SAMPLE_GAP` for why one
+#: number cannot serve both.
+#:
+#: Population: every concept size population in EAExample that this tool would
+#: actually EMIT a value for - n >= 40, a unique mode, and a mode covering at least
+#: `DOMINANT_SHARE` - across every technology in the model plus the base notation.
+#: 11 populations. Criterion: draw a random subsample of size k and ask whether its
+#: modal size equals the full population's, 600 draws per population per k, and
+#: take the smallest k at which that holds 95% of the time. Result: k = 8, 9, 9
+#: over three seeds (20260930, 1, 987654321). 10 is the next round number above
+#: every one of them, which is why the value does not change. Agreement at 10 is
+#: 96.5%, at 5 it is 90.9% and at 3 it is 81.9%.
+#:
+#: VALID FOR a modal size drawn from a population whose mode is dominant. NOT a
+#: statement about a tied or thinly spread population, and not about a gap median.
 MIN_SAMPLE = 10
+
+#: The observations a GAP MEDIAN needs before it is stable, which is nothing like
+#: `MIN_SAMPLE`, and the reason this constant exists.
+#:
+#: Same method, same seeds, over the 19 gap populations of n >= 40 in EAExample.
+#: Criterion: the subsample's median lands within 25% of the full population's,
+#: 90% of the time. Result: k = 36, 36, 38 over the three seeds; this takes the
+#: largest, because a floor that is understated is not a floor. Tighter criteria do
+#: not converge in range at all: within 10% of the population median reaches only
+#: 69% agreement at k = 40.
+#:
+#: AT `MIN_SAMPLE` = 10 A GAP MEDIAN IS WITHIN 10% OF THE NOTATION'S MEDIAN 39% OF
+#: THE TIME, and within 25% of it 67% of the time. So the `low_n` gate, at 10, is
+#: roughly the right floor for a size and much too low for a gap.
+#:
+#: IT IS A GUARD, NOT A SUPPRESSION. Raising the floor that comments a value out
+#: would move every gap already authored against this tool, which is a sequenced
+#: change and not one to make inside a measurement fix. So `GapStat.thin_median`
+#: fires, `format_binding_yaml` says so on the line, and the value is still
+#: emitted. Tightening the suppression is the follow-up this makes possible.
+MIN_SAMPLE_GAP = 38
 
 #: A stereotype whose modal size covers at least this share of >= MIN_SAMPLE
 #: instances is treated as fixed by the notation, not chosen by authors.
@@ -331,6 +433,14 @@ BASE_NOTATION = "UML"
 #: Base-notation selection: share of a diagram's non-furniture elements that must
 #: carry no stereotype for the diagram to count as plain UML.
 BASE_UNSTEREOTYPED_SHARE = 0.5
+
+#: Base-notation selection: a diagram whose objects are MORE than this share
+#: annotation furniture is a documentation page, not model content, and is dropped.
+#: Aggregate over `FURNITURE_TYPES` TOGETHER, not one type at a time: four Text
+#: plus four Note beside one Package is a documentation page and no single type is
+#: a majority of it. Exactly half is not more than half. See "DOCUMENTATION PAGES"
+#: in the module docstring.
+BASE_FURNITURE_SHARE = 0.5
 
 #: A gap statistic is `concentrated` when ONE diagram supplies MORE than this
 #: share of the population.
@@ -436,9 +546,38 @@ def promote_furniture(
 
 
 def furniture_majority(items: list[Item]) -> frozenset[str]:
-    """Furniture types (not promoted) that are the majority of a diagram's objects."""
+    """Furniture types (not promoted) that are the majority of a diagram's objects.
+
+    ONE type at a time, because this is the counterpart of `promote_furniture`'s
+    rule 1: it names the type that would have been promoted and was not. For "is
+    this diagram mostly furniture at all", which is a different question and a
+    strictly larger set, use `furniture_share`.
+    """
     counts = Counter(it.object_type for it in items if it.is_furniture)
     return frozenset(t for t, n in counts.items() if 2 * n > len(items))
+
+
+def furniture_share(items: list[Item]) -> float:
+    """Share of a diagram's objects that is unpromoted annotation furniture.
+
+    All of `FURNITURE_TYPES` counted together. A diagram with no objects has a
+    share of 0: emptiness is not furniture.
+    """
+    if not items:
+        return 0.0
+    return sum(1 for it in items if it.is_furniture) / len(items)
+
+
+def is_documentation_page(items: list[Item],
+                          share: float = BASE_FURNITURE_SHARE) -> bool:
+    """True when furniture is MORE than `share` of the diagram's objects.
+
+    A property of the diagram's COMPOSITION. No diagram type is consulted, and
+    none ever should be: documentation pages sit in Logical and Package diagrams
+    as readily as in Custom ones, and the types that hold them also hold real
+    content. See "DOCUMENTATION PAGES" in the module docstring.
+    """
+    return furniture_share(items) > share
 
 
 def _horizontal_gap(a: Rect, b: Rect) -> tuple[int, int, int]:
@@ -546,6 +685,12 @@ class GapStat:
     statistic keeps its median and mode - the pooled figure stays inspectable -
     but is not a statement about the notation. `diagrams` is 0 when the caller
     did not say where the gaps came from.
+
+    `thin_median` is the guard on `MIN_SAMPLE`: True when `n` is below
+    `MIN_SAMPLE_GAP`, the sample size at which a gap median was measured to become
+    stable. `low_n` at `MIN_SAMPLE` is a floor derived for a modal SIZE and is far
+    too low for a median, so a statistic can be `low_n=False` and `thin_median=True`
+    - which is most of them, and is the point.
     """
     n: int
     median: Optional[float]
@@ -558,6 +703,7 @@ class GapStat:
     top_diagram_name: str = ""
     top_count: int = 0
     concentrated: bool = False
+    thin_median: bool = False
 
     @property
     def top_share(self) -> float:
@@ -594,6 +740,7 @@ def gap_stat(
     sources: Optional[Sequence[int]] = None,
     names: Optional[dict[int, str]] = None,
     max_diagram_share: float = MAX_DIAGRAM_SHARE,
+    min_sample_gap: int = MIN_SAMPLE_GAP,
 ) -> GapStat:
     """Median, mode and provenance of pooled gaps.
 
@@ -601,7 +748,7 @@ def gap_stat(
     concentration can be judged and the result says `diagrams=0`.
     """
     if not gaps:
-        return GapStat(0, None, None, 0, (), True)
+        return GapStat(0, None, None, 0, (), True, thin_median=True)
     mode, count, winners = _unique_mode(gaps)
     diagrams, top, top_count, concentrated = 0, None, 0, False
     if sources is not None:
@@ -614,7 +761,7 @@ def gap_stat(
     return GapStat(len(gaps), statistics.median(gaps), mode, count,
                    winners if mode is None else (), len(gaps) < min_sample,
                    diagrams, top, (names or {}).get(top, "") if top is not None else "",
-                   top_count, concentrated)
+                   top_count, concentrated, len(gaps) < min_sample_gap)
 
 
 def size_stat(sizes: list[tuple[int, int]], min_sample: int = MIN_SAMPLE) -> SizeStat:
@@ -763,18 +910,26 @@ def _select_base(
     diagrams: dict[int, _Diagram],
     exclude_base_types: Collection[str],
     content_types: Collection[str],
-) -> tuple[list[_Diagram], dict[str, int], dict[int, Counter]]:
+) -> tuple[list[_Diagram], dict[str, int], dict[int, Counter], list[_Diagram]]:
     """Diagrams of EA's base notation, keyed by Object_Type.
 
-    Returns `(selected, excluded_by_type, promoted_by_diagram)`. Each selected
-    diagram is a copy whose items carry their Object_Type in the `stereotype`
-    slot - the concept column for a base notation - with furniture left unkeyed
-    so it stays out of sizes and endpoints.
+    Returns `(selected, excluded_by_type, promoted_by_diagram, documentation_pages)`.
+    Each selected diagram is a copy whose items carry their Object_Type in the
+    `stereotype` slot - the concept column for a base notation - with furniture
+    left unkeyed so it stays out of sizes and endpoints.
+
+    The order of the tests is the order of the reporting. The plain-UML tests come
+    first, so `documentation_pages` holds diagrams that would otherwise have been
+    selected and the removal is quotable against the pre-filter population. The
+    caller's type exclusion comes next, so `excluded_by_type` counts every diagram
+    the caller asked to leave out whether or not it is a documentation page. The
+    composition filter is last.
     """
     excluded_types = {t.lower() for t in exclude_base_types}
     selected: list[_Diagram] = []
     excluded: Counter = Counter()
     promoted_by_diagram: dict[int, Counter] = {}
+    pages: list[_Diagram] = []
     for d in diagrams.values():
         if d.technology:
             continue
@@ -791,18 +946,29 @@ def _select_base(
             continue
         keyed = [replace(it, stereotype="") if it.is_furniture
                  else replace(it, stereotype=it.object_type) for it in items]
-        selected.append(replace(d, items=keyed, unstereotyped=bare))
+        kept = replace(d, items=keyed, unstereotyped=bare)
+        if is_documentation_page(items):
+            pages.append(kept)
+            continue
+        selected.append(kept)
         promoted_by_diagram[d.diagram_id] = promoted
-    return selected, dict(sorted(excluded.items())), promoted_by_diagram
+    pages.sort(key=lambda d: (d.raw_type, d.name, d.diagram_id))
+    return selected, dict(sorted(excluded.items())), promoted_by_diagram, pages
 
 
 def list_base_notation(
     diagrams: dict[int, _Diagram],
     exclude_base_types: Optional[Collection[str]] = None,
-) -> tuple[dict[str, int], dict[str, int]]:
-    """`(diagram_types, excluded)` counts for the base notation, by `Diagram_Type`."""
-    selected, excluded, _ = _select_base(diagrams, exclude_base_types or (), frozenset())
-    return dict(sorted(Counter(d.raw_type for d in selected).items())), excluded
+) -> tuple[dict[str, int], dict[str, int], dict[str, int]]:
+    """`(diagram_types, excluded, documentation_pages)` counts, by `Diagram_Type`.
+
+    `documentation_pages` are the diagrams the composition filter dropped, so
+    `--list` says what the selection cost as well as what it admitted.
+    """
+    selected, excluded, _, pages = _select_base(
+        diagrams, exclude_base_types or (), frozenset())
+    return (dict(sorted(Counter(d.raw_type for d in selected).items())), excluded,
+            dict(sorted(Counter(d.raw_type for d in pages).items())))
 
 
 # --------------------------------------------------------------------------
@@ -834,6 +1000,21 @@ class Measurement:
     #: Base notation only: diagrams that passed the selection but were left out
     #: because the caller excluded that type, by `Diagram_Type`.
     excluded_base_types: dict[str, int] = field(default_factory=dict)
+    #: Base notation only: the diagrams the composition filter dropped as
+    #: documentation pages, as `(Diagram_Type, name)`, sorted. Reported against
+    #: `base_before_filter`, the population the plain-UML tests admitted.
+    documentation_pages: tuple[tuple[str, str], ...] = ()
+    base_before_filter: int = 0
+    #: How many of `documentation_pages` also had ONE furniture type as a majority,
+    #: which is what `furniture_majority_diagrams` used to count on them. The
+    #: difference is the pages no per-type test can see. Reconciles the two.
+    documentation_pages_type_majority: int = 0
+    #: Non-furniture elements the dropped pages carried, and the largest single
+    #: diagram's share of them as `(count, Diagram_Type, name)`. A majority-furniture
+    #: diagram can still hold real content, and the filter takes it away: this is
+    #: what the filter COST, stated rather than left for someone to notice.
+    documentation_page_elements: int = 0
+    documentation_page_worst: tuple[int, str, str] = (0, "", "")
     #: Base notation only: elements with an empty Stereotype, and all elements.
     unstereotyped: tuple[int, int] = (0, 0)
     #: Furniture objects promoted to content, by Object_Type, and on how many diagrams.
@@ -923,10 +1104,15 @@ def measure_diagrams(
     content_types = frozenset(content_types)
     base = technology == BASE_NOTATION and technology not in known
     excluded_base: dict[str, int] = {}
+    documentation_pages: tuple[tuple[str, str], ...] = ()
+    base_before_filter = 0
+    pages_type_majority = 0
+    pages_elements = 0
+    pages_worst: tuple[int, str, str] = (0, "", "")
     tagged: list[_Diagram] = []
     fallback: list[_Diagram] = []
     if base:
-        scope, excluded_base, promoted_by = _select_base(
+        scope, excluded_base, promoted_by, pages = _select_base(
             diagrams, exclude_base_types or (), content_types)
         if diagram_type is not None:
             types = {d.raw_type for d in scope}
@@ -935,7 +1121,15 @@ def measure_diagrams(
                     f"the base notation has no diagram type {diagram_type!r}. "
                     f"Known: {', '.join(sorted(types))}")
             scope = [d for d in scope if d.raw_type == diagram_type]
+            pages = [d for d in pages if d.raw_type == diagram_type]
         diagram_types = Counter(d.raw_type for d in scope)
+        documentation_pages = tuple((d.raw_type, d.name) for d in pages)
+        base_before_filter = len(scope) + len(pages)
+        pages_type_majority = sum(1 for d in pages if furniture_majority(d.items))
+        lost = [(sum(1 for it in d.items if not it.is_furniture), d.raw_type, d.name)
+                for d in pages]
+        pages_elements = sum(n for n, _, _ in lost)
+        pages_worst = max(lost, default=(0, "", ""))
     else:
         if technology not in known:
             close = difflib.get_close_matches(technology, list(known), n=3, cutoff=0.5)
@@ -1037,6 +1231,11 @@ def measure_diagrams(
         concept_column="Object_Type" if base else "Stereotype",
         diagrams_by_base=len(scope) if base else 0,
         excluded_base_types=excluded_base,
+        documentation_pages=documentation_pages,
+        base_before_filter=base_before_filter,
+        documentation_pages_type_majority=pages_type_majority,
+        documentation_page_elements=pages_elements,
+        documentation_page_worst=pages_worst,
         unstereotyped=unstereotyped,
         content_promoted=dict(promoted_total),
         content_promoted_diagrams=promoted_diagrams,
@@ -1073,6 +1272,22 @@ def _gap_evidence(g: GapStat) -> str:
     return f"median {g.median:g}, {mode}, n={g.n}{spread}"
 
 
+def _thin_median_text(g: GapStat) -> str:
+    """The guard on `MIN_SAMPLE`, as it appears on the line it qualifies.
+
+    `low_n` already covers a population under `MIN_SAMPLE`, which is the floor
+    derived for a modal size. This is the one derived for a median, and it fires on
+    a population that clears `low_n` and is still thin for the statistic being
+    stated - which is the common case and the whole reason it is here.
+    """
+    if not g.thin_median or g.low_n or g.n == 0:
+        return ""
+    return (f"; THIN FOR A MEDIAN: n={g.n} is under MIN_SAMPLE_GAP="
+            f"{MIN_SAMPLE_GAP}, the measured floor at which a gap median lands "
+            "within 25% of the notation's median 90% of the time. Treat this value "
+            "as provisional and re-measure on more diagrams before relying on it")
+
+
 def _concentration_text(g: GapStat) -> str:
     who = f'"{g.top_diagram_name}" (id {g.top_diagram})' if g.top_diagram_name \
         else f"diagram id {g.top_diagram}"
@@ -1089,6 +1304,46 @@ def _no_neighbors_text(m: Measurement) -> str:
                  "Note/Text/Boundary objects and were measured without them - see "
                  "the furniture note above")
     return text
+
+
+def _documentation_page_lines(m: Measurement) -> list[str]:
+    """The composition filter's own report: how many pages it dropped, and which.
+
+    A population change that is not written down is how a measurement stops being
+    reproducible, so the names go in the output, not into a transcript.
+    """
+    if not m.base_before_filter:
+        return []
+    n = len(m.documentation_pages)
+    if not n:
+        return [f"# Documentation-page filter: none of the {m.base_before_filter} "
+                f"selected diagrams is more than {BASE_FURNITURE_SHARE:.0%} furniture."]
+    by_type: dict[str, list[str]] = defaultdict(list)
+    for raw_type, name in m.documentation_pages:
+        by_type[raw_type].append(name)
+    lines = [
+        f"# Documentation-page filter: {n} of {m.base_before_filter} selected "
+        f"diagram(s) dropped - MORE than {BASE_FURNITURE_SHARE:.0%} of their objects "
+        "is Note/Text/Boundary, so they are pages about the model, not model "
+        "content. Composition only: no Diagram_Type is named by the filter, and "
+        f"{len(by_type)} type(s) are affected.",
+        f"#   {m.documentation_pages_type_majority} of the {n} have ONE furniture "
+        "type as a majority (what furniture_majority() counts); the other "
+        f"{n - m.documentation_pages_type_majority} are furniture only when the "
+        "types are counted together.",
+    ]
+    cost, worst_type, worst_name = m.documentation_page_worst
+    lines.append(
+        f"#   WHAT THE FILTER COST: the dropped pages carried "
+        f"{m.documentation_page_elements} non-furniture element(s), the most on one "
+        f'diagram being {cost} on {worst_type} "{worst_name}". A majority-furniture '
+        "diagram can still hold real content; that content is not measured. If a "
+        "dropped diagram is real, its annotation types are the lever "
+        "(--content-type), not the threshold.")
+    for raw_type, names in sorted(by_type.items()):
+        listed = ", ".join(f'"{name}"' for name in sorted(names))
+        lines.append(f"#   dropped {raw_type} ({len(names)}): {listed}")
+    return lines
 
 
 def format_binding_yaml(m: Measurement) -> str:
@@ -1110,6 +1365,7 @@ def format_binding_yaml(m: Measurement) -> str:
         if m.excluded_base_types:
             left_out = ", ".join(f"{t} ({n})" for t, n in m.excluded_base_types.items())
             lines.append(f"# Left out at the caller's request: {left_out}.")
+        lines += _documentation_page_lines(m)
         bare, total = m.unstereotyped
         if total:
             lines.append(f"# {bare} of {total} measured elements ({bare / total:.1%}) "
@@ -1195,7 +1451,7 @@ def format_binding_yaml(m: Measurement) -> str:
                          f"# LOW-N ({_gap_evidence(gap)})")
         else:
             lines.append(f"      {label}: {round(gap.median)}   "
-                         f"# measured: {_gap_evidence(gap)}")
+                         f"# measured: {_gap_evidence(gap)}{_thin_median_text(gap)}")
     if m.rule == "strict":
         lines.append("      # rule: strict - nearest neighbor in the same container, "
                      "positive gap only; excluded as touching/overlapping: "
@@ -1252,12 +1508,17 @@ def main(argv: Optional[list[str]] = None) -> int:
             for tech, types in technologies.items():
                 print(f"{tech}: " + ", ".join(f"{t or '(none)'} ({n})"
                                               for t, n in sorted(types.items())))
-            base_types, excluded = list_base_notation(diagrams, args.exclude_base_type)
+            base_types, excluded, pages = list_base_notation(
+                diagrams, args.exclude_base_type)
             print(f"{BASE_NOTATION} [base notation, no MDGDgm tag; keyed by Object_Type]: "
                   + ", ".join(f"{t} ({n})" for t, n in base_types.items())
                   + ("; left out at the caller's request: "
                      + ", ".join(f"{t} ({n})" for t, n in excluded.items())
-                     if excluded else ""))
+                     if excluded else "")
+                  + (f"; dropped as documentation pages (more than "
+                     f"{BASE_FURNITURE_SHARE:.0%} furniture): "
+                     + ", ".join(f"{t} ({n})" for t, n in pages.items())
+                     if pages else ""))
             return 0
         if not args.technology:
             parser.error("--technology is required (or use --list)")

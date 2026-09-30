@@ -68,6 +68,17 @@
 # split is now written out. Both canvases are bound below, so the 330-diagram
 # selection is the one this file describes.
 #
+# THE TOOL NO LONGER PRODUCES THAT SELECTION (2026-09-30). `measure_binding.py`
+# now drops a diagram whose objects are MORE than half annotation furniture -
+# a documentation page, a property of the diagram's composition and not of its
+# `Diagram_Type`. On the same model that removes 65 of the 330, leaving 265
+# diagrams, 15 types and 2,070 non-furniture elements (1,930 unstereotyped); the
+# 301 subset becomes 249 diagrams, 13 types and 1,969 elements. Every figure in
+# THIS FILE was measured over the pre-filter 330 and is left as it was measured,
+# because rewriting a recorded number without re-running the measurement is the
+# defect this note exists to prevent. Re-measuring this binding is an authoring
+# task of its own; the tool's own docstring carries the movement it caused.
+#
 # TWO RULES GOVERN EVERY FIGURE HERE, and both reject values the arithmetic
 # would otherwise hand over:
 #

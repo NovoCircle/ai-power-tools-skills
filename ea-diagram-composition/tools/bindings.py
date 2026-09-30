@@ -161,6 +161,7 @@ from __future__ import annotations
 
 import math
 import sys
+import unicodedata
 from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
 from typing import Any
@@ -217,6 +218,9 @@ __all__ = [
     "MDG_STYLE_KEY",
     "MDG_SEPARATOR",
     "HEADER_ADVANCE_PX",
+    "CALIBRATED_REPERTOIRE",
+    "FULL_WIDTH_CELLS",
+    "unvalidated_glyphs",
     "SpecFit",
     "FitConflict",
     "FIT_WIDEN",
@@ -229,6 +233,9 @@ __all__ = [
     "load_binding_text",
     "find_binding",
     "available_bindings",
+    "DuplicateTechnology",
+    "declared_technologies",
+    "binding_conflicts",
     "mdg_diagram_key",
     "bindings_for_technologies",
     "resolve_diagram",
@@ -244,6 +251,32 @@ class BindingError(ValueError):
     without guessing. That is the whole point of validating on load: a binding
     with a typo'd route name or a diagram type nothing declares would otherwise
     fail much later, as a diagram that came out wrong.
+    """
+
+
+class DuplicateTechnology(BindingError):
+    """Two binding files in one directory declare the same `technology` id.
+
+    THIS REFUSES RATHER THAN RANKING, and the reason is that there is no correct
+    answer to rank to. The catalog is keyed by technology id, "which file supplied
+    this id" is the one fact a caller cannot recover afterward, and the readers of
+    the directory did not even agree on the winner: `available_bindings` kept the
+    LAST file in sorted order, `_binding_path` - and so `find_binding` and every
+    `extends` resolution - took the FIRST, and a third reader outside this module
+    merged the two files' diagram types into one technology. Two of those silently
+    compose diagrams against the shadow; the third silently inflates how much of a
+    notation is bound. A duplicate id is an authoring mistake with a one-line fix,
+    so it is raised where it is made.
+
+    It is raised even when one of the two files does not validate. A file that
+    fails validation is normally skipped - one bad file must not make the whole
+    catalog unreadable - but skipping a bad file that CLAIMS AN ID ANOTHER FILE
+    CLAIMS is not skipping, it is picking a winner. The claim is read from the
+    parsed `technology` key alone, so the conflict is decided the same way by every
+    reader whatever else is wrong with either file.
+
+    The message names the id and EVERY file that claims it, sorted, so the outcome
+    does not depend on the order the filesystem enumerates them.
     """
 
 
@@ -676,7 +709,30 @@ class PresentationProfile:
 # full-width glyphs. A run of wide capitals is the case that could still exceed
 # it. The linter stays the backstop for all of those, because it measures
 # instead of predicting.
+#
+# AND A STATED POPULATION WITH NO GUARD IS THE SAME DEFECT ONE LAYER DOWN, so
+# the "not validated for" paragraph above is now enforced rather than merely
+# written: `CALIBRATED_REPERTOIRE` is the character set the measurement covered,
+# `unvalidated_glyphs` names what a caller's name carries outside it, and
+# `SpecFit.extrapolated` reports it wherever `fit_spec` is used. See
+# `width_to_fit` for what the guard does about a full-width glyph, and why that
+# is a derivation rather than a second guess.
 HEADER_ADVANCE_PX = 5.5
+
+#: The characters `HEADER_ADVANCE_PX` was calibrated on: printable ASCII, which
+#: is what the measured strings contained. Anything else is an EXTRAPOLATION -
+#: possibly a fine one for Latin-1 or Cyrillic, which occupy the same width class,
+#: and definitely not for a full-width glyph.
+CALIBRATED_REPERTOIRE = frozenset(chr(c) for c in range(0x20, 0x7F))
+
+#: What a full-width glyph is charged, as a MULTIPLE of the calibrated advance.
+#: Derived, not measured: Unicode East Asian Width `W` and `F` mean the glyph
+#: occupies two character cells, and 5.5 is the widest advance any single cell in
+#: the calibrated population reached, so two cells cannot be narrower than
+#: `2 * HEADER_ADVANCE_PX`. It is a FLOOR on the prediction and therefore errs
+#: toward a wider box, which this module's own reasoning calls the cheap and
+#: self-correcting direction. A measurement in the target font would replace it.
+FULL_WIDTH_CELLS = 2
 
 
 def _longest_unbroken_run(name: str) -> str:
@@ -727,7 +783,45 @@ def width_to_fit(name: str) -> int:
     run = _longest_unbroken_run(name)
     if not run:
         return 0
-    return math.ceil(len(run) * HEADER_ADVANCE_PX) + 2 * LABEL_MARGIN
+    return math.ceil(_advance(run)) + 2 * LABEL_MARGIN
+
+
+def _advance(run: str) -> float:
+    """The predicted pixel advance of one unbreakable run.
+
+    Inside `CALIBRATED_REPERTOIRE` this is `len(run) * HEADER_ADVANCE_PX`, which
+    is the whole of the calibration. Outside it:
+
+    * a FULL-WIDTH glyph is charged `FULL_WIDTH_CELLS * HEADER_ADVANCE_PX`,
+      because it occupies two character cells and no cell in the calibrated
+      population was wider than 5.5. That is a floor derived from a Unicode
+      property and the measured maximum, not a second estimate;
+    * anything else out of repertoire is charged the calibrated advance, because
+      there is nothing better to charge it and no reason to think it is wider.
+      This is the case `unvalidated_glyphs` exists to make visible: the number
+      is an extrapolation and the linter, which measures, is the backstop.
+    """
+    if not run:
+        return 0.0
+    wide = sum(1 for ch in run if unicodedata.east_asian_width(ch) in ("W", "F"))
+    return (len(run) + wide * (FULL_WIDTH_CELLS - 1)) * HEADER_ADVANCE_PX
+
+
+def unvalidated_glyphs(name: str) -> tuple[str, ...]:
+    """The distinct characters of `name` that `HEADER_ADVANCE_PX` never measured.
+
+    Sorted and de-duplicated, empty for a name entirely inside
+    `CALIBRATED_REPERTOIRE`. This is the GUARD on that constant: a width predicted
+    for a name containing any of these is an extrapolation past the population the
+    constant was calibrated on, and a caller that cares must verify by measuring
+    rather than trust the prediction. `fit_spec` surfaces it as
+    `SpecFit.extrapolated` so a caller does not have to remember to ask.
+
+    It reports rather than raising. A model whose element names are in Japanese or
+    Russian is a legitimate model and must still compose; what it must not do is
+    compose against a number that quietly claims a provenance it does not have.
+    """
+    return tuple(sorted({ch for ch in name if ch not in CALIBRATED_REPERTOIRE}))
 
 
 class SpecFit(dict):
@@ -736,7 +830,7 @@ class SpecFit(dict):
     It IS the spec - a plain `dict` subclass, equal to the dict it would have
     been, passable straight to any composer - so nothing downstream has to know
     this type exists. What it adds is the report: `conflicts`, `widened`,
-    `requested_width`, `driver` and a one-line `note`.
+    `requested_width`, `driver`, `extrapolated` and a one-line `note`.
 
     THE REPORT IS NOT OPTIONAL DECORATION. `sizing.default` is measured off real
     diagrams of the notation and `default_size_provenance` names whose
@@ -756,11 +850,13 @@ class SpecFit(dict):
     inconsistency.
     """
 
-    __slots__ = ("requested_width", "driver", "conflicts")
+    __slots__ = ("requested_width", "driver", "conflicts",
+                 "extrapolated")
 
     def __init__(self, spec: Mapping[str, Any], requested_width: int,
                  driver: str = "",
-                 conflicts: Sequence[FitConflict] = ()) -> None:
+                 conflicts: Sequence[FitConflict] = (),
+                 extrapolated: Mapping[str, tuple] | None = None) -> None:
         super().__init__(spec)
         #: The `item_width` that was asked for, before any widening: the
         #: binding's measured default, or the caller's override of it.
@@ -772,6 +868,11 @@ class SpecFit(dict):
         #: The misfits, as `compose.FitConflict` records. Empty when the names
         #: fitted the width that was asked for.
         self.conflicts = tuple(conflicts)
+        #: `{name: the glyphs in it HEADER_ADVANCE_PX was never calibrated on}`,
+        #: for every name that carries any. Empty in the normal case. THE WIDTHS
+        #: FOR THESE NAMES ARE EXTRAPOLATIONS, not measurements, and this is the
+        #: field that says so; see `unvalidated_glyphs`.
+        self.extrapolated = dict(extrapolated or {})
 
     @property
     def item_width(self) -> int:
@@ -810,12 +911,18 @@ class SpecFit(dict):
         numbers. Non-empty whenever a name did not fit, INCLUDING under
         `overlap`, where no width moved but a choice was still made.
         """
-        if not self.conflicts:
-            return ""
-        return " ".join(
-            " ".join(part for part in (c["note"], c["detail"]) if part)
-            for c in self.conflicts
-        )
+        parts = [" ".join(part for part in (c["note"], c["detail"]) if part)
+                 for c in self.conflicts]
+        if self.extrapolated:
+            named = "; ".join(
+                f"{name!r} contains " + ", ".join(repr(g) for g in glyphs)
+                for name, glyphs in sorted(self.extrapolated.items()))
+            parts.append(
+                f"WIDTH EXTRAPOLATED: {named}. HEADER_ADVANCE_PX was calibrated on "
+                "printable ASCII in one font only, so these widths are predictions "
+                "past that population - measure the rendered diagram rather than "
+                "trusting them.")
+        return " ".join(parts)
 
 
 class DiagramTypeBinding:
@@ -1098,11 +1205,19 @@ class DiagramTypeBinding:
         requested = int(spec["item_width"])
         driver = ""
         needed = requested
+        extrapolated: dict[str, tuple] = {}
         for i, name in enumerate(names):
             if not isinstance(name, str):
                 raise BindingError(
                     f"names[{i}]: item names must be strings, got "
                     f"{type(name).__name__}")
+            # The guard on HEADER_ADVANCE_PX's calibrated population, applied to
+            # EVERY name and not only the widest: a name that fits the requested
+            # width is still a name whose width was extrapolated, and the caller
+            # deciding whether to verify needs all of them.
+            unvalidated = unvalidated_glyphs(name)
+            if unvalidated:
+                extrapolated[name] = unvalidated
             want = width_to_fit(name)
             if want > needed:
                 needed, driver = want, name
@@ -1128,7 +1243,8 @@ class DiagramTypeBinding:
         )
         spec["item_width"] = width
         return SpecFit(spec, requested, driver,
-                       (conflict,) if conflict is not None else ())
+                       (conflict,) if conflict is not None else (),
+                       extrapolated=extrapolated)
 
 
 class Viewpoint:
@@ -1862,7 +1978,62 @@ def _slug(technology: str) -> str:
     return "".join(out).strip("-") or "binding"
 
 
+def declared_technologies(directory: str | Path | None = None
+                          ) -> dict[str, tuple[str, ...]]:
+    """`{technology id: filenames that declare it}`, every id claimed in `directory`.
+
+    IDENTITY ONLY. Each file is parsed and its `technology` key read; nothing is
+    validated. That is deliberate: this is the one view of the directory that every
+    reader can agree on, and it has to answer "who claims this id" for a file that
+    does not load as well as for one that does. Filenames are sorted, so the answer
+    does not depend on the order the filesystem enumerates them.
+    """
+    directory = _bindings_dir(directory)
+    if not directory.is_dir():
+        return {}
+    claims: dict[str, list[str]] = {}
+    for path in sorted(directory.glob("*.yaml")):
+        try:
+            doc = _parse(path.read_text(encoding="utf-8"), path.name)
+        except (BindingError, OSError):
+            continue
+        if isinstance(doc, Mapping) and isinstance(doc.get("technology"), str):
+            claims.setdefault(doc["technology"], []).append(path.name)
+    return {tech: tuple(sorted(files)) for tech, files in sorted(claims.items())}
+
+
+def binding_conflicts(directory: str | Path | None = None
+                      ) -> dict[str, tuple[str, ...]]:
+    """`{technology id: filenames}` for ids claimed by MORE than one file.
+
+    Empty when the directory is unambiguous. This never raises, so a caller that
+    wants to report a shadowed id rather than fail on it - an audit, a health
+    check, a test - can see the conflict without catching anything.
+    """
+    return {tech: files for tech, files in declared_technologies(directory).items()
+            if len(files) > 1}
+
+
+def _require_unique_technologies(directory: Path) -> None:
+    """Raise `DuplicateTechnology` when any id in `directory` is claimed twice."""
+    conflicts = binding_conflicts(directory)
+    if not conflicts:
+        return
+    detail = "; ".join(f"{tech!r} is declared by " + ", ".join(files)
+                       for tech, files in conflicts.items())
+    raise DuplicateTechnology(
+        f"duplicate technology id in {directory}: {detail}. Each technology id "
+        "must be declared by exactly one binding file: rename the id or delete "
+        "the shadow. Nothing in this directory can be resolved until it is fixed, "
+        "because the catalog, the resolver and the audit would each pick a "
+        "different file.")
+
+
 def _binding_path(technology: str, directory: Path) -> Path | None:
+    # BEFORE the slug shortcut below, because the realistic duplicate is a second
+    # file with a descriptive name beside the slug-named one, and the shortcut
+    # would return the slug file without ever noticing the other claim.
+    _require_unique_technologies(directory)
     candidate = directory / f"{_slug(technology)}.yaml"
     if candidate.is_file():
         return candidate
@@ -1905,10 +2076,18 @@ def available_bindings(directory: str | Path | None = None) -> dict[str, str]:
 
     Invalid bindings are omitted rather than raising, so one bad file does not
     make the whole catalog unreadable; load it directly to see why.
+
+    A DUPLICATE technology id is the exception, and raises `DuplicateTechnology`.
+    Omitting a file whose id another file also claims is not omitting it, it is
+    choosing between them: this used to keep whichever came last in sorted order
+    and say nothing, while `find_binding` resolved the same id to the FIRST file,
+    so the catalog and the composer could name different files for one technology.
+    `binding_conflicts()` reports the same finding without raising.
     """
     directory = _bindings_dir(directory)
     if not directory.is_dir():
         return {}
+    _require_unique_technologies(directory)
     out = {}
     for path in sorted(directory.glob("*.yaml")):
         try:

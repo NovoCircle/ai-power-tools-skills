@@ -277,6 +277,35 @@ So on a shape-scripted notation these rules mostly stay silent, and `labels_unma
 says how much went unjudged. A quality warning that fires wrongly across a whole notation is how a
 linter gets switched off, and a missed cramped label costs far less than that.
 
+#### Then measured against live EA, which moved two of these from belief to fact
+
+A bound MDG's shape-scripted elements were rendered by EA 17.1 for the first time: six elements on
+one view — three shape-scripted, two plain `Class`, and a named container — with one shape-scripted
+element and one plain element deliberately given the **same** 46-character unbreakable name.
+
+**`labels_measured` counts BOXES, not elements, and `not_run` stayed silent.** The three
+shape-scripted elements emitted no `<rect>` at all, so none of them was label-checked; the report
+still read `labels_measured: 4` and `not_run: []`, because the container and the two plain elements
+supplied boxes of their own. The `not_run` line for this case only appears when *nothing* was
+measured, so a mixed diagram — one plain element beside a notation the rule cannot see — reports a
+positive count and says nothing about the half it skipped. **Read `labels_measured` as "boxes
+judged", never as "elements checked", and compare it against the element count yourself.** The claim
+elsewhere in this file that a shape-scripted notation reports itself on `not_run` holds only when
+every element on the view is shape-scripted.
+
+**A name two elements share used to name the wrong element.** In the same run the plain `Class` grew
+its drawn box from 100px to 216px — a real `render-exceeds-rect` error — and the error was raised
+against the *shape-scripted* element, which had emitted no box and could not have overflowed.
+Renaming one of the two moved the finding onto the right element, which is how the shared name was
+established as the cause: the name-to-element index kept the first element carrying a name and
+dropped the rest, and "first placed" is not a tie-break, it is a coin toss. A duplicated name is now
+counted as **unmatched**, restoring what this rule's contract already said — *exactly one* known
+element's name. The residual cost is stated rather than hidden: **an element that shares its name
+with another on the same view is not label-checked.**
+
+Neither of these was reachable hermetically. The first needs EA's own renderer to decline to emit a
+rect; the second needs EA to grow a box.
+
 ---
 
 ## 4. Profiles: why suppression is correctness, not convenience
@@ -385,6 +414,21 @@ date, so re-run it rather than repeating the figures above.
 - **A collision caused by a grown box, unless the render was supplied.** Without `include_svg=True`
   the geometry rules read stored rects and cannot know the drawing is wider — see §3a. The report
   lists this on `not_run` rather than staying quiet about it.
+- **Two connectors drawn on top of each other.** Measured live on EA 17.1: two `OrthogonalSquare`
+  connectors between the corners of a square shared a collinear horizontal segment, which reads worse
+  than a crossing and is not one. `crossings` counted the center-to-center approximation instead and
+  reported **1** where the drawn paths proper-cross **0** times. The count is honest about being
+  approximate and is still the right metric for comparing two versions of one diagram, but under
+  orthogonal routing it is neither an upper nor a lower bound on what the reader sees, and no rule
+  sees the overlap at all.
+- **Color set as the element's DEFAULT appearance rather than on the placement.** `unexplained-color`
+  counts `distinct_fills`, and `fill` is decoded from the placement's own style string only. Measured
+  live on EA 17.1: the same three colors reported `distinct_fills: 3` when set per placement and
+  `distinct_fills: 0` when set as the element default — while EA drew all three either way, and the
+  render carried `fill:#FF0000`, `fill:#00FF00` and `fill:#0000FF` in both cases. So a diagram
+  colored the way EA's own *Default Appearance* dialog colors one is **invisible** to this rule, and
+  its zero is the vacuous kind. This is the likeliest reason a generated view reports no fills at all
+  when it plainly has some: check the render, or set the color on the placement.
 
 When a rule *can* be built for something on this list, it should be. Until then, the honest report
 is "clean, and here is what clean does not cover" — which is why this section exists in a file the
@@ -403,7 +447,9 @@ because a limit without its mechanism gets rediscovered as a bug:
    or the SVG rects to measure the name against.
 3. **The one rule that reads the render refuses to judge those diagrams.** On a shape-scripted
    notation the only `<rect>`s are the drawn containers, so no box's text is exactly one element's
-   name, `labels_unmatched` rises, and `check_labels_fit` reports itself on `not_run`. When a shape
+   name and `labels_unmatched` rises. `check_labels_fit` reports itself on `not_run` only when
+   **nothing** on the view was measured — measured live, a container plus two plain elements is
+   enough to keep that line away while every shape-scripted element goes unjudged. See §3a. When a shape
    script *does* emit small rects — an icon box, a compartment divider — they are under `_MIN_BOX`
    (20px) and discarded as decoration, which is exactly the size an icon is.
 
