@@ -16,8 +16,18 @@
         "_shared/references/latency.md",
         "_shared/references/operations.md",
         "_shared/references/westbrook-example.md",
+        "_shared/tools/ddl.py",
         "_shared/tools/ea_census.py",
-        "_shared/tools/test_ea_census.py"
+        "_shared/tools/extract.py",
+        "_shared/tools/pivot.py",
+        "_shared/tools/reconcile.py",
+        "_shared/tools/report_model.py",
+        "_shared/tools/test_ddl.py",
+        "_shared/tools/test_ea_census.py",
+        "_shared/tools/test_extract.py",
+        "_shared/tools/test_pivot.py",
+        "_shared/tools/test_reconcile.py",
+        "_shared/tools/test_report_model.py"
       ],
       "sha256": {
         "_shared/references/ea-ui-verification.md": "4f74960eed2c33a1097b19f8931a82c2f60fce90de70f5bb7c77f4105ecbe2ba",
@@ -25,8 +35,18 @@
         "_shared/references/latency.md": "af565b7e08f3a79a9239f548c63115181ef3ea7bd845b94ef0363a28f035d06f",
         "_shared/references/operations.md": "ec4331f19cdba7c8f299ac198656d6eea117d4ef2630284dd6d83e49a6b03db9",
         "_shared/references/westbrook-example.md": "d4622f3cf9ef6a58d661fb54cb4248dfc364e8e6ab9d0314876838081600cdf2",
-        "_shared/tools/ea_census.py": "58a1a7b114c95f4c56747429e0166834bfea32c70e5d7ea52fee3844352ddf8b",
-        "_shared/tools/test_ea_census.py": "d8db0eeffcd9361c8ace6450ce21ddedbb5e7a9516baa3004fcaa4f8adbcfe50"
+        "_shared/tools/ddl.py": "e9d1b5c107b8e3e24d3e59cb461ffd7f41e987877ae90c9173d7160a137966da",
+        "_shared/tools/ea_census.py": "e1421c0752096a16b6aca8fb37da0539acd41c60e67800ffed96a07f39b9e967",
+        "_shared/tools/extract.py": "8bc8b3a9557709f49d739844fc81255b7e3f97d949c263492e4284d6ff29df29",
+        "_shared/tools/pivot.py": "2a4ae40178f3e942989e7e57c35853a0c2482b2adab8cfde291d4cb82bbd9d66",
+        "_shared/tools/reconcile.py": "462496e4bea90bb774e927a9ec33e9625cea668b5ea88f70aaac9fe09e50212e",
+        "_shared/tools/report_model.py": "341d945108364018edfaf7992b92c09e57aa641de9b44b72d80bb08c8abadbef",
+        "_shared/tools/test_ddl.py": "3b80ec7bf4801cb62db4182ce7ef3f9fcc20555819259552f5ba910c24f98936",
+        "_shared/tools/test_ea_census.py": "668b74f44679739233eea701ea446ce9fa8609420ff6a6269f0fda27bde36530",
+        "_shared/tools/test_extract.py": "c93db08ac9a35e04bdc97bf13169253e764c78c3546b2737c0290c6b770ecf3e",
+        "_shared/tools/test_pivot.py": "ce41d18393d28287cef75bd0e5740801196115c17fb6225ccfdb0e4b65fa9f4a",
+        "_shared/tools/test_reconcile.py": "fe6ab9adfb8a4567be6b76dffe59a0458aa60b7b7fdde8895e3403c44e6f417b",
+        "_shared/tools/test_report_model.py": "f5d6b2ab808a7faba42ad6dbf00bc04c61dcd7ea3c6fddd93cc9c2c349bc4ee2"
       }
     },
     {

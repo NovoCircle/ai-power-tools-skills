@@ -646,3 +646,27 @@ def test_partially_used_domain_reports_one_aggregated_finding():
     assert len(unused) == 1                       # one finding, not two
     assert "'Confidential'" in unused[0].detail
     assert "'Restricted'" in unused[0].detail
+
+
+def test_excluded_elements_are_not_counted_as_untyped():
+    """REGRESSION. An element whose every stereotype was excluded as EA's own
+    machinery fell into `untyped_guids`, which conflates "we deliberately
+    dropped EA scaffolding" with "this has no stereotype at all". Downstream
+    that reported 29 rows of EA report-package tags (ReportName, SearchValue)
+    as unplaced business data.
+    """
+    c = census_elements([obj("{E}", "Package", "report package"),
+                         obj("{U}", "Class", "")], {})
+    assert c.excluded_guids == {"{E}"}
+    assert c.untyped_guids == {"{U}"}
+    assert c.excluded_guids.isdisjoint(c.untyped_guids)
+
+
+def test_an_element_with_one_excluded_and_one_kept_stereotype_is_still_placed():
+    c = census_elements(
+        [obj("{M}", "Component", "EATool")],
+        build_stereotype_index([stereo_row("{M}", ("EATool", "", ""),
+                                           ("WBAThing", "%s::WBAThing" % NS, ""))]))
+    assert c.placement["{M}"] == ["%s::WBAThing" % NS]
+    assert c.excluded_guids == set()
+    assert c.excluded_ea_internal["EATool"] == 1

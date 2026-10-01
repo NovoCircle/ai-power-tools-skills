@@ -232,7 +232,15 @@ class ElementCensus:
     placement: dict[str, list[str]] = field(default_factory=dict)
     excluded_ea_internal: Counter = field(default_factory=Counter)
     excluded_profile_authoring: Counter = field(default_factory=Counter)
+    #: Elements carrying NO stereotype at all - the honest remainder. Plain UML
+    #: classes, notes, boundaries. Real content, queryable through `element`.
     untyped_guids: set[str] = field(default_factory=set)
+    #: Elements whose every stereotype was excluded as EA's own machinery or as
+    #: profile-authoring scaffolding. NOT the same thing as untyped, and keeping
+    #: them apart matters: lumping them together counted EA's report-package
+    #: tags (`ReportName`, `SearchValue`, ...) as unplaced business data and
+    #: overstated the remainder.
+    excluded_guids: set[str] = field(default_factory=set)
     multi_stereotype_guids: set[str] = field(default_factory=set)
 
     @property
@@ -277,16 +285,20 @@ def census_elements(
         if len(applied) > 1:
             census.multi_stereotype_guids.add(guid)
 
+        excluded_any = False
         landed: list[str] = []
         for stereo in applied:
             if exclude_ea_internal and stereo.name in EA_INTERNAL_STEREOTYPES:
                 census.excluded_ea_internal[stereo.name] += 1
+                excluded_any = True
                 continue
             if exclude_profile_authoring and stereo.name in PROFILE_AUTHORING_STEREOTYPES:
                 census.excluded_profile_authoring[stereo.name] += 1
+                excluded_any = True
                 continue
             if stereo.profile in EA_INTERNAL_PROFILES:
                 census.excluded_ea_internal[stereo.fqname] += 1
+                excluded_any = True
                 continue
 
             key = entity_key(stereo, metaclass)
@@ -302,6 +314,8 @@ def census_elements(
 
         if landed:
             census.placement[guid] = landed
+        elif excluded_any:
+            census.excluded_guids.add(guid)
         else:
             census.untyped_guids.add(guid)
 
