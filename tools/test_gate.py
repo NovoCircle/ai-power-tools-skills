@@ -483,3 +483,65 @@ def test_a_clean_file_produces_no_findings(library):
         "WestbrookBank.qea.\n"
     ))
     assert gate.check_file(f) == []
+
+
+class TestRulesetPathsAreTheInstalledOnes:
+    """Rulesets install OUTSIDE the skills directory because they have no
+    SKILL.md. A skill that documents them under ~/.claude/skills sends the
+    reader to a directory the installer never writes.
+
+    Bundle 1.4.1 did install them among the skills, and that leftover copy was
+    the only thing making the old documented path resolve. So the symptom was
+    invisible until the copy was pruned: upgraders read 1.4.1 rules and got
+    confident wrong answers, fresh installs found nothing.
+    """
+
+    _GOOD = "run it from ~/.claude/ai-power-tools/rulesets/x/rules.yaml\n"
+
+    def test_the_old_skills_directory_path_is_caught(self, library):
+        _write(library, "ea-validation/SKILL.md",
+               self._GOOD +
+               '"rules": "~/.claude/skills/ruleset-archimate31/rules.yaml"\n')
+        findings = gate.check_ruleset_paths(library)
+        assert any("documents a ruleset under the skills directory" in f
+                   for f in findings), findings
+
+    def test_a_windows_separator_does_not_slip_past(self, library):
+        """The first version of this pattern matched only forward slashes and
+        nobody would have noticed, because the file that broke used them."""
+        bs = gate.BACKSLASH
+        _write(library, "ea-validation/SKILL.md",
+               self._GOOD + f'"rules": "~{bs}.claude{bs}skills{bs}ruleset-a{bs}r.yaml"\n')
+        findings = gate.check_ruleset_paths(library)
+        assert any("documents a ruleset under the skills directory" in f
+                   for f in findings), findings
+
+    def test_a_github_url_is_not_caught(self, library):
+        """URL fetch reads the REPO layout, where that path is correct."""
+        _write(library, "ea-validation/SKILL.md", self._GOOD +
+               "https://raw.githubusercontent.com/o/r/main/"
+               "ruleset-archimate31/archimate31_rules.yaml\n")
+        assert gate.check_ruleset_paths(library) == []
+
+    def test_a_repo_relative_mention_is_not_caught(self, library):
+        _write(library, "ea-ruleset-author/SKILL.md", self._GOOD +
+               "the canonical set is `ruleset-archimate31/archimate31_rules.yaml`\n")
+        assert gate.check_ruleset_paths(library) == []
+
+    def test_documenting_no_installed_path_at_all_is_caught(self, library):
+        """The positive half. A rename or a deletion would otherwise satisfy
+        the ban while removing the only instruction for running a ruleset from
+        disk."""
+        _write(library, "ea-validation/SKILL.md", "no local path documented\n")
+        findings = gate.check_ruleset_paths(library)
+        assert any("no shipped file documents the installed ruleset path" in f
+                   for f in findings), findings
+
+    def test_the_gates_own_source_is_not_scanned(self, library):
+        """This rule's explanation necessarily contains the string it forbids.
+        A guard that fires on its own explanation teaches the next reader to
+        delete the explanation."""
+        _write(library, "tools/gate.py",
+               '"~/.claude/skills/ruleset-archimate31/rules.yaml"\n')
+        _write(library, "ea-validation/SKILL.md", self._GOOD)
+        assert gate.check_ruleset_paths(library) == []

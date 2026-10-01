@@ -502,6 +502,66 @@ def check_op_drift(target: Path, server: Optional[Path] = None) -> list[str]:
     return out
 
 
+# The installed ruleset path. Rulesets carry no SKILL.md, so the installer
+# deliberately writes them OUTSIDE the skills directory (see
+# ``skills_installer._destination_root``). A skill that documents them under
+# ~/.claude/skills sends the reader to a directory the installer never writes.
+#
+# Bundle 1.4.1 DID install them among the skills, and that stale copy was the
+# only thing making the old documented path resolve. Pruning the copy exposed
+# the bug: upgraders had been reading 1.4.1 rules and getting confident wrong
+# answers, and fresh installs found nothing at all.
+#
+# Repo-relative mentions and raw.githubusercontent URLs are correct and must
+# keep passing -- URL fetch reads the REPO layout, not the install layout. So
+# this matches only a path rooted at the skills directory.
+_RULESET_IN_SKILLS_DIR = re.compile(
+    "[.]claude/skills/[^ ]*ruleset", re.I)
+_INSTALLED_RULESET_DIR = "ai-power-tools/rulesets"
+BACKSLASH = chr(92)
+
+
+def check_ruleset_paths(target: Path) -> list[str]:
+    """Two-sided: no skill may document the old path, and some skill must
+    document the new one.
+
+    The positive half matters because a rename or a deletion would satisfy the
+    ban while quietly removing the only instruction a customer has for running
+    a ruleset from disk.
+
+    ``tools/`` is skipped. This function's own comment contains the string it
+    forbids, and a guard that fires on its own explanation teaches the next
+    reader to delete the explanation.
+    """
+    out: list[str] = []
+    documents_new = False
+    for f in iter_files(target):
+        rel = f.relative_to(ROOT)
+        if rel.parts and rel.parts[0] == "tools":
+            continue
+        text = f.read_text(encoding="utf-8", errors="replace")
+        if _INSTALLED_RULESET_DIR in text:
+            documents_new = True
+        for n, line in enumerate(text.splitlines(), 1):
+            if _RULESET_IN_SKILLS_DIR.search(line.replace(BACKSLASH, "/")):
+                out.append(
+                    f"{rel}:{n}: documents a ruleset under the skills directory. "
+                    f"Rulesets install under ~/.claude/{_INSTALLED_RULESET_DIR}/ "
+                    f"because they have no SKILL.md. The path as written resolves "
+                    f"to nothing on a clean install, and to STALE 1.4.1 rules on "
+                    f"a machine that upgraded."
+                )
+    if not documents_new:
+        out.append(
+            f"no shipped file documents the installed ruleset path "
+            f"(~/.claude/{_INSTALLED_RULESET_DIR}/). A customer who installs a "
+            f"ruleset has no instruction for running it from disk. If rulesets "
+            f"stopped being installable, remove this check in the same change "
+            f"and say why."
+        )
+    return out
+
+
 def is_blocking(finding: str) -> bool:
     """Whether a finding stops the release. Everything does but the line limit.
 
@@ -530,6 +590,7 @@ def main() -> int:
         findings.extend(check_file(f))
     findings.extend(check_images(target))
     findings.extend(check_op_drift(target))
+    findings.extend(check_ruleset_paths(target))
     if target == ROOT:
         findings.extend(check_manifest())
 

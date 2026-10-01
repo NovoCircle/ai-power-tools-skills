@@ -158,10 +158,12 @@ result = ea_validate(operation="audit", params={
     ),
 })
 
-# 2. Or install locally first, then run from the installed path
+# 2. Or install locally first, then run from the installed path.
+#    Rulesets do NOT install among the skills -- they carry no SKILL.md, so
+#    they go under the product data directory instead.
 ea_repository(operation="install_skills", params={"names": ["ruleset-archimate31"]})
 result = ea_validate(operation="audit", params={
-    "rules_path_or_content": "~/.claude/skills/ruleset-archimate31/archimate31_rules.yaml"
+    "rules_path_or_content": "~/.claude/ai-power-tools/rulesets/ruleset-archimate31/archimate31_rules.yaml"
 })
 
 # 3. Or pass inline YAML content as a string (no file or URL required)
