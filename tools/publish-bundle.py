@@ -197,6 +197,9 @@ def main() -> int:
     ap.add_argument("--verify-published", action="store_true",
                     help="re-fetch the published assets and re-hash them")
     ap.add_argument("--out", default=os.path.join(ROOT, ".release-staging"))
+    ap.add_argument("--notes-file", metavar="PATH",
+                    help="Release body. Defaults to a generated note naming "
+                         "the bundle and server versions.")
     args = ap.parse_args()
 
     manifest = load()
@@ -223,14 +226,48 @@ def main() -> int:
     staged = stage(pairs, args.out)
     print(f"\nstaged {len(staged)} assets in {args.out}")
 
+    # Build the REAL command, including the real notes file and the real asset
+    # list. Both used to be placeholders substituted nowhere: "<NOTES>" was
+    # passed to gh verbatim, and the asset list was replaced at call time by
+    # `cmd[:-1] + [args.out]`, which dropped the last asset and handed gh the
+    # staging DIRECTORY instead. Neither could fail in a dry run, because the
+    # dry run prints `cmd[:8]` and never executes -- so the rehearsal was green
+    # and the performance was broken, every time, until someone published.
+    notes_path = args.notes_file
+    if not notes_path:
+        notes_path = os.path.join(args.out, "RELEASE-NOTES.md")
+        body = "\n".join([
+            f"Skills bundle {manifest.get('bundle_version')} for "
+            f"AI Power Tools for Sparx EA.",
+            "",
+            f"Requires server **{manifest.get('min_server_version')}** or "
+            f"newer. The floor is enforced all or nothing: an older server "
+            f"receives no files and an error naming the version it needs.",
+            "",
+            f"{len(manifest.get('skills', []))} entries. Installed with "
+            f"`install_skills`; the installer verifies every file against "
+            f"`manifest.json` and refuses any whose bytes do not match.",
+            "",
+        ])
+        with open(notes_path, "w", encoding="utf-8", newline="\n") as fh:
+            fh.write(body)
+    assets = [os.path.join(args.out, os.path.basename(p)) for p in staged]
     cmd = ["gh", "release", "create", args.publish or "<TAG>",
-           "--repo", repo, "--title", f"Skills bundle "
-           f"{manifest.get('bundle_version')}", "--notes-file", "<NOTES>"]
-    cmd += [os.path.join(args.out, os.path.basename(p)) for p in staged]
+           "--repo", repo, "--title",
+           f"Skills bundle {manifest.get('bundle_version')}",
+           "--notes-file", notes_path] + assets
 
     if not args.publish:
         print("\nDRY RUN — nothing published. The command would be:\n")
-        print("  " + " ".join(cmd[:8]) + f" \\\n    <{len(staged)} assets>")
+        # Print every flag, eliding only the asset paths. The old version
+        # printed cmd[:8], which stopped exactly before --notes-file and so
+        # concealed that it was the literal string "<NOTES>".
+        flags = cmd[:len(cmd) - len(assets)]
+        print("  " + " ".join(flags) + f" \\\n    <{len(assets)} assets>")
+        print(f"\n  notes file: {notes_path}")
+        missing = [a for a in assets if not os.path.isfile(a)]
+        if missing:
+            print(f"  WARNING: {len(missing)} staged asset(s) not on disk")
         print("\nPublishing is a deliberate act and needs approval. Re-run "
               "with --publish TAG once you have it, then immediately run "
               "--verify-published: a bundle whose bytes do not match its "
@@ -239,7 +276,7 @@ def main() -> int:
         return 0
 
     print(f"\npublishing {args.publish} to {repo} ...")
-    out = subprocess.run(cmd[:-1] + [args.out], capture_output=True, text=True)
+    out = subprocess.run(cmd, capture_output=True, text=True)
     print(out.stdout or out.stderr)
     if out.returncode != 0:
         return out.returncode

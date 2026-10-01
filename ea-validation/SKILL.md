@@ -163,7 +163,12 @@ result = ea_validate(operation="audit", params={
 #    they go under the product data directory instead.
 ea_repository(operation="install_skills", params={"names": ["ruleset-archimate31"]})
 result = ea_validate(operation="audit", params={
-    "rules_path_or_content": "~/.claude/ai-power-tools/rulesets/ruleset-archimate31/archimate31_rules.yaml"
+    # Give the FULL path. `rules_path_or_content` does not expand `~`, and an
+    # unresolvable path is read as inline YAML -- so a tilde path fails with
+    # `invalid_yaml`, which points at the wrong problem entirely.
+    "rules_path_or_content":
+        r"C:\Users\<you>\.claude\ai-power-tools\rulesets"
+        r"\ruleset-archimate31\archimate31_rules.yaml"
 })
 
 # 3. Or pass inline YAML content as a string (no file or URL required)
