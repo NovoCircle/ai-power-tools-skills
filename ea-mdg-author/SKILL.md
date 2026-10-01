@@ -20,6 +20,15 @@ record that it ever existed. There's no reconciliation step; the export doesn't 
 happened. If you're not sure whether a technology has a source model, ask before editing its XML
 directly.
 
+**Generating a technology from a repository's existing usage?** That is path A, and this is the
+right skill for it — see [Authoring from a generated candidate metamodel](#authoring-from-a-generated-candidate-metamodel)
+below. Note what the choice commits you to: the generated `.xml` becomes the source of truth from
+the moment it is written, and the repository content it was derived from does **not**. Re-running
+the census later produces a fresh candidate, not an update to the file you shipped. If the
+technology needs a living source model instead, stop now and use `ea-mdg-model-build` — that is
+path B, and moving from A to B afterwards means importing the XML back as a profile package and
+never hand-editing again.
+
 ## Quick Reference
 
 | Task | Key Rule |
@@ -40,6 +49,8 @@ When automating MDG work, pick the right tool tier:
 | Operation | Use |
 |-----------|-----|
 | Author MDG XML, read/write files | Claude Code file tools (`Write`, `Read`, `Edit`) |
+| **Emit MDG XML from a metamodel dict** | `ea_mdg(operation="write_mdg_xml", params={"intermediate_metamodel": {...}, "output_path": "..."})` — the path-A route; hand-writing the XML is for edits afterwards |
+| Census a repository's existing usage | `_shared/tools/ea_census.py` — profile-aware. **Not** `summarize_stereotype_usage`, which reads the bare stereotype column and cannot see the language |
 | Parse and validate MDG XML | `ea_mdg(operation="parse_mdg_xml", params={"path_or_content": "..."})` |
 | Install MDG at application scope | `ea_mdg(operation="install_mdg", params={"scope": "user"})` |
 | Install MDG as model-embedded | `ea_mdg(operation="install_mdg", params={"scope": "embedded"})` — or COM `repo.ImportTechnology()` if MCP times out |
@@ -50,6 +61,116 @@ When automating MDG work, pick the right tool tier:
 > **`get_embedded_mdgs` is unreliable in EA 17+ for model-embedded MDGs.** Use
 > `repo.IsTechnologyLoaded("WBA")` or check Specialize → Technologies → Manage Technology
 > in the EA UI instead.
+
+---
+
+## Authoring from a generated candidate metamodel
+
+The usual entry to this skill is a blank file and a design. The other entry is a repository that
+already contains the language, undeclared — the stereotypes people reached for, the metaclasses
+they landed on, the tagged values they filled in. That is a **candidate metamodel**, and this
+section turns it into a technology. The rest of the skill then applies unchanged for edits
+afterwards.
+
+Route here from `ea-mdg-assess` §2a, which is where the path A / path B choice is made and
+recorded. If you have not made that choice yet, go back and make it — it is one-way.
+
+### The sequence
+
+```
+census  →  candidate metamodel  →  write_mdg_xml  →  parse_mdg_xml  →  install_mdg  →  verify
+                                                     (round-trip)
+```
+
+**1. Census, profile-aware.** `_shared/tools/ea_census.py`. Not `summarize_stereotype_usage`:
+that reads `t_object.Stereotype`, a bare name that does not identify the language, so it cannot
+separate a governed element from an ad hoc one carrying the same name.
+
+**2. Shape the candidate.** `write_mdg_xml` takes the dict shape `parse_mdg_xml` produces and
+`get_mdg_from_runtime` returns — which is what makes the round-trip in step 4 meaningful:
+
+```python
+{
+  "technology_id":   "WBA",            # see the 7-character rule below
+  "technology_name": "Westbrook Bank Architecture",
+  "version":         "1.0.0",
+  "notes":           "Generated from a census of <repository> on <date>.",
+  "stereotypes": [
+    {"name": "WBABusinessApplication", "alias": "Business Application",
+     "metatype": "WBABusinessApplication", "base_metaclass": "Component",
+     "notes": "...",
+     "tagged_values": [
+       {"name": "criticality", "type": "enumeration",
+        "values": ["Mission-Critical", "Business-Critical", "Important", "Standard"]},
+     ]},
+  ],
+  "diagram_types": [...],
+}
+```
+
+Put the provenance in `notes` — that the technology was generated, from which repository, on what
+date. It is the only place a path-A technology can record it, and `ea-mdg-assess` §2a requires it.
+
+**3. Emit.** `ea_mdg(operation="write_mdg_xml", params={"intermediate_metamodel": {...},
+"output_path": "..."})`.
+
+**4. Round-trip before installing anything.** Parse what you just wrote and compare it against the
+dict you passed in:
+
+```python
+ea_mdg(operation="parse_mdg_xml", params={"path_or_content": "<output_path>"})
+```
+
+Stereotype count, names, metaclasses and tagged values should come back equal. This is cheap and
+it is the only check that catches an emitter gap between what you described and what the file
+says — install and deploy both report success on a file that is missing content.
+
+**5. Install and verify** — hand off to `ea-mdg-deploy`. Do not treat a `True` return as proof;
+that skill says what to check instead.
+
+### Naming, when nothing declares an alias
+
+A census gives you stereotype names, not display names. There is no alias to copy, and mechanical
+case-splitting cannot see into an all-caps technology prefix — `WBABusinessApplication` splits to
+`wbabusiness_application`, not `business_application`.
+
+So the rule is **strip the known technology prefix first, then split**, and state the prefix you
+stripped rather than inferring one per name. Where the repository has a loaded technology,
+`get_mdg_from_runtime` supplies real aliases and they beat anything derived. Where it does not,
+derive a candidate and **put it in front of the user before shipping it** — a display name is
+customer-facing text and a wrong one is cheap to fix now and awkward later.
+
+⚠ **The technology id's effective limit is 7 characters, not 12.** The ≤ 12 rule in Quick
+Reference is EA's, and it applies to the *derived* ids too: the writer generates `<id>-Diag` and
+`<id>-TB`, so an 8-character id produces a 13-character derived id and is rejected. Unlike
+hand-authoring, this route catches it — `write_mdg_xml` pre-flights every id and returns a
+structured `id_too_long` naming the offending value, instead of EA silently rejecting the
+technology at load time. A census-derived id taken from a package or profile name will often be
+too long; shorten it deliberately rather than truncating.
+
+### Connector stereotypes
+
+A census over a live repository finds connector stereotypes as readily as element ones, and the
+emitter supports them in `UMLProfiles`. Generate them the same way, with one caution: an observed
+connector stereotype is frequently a *shipped language's* relationship — `BMM::Uses`,
+`StandardProfileL2::Realization`, `BPMN1.1::Assignment` — rather than a concept the technology
+should claim. Check the census's profile binding before promoting one. Adopting another language's
+relationship into your own technology makes a reporting distinction permanent that was probably an
+accident.
+
+### ⚠ Generated XML ships no reference data, so enum tagged values stay free text
+
+`_emit_mdg_xml_string` writes a hardcoded empty `<TaggedValueTypes/>` into every section. The
+`values=` list on a `<Tag>` is emitted and is what makes the dropdown work in a hand-authored
+file, but **no RefData is generated**, so a technology installed from `write_mdg_xml` output alone
+gives free-text fields where a closed list was intended.
+
+Consequence for a generated technology: the enum domains the census inferred, and the complete
+domains the MDG declared, are both present in the XML as `values=` and neither becomes repository
+reference data. Say so when handing the technology over, rather than letting someone discover it
+when a dropdown is a text box. Reference data is a repository-wide concern — see
+`ea-mdg-model-build` Phase 3, which covers `t_propertytypes` and how types get selected into a
+build. Tracked as `APT-2026-0055`.
 
 ---
 

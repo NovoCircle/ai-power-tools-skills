@@ -8,7 +8,7 @@
       "name": "_shared",
       "title": "Shared references",
       "description": "Reference material several EA skills link to: the Westbrook Bank canonical example, EA latency guidance, and file-encoding guidance. Not a skill \u2014 it has no SKILL.md and does not load as one. It installs beside the skills so their relative links resolve.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "min_server_version": "2.3.0",
       "files": [
         "_shared/references/ea-ui-verification.md",
@@ -242,7 +242,7 @@
       "name": "ea-mdg-assess",
       "title": "ea-mdg-assess",
       "description": "Work out what modelling-language situation a repository is actually in before acting \u2014 which technologies are loaded, embedded or merely registered, and how much of the model conforms",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "min_server_version": "2.2.0",
       "files": [
         "ea-mdg-assess/SKILL.md",
@@ -250,7 +250,7 @@
         "ea-mdg-assess/references/verification-walkthrough.md"
       ],
       "sha256": {
-        "ea-mdg-assess/SKILL.md": "40c603412ea4ecd04ad1e87fcef3bb0cc8542c57bfcc385831d43662a2fb4fed",
+        "ea-mdg-assess/SKILL.md": "8c955061988ccd8a10a3bbe16581c6b58299acf621b4fcbc766c80ea3e4de5ba",
         "ea-mdg-assess/references/three-states.md": "b6cba289449191da6280975c5106ea94098d015d7d6f7f48fa4c30478edb7786",
         "ea-mdg-assess/references/verification-walkthrough.md": "a98249cc9934336eb9931ec52391df87fff2fae294354c722dab6ccee513b95f"
       }
@@ -259,7 +259,7 @@
       "name": "ea-mdg-author",
       "title": "ea-mdg-author",
       "description": "Author MDG Technology XML files for Sparx EA \u2014 stereotypes, tagged values, toolbox pages, Quick Linker rules, and validation sidecars",
-      "version": "1.2.1",
+      "version": "1.3.0",
       "min_server_version": "2.2.0",
       "files": [
         "ea-mdg-author/SKILL.md",
@@ -271,7 +271,7 @@
         "ea-mdg-author/references/xml-skeleton.md"
       ],
       "sha256": {
-        "ea-mdg-author/SKILL.md": "8ca6002d489883978f021a17e874e4bb1ca68cd93e4446322165101e47a6d7c3",
+        "ea-mdg-author/SKILL.md": "10eef8350e1f47c2635bf8b04d84624e45c40060b3d650d2dfda7df2a49695d7",
         "ea-mdg-author/references/diagrams-toolboxes.md": "e81b5bff2094768ee93b73e5d33bb233057a1133434f773c4941c6328fc8d557",
         "ea-mdg-author/references/post-install-migration.md": "b2e3f1a2f047042a917eea2b201ebb454df7886ef0136d316bc092f997dd3cec",
         "ea-mdg-author/references/quick-linker.md": "1b0e4e93230bce9138b650aa403f73e370cc6592807009949404b8f06ade232a",
@@ -284,26 +284,28 @@
       "name": "ea-mdg-deploy",
       "title": "ea-mdg-deploy",
       "description": "Deploy and test an EA MDG Technology",
-      "version": "1.1.1",
+      "version": "1.2.0",
       "min_server_version": "1.0.3",
       "files": [
         "ea-mdg-deploy/SKILL.md"
       ],
       "sha256": {
-        "ea-mdg-deploy/SKILL.md": "c00d4830f958fce15adc054a7d3f5e4994b96d3bad29079c8ef6071e89677803"
+        "ea-mdg-deploy/SKILL.md": "b99d5ce83017435803386d78a7f8f02c63d8b07a49ad98e6c5524888d156ea34"
       }
     },
     {
       "name": "ea-mdg-model-build",
       "title": "ea-mdg-model-build",
       "description": "Build a Sparx EA MDG Technology from a source model inside a repository \u2014 profile packages, toolbox/diagram profiles, reference data, and the export/build/deploy procedure",
-      "version": "1.0.1",
+      "version": "1.1.0",
       "min_server_version": "2.3.0",
       "files": [
-        "ea-mdg-model-build/SKILL.md"
+        "ea-mdg-model-build/SKILL.md",
+        "ea-mdg-model-build/references/generating-from-a-census.md"
       ],
       "sha256": {
-        "ea-mdg-model-build/SKILL.md": "91e2aec2ac26781ccbc33d419e291b909169bf800d115068f0808ce36e2854d8"
+        "ea-mdg-model-build/SKILL.md": "32237f057d11c39547e08bc7521b219790dad8b6c97e697e333a2c4592a5eb13",
+        "ea-mdg-model-build/references/generating-from-a-census.md": "70e682c06efc17d9b80081daa6c6344a5d45ee0b6e462beac30143a50487957d"
       }
     },
     {
