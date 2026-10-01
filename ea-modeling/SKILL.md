@@ -207,18 +207,23 @@ language_type / StyleEx mapping tables:
 ## 6. Diagram Layout
 
 `layout_diagram` works as of v1.0.0 (the earlier GUID bug, REQ-004, is fixed) — call it
-freely. `add_elements_to_diagram_bulk` auto-applies `"Hierarchical"` layout after placement by
-default; pass `layout=None` to skip or another style name to override.
+freely. `style` takes exactly four values: `Orthogonal`, `Hierarchical`, `Circular`,
+`Sequence`. As of server 3.0.0 anything else is a structured `invalid_layout_style` error
+rather than a silent fallback to `Orthogonal`. `add_elements_to_diagram_bulk` defaults to
+`layout="auto"` — element coordinates you supplied are kept as given, and `Hierarchical` runs
+only when no element supplied any; pass `layout=None` to skip layout or a style name to force
+one.
 
 ---
 
-## 6.5 Connector Visibility on Diagrams — t_diagramlinks
+## 6.5 Connector Rendering and t_diagramlinks
 
-**The most important diagram trap.** Placing elements on a diagram does NOT automatically
-render the connectors between them — `t_connector` (logical) and `t_diagramlinks` (visible
-rendering) are independent stores. Since v1.0.4, `add_elements_to_diagram_bulk` auto-repairs
-this. If adding elements one at a time, or repairing an older diagram, call
-`ea_diagram(operation="add_connectors_to_diagram_bulk", params={"diagram_id": <id>})`. Full
+**A `t_diagramlinks` row styles a connector; it does not make it visible.** Verified against
+EA 17.1 build 1716: EA draws the relationship between two placed elements with or without a
+row. The row carries per-diagram presentation — route, color, width, label placement, hidden
+flag — and is written by EA's own layout pass. In `get_diagram`, a non-zero `InstanceID` is a
+stored placed link; `0` means EA is drawing it with no row behind it. If a line is genuinely
+missing, look at whether both endpoints are placed on that diagram, not at the table. Full
 explanation: [`references/diagrams_and_connectors.md`](references/diagrams_and_connectors.md) §3.
 
 ---

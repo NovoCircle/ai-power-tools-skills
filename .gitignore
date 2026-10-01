@@ -3,3 +3,10 @@
 __pycache__/
 *.pyc
 .DS_Store
+
+# Tool caches. Not assets; the gate skips them too.
+.pytest_cache/
+
+# Staging area built by tools/publish-bundle.py. Regenerated on demand and
+# never committed: it is a flattened copy of tracked files.
+.release-staging/

@@ -60,7 +60,7 @@ ea_analyze(operation="trace_connectors", params={"element_id": 140})
 `direction` defaults to `downstream` and `depth` defaults to `4`; `depth_reached: 1` here just
 means the search ran out of edges to follow, not that it stopped early.
 
-**Step 2 -- neighbourhood via `traverse_element_subgraph`,** run from the upstream element
+**Step 2 -- neighborhood via `traverse_element_subgraph`,** run from the upstream element
 `Westbrook Customer Self-Service Web` (79) instead, to see the fuller local picture before
 touching anything connected to it:
 

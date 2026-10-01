@@ -106,6 +106,35 @@ class TestUnknownIdentifiers:
         f = _write(library, "s/SKILL.md", "# s\n\nUse ArchiMate3::ArchiMate_Node\n")
         assert "unrecognized" not in _findings(f)
 
+    def test_a_sparx_id_containing_a_space_is_not_reported(self, library):
+        """`MDG_NS` cannot see a space, so these need their own allowance.
+
+        The pattern captures only the last word before `::`, so
+        `TOGAF Diagrams::TOGAF_Interface` arrives as `Diagrams` and
+        `ZF Owner::OwnerTime` as `Owner` - both real Sparx-shipped ids, and both
+        were blocking honest bindings until the full id was matched instead.
+        """
+        for text in ("Use TOGAF Diagrams::TOGAF_Interface here",
+                     "Use ZF Owner::OwnerTime here",
+                     "Use ZF Planner::PlannerData here"):
+            f = _write(library, "s/SKILL.md", "# s\n\n" + text + "\n")
+            assert "unrecognized" not in _findings(f), text
+
+    def test_the_bare_word_before_the_space_is_still_unknown(self, library):
+        """THE REASON THE FULL ID IS MATCHED RATHER THAN THE BARE WORD.
+
+        Adding `Diagrams` and `Owner` to `KNOWN_IDS` would have been the one-line
+        fix, and it would have whitelisted every customer whose technology
+        happens to end in one of those words - the exact opposite of what this
+        rule exists for. This fails if anyone ever takes that shortcut.
+        """
+        for text in ("Use Acme Diagrams::AcmeThing here",
+                     "Use Contoso Owner::ContosoThing here",
+                     "Use Diagrams::Thing here"):
+            f = _write(library, "s/SKILL.md", "# s\n\n" + text + "\n")
+            assert "unrecognized MDG namespace" in _findings(f), text
+
+
 
 # ---------------------------------------------------------------------------
 # Encoding — the class that broke v1.4.1
@@ -251,6 +280,195 @@ class TestOperationDrift:
         assert gate.op_drift_ran() is False
 
 # ---------------------------------------------------------------------------
+# Rule 4 — the Sparx diagram gallery must not leak into the bundle
+#
+# The half that matters is TestGalleryNamesNotCaught. A copyright rule earns
+# its keep by being precise: widen it until it fires on ordinary words and
+# somebody switches it off, and then a real leak ships. Those tests pin every
+# term we deliberately let through, so a later reader has to argue with a
+# failing test rather than quietly broaden a regex.
+# ---------------------------------------------------------------------------
+
+CORPUS_CATALOG = (
+    "file\tnotation\tgrammar\n"
+    "bpmn-business-process-hardware-retailer.png\tBPMN\tlanes\n"
+    "sysml-requirements-hsuv-specification.png\tSysML\ttree\n"
+)
+
+
+class TestCorpusImages:
+    @pytest.fixture
+    def catalog(self, tmp_path):
+        c = tmp_path / "catalog-rescored.tsv"
+        c.write_text(CORPUS_CATALOG, encoding="utf-8")
+        return c
+
+    def test_the_catalog_supplies_the_corpus_filenames(self, catalog):
+        assert gate.corpus_image_names(catalog) == {
+            "bpmn-business-process-hardware-retailer.png",
+            "sysml-requirements-hsuv-specification.png",
+        }
+
+    def test_a_corpus_image_is_caught_and_named(self, library, catalog):
+        img = library / "ea-modeling" / "bpmn-business-process-hardware-retailer.png"
+        img.parent.mkdir(parents=True)
+        img.write_bytes(b"\x89PNG\r\n\x1a\n")
+        findings = gate.check_images(library, catalog=catalog)
+        assert any("corpus image" in f for f in findings), findings
+
+    def test_a_renamed_corpus_image_is_still_caught(self, library, catalog):
+        """The reason the rule is "no images" and not "no corpus filenames".
+
+        A basename match alone is defeated by `cp gallery.png screenshot.png`,
+        so it would be the weaker rule as well as the more brittle one.
+        """
+        img = library / "ea-modeling" / "screenshot.png"
+        img.parent.mkdir(parents=True)
+        img.write_bytes(b"\x89PNG\r\n\x1a\n")
+        findings = gate.check_images(library, catalog=catalog)
+        assert any("image file in the bundle" in f for f in findings), findings
+
+    @pytest.mark.parametrize("name", [
+        "diagram.png", "diagram.jpg", "diagram.jpeg", "diagram.gif", "diagram.svg",
+    ])
+    def test_every_image_format_is_covered(self, library, catalog, name):
+        img = library / "ea-modeling" / name
+        img.parent.mkdir(parents=True, exist_ok=True)
+        img.write_bytes(b"\x89PNG\r\n\x1a\n")
+        assert gate.check_images(library, catalog=catalog)
+
+    def test_a_missing_catalog_still_blocks_the_image(self, library, tmp_path):
+        """The degradation path: a bundle-only checkout has no research/.
+
+        Without the catalog the finding cannot say *which* corpus image this
+        is, but it must still be a finding. A check that goes quiet when its
+        reference data is absent is indistinguishable from a check that passed.
+        """
+        assert gate.corpus_image_names(tmp_path / "nope.tsv") == set()
+        img = library / "ea-modeling" / "bpmn-business-process-hardware-retailer.png"
+        img.parent.mkdir(parents=True)
+        img.write_bytes(b"\x89PNG\r\n\x1a\n")
+        findings = gate.check_images(library, catalog=tmp_path / "nope.tsv")
+        assert len(findings) == 1, findings
+        assert "image file in the bundle" in findings[0]
+
+    def test_a_text_only_bundle_is_clean(self, library, catalog):
+        _write(library, "ea-modeling/SKILL.md", "# s\n\nWestbrookBank.qea\n")
+        assert gate.check_images(library, catalog=catalog) == []
+
+    def test_an_allowlisted_image_passes(self, library, catalog, monkeypatch):
+        """The sanctioned escape hatch, so nobody needs to disable the rule."""
+        img = library / "ea-modeling" / "ours.png"
+        img.parent.mkdir(parents=True)
+        img.write_bytes(b"\x89PNG\r\n\x1a\n")
+        monkeypatch.setattr(gate, "ALLOWED_IMAGES", {"ea-modeling/ours.png"})
+        assert gate.check_images(library, catalog=catalog) == []
+
+
+class TestGalleryNamesCaught:
+    @pytest.mark.parametrize("spelling", [
+        "Hardware Retailer", "hardware-retailer", "HardwareRetailer",
+        "hardware_retailer", "hardware retailers",
+    ])
+    def test_hardware_retailer_in_every_spelling(self, library, spelling):
+        f = _write(library, "s/SKILL.md", f"# s\n\nModel the {spelling} process.\n")
+        assert "Hardware Retailer" in _findings(f)
+
+    @pytest.mark.parametrize("spelling,subject", [
+        ("HSUV", "HSUV"),
+        ("hsuv", "HSUV"),
+        ("the HSUV specification", "HSUV"),
+        ("Hybrid SUV", "Hybrid SUV"),
+        ("hybrid-suv", "Hybrid SUV"),
+        ("HybridSUV", "Hybrid SUV"),
+        ("Distiller", "Distiller"),
+        ("distiller", "Distiller"),
+        ("the Distillery model", "Distiller"),
+        ("Bookstore", "Bookstore"),
+        ("book-store", "Bookstore"),
+        ("Book Store", "Bookstore"),
+        ("bookstores", "Bookstore"),
+        ("Nobel Prize", "Nobel Prize"),
+        ("nobel-prize", "Nobel Prize"),
+        ("NobelPrize", "Nobel Prize"),
+    ])
+    def test_a_gallery_subject_is_caught(self, library, spelling, subject):
+        f = _write(library, "s/SKILL.md", f"# s\n\nSee the {spelling} example.\n")
+        findings = _findings(f)
+        assert f"gallery example subject '{subject}'" in findings, findings
+
+    def test_a_gallery_subject_in_a_fenced_block_is_caught(self, library):
+        # A name inside a code sample ships just as surely as one in prose.
+        f = _write(library, "s/SKILL.md",
+                   '# s\n\n```python\nname = "Hardware Retailer"\n```\n')
+        assert "Hardware Retailer" in _findings(f)
+
+    def test_a_gallery_subject_in_the_file_path_is_caught(self, library):
+        f = _write(library, "s/references/hsuv-requirements.md", "# notes\n\nplain\n")
+        assert "in the file path" in _findings(f)
+
+    def test_a_gallery_finding_is_blocking_not_advisory(self, library):
+        f = _write(library, "s/SKILL.md", "# s\n\nThe Hardware Retailer example.\n")
+        findings = gate.check_file(f)
+        assert findings
+        assert all(gate.is_blocking(x) for x in findings), findings
+
+    def test_a_corpus_image_finding_is_blocking_not_advisory(self, library):
+        img = library / "s" / "gallery.png"
+        img.parent.mkdir(parents=True)
+        img.write_bytes(b"\x89PNG\r\n\x1a\n")
+        findings = gate.check_images(library)
+        assert findings
+        assert all(gate.is_blocking(x) for x in findings), findings
+
+    def test_the_line_limit_remains_the_only_advisory_finding(self, library):
+        # Pins the contrast: without this, "blocking" could become vacuous.
+        body = "\n".join(f"line {i}" for i in range(gate.MAX_SKILL_LINES + 5))
+        f = _write(library, "s/SKILL.md", body + "\n")
+        assert not any(gate.is_blocking(x) for x in gate.check_file(f))
+
+
+class TestGalleryNamesNotCaught:
+    @pytest.mark.parametrize("line", [
+        # Gallery subjects that are ordinary industry vocabulary. Someone
+        # else's BPMN tutorial uses each of these too.
+        "A travel booking process spans three pools.",
+        "An email voting process needs a timer event.",
+        "A book lending process is a good first BPMN model.",
+        # Textbook state-machine and use-case subjects.
+        "Model a smart home device as a component.",
+        "A customer login state machine has three states.",
+        "A pedestrian crossing is the canonical traffic example.",
+        "Use Manage Inventory as the use case name.",
+        "The states of water example shows guards.",
+        # Electronics and physics vocabulary; SysPhS is an OMG standard.
+        "A flip flop needs two stable states.",
+        "An opamp block has two input ports.",
+        "A liquid tank has one fill port.",
+        "SysPhS bindings need a simulation profile.",
+        # Reference architectures the gallery reproduces from elsewhere.
+        "A connected vehicle solution spans two regions.",
+        "Chef Automate runs on three nodes.",
+        # Standards and framework names.
+        "Render the TOGAF ADM as a custom diagram.",
+        "The Zachman framework has six columns.",
+        "Use the ArchiMate motivation viewpoint.",
+        # Halves of a two-word subject, and near-miss compounds.
+        "Check the hardware requirements first.",
+        "Every retailer in the model is a business actor.",
+        "Buy hardware for a retailer and model both.",
+        "An SUV is a vehicle subtype.",
+        "Increase book storage on the shared volume.",
+        "The notebook store keeps one entry per run.",
+        "Store the diagram id for later.",
+        "Prized attributes are not tagged values.",
+    ])
+    def test_an_innocent_line_is_not_flagged(self, library, line):
+        f = _write(library, "s/SKILL.md", f"# s\n\n{line}\n")
+        assert "gallery example subject" not in _findings(f)
+
+
+# ---------------------------------------------------------------------------
 # The negative case that matters most
 # ---------------------------------------------------------------------------
 
@@ -265,3 +483,65 @@ def test_a_clean_file_produces_no_findings(library):
         "WestbrookBank.qea.\n"
     ))
     assert gate.check_file(f) == []
+
+
+class TestRulesetPathsAreTheInstalledOnes:
+    """Rulesets install OUTSIDE the skills directory because they have no
+    SKILL.md. A skill that documents them under ~/.claude/skills sends the
+    reader to a directory the installer never writes.
+
+    Bundle 1.4.1 did install them among the skills, and that leftover copy was
+    the only thing making the old documented path resolve. So the symptom was
+    invisible until the copy was pruned: upgraders read 1.4.1 rules and got
+    confident wrong answers, fresh installs found nothing.
+    """
+
+    _GOOD = "run it from ~/.claude/ai-power-tools/rulesets/x/rules.yaml\n"
+
+    def test_the_old_skills_directory_path_is_caught(self, library):
+        _write(library, "ea-validation/SKILL.md",
+               self._GOOD +
+               '"rules": "~/.claude/skills/ruleset-archimate31/rules.yaml"\n')
+        findings = gate.check_ruleset_paths(library)
+        assert any("documents a ruleset under the skills directory" in f
+                   for f in findings), findings
+
+    def test_a_windows_separator_does_not_slip_past(self, library):
+        """The first version of this pattern matched only forward slashes and
+        nobody would have noticed, because the file that broke used them."""
+        bs = gate.BACKSLASH
+        _write(library, "ea-validation/SKILL.md",
+               self._GOOD + f'"rules": "~{bs}.claude{bs}skills{bs}ruleset-a{bs}r.yaml"\n')
+        findings = gate.check_ruleset_paths(library)
+        assert any("documents a ruleset under the skills directory" in f
+                   for f in findings), findings
+
+    def test_a_github_url_is_not_caught(self, library):
+        """URL fetch reads the REPO layout, where that path is correct."""
+        _write(library, "ea-validation/SKILL.md", self._GOOD +
+               "https://raw.githubusercontent.com/o/r/main/"
+               "ruleset-archimate31/archimate31_rules.yaml\n")
+        assert gate.check_ruleset_paths(library) == []
+
+    def test_a_repo_relative_mention_is_not_caught(self, library):
+        _write(library, "ea-ruleset-author/SKILL.md", self._GOOD +
+               "the canonical set is `ruleset-archimate31/archimate31_rules.yaml`\n")
+        assert gate.check_ruleset_paths(library) == []
+
+    def test_documenting_no_installed_path_at_all_is_caught(self, library):
+        """The positive half. A rename or a deletion would otherwise satisfy
+        the ban while removing the only instruction for running a ruleset from
+        disk."""
+        _write(library, "ea-validation/SKILL.md", "no local path documented\n")
+        findings = gate.check_ruleset_paths(library)
+        assert any("no shipped file documents the installed ruleset path" in f
+                   for f in findings), findings
+
+    def test_the_gates_own_source_is_not_scanned(self, library):
+        """This rule's explanation necessarily contains the string it forbids.
+        A guard that fires on its own explanation teaches the next reader to
+        delete the explanation."""
+        _write(library, "tools/gate.py",
+               '"~/.claude/skills/ruleset-archimate31/rules.yaml"\n')
+        _write(library, "ea-validation/SKILL.md", self._GOOD)
+        assert gate.check_ruleset_paths(library) == []

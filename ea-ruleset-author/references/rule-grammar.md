@@ -88,10 +88,43 @@ The most powerful rule type. Write them in this order:
 3. Write the description explaining WHY these constraints exist
 4. Set severity: `error` — endpoint violations are always structural
 
-**EA stereotype names:** EA stores stereotypes as bare names without namespace prefix.
-The selector `connector_stereotype: Assignment` matches connectors whose stereotype is
-`Assignment`, regardless of whether EA shows it as `ArchiMate3::Assignment` internally.
-Use the bare name everywhere in the YAML.
+**EA stereotype names: unqualified, but otherwise verbatim.** This is the single
+easiest way to ship a ruleset that validates nothing. `validate_model` selects with
+`Stereotype IN (...)` against `t_object` / `t_connector` -- exact string comparison, no
+normalization and no prefix stripping. A name one character off selects nothing, the
+rule reports no violations, and the output is indistinguishable from a clean model.
+
+*Leave the technology NAMESPACE off.* The profile-qualified form
+`ArchiMate3::ArchiMate_Assignment` is real, but it is stored in `t_xref` rows named
+`Stereotypes` and reached through the API's `StereotypeEx`. The `Stereotype` column that
+rules match on holds the unqualified name, so matching the qualified form finds nothing.
+
+*Do not strip anything else.* A prefix that belongs to the stereotype's own name is not a
+namespace, and whether a technology uses one is a fact about that technology:
+
+| Technology | What `t_object.Stereotype` holds | Selector to write |
+|---|---|---|
+| EA built-in ArchiMate (1, 2 and 3.1) | `ArchiMate_Assignment` | `ArchiMate_Assignment` |
+| EA built-in BPMN2.0 | `BusinessProcess` | `BusinessProcess` |
+
+Both rows were measured on EA 17.1 build 1716, in the MDG declaration and in stored model
+data. So for an ArchiMate ruleset the selector reads:
+
+```yaml
+    selector:
+      type: connector
+      connector_stereotype: ArchiMate_Assignment   # NOT `Assignment` — that matches 0
+```
+
+*Measure it, do not infer it.* Run `summarize_stereotype_usage`, or read
+`SELECT DISTINCT Stereotype FROM t_object`, against a model actually built with the
+technology. Do not take the name from the notation's specification, and do not take it
+from the MDG's `metatype` attribute -- `metatype` is the concept name without the prefix,
+which is precisely the trap. `ruleset-archimate31/archimate31_rules.yaml` carries the
+worked measurement in its header, including what the unprefixed form did when it shipped.
+
+*Sanity-check the run.* Zero violations and zero matched elements are the same output.
+Confirm a ruleset matched more than zero elements before reporting a model as clean.
 
 ## Writing connector count rules
 

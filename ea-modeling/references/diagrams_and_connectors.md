@@ -80,46 +80,112 @@ For a BPMN diagram, `Diagram_Type` should contain `"Business Process"` or `"BPMN
 
 The earlier GUID bug (REQ-004) is **fixed in v1.0.0**. Call `layout_diagram` freely.
 
-`ea_diagram("add_elements_to_diagram_bulk")` auto-applies `"Hierarchical"` layout after placement by
-default (`layout="Hierarchical"`). You can pass `layout=None` to skip it, or pass any
-supported style name (`"Circular"`, `"Digraph"`, etc.) to override.
-
 To manually trigger layout on a diagram at any time:
 ```
 ea_diagram(operation="layout_diagram", params={"diagram_id": <id>, "style": "Hierarchical"})
 ```
 
+### The four valid layout styles
+
+`style` accepts exactly four values, and nothing else:
+
+| Style | Use it for |
+|---|---|
+| `Orthogonal` | Right-angled routing over a general-purpose diagram |
+| `Hierarchical` | Layered, top-down structures (the usual choice for a freshly populated diagram) |
+| `Circular` | Peer sets with no natural hierarchy |
+| `Sequence` | Sequence diagrams |
+
+There is no `Digraph` style — it has never been one, despite appearing in older notes.
+
+### Behavior change in server 3.0.0 — unrecognized styles now error
+
+Through 2.x an unrecognized style name was accepted silently: the server laid the diagram out
+as `Orthogonal` and set `style_fallback: true` in the response. From **3.0.0** it is a
+structured error instead, and no layout runs:
+
+```json
+{"error": "invalid_layout_style", "diagram_id": 123, "requested_style": "Digraph",
+ "valid_styles": ["Circular", "Hierarchical", "Orthogonal", "Sequence"],
+ "message": "..."}
+```
+
+Treat the error as a caller bug: pick one of the four names from `valid_styles` and re-issue.
+Do not retry the same style expecting the old fallback.
+
+### `add_elements_to_diagram_bulk` — the `layout` default is `"auto"`
+
+`ea_diagram("add_elements_to_diagram_bulk")` defaults to `layout="auto"`, not to a fixed style:
+
+- If **any** element in the call supplied explicit `left` / `top` / `right` / `bottom`
+  coordinates, no layout runs and the coordinates you gave are kept.
+- If **none** did, `Hierarchical` runs after placement.
+
+Pass `layout=None` to skip layout regardless, or one of the four style names above to force
+that style regardless.
+
 ---
 
-## 3. Connector visibility on diagrams — t_diagramlinks
+## 3. Connector rendering and t_diagramlinks
 
-**This is the most important diagram trap.** Placing elements on a diagram via
-`add_elements_to_diagram_bulk` does NOT automatically render the connectors between
-those elements. EA stores two completely independent things:
+**A `t_diagramlinks` row is not what makes a connector visible.** Behavior in this section was
+verified against **EA 17.1 build 1716**: a connector between two placed elements renders
+correctly with **zero** `t_diagramlinks` rows for that diagram, and still renders after EA is
+closed and reopened. Deleting rows does not suppress the line. Earlier revisions of this file
+said the opposite — they were wrong.
 
-| Store | What it is | Tools that write it |
+What the row actually carries is **per-instance presentation** for one link on one diagram:
+route mode, line color, line width, label placement and visibility, the hidden flag. With no
+row, EA draws the connector with its defaults. **The row is required to *style* a connector,
+not to *show* it.**
+
+| Store | What it is | How it comes to exist |
 |---|---|---|
-| `t_connector` | The logical connector (exists in the model) | `ea_model("create_connector")`, `ea_model("create_connectors_bulk")` |
-| `t_diagramlinks` | The diagram-visible rendering of that connector | `ea_diagram("add_connectors_to_diagram_bulk")` (auto-called by `ea_diagram("add_elements_to_diagram_bulk")`) |
+| `t_connector` | The logical connector — model-level, independent of any diagram | `ea_model("create_connector")`, `ea_model("create_connectors_bulk")` |
+| `t_diagramlinks` | Per-diagram presentation of that connector — route, color, width, label placement, hidden flag | Written by EA's own layout pass over the diagram; absent until then, and absence is not a defect |
 
-If `t_diagramlinks` rows are missing, connectors are invisible on the diagram even though
-`ea_model("get_connector")` and `ea_analyze("execute_sql")` against `t_connector` show them present.
+### `InstanceID` — telling a stored link from a drawn one
 
-**`ea_diagram("add_elements_to_diagram_bulk")` auto-repairs this** (since v1.0.4):
-- After placing elements it calls `ea_diagram("add_connectors_to_diagram_bulk")` with `connector_ids=None`
-  which auto-discovers every connector whose both endpoints are already on the diagram and
-  are not yet in `t_diagramlinks`.
-- This is controlled by the `auto_show_connectors=True` default.
+`ea_diagram("get_diagram")` reads the COM `DiagramLinks` collection, not the table, so it
+reports links EA is rendering whether or not a row backs them:
 
-If you manually add elements via `ea_diagram("add_element_to_diagram")` (single-element variant), you
-must call `ea_diagram(operation="add_connectors_to_diagram_bulk", params={"diagram_id": <id>})` afterwards yourself — or use
-the bulk variant which handles it automatically.
+| `InstanceID` | Meaning |
+|---|---|
+| Non-zero | A real placed link with a stored `t_diagramlinks` row — its presentation is persisted and can be styled |
+| `0` | EA is drawing the connector without a stored row — the line is on the diagram, there is simply nothing yet to style |
 
-**To repair a diagram with missing connector lines** (e.g. diagrams built with v1.0.3 or
-earlier):
-```
-ea_diagram(operation="add_connectors_to_diagram_bulk", params={"diagram_id": <id>})
-```
+Use that distinction to decide whether a styling change has somewhere to land. Do not use it
+to decide whether a connector is visible; both values render.
+
+### What does not create a row
+
+Neither `DiagramLinks.AddNew`, nor `Refresh()`, nor `ReloadDiagram()`, nor `CloseDiagram()`
+produces a `t_diagramlinks` row on its own. EA's own layout pass over the diagram is what
+writes one.
+
+Consequently, calling `ea_diagram("add_connectors_to_diagram_bulk")` to "restore" connectors
+you cannot see is not a fix — the missing row was never the reason they were invisible. Reach
+for that operation when you are working on link presentation, not when a line is absent.
+
+### When a connector really is missing from a diagram
+
+If an expected line is genuinely absent, the cause is in the model or in what got placed, not
+in `t_diagramlinks`. Check in this order:
+
+1. **Are both endpoints on this diagram?** EA draws a relationship only between two elements
+   that are both placed on it. One endpoint missing and there is no line to draw — this is by
+   far the most common cause.
+   ```
+   ea_analyze(operation="execute_sql", params={"sql": """
+       SELECT Object_ID FROM t_diagramobjects WHERE Diagram_ID = <id>
+   """})
+   ```
+2. **Does the connector exist at all?** Confirm the logical connector is in `t_connector` with
+   the endpoints you expect — `ea_model("list_connectors_for_element")` or SQL against
+   `t_connector` on `Start_Object_ID` / `End_Object_ID`.
+3. **Is it hidden on this diagram?** A `t_diagramlinks` row *with the hidden flag set* does
+   suppress the line. That is the one case where a row changes visibility — and it needs a row
+   to exist, which is the opposite of the old claim.
 
 ---
 
@@ -217,3 +283,106 @@ sequence. Write the note once, after that sequence completes, from that context.
 from an unrelated update (a rename, a `StyleEx` fix) never clears or overwrites it. Re-set
 `Notes` only when the diagram's purpose or contents changed enough to make the old note
 wrong.
+
+---
+
+## 6. Custom element images — drawing an element as an icon
+
+Iconography (a cloud-vendor glyph, a device picture, a logo) is two rows, not one. The
+artwork lives in `t_image`, which EA calls the Image Manager; each **placement** points at
+it through `t_diagramobjects.ObjectStyle`'s `ImageID=` token. Setting one without the other
+does nothing visible.
+
+```python
+# 1. Get the artwork into the model. PNG, EMF or WMF. Idempotent on content:
+#    re-adding the same file returns the existing id with status "skipped".
+img = ea_diagram(operation="add_image", params={
+    "path": r"<icon-dir>\core-banking.png",
+    "name": "WBA Core Banking",            # optional; defaults to the file name
+})
+
+# 2. Point a PLACED element at it. Other diagrams are untouched.
+ea_diagram(operation="set_element_image", params={
+    "diagram_id": <id>,
+    "element_id": <id>,
+    "image_id": img["image_id"],           # or image_name="WBA Core Banking"
+    "name_under_image": True,              # caption below the icon
+})
+
+# 3. See it. The token being stored is not the same as EA drawing it.
+ea_diagram(operation="verify_diagram", params={"diagram_id": <id>,
+                                               "include_svg": True})
+```
+
+### Rules that save a debugging cycle
+
+| Rule | Why |
+|---|---|
+| The element must already be placed on the diagram | The image rides on the placement row, not the element; an unplaced element returns `element_not_on_diagram` |
+| `add_image` needs a `.qea`/`.qeax` project | EA's COM API has no route to the image library at all, so this writes SQL, and a binary literal has no portable syntax. On other backends load the artwork through EA's own Image Manager — `list_images` and `set_element_image` then work normally |
+| PNG, EMF and WMF only | EA re-encodes raster artwork to PNG when it takes it in. A JPEG, GIF or BMP is refused with the conversion named, rather than stored under a type that would draw blank |
+| `ok: true` means the token is stored, not that the picture renders | Both operations re-read after writing and report `verified`. Rendering is `verify_diagram`'s job |
+| Clearing keeps the artwork | `clear_element_image` writes `ImageID=0` on that one placement. The `t_image` row survives, so other placements using it are unaffected |
+
+### EA's shipped icon libraries are NOT image-library rows
+
+Importing one of EA's cloud-icon pattern files (AWS, Azure, Google Cloud) adds nothing to
+`list_images`. In those files each icon is an **Artifact element** carrying the `Image`
+stereotype from EA's own built-in profile, with its PNG as an attached document, so it
+imports as elements plus documents. `ImageID=` resolves against `t_image`, which is a separate store — EA's own
+example model has 56 of those elements and 143 image-library rows, and the two name sets do
+not intersect. If a customer already has the icon files on disk, `add_image` each file; the
+library import is an element gallery and does not substitute for it.
+
+---
+
+## 7. Custom Style — shape, opacity, alignment, rotation, border, stack
+
+These are EA's Custom Style levers: how one **placement** is drawn. They live in
+`t_diagram.StyleEx` under `OPTIONS_<DUID>=`. Callers never handle DUIDs — pass
+`diagram_id` and `element_id` and the server resolves the placement's own.
+
+```python
+ea_diagram(operation="set_custom_style", params={
+    "diagram_id": <id>, "element_id": <id>,
+    "shape": "round rectangle",      # rectangle | round rectangle | ellipse
+                                     # | diamond | triangle
+    "opacity": 50,                   # 0 | 25 | 50 | 75 | 100
+    "text_align": "top center",      # top/bottom + left/center/right, or
+                                     # left center | center | right center
+    "border_style": "dash",          # solid | dash | dot | dash-dot | none
+})
+
+# Styling a whole diagram: one call, one write, one reload.
+ea_diagram(operation="set_custom_styles_bulk", params={
+    "diagram_id": <id>,
+    "objects": [{"element_id": a, "shape": "ellipse"},
+                {"element_id": b, "shape": "ellipse", "opacity": 25}],
+})
+```
+
+Also available: `rotation` (`clockwise` | `counterclockwise` | `none`), `stack_count`
+(1 or more — draws the element as that many stacked cards) and `stack_direction`
+(`NE` | `SE` | `SW` | `NW`).
+
+### Three things to know
+
+**Omitting a lever leaves it alone; `"default"` resets it.** A reset REMOVES the key rather
+than writing a value, because that is how EA records a default — it writes nothing at all
+for one. `shape="rectangle"`, `opacity=100`, `text_align="center"`, `border_style="solid"`,
+`rotation="none"`, `stack_count=1` and `stack_direction="NE"` are each their lever's default
+and behave the same way.
+
+**A value EA does not recognize is refused, not written.** EA ignores a number it does not
+know, so writing one leaves the element unchanged while the call looks like it worked.
+Spelling is forgiving on the accepted values: `"Round Rectangle"`, `"round-rectangle"` and
+`"roundrect"` are the same value.
+
+**These are not the color levers.** Fill, border and font color are
+`set_diagram_object_appearance` (per diagram) or `set_element_appearance` (model-wide). An
+element drawn as a picture is `set_element_image`, §6.
+
+The response reports `sibling_keys_preserved`. Every other placement's style block lives in
+the same `StyleEx` string, along with `MDGDgm=`, which attaches the diagram to its modeling
+language — so a write that lost one of those is reported as a failure and the lost keys are
+named, rather than left for someone to find later.

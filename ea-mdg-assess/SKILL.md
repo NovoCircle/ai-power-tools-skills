@@ -78,7 +78,7 @@ technology's, not a description of one. Read `source` before you read anything e
 | `source` | What it means for your conclusion |
 |---|---|
 | `live` | Definitions read from the loaded technology. Safe to reason about as deployed. |
-| `registered_not_loaded` | The definitions exist, but EA does not currently have the technology loaded. Modelling against it will not behave as described until it is enabled in Manage Technology. |
+| `registered_not_loaded` | The definitions exist, but EA does not currently have the technology loaded. Modeling against it will not behave as described until it is enabled in Manage Technology. |
 | `session_parse` | These came from a file handed to `parse_mdg_xml` this session, which is not necessarily what EA loaded. |
 | `unavailable` | The call declines to answer. `error` says why: `mdg_loaded_no_definition` (loaded, but its XML is neither registered nor in the model — export it and run `parse_mdg_xml`), `unknown_mdg` (EA reports nothing loaded under that exact id), `cannot_determine` (EA could not be probed at all). |
 
