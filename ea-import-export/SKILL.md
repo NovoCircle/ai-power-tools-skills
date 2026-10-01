@@ -69,29 +69,27 @@ not a standard paper size.
 
 ## 4. XMI package export/import — `export_xmi` / `import_xmi`
 
-> **Verified defect (server v2.1.0) — do not trust this path for real interchange without
-> checking the output file yourself.** In this session, `export_xmi` against three different
-> Westbrook Bank packages (a plain component package, one with tagged values and connectors, and
-> one containing a BPMN diagram) every time wrote an **XPDL 2.2 workflow-package stub**, not a
-> UML/XMI document — despite the tool's own response reporting `"xmi_type": "XMI 2.1"` and
-> `"status": "exported"`. The written file contained a `PackageHeader` and an empty
-> `TypeDeclarations` block; no elements, tagged values, or connectors were present. Re-importing
-> that file with `import_xmi` into a scratch package reported `"status": "imported"` but created
-> **zero** objects and **zero** child packages — confirmed by `execute_sql` counts of `t_object`
-> and `t_package` against the target package, both `0`.
+> **Fixed in server 2.2.0.** This path was genuinely broken and this skill told you not to trust
+> it. `export_xmi` wrote a ~350-byte **XPDL 2.2** stub containing none of the package's elements
+> while reporting `"xmi_type": "XMI 2.1"` and `"status": "exported"`, and re-importing it created
+> zero objects while reporting `"status": "imported"`. The cause was that `xmiType` is an ordinal
+> from Sparx's `EnumXMIType` and the mapping table had been written as though the ordinal were the
+> XMI version number, so every entry was wrong.
 >
-> **Practical guidance:**
-> - Never trust `status: "exported"` / `status: "imported"` alone. Open the exported file (or
->   count rows in the target package after import) before treating the operation as complete.
-> - If you need a package to actually survive a round trip today, use EA's baseline/compare
->   tooling (`ea_repository(operation="create_baseline")` etc.) or a `duplicate_package` copy
->   within the same repository instead of `export_xmi`/`import_xmi`.
-> - If you hit this yourself and need to report it, escalate through **`ea-diagnostic`** with
->   the exported file attached — the "two failed attempts at the same thing" threshold in
->   `ea-start-here` §3 applies directly here.
+> **What the server does now:** `export_xmi` reads the file back before reporting success and
+> confirms both that it is XMI and that the package's elements appear in it. A wrong-format or
+> empty result returns `xmi_export_wrong_format` or `xmi_export_empty` instead of a false success,
+> and the response carries `elements_in_package` / `elements_in_export` so you can see the export
+> is real. `xmi_type` accepts `"XMI 1.0"`, `"XMI 1.1"`, `"XMI 1.2"`, `"XMI 2.1"` (default),
+> `"XMI 2.4.1"` and `"XMI 2.5.1"`.
+>
+> **Still worth doing:** check `elements_in_export` against `elements_in_package` rather than
+> reading `status` alone. The server checks it for you now, but the habit is what caught this.
 
-Full repro steps, the exact file contents observed, and the SQL used to confirm zero import are
-in [`references/xmi-export-import.md`](references/xmi-export-import.md).
+The original investigation -- the file contents observed and the SQL that confirmed zero import --
+is kept in [`references/xmi-export-import.md`](references/xmi-export-import.md) as the record of a
+defect that reported success, which is worth reading for the pattern even though the specific bug
+is gone.
 
 ## 5. `generate_report` — RTF document generation
 
