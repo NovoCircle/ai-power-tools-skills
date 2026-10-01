@@ -339,8 +339,29 @@ library import is an element gallery and does not substitute for it.
 ## 7. Custom Style — shape, opacity, alignment, rotation, border, stack
 
 These are EA's Custom Style levers: how one **placement** is drawn. They live in
-`t_diagram.StyleEx` under `OPTIONS_<DUID>=`. Callers never handle DUIDs — pass
+`t_diagram.StyleEx` under `OPTIONS_<DUID>=`. You never pass a DUID — give
 `diagram_id` and `element_id` and the server resolves the placement's own.
+
+> **Precondition: the placement must already carry a DUID, and one you added
+> through the API does not.** Custom Style is keyed on that token, and EA only
+> writes it for placements EA itself created — dragged onto a diagram in the UI,
+> or brought in by an import. An element placed with `add_element_to_diagram` or
+> `add_elements_to_diagram_bulk` has no DUID, and neither `reload_diagram` nor a
+> `set_diagram_object_appearance` write creates one. The call returns
+> `placement_has_no_duid` and changes nothing. Measured on EA 17.1: 89 of 184
+> placements in a working model carry a DUID; every one added through the API
+> does not.
+>
+> **So for a diagram you generated, use `set_diagram_object_appearance`** — fill,
+> font color, border color and width, size and z-order all work on
+> API-placed elements. Custom Style's levers (shape, opacity, rotation, stacked
+> cards) are reachable only on placements EA made. If you need one of those on a
+> generated diagram, apply it through EA's own dialog — right-click the element,
+> Appearance, Custom Style — which makes EA mint the DUID itself.
+>
+> The server refuses rather than inventing a DUID, because minting one risks
+> naming a block EA never reads and copying another placement's would clone a
+> model-unique id. The refusal is deliberate, not a gap in error handling.
 
 ```python
 ea_diagram(operation="set_custom_style", params={
