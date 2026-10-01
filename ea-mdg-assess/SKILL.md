@@ -79,6 +79,11 @@ from ea_census import build_stereotype_index, census_elements, tag_coverage
 census = census_elements(objects, build_stereotype_index(xrefs))
 ```
 
+**The same census has a second consumer.** `ea-reporting-database` runs it to decide what tables a
+reporting database gets. If the ask is a *queryable extract* of the repository rather than a
+*technology* generated from it, go there instead — the census work is identical and only the output
+differs. Both can be run from one extract.
+
 Read the result before choosing a path. Three things in it change the decision:
 
 - **Ad hoc versus profile-bound usage of the same name.** One stereotype name can be both. If most

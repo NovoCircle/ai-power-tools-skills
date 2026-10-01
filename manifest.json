@@ -1,6 +1,6 @@
 {
   "manifest_version": "1.0",
-  "bundle_version": "3.0.1",
+  "bundle_version": "3.1.0",
   "released_at": "2026-10-01",
   "min_server_version": "3.0.0",
   "skills": [
@@ -254,7 +254,7 @@
       "name": "ea-mdg-assess",
       "title": "ea-mdg-assess",
       "description": "Work out what modelling-language situation a repository is actually in before acting \u2014 which technologies are loaded, embedded or merely registered, and how much of the model conforms",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "min_server_version": "2.2.0",
       "files": [
         "ea-mdg-assess/SKILL.md",
@@ -262,7 +262,7 @@
         "ea-mdg-assess/references/verification-walkthrough.md"
       ],
       "sha256": {
-        "ea-mdg-assess/SKILL.md": "8c955061988ccd8a10a3bbe16581c6b58299acf621b4fcbc766c80ea3e4de5ba",
+        "ea-mdg-assess/SKILL.md": "0701d2a6402d13f11979e30445a139c3f7c5758fb735bf02757904d4d9344620",
         "ea-mdg-assess/references/three-states.md": "b6cba289449191da6280975c5106ea94098d015d7d6f7f48fa4c30478edb7786",
         "ea-mdg-assess/references/verification-walkthrough.md": "a98249cc9934336eb9931ec52391df87fff2fae294354c722dab6ccee513b95f"
       }
@@ -397,17 +397,32 @@
       }
     },
     {
+      "name": "ea-reporting-database",
+      "title": "EA - reporting database",
+      "description": "Build a queryable relational database from an EA repository - elements, relationships, tagged values, attributes and diagram placements, typed by the technology that governs them - and reconcile it back against the repository. SQLite, with a data dictionary and an issued-SQL log.",
+      "version": "1.0.0",
+      "min_server_version": "3.0.0",
+      "files": [
+        "ea-reporting-database/SKILL.md",
+        "ea-reporting-database/references/the-schema.md"
+      ],
+      "sha256": {
+        "ea-reporting-database/SKILL.md": "b3081aa94514d50c16fededfa9818a92b782653604039406b53ffa31704af950",
+        "ea-reporting-database/references/the-schema.md": "7c216ea52eb314f14354848530e5c90edeb2e2c26326af1450a1525b07aeb93c"
+      }
+    },
+    {
       "name": "ea-stakeholder-reporting",
       "title": "ea-stakeholder-reporting",
       "description": "Turn a model into answers a non-modeller can act on \u2014 portfolio roll-ups by tagged value, business-language display terms, and checking coverage before presenting a figure",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "min_server_version": "2.2.0",
       "files": [
         "ea-stakeholder-reporting/SKILL.md",
         "ea-stakeholder-reporting/references/coverage-data.md"
       ],
       "sha256": {
-        "ea-stakeholder-reporting/SKILL.md": "538b275ef4a0ffe5b7286b8309f1bf248a511992da13d966f1cd1510a989a579",
+        "ea-stakeholder-reporting/SKILL.md": "1f0f3af69ef5c266ffebaeaf0f73b5fca40c5f88c17bbb93b0b5e497d4a3dc3a",
         "ea-stakeholder-reporting/references/coverage-data.md": "51dd954af09d18a32515715012bb3069689a526284bcacea5b39f4a1d252e101"
       }
     },
@@ -415,13 +430,13 @@
       "name": "ea-start-here",
       "title": "EA \u2014 start here",
       "description": "Entry point for any Sparx EA task: session preflight, then routing to the right skill",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "min_server_version": "2.2.0",
       "files": [
         "ea-start-here/SKILL.md"
       ],
       "sha256": {
-        "ea-start-here/SKILL.md": "a13b40c8c2b315ab522784e740493ae99abd126e88a4ee3d3b64e9d3ec4fade3"
+        "ea-start-here/SKILL.md": "d9270d1b03a476814ce70f98dce4127a9d1b883e1052637397ee204c441367ce"
       }
     },
     {
