@@ -114,7 +114,9 @@ as a skill.
 |---|---|---|
 | `install_skills` returns `error: "fetch_failed"` | GitHub unreachable, or no network | Retry. The source is always `releases/latest` on this repo |
 | Files were written but Claude does not offer the skills | The host has not re-scanned its skill directory | Restart the host, or toggle the extension off and on again |
-| Re-running the install does not pick up newer skill text | Your local edits are preserved by default, and reported on `skipped_local_edits` | Re-run with `force=True`; the bundled copy then overwrites your edits |
+| Re-running the install does not pick up newer skill text | A file whose content differs from both this bundle and the installer's own record of what it wrote is treated as yours and preserved, and reported on `skipped_local_edits` | Re-run with `force=True`; the bundled copy then overwrites it. A file you never edited is not listed there — an upgrade of an untouched file is applied |
+| `install_skills` returns `error: "server_too_old"` | The server is below the bundle-wide `min_server_version`. The bundle is all-or-nothing, so nothing was written | Upgrade AI Power Tools to the version named in the message, then re-run |
+| `install_skills` returns `complete: false` | Some requested file is not in place — see `incomplete_hint` for which of `skipped_incompatible`, `skipped_local_edits` or `errors` accounts for it | Follow the hint. `ok: true` only means the call ran |
 | A skill comes back on `skipped_incompatible` | Its `min_server_version` is above the running server | Upgrade the server. The bundle-wide floor is server 3.0.0 |
 | A file appears in `errors` with `sha256 mismatch` | The published asset does not hash to `manifest.json` | Nothing to fix locally — the installer refuses a file it cannot verify rather than writing it. Report it |
 | Two skills give contradictory guidance on one subject | A pre-2.2.0 install left the old names beside the new ones (`ea-mcp-validation` beside `ea-validation`) | Ask Claude to prune the legacy skills; it dry-runs first, then confirm to apply |
@@ -144,8 +146,14 @@ Bundle-level fields:
 
 * `bundle_version` — independent of the product version; bumps on every
   published release of this repo
-* `min_server_version` — bundle-wide floor; the installer refuses to
-  write any skill whose `min_server_version` exceeds the running server
+* `min_server_version` — bundle-wide floor, enforced **all or nothing**:
+  a server below it receives no files at all and
+  `error: "server_too_old"` naming the version needed. The bundle is
+  built, tested and released as a set, so half of it is not a smaller
+  version of it — it is skill documents describing operations the
+  binary does not have. Separate from the per-skill field above, which
+  is the finer-grained statement used by bundles that set a lower
+  bundle floor
 
 ## Release process
 
@@ -171,6 +179,20 @@ need to be re-released for skill changes. That's the whole point.
   skill that references a tool introduced in product v0.7.0 must set
   `min_server_version: "0.7.0"`; v0.6.0 customers see it in
   `list_available_skills` with `compatible: false`.
+
+  This number is derived from the skill's own text, not chosen: take
+  every operation the skill names, take the release each operation was
+  introduced in, and the highest of those is the floor. It is content
+  metadata, and left to drift it becomes decorative — for bundle 3.0.0,
+  seven entries declared `1.0.0` while their text called operations
+  added as late as 3.0.0, and `ea-modeling` documented `add_image`
+  against a declared floor of `1.0.0`.
+
+  Re-derive it whenever a skill's text changes, and treat the result as
+  a **lower bound**: the introducing release is read from the server
+  `CHANGELOG.md`, and roughly a third of the operations are never named
+  there, so they contribute nothing to the maximum. The bundle-wide
+  floor is the guard that does not depend on this being right.
 
 ## Authoring a new skill
 
