@@ -1,5 +1,12 @@
 # `export_xmi` / `import_xmi` — full verification record
 
+> **HISTORICAL. The defect recorded here was fixed in server 2.2.0.** Everything below was measured
+> against v2.1.0 and is kept because the shape of the failure is worth knowing: both operations
+> reported success while doing nothing, and only opening the file and counting rows revealed it.
+> `export_xmi` now reads the file back and returns `xmi_export_wrong_format` or `xmi_export_empty`
+> rather than a false success. Do not read the guidance below as current advice about the server.
+
+
 *Server: AI Power Tools for Sparx EA v2.1.0. Model: the Westbrook Bank demo repository,
 `<model-dir>\WestbrookBank.qea`. All calls below were made against packages that already existed
 in the model — none of the source content was created for this test.*
