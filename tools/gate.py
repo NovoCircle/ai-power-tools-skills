@@ -540,7 +540,11 @@ def check_ruleset_paths(target: Path) -> list[str]:
         if rel.parts and rel.parts[0] == "tools":
             continue
         text = f.read_text(encoding="utf-8", errors="replace")
-        if _INSTALLED_RULESET_DIR in text:
+        # Normalize separators here too. The first version checked the raw
+        # text, so documenting the path in Windows form -- which is what a
+        # customer on Windows needs, since the server does not expand `~` --
+        # made this half fire on a correct change.
+        if _INSTALLED_RULESET_DIR in text.replace(BACKSLASH, "/"):
             documents_new = True
         for n, line in enumerate(text.splitlines(), 1):
             if _RULESET_IN_SKILLS_DIR.search(line.replace(BACKSLASH, "/")):

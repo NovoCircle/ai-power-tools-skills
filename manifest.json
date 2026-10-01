@@ -1,7 +1,7 @@
 {
   "manifest_version": "1.0",
-  "bundle_version": "3.0.0",
-  "released_at": "2026-09-30",
+  "bundle_version": "3.0.1",
+  "released_at": "2026-10-01",
   "min_server_version": "3.0.0",
   "skills": [
     {
@@ -396,7 +396,7 @@
         "ea-validation/SKILL.md"
       ],
       "sha256": {
-        "ea-validation/SKILL.md": "85c347e8c629f9318116db87b84905c1e29cebd2dc6bda38fd83d2955dfcb4d9"
+        "ea-validation/SKILL.md": "4907139e79b5f1c593c0b41cdb6b455b3bb1301c98d61c333c18847f10ec73bb"
       }
     },
     {
