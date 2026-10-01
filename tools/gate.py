@@ -74,6 +74,11 @@ KNOWN_IDS = {
     # which the census has to recognise in order to EXCLUDE it - so the id has
     # to be nameable in our own source.
     "EAUML",
+    # The UML 2 Standard Profile EA ships and applies by default. Real
+    # repositories carry `StandardProfileL2::Realization` on ordinary
+    # Realization connectors, so a skill citing what `t_xref` actually holds
+    # was flagged as naming a customer technology.
+    "StandardProfileL2",
     "MDG", "EA", "XMI", "SQL", "COM", "API", "XML", "YAML", "JSON", "HTML",
     "PNG", "SVG", "CSV", "UTF", "BOM", "URL", "ID", "OK", "NOT", "AND", "OR",
     # EA's strategic-modeling and mind-mapping MDGs, read from the reference
