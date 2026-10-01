@@ -50,12 +50,14 @@ CENSUS_QUERIES = {
 #: t_operation needs [Type], [Scope]; and t_diagram's type column is
 #: Diagram_Type, NOT Type. Its primary key is Diagram_ID, where t_attribute's is
 #: ID and t_operation's is OperationID.
+#: t_connector carries ea_guid so a connector's stereotype provenance can be
+#: looked up in t_xref - without it `rel_all.profile` could only ever be empty.
 STRUCTURE_QUERIES = {
     "attribute": "SELECT ID, Object_ID, Name, [Type], [Scope] FROM t_attribute",
     "operation": "SELECT OperationID, Object_ID, Name, [Type], [Scope] FROM t_operation",
     "diagram": "SELECT Diagram_ID, Name, Diagram_Type, Package_ID FROM t_diagram",
     "diagramobjects": "SELECT Diagram_ID, Object_ID FROM t_diagramobjects",
-    "connector": ("SELECT Connector_ID, Name, Connector_Type, Stereotype, "
+    "connector": ("SELECT Connector_ID, ea_guid, Name, Connector_Type, Stereotype, "
                   "Start_Object_ID, End_Object_ID FROM t_connector"),
     "connectortag": "SELECT PropertyID, ElementID, Property, [VALUE] FROM t_connectortag",
 }

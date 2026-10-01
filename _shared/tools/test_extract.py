@@ -148,3 +148,10 @@ def test_int_coercion_returns_a_sentinel_rather_than_raising():
     assert ex_mod._int("4") == 4
     assert ex_mod._int(None) == -1
     assert ex_mod._int("not a number") == -1
+
+
+def test_the_connector_query_pulls_the_guid_that_makes_provenance_resolvable():
+    """t_xref keys stereotype provenance by GUID. Without ea_guid here,
+    `rel_all.profile` could only ever be empty - a column that ships always-NULL
+    reads as "no connector has a profile", which is a claim, not an absence."""
+    assert "ea_guid" in STRUCTURE_QUERIES["connector"]

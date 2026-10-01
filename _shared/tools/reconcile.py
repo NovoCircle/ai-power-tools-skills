@@ -197,3 +197,57 @@ def format_report(rec: Reconciliation) -> str:
         lines.append("")
     lines.append(rec.summary())
     return "\n".join(lines)
+
+
+def domain_violations(model, rows: dict[str, list[dict]], *,
+                      separator: str = ",") -> list[dict]:
+    """Values that fall outside a DECLARED enum domain.
+
+    Checked against the entity rows rather than `tag_value`, because the bridge is
+    keyed by element and the same tag name can be declared with different domains
+    on different stereotypes - so only the per-table rows say which domain applies.
+
+    Only declared domains are checkable. An observed domain is by construction
+    every value that was seen, so it cannot be violated; the gap between the two
+    is `DRIFT_ENUM_OBSERVED_UNDECLARED` in the census, which is a different
+    finding about the technology rather than about the data.
+
+    A violation is not a load failure. It is a governance finding, reported with
+    a count so a reviewer can see whether it is one typo or a whole convention
+    nobody declared.
+    """
+    out: list[dict] = []
+    for table in model.tables:
+        for col in table.columns:
+            if col.enum_source != "declared" or not col.enum_values:
+                continue
+            allowed = set(col.enum_values)
+            counts: dict[str, int] = {}
+            for row in rows.get(table.name, []):
+                raw = row.get(col.name)
+                if raw is None or str(raw).strip() == "":
+                    continue            # absent is coverage, not a violation
+                parts = ([p.strip() for p in str(raw).split(separator)]
+                         if col.multi_valued else [str(raw).strip()])
+                for p in parts:
+                    if p and p not in allowed:
+                        counts[p] = counts.get(p, 0) + 1
+            for value in sorted(counts):
+                out.append({"table": table.name, "column": col.name,
+                            "tag": col.source_tag, "value": value,
+                            "count": counts[value]})
+    return out
+
+
+# There is deliberately NO function here folding domain violations into a
+# Reconciliation.
+#
+# One was written and the first live run killed it. A value outside a declared
+# enumeration is in the repository and is in the database, so the load was
+# faithful - which is the only question a reconciliation answers. Failing the
+# build on it meant `load_run.reconciled = 0` and a manifest saying `ok: false`
+# over a database that had loaded all 298 elements correctly, and it would do that
+# on every customer model carrying any governance drift at all. Surfacing drift is
+# the capability; it is not an error condition. Violations travel in the data
+# dictionary and the manifest, where a reader can see them, and the reconciliation
+# stays a statement about load fidelity.
