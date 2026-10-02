@@ -1,0 +1,132 @@
+---
+name: prol-start-here
+description: Start here for any Sparx Prolaborate task driven through the web interface. Runs a short session preflight — which tenant, which signed-in identity, which version, which repositories — then routes to the right Prolaborate skill: administration, dashboards, relationship matrices, reviews, or impact analysis. Use this first whenever a session involves Prolaborate, before reaching for a more specific prol- skill.
+---
+
+# Prolaborate — start here
+
+This is the entry point for Sparx Prolaborate work driven through a browser. It does two things:
+a preflight so you know whose session you are acting in, and routing so you pick the right skill.
+
+Prolaborate is a separate product from Enterprise Architect. It is the hosted collaboration layer
+over an EA repository — reviews, dashboards, matrices, impact analysis, access control. It does
+**not** author models. Anything involving element creation, MDG work, diagram composition,
+validation or baselines belongs to the EA skills; start at `ea-start-here` instead.
+
+**Read [`_shared/references/prolaborate-session.md`](../_shared/references/prolaborate-session.md)
+before driving anything.** It covers how the session and token actually behave, and most failures
+in Prolaborate are session failures wearing a disguise.
+
+---
+
+## 1. Session preflight
+
+Five checks. Run them in order and stop at the first that fails. All are read-only.
+
+### 1.1 Are we signed in, and to what?
+
+Navigate to the Prolaborate host and read the page. If you land on `/Account/Login`, stop — the
+person must sign in themselves. **Never enter credentials on their behalf.**
+
+### 1.2 Is there a live token?
+
+```js
+const key = Object.keys(sessionStorage).find(k => k.startsWith('oidc.user:'));
+const user = key ? JSON.parse(sessionStorage.getItem(key)) : null;
+```
+
+No key means the SPA has not been loaded in this tab yet — navigate to the app root first. The
+key is present but the token is routinely stale; that is normal and recoverable. See the session
+reference.
+
+### 1.3 Who are we acting as?
+
+Decode the access token claims. This is the most valuable step in the preflight, because it tells
+you what will be refused before you drive a flow that gets refused.
+
+| What to read | Why it matters |
+|---|---|
+| `name`, `sub` | Who the action will be attributed to. State it back before anything consequential |
+| `rol` = `ADMIN` | Super Admin. Everything will work — which means **nothing you verify here proves a normal user can do it** |
+| `profile.isreadonly` | The person cannot write. Say so up front rather than letting an action fail |
+| `profile.groups` | Drives Access Permissions, so it explains what is visible and what is not |
+
+### 1.4 Which version?
+
+Prolaborate screens move between releases. The version is in the page footer and on
+`/PortalSettings/HealthChecks`.
+
+Every `prol-` skill declares the version it was verified against. If the running version is newer,
+prefer API reads over markup assumptions and say plainly which parts are unverified.
+
+### 1.5 What can this identity actually see?
+
+```js
+await fetch('/api/repository/GetAllActiveRepositories',
+  { headers: { Authorization: 'Bearer ' + user.access_token } }).then(r => r.json());
+```
+
+Returns the repositories this person has access to, with `id`, `name` and `status`. Confirm the
+intended repository is present and `Active` before going further — an inactive repository produces
+errors throughout Prolaborate that read like permission faults.
+
+---
+
+## 2. Routing
+
+| The task | Skill |
+|---|---|
+| Users, groups, access permissions, sections, repository configuration, integrated applications | `prol-admin` |
+| Building, editing or reading dashboards and their widgets | `prol-dashboards` |
+| Relationship matrices — building, filtering, reading, sharing | `prol-matrix` |
+| Reviews — creating, participating, approving, chasing status | `prol-reviews` |
+| Impact and dependency analysis across the repository | `prol-impact-analysis` |
+| Authoring model content, MDG, diagrams, validation, baselines | **Not Prolaborate.** Go to `ea-start-here` |
+
+When a request spans both products — "review what changed and then fix the model" — do the
+Prolaborate half here and hand the authoring half to the EA skills. They operate on the same
+repository through different paths and should not be mixed in one flow.
+
+---
+
+## 3. Working rules
+
+These hold across every `prol-` skill.
+
+> **Ride the session, never create one.** Do not register an integrated application, generate a
+> security token, or ask for a client secret in order to drive the UI. Those are for server-to-
+> server integrations and they carry far more reach than a UI task needs.
+
+> **Read through the API, act through the interface.** Use the bearer token from `sessionStorage`
+> to read structured JSON for anything you need to know or verify. Drive the UI for anything you
+> need to change. Scraped tables are a last resort, not the default.
+
+> **Verify the action, do not assume it.** Prolaborate returns `200 OK` with a failure in the body
+> on several endpoints — `IsSuccess: false` inside a success response is a normal failure. After
+> any change, read the resulting state back rather than trusting the absence of an error.
+
+> **State the identity on consequential actions.** Deleting a user, changing access permissions, or
+> approving a review are attributed to the signed-in person. Say who that is before doing it.
+
+> **Do not act on a session that ended.** If a page becomes the login screen mid-task, stop and
+> tell the person. Re-driving a flow against a half-authenticated app creates duplicates.
+
+---
+
+## 4. When something fails
+
+Work through these in order before concluding a capability is missing:
+
+1. **`ID2019` in `WWW-Authenticate`** — the token aged out. Navigate to refresh it, re-read
+   `sessionStorage`, retry once.
+2. **`ID2095`** — authenticated but not permitted. Check `rol` and the person's Access Permissions
+   on the repository. This is a permissions answer, not a bug.
+3. **`422` with `'User Id' must not be empty`** — you are holding a service token rather than the
+   signed-in user's. Re-read the key; do not substitute a registered application.
+4. **The repository is inactive** — the single most common cause of errors that look like
+   permission faults across Prolaborate. Confirm `status` from the preflight.
+5. **The screen moved** — check the running version against what the skill declares, and look at
+   `/PortalSettings/HealthChecks` for the current layout.
+
+If none of these explain it, say what you observed and stop. Do not try alternative routes to the
+same change in a collaboration tool — partial writes are visible to other people immediately.
