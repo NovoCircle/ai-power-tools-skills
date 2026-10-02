@@ -26,9 +26,24 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 
 # Default location of the server source, relative to this repo.
-DEFAULT_SERVER = (
-    ROOT.parent / "ai-power-tools" / "ea-mcp-server" / "ea_mcp_server" / "server.py"
-)
+#
+# Searched upward rather than fixed at ROOT.parent: in a git worktree the repo
+# sits one level deeper (`<repo>.worktrees/<name>/`), so the sibling lookup
+# missed and the op-drift check silently skipped -- printing a warning while the
+# gate still reported green, which is the worst of both. Walking the parents
+# finds the server from a worktree and from the main checkout alike.
+_SERVER_REL = ("ai-power-tools", "ea-mcp-server", "ea_mcp_server", "server.py")
+
+
+def _find_server() -> Path:
+    for base in (ROOT, *ROOT.parents):
+        candidate = base.parent.joinpath(*_SERVER_REL)
+        if candidate.is_file():
+            return candidate
+    return ROOT.parent.joinpath(*_SERVER_REL)
+
+
+DEFAULT_SERVER = _find_server()
 
 META_TOOLS = ("ea_model", "ea_diagram", "ea_analyze", "ea_mdg", "ea_validate",
               "ea_repository")
