@@ -107,35 +107,57 @@ def test_package_rows_fit_the_frame_schema():
 
 # --- element ----------------------------------------------------------------
 
-def test_element_rows_name_where_each_element_landed():
+def test_the_key_map_names_where_each_element_landed():
     model, key = _model()
     rows = {r["ea_guid"]: r for r in element_rows(
         ELEMENTS, model, {"{A}": [key], "{B}": [key]})}
     assert rows["{A}"]["entity_table"] == model.tables[0].name
-    assert rows["{A}"]["stereotype"] == "WBABusinessApplication"
-    assert rows["{A}"]["profile"] == NS
-    assert rows["{A}"]["object_id"] == 1
+    assert rows["{A}"]["package_id"] == 5
 
 
-def test_an_untyped_element_is_still_in_the_frame_with_no_table():
+def test_the_key_map_carries_no_business_columns():
+    """`name`, `metaclass`, `stereotype` and `profile` belong to the entity
+    tables. Carrying them here duplicated every entity table and made the
+    database read as EA's metamodel (APT-2026-0226)."""
+    model, key = _model()
+    row = element_rows(ELEMENTS, model, {"{A}": [key]})[0]
+    assert set(row) == {"ea_guid", "entity_table", "package_id"}
+
+
+def test_an_untyped_element_is_out_of_scope_not_written_with_a_null_table():
+    """It has no business vocabulary term, so it has no place in the database.
+    `governance_gap` asks about it BEFORE the build."""
     model, key = _model()
     els = ELEMENTS + [{"ea_guid": "{C}", "Object_ID": 3, "Name": "Spreadsheet",
                        "Object_Type": "Artifact", "Stereotype": "", "Package_ID": 5}]
     rows = {r["ea_guid"]: r for r in element_rows(els, model, {"{A}": [key]})}
-    assert rows["{C}"]["entity_table"] is None
-    assert rows["{C}"]["stereotype"] == ""
+    assert "{C}" not in rows
 
 
-def test_an_observed_but_undeclared_stereotype_is_kept_not_blanked():
-    """Architects pick stereotypes from whatever language EA has enabled. One that
-    no loaded technology declares is a finding, not noise."""
+def test_an_excluded_element_is_counted_by_metaclass_not_dropped_silently():
+    model, key = _model()
+    els = ELEMENTS + [{"ea_guid": "{C}", "Object_ID": 3, "Name": "Spreadsheet",
+                       "Object_Type": "Artifact", "Stereotype": "", "Package_ID": 5},
+                      {"ea_guid": "{D}", "Object_ID": 4, "Name": "Consumer Banking",
+                       "Object_Type": "Package", "Stereotype": "", "Package_ID": 5}]
+    excluded = {}
+    element_rows(els, model, {"{A}": [key], "{B}": [key]}, excluded_out=excluded)
+    assert excluded == {"Artifact": 1, "Package": 1}
+
+
+def test_an_observed_but_undeclared_stereotype_is_out_of_scope_and_reported():
+    """Architects pick stereotypes from whatever language EA has enabled. One
+    that no loaded technology declares has no entity table, so it leaves the
+    scope - but it is counted, and the gate asks about it first."""
     model, key = _model()
     els = ELEMENTS + [{"ea_guid": "{C}", "Object_ID": 3, "Name": "Thing",
                        "Object_Type": "Class", "Stereotype": "ArchiMate_Node",
                        "Package_ID": 5}]
-    rows = {r["ea_guid"]: r for r in element_rows(els, model, {"{A}": [key]})}
-    assert rows["{C}"]["stereotype"] == "ArchiMate_Node"
-    assert rows["{C}"]["entity_table"] is None
+    excluded = {}
+    rows = {r["ea_guid"]: r for r in element_rows(
+        els, model, {"{A}": [key], "{B}": [key]}, excluded_out=excluded)}
+    assert "{C}" not in rows
+    assert excluded == {"Class": 1}
 
 
 def test_excluded_elements_do_not_reach_the_frame():

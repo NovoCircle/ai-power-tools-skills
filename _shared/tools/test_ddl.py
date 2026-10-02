@@ -7,7 +7,8 @@ Nothing here touches a repository, a COM object or the filesystem.
 """
 from __future__ import annotations
 
-from ddl import FRAME_DDL, entity_table_ddl, frame_table_ddl, generate_ddl, quote
+from ddl import (FRAME_DDL, entity_table_ddl, frame_table_ddl, generate_ddl,
+                 physical, quote)
 from report_model import Column, ReportModel, Table
 
 
@@ -40,11 +41,26 @@ def test_columns_carry_their_declared_sql_type():
     assert '"human_in_loop" INTEGER' in sql
 
 
-def test_every_frame_table_generates():
+def test_every_frame_table_generates_under_its_physical_name():
     for name in FRAME_DDL:
         sql = frame_table_ddl(name)
-        assert sql.startswith(f'CREATE TABLE "{name}" (')
+        assert sql.startswith(f'CREATE TABLE "{physical(name)}" (')
         assert sql.rstrip().endswith(");")
+
+
+def test_every_frame_table_is_prefixed_so_the_vocabulary_sorts_first():
+    """The customer is promised their business vocabulary. Plumbing that sorts
+    in among it breaks that promise (APT-2026-0226)."""
+    for name in FRAME_DDL:
+        assert physical(name).startswith("_")
+
+
+def test_the_hub_is_a_key_map_and_carries_no_business_columns():
+    """`name`, `metaclass` and `stereotype` belong to the entity tables.
+    Duplicating them here is what made the database read as EA's metamodel."""
+    cols = {c for c, _ in FRAME_DDL["element"]}
+    assert cols == {"ea_guid", "entity_table", "package_id"}
+    assert physical("element") == "_keymap"
 
 
 def test_the_load_bearing_frame_tables_exist():
@@ -71,7 +87,7 @@ def test_frame_comes_before_entity_tables():
     model = ReportModel(tables=[table()])
     out = generate_ddl(model)
     first_entity = next(i for i, s in enumerate(out) if '"business_application"' in s)
-    first_frame = next(i for i, s in enumerate(out) if '"element"' in s)
+    first_frame = next(i for i, s in enumerate(out) if '"_keymap"' in s)
     assert first_frame < first_entity
 
 

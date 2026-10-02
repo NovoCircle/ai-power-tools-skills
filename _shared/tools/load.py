@@ -37,7 +37,7 @@ import pathlib
 import sqlite3
 from dataclasses import dataclass, field
 
-from ddl import FRAME_DDL, generate_ddl, quote
+from ddl import FRAME_DDL, generate_ddl, physical, quote
 from report_model import ReportModel
 
 
@@ -60,6 +60,10 @@ class LoadResult:
     rows_by_table: dict[str, int] = field(default_factory=dict)
     sql_log: list[str] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)
+    #: Things the reader should know that are NOT faults. Kept apart from
+    #: `warnings` so the ordinary consequence of the scope rule does not read as
+    #: a defect every single build (APT-2026-0226).
+    notes: list[str] = field(default_factory=list)
 
     @property
     def statements(self) -> int:
@@ -78,6 +82,7 @@ class LoadResult:
             "rows_loaded": self.rows_loaded,
             "rows_by_table": dict(sorted(self.rows_by_table.items())),
             "warnings": list(self.warnings),
+            "notes": list(self.notes),
         }
 
 
@@ -179,6 +184,14 @@ def build_database(path,
         result.warnings.append(
             f"{len(pivot_result.unplaced)} tag row(s) reached no table - see the "
             "pivot result; these are empty values on untyped elements")
+    # Reported, deliberately NOT a warning. These are populated values left out
+    # by the scope rule, which the governance gate already put in front of a
+    # human before the build. A warning here would make the ordinary case look
+    # like a fault (APT-2026-0226).
+    if pivot_result.excluded:
+        result.notes.append(
+            f"{len(pivot_result.excluded)} populated tag value(s) excluded with "
+            "their element, which landed in no entity table")
 
     conn = sqlite3.connect(str(path))
     try:
@@ -196,7 +209,7 @@ def build_database(path,
             if name == LOAD_RUN:
                 continue
             rows = derived.get(name, frame_rows.get(name, []))
-            w.insert(name, frame_cols[name], rows)
+            w.insert(physical(name), frame_cols[name], rows)
 
         for table_name, cols in ent_cols.items():
             w.insert(table_name, cols, pivot_result.rows.get(table_name, []))
@@ -205,18 +218,18 @@ def build_database(path,
         # other row, with reconciled/mismatches left NULL until there is a
         # reconciliation to record. A build that claims to be reconciled before
         # anything checked it is the defect this column exists to expose.
-        w.insert(LOAD_RUN, frame_cols[LOAD_RUN], [{
+        w.insert(physical(LOAD_RUN), frame_cols[LOAD_RUN], [{
             "run_id": run_id, "run_at": run_at, "repository": repository,
             "spec_hash": spec_hash, "rows_loaded": None,
             "reconciled": None, "mismatches": None,
         }])
 
         for name in list(FRAME_DDL) + list(ent_cols):
-            sql = f"SELECT COUNT(*) FROM {quote(name)}"
+            sql = f"SELECT COUNT(*) FROM {quote(physical(name))}"
             result.sql_log.append(sql)
             result.rows_by_table[name] = conn.execute(sql).fetchone()[0]
 
-        sql = (f"UPDATE {quote(LOAD_RUN)} SET {quote('rows_loaded')} = ? "
+        sql = (f"UPDATE {quote(physical(LOAD_RUN))} SET {quote('rows_loaded')} = ? "
                f"WHERE {quote('run_id')} = ?")
         result.sql_log.append(sql)
         conn.execute(sql, (result.rows_loaded, run_id))
@@ -238,7 +251,7 @@ def record_reconciliation(path, run_id: str, reconciliation) -> bool:
     conn = sqlite3.connect(str(path))
     try:
         cur = conn.execute(
-            f"UPDATE {quote(LOAD_RUN)} SET {quote('reconciled')} = ?, "
+            f"UPDATE {quote(physical(LOAD_RUN))} SET {quote('reconciled')} = ?, "
             f"{quote('mismatches')} = ? WHERE {quote('run_id')} = ?",
             (1 if reconciliation.ok else 0,
              len(reconciliation.failures) + len(reconciliation.skipped),
@@ -272,7 +285,7 @@ def scalar_counts(path) -> dict[str, int]:
     conn = sqlite3.connect(str(path))
     try:
         return {name: conn.execute(
-            f"SELECT COUNT(*) FROM {quote(name)}").fetchone()[0]
+            f"SELECT COUNT(*) FROM {quote(physical(name))}").fetchone()[0]
             for name in FRAME_DDL}
     finally:
         conn.close()

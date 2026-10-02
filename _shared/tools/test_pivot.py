@@ -117,14 +117,15 @@ def test_sparse_tags_are_routed_to_overflow_not_dropped():
     assert "rare" not in r.rows["app"][0]
 
 
-def test_a_value_on_an_element_in_no_table_still_reaches_the_bridge():
-    """Nothing is lost: the bridge is keyed by element, not by table, so an
-    element with no entity table still contributes its values. This is the
-    honest remainder working, and it is why `unplaced` counts only rows that
-    reached nowhere at all."""
+def test_a_value_on_an_element_in_no_table_is_excluded_not_bridged():
+    """APT-2026-0226 put elements with no entity table out of the reporting
+    scope, so their values leave with them. Writing them to the bridge anyway
+    would leave rows pointing at a key the key map does not hold."""
     m = model_with(tbl("app", "K", [col("criticality")]))
     r = pivot(m, ELEMENTS, props(("{9}", "criticality", "High")), {"{1}": ["K"]})
-    assert r.tag_value == [{"ea_guid": "{9}", "tag": "criticality", "value": "High"}]
+    assert r.tag_value == []
+    assert r.excluded == [{"ea_guid": "{9}", "tag": "criticality", "value": "High"}]
+    # and it is NOT called lost - that distinction is the whole point
     assert r.unplaced == []
 
 
@@ -157,14 +158,15 @@ def test_total_rows_counts_placements_not_elements():
 
 
 def test_tags_on_an_untyped_element_are_NOT_reported_as_lost():
-    """REGRESSION. An element in no entity table still gets its values into the
-    bridge, because the bridge is keyed by element rather than by table. Calling
-    that "unplaced" reported 88 false losses on a real model and would have sent
-    someone hunting a data-loss bug that did not exist."""
+    """REGRESSION, and it survives the scope change. Calling an out-of-scope
+    value "unplaced" reported 88 false losses on a real model and would have
+    sent someone hunting a data-loss bug that did not exist. Since
+    APT-2026-0226 the value is excluded rather than bridged - but excluded is
+    counted and visible, and `unplaced` still means lost."""
     m = model_with(tbl("app", "K", [col("criticality")]))
     r = pivot(m, ELEMENTS, props(("{2}", "owner", "Data Team")), {"{1}": ["K"]})
     assert r.unplaced == []
-    assert r.tag_value == [{"ea_guid": "{2}", "tag": "owner", "value": "Data Team"}]
+    assert r.excluded == [{"ea_guid": "{2}", "tag": "owner", "value": "Data Team"}]
 
 
 def test_an_empty_tag_on_an_untyped_element_IS_reported_as_unplaced():

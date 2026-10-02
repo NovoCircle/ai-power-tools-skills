@@ -31,14 +31,17 @@ FRAME_DDL: dict[str, list[tuple[str, str]]] = {
         ("package_id", "INTEGER"), ("parent_id", "INTEGER"), ("name", "TEXT"),
         ("path", "TEXT"), ("depth", "INTEGER"),
     ],
-    # Every in-scope element, whatever its stereotype. `entity_table` names where
-    # it landed, NULL when nowhere. Load-bearing: relationship endpoints resolve
-    # against this, never against the typed tables, or every edge touching an
-    # untyped element dangles.
+    # The key map. NOT a business table: it carries no name, no metaclass and no
+    # stereotype, because those belong to the entity tables and duplicating them
+    # here is what made the database look like EA's metamodel (APT-2026-0226).
+    #
+    # It exists because a reference to "any of 29 entity tables" is polymorphic,
+    # and a relational model has exactly three ways to express that: a
+    # discriminator column, one bridge table per type, or a shared key table.
+    # This is the third. Diagram membership and relationship endpoints resolve
+    # against it, never against a typed table.
     "element": [
-        ("ea_guid", "TEXT"), ("object_id", "INTEGER"), ("name", "TEXT"),
-        ("metaclass", "TEXT"), ("stereotype", "TEXT"), ("profile", "TEXT"),
-        ("entity_table", "TEXT"), ("package_id", "INTEGER"),
+        ("ea_guid", "TEXT"), ("entity_table", "TEXT"), ("package_id", "INTEGER"),
     ],
     "rel_all": [
         ("connector_id", "INTEGER"), ("source_guid", "TEXT"), ("target_guid", "TEXT"),
@@ -91,6 +94,34 @@ FRAME_KEYS = {
     "operation": "operation_id",
 }
 
+#: What each frame table is CALLED IN THE DATABASE. The pipeline keeps its own
+#: vocabulary - `frame_rows["element"]` - and the physical name is applied once,
+#: here, at the DDL and load boundary.
+#:
+#: The underscore is the whole point. A customer opening the database is
+#: promised their business vocabulary, and sorting the plumbing to the bottom
+#: under a prefix that reads as internal is what makes the promise true
+#: (APT-2026-0226). `element` becomes `_keymap` because that is what it is once
+#: the business columns are gone.
+PHYSICAL_NAME = {
+    "element": "_keymap",
+    "pkg": "_pkg",
+    "rel_all": "_rel_all",
+    "tag_value": "_tag_value",
+    "tag_coverage": "_tag_coverage",
+    "overflow_tag": "_overflow_tag",
+    "diagram": "_diagram",
+    "diagram_object": "_diagram_object",
+    "attribute": "_attribute",
+    "operation": "_operation",
+    "load_run": "_load_run",
+}
+
+
+def physical(name: str) -> str:
+    """The database name for a frame table; an entity table is its own name."""
+    return PHYSICAL_NAME.get(name, name)
+
 
 def quote(identifier: str) -> str:
     """Double-quote an identifier, doubling any embedded quote.
@@ -123,7 +154,7 @@ def frame_table_ddl(name: str) -> str:
     if key:
         cols.append(f"  PRIMARY KEY ({quote(key)})")
     body = ",\n".join(cols)
-    return f"CREATE TABLE {quote(name)} (\n{body}\n);"
+    return f"CREATE TABLE {quote(physical(name))} (\n{body}\n);"
 
 
 def generate_ddl(model: ReportModel, *, include_frame: bool = True) -> list[str]:
