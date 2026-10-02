@@ -95,6 +95,37 @@ means the scope is wrong, and it is much cheaper to notice here than after the r
 the depth it reached. The shipped `_package_subtree_ids` stops at depth 8 and skips anything
 deeper with no warning (APT-2026-0216), which is why this does its own walk.
 
+### 3.2b The governance gate — run this before you build anything
+
+An element carrying no stereotype lands in no table, so it will not be in the database. Ask
+before you build, not after: a customer must not discover the omission by failing to find a
+system in their report.
+
+```python
+from ea_census import declared_shapes
+from governance_gap import assess, find_ungoverned, format_report
+# elements/tags: the extract's rows under the frame's column names - mapping in the reference
+findings = assess(find_ungoverned(elements, tags), declared_shapes(mdg), elements)
+print(format_report(findings))
+```
+
+Show the customer the report and let them decide per element. Three outcomes, and **they are not
+interchangeable**:
+
+| Outcome | What to say |
+|---|---|
+| `ranked` | One candidate is backed by evidence the others are not. Offer it **with the reason**, never as certain |
+| `unrankable` | Nothing separates the candidates. List them and ask. **Do not pick one** |
+| `no_candidate` | The technology extends no stereotype for that metaclass. Offer to extend it (`ea-mdg-model-build`), or accept the exclusion. Never invent a suggestion |
+
+To apply one, pass the **bare** stereotype name via `update_element` — EA resolves it against
+the loaded technology and writes the fully-qualified form itself. **Take a baseline first**
+(`ea-change-management`): this is the only step in this skill that writes to the model.
+
+If the customer declines, say plainly which elements will not be in the database and carry on —
+declining is a valid answer. The call, the row mapping, the loaded-technology precondition and
+the verification are in [`references/the-governance-gate.md`](references/the-governance-gate.md).
+
 ### 3.3 Transform and load
 
 All of this is local Python. Every decision is in the modules; this is the order they go in.
@@ -358,6 +389,9 @@ quote a refresh window from it.
 
 - [`references/the-schema.md`](references/the-schema.md) — every frame table, column by column,
   and worked queries for the questions people actually ask
+- [`references/the-governance-gate.md`](references/the-governance-gate.md) — the pre-build gate:
+  the three outcomes, how to apply a stereotype so it binds to the technology, and what to say
+  when the customer declines
 - [`../_shared/references/ea-ui-verification.md`](../_shared/references/ea-ui-verification.md) —
   the modal-dialog trap
 - [`../_shared/references/westbrook-example.md`](../_shared/references/westbrook-example.md) — the

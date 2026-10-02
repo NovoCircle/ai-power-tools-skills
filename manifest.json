@@ -8,7 +8,7 @@
       "name": "_shared",
       "title": "Shared references",
       "description": "Reference material several EA skills link to: the Westbrook Bank canonical example, EA latency guidance, and file-encoding guidance. Not a skill \u2014 it has no SKILL.md and does not load as one. It installs beside the skills so their relative links resolve.",
-      "version": "1.2.0",
+      "version": "1.3.0",
       "min_server_version": "2.3.0",
       "files": [
         "_shared/references/ea-ui-verification.md",
@@ -21,6 +21,7 @@
         "_shared/tools/ea_census.py",
         "_shared/tools/extract.py",
         "_shared/tools/frame.py",
+        "_shared/tools/governance_gap.py",
         "_shared/tools/load.py",
         "_shared/tools/pivot.py",
         "_shared/tools/reconcile.py",
@@ -30,6 +31,7 @@
         "_shared/tools/test_ea_census.py",
         "_shared/tools/test_extract.py",
         "_shared/tools/test_frame.py",
+        "_shared/tools/test_governance_gap.py",
         "_shared/tools/test_load.py",
         "_shared/tools/test_pivot.py",
         "_shared/tools/test_reconcile.py",
@@ -46,6 +48,7 @@
         "_shared/tools/ea_census.py": "2ce1c555e3a75c020dc1c6f35afb33cec8fe67155ed2fe06f173ca40efe563d7",
         "_shared/tools/extract.py": "c521189562e9f8b87777026eef7d793c9ea666133104346edd25ce5277cc97a4",
         "_shared/tools/frame.py": "db808b9a6ef455569babd2e5a9056d9ab3d113cb59bcdee40cc9624fbbd59870",
+        "_shared/tools/governance_gap.py": "6d50f395bd193088ce9c223add0a3f11bd4b9cc2a80739be74435a902585e611",
         "_shared/tools/load.py": "adda5d9f5b50a70d23bf3c409ba49384ea0a96436c288415a90604c057c58c0f",
         "_shared/tools/pivot.py": "2a4ae40178f3e942989e7e57c35853a0c2482b2adab8cfde291d4cb82bbd9d66",
         "_shared/tools/reconcile.py": "e19045613c7291c948490cf073f96c96c2a4916489863cf417245fd598d5b453",
@@ -55,6 +58,7 @@
         "_shared/tools/test_ea_census.py": "3213f816d8f22c564e98b9d6306cae5a45e3afeb17ba83b3c026fef298063e38",
         "_shared/tools/test_extract.py": "13b61f5812068afe0f3a535fd6ef204c6e96c808d6708d3df6dd67441ac39e04",
         "_shared/tools/test_frame.py": "00542a44764588a32f8d4c0fe6cbcc494c07559cf93372af19f9acf38150546e",
+        "_shared/tools/test_governance_gap.py": "e39e2f43392c909b62f460e8403e77c1d5879185cb86746a0a77a2b70bba2aaa",
         "_shared/tools/test_load.py": "5bb510012b1467a1651a1fae7d2bd0213aa81bef3bd273e194201c54efa2be40",
         "_shared/tools/test_pivot.py": "ce41d18393d28287cef75bd0e5740801196115c17fb6225ccfdb0e4b65fa9f4a",
         "_shared/tools/test_reconcile.py": "fe6ab9adfb8a4567be6b76dffe59a0458aa60b7b7fdde8895e3403c44e6f417b",
@@ -400,14 +404,16 @@
       "name": "ea-reporting-database",
       "title": "EA - reporting database",
       "description": "Build a queryable relational database from an EA repository - elements, relationships, tagged values, attributes and diagram placements, typed by the technology that governs them - and reconcile it back against the repository. SQLite, with a data dictionary and an issued-SQL log.",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "min_server_version": "3.0.0",
       "files": [
         "ea-reporting-database/SKILL.md",
+        "ea-reporting-database/references/the-governance-gate.md",
         "ea-reporting-database/references/the-schema.md"
       ],
       "sha256": {
-        "ea-reporting-database/SKILL.md": "b3081aa94514d50c16fededfa9818a92b782653604039406b53ffa31704af950",
+        "ea-reporting-database/SKILL.md": "8ec7594f80878bc0a3d523938aa3b870948748ae6249eccc7fb51b64ff1ff114",
+        "ea-reporting-database/references/the-governance-gate.md": "042267320fa3f485ee79d61a47cd88396b5029e16973af0ae9874883d937bc4f",
         "ea-reporting-database/references/the-schema.md": "7c216ea52eb314f14354848530e5c90edeb2e2c26326af1450a1525b07aeb93c"
       }
     },
