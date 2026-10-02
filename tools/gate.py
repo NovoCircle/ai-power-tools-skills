@@ -26,29 +26,8 @@ ROOT = Path(__file__).resolve().parent.parent
 #: the repo. Skills live under the plugin -- one tree serving both the
 #: marketplace and the packaged `.plugin` -- while the rulesets stay at the root
 #: because `ea-validation` pins a raw.githubusercontent URL into them.
-PLUGIN_SKILLS = ROOT / "plugins" / "ai-power-tools" / "skills"
-
-
-def _source_path(rel: str) -> Path:
-    """Resolve an install-relative manifest path to its file in the repo."""
-    candidate = PLUGIN_SKILLS / rel
-    return candidate if candidate.exists() else ROOT / rel
-
-
-def _asset_dirs() -> list[tuple[Path, Path]]:
-    """(base, directory) pairs to scan for assets the manifest forgot.
-
-    `base` is what a found file is made relative to, so the result can be
-    compared against the manifest's install-relative paths.
-    """
-    pairs: list[tuple[Path, Path]] = []
-    if PLUGIN_SKILLS.is_dir():
-        pairs += [(PLUGIN_SKILLS, d) for d in sorted(PLUGIN_SKILLS.iterdir())
-                  if d.is_dir() and not d.name.startswith((".", "_"))]
-    pairs += [(ROOT, d) for d in sorted(ROOT.iterdir())
-              if d.is_dir() and not d.name.startswith((".", "_"))
-              and d.name not in {"tools", "plugins", "docs"}]
-    return pairs
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from _layout import source_path as _source_path, asset_dirs as _asset_dirs  # noqa: E402
 
 # --------------------------------------------------------------------------
 # Rule 1 — known real-customer identifiers. Denylist: catches what we know.

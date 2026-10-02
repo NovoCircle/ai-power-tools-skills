@@ -161,7 +161,7 @@ Expect `ai-power-tools@novocircle`, enabled, at the version you deployed.
 claude plugin details ai-power-tools
 ```
 
-Expect `Skills (18)`. `_shared` is correctly not among them — it carries no
+Expect `Skills (19)`. `_shared` is correctly not among them — it carries no
 `SKILL.md` and ships only so the skills' relative links resolve.
 
 In a Cowork session, confirm both halves arrived: ask for a skill by name

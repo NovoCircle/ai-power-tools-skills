@@ -17,24 +17,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 MANIFEST = ROOT / "manifest.json"
 
-#: Skills live inside the plugin so a single tree serves both delivery
-#: channels: `claude plugin marketplace add` for Claude Code, and the packaged
-#: `.plugin` for Cowork, which only loads skills from `<plugin>/skills/`.
-#:
-#: Data entries -- the rulesets -- deliberately stay at the repository root.
-#: `ea-validation/SKILL.md` pins
-#: `raw.githubusercontent.com/.../main/ruleset-archimate31/...`, so moving that
-#: directory would break every already-installed copy of that skill the moment
-#: the branch merged.
-PLUGIN_SKILLS = ROOT / "plugins" / "ai-power-tools" / "skills"
-
-
-def _source_dir(name: str) -> Path | None:
-    """Where `name`'s files live in the repo, or None if it is missing."""
-    for base in (PLUGIN_SKILLS, ROOT):
-        if (base / name).is_dir():
-            return base / name
-    return None
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from _layout import source_dir as _source_dir  # noqa: E402
 
 
 def sha256(p: Path) -> str:
