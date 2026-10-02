@@ -27,6 +27,14 @@ is done.
 - Before you present any number derived from a tagged value, full stop -- coverage checking
   belongs in front of every roll-up, not just the ones that look suspicious.
 
+**When to reach for `ea-reporting-database` instead.** This skill answers a question by asking EA
+directly, which is right for a question or two. Switch to building a reporting database when the
+question spans the whole model, when the same questions recur and someone wants a refreshable
+extract, when the answer has to come back **reconciled** against the repository because a figure is
+disputed, or when a tagged value is multi-valued -- `aggregate_portfolio` counts a tag holding
+`GLBA, FFIEC` as its own distinct value, where a database with a value-level bridge counts it as
+both. See `../ea-reporting-database/SKILL.md`.
+
 ## The gap this closes
 
 An architect has a model. A stakeholder wants an answer in their own language: "Business

@@ -66,7 +66,19 @@ KNOWN_IDS = {
     # reference model's own MDGDgm tokens, not a project code.
     "Extended",
     "UML", "SysML", "SysML15", "SysML16", "TOGAF", "DoDAF", "MODAF", "NIEM",
-    "UPDM", "SPEM", "SOMF", "BPEL", "XSD", "WSDL", "ERD", "DMN", "CMMN",
+    # UPDM2 is the second-generation Sparx-shipped UPDM technology and appears
+    # as an FQName namespace in real repositories (`UPDM2::Node`). `UPDM` alone
+    # was listed, so a measurement citing the id EA actually writes was flagged.
+    "UPDM", "UPDM2", "SPEM", "SOMF", "BPEL", "XSD", "WSDL", "ERD", "DMN", "CMMN",
+    # EA's own internal UML profile. `EAUML::report package` is EA's machinery,
+    # which the census has to recognize in order to EXCLUDE it - so the id has
+    # to be nameable in our own source.
+    "EAUML",
+    # The UML 2 Standard Profile EA ships and applies by default. Real
+    # repositories carry `StandardProfileL2::Realization` on ordinary
+    # Realization connectors, so a skill citing what `t_xref` actually holds
+    # was flagged as naming a customer technology.
+    "StandardProfileL2",
     "MDG", "EA", "XMI", "SQL", "COM", "API", "XML", "YAML", "JSON", "HTML",
     "PNG", "SVG", "CSV", "UTF", "BOM", "URL", "ID", "OK", "NOT", "AND", "OR",
     # EA's strategic-modeling and mind-mapping MDGs, read from the reference

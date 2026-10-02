@@ -82,7 +82,7 @@ print("Done. Restart EA to verify.")
 ```
 
 **What happens after ImportTechnology:**
-- The technology is stored in the `t_propertytypes` or `t_stereotypes` tables in the `.qea` SQLite file
+- The technology registers in **`t_trxtypes`** in the `.qea` file. Not `t_document`, and not `t_propertytypes` or `t_stereotypes` — an earlier version of this line named those two and they are wrong, which matters because a reader who checks them finds nothing and cannot tell a failed embed from a successful one. `SELECT Description, TRX FROM t_trxtypes` is the query
 - EA must be restarted for the new/updated technology to take full effect
 - `ImportTechnology` returns `False` if EA shows an error dialog — common causes:
   - `id=` attribute longer than 12 characters → shorten it
@@ -164,11 +164,61 @@ Restart EA after install.
 
 ---
 
-## Deploy: Import Package as MDG Technology (EA 17.1+ ONLY)
+## Deploy: from a profile package (EA 17.1+ ONLY)
 
-**Specialize > Publish Technology > Import Package as MDG Technology**
+EA 17.1 added two commands on **Specialize > Publish Technology** that work directly from a
+`«mdg technology»` package tree, with no `.mts` and no intermediate profile exports. **They are
+not the same command and the names do not say which is which:**
 
-This path does **not exist in EA 17.0 Build 1704**. If you are running EA 17.0, use the MTS Wizard method instead.
+| Command | What it does | Leaves behind |
+|---|---|---|
+| **Save Package as MDG Technology** | Assembles the technology and writes it to a file | an `.xml` on disk. Nothing is installed |
+| **Import Package as MDG Technology** | Loads the technology into the **session runtime** | nothing on disk, nothing embedded |
+
+**If you want a deployable artifact, use Save.** Import is for trying a technology out in the
+current session.
+
+### Procedure — Save Package as MDG Technology
+
+1. Select the `«mdg technology»` package in the Browser.
+2. **Specialize > Publish Technology > Save Package as MDG Technology**.
+3. A Save As dialog appears (`XML Export File (*.xml)`). Choose the path.
+4. EA reports `MDG Technology successfully saved to file`.
+5. **Read System Output.** It carries diagnostics the dialog does not, such as
+   `WARNING: Duplicate profile name: …`. A build can report success and still have collided.
+6. **Version-stamp the file.** Generated technologies come out with an empty `version` attribute,
+   and setting the package `Version` beforehand does not carry through. Two unversioned builds are
+   indistinguishable in Manage Technologies.
+7. Deploy the resulting `.xml` by either route above — model-embedded or application-level. This
+   command does not install anything.
+
+The technology id is the **package name truncated to 12 characters** (`WBA Technology` →
+`WBA Technolo`), so name the package for the id you want before publishing.
+
+### Import Package as MDG Technology — what it does and does not do
+
+⚠ **It reports success without leaving evidence.** `Repository.ImportPackageAsMDGTechnology(<package GUID>)`
+is present on `Repository` and returns `True` for a valid GUID. Measured against a populated
+14-stereotype source model: it returned `True` and **changed nothing** — `t_trxtypes` stayed at its
+previous row count and the embedded profile blob stayed byte-identical.
+
+So do not take `True`, or the UI's `MDG Technology successfully loaded into current model`, as
+proof of a deploy. If you use this command, verify with **`repo.IsTechnologyLoaded(<id>)`** — the
+session-runtime question, which is what this command actually affects. Checking `t_trxtypes` is
+the wrong test and will report failure on a command that worked as designed.
+
+Whether it can be made to embed with `SuppressEADialogs = True` / `EnableUIUpdates = False`, the
+way `install_mdg` pushes `ImportTechnology` past its confirmation dialog, is **untested**.
+
+### Version gate
+
+| EA version | Build the MDG with |
+|---|---|
+| **17.1+** | `Save Package as MDG Technology` — above |
+| **17.0 and earlier** | The MTS Wizard. These commands do not exist; the menu entries are absent, not greyed out |
+
+Verified absent on **EA 17.0 Build 1704**. Check the build before routing someone down either
+path — `ea_repository(operation="get_repository_info", params={})` reports `ea_version`.
 
 ---
 

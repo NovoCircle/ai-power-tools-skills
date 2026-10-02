@@ -95,6 +95,7 @@ neither.
 | Writing an MDG Technology XML by hand — stereotypes, tagged values, toolboxes, Quick Linker | **ea-mdg-author** |
 | Building an MDG from a profile model that already exists inside a repository | **ea-mdg-model-build** |
 | Installing an MDG into a model or machine, and proving it works | **ea-mdg-deploy** |
+| Querying, rolling up or reporting across a whole model rather than element by element — or getting EA content into a database a BI tool can read | **ea-reporting-database** |
 | Writing YAML conformance rules, or running a ruleset against a model | **ea-validation** |
 | Building a complete ruleset for a modeling language from scratch | **ea-ruleset-author** |
 | Driving EA from Python via the COM API rather than through MCP | **ea-com** |
