@@ -200,7 +200,7 @@ def test_frame_is_present_and_includes_the_load_bearing_tables():
         assert required in m.frame
 
 
-def test_model_is_deterministic_and_serialisable():
+def test_model_is_deterministic_and_serializable():
     e1 = entity("A|Component", "A", 3)
     e2 = entity("B|Component", "B", 3)
     stats = {"A|Component": [stat("x", 3, 3, ["v"] * 3)]}

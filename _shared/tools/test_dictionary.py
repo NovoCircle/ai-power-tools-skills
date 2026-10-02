@@ -87,12 +87,12 @@ def test_the_alias_description_and_type_from_the_technology_all_appear():
     assert "WBABusinessApplication" in md
 
 
-def test_a_declared_enumeration_is_labelled_declared():
+def test_a_declared_enumeration_is_labeled_declared():
     md = data_dictionary(_declared_model())
     assert "declared: `Mission-Critical`, `Standard`" in md
 
 
-def test_an_observed_enumeration_is_labelled_observed_not_passed_off_as_declared():
+def test_an_observed_enumeration_is_labeled_observed_not_passed_off_as_declared():
     """Observation only shows what happened to be used. Presenting it as the
     technology's domain is how a missing value becomes an invisible gap."""
     key = "Thing|Component"
@@ -214,7 +214,7 @@ def _load_result():
                       rows_by_table={"business_application": 4, "load_run": 1})
 
 
-def test_the_manifest_is_json_serialisable():
+def test_the_manifest_is_json_serializable():
     m = manifest(_declared_model(), _load_result(), run_id="run-7")
     assert json.loads(json.dumps(m))["run_id"] == "run-7"
 

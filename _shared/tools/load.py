@@ -19,7 +19,7 @@ the function that happens to write the row.
 EVERY STATEMENT IS LOGGED, NO VALUE IS
 --------------------------------------
 `LoadResult.sql_log` holds the statement text in issue order, with a row count
-for the parameterised inserts - never the bindings. The log is a build artifact
+for the parameterized inserts - never the bindings. The log is a build artifact
 that gets attached to tickets and pasted into chat; the values are customer
 content. Statement text plus count is what makes a build reproducible and
 reviewable, and it is also all that can be published safely.

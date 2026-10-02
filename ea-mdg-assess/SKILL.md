@@ -92,7 +92,7 @@ Read the result before choosing a path. Three things in it change the decision:
   architect reaching for "Application Component" can land on TOGAF's without noticing. Several
   languages in light use is usually accident, not design — and generating a technology that
   blesses the accident makes it permanent.
-- **Tag-name shape.** An element carrying your technology's tags while labelled with somebody
+- **Tag-name shape.** An element carrying your technology's tags while labeled with somebody
   else's stereotype is a misassignment, and the census reports it as one.
 
 ### Then ask which path, and say what it costs

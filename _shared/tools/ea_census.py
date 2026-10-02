@@ -217,7 +217,7 @@ class Entity:
     def is_heterogeneous(self) -> bool:
         """True when one stereotype is applied across several metaclasses.
 
-        Real, and a finding rather than an error: it is how a modeller draws
+        Real, and a finding rather than an error: it is how a modeler draws
         the same concept two ways. It is reported so a consumer can see it.
         """
         return len(self.metaclasses) > 1
@@ -489,7 +489,7 @@ DRIFT_PROBABLE_MISASSIGNMENT = "probable_stereotype_misassignment"
 
 
 # --------------------------------------------------------------------------
-# Shape - what an element LOOKS like, independent of what it is labelled
+# Shape - what an element LOOKS like, independent of what it is labeled
 # --------------------------------------------------------------------------
 #
 # EA ships with every modeling language enabled, so the toolbox offers hundreds
@@ -504,12 +504,12 @@ DRIFT_PROBABLE_MISASSIGNMENT = "probable_stereotype_misassignment"
 # set of tag NAMES the element carries, because EA creates those rows from the
 # stereotype definition - rather than trusting the label.
 #
-# Measured on the reference fixture: an element labelled `VendorApplication`
+# Measured on the reference fixture: an element labeled `VendorApplication`
 # with no profile binding carries 6 of 6 of the technology's base tags and sits
 # beside 35 correctly-stereotyped siblings. It is plainly meant to be the
 # governed stereotype. By contrast `TOGAF::ApplicationComponent` elements carry
 # 9 tags and 0 of those 6 - a genuinely different shape, and a different
-# judgement.
+# judgment.
 
 @dataclass(frozen=True)
 class Shape:
@@ -706,7 +706,7 @@ def compare_declared_observed(census: ElementCensus, mdg: dict,
             top = best[0]
             out.append(Drift(
                 DRIFT_PROBABLE_MISASSIGNMENT, name,
-                f"{total} instance(s) labelled {name!r} have the shape of "
+                f"{total} instance(s) labeled {name!r} have the shape of "
                 f"{top.stereotype!r}: {top.detail}"))
 
     if tag_stats:

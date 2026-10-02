@@ -6,7 +6,7 @@ randomness. It turns a census plus a technology into a description of tables and
 columns, and nothing else builds or loads anything.
 
 This is the artifact a customer tunes. It is deliberately plain data so it can be
-serialised to YAML, reviewed, edited and re-applied, in the same lineage as the
+serialized to YAML, reviewed, edited and re-applied, in the same lineage as the
 validation rulesets.
 
 WHAT DECIDES A COLUMN'S TYPE AND DOMAIN
@@ -84,7 +84,7 @@ SQL_TYPES = {
 DEFAULT_SQL_TYPE = "TEXT"
 
 #: Below this share of POPULATED coverage a tag becomes an overflow row rather
-#: than a column. Arbitrary, and labelled as such: it is a default that behaved
+#: than a column. Arbitrary, and labeled as such: it is a default that behaved
 #: sensibly on one model, not a measured threshold. Callers should override it
 #: deliberately rather than inherit it by accident.
 DEFAULT_SPARSE_THRESHOLD = 0.05
@@ -135,7 +135,7 @@ class ReportModel:
     excluded: dict[str, int] = field(default_factory=dict)
 
     def to_dict(self) -> dict:
-        """Plain data, for serialising to YAML or JSON."""
+        """Plain data, for serializing to YAML or JSON."""
         return asdict(self)
 
     def table_for(self, entity_key: str) -> Table | None:

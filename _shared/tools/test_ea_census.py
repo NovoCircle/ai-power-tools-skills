@@ -24,7 +24,7 @@ that no previous fixture could reach:
   * populated-vs-present coverage (reports 100% on an empty tag)
   * a tag value that legitimately contains the split separator
 
-Each of those has a NEGATIVE test - a case asserting the wrong behaviour is not
+Each of those has a NEGATIVE test - a case asserting the wrong behavior is not
 produced - because the prototype this replaces passed every check it had on the
 first run, which proved nothing about detection.
 """
