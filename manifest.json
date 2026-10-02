@@ -488,6 +488,23 @@
       }
     },
     {
+      "name": "prol-matrix",
+      "title": "prol-matrix",
+      "description": "Read, filter, share and export Prolaborate relationship matrices",
+      "version": "1.0.0",
+      "min_server_version": "1.0.0",
+      "files": [
+        "prol-matrix/SKILL.md",
+        "prol-matrix/references/reading-a-matrix.md",
+        "prol-matrix/references/test-cases.md"
+      ],
+      "sha256": {
+        "prol-matrix/SKILL.md": "da29bd44fa4ab024a570106d52f210e8d8f6290e8ce01ec9c5ccb2dc57967f8d",
+        "prol-matrix/references/reading-a-matrix.md": "48c6eb2171df755668f81b2157ff4d1acfdebd6071778f7882a39010c8d59a29",
+        "prol-matrix/references/test-cases.md": "31577b5cd621b5e3e6b54c40a4194db28721265940c8b963c072ef22eb767c37"
+      }
+    },
+    {
       "name": "prol-start-here",
       "title": "Prolaborate \u2014 start here",
       "description": "Entry point for any Prolaborate task: session preflight, then routing to the right skill",
