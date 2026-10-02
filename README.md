@@ -11,38 +11,60 @@ shared between them, and no Visio skill is ever installed from here.
 
 ## How to install
 
-If you have AI Power Tools for Sparx EA installed:
+One plugin. It carries these skills **and** the AI Power Tools MCP server, so there is a
+single thing to install and a single thing to update.
 
-> *"Install the AI Power Tools skills."*
+```
+claude plugin marketplace add NovoCircle/ai-power-tools-skills
+claude plugin install ai-power-tools@novocircle
+```
 
-Claude calls the `install_skills` MCP tool, which fetches this bundle from `releases/latest` and
-copies the skills into `~/.claude/skills`. Re-run it any time to pick up newer versions;
-unchanged files are skipped.
+Restart Claude afterwards: plugin changes are staged, not applied to a running session.
 
-**Bundle 3.0.0 requires server 3.0.0 or later.** Those two figures are `bundle_version` and
-`min_server_version` in `manifest.json`; if this sentence ever lags the manifest, the manifest is
-the one to believe. Several skills document operations that are broken or absent in earlier
-servers, so installing against an older server is refused per-skill rather than silently
-producing guidance that does not work.
+That works on every surface Claude offers — the CLI, the desktop Code tab, VS Code, Claude
+Desktop chat and Cowork. Plugins are the only mechanism all of them load.
 
-### Upgrading from 1.4.1 or earlier
+You still need Enterprise Architect installed on the same Windows machine. The server drives
+EA over COM, so it has to run where EA runs. A Cowork session in the cloud reaches it through
+Claude Desktop on your workstation — that relocates the conversation, not EA.
 
-Two things changed that affect an existing installation.
+In Claude Desktop you can instead download `ai-power-tools.plugin` from the
+[latest release](https://github.com/NovoCircle/ai-power-tools-skills/releases/latest) and
+upload it in the app. That copy is per machine and does not update itself; the marketplace
+does.
 
-**Skills now install to `~/.claude/skills`.** Earlier versions defaulted to
-`%APPDATA%\Claude\skills`, which no Claude surface actually reads — installs reported success and
-the skills never loaded. If you installed skills before 2.2.0 they are probably sitting there
-unused. After upgrading the server, ask Claude to:
+### Coming from `install_skills`?
 
-> *"Prune the legacy AI Power Tools skills."*
+Before 3.5.0 the skills arrived through the `install_skills` MCP tool, which copied them into
+`~/.claude/skills`. The plugin supersedes that, and `install_skills` now declines rather than
+writing a second copy — a machine carrying both loads every skill twice, once unprefixed and
+once as `ai-power-tools:<name>`, because they are different sources and nothing deduplicates
+across them.
 
-That reports what it would remove; confirm to apply. It only removes directories it can prove
-came from this product, and backs up anything you edited.
+To clear the older copies, download **`migrate-to-plugin.ps1`** from the
+[latest server release](https://github.com/NovoCircle/ai-power-tools-releases/releases/latest)
+and run it:
 
-**Two skills were renamed.** `ea-mcp-modeling` → `ea-modeling`, and `ea-mcp-validation` →
-`ea-validation`. `ea-mcp-quicklinker` was withdrawn. Without pruning you will have both the old
-and new copies installed, giving contradictory guidance on the same subject — so prune as part of
-upgrading, not later.
+```powershell
+.\migrate-to-plugin.ps1 -WhatIf     # show what would go, change nothing
+.\migrate-to-plugin.ps1             # list it, then ask before removing
+```
+
+It prints the skills it would remove, names the ones it will **not** touch, and does nothing
+until you type `YES`.
+
+**Do not delete `~/.claude/skills` by hand.** It may also hold skills for AI Power Tools for
+Microsoft Visio — a separate product with its own installer — and any skills you wrote
+yourself. The script knows the difference because it reads the installer's own record of what
+it wrote; a directory listing cannot tell them apart. Anything you edited locally is backed up
+before removal.
+
+This is a one-time job, which is why it ships as a script rather than living in the product.
+
+### Version
+
+The skills, the MCP server and the VS Code extension share one version and ship together, so
+there is one number to reason about rather than three.
 
 ## What's in the bundle
 
@@ -157,42 +179,65 @@ Bundle-level fields:
 
 ## Release process
 
-1. Edit a skill (or add a new one).
-2. Bump the affected skill's `version` in `manifest.json`.
-3. Bump `bundle_version` and `released_at`.
-4. Regenerate the `sha256` map (see `tools/regen-manifest.py`).
-5. Commit, tag (e.g. `v0.6.1`), push.
-6. `gh release create vX.Y.Z` with each skill file plus `manifest.json`
-   as release assets — uploaded under stable filenames so the installer
-   resolves `/releases/latest/download/<filename>` reliably.
+The skills, the MCP server and the VS Code extension ship **together, on one version**. A
+release is one number across both repositories, not a skills release that happens to coincide
+with a server one.
 
-The product binary at `NovoCircle/ai-power-tools-releases` does NOT
-need to be re-released for skill changes. That's the whole point.
+```
+python tools/regen-manifest.py     # refresh the sha256 map
+python tools/gate.py               # release blocker if red
+python tools/build-plugin.py       # emits dist/ai-power-tools.plugin
+python tools/publish-bundle.py                 # stage + verify, publishes nothing
+python tools/publish-bundle.py --publish vX.Y.Z --notes-file docs/release-notes/X.Y.Z.md
+python tools/publish-bundle.py --verify-published
+```
+
+`publish-bundle.py` exists because the folklore version of this failed: the bundle reached
+2.0.0 through 2.3.0 on `main` and **no 2.x release was ever cut**, so `install_skills` kept
+serving 1.4.1 for weeks against a 2.3.0 server. The script refuses rather than guesses, and
+`--verify-published` re-fetches the release from outside and re-hashes it, because a bundle
+whose bytes do not match its manifest is rejected by every customer's installer and there is
+no other way to find out.
+
+Three files carry the version and must agree — `manifest.json`'s `bundle_version`,
+`plugins/ai-power-tools/.claude-plugin/plugin.json`, and the `ai-power-tools` entry in
+`.claude-plugin/marketplace.json`. `tools/build-plugin.py` refuses to build when they differ,
+so drift fails at build time rather than reaching a customer as two numbers for one product.
+
+### Ordering across the two repositories
+
+The plugin references the server's `.mcpb` by a **pinned** release URL, so the server release
+has to exist first:
+
+1. Release the server from `NovoCircle/ai-power-tools` (`build.py --publish`), which publishes
+   the `.mcpb`, the `.vsix` and `migrate-to-plugin.ps1` to `ai-power-tools-releases`.
+2. Point `mcpServers` in `plugin.json` at that tag.
+3. Release the bundle from here.
+
+Pinned rather than `releases/latest` on purpose: a floating reference would mean a later server
+release silently changes which binary every already-installed plugin pulls, including for
+customers who installed months ago and changed nothing.
 
 ## Versioning policy
 
-- **bundle_version** moves independently of the product version. AI
-  Power Tools v0.6.0 customers can pull bundle v0.7.x as long as the
-  manifest's `min_server_version` is ≤ 0.6.0.
-- **Per-skill `version`** bumps only when that skill's content changes.
-- **`min_server_version` per skill** gates against tool additions. A
-  skill that references a tool introduced in product v0.7.0 must set
-  `min_server_version: "0.7.0"`; v0.6.0 customers see it in
-  `list_available_skills` with `compatible: false`.
+- **One version across the product.** The bundle, the plugin, the MCP server and the VS Code
+  extension carry the same number and ship together. The binary is sometimes byte-identical
+  between two versions, because a skills-only change still bumps it. That is the cost of one
+  number, and it is cheaper than explaining three.
+- **Per-skill `version`** bumps only when that skill's content changes. It is a record of what
+  moved, not a compatibility gate.
+- **`min_server_version`** is vestigial for plugin users, since the plugin ships the server it
+  was built against and the two cannot disagree. It still matters for machines that have not
+  migrated off `install_skills`, where an older server can meet a newer bundle, so the field is
+  maintained and the bundle-wide floor is still enforced all-or-nothing.
 
-  This number is derived from the skill's own text, not chosen: take
-  every operation the skill names, take the release each operation was
-  introduced in, and the highest of those is the floor. It is content
-  metadata, and left to drift it becomes decorative — for bundle 3.0.0,
-  seven entries declared `1.0.0` while their text called operations
-  added as late as 3.0.0, and `ea-modeling` documented `add_image`
-  against a declared floor of `1.0.0`.
-
-  Re-derive it whenever a skill's text changes, and treat the result as
-  a **lower bound**: the introducing release is read from the server
-  `CHANGELOG.md`, and roughly a third of the operations are never named
-  there, so they contribute nothing to the maximum. The bundle-wide
-  floor is the guard that does not depend on this being right.
+  The per-skill floor is derived from the skill's own text, not chosen: take every operation
+  the skill names, take the release each was introduced in, and the highest is the floor. Left
+  to drift it becomes decorative — for bundle 3.0.0, seven entries declared `1.0.0` while their
+  text called operations added as late as 3.0.0. Treat the result as a **lower bound**: roughly
+  a third of operations are never named in the server `CHANGELOG.md`, so they contribute
+  nothing to the maximum. The bundle-wide floor is the guard that does not depend on this being
+  right.
 
 ## Authoring a new skill
 
