@@ -71,7 +71,7 @@ KNOWN_IDS = {
     # was listed, so a measurement citing the id EA actually writes was flagged.
     "UPDM", "UPDM2", "SPEM", "SOMF", "BPEL", "XSD", "WSDL", "ERD", "DMN", "CMMN",
     # EA's own internal UML profile. `EAUML::report package` is EA's machinery,
-    # which the census has to recognise in order to EXCLUDE it - so the id has
+    # which the census has to recognize in order to EXCLUDE it - so the id has
     # to be nameable in our own source.
     "EAUML",
     # The UML 2 Standard Profile EA ships and applies by default. Real
