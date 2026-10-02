@@ -279,6 +279,71 @@ class TestOperationDrift:
         assert findings == []
         assert gate.op_drift_ran() is False
 
+    def test_every_skip_path_records_that_it_did_not_run(self, library, tmp_path,
+                                                         monkeypatch):
+        """Not just the missing-server one.
+
+        Three of the four early returns used to print a note and return [],
+        leaving op_drift_ran() True. The verdict then read as a clean pass
+        while the check had not run -- the same defect one level in.
+        """
+        monkeypatch.setattr(gate, "_OP_DRIFT_RAN", True)
+        monkeypatch.setattr(gate, "_OP_DRIFT_SKIP_REASON", None)
+
+        # A server path that exists but cannot yield operations.
+        broken = tmp_path / "broken_server.py"
+        broken.write_text("this is not valid python <<<", encoding="utf-8")
+        gate.check_op_drift(library, server=broken)
+
+        assert gate.op_drift_ran() is False
+        assert gate.op_drift_skip_reason(), "the reason must be recorded, not just the flag"
+
+    def test_a_completed_run_reports_that_it_ran(self, library, tmp_path, monkeypatch):
+        monkeypatch.setattr(gate, "_OP_DRIFT_RAN", False)
+        monkeypatch.setattr(gate, "_OP_DRIFT_SKIP_REASON", "stale")
+        gate.check_op_drift(library, server=self._fake_server(tmp_path))
+        assert gate.op_drift_ran() is True
+        assert gate.op_drift_skip_reason() is None
+
+
+class TestSkippedCheckIsNotAPass:
+    """A gate that stopped checking passes everything, so its verdict must say so.
+
+    Exercised through the real entry point rather than the helpers, because the
+    defect was never in the checks -- it was in what main() printed and returned
+    afterwards.
+    """
+
+    def _run(self, *args):
+        import subprocess, sys
+        gate_py = Path(gate.__file__)
+        proc = subprocess.run(
+            [sys.executable, str(gate_py), *args],
+            capture_output=True, text=True, cwd=str(gate_py.resolve().parent.parent),
+        )
+        return proc.returncode, proc.stdout + proc.stderr
+
+    def test_a_skipped_check_does_not_report_a_plain_green(self):
+        code, out = self._run("--server", "definitely/not/here.py")
+        assert "GATE GREEN (1 check skipped)" in out, out
+        assert "GATE GREEN — no violations" not in out
+        assert code == 0, "non-strict stays passable, so CI is not broken by it"
+
+    def test_strict_fails_when_a_check_could_not_run(self):
+        code, out = self._run("--server", "definitely/not/here.py", "--strict")
+        assert code == 1, out
+        assert "a skipped check fails the gate" in out
+
+    def test_strict_passes_when_every_check_ran(self):
+        # No --server, so discovery finds the real one. If this machine has no
+        # server source the premise does not hold and the case is not meaningful.
+        code, out = self._run("--strict")
+        if "1 check skipped" in out:
+            pytest.skip("no server source on this machine; nothing to assert")
+        assert code == 0, out
+        assert "GATE GREEN" in out
+        assert "skipped" not in out
+
 # ---------------------------------------------------------------------------
 # Rule 4 — the Sparx diagram gallery must not leak into the bundle
 #
