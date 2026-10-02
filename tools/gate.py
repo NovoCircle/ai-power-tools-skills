@@ -436,11 +436,36 @@ def check_manifest() -> list[str]:
 
 
 _OP_DRIFT_RAN = True
+_OP_DRIFT_SKIP_REASON: Optional[str] = None
 
 
 def op_drift_ran() -> bool:
     """False when the last check_op_drift call could not read the server."""
     return _OP_DRIFT_RAN
+
+
+def op_drift_skip_reason() -> Optional[str]:
+    """Why the last check_op_drift call did not run, or None if it did."""
+    return _OP_DRIFT_SKIP_REASON
+
+
+def _op_drift_skipped(reason: str) -> list[str]:
+    """Record that the check did not run, and say so.
+
+    Every early return from check_op_drift comes through here. Three of them
+    used to return quietly, having only printed a note: a missing
+    gen-operations.py, a module that would not import, and a server whose
+    operations could not be collected. Only the missing-server path set the
+    flag, so the other three could leave the verdict a clean GREEN while the
+    check had not run at all -- which is the defect this guards, one level in.
+    """
+    global _OP_DRIFT_RAN, _OP_DRIFT_SKIP_REASON
+    _OP_DRIFT_RAN = False
+    _OP_DRIFT_SKIP_REASON = reason
+    print(f"  !! OP-DRIFT CHECK DID NOT RUN: {reason}")
+    print("     Skills naming a renamed or invented operation will NOT be "
+          "caught by this run.")
+    return []
 
 
 def check_op_drift(target: Path, server: Optional[Path] = None) -> list[str]:
@@ -465,39 +490,38 @@ def check_op_drift(target: Path, server: Optional[Path] = None) -> list[str]:
     as a check that passed, so the notice is loud and `op_drift_ran()` reports
     whether the last call actually checked anything.
     """
+    # Each call is authoritative about itself. Without this the flag only ever
+    # moved one way: a run that skipped left it False for the life of the
+    # process, so a later successful call still reported as skipped.
+    global _OP_DRIFT_RAN, _OP_DRIFT_SKIP_REASON
+    _OP_DRIFT_RAN = True
+    _OP_DRIFT_SKIP_REASON = None
+
     # Loaded by path: the filename contains a hyphen, so it is not importable
     # by name.
     import importlib.util
     spec = importlib.util.spec_from_file_location(
         "gen_operations", Path(__file__).resolve().parent / "gen-operations.py")
     if spec is None or spec.loader is None:
-        print("  (op-drift check skipped: tools/gen-operations.py not found)")
-        return []
+        return _op_drift_skipped("tools/gen-operations.py not found")
     gen = importlib.util.module_from_spec(spec)
     try:
         spec.loader.exec_module(gen)
     except Exception as e:
-        print(f"  (op-drift check skipped: {e})")
-        return []
+        return _op_drift_skipped(f"tools/gen-operations.py did not import: {e}")
 
     server = Path(server) if server is not None else gen.DEFAULT_SERVER
     if not server.is_file():
-        global _OP_DRIFT_RAN
-        _OP_DRIFT_RAN = False
-        print(
-            "  !! OP-DRIFT CHECK DID NOT RUN: no server source at "
-            f"{server}. Skills naming a renamed or invented operation will "
-            "NOT be caught by this run."
+        return _op_drift_skipped(
+            f"no server source at {server} (pass --server PATH to point at it)"
         )
-        return []
 
     try:
         known: set[str] = set()
         for ops in gen.collect_operations(server).values():
             known.update(ops)
     except Exception as e:
-        print(f"  (op-drift check skipped: {e})")
-        return []
+        return _op_drift_skipped(f"could not read operations from {server}: {e}")
 
     call_site = re.compile(r'operation\s*=\s*["\']([a-z_][a-z0-9_]*)["\']')
     out: list[str] = []
@@ -601,7 +625,24 @@ def main() -> int:
     except (AttributeError, ValueError):
         pass
 
-    target = ROOT / sys.argv[1] if len(sys.argv) > 1 else ROOT
+    import argparse
+    parser = argparse.ArgumentParser(
+        description="Release gate for the skills bundle.")
+    parser.add_argument("path", nargs="?", default=None,
+                        help="limit the scan to this path (default: the repo)")
+    parser.add_argument("--server", metavar="PATH", default=None,
+                        help="server.py to check operations against. Discovery "
+                             "walks up from this repo and finds it in a normal "
+                             "checkout and in a worktree; pass this when the "
+                             "server lives somewhere else.")
+    parser.add_argument("--strict", action="store_true",
+                        help="fail when a check could not run. Use for releases. "
+                             "CI leaves it off because the runner checks out only "
+                             "this repository, so it has no server source and the "
+                             "op-drift check cannot run there at all.")
+    args = parser.parse_args()
+
+    target = ROOT / args.path if args.path else ROOT
     if not target.exists():
         print(f"no such path: {target}")
         return 2
@@ -610,20 +651,36 @@ def main() -> int:
     for f in iter_files(target):
         findings.extend(check_file(f))
     findings.extend(check_images(target))
-    findings.extend(check_op_drift(target))
+    findings.extend(check_op_drift(target, Path(args.server) if args.server else None))
     findings.extend(check_ruleset_paths(target))
     if target == ROOT:
         findings.extend(check_manifest())
 
+    # A check that did not run is not a check that passed. The verdict says so
+    # whatever the findings, because the whole point of this item was a gate
+    # reporting GREEN while one of its checks had been skipped.
+    skipped = None if op_drift_ran() else op_drift_skip_reason()
+
     if not findings:
-        print("GATE GREEN — no violations")
+        if skipped is None:
+            print("GATE GREEN — no violations")
+            return 0
+        print("GATE GREEN (1 check skipped) — no violations found, but "
+              "op-drift did not run")
+        print(f"  reason: {skipped}")
+        if args.strict:
+            print("  --strict: a skipped check fails the gate")
+            return 1
         return 0
 
     blocking = [f for f in findings if is_blocking(f)]
-    print(f"GATE RED — {len(findings)} finding(s), {len(blocking)} blocking\n")
+    suffix = "" if skipped is None else ", 1 check skipped"
+    print(f"GATE RED — {len(findings)} finding(s), {len(blocking)} blocking{suffix}\n")
     for f in findings:
         print(f"  {f}")
-    return 1 if blocking else 0
+    if skipped is not None:
+        print(f"\n  op-drift did not run: {skipped}")
+    return 1 if (blocking or (args.strict and skipped is not None)) else 0
 
 
 if __name__ == "__main__":
