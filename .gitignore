@@ -10,3 +10,6 @@ __pycache__/
 # Staging area built by tools/publish-bundle.py. Regenerated on demand and
 # never committed: it is a flattened copy of tracked files.
 .release-staging/
+
+# Built by tools/build-plugin.py. Regenerated on demand, never committed.
+dist/

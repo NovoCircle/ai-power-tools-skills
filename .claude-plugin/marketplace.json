@@ -1,0 +1,13 @@
+{
+  "name": "novocircle",
+  "owner": { "name": "NovoCircle" },
+  "description": "Skills published by NovoCircle for the AI Power Tools product family.",
+  "plugins": [
+    {
+      "name": "ai-power-tools",
+      "source": "./plugins/ai-power-tools",
+      "version": "3.0.1",
+      "description": "Skills for AI Power Tools for Sparx EA — modeling, MDG authoring and deployment, validation rulesets, diagram composition, import/export, and stakeholder reporting against a Sparx Enterprise Architect repository."
+    }
+  ]
+}
