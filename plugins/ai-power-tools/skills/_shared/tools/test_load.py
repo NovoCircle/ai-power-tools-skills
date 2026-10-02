@@ -408,3 +408,32 @@ def test_a_multi_valued_column_is_checked_value_by_value():
     rows = {model.tables[0].name: [{"ea_guid": "{A}", "scope": "GLBA, SOX"}]}
     v = domain_violations(model, rows)
     assert [x["value"] for x in v] == ["SOX"]       # GLBA is declared, SOX is not
+
+
+def test_every_stored_value_matches_the_type_its_column_declares(fixture, tmp_path):
+    """APT-2026-0225. SQLite will store 'true' in an INTEGER column and say
+    nothing, so the DDL claimed one type while the data was another. Neither the
+    hermetic suite nor the live reconciliation could see it - both count rows,
+    and the row counts were right. This is the invariant that makes the whole
+    class of fault visible."""
+    model, pv, _, _, census = fixture
+    db = tmp_path / "r.sqlite"
+    build_database(db, model, pv, run_id=RUN, run_at=AT)
+
+    expected = {"TEXT": "text", "INTEGER": "integer", "REAL": "real"}
+    conn = sqlite3.connect(str(db))
+    try:
+        tables = [r[0] for r in conn.execute(
+            "SELECT name FROM sqlite_master WHERE type='table'")]
+        offenders = []
+        for table in tables:
+            for _, col, decl, *_ in conn.execute(f'PRAGMA table_info("{table}")'):
+                want = expected.get((decl or "TEXT").upper())
+                stored = {r[0] for r in conn.execute(
+                    f'SELECT DISTINCT typeof("{col}") FROM "{table}"')} - {"null"}
+                wrong = stored - {want}
+                if wrong:
+                    offenders.append(f"{table}.{col} declared {decl}, stored {sorted(wrong)}")
+        assert offenders == []
+    finally:
+        conn.close()

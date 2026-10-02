@@ -188,6 +188,13 @@ def build_database(path,
     # by the scope rule, which the governance gate already put in front of a
     # human before the build. A warning here would make the ordinary case look
     # like a fault (APT-2026-0226).
+    # A warning, not a note: a value the technology says is a boolean and the
+    # repository says is "maybe" is a data-quality finding somebody should see
+    # (APT-2026-0225).
+    if pivot_result.uncoercible:
+        result.warnings.append(
+            f"{len(pivot_result.uncoercible)} value(s) could not be stored as the "
+            "type their column declares and were left NULL - see the pivot result")
     if pivot_result.excluded:
         result.notes.append(
             f"{len(pivot_result.excluded)} populated tag value(s) excluded with "

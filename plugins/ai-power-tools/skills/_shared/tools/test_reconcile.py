@@ -11,7 +11,8 @@ way that looked like success.
 from __future__ import annotations
 
 from ea_census import build_stereotype_index, census_elements
-from reconcile import FAIL, PASS, SKIPPED, Reconciliation, format_report, reconcile
+from reconcile import (FAIL, PASS, SKIPPED, Reconciliation, domain_violations,
+                       format_report, reconcile)
 
 NS = "WestbrookBankArchitecture"
 
@@ -135,3 +136,32 @@ def test_an_empty_reconciliation_is_ok_but_proves_nothing():
     rec = Reconciliation()
     assert rec.ok is True
     assert len(rec.checks) == 0
+
+
+def test_a_typed_column_is_not_domain_checked_against_declared_strings():
+    """APT-2026-0225. A boolean column declares the domain `true`/`false` and
+    stores the coerced 1/0. Comparing those two spaces reported every correctly
+    stored boolean as a violation - ten findings on the reference model, none of
+    them real. For a typed column the coercion is the domain check."""
+    from report_model import Column, ReportModel, Table
+    col = Column(name="audit_logging_enabled", source_tag="auditLoggingEnabled",
+                 sql_type="INTEGER", enum_values=["true", "false"],
+                 enum_source="declared")
+    model = ReportModel(tables=[Table(name="ai_model", entity_key="K",
+                                      stereotype="WBAAIModel", columns=[col])])
+    rows = {"ai_model": [{"audit_logging_enabled": 1},
+                         {"audit_logging_enabled": 0}]}
+    assert domain_violations(model, rows) == []
+
+
+def test_a_text_column_is_still_domain_checked():
+    from report_model import Column, ReportModel, Table
+    col = Column(name="lifecycle", source_tag="lifecycle", sql_type="TEXT",
+                 enum_values=["Current", "Sunset"], enum_source="declared")
+    model = ReportModel(tables=[Table(name="app", entity_key="K",
+                                      stereotype="WBABusinessApplication",
+                                      columns=[col])])
+    rows = {"app": [{"lifecycle": "Archive"}, {"lifecycle": "Current"}]}
+    found = domain_violations(model, rows)
+    assert [(v["column"], v["value"], v["count"]) for v in found] == [
+        ("lifecycle", "Archive", 1)]

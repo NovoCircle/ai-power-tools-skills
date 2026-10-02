@@ -30,7 +30,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 from ea_census import split_multi_value
-from report_model import ReportModel, Table
+from report_model import UNCOERCIBLE, ReportModel, Table, coerce_value
 
 
 @dataclass
@@ -40,6 +40,12 @@ class PivotResult:
     tag_value: list[dict] = field(default_factory=list)
     overflow: list[dict] = field(default_factory=list)
     coverage: list[dict] = field(default_factory=list)
+    #: Values that could not be written as the type their column declares -
+    #: `audit_logging_enabled` declared INTEGER holding "maybe". Reported, never
+    #: written as text into a typed column and never dropped: the DDL claiming
+    #: one type while the data is another is the defect this list exists to make
+    #: impossible (APT-2026-0225).
+    uncoercible: list[dict] = field(default_factory=list)
     #: Tag rows that reached NOWHERE - not a column, not overflow, not the
     #: bridge. Should be empty, and is reported rather than dropped so "should
     #: be" is checkable.
@@ -126,7 +132,18 @@ def pivot(model: ReportModel,
                 if col is not None:
                     # The flattened column stays for display. Measures use the
                     # bridge; that is the point of having both.
-                    row[col.name] = value
+                    #
+                    # It is also the only TYPED copy of the value, so it is the
+                    # one that has to honor the declared type. `tag_value` is a
+                    # bridge over tags of every type at once and stays text.
+                    coerced = coerce_value(value, col.sql_type)
+                    if coerced is UNCOERCIBLE:
+                        result.uncoercible.append({
+                            "ea_guid": guid, "table": table.name,
+                            "column": col.name, "sql_type": col.sql_type,
+                            "value": value})
+                    else:
+                        row[col.name] = coerced
                 elif tag in overflow_tags:
                     result.overflow.append({"ea_guid": guid, "tag": tag, "value": value})
             for c in table.columns:

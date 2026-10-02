@@ -9,6 +9,8 @@ from __future__ import annotations
 
 from ea_census import Entity, ElementCensus, TagStat
 from report_model import (
+    UNCOERCIBLE,
+    coerce_value,
     DEFAULT_SPARSE_THRESHOLD,
     FRAME_TABLES,
     build_report_model,
@@ -212,3 +214,52 @@ def test_model_is_deterministic_and_serializable():
 
 def test_default_threshold_is_declared_not_hidden():
     assert DEFAULT_SPARSE_THRESHOLD == 0.05
+
+
+# --- APT-2026-0225: declared type vs stored value ----------------------
+
+def test_a_declared_boolean_is_stored_as_an_integer_not_the_string_true():
+    """SQLite stores 'true' in an INTEGER column without complaint, so the DDL
+    claimed one type while the data was another. `WHERE x = 1` matched nothing
+    and a Parquet write refused the column outright."""
+    assert coerce_value("true", "INTEGER") == 1
+    assert coerce_value("false", "INTEGER") == 0
+
+
+def test_every_boolean_spelling_ea_actually_stores_is_handled():
+    for t in ("true", "True", "TRUE", " t ", "yes", "Y", "1"):
+        assert coerce_value(t, "INTEGER") == 1, t
+    for f in ("false", "False", "FALSE", " f ", "no", "N", "0"):
+        assert coerce_value(f, "INTEGER") == 0, f
+
+
+def test_an_empty_typed_value_is_null_not_zero():
+    """Empty means nobody filled it in. Zero is a value somebody chose, and
+    writing it would make tag_coverage disagree with its own column."""
+    assert coerce_value("", "INTEGER") is None
+    assert coerce_value("   ", "REAL") is None
+    assert coerce_value(None, "INTEGER") is None
+
+
+def test_an_empty_text_value_keeps_the_behavior_every_build_has_had():
+    """Changing '' to NULL is a separate semantic decision and would break any
+    customer query testing = ''."""
+    assert coerce_value("", "TEXT") == ""
+
+
+def test_an_unparseable_value_is_reported_not_silently_written_as_text():
+    assert coerce_value("maybe", "INTEGER") is UNCOERCIBLE
+    assert coerce_value("lots", "REAL") is UNCOERCIBLE
+    # and it is distinguishable from "nobody filled it in"
+    assert coerce_value("maybe", "INTEGER") is not None
+    assert bool(UNCOERCIBLE) is False
+
+
+def test_ordinary_numbers_still_coerce():
+    assert coerce_value("42", "INTEGER") == 42
+    assert coerce_value("-7", "INTEGER") == -7
+    assert coerce_value("3.5", "REAL") == 3.5
+
+
+def test_text_passes_through_untouched():
+    assert coerce_value("GLBA, FFIEC", "TEXT") == "GLBA, FFIEC"

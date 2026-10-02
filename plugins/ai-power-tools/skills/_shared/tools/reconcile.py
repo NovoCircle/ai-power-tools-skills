@@ -215,10 +215,21 @@ def domain_violations(model, rows: dict[str, list[dict]], *,
     A violation is not a load failure. It is a governance finding, reported with
     a count so a reviewer can see whether it is one typo or a whole convention
     nobody declared.
+
+    ONLY TEXT COLUMNS ARE CHECKED, and that is not a shortcut. A declared domain
+    is a list of strings from the technology; a typed column holds the coerced
+    value. Comparing the two spaces reported every correctly-stored boolean as a
+    violation - a column declaring `true`/`false` and holding 1/0 produced ten
+    findings on the reference model, none of them real (APT-2026-0225). For a
+    typed column the coercion IS the domain check: anything outside the type is
+    already reported as uncoercible, which is a stronger statement than a string
+    comparison could make.
     """
     out: list[dict] = []
     for table in model.tables:
         for col in table.columns:
+            if col.sql_type != "TEXT":
+                continue
             if col.enum_source != "declared" or not col.enum_values:
                 continue
             allowed = set(col.enum_values)
