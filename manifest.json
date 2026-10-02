@@ -15,6 +15,7 @@
         "_shared/references/file-encoding.md",
         "_shared/references/latency.md",
         "_shared/references/operations.md",
+        "_shared/references/prolaborate-session.md",
         "_shared/references/westbrook-example.md",
         "_shared/tools/ddl.py",
         "_shared/tools/dictionary.py",
@@ -42,6 +43,7 @@
         "_shared/references/file-encoding.md": "5759bac841234558071a4cde555587e45cabebe5a90420188b07f8323d62f7fe",
         "_shared/references/latency.md": "af565b7e08f3a79a9239f548c63115181ef3ea7bd845b94ef0363a28f035d06f",
         "_shared/references/operations.md": "ec4331f19cdba7c8f299ac198656d6eea117d4ef2630284dd6d83e49a6b03db9",
+        "_shared/references/prolaborate-session.md": "6c129892dd6e247673302954ab89f78c36e31f4b0c7dc93dbba541ccfecab2ca",
         "_shared/references/westbrook-example.md": "d4622f3cf9ef6a58d661fb54cb4248dfc364e8e6ab9d0314876838081600cdf2",
         "_shared/tools/ddl.py": "e2298b6df49d3ca718e6a7743a530b68568bc7f0c6e9585197ad7bbaf11105dc",
         "_shared/tools/dictionary.py": "1442d14d9c74ad8e7bc7ead17629f7756962538ad5f919bc7e5fc23ff3ad449d",
@@ -386,21 +388,6 @@
       }
     },
     {
-      "name": "ea-ruleset-author",
-      "title": "ea-ruleset-author",
-      "description": "Build a YAML validation ruleset for a modeling language (ArchiMate, BPMN, UML, SysML, custom MDG), consumed by validate_model. Covers research, rule-category planning, YAML authoring, and testing.",
-      "version": "1.1.0",
-      "min_server_version": "1.2.0",
-      "files": [
-        "ea-ruleset-author/SKILL.md",
-        "ea-ruleset-author/references/rule-grammar.md"
-      ],
-      "sha256": {
-        "ea-ruleset-author/SKILL.md": "44ee799ea211de9d4eb7dbfcacd30b29dde20b82b048aae668eff8b03fd88a2b",
-        "ea-ruleset-author/references/rule-grammar.md": "3445cebb547a6c648c4e8ef5fb2b478adfdb7212004767d651724e299d92ac27"
-      }
-    },
-    {
       "name": "ea-reporting-database",
       "title": "EA - reporting database",
       "description": "Build a queryable relational database from an EA repository - elements, relationships, tagged values, attributes and diagram placements, typed by the technology that governs them - and reconcile it back against the repository. SQLite, with a data dictionary and an issued-SQL log.",
@@ -415,6 +402,21 @@
         "ea-reporting-database/SKILL.md": "44ca128cd798046beca26cee720dfc372da938bb32dc3a78e9c2741e319cc3eb",
         "ea-reporting-database/references/the-governance-gate.md": "042267320fa3f485ee79d61a47cd88396b5029e16973af0ae9874883d937bc4f",
         "ea-reporting-database/references/the-schema.md": "f4e0d7656b90fb38d3705cddb6cac3a50ede9ebaf2d110002f25489c9bf5db2f"
+      }
+    },
+    {
+      "name": "ea-ruleset-author",
+      "title": "ea-ruleset-author",
+      "description": "Build a YAML validation ruleset for a modeling language (ArchiMate, BPMN, UML, SysML, custom MDG), consumed by validate_model. Covers research, rule-category planning, YAML authoring, and testing.",
+      "version": "1.1.0",
+      "min_server_version": "1.2.0",
+      "files": [
+        "ea-ruleset-author/SKILL.md",
+        "ea-ruleset-author/references/rule-grammar.md"
+      ],
+      "sha256": {
+        "ea-ruleset-author/SKILL.md": "44ee799ea211de9d4eb7dbfcacd30b29dde20b82b048aae668eff8b03fd88a2b",
+        "ea-ruleset-author/references/rule-grammar.md": "3445cebb547a6c648c4e8ef5fb2b478adfdb7212004767d651724e299d92ac27"
       }
     },
     {
@@ -456,6 +458,46 @@
       ],
       "sha256": {
         "ea-validation/SKILL.md": "4907139e79b5f1c593c0b41cdb6b455b3bb1301c98d61c333c18847f10ec73bb"
+      }
+    },
+    {
+      "name": "prol-dashboards",
+      "title": "prol-dashboards",
+      "description": "Build and read Prolaborate dashboards through the web interface",
+      "version": "1.0.0",
+      "min_server_version": "1.0.0",
+      "files": [
+        "prol-dashboards/SKILL.md",
+        "prol-dashboards/references/chart-types.md",
+        "prol-dashboards/references/data-probes.md",
+        "prol-dashboards/references/layout.md",
+        "prol-dashboards/references/payloads.md",
+        "prol-dashboards/references/query-contracts.md",
+        "prol-dashboards/references/test-cases.md",
+        "prol-dashboards/references/worked-example.md"
+      ],
+      "sha256": {
+        "prol-dashboards/SKILL.md": "e28dbd28e29038f58647a66648c8088ad3cf756f76b9a5490e7bb5e725faddcb",
+        "prol-dashboards/references/chart-types.md": "25b8a9e8aea129e693abcb7217c9404efeac59d4fd64d0145e8e9292f0d5a684",
+        "prol-dashboards/references/data-probes.md": "445c9f7c725d9c173a8504bf6e3ae8e650441796ca15aa2f5500e2edda1f6190",
+        "prol-dashboards/references/layout.md": "a9906964d2c6514052dee3301ee1224818a864a39fd9dd47a1803f123260f2ae",
+        "prol-dashboards/references/payloads.md": "6b7275c1a467f265818309f4374a853d59443e370a3199c38a5c49f9d7d370e3",
+        "prol-dashboards/references/query-contracts.md": "ca17edd572b467b6fd88b3b8d92a77900024a0298452a8ace63962b695fd9753",
+        "prol-dashboards/references/test-cases.md": "f79103249494d384f48dec30ccaa4e647b5f4261e2b48e1129ee109f65611707",
+        "prol-dashboards/references/worked-example.md": "c649d23bd01cd1db9f136a1fa2bb14f8e116ded885ecda1a1eb3bc489bea4751"
+      }
+    },
+    {
+      "name": "prol-start-here",
+      "title": "Prolaborate \u2014 start here",
+      "description": "Entry point for any Prolaborate task: session preflight, then routing to the right skill",
+      "version": "1.0.0",
+      "min_server_version": "1.0.0",
+      "files": [
+        "prol-start-here/SKILL.md"
+      ],
+      "sha256": {
+        "prol-start-here/SKILL.md": "b5d8e06aaf605c122141ab026be14d994b76d4b65211fe1875adc76aee9ddfa2"
       }
     },
     {
