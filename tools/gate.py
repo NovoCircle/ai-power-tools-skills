@@ -22,6 +22,13 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 
+#: Manifest paths are install-relative, so they do not say where a file sits in
+#: the repo. Skills live under the plugin -- one tree serving both the
+#: marketplace and the packaged `.plugin` -- while the rulesets stay at the root
+#: because `ea-validation` pins a raw.githubusercontent URL into them.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from _layout import source_path as _source_path, asset_dirs as _asset_dirs  # noqa: E402
+
 # --------------------------------------------------------------------------
 # Rule 1 — known real-customer identifiers. Denylist: catches what we know.
 # --------------------------------------------------------------------------
@@ -399,7 +406,7 @@ def check_manifest() -> list[str]:
     for skill in m.get("skills", []):
         for rel, want in skill.get("sha256", {}).items():
             listed.add(rel)
-            f = ROOT / rel
+            f = _source_path(rel)
             if not f.exists():
                 out.append(f"manifest.json: lists a missing file: {rel}")
                 continue
@@ -412,9 +419,7 @@ def check_manifest() -> list[str]:
             if b"\r\n" in raw:
                 out.append(f"{rel}: CRLF line endings — assets must ship as LF")
 
-    for skill_dir in sorted(p for p in ROOT.iterdir() if p.is_dir()):
-        if skill_dir.name.startswith((".", "_")) or skill_dir.name == "tools":
-            continue
+    for base, skill_dir in _asset_dirs():
         for f in skill_dir.rglob("*"):
             # Tool caches are not assets. `.pytest_cache/README.md` appears the
             # moment anybody runs the skill's own tests, and reporting it turns
@@ -423,7 +428,7 @@ def check_manifest() -> list[str]:
             if any(part in SKIP_DIRS for part in f.parts):
                 continue
             if f.is_file() and f.suffix.lower() in {".md", ".yaml", ".yml"}:
-                rel = f.relative_to(ROOT).as_posix()
+                rel = f.relative_to(base).as_posix()
                 if rel not in listed:
                     out.append(f"{rel}: present in the repo but not in manifest.json "
                                f"— it will not ship")
