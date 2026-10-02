@@ -24,7 +24,7 @@ Five files per build:
 
 | File | What it is |
 |---|---|
-| `reporting.sqlite` | The database: one table per stereotype, plus eleven fixed frame tables |
+| `reporting.sqlite` | The database: one table per stereotype, plus eleven `_`-prefixed plumbing tables |
 | `manifest.json` | Machine-readable build record, including the reconciliation verdict and `ok` |
 | `reconciliation.txt` | The count-back, dimension by dimension, readable |
 | `data-dictionary.md` | What every column means, where it came from, and **how populated it is** |
@@ -39,18 +39,26 @@ target* — not retrofitted from SQLite's dialect.
 
 ## 2. The shape of the output
 
-**Entity tables** — one per stereotype actually found, named from the technology's alias where
-it declares one (`Business Application` becomes `business_application`), snake-cased from the
-stereotype name otherwise. Columns are `ea_guid`, `name`, `metaclass`, then one per tagged value
-that cleared the sparse threshold. `ea_guid` is the primary key: it is EA's stable natural key and
-survives a rebuild where a row number does not.
+**Entity tables** — one per stereotype actually found, named from the technology's alias where it
+declares one (`Business Application` becomes `business_application`), snake-cased otherwise.
+Columns are `ea_guid`, `name`, `metaclass`, then one per tagged value that cleared the sparse
+threshold. `ea_guid` is the primary key: EA's stable natural key, which survives a rebuild where
+a row number does not.
 
-**Eleven frame tables**, fixed and technology-independent: `pkg`, `element`, `rel_all`,
-`tag_value`, `tag_coverage`, `overflow_tag`, `diagram`, `diagram_object`, `attribute`,
-`operation`, `load_run`. Full column reference: [`references/the-schema.md`](references/the-schema.md).
+**Eleven plumbing tables**, fixed and technology-independent, all prefixed `_` so they sort below
+the vocabulary and read as internal: `_keymap`, `_pkg`, `_rel_all`, `_tag_value`, `_tag_coverage`,
+`_overflow_tag`, `_diagram`, `_diagram_object`, `_attribute`, `_operation`, `_load_run`. Columns:
+[`references/the-schema.md`](references/the-schema.md).
 
-Three of them are load-bearing and get their own rules in §5: `element`, `tag_value`,
-`tag_coverage`.
+`_keymap` is `ea_guid`, `entity_table`, `package_id` and nothing else — no name, metaclass or
+stereotype, because those belong to the entity tables. Diagram membership and relationship
+endpoints resolve against it: a reference to "any entity table" is polymorphic, and a shared key
+table is how a relational model expresses it.
+
+**Only elements that landed in an entity table are in the database.** One carrying no stereotype
+has no vocabulary term, so it is out of scope — reported before the build by the governance gate
+(§3.2b), never dropped silently. `_keymap`, `_tag_value` and `_tag_coverage` are load-bearing and
+get their own rules in §5.
 
 ---
 
@@ -94,6 +102,32 @@ means the scope is wrong, and it is much cheaper to notice here than after the r
 **Scope resolution has no depth cap.** `resolve_scope` walks the whole package tree and reports
 the depth it reached. The shipped `_package_subtree_ids` stops at depth 8 and skips anything
 deeper with no warning (APT-2026-0216), which is why this does its own walk.
+
+### 3.2b The governance gate — run this before you build anything
+
+An element carrying no stereotype lands in no table, so it will not be in the database. Ask
+before you build, not after — a customer must not discover it by failing to find a system.
+
+```python
+findings = assess(find_ungoverned(elements, tags), declared_shapes(mdg), elements)
+print(format_report(findings))   # imports and row mapping: see the reference
+```
+
+Show the report and let them decide per element. Three outcomes, **not interchangeable**:
+
+| Outcome | What to say |
+|---|---|
+| `ranked` | One candidate is backed by evidence the others are not. Offer it **with the reason**, never as certain |
+| `unrankable` | Nothing separates the candidates. List them and ask. **Do not pick one** |
+| `no_candidate` | The technology extends no stereotype for that metaclass. Offer to extend it (`ea-mdg-model-build`), or accept the exclusion. Never invent a suggestion |
+
+To apply one, pass the **bare** stereotype name via `update_element` — EA resolves it against
+the loaded technology and writes the fully-qualified form itself. **Take a baseline first**
+(`ea-change-management`): this is the only step in this skill that writes to the model.
+
+If the customer declines, say plainly which elements will not be in the database and carry on —
+declining is a valid answer. The call, row mapping, loaded-technology precondition and
+verification: [`references/the-governance-gate.md`](references/the-governance-gate.md).
 
 ### 3.3 Transform and load
 
@@ -152,7 +186,7 @@ frame_rows["diagram_object"] = diagram_object_rows(
     diagram_objects, guid_by_id,
     diagram_ids={r["diagram_id"] for r in frame_rows["diagram"]}, guids_in_scope=in_scope)
 
-# Every guid reference must resolve against `element`. Should be empty; check, do not assume.
+# Every guid reference must resolve against the key map. Should be empty; check, do not assume.
 checkable = dict(frame_rows, tag_value=result.tag_value, overflow_tag=result.overflow)
 assert not dangling(checkable), dangling(checkable)[:5]
 
@@ -239,10 +273,9 @@ Say these four things, in this order, and do not bury the third:
 
 1. **Reconciled or not**, with the check count — `rec.summary()` gives the line.
 2. **What was built**: entity tables, rows, and the five files with their location.
-3. **What is outside an entity table**: untyped elements and excluded EA machinery, both from the
-   manifest. These are not losses — untyped elements are in `element` and their relationships are
-   in `rel_all` — but a reader comparing a table count against EA's own element count will see the
-   difference and should hear it from you first.
+3. **What is outside the database**: untyped elements and excluded EA machinery, from the
+   manifest. Neither is in the database, so a reader comparing a table count against EA's own
+   element count will see the difference and should hear it from you first.
 4. **The drift findings** (§6). They are the capability, not an appendix.
 
 Never report a figure from an entity table without saying what the coverage behind it is.
@@ -253,30 +286,27 @@ Never report a figure from an entity table without saying what the coverage behi
 
 **Coverage is populated, not present.** A tagged value can be attached to every element and
 filled in on a quarter of them. `tag_coverage.populated` is the filled-in count and
-`tag_coverage.present` is the attached count. A roll-up over a partly-populated tag produces a
+`_tag_coverage.present` is the attached count. A roll-up over a partly-populated tag produces a
 confident wrong number, and a BI report is exactly where that gets believed.
 
-**Aggregate through `tag_value`, never the flattened column.** The bridge holds one row per
-*value*. Measured on the reference model: "how many applications are in scope for GLBA" answers
-**34** through the bridge and **14** by exact match on the flattened column, because that column
-holds `GLBA, FFIEC` and `GLBA, SOX, FFIEC` as single strings. The flattened column stays for
-display; that is why there are both. Worked both ways in
+**Aggregate through `_tag_value`, never the flattened column.** The bridge holds one row per
+*value*. Measured: "how many applications are in scope for GLBA" answers **31** through the
+bridge and **14** by exact match on the flattened column, which holds `GLBA, FFIEC` as a single
+string. The flattened column is for display. Worked both ways in
 [`references/the-schema.md`](references/the-schema.md) §3.
 
-**Resolve relationship endpoints against `element`, never against an entity table.** `element`
-holds every in-scope element whatever its typing. Join to a typed table instead and every edge
-touching an untyped element dangles — in a prototype that lacked this table, 16 of 104
-relationships had both endpoints resolvable.
+**Resolve relationship endpoints against `_keymap`, never against an entity table.** Join to a
+typed table instead and every edge whose other end is a different stereotype dangles.
 
-**`element.entity_table` names the first table only.** An element carrying several stereotypes is
+**`_keymap.entity_table` names the first table only.** An element carrying several stereotypes is
 genuinely several things and appears in several entity tables; one column cannot hold a
-one-to-many, and joining names with a separator would reintroduce the comma hazard. Join `element`
-to each entity table on `ea_guid` for the complete mapping.
+one-to-many, and joining names with a separator would reintroduce the comma hazard. Join
+`_keymap` to each entity table on `ea_guid` for the complete mapping.
 
-**A sparse tag is routed, not dropped.** Below the threshold (default 5% populated coverage) a tag
-becomes `overflow_tag` rows instead of a column, and the data dictionary names which ones. The
-threshold is a parameter — `sparse_threshold=` on `build_report_model` — and it is a default that
-behaved sensibly on one model, not a measured constant. Override it deliberately.
+**A sparse tag is routed, not dropped.** Below the threshold (default 5% populated coverage) a
+tag becomes `_overflow_tag` rows instead of a column, and the data dictionary names which ones.
+`sparse_threshold=` on `build_report_model` is a default that behaved sensibly on one model, not
+a measured constant. Override it deliberately.
 
 **Multi-valued tags are reported, never guessed.** `model.multi_value_candidates` lists tags whose
 values often contain a comma. A genuinely multi-valued tag and a free-text field containing a
@@ -358,6 +388,9 @@ quote a refresh window from it.
 
 - [`references/the-schema.md`](references/the-schema.md) — every frame table, column by column,
   and worked queries for the questions people actually ask
+- [`references/the-governance-gate.md`](references/the-governance-gate.md) — the pre-build gate:
+  the three outcomes, how to apply a stereotype so it binds to the technology, and what to say
+  when the customer declines
 - [`../_shared/references/ea-ui-verification.md`](../_shared/references/ea-ui-verification.md) —
   the modal-dialog trap
 - [`../_shared/references/westbrook-example.md`](../_shared/references/westbrook-example.md) — the

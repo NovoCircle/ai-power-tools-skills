@@ -46,11 +46,22 @@ jobs:
         run: |
           python - <<'PY'
           import json, pathlib, sys
+          # Manifest paths are INSTALL-relative, and the skills live under the
+          # plugin, so a path has to be RESOLVED rather than opened as written.
+          # `tools/_layout.py` is the one place that knows the mapping; opening
+          # the raw string here is what made this step fail on every run after
+          # the skills moved.
+          sys.path.insert(0, "tools")
+          from _layout import source_path
           manifest = json.loads(pathlib.Path("manifest.json").read_text(encoding="utf-8"))
           bad = []
           for skill in manifest["skills"]:
               for rel in skill["files"]:
-                  raw = pathlib.Path(rel).read_bytes()
+                  f = source_path(rel)
+                  if not f.exists():
+                      bad.append(f"{rel}: listed in the manifest but not in the repo")
+                      continue
+                  raw = f.read_bytes()
                   if b"\r\n" in raw:
                       bad.append(f"{rel}: CRLF")
                   if raw.startswith(b"\xef\xbb\xbf"):

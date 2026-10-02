@@ -30,7 +30,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 from ea_census import split_multi_value
-from report_model import ReportModel, Table
+from report_model import UNCOERCIBLE, ReportModel, Table, coerce_value
 
 
 @dataclass
@@ -40,16 +40,28 @@ class PivotResult:
     tag_value: list[dict] = field(default_factory=list)
     overflow: list[dict] = field(default_factory=list)
     coverage: list[dict] = field(default_factory=list)
+    #: Values that could not be written as the type their column declares -
+    #: `audit_logging_enabled` declared INTEGER holding "maybe". Reported, never
+    #: written as text into a typed column and never dropped: the DDL claiming
+    #: one type while the data is another is the defect this list exists to make
+    #: impossible (APT-2026-0225).
+    uncoercible: list[dict] = field(default_factory=list)
     #: Tag rows that reached NOWHERE - not a column, not overflow, not the
     #: bridge. Should be empty, and is reported rather than dropped so "should
     #: be" is checkable.
     #:
-    #: This is deliberately narrower than "its element has no entity table". An
-    #: untyped element still gets its values into `tag_value`, because the
-    #: bridge is keyed by element rather than by table - that is the honest
-    #: remainder working as designed, not a loss. Counting those as unplaced
-    #: reported 88 false losses on a real model.
+    #: This is deliberately narrower than "its element has no entity table".
+    #: Since APT-2026-0226 an element in no entity table is out of the reporting
+    #: scope and its values go to `excluded` below - deliberately left out, with
+    #: a count, which is a different thing from lost. Conflating the two
+    #: reported 88 false losses on a real model and would send someone hunting a
+    #: data-loss bug that does not exist.
     unplaced: list[dict] = field(default_factory=list)
+    #: Populated values dropped because their element landed in no entity table.
+    #: Not a defect and not a loss - the scope decision, made visible. The
+    #: governance gate puts these in front of a human BEFORE the build, so this
+    #: list is what they were warned about.
+    excluded: list[dict] = field(default_factory=list)
 
     @property
     def total_rows(self) -> int:
@@ -120,7 +132,18 @@ def pivot(model: ReportModel,
                 if col is not None:
                     # The flattened column stays for display. Measures use the
                     # bridge; that is the point of having both.
-                    row[col.name] = value
+                    #
+                    # It is also the only TYPED copy of the value, so it is the
+                    # one that has to honor the declared type. `tag_value` is a
+                    # bridge over tags of every type at once and stays text.
+                    coerced = coerce_value(value, col.sql_type)
+                    if coerced is UNCOERCIBLE:
+                        result.uncoercible.append({
+                            "ea_guid": guid, "table": table.name,
+                            "column": col.name, "sql_type": col.sql_type,
+                            "value": value})
+                    else:
+                        row[col.name] = coerced
                 elif tag in overflow_tags:
                     result.overflow.append({"ea_guid": guid, "tag": tag, "value": value})
             for c in table.columns:
@@ -128,7 +151,20 @@ def pivot(model: ReportModel,
             result.rows[table.name].append(row)
 
     # ---- tag_value bridge, once per element regardless of how many tables it is in
+    #
+    # Only for elements that landed in an entity table. An element with no
+    # stereotype is not in the database (APT-2026-0226), so its tags are not
+    # either - writing them would leave `tag_value` rows pointing at a key the
+    # key map does not hold, which `dangling()` catches and which would make an
+    # inner join silently return fewer rows than a total being read elsewhere.
+    #
+    # This is the one place the scope decision costs real customer data: on the
+    # reference model three Components carry six governance tags each and no
+    # stereotype, so eighteen values leave with them. That is precisely what the
+    # pre-build governance gate exists to put in front of a human first.
     for guid in sorted(tags_by_guid):
+        if not placement.get(guid):
+            continue
         for tag, value in tags_by_guid[guid]:
             if not value:
                 continue            # an empty tag is coverage, not a value
@@ -145,19 +181,24 @@ def pivot(model: ReportModel,
                 "total": t.row_count, "coverage": c.coverage,
             })
 
-    # ---- anything that reached nowhere at all
+    # ---- what did not reach a table, split by WHY
     #
-    # A value lands in the bridge whatever its element's typing, so the only
-    # genuinely lost rows are EMPTY values on an element with no entity table:
-    # no column to sit in, no overflow routing, and nothing for the bridge to
-    # carry. Those are coverage facts about an untyped element, which the
-    # `element` frame table records separately.
+    # Two different things, and keeping them apart is the point. A POPULATED
+    # value on an element with no entity table is excluded: real data, left out
+    # by the scope decision, counted so the decision is visible. An EMPTY one is
+    # a coverage fact about an element that is not in the database at all, so it
+    # carries nothing and is genuinely unplaced.
+    #
+    # Neither is a load failure. `unplaced` is what the loader warns on, and it
+    # must not fill up with the ordinary consequence of the scope rule.
     in_a_table = set(placement)
     for guid in sorted(tags_by_guid):
         if guid in in_a_table:
             continue
         for tag, value in tags_by_guid[guid]:
-            if not value:
+            if value:
+                result.excluded.append({"ea_guid": guid, "tag": tag, "value": value})
+            else:
                 result.unplaced.append({"ea_guid": guid, "tag": tag, "value": value})
 
     return result

@@ -83,6 +83,70 @@ SQL_TYPES = {
 
 DEFAULT_SQL_TYPE = "TEXT"
 
+#: The string forms EA actually stores for a tag the technology declares
+#: `boolean`. EA has no boolean tagged-value type - it stores whatever the
+#: editor or the profile's default put there - so the mapping has to be explicit
+#: rather than inferred.
+BOOLEAN_TRUE = frozenset({"true", "t", "yes", "y", "1"})
+BOOLEAN_FALSE = frozenset({"false", "f", "no", "n", "0"})
+
+
+def coerce_value(value, sql_type: str):
+    """A tag's string value as its declared type, or `UNCOERCIBLE`.
+
+    SQLite is dynamically typed, so a column declared INTEGER will store the
+    string 'true' without complaint. The DDL then claims one type while the data
+    is another: `WHERE audit_logging_enabled = 1` matches nothing, and a
+    strictly-typed consumer refuses the column outright - which is how this was
+    found, with pyarrow raising on a Parquet write (APT-2026-0225).
+
+    An empty value on a TYPED column is NULL, never 0 or False. Empty means
+    nobody filled it in, which is a coverage fact; turning it into a value would
+    invent data and make `tag_coverage` disagree with the column it describes.
+    On a TEXT column an empty value stays the empty string, which is what every
+    build before this one wrote - changing it to NULL is a separate semantic
+    decision, not part of fixing a type disagreement, and it would silently
+    break any customer query testing `= ''`.
+
+    A value that cannot be coerced is returned as `UNCOERCIBLE` rather than
+    quietly written as text or dropped. An unparseable boolean is a data-quality
+    finding of exactly the kind this product exists to surface.
+    """
+    if value is None:
+        return None
+    text = str(value).strip()
+    if not text:
+        return None if sql_type in ("INTEGER", "REAL") else value
+    if sql_type == "INTEGER":
+        low = text.lower()
+        if low in BOOLEAN_TRUE:
+            return 1
+        if low in BOOLEAN_FALSE:
+            return 0
+        try:
+            return int(text)
+        except ValueError:
+            return UNCOERCIBLE
+    if sql_type == "REAL":
+        try:
+            return float(text)
+        except ValueError:
+            return UNCOERCIBLE
+    return text
+
+
+class _Uncoercible:
+    """Distinct from None, which means "nobody filled it in"."""
+
+    def __repr__(self):            # pragma: no cover - debugging aid
+        return "UNCOERCIBLE"
+
+    def __bool__(self):
+        return False
+
+
+UNCOERCIBLE = _Uncoercible()
+
 #: Below this share of POPULATED coverage a tag becomes an overflow row rather
 #: than a column. Arbitrary, and labeled as such: it is a default that behaved
 #: sensibly on one model, not a measured threshold. Callers should override it

@@ -406,7 +406,7 @@ def check_manifest() -> list[str]:
     for skill in m.get("skills", []):
         for rel, want in skill.get("sha256", {}).items():
             listed.add(rel)
-            f = _source_path(rel)
+            f = _source_path(rel, ROOT)
             if not f.exists():
                 out.append(f"manifest.json: lists a missing file: {rel}")
                 continue
@@ -419,7 +419,7 @@ def check_manifest() -> list[str]:
             if b"\r\n" in raw:
                 out.append(f"{rel}: CRLF line endings — assets must ship as LF")
 
-    for base, skill_dir in _asset_dirs():
+    for base, skill_dir in _asset_dirs(ROOT):
         for f in skill_dir.rglob("*"):
             # Tool caches are not assets. `.pytest_cache/README.md` appears the
             # moment anybody runs the skill's own tests, and reporting it turns

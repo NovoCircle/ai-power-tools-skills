@@ -17,7 +17,7 @@ import sqlite3
 
 import pytest
 
-from ddl import FRAME_DDL
+from ddl import FRAME_DDL, physical
 from ea_census import Entity, ElementCensus, TagStat
 from load import (
     LOAD_RUN,
@@ -112,7 +112,7 @@ def test_every_frame_and_entity_table_is_created(fixture, tmp_path):
     names = {r[0] for r in conn.execute(
         "SELECT name FROM sqlite_master WHERE type='table'")}
     conn.close()
-    assert set(FRAME_DDL) <= names
+    assert {physical(n) for n in FRAME_DDL} <= names
     assert {t.name for t in model.tables} <= names
 
 
@@ -211,7 +211,7 @@ def test_load_run_records_the_build_but_claims_nothing_about_reconciliation(
     conn = sqlite3.connect(str(db))
     row = conn.execute(
         'SELECT "run_id", "run_at", "repository", "spec_hash", "rows_loaded", '
-        '"reconciled", "mismatches" FROM "load_run"').fetchone()
+        '"reconciled", "mismatches" FROM "_load_run"').fetchone()
     conn.close()
     assert row[:4] == (RUN, AT, "WestbrookBank.qea", "abc123")
     assert row[4] == res.rows_loaded
@@ -234,7 +234,7 @@ def test_recording_a_reconciliation_marks_the_run(fixture, tmp_path):
                     entity_key_of_table={t.name: t.entity_key for t in model.tables})
     assert record_reconciliation(db, RUN, rec) is True
     conn = sqlite3.connect(str(db))
-    assert conn.execute('SELECT "reconciled", "mismatches" FROM "load_run"'
+    assert conn.execute('SELECT "reconciled", "mismatches" FROM "_load_run"'
                         ).fetchone() == (1, 0)
     conn.close()
 
@@ -277,7 +277,7 @@ def test_a_table_that_received_nothing_is_logged_as_zero_not_omitted(
         fixture, tmp_path):
     model, pv, _, _, _ = fixture
     res = build_database(tmp_path / "r.sqlite", model, pv, run_id=RUN, run_at=AT)
-    assert any('-- INSERT INTO "diagram": 0 rows' == s for s in res.sql_log)
+    assert any('-- INSERT INTO "_diagram": 0 rows' == s for s in res.sql_log)
 
 
 # --- reading it back --------------------------------------------------------
@@ -320,7 +320,7 @@ def test_a_tag_value_removed_after_the_load_is_caught_as_a_scalar_mismatch(
     build_database(db, model, pv, run_id=RUN, run_at=AT)
 
     conn = sqlite3.connect(str(db))
-    conn.execute('DELETE FROM "tag_value" WHERE "tag" = \'businessOwner\'')
+    conn.execute('DELETE FROM "_tag_value" WHERE "tag" = \'businessOwner\'')
     conn.commit()
     conn.close()
 
@@ -408,3 +408,32 @@ def test_a_multi_valued_column_is_checked_value_by_value():
     rows = {model.tables[0].name: [{"ea_guid": "{A}", "scope": "GLBA, SOX"}]}
     v = domain_violations(model, rows)
     assert [x["value"] for x in v] == ["SOX"]       # GLBA is declared, SOX is not
+
+
+def test_every_stored_value_matches_the_type_its_column_declares(fixture, tmp_path):
+    """APT-2026-0225. SQLite will store 'true' in an INTEGER column and say
+    nothing, so the DDL claimed one type while the data was another. Neither the
+    hermetic suite nor the live reconciliation could see it - both count rows,
+    and the row counts were right. This is the invariant that makes the whole
+    class of fault visible."""
+    model, pv, _, _, census = fixture
+    db = tmp_path / "r.sqlite"
+    build_database(db, model, pv, run_id=RUN, run_at=AT)
+
+    expected = {"TEXT": "text", "INTEGER": "integer", "REAL": "real"}
+    conn = sqlite3.connect(str(db))
+    try:
+        tables = [r[0] for r in conn.execute(
+            "SELECT name FROM sqlite_master WHERE type='table'")]
+        offenders = []
+        for table in tables:
+            for _, col, decl, *_ in conn.execute(f'PRAGMA table_info("{table}")'):
+                want = expected.get((decl or "TEXT").upper())
+                stored = {r[0] for r in conn.execute(
+                    f'SELECT DISTINCT typeof("{col}") FROM "{table}"')} - {"null"}
+                wrong = stored - {want}
+                if wrong:
+                    offenders.append(f"{table}.{col} declared {decl}, stored {sorted(wrong)}")
+        assert offenders == []
+    finally:
+        conn.close()

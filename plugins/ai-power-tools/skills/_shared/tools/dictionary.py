@@ -31,9 +31,11 @@ from report_model import ReportModel
 #: once already, and a dictionary that omits a table is how that stays invisible.
 FRAME_PURPOSE = {
     "pkg": "The package tree in scope, with each package's path and depth.",
-    "element": ("Every in-scope element whatever its stereotype. Relationship "
-                "endpoints resolve against this table, never against the typed "
-                "tables, or every edge touching an untyped element dangles."),
+    "element": ("The key map: which entity table each element landed in, and "
+                "which package it lives in. Not a business table - it carries no "
+                "name, metaclass or stereotype, because those belong to the "
+                "entity tables. Diagram membership and relationship endpoints "
+                "resolve against it, never against a typed table."),
     "rel_all": "Every relationship between in-scope elements.",
     "tag_value": ("The multi-value bridge: one row per VALUE, not per tag. "
                   "Measures and filters must use this, not the flattened column."),
@@ -100,10 +102,13 @@ def data_dictionary(model: ReportModel,
     out.append("- **Aggregate through `tag_value`, not the flattened column.** A "
                "column holding both `GLBA` and `GLBA, FFIEC` understates an "
                "exact-match count by about half.")
-    out.append("- **`element.entity_table` names the first table only.** An element "
+    out.append("- **`_keymap.entity_table` names the first table only.** An element "
                "carrying several stereotypes is genuinely several things and "
-               "appears in several entity tables; join `element` to each entity "
+               "appears in several entity tables; join `_keymap` to each entity "
                "table on `ea_guid` for the complete mapping.")
+    out.append("- **Tables prefixed `_` are plumbing, not vocabulary.** They carry "
+               "the keys, bridges and audit the entity tables rest on. Report "
+               "against the unprefixed tables.")
     out.append("- **A declared enumeration is the technology's; an observed one is "
                "merely what was used.** The column below says which.")
     out.append("")
@@ -208,9 +213,10 @@ def data_dictionary(model: ReportModel,
     if model.untyped_elements or model.excluded:
         out.append("## Not in an entity table")
         out.append("")
-        out.append(f"- **{model.untyped_elements}** element(s) carry no stereotype. "
-                   "They are in `element` and their relationships are in `rel_all`, "
-                   "so nothing about them is lost.")
+        out.append(f"- **{model.untyped_elements}** element(s) carry no stereotype, "
+                   "so they have no business vocabulary term and are not in the "
+                   "database. They were reported before the build; applying a "
+                   "stereotype brings one into scope.")
         for key, n in sorted(model.excluded.items()):
             out.append(f"- **{n}** excluded, `{key}`")
         out.append("")

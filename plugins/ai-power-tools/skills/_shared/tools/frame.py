@@ -88,19 +88,32 @@ def element_rows(elements: list[dict],
                  model: ReportModel,
                  placement: dict[str, list[str]],
                  *,
-                 excluded_guids: set[str] | None = None) -> list[dict]:
-    """Rows for `element`: every in-scope element whatever its typing.
+                 excluded_guids: set[str] | None = None,
+                 excluded_out: dict[str, int] | None = None) -> list[dict]:
+    """Rows for the key map: one per element that landed in an entity table.
 
-    This is the load-bearing table. In a prototype that lacked it only 16 of 104
-    relationships had both endpoints resolvable, because every edge touching an
-    untyped element dangled.
+    It carries `ea_guid`, `entity_table` and `package_id` and nothing else. It
+    used to carry `name`, `metaclass`, `stereotype` and `profile` as well, which
+    duplicated the entity tables and made the database read as EA's metamodel
+    rather than the customer's vocabulary (APT-2026-0226).
 
-    `entity_table` names where the element landed, or None when nowhere. For a
-    MULTI-STEREOTYPE element it names the FIRST table in model order, because one
-    column cannot hold a one-to-many and joining names with a separator would
-    reintroduce exactly the comma hazard `tag_value` exists to avoid. The complete
-    mapping stays recoverable by joining this table to each entity table on
-    `ea_guid`, which is how a reporting tool would traverse it in any case.
+    AN UNPLACED ELEMENT IS NOT WRITTEN, AND THAT IS A SCOPE DECISION
+    ---------------------------------------------------------------
+    An element in no entity table has no business vocabulary term, so it is not
+    in the reporting database. Measured on the reference model that is 153 of
+    298 elements - 85 of them package twins that `pkg` already describes, the
+    rest unstereotyped UML and behavioral content.
+
+    It is NOT silent. `excluded_out`, when passed, receives the counts by
+    metaclass, and `governance_gap` asks the customer about them BEFORE the
+    build so that an element they care about can be stereotyped into scope
+    rather than discovered missing afterwards.
+
+    `entity_table` names the FIRST table in model order for a multi-stereotype
+    element, because one column cannot hold a one-to-many and joining names with
+    a separator would reintroduce exactly the comma hazard `tag_value` exists to
+    avoid. The complete mapping stays recoverable by joining to each entity
+    table on `ea_guid`.
     """
     excluded_guids = excluded_guids or set()
     order = {t.name: i for i, t in enumerate(model.tables)}
@@ -113,20 +126,14 @@ def element_rows(elements: list[dict],
             continue
         tables = [by_key[k] for k in placement.get(guid, []) if k in by_key]
         tables.sort(key=lambda t: order[t.name])
-        first = tables[0] if tables else None
+        if not tables:
+            if excluded_out is not None:
+                metaclass = el.get("Object_Type") or "(unknown)"
+                excluded_out[metaclass] = excluded_out.get(metaclass, 0) + 1
+            continue
         out.append({
             "ea_guid": guid,
-            "object_id": _int(el.get("Object_ID")),
-            "name": el.get("Name", ""),
-            "metaclass": el.get("Object_Type", ""),
-            # A placed element takes the stereotype the census resolved from
-            # t_xref. An unplaced one takes t_object.Stereotype as observed - that
-            # column holds only the first of several and may name a stereotype no
-            # loaded technology declares, which is a finding rather than a reason
-            # to blank it.
-            "stereotype": first.stereotype if first else (el.get("Stereotype") or ""),
-            "profile": first.profile if first else "",
-            "entity_table": first.name if first else None,
+            "entity_table": tables[0].name,
             "package_id": _int(el.get("Package_ID")),
         })
     return out
