@@ -17,6 +17,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 MANIFEST = ROOT / "manifest.json"
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from _layout import source_dir as _source_dir  # noqa: E402
+
 
 def sha256(p: Path) -> str:
     return hashlib.sha256(p.read_bytes()).hexdigest()
@@ -39,18 +42,24 @@ def main() -> int:
     current = json.loads(MANIFEST.read_text(encoding="utf-8"))
     for entry in current["skills"]:
         name = entry["name"]
-        skill_dir = ROOT / name
-        if not skill_dir.is_dir():
+        skill_dir = _source_dir(name)
+        if skill_dir is None:
             print(f"Skill dir missing: {name}", file=sys.stderr)
             return 1
-        files = sorted(str(p.relative_to(ROOT).as_posix())
+        # Paths in the manifest are INSTALL-relative, not repo-relative: the
+        # installer writes each one straight under the skills directory, and
+        # publish-bundle.py derives the flat release-asset name from the same
+        # string. Both are unaffected by where the file sits in the repo, so
+        # moving the skills under the plugin must not change these values.
+        base = skill_dir.parent
+        files = sorted(str(p.relative_to(base).as_posix())
                        for p in skill_dir.rglob("*")
                        if p.is_file() and not _is_build_residue(p))
         if not files:
             print(f"No files under: {name}", file=sys.stderr)
             return 1
         entry["files"] = files
-        entry["sha256"] = {f: sha256(ROOT / f) for f in files}
+        entry["sha256"] = {f: sha256(base / f) for f in files}
 
     # newline="" prevents Windows from translating LF to CRLF on write.
     # A CRLF manifest is what broke the v1.4.1 release: the assets hash as LF,

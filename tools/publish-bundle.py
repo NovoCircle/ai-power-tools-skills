@@ -44,15 +44,39 @@ import subprocess
 import sys
 import urllib.request
 
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 MANIFEST = os.path.join(ROOT, "manifest.json")
 
+sys.path.insert(0, HERE)
+from _layout import source_path  # noqa: E402
+
 #: Read from the installer rather than restated, so this cannot drift from the
 #: repository customers actually fetch from.
-INSTALLER = os.path.join(
-    os.path.dirname(ROOT), "ai-power-tools", "ea-mcp-server",
-    "ea_mcp_server", "skills_installer.py")
+#: Searched upward rather than fixed beside ROOT: in a git worktree the repo
+#: sits one level deeper (`<repo>.worktrees/<name>/`), so the sibling lookup
+#: missed and this script refused to publish at all -- correctly, since it
+#: cannot confirm the target repository, but for a reason that has nothing to
+#: do with the release. The same defect silently skipped the gate's op-drift
+#: check; see tools/gen-operations.py.
+_INSTALLER_REL = ("ai-power-tools", "ea-mcp-server",
+                  "ea_mcp_server", "skills_installer.py")
+
+
+def _find_installer() -> str:
+    base = ROOT
+    while True:
+        candidate = os.path.join(os.path.dirname(base), *_INSTALLER_REL)
+        if os.path.isfile(candidate):
+            return candidate
+        parent = os.path.dirname(base)
+        if parent == base:
+            return os.path.join(os.path.dirname(ROOT), *_INSTALLER_REL)
+        base = parent
+
+
+INSTALLER = _find_installer()
 
 
 def installer_repo() -> str | None:
@@ -105,7 +129,7 @@ def collect(manifest: dict) -> tuple[list[tuple[str, str]], list[str]]:
         name = skill.get("name", "?")
         hashes = skill.get("sha256", {})
         for rel in skill.get("files", []):
-            src = os.path.join(ROOT, rel.replace("/", os.sep))
+            src = str(source_path(rel))
             if not os.path.isfile(src):
                 problems.append(f"{name}: {rel} is in the manifest but not on "
                                 f"disk")
@@ -224,6 +248,19 @@ def main() -> int:
         return 1
 
     staged = stage(pairs, args.out)
+
+    # The packaged plugin ships in the same release as the flat bundle assets:
+    # the marketplace serves Claude Code from the repo, but Cowork is fed by
+    # uploading this file, and a release without it leaves that channel with
+    # nothing to install. Built by tools/build-plugin.py.
+    plugin = os.path.join(ROOT, "dist", "ai-power-tools.plugin")
+    if not os.path.isfile(plugin):
+        print("FAIL: dist/ai-power-tools.plugin is missing - "
+              "run tools/build-plugin.py before publishing.")
+        return 1
+    plugin_staged = os.path.join(args.out, os.path.basename(plugin))
+    shutil.copy2(plugin, plugin_staged)
+    staged = list(staged) + [plugin_staged]
     print(f"\nstaged {len(staged)} assets in {args.out}")
 
     # Build the REAL command, including the real notes file and the real asset

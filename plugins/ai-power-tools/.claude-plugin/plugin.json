@@ -1,0 +1,10 @@
+{
+  "name": "ai-power-tools",
+  "version": "3.2.0",
+  "description": "Skills for AI Power Tools for Sparx EA \u2014 modeling, MDG authoring and deployment, validation rulesets, diagram composition, import/export, and stakeholder reporting against a Sparx Enterprise Architect repository.",
+  "author": {
+    "name": "NovoCircle"
+  },
+  "homepage": "https://github.com/NovoCircle/ai-power-tools-skills",
+  "license": "MIT"
+}
