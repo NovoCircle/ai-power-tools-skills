@@ -5,28 +5,37 @@ fleet of machines, and how updates reach them afterwards.
 
 ## What actually gets deployed
 
-Two independent artifacts. Neither installs the other, and they version separately.
+**One plugin.** From 3.5.0 the skills and the MCP server ship together and carry the same
+version, so there is one artifact to approve, deploy and update.
 
 | Artifact | What it is | Scope |
 |---|---|---|
-| `AI-Power-Tools-for-Sparx-EA-<version>.mcpb` | The MCP server. Drives Enterprise Architect over COM. | Per machine — it needs a local EA install |
-| `ai-power-tools` plugin | The skills. Published from `NovoCircle/ai-power-tools-skills`. | Per machine or per org, depending on route |
+| `ai-power-tools` plugin | The skills, plus the MCP server it declares by pinned release URL | Per machine or per org, depending on route |
 
-The server is what does the work; the skills are what tell Claude how to use it.
-A machine with only the server works but behaves worse. A machine with only the
-skills has nothing to drive.
+The plugin does not carry the ~40 MB binary. It names a release asset, and Claude Code
+downloads and extracts it into the plugin cache on first use. One plugin version maps to
+exactly one server build, because the reference is pinned rather than floating — a later
+server release cannot change what an already-installed plugin loads.
+
+A standalone `.mcpb` is still published for the Claude Desktop extension path, and the
+extension's own updater still polls for it. That path remains for installations that predate
+the plugin; new deployments do not need it.
 
 ## How this works when Cowork runs in the cloud
 
-Cowork defaults to a cloud sandbox, which attaches back to Claude Desktop running
-on a physical machine. The desktop mounts the plugin's files into the sandbox and
-proxies the plugin's MCP servers back to the host, so Enterprise Architect stays
-local while the session itself runs remotely.
+Cowork defaults to a cloud sandbox, which attaches back to Claude Desktop running on a
+physical machine. The desktop mounts the plugin's files into the sandbox and proxies the
+plugin's MCP server back to the host, so Enterprise Architect stays local while the session
+runs remotely.
 
-The practical consequence: **the machine still needs Claude Desktop, the `.mcpb`
-extension, and a working EA install.** A cloud Cowork session is not a way to
-avoid deploying to the workstation — it is a different place for the conversation
-to run, not a different place for EA to run.
+The practical consequence: **the machine still needs Claude Desktop and a working EA
+install.** A cloud Cowork session is not a way to avoid deploying to the workstation — it is a
+different place for the conversation to run, not a different place for EA to run.
+
+Enterprise Architect is Windows-only and the server drives it over COM, so the server must run
+in the *same* Windows environment as EA. For a macOS user that means the whole stack inside a
+Windows VM; native Claude Desktop talking to EA under Wine cannot work, because the COM
+boundary sits between them.
 
 ## Deploying the skills plugin
 
@@ -104,11 +113,7 @@ Updates differ by route, and only one of them is automatic.
 A plugin update needs a **restart to apply** — the new version is staged, not
 swapped into a running session.
 
-The older `install_skills` MCP tool is unaffected by all of this. It still fetches
-the bundle from `releases/latest` and writes to `~/.claude/skills`, which the
-Claude Code surfaces read. It is a separate channel serving the same content, kept
-working for existing installs; the manifest regenerates byte-identical after the
-plugin restructure precisely so that remained true.
+`install_skills` is retired. It still exists on machines that have it, but from 3.5.0 it declines once the plugin supplies the same skills and points at the migration script instead of writing a second copy.
 
 ## Cutting a release that serves every route
 
@@ -149,35 +154,37 @@ mechanism, not a deployment one.
 
 ## Moving from `install_skills`
 
-The two channels are **additive, not exclusive**. A machine that has skills from
-`install_skills` in `~/.claude/skills` *and* the plugin installed loads every EA skill
-twice — once unprefixed, once as `ai-power-tools:<name>` — because they come from
-different sources and nothing deduplicates them. That is double the always-on token cost
-and leaves it ambiguous which copy answers.
+Before 3.5.0 the skills arrived through the `install_skills` MCP tool, which copied them into
+`~/.claude/skills`. The plugin supersedes that, and `install_skills` now declines rather than
+writing a second copy.
 
-**Pick one channel per machine.** To move an existing install onto the plugin:
+The two are additive. A machine carrying both loads every skill twice — once unprefixed, once
+as `ai-power-tools:<name>` — because they are different sources and nothing deduplicates
+across them. That is double the always-on token cost and leaves it ambiguous which copy
+answers.
 
-1. `claude plugin marketplace add NovoCircle/ai-power-tools-skills`
-2. `claude plugin install ai-power-tools@novocircle`
-3. Remove the skill directories `install_skills` wrote, then restart.
+Clearing the older copies is a **one-time job per machine**, done with a script rather than a
+product feature:
 
-**Do not blanket-delete `~/.claude/skills`.** It may also hold skills for AI Power Tools
-for Microsoft Visio, which is a separate product shipping from its own repo, and any
-skills you wrote yourself. Neither is in this plugin, and both would be lost.
+```powershell
+.\migrate-to-plugin.ps1 -WhatIf     # show what would go, change nothing
+.\migrate-to-plugin.ps1             # list it, then ask before removing
+.\migrate-to-plugin.ps1 -Force      # unattended; the list is still printed
+```
 
-The installer records exactly what it owns in
-`~/.claude/ai-power-tools/install-hashes.json`. Every top-level directory named there —
-except `ruleset-archimate31`, which installs to the data directory rather than among the
-skills — is one the plugin now supplies and is safe to remove. Anything in
-`~/.claude/skills` that the sidecar does not name came from somewhere else; leave it.
+`migrate-to-plugin.ps1` ships with each server release on `ai-power-tools-releases`. It prints
+the skills it would remove, names the ones it will **not** touch, and deletes nothing until the
+operator types `YES`. `-Force` exists for unattended fleet use.
 
-Compare each file against its recorded hash before deleting, and keep a copy of anything
-that differs: a mismatch means the file was edited locally, and those edits are not in the
-plugin.
+**Do not script a delete of `~/.claude/skills`.** That directory may also hold skills for AI
+Power Tools for Microsoft Visio — a separate product with its own installer — and any skills a
+user wrote themselves. The migration script can tell them apart because it reads the
+installer's own record of what it wrote; a directory listing cannot. Files edited locally are
+copied to a timestamped backup under `~/.claude/backups/` before removal and named in the
+summary.
 
-The sidecar is left in place by this procedure, so a later `install_skills` call will
-reinstall the files and recreate the duplication. After moving to the plugin, stop calling
-it on that machine.
+For a fleet, the sequence is: deploy the plugin through managed settings, then run the script
+once per machine that previously used `install_skills`.
 
 ## Verifying a deployment
 
