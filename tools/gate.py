@@ -47,7 +47,7 @@ def _asset_dirs() -> list[tuple[Path, Path]]:
                   if d.is_dir() and not d.name.startswith((".", "_"))]
     pairs += [(ROOT, d) for d in sorted(ROOT.iterdir())
               if d.is_dir() and not d.name.startswith((".", "_"))
-              and d.name not in {"tools", "plugins"}]
+              and d.name not in {"tools", "plugins", "docs"}]
     return pairs
 
 # --------------------------------------------------------------------------
