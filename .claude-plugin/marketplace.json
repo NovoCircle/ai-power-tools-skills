@@ -8,7 +8,7 @@
     {
       "name": "ai-power-tools",
       "source": "./plugins/ai-power-tools",
-      "version": "3.3.0",
+      "version": "3.5.0",
       "description": "AI Power Tools for Sparx EA \u2014 the MCP server and its skills in one install. Modeling, MDG authoring and deployment, validation rulesets, diagram composition, import/export and stakeholder reporting against a Sparx Enterprise Architect repository. Requires Enterprise Architect on Windows."
     }
   ]
