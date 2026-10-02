@@ -461,6 +461,23 @@
       }
     },
     {
+      "name": "prol-impact-analysis",
+      "title": "prol-impact-analysis",
+      "description": "Trace dependencies and analyse change impact using Prolaborate Analyzer views",
+      "version": "1.0.0",
+      "min_server_version": "1.0.0",
+      "files": [
+        "prol-impact-analysis/SKILL.md",
+        "prol-impact-analysis/references/test-cases.md",
+        "prol-impact-analysis/references/traversal.md"
+      ],
+      "sha256": {
+        "prol-impact-analysis/SKILL.md": "bc7b6e69d69b84b3e9635c27ba39eae8b2c8877d55566d38b3530fa637a4ca16",
+        "prol-impact-analysis/references/test-cases.md": "5bb5be0d92385dfb0f66f677ae0cd2cd07583b8d8110d63c17a781fe5d6a83e8",
+        "prol-impact-analysis/references/traversal.md": "25b231bf050113fc53148bb76109bf0c324d89d4787e8351a944013e494ba5d3"
+      }
+    },
+    {
       "name": "prol-dashboards",
       "title": "prol-dashboards",
       "description": "Build and read Prolaborate dashboards through the web interface",
