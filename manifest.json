@@ -27,6 +27,7 @@
         "_shared/tools/pivot.py",
         "_shared/tools/reconcile.py",
         "_shared/tools/report_model.py",
+        "_shared/tools/semantic_model.py",
         "_shared/tools/test_ddl.py",
         "_shared/tools/test_dictionary.py",
         "_shared/tools/test_ea_census.py",
@@ -36,7 +37,10 @@
         "_shared/tools/test_load.py",
         "_shared/tools/test_pivot.py",
         "_shared/tools/test_reconcile.py",
-        "_shared/tools/test_report_model.py"
+        "_shared/tools/test_report_model.py",
+        "_shared/tools/test_semantic_model.py",
+        "_shared/tools/test_tmdl.py",
+        "_shared/tools/tmdl.py"
       ],
       "sha256": {
         "_shared/references/ea-ui-verification.md": "4f74960eed2c33a1097b19f8931a82c2f60fce90de70f5bb7c77f4105ecbe2ba",
@@ -55,6 +59,7 @@
         "_shared/tools/pivot.py": "498207768d5c72c337a81339c60fcd4a9f179cd0809ab7c34e77e2e5943c8b2e",
         "_shared/tools/reconcile.py": "80f90ba230b15b53aad17073c2a3ad0f46709de449f7877e2dd2476d88194118",
         "_shared/tools/report_model.py": "7e1a9b0ed310dbc03332abdc3f118c18dcba1e69d501e5487cac7ec6222d9975",
+        "_shared/tools/semantic_model.py": "ae9ddde7eba3831c42d3a51ca18268739d207b4a5a2e8441c27fb489fe7a7984",
         "_shared/tools/test_ddl.py": "4aacaf1819268ab0da21e2678fea7d6ec0b6beb6a27cea9e5ffb9f59d0e685e5",
         "_shared/tools/test_dictionary.py": "fdc9bf811dd097a1c7499d2740c6cb39789238ec65a08377be8f14edef7e376d",
         "_shared/tools/test_ea_census.py": "3213f816d8f22c564e98b9d6306cae5a45e3afeb17ba83b3c026fef298063e38",
@@ -64,7 +69,10 @@
         "_shared/tools/test_load.py": "62bf8818ddff1fa26476c318d219fc3286b0d7ddd5cd1cd85d96477bbe016f32",
         "_shared/tools/test_pivot.py": "797bf3a2ca16b24e595474d74e1f3fec2d78beef64b36bf2d933bebe48e1db4a",
         "_shared/tools/test_reconcile.py": "28daeb34d5c9762989768dd9ab806fae74953d10587676d523844e43ed58ca13",
-        "_shared/tools/test_report_model.py": "e14e0f1a8d1df9a8b6e00e6a78103ccfc79becc6de14f25ed08a722324da7fb2"
+        "_shared/tools/test_report_model.py": "e14e0f1a8d1df9a8b6e00e6a78103ccfc79becc6de14f25ed08a722324da7fb2",
+        "_shared/tools/test_semantic_model.py": "197cc4c46b01d546fb431f3532c3b95e260aec7f5d77ef8cf36026f671923247",
+        "_shared/tools/test_tmdl.py": "8e0827dd97c9734b9786f23d15adfb2601e378ad7d4ed309caca63863733d9ac",
+        "_shared/tools/tmdl.py": "37b938fadde733c992df2cbd3a57bbd8df268394fa176b87fb4812078c3d75e9"
       }
     },
     {
