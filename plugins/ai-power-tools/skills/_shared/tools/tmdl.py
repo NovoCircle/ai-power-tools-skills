@@ -183,8 +183,17 @@ def render_table(table: SemanticTable, source) -> str:
 
 
 def render_relationship(rel: Relationship) -> list[str]:
-    out = description_lines(rel.why, "")
-    out.append(f"relationship {rel.name}")
+    # NO description line. MEASURED 2026-10-02 on Power BI 2.158.1177.0: a `///`
+    # line before `relationship` sets a `description` property, and
+    # `SingleColumnRelationship` has none. The whole project then fails to open
+    # with "Property 'description' is unknown and is not expected in the
+    # situation it appears" - no file named, no line number, and the semantic
+    # model does not load at all.
+    #
+    # Tables, columns and measures DO take descriptions. Relationships do not.
+    # `Relationship.why` is kept on the dataclass because the rationale is worth
+    # having - it just cannot travel in the TMDL.
+    out = [f"relationship {rel.name}"]
     if not rel.is_active:
         out.append(f"{T}isActive: false")
     if rel.cross_filtering != "automatic":

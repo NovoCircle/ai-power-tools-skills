@@ -198,12 +198,28 @@ def test_a_many_to_one_emits_neither():
     assert "fromCardinality" not in block
 
 
-def test_every_relationship_carries_its_reason_as_a_comment():
+def test_a_relationship_carries_no_description():
+    """MEASURED 2026-10-02, Power BI 2.158.1177.0. A `///` line before
+    `relationship` sets a `description` property and `SingleColumnRelationship`
+    has none, so THE WHOLE PROJECT fails to open:
+
+        Property 'description' is unknown and is not expected in the situation
+        it appears.
+
+    No file is named and no line number is given. Tables, columns and measures
+    do take descriptions; relationships do not. The rationale stays on
+    `Relationship.why` and simply cannot travel in the TMDL."""
     text = render_relationships(semantic())
+    assert "///" not in text
+    assert text.startswith("relationship ")
     for block in text.split("relationship ")[1:]:
         assert block.count("fromColumn:") == 1
-    assert text.startswith("/// ")
-    assert "INACTIVE BY DESIGN" in text
+
+
+def test_the_reason_is_still_carried_on_the_model_even_though_it_is_not_emitted():
+    sm = semantic()
+    assert all(r.why for r in sm.relationships)
+    assert "INACTIVE BY DESIGN" in sm.inactive[0].why
 
 
 def test_endpoints_render_as_table_dot_column():

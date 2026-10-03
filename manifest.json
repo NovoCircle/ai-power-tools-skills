@@ -24,6 +24,8 @@
         "_shared/tools/frame.py",
         "_shared/tools/governance_gap.py",
         "_shared/tools/load.py",
+        "_shared/tools/parquet_out.py",
+        "_shared/tools/pbip.py",
         "_shared/tools/pivot.py",
         "_shared/tools/reconcile.py",
         "_shared/tools/report_model.py",
@@ -35,6 +37,8 @@
         "_shared/tools/test_frame.py",
         "_shared/tools/test_governance_gap.py",
         "_shared/tools/test_load.py",
+        "_shared/tools/test_parquet_out.py",
+        "_shared/tools/test_pbip.py",
         "_shared/tools/test_pivot.py",
         "_shared/tools/test_reconcile.py",
         "_shared/tools/test_report_model.py",
@@ -56,6 +60,8 @@
         "_shared/tools/frame.py": "31cf98c6e860d7ee8c4b24b76c5b646ff3c7e4d44578e4338c6d1d90f84d504e",
         "_shared/tools/governance_gap.py": "6d50f395bd193088ce9c223add0a3f11bd4b9cc2a80739be74435a902585e611",
         "_shared/tools/load.py": "50c20a9afeb8f63e515435afbc3ad7ea36d1edec0e1fda9aa53f2a3366b1456b",
+        "_shared/tools/parquet_out.py": "0885a95673064009e8f426987ffc71e2ef1ee7596a1b73843ea61924d9bdb7fa",
+        "_shared/tools/pbip.py": "2363f2f9265cfe7170c63a4e2ce516b5a4c743c89ee68d165fea8d49ff02235a",
         "_shared/tools/pivot.py": "498207768d5c72c337a81339c60fcd4a9f179cd0809ab7c34e77e2e5943c8b2e",
         "_shared/tools/reconcile.py": "80f90ba230b15b53aad17073c2a3ad0f46709de449f7877e2dd2476d88194118",
         "_shared/tools/report_model.py": "7e1a9b0ed310dbc03332abdc3f118c18dcba1e69d501e5487cac7ec6222d9975",
@@ -67,12 +73,14 @@
         "_shared/tools/test_frame.py": "e2b52f577977a998cdf82e6944217e990fc10d46e07c3aad7ca8832328bb761e",
         "_shared/tools/test_governance_gap.py": "e39e2f43392c909b62f460e8403e77c1d5879185cb86746a0a77a2b70bba2aaa",
         "_shared/tools/test_load.py": "62bf8818ddff1fa26476c318d219fc3286b0d7ddd5cd1cd85d96477bbe016f32",
+        "_shared/tools/test_parquet_out.py": "ee61fea87c94e16e6dac4a6e302dad4eae6f3089d06894ceecd03f567e63d465",
+        "_shared/tools/test_pbip.py": "bffeae36a57860bdd5137d40813c2ed6c1937c73826ec4439b2eb4905b0eb887",
         "_shared/tools/test_pivot.py": "797bf3a2ca16b24e595474d74e1f3fec2d78beef64b36bf2d933bebe48e1db4a",
         "_shared/tools/test_reconcile.py": "28daeb34d5c9762989768dd9ab806fae74953d10587676d523844e43ed58ca13",
         "_shared/tools/test_report_model.py": "e14e0f1a8d1df9a8b6e00e6a78103ccfc79becc6de14f25ed08a722324da7fb2",
         "_shared/tools/test_semantic_model.py": "197cc4c46b01d546fb431f3532c3b95e260aec7f5d77ef8cf36026f671923247",
-        "_shared/tools/test_tmdl.py": "8e0827dd97c9734b9786f23d15adfb2601e378ad7d4ed309caca63863733d9ac",
-        "_shared/tools/tmdl.py": "37b938fadde733c992df2cbd3a57bbd8df268394fa176b87fb4812078c3d75e9"
+        "_shared/tools/test_tmdl.py": "2da02fa09fec1bd983c7cedc25e899d8816abdc32dfe9ab7ec96777377e8e2ef",
+        "_shared/tools/tmdl.py": "9e3fb8fdfab410f4f053ec5860d6934ae4733b3fa64e57bb957757fc9b946a65"
       }
     },
     {
