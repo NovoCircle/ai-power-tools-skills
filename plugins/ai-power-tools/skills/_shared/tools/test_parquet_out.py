@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import pytest
 
+import parquet_out
 from ddl import FRAME_DDL, physical
 from load import LOAD_RUN, build_database, entity_columns
 from parquet_out import (PYARROW_AVAILABLE, ParquetError, build_parquet,
@@ -135,15 +136,27 @@ def test_a_non_frame_table_is_refused_rather_than_ignored():
                       run_id="r", run_at="t")
 
 
-def test_pyarrow_absent_says_so_and_does_not_offer_csv():
+def test_pyarrow_absent_says_so_and_does_not_offer_csv(monkeypatch):
     """A CSV fallback would quietly give back the defect Parquet was chosen to
-    remove - the measured `Column1...ColumnN` load."""
-    if PYARROW_AVAILABLE:
-        pytest.skip("pyarrow is installed, so the guard cannot be exercised")
+    remove - the measured `Column1...ColumnN` load.
+
+    The flag is patched rather than the test skipped, so this branch is covered
+    whether or not the machine running the suite happens to have pyarrow. A
+    guard that only runs on the machines where it cannot matter is not a test."""
+    monkeypatch.setattr(parquet_out, "PYARROW_AVAILABLE", False)
     with pytest.raises(ParquetError) as e:
         build_parquet("x", model(), pivot_result(), run_id="r", run_at="t")
     assert "pyarrow" in str(e.value)
     assert "CSV is not a substitute" in str(e.value)
+
+
+def test_the_argument_check_still_fires_first_when_pyarrow_is_absent(monkeypatch):
+    """The ordering bug this caught: a caller who passed the wrong thing was
+    told to install pyarrow, which sends them to fix the wrong problem."""
+    monkeypatch.setattr(parquet_out, "PYARROW_AVAILABLE", False)
+    with pytest.raises(ParquetError, match="not frame tables"):
+        build_parquet("x", model(), pivot_result(), {"invented": []},
+                      run_id="r", run_at="t")
 
 
 # ------------------------------------------------------------- the writing
