@@ -525,13 +525,13 @@
       "name": "prol-start-here",
       "title": "Prolaborate \u2014 start here",
       "description": "Entry point for any Prolaborate task: session preflight, then routing to the right skill",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "min_server_version": "1.0.0",
       "files": [
         "prol-start-here/SKILL.md"
       ],
       "sha256": {
-        "prol-start-here/SKILL.md": "b5d8e06aaf605c122141ab026be14d994b76d4b65211fe1875adc76aee9ddfa2"
+        "prol-start-here/SKILL.md": "4754b6dc4d2998a35354e5f40f48f84dc7404a8e6e6df247d1b82fe7a5f743d9"
       }
     },
     {
