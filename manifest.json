@@ -461,6 +461,23 @@
       }
     },
     {
+      "name": "prol-impact-analysis",
+      "title": "prol-impact-analysis",
+      "description": "Trace dependencies and analyse change impact using Prolaborate Analyzer views",
+      "version": "1.0.0",
+      "min_server_version": "1.0.0",
+      "files": [
+        "prol-impact-analysis/SKILL.md",
+        "prol-impact-analysis/references/test-cases.md",
+        "prol-impact-analysis/references/traversal.md"
+      ],
+      "sha256": {
+        "prol-impact-analysis/SKILL.md": "bc7b6e69d69b84b3e9635c27ba39eae8b2c8877d55566d38b3530fa637a4ca16",
+        "prol-impact-analysis/references/test-cases.md": "5bb5be0d92385dfb0f66f677ae0cd2cd07583b8d8110d63c17a781fe5d6a83e8",
+        "prol-impact-analysis/references/traversal.md": "25b231bf050113fc53148bb76109bf0c324d89d4787e8351a944013e494ba5d3"
+      }
+    },
+    {
       "name": "prol-dashboards",
       "title": "prol-dashboards",
       "description": "Build and read Prolaborate dashboards through the web interface",
@@ -488,16 +505,33 @@
       }
     },
     {
+      "name": "prol-matrix",
+      "title": "prol-matrix",
+      "description": "Read, filter, share and export Prolaborate relationship matrices",
+      "version": "1.0.0",
+      "min_server_version": "1.0.0",
+      "files": [
+        "prol-matrix/SKILL.md",
+        "prol-matrix/references/reading-a-matrix.md",
+        "prol-matrix/references/test-cases.md"
+      ],
+      "sha256": {
+        "prol-matrix/SKILL.md": "da29bd44fa4ab024a570106d52f210e8d8f6290e8ce01ec9c5ccb2dc57967f8d",
+        "prol-matrix/references/reading-a-matrix.md": "48c6eb2171df755668f81b2157ff4d1acfdebd6071778f7882a39010c8d59a29",
+        "prol-matrix/references/test-cases.md": "31577b5cd621b5e3e6b54c40a4194db28721265940c8b963c072ef22eb767c37"
+      }
+    },
+    {
       "name": "prol-start-here",
       "title": "Prolaborate \u2014 start here",
       "description": "Entry point for any Prolaborate task: session preflight, then routing to the right skill",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "min_server_version": "1.0.0",
       "files": [
         "prol-start-here/SKILL.md"
       ],
       "sha256": {
-        "prol-start-here/SKILL.md": "b5d8e06aaf605c122141ab026be14d994b76d4b65211fe1875adc76aee9ddfa2"
+        "prol-start-here/SKILL.md": "4754b6dc4d2998a35354e5f40f48f84dc7404a8e6e6df247d1b82fe7a5f743d9"
       }
     },
     {

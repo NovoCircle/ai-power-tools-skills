@@ -1,9 +1,13 @@
 ---
 name: prol-start-here
-description: Start here for any Sparx Prolaborate task driven through the web interface. Runs a short session preflight — which tenant, which signed-in identity, which version, which repositories — then routes to the right Prolaborate skill: administration, dashboards, relationship matrices, reviews, or impact analysis. Use this first whenever a session involves Prolaborate, before reaching for a more specific prol- skill.
+description: Start here for any Sparx Prolaborate task driven through the web interface. Runs a short session preflight — which tenant, which signed-in identity, which version, which repositories — then routes to the right Prolaborate skill for dashboards, relationship matrices or impact analysis. Use this first whenever a session involves Prolaborate, before reaching for a more specific prol- skill.
 ---
 
 # Prolaborate — start here
+
+*Verified against Prolaborate 5.6.1.40 on a Sparx-hosted tenant, driven as a Super Admin session.
+A Super Admin short-circuits Prolaborate's authorization checks, so nothing verified this way
+proves what a restricted user sees.*
 
 This is the entry point for Sparx Prolaborate work driven through a browser. It does two things:
 a preflight so you know whose session you are acting in, and routing so you pick the right skill.
@@ -76,16 +80,28 @@ errors throughout Prolaborate that read like permission faults.
 
 | The task | Skill |
 |---|---|
-| Users, groups, access permissions, sections, repository configuration, integrated applications | `prol-admin` |
 | Building, editing or reading dashboards and their widgets | `prol-dashboards` |
-| Relationship matrices — building, filtering, reading, sharing | `prol-matrix` |
-| Reviews — creating, participating, approving, chasing status | `prol-reviews` |
-| Impact and dependency analysis across the repository | `prol-impact-analysis` |
+| Relationship matrices — filtering, reading, sharing, exporting | `prol-matrix` |
+| Impact and dependency analysis, and Analyzer views | `prol-impact-analysis` |
 | Authoring model content, MDG, diagrams, validation, baselines | **Not Prolaborate.** Go to `ea-start-here` |
 
 When a request spans both products — "review what changed and then fix the model" — do the
 Prolaborate half here and hand the authoring half to the EA skills. They operate on the same
 repository through different paths and should not be mixed in one flow.
+
+### Areas with no skill yet
+
+There is deliberately **no row** for these. Prolaborate does them; this library has not been
+taught them, and a route to a skill that does not exist is worse than no route at all.
+
+| Area | What to do |
+|---|---|
+| **Reviews** — creating, participating, approving, chasing status | Say there is no skill for it yet. Reading a review's state through the interface is fine; **do not create, comment on or approve anything**, because every write is immediately visible to other people and reviews carry real names |
+| **Administration** — users, groups, access permissions, sections, repository configuration, integrated applications | Say there is no skill for it yet, and **stop**. This is the highest-consequence area of the product and it is out of scope until guardrails are agreed |
+
+> **Do not improvise in either area.** They are the two places where a wrong move is visible to
+> other people or hard to undo. "There is no skill for this yet" is the correct answer, and it is
+> a better one than a confident guess.
 
 ---
 
