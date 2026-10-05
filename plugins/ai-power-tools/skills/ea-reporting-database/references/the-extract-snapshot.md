@@ -48,12 +48,23 @@ python <skills-dir>/_shared/tools/extract.py --out ./extracts \
 is needed only if `ea_mcp_server` is not importable, for the row parser.
 
 **`--run-at` has to be exactly `YYYY-MM-DD HH:MM:SS`, and `--run-id` has to be one path
-component** — letters, digits, dot, dash, underscore, starting with a letter or digit. Both are
-checked before EA is touched, and neither is cosmetic. Retained snapshots are ordered by
-`run_at` as a *string*, so `2026-10-05T08:00:00` or `05/10/2026` sorts wrongly against the
-others, and that sort decides what gets deleted. A `run_id` containing a path separator would
-put the snapshot somewhere retention cannot see it, where it is never pruned but still
-loadable.
+component** — letters, digits, dot, dash, underscore, starting with a letter or digit and *not
+ending in a dot*. Both are checked before EA is touched, and neither is cosmetic. Retained
+snapshots are ordered by `run_at` as a *string*, so `2026-10-05T08:00:00` or `05/10/2026` sorts
+wrongly against the others, and that sort decides what gets deleted. A `run_id` containing a
+path separator would put the snapshot somewhere retention cannot see it, where it is never
+pruned but still loadable; a `run_id` ending in a dot is one Windows silently renames, so the
+directory and the manifest inside it end up naming different things — which stops retention for
+the whole store, not just that snapshot.
+
+**A `run_id` that differs from a retained one only in CASE is refused**, before anything is
+written, naming both. `Run-A` and `run-a` are two run_ids to this tool and one directory to the
+filesystem, so the second would replace the first's rows while retention went on reporting it
+under its own name — and a replay of the first build would then report the substitution as
+tampering. The store keeps a `run_id` exactly as given rather than case-folding it: the value is
+recorded verbatim in `_load_run.extract_run_id`, and folding it would mean a build's provenance
+cell no longer holds what you passed. Re-running the *same* `run_id` is still supported, and is
+still the one way a snapshot is replaced.
 
 **Do not pull the row data through `execute_sql` instead.** A mid-sized model is a few
 thousand rows across ten tables; `execute_sql` has no row cap and returns every result
@@ -64,6 +75,13 @@ database that way. This talks to EA directly and writes to disk.
 **Read the printed counts before going on.** An unexpectedly small `object` or
 `objectproperties` count means the scope is wrong, and it is much cheaper to notice
 there than after the reconciliation.
+
+**The `run_id` and the digest are printed before retention runs**, because they are
+what `build_database` needs and it refuses half a reference — so a problem in some
+other directory in the store must not cost you them. Exit codes: **0** done; **1**
+the snapshot is retained and its digest is printed but retention did not complete, so
+the store needs attention before the next run; **2** nothing was retained, and the
+message says what to do about it.
 
 **Scope resolution has no depth cap.** `resolve_scope` walks the whole package tree
 host-side and reports the depth it reached, because recursive CTEs are not portable and
@@ -151,10 +169,23 @@ only the ~300-element figure is measured. Say which is which if it matters.
 removed = prune_snapshots(root, keep=10, protect=(this_run_id,))
 ```
 
-Returns a list of `{run_id, run_at, bytes, dir, status}` for everything it deleted,
+Returns a list of `{run_id, run_at, bytes, dir, status}` for everything it acted on,
 newest-first ordering decided by the manifest's own `run_at` rather than by file
 mtime — a snapshot that has been copied or restored keeps the moment the extract was
 *taken*, and that is the moment a figure is as-of.
+
+| `status` | What it means |
+|---|---|
+| `pruned` | A snapshot that aged out. The loud one — a figure quoted from that build can no longer be reproduced from its own rows |
+| `incomplete` | A `.incomplete-*` write that never finished |
+| `superseded` | The copy a re-run of the same `run_id` replaced, left behind because deleting it was refused at the time |
+| `unreadable` | Any other directory in the store that is not a loadable snapshot — what a delete stopped part-way leaves |
+| `held` | It could not be removed and **is still there**. Reported, not raised, so one locked directory cannot cost you the report of everything that did go |
+
+**`protect` takes a collection, and a bare string is refused.** `protect="backfill"`
+iterates into its characters and protects nothing: it deleted `backfill` with no
+error and nothing in the report. It now raises instead. Write the trailing comma —
+`protect=(this_run_id,)`.
 
 `dir` is the directory that went, and it is the directory `list_snapshots` walked —
 never a path rebuilt from the manifest's `run_id`. The manifest sits outside the
@@ -187,16 +218,33 @@ unrunnable statement holds the COM connection, every later call appears to hang,
 the run gets killed — therefore leaves nothing under a snapshot name. That matters
 because `list_snapshots` only recognizes a directory with a manifest: a half-written
 one would be invisible to pruning *and* to the KiB-on-disk figure, and so would never
-be reclaimed. Whatever a hard kill does leave is swept by the next `prune_snapshots`
-and reported with `status: "incomplete"`, separately from the snapshots that aged
-out. Nothing can be replayed from it, and `open_snapshot` refuses its name.
+be reclaimed.
+
+**The next `prune_snapshots` sweeps every directory in the store that is not a
+loadable snapshot**, whatever it is called, and reports each one — `incomplete` for
+the prefix this tool writes, `unreadable` for anything else, both separately from the
+snapshots that aged out. Matching the prefix alone was not enough: debris does not
+only arrive by the route designed for it. A delete stopped by a held file leaves a
+directory under a *plain* name with its manifest already gone, which no function
+could see and no prefix match would catch, and that survived a full prune forever.
+Nothing can be replayed from any of it, and `open_snapshot` refuses the names it can.
 
 The rename is the commit, and on Windows it needs exclusive access to the whole
-subtree — a scanner holding a file written a moment ago can refuse it. It is retried,
-and if it still will not go the run **says so and keeps the rows** under the temp
-name rather than discarding an extract that cost a COM round trip against a
-repository which has since moved on. Rename the directory to the `run_id` to retain
-it; until then nothing reads it.
+subtree — a scanner holding a file written a moment ago can refuse it. Every step is
+retried, 4 attempts over 0.75 s, and that includes the destructive ones: a *delete*
+is refused by a held file exactly as readily as a rename.
+
+**Re-running a `run_id` replaces its snapshot without ever leaving the name empty.**
+The retained directory is renamed *aside*, the new one is renamed into place, and only
+then is the aside deleted — so at every instant that `run_id` holds one whole,
+loadable snapshot. Deleting first opened a window in which it held neither, and a held
+file inside that window destroyed the old manifest, left half its table files under
+the snapshot's own name, and told the earlier build its evidence "has been pruned".
+If any step is refused the run **says so and keeps both sets of rows**: the retained
+snapshot stays readable and replayable under its own name, and the new rows stay under
+the temp name rather than being discarded after a COM round trip against a repository
+which has since moved on. Rename that directory to the `run_id` to retain it; until
+then nothing reads it, and pruning will reclaim it.
 
 ---
 
@@ -244,8 +292,10 @@ success.
 | Build recorded no extract at all | `LoadError` — builds predating retention are in this state |
 | No `_load_run` row for that `run_id` | `LoadError` — different fact from "recorded no extract", and not conflated with it |
 | A recorded `extract_run_id` with no digest | `LoadError` — half a reference names a snapshot with nothing to verify it against |
-| A `run_id` that is not one safe path component | `SnapshotError` — it would put the snapshot outside retention's reach |
+| A `run_id` that is not one safe path component | `SnapshotError` — it would put the snapshot outside retention's reach, or under a name the filesystem changes |
+| A `run_id` differing from a retained one only in case | `SnapshotError` naming both — the filesystem cannot tell them apart, so writing it would replace that snapshot's rows and the replay would read the loss as tampering |
 | Two directories claiming one `run_id` | `SnapshotError` naming both — restore a snapshot under its own `run_id`, or remove the copy |
+| A finished extract that cannot be moved into place | `SnapshotError`, exit 2 — nothing is deleted. The retained snapshot stays under its own name and the new rows stay under the temp name |
 
 Only the asked-for `run_id` is ever read. The failure mode being designed out is the
 quiet one: a store containing one perfectly loadable snapshot that is *not* the right

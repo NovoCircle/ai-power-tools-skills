@@ -33,6 +33,8 @@ import pathlib
 import re
 import shutil
 import sqlite3
+import sys
+import types
 
 import pytest
 
@@ -44,15 +46,18 @@ from extract import (
     MANIFEST_NAME,
     STRUCTURE_QUERIES,
     TABLE_NAMES,
+    SUPERSEDED_PREFIX,
     Extractor,
     Snapshot,
     SnapshotError,
     extract,
     list_snapshots,
+    main,
     open_snapshot,
     prune_snapshots,
     snapshot_dir,
     snapshot_digest,
+    validate_run_id,
 )
 from frame import (attribute_rows, diagram_object_rows, diagram_rows, element_rows,
                    operation_rows, package_rows, relationship_rows)
@@ -88,10 +93,35 @@ MDG = {
 
 _STEREO_BLOCK = (f"@STEREO;Name={STEREO};GUID={{01}};"
                  f"FQName={NS}::{STEREO};@ENDSTEREO;")
+#: Connector stereotypes, deliberately UNQUALIFIED - no `FQName`, no `WBA::`. The
+#: reference technology declares no connector stereotype at all, so a prefixed one
+#: would assert something the MDG does not; a bare string on
+#: `t_connector.Stereotype` that comes from no MDG is what a real model carries.
+#: See `_shared/references/westbrook-example.md` §6, whose observed-counts table
+#: these two names come from rather than from an invented vocabulary.
+_CONNECTOR_STEREO_USES = "@STEREO;Name=Uses;GUID={02};@ENDSTEREO;"
+_CONNECTOR_STEREO_FLOWS = "@STEREO;Name=Flows;GUID={03};@ENDSTEREO;"
 
 #: One snapshot's worth of `t_*` rows, in the shape `extract.py` writes them.
 #: Deliberately includes an untyped element, so the census has a remainder to
 #: carry and the replayed database has something non-trivial to reproduce.
+#:
+#: EVERY ONE OF THE TEN TABLES HAS MORE THAN ONE ROW, and for each one its
+#: query's `ORDER BY` is the only thing deciding the sequence - which is the
+#: property `test_the_determinism_net_can_fail_for_every_one_of_the_ten_queries`
+#: measures and W19 found missing. Five of these tables used to hold a single
+#: row, so `reversed()` was a no-op and the determinism test compared a file
+#: against itself: the five shipped queries could be given a non-total `ORDER BY`
+#: and the suite stayed green at 37 passed.
+#:
+#: Two of them carry a deliberate TIE on the columns their query sorts by before
+#: the tie-break: `xref` has two rows for one `Client`, and `objectproperties`
+#: has two `criticality` tags on one element - the exact case `extract.py` singles
+#: out, since `t_objectproperties` has no unique index on (Object_ID, Property).
+#: Their tie-breaks, `XrefID` and `PropertyID`, are NOT selected by the shipped
+#: projections, so the fixture carries them and `_as_the_backend_would_order_them`
+#: projects them away after sorting, exactly as a backend does. Without them
+#: those two queries could lose their tie-break with nothing noticing.
 TABLES = {
     "object": [
         {"Object_ID": 1, "ea_guid": "{A}", "Name": "Core Ledger",
@@ -101,15 +131,28 @@ TABLES = {
         {"Object_ID": 3, "ea_guid": "{C}", "Name": "Settlement Notes",
          "Object_Type": "Note", "Stereotype": "", "Package_ID": 5},
     ],
+    # Two rows for one Client: a connector's stereotype provenance, which is why
+    # `t_connector.ea_guid` is selected at all. `XrefID` is the tie-break and the
+    # projection does not select it.
     "xref": [
-        {"Client": "{A}", "Description": _STEREO_BLOCK},
-        {"Client": "{B}", "Description": _STEREO_BLOCK},
+        {"XrefID": 71, "Client": "{A}", "Description": _STEREO_BLOCK},
+        {"XrefID": 72, "Client": "{B}", "Description": _STEREO_BLOCK},
+        {"XrefID": 73, "Client": "{R1}", "Description": _CONNECTOR_STEREO_USES},
+        {"XrefID": 74, "Client": "{R1}", "Description": _CONNECTOR_STEREO_FLOWS},
     ],
+    # Two `criticality` tags on element 1, with different values: no unique index
+    # on (Object_ID, Property) and `PropertyID` is the unselected tie-break.
     "objectproperties": [
-        {"Object_ID": 1, "Property": "criticality", "Value": "Mission-Critical"},
-        {"Object_ID": 1, "Property": "businessOwner", "Value": "Payments"},
-        {"Object_ID": 2, "Property": "criticality", "Value": "Standard"},
-        {"Object_ID": 2, "Property": "businessOwner", "Value": "Lending"},
+        {"PropertyID": 61, "Object_ID": 1, "Property": "criticality",
+         "Value": "Mission-Critical"},
+        {"PropertyID": 62, "Object_ID": 1, "Property": "criticality",
+         "Value": "Business-Critical"},
+        {"PropertyID": 63, "Object_ID": 1, "Property": "businessOwner",
+         "Value": "Payments"},
+        {"PropertyID": 64, "Object_ID": 2, "Property": "criticality",
+         "Value": "Standard"},
+        {"PropertyID": 65, "Object_ID": 2, "Property": "businessOwner",
+         "Value": "Lending"},
     ],
     "package": [
         {"Package_ID": 1, "Parent_ID": 0, "Name": "Model"},
@@ -118,26 +161,39 @@ TABLES = {
     "attribute": [
         {"ID": 21, "Object_ID": 1, "Name": "ledgerCode", "Type": "String",
          "Scope": "Public"},
+        {"ID": 22, "Object_ID": 1, "Name": "currency", "Type": "String",
+         "Scope": "Private"},
     ],
     "operation": [
         {"OperationID": 31, "Object_ID": 1, "Name": "postEntry", "Type": "void",
          "Scope": "Public"},
+        {"OperationID": 32, "Object_ID": 1, "Name": "reverseEntry",
+         "Type": "void", "Scope": "Public"},
     ],
     "diagram": [
         {"Diagram_ID": 41, "Name": "Payments Landscape",
+         "Diagram_Type": "Logical", "Package_ID": 5},
+        {"Diagram_ID": 42, "Name": "Settlement Flow",
          "Diagram_Type": "Logical", "Package_ID": 5},
     ],
     "diagramobjects": [
         {"Diagram_ID": 41, "Object_ID": 1},
         {"Diagram_ID": 41, "Object_ID": 2},
+        {"Diagram_ID": 42, "Object_ID": 2},
     ],
     "connector": [
         {"Connector_ID": 11, "ea_guid": "{R1}", "Name": "settles via",
-         "Connector_Type": "Association", "Stereotype": "",
+         "Connector_Type": "Association", "Stereotype": "Uses",
          "Start_Object_ID": 1, "End_Object_ID": 2},
+        {"Connector_ID": 12, "ea_guid": "{R2}", "Name": "clears through",
+         "Connector_Type": "Association", "Stereotype": "",
+         "Start_Object_ID": 2, "End_Object_ID": 1},
     ],
     "connectortag": [
         {"PropertyID": 51, "ElementID": 11, "Property": "channel", "VALUE": "ACH"},
+        {"PropertyID": 52, "ElementID": 11, "Property": "channel",
+         "VALUE": "SWIFT"},
+        {"PropertyID": 53, "ElementID": 12, "Property": "channel", "VALUE": "ACH"},
     ],
 }
 
@@ -151,14 +207,25 @@ class _EchoRepo:
 
 
 _ORDER_BY = re.compile(r"ORDER BY (.+)$", re.IGNORECASE)
+_SELECT = re.compile(r"SELECT (.+?) FROM ", re.IGNORECASE)
 
 
 def _sort_key(v):
     return (v is not None, isinstance(v, str), v)
 
 
+def _columns(clause):
+    """Column names out of a SELECT list or an ORDER BY list, brackets stripped.
+
+    `[Type]`, `[Scope]` and `[VALUE]` are bracketed in the shipped SQL because
+    they are reserved words in EA's backends; the rows come back under the bare
+    name.
+    """
+    return [c.strip().strip("[]") for c in clause.split(",")]
+
+
 def _as_the_backend_would_order_them(rows, sql):
-    """Apply the statement's own `ORDER BY`, the way a backend does.
+    """Apply the statement's own `ORDER BY` and projection, the way a backend does.
 
     The fake HAS to do this. A fake that hands back a fixed Python list makes any
     assertion about row order pass by construction - which is exactly how the
@@ -166,23 +233,28 @@ def _as_the_backend_would_order_them(rows, sql):
     With the ordering emulated, dropping an `ORDER BY` from a shipped query shows
     up as a failure instead.
 
-    Columns the projection does not select - a table's primary key, used as the
-    tie-break - are not in these rows, so they leave the stable order alone. That
-    is also what they do to the file's bytes: rows that tie on every SELECTED
-    column are byte-identical, so their order cannot change the digest.
+    It also has to SORT ON COLUMNS THE PROJECTION DOES NOT SELECT and then drop
+    them, which is what the two queries that most need a tie-break do: `t_xref`
+    orders by `XrefID` and `t_objectproperties` by `PropertyID`, neither of which
+    is selected, because the alternative is sorting on a memo column and a backend
+    that refuses to sort one reports it as a modal dialog. Filtering those columns
+    out BEFORE sorting, as this fake used to, emulates no tie-break at all for
+    exactly the two tables the design singles out - `sorted` is stable, so ties
+    simply keep their input order and a dropped tie-break cannot be detected. The
+    comment that justified it ("rows that tie on every selected column are
+    byte-identical, so their order cannot change the digest") is false for
+    `t_objectproperties`, where `Value` is selected and is not in the `ORDER BY`.
     """
-    match = _ORDER_BY.search(sql)
-    if not match:
-        return rows
-    cols = [c.strip() for c in match.group(1).split(",")]
-    cols = [c for c in cols if any(c in r for r in rows)]
-    if not cols:
-        return rows
-    return sorted(rows, key=lambda r: tuple(_sort_key(r.get(c)) for c in cols))
+    order = _ORDER_BY.search(sql)
+    if order:
+        rows = sorted(rows, key=lambda r: tuple(
+            _sort_key(r.get(c)) for c in _columns(order.group(1))))
+    selected = _columns(_SELECT.search(sql).group(1))
+    return [{k: v for k, v in r.items() if k in selected} for r in rows]
 
 
-def fake_extractor(tables=None):
-    """An `Extractor` that answers each query from `tables`.
+def _answering_from(tables):
+    """The row-parser half of the fake: a statement in, its rows out.
 
     Routes on the `FROM t_<name>` in the statement rather than on call order, so
     the fake cannot quietly drift out of step with the query constants. The word
@@ -197,11 +269,40 @@ def fake_extractor(tables=None):
                     [dict(r) for r in rows], sql)
         return []
 
-    return Extractor(_EchoRepo(), parse)
+    return parse
+
+
+def fake_extractor(tables=None):
+    """An `Extractor` that answers each query from `tables`."""
+    return Extractor(_EchoRepo(), _answering_from(tables))
 
 
 def take_snapshot(root, run_id=RUN, run_at=AT, tables=None):
     return extract(fake_extractor(tables), root, run_id=run_id, run_at=run_at)
+
+
+def _ea_is_reachable(patched, tables=None):
+    """Put a fake `win32com.client` and row parser into `sys.modules`.
+
+    `main()` imports both and returns 2 if it cannot reach them, so testing what it
+    PRINTS - and in what order, which is a finding in its own right - needs them
+    present. The repository echoes the statement and the "parser" answers from the
+    fixture: the same seam `fake_extractor` uses, one layer out.
+    """
+    answer = _answering_from(tables)
+    client = types.ModuleType("win32com.client")
+    client.GetActiveObject = lambda _name: types.SimpleNamespace(
+        Repository=_EchoRepo())
+    win32com = types.ModuleType("win32com")
+    win32com.client = client
+    server = types.ModuleType("ea_mcp_server.server")
+    server._parse_rows_from_sql_xml = answer
+    ea_mcp_server = types.ModuleType("ea_mcp_server")
+    ea_mcp_server.server = server
+    for name, module in (("win32com", win32com), ("win32com.client", client),
+                         ("ea_mcp_server", ea_mcp_server),
+                         ("ea_mcp_server.server", server)):
+        patched.setitem(sys.modules, name, module)
 
 
 def build(db_path, tables, *, run_id, run_at,
@@ -343,7 +444,10 @@ def test_the_digest_does_not_depend_on_the_order_the_backend_returned_rows(tmp_p
 
     `t_objectproperties` is the soft spot: no unique index on
     (Object_ID, Property), one element can carry two tags of the same name, and
-    which came back first was whatever the backend felt like.
+    which came back first was whatever the backend felt like. The fixture now
+    holds that case - two `criticality` tags on element 1 - and the matching one
+    for `t_xref`, so this comparison is over tables that genuinely need their
+    tie-breaks.
     """
     take_snapshot(tmp_path, run_id="in-order", run_at="2026-10-01 08:00:00")
     take_snapshot(tmp_path, run_id="reversed", run_at="2026-10-02 08:00:00",
@@ -361,6 +465,59 @@ def test_every_shipped_query_orders_its_rows():
     for name, sql in {**CENSUS_QUERIES, **STRUCTURE_QUERIES}.items():
         assert "ORDER BY" in sql.upper(), f"{name} has no deterministic order"
     assert len(TABLE_NAMES) == 10
+
+
+def _with_a_weaker_order(sql):
+    """The same statement with the LAST column dropped from its `ORDER BY`.
+
+    The smallest real mistake, and the one a reviewer actually makes: a tie-break
+    left off, or a single-column order deleted outright. Either leaves a sequence
+    no backend promises.
+    """
+    match = _ORDER_BY.search(sql)
+    kept = _columns(match.group(1))[:-1]
+    return (sql[:match.start()] + (f"ORDER BY {', '.join(kept)}" if kept else "")
+            ).rstrip()
+
+
+def test_the_determinism_net_can_fail_for_every_one_of_the_ten_queries(
+        tmp_path, monkeypatch):
+    """W19. The test above asserts two digests are EQUAL, so it proves nothing
+    unless weakening a query's order can make them differ - and for half the
+    shipped queries it could not. Measured on the branch: `attribute`, `operation`,
+    `diagram`, `connector` and `connectortag` each had a ONE-ROW fixture, so
+    `reversed()` was a no-op and the comparison was a file against itself. Those
+    five queries were given a non-total `ORDER BY` - `connector` by `Stereotype`,
+    `connectortag` by `Property`, `attribute` and `operation` by `[Scope]`,
+    `diagram` by `Diagram_Type` - and the suite stayed green at 37 passed. The
+    other guard, `test_every_shipped_query_orders_its_rows`, is
+    `assert "ORDER BY" in sql`: it catches absence and cannot tell a total order
+    from a wrong one.
+
+    Separately, `_as_the_backend_would_order_them` dropped any `ORDER BY` column
+    the projection does not select, which is `XrefID` and `PropertyID` - the two
+    tie-breaks `extract.py` singles out - so for `t_xref` and `t_objectproperties`
+    the fake emulated NO tie-break at all.
+
+    So this is the net's own test. For each of the ten shipped queries in turn,
+    its order is weakened by one column and the digests MUST then differ. Ten
+    assertions that each fail if that query's ordering has stopped being the only
+    thing deciding the sequence - whether because the fixture lost its second row
+    or because the fake stopped honoring a tie-break.
+    """
+    for name in TABLE_NAMES:
+        source = CENSUS_QUERIES if name in CENSUS_QUERIES else STRUCTURE_QUERIES
+        with monkeypatch.context() as patched:
+            patched.setitem(source, name, _with_a_weaker_order(source[name]))
+            root = tmp_path / name
+            take_snapshot(root, run_id="in-order", run_at="2026-10-01 08:00:00")
+            take_snapshot(root, run_id="reversed", run_at="2026-10-02 08:00:00",
+                          tables={n: list(reversed(rows))
+                                  for n, rows in TABLES.items()})
+            assert (snapshot_digest(snapshot_dir(root, "in-order"))
+                    != snapshot_digest(snapshot_dir(root, "reversed"))), (
+                f"{name}: its ORDER BY could lose a column and nothing here "
+                f"would notice, so the determinism claim is unsupported for it")
 
 
 # --- retention is bounded, and pruning says what it took ---------------------
@@ -537,6 +694,128 @@ def test_a_snapshot_that_cannot_be_committed_is_kept_not_discarded(tmp_path):
     assert list_snapshots(root) == [], "and it is not a snapshot until renamed"
 
 
+def test_a_run_id_that_collides_only_in_case_is_refused(tmp_path):
+    """CR-0229-05(a), and it needs no failure at all to happen. `_RUN_ID` is
+    case-sensitive; NTFS is not, and neither is `Path.exists`. Measured on the
+    branch, with `Run-A` then `run-a` - both accepted by `validate_run_id`:
+
+        after run 1, dirs: ['Run-A']   digest d687065edc54
+        after run 2, dirs: ['run-a']   digest bddf304f85f9
+        list_snapshots: [('run-a', '2026-10-02 08:00:00')]
+        prune reports: []
+        replay of the FIRST build: refused - 'Run-A' hashes to bddf304f...
+
+    Three things wrong at once. `Run-A`'s rows were nowhere on disk. Nothing said
+    so - `prune_snapshots` returned `[]` and `list_snapshots` showed one snapshot
+    where the operator believed there were two, against a module that promises
+    going is never silent. And the loss was MISATTRIBUTED: the replay reported
+    "hashes to X, but the build recorded Y", which the shipped refusal table
+    defines as a different extract under the same `run_id`, i.e. tampering.
+
+    It also contradicted `extract.py` verbatim - "No OTHER snapshot is overwritten
+    ... a different `run_id` is a different snapshot beside it".
+    """
+    root = tmp_path / "extracts"
+    first = take_snapshot(root, run_id="Run-A", run_at="2026-10-01 08:00:00")
+
+    with pytest.raises(SnapshotError, match="differs only in case"):
+        take_snapshot(root, run_id="run-a", run_at="2026-10-02 08:00:00",
+                      tables=dict(TABLES, object=TABLES["object"][:1]))
+
+    assert [p.name for p in root.iterdir()] == ["Run-A"], "refused before writing"
+    assert [s["run_id"] for s in list_snapshots(root)] == ["Run-A"]
+    assert len(open_snapshot(root, "Run-A",
+                             expect_digest=first["digest"]).tables["object"]) == 3
+
+    # Re-running the SAME run_id is still what the module documents it to be.
+    take_snapshot(root, run_id="Run-A", run_at="2026-10-03 08:00:00",
+                  tables=dict(TABLES, object=TABLES["object"][:1]))
+    assert len(open_snapshot(root, "Run-A").tables["object"]) == 1
+
+
+def test_a_rerun_that_cannot_replace_a_snapshot_leaves_the_retained_one_whole(
+        tmp_path):
+    """CR-0229-05(b). `_commit` deleted the existing snapshot BEFORE the rename,
+    above the retry and outside every handler - the retry guarded the
+    non-destructive step and the destructive one sat bare, on a platform whose
+    documented failure mode is exactly a held file. Measured on a repeat `run_id`
+    (which `extract.py` documents as supported) with one file open inside it:
+
+        second run raised PermissionError: [WinError 32] ... from extract.py:501
+        SnapshotError, i.e. caught by main() -> exit 2?  False
+        r1 on disk: 5 of the 10 table files; manifest still there?  False
+        list_snapshots sees: []   prune reclaims: [('.incomplete-r1','incomplete')]
+        STILL on disk after a full prune: ['r1']
+
+    So: a destroyed manifest, a half-deleted snapshot, a husk invisible to every
+    function and to the KiB figure that survived a full prune, a traceback instead
+    of exit 2, and the earlier build told its evidence "has been pruned, or was
+    never kept" - false twice over. This was a REGRESSION against the commit that
+    overwrote in place, where the same interruption left a coherent, visible,
+    loadable snapshot. So the bar is: no worse than that.
+
+    Renaming the old snapshot aside first means the failure happens before
+    anything is destroyed. Its rows are whole, it is still listed, and it still
+    verifies against the digest the first build recorded.
+    """
+    root = tmp_path / "extracts"
+    first = take_snapshot(root, run_id="r1", run_at="2026-10-01 08:00:00")
+
+    with open(snapshot_dir(root, "r1") / "object.json", encoding="utf-8"):
+        with pytest.raises(SnapshotError, match="could not be moved aside"):
+            take_snapshot(root, run_id="r1", run_at="2026-10-02 08:00:00",
+                          tables=dict(TABLES, object=TABLES["object"][:1]))
+
+    reopened = open_snapshot(root, "r1", expect_digest=first["digest"])
+    assert len(reopened.tables["object"]) == 3, "the retained rows are all there"
+    assert reopened.run_at == "2026-10-01 08:00:00"
+    assert [s["run_id"] for s in list_snapshots(root)] == ["r1"]
+
+    # And the new rows were kept, not discarded: they cost a COM extract.
+    debris = root / f"{INCOMPLETE_PREFIX}r1"
+    assert len(json.loads(
+        (debris / "object.json").read_text(encoding="utf-8"))) == 1
+    assert [(s["run_id"], s["status"]) for s in
+            prune_snapshots(root, keep=KEEP_RUNS, protect=("r1",))] == [
+        (debris.name, "incomplete")]
+
+
+def test_a_replacement_that_fails_mid_commit_puts_the_old_snapshot_back(tmp_path):
+    """CR-0229-05, the window itself. There must be no instant in which the
+    snapshot's own name holds NEITHER the old rows nor the new ones, because that
+    instant is what the measurement above is: the old manifest already gone, the
+    new directory not yet renamed in, and nothing left that `list_snapshots`,
+    `open_snapshot` or the sweep could see.
+
+    Here the move-aside succeeds and the commit itself is then refused - the
+    `WinError 5` the module documents as observed once in about four hundred runs.
+    The old snapshot goes back under its own name, so the store holds one whole
+    snapshot at every point, and the new rows are still kept.
+    """
+    root = tmp_path / "extracts"
+    first = take_snapshot(root, run_id="r1", run_at="2026-10-01 08:00:00")
+    real_rename = pathlib.Path.rename
+
+    def refuse_only_the_commit(self, target):
+        if self.name.startswith(INCOMPLETE_PREFIX):
+            raise PermissionError(5, "Access is denied")
+        return real_rename(self, target)
+
+    with pytest.MonkeyPatch.context() as patched:
+        patched.setattr(pathlib.Path, "rename", refuse_only_the_commit)
+        with pytest.raises(SnapshotError, match="rows are intact"):
+            take_snapshot(root, run_id="r1", run_at="2026-10-02 08:00:00",
+                          tables=dict(TABLES, object=TABLES["object"][:1]))
+
+    assert len(open_snapshot(root, "r1",
+                             expect_digest=first["digest"]).tables["object"]) == 3
+    assert [s["run_id"] for s in list_snapshots(root)] == ["r1"]
+    assert not (root / f"{SUPERSEDED_PREFIX}r1").exists(), "the aside went back"
+    assert len(json.loads(
+        (root / f"{INCOMPLETE_PREFIX}r1" / "object.json").read_text(
+            encoding="utf-8"))) == 1
+
+
 def test_the_debris_of_a_killed_run_is_not_a_snapshot_and_is_swept(tmp_path):
     """CR-0229-04's other half: bounded has to hold for a run killed so hard that
     nothing cleaned up after it. The leftover is named so that it can never be
@@ -559,6 +838,114 @@ def test_the_debris_of_a_killed_run_is_not_a_snapshot_and_is_swept(tmp_path):
     assert removed[0]["bytes"] > 0, "the report has to carry what it reclaimed"
     assert not debris.exists()
     assert [s["run_id"] for s in list_snapshots(root)] == ["good"]
+
+
+def test_a_plain_named_directory_that_is_not_a_snapshot_is_swept_too(tmp_path):
+    """CR-0229-06. The sweep matched `.incomplete-*` only, and `list_snapshots`
+    requires a manifest - so a manifest-less directory under a PLAIN name was
+    invisible to both, and to the KiB-on-disk figure, and survived a full prune
+    permanently. Measured with two of them beside one good snapshot:
+
+        plain-named manifest-less dirs: swept = []
+        still on disk: ['good','legacy-1','legacy-2']
+        list_snapshots counted 4,374 of the 5,344 bytes actually there
+
+    That is the acceptance criterion - retention bounded, and the bound stated -
+    failing by a second route, and it made the shipped reference's "whatever a hard
+    kill does leave is swept by the next `prune_snapshots`" false as written.
+
+    Prefix-matching was the mistake: debris does not only arrive by the route
+    designed for it. Both producers are real and neither writes the prefix - the
+    husk a refused replacement used to leave, and a prune stopped by a held file
+    (next test). So the rule is what the store can SEE, not what it is called:
+    every directory that is not a loadable snapshot is reclaimed, and reported.
+    """
+    root = tmp_path / "extracts"
+    take_snapshot(root, run_id="good", run_at="2026-10-01 08:00:00")
+    for name in ("legacy-1", "legacy-2"):
+        husk = root / name
+        husk.mkdir()
+        (husk / "object.json").write_text(
+            json.dumps(TABLES["object"], indent=1), encoding="utf-8")
+
+    removed = prune_snapshots(root, keep=KEEP_RUNS)
+    assert [(s["run_id"], s["status"]) for s in removed] == [
+        ("legacy-1", "unreadable"), ("legacy-2", "unreadable")]
+    assert all(s["bytes"] > 0 for s in removed), "report what it reclaimed"
+    assert [p.name for p in root.iterdir()] == ["good"]
+    assert [s["run_id"] for s in list_snapshots(root)] == ["good"]
+
+
+def test_a_prune_stopped_by_a_held_file_is_reported_not_raised(tmp_path):
+    """CR-0229-06's second producer - and the same lesson as CR-0229-05, applied to
+    the delete retention has always done. Measured with one table file held open:
+
+        prune raised PermissionError: [WinError 32]      <- raw, mid-loop
+        'drop' dir now: 5 table files, no manifest
+        list_snapshots sees: ['keep']
+        a SECOND full prune reclaims: []
+        still on disk: ['drop', 'keep']
+
+    `shutil.rmtree` stops at the first file it cannot remove, and the manifest goes
+    early in directory order - so the failed prune MANUFACTURED the invisible
+    plain-named husk of the test above, then raised out of the loop, which also
+    cost the caller the report of everything that had already gone.
+
+    Retried now, and a directory that will not go is reported as `held` rather than
+    raised: one locked directory cannot cost the report, the operator is told it is
+    still there, and whatever is left of it is swept by the next prune. A `held`
+    entry is the one status that means "still on disk".
+    """
+    root = tmp_path / "extracts"
+    take_snapshot(root, run_id="keep", run_at="2026-10-02 08:00:00")
+    take_snapshot(root, run_id="drop", run_at="2026-10-01 08:00:00")
+
+    with open(snapshot_dir(root, "drop") / "object.json", encoding="utf-8"):
+        removed = prune_snapshots(root, keep=1)
+        assert [(s["run_id"], s["status"]) for s in removed] == [("drop", "held")]
+        assert snapshot_dir(root, "drop").exists(), "held means still there"
+
+    assert [(s["run_id"], s["status"]) for s in prune_snapshots(root, keep=1)] == [
+        ("drop", "unreadable")]
+    assert [p.name for p in root.iterdir()] == ["keep"]
+
+
+def test_main_prints_the_reference_before_it_prunes(tmp_path, capsys):
+    """CR-0229-06's other limb. `main()` called `prune_snapshots` and then
+    `list_snapshots` with no `try`, and both sat AHEAD of the only lines that print
+    the `run_id` and the digest. Measured, with a valid new snapshot already on
+    disk and one restored copy elsewhere in the store:
+
+        the new snapshot is on disk and valid: True  digest d687065edc54
+        prune raised SnapshotError -> main() has NO handler here
+        => the operator never sees 'snapshot ... retained at ...' or 'digest ...'
+
+    Any store-level condition in a directory unrelated to this run does it: a held
+    file, a trailing-dot name, a manifest missing `run_at`. And because
+    `build_database` now refuses half a reference - correctly - an operator who
+    cannot read the digest cannot record provenance at all, so the build ships with
+    none. The reorder bought nothing: `protect` is what stops this run being
+    pruned, not the printing order.
+
+    So the reference goes out first and retention reports its own failure, with a
+    distinct exit code, against a snapshot that is on disk and replayable.
+    """
+    root = tmp_path / "extracts"
+    take_snapshot(root, run_id="archived", run_at="2026-10-01 08:00:00")
+    shutil.copytree(snapshot_dir(root, "archived"), root / "archived-restored")
+
+    with pytest.MonkeyPatch.context() as patched:
+        _ea_is_reachable(patched)
+        code = main(["--out", str(root), "--run-id", "fresh",
+                     "--run-at", "2026-10-05 08:00:00"])
+
+    printed = capsys.readouterr()
+    assert "snapshot fresh retained at" in printed.out
+    assert f"digest {open_snapshot(root, 'fresh').digest}" in printed.out
+    assert "retention did not run" in printed.err
+    assert "holds a manifest naming" in printed.err, "and says what is wrong"
+    assert code == 1
+    assert open_snapshot(root, "fresh").manifest["counts"]["object"] == 3
 
 
 # --- a run never deletes the snapshot it has just reported as retained -------
@@ -587,6 +974,38 @@ def test_the_run_just_written_is_never_pruned(tmp_path):
     assert [s["run_id"] for s in prune_snapshots(root, keep=KEEP_RUNS)] == ["backfill"]
 
 
+def test_protect_as_a_bare_string_is_refused_not_read_as_its_characters(tmp_path):
+    """CR-0229-07, which reopened CR-0229-02 in the public function the shipped
+    reference tells a reader to call. `protected = {str(p) for p in protect}`
+    iterates a bare string into its characters. Measured as the verbatim
+    CR-0229-02 reproduction:
+
+        prune_snapshots(root, keep=10, protect="backfill")
+          removed: ['backfill']
+          backfill still on disk? False
+          the protected set actually built: {'c','a','i','b','l','f','k'}
+
+    No error, no report, and `prune_snapshots` promises the opposite - "`protect`
+    names run_ids that are never pruned however the order comes out". `main()`
+    happens to pass a tuple, so the CLI was safe; `the-extract-snapshot.md`
+    documents the call as `protect=(this_run_id,)`, where a forgotten trailing
+    comma was all that stood between a reader and deleting the evidence behind the
+    build they had just made. A collection or nothing.
+    """
+    root = tmp_path / "extracts"
+    for day in (1, 2):
+        take_snapshot(root, run_id=f"run-{day:02d}",
+                      run_at=f"2026-10-{day:02d} 08:00:00")
+    take_snapshot(root, run_id="backfill", run_at="2026-09-01 08:00:00")
+
+    with pytest.raises(ValueError, match="not the string"):
+        prune_snapshots(root, keep=2, protect="backfill")
+    assert snapshot_dir(root, "backfill").is_dir(), "nothing was deleted"
+
+    assert prune_snapshots(root, keep=2, protect=("backfill",)) == []
+    assert [s["run_id"] for s in prune_snapshots(root, keep=2)] == ["backfill"]
+
+
 def test_a_run_at_the_sort_cannot_order_is_refused(tmp_path):
     """CR-0229-02's cause. `--run-at` was free text, and retention order is a
     lexicographic sort over it: `2026-10-05T08:00:00` and `05/10/2026` both sort
@@ -609,7 +1028,7 @@ def test_a_run_id_that_is_a_path_is_refused_rather_than_escaping_the_root(tmp_pa
     absolute right operand. `list_snapshots(root)` then returned [], so the snapshot
     was invisible to retention and never pruned, while `open_snapshot` still loaded
     it: a traversal and an unbounded store in one move. At replay time the value
-    comes out of `_load_run` in a database file that may have travelled, so it is
+    comes out of `_load_run` in a database file that may have traveled, so it is
     not an operator-only input."""
     root = tmp_path / "extracts"
     root.mkdir()
@@ -621,6 +1040,33 @@ def test_a_run_id_that_is_a_path_is_refused_rather_than_escaping_the_root(tmp_pa
             open_snapshot(root, bad)
     assert list(root.iterdir()) == []
     assert list_snapshots(root) == []
+
+
+def test_a_run_id_ending_in_a_dot_is_refused(tmp_path):
+    """W16. `_RUN_ID` allowed a trailing dot, which the Win32 path layer strips, so
+    `run_id='run.'` was accepted and created a directory called `run` holding a
+    manifest that named `run.` - which is the two-directories-one-run_id condition
+    `list_snapshots` refuses. Measured:
+
+        extract(run_id='run.') succeeded, manifest run_id = 'run.'
+        directories actually created: ['run']
+        list_snapshots -> SnapshotError: directory 'run' ... naming 'run.'
+        ... a second, legitimate extract then succeeds, and list_snapshots STILL
+            raises
+
+    From that point every `list_snapshots`, `prune_snapshots` and retention report
+    raised for the WHOLE store, so retention stopped entirely - unbounded again -
+    and every later run died before printing its own digest. One character class,
+    and `validate_run_id` promises "one safe path component" on a platform where a
+    trailing dot is not one.
+    """
+    root = tmp_path / "extracts"
+    root.mkdir()
+    for bad in ("run.", "r.", "snapshot-01."):
+        with pytest.raises(SnapshotError, match="not usable as a snapshot name"):
+            take_snapshot(root, run_id=bad)
+    assert list(root.iterdir()) == [], "refused before anything was written"
+    assert validate_run_id("r.1") == "r.1", "a dot INSIDE the name is still fine"
 
 
 # --- the build records which extract it consumed -----------------------------
@@ -753,7 +1199,7 @@ def test_a_pruned_extract_is_named_as_pruned(tmp_path):
 
 
 def test_a_pruned_extract_does_not_fall_back_to_the_snapshot_that_remains(tmp_path):
-    """Stated separately from the message test because this is the behaviour that
+    """Stated separately from the message test because this is the behavior that
     actually matters: the one remaining snapshot is a perfectly loadable extract,
     and using it would produce a plausible database answering about the wrong
     moment. Only the asked-for run_id is ever read."""

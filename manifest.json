@@ -57,7 +57,7 @@
         "_shared/tools/ddl.py": "7dafe7fb35c29100ce70f54f475c4637f3014f789bbb17a9dc653769a777da39",
         "_shared/tools/dictionary.py": "1442d14d9c74ad8e7bc7ead17629f7756962538ad5f919bc7e5fc23ff3ad449d",
         "_shared/tools/ea_census.py": "2ce1c555e3a75c020dc1c6f35afb33cec8fe67155ed2fe06f173ca40efe563d7",
-        "_shared/tools/extract.py": "9a8782a1e3a442d205151e8ab9d9fa6425c7ae9929bb3f7946de97e719dd8f41",
+        "_shared/tools/extract.py": "35af63a26e087acb3d2dc0a30623a2b66b7a9415411a298f2736b7b3bbd7b906",
         "_shared/tools/frame.py": "31cf98c6e860d7ee8c4b24b76c5b646ff3c7e4d44578e4338c6d1d90f84d504e",
         "_shared/tools/governance_gap.py": "6d50f395bd193088ce9c223add0a3f11bd4b9cc2a80739be74435a902585e611",
         "_shared/tools/load.py": "c8e413e7d629b597568aca6f9ed7e09dfc3f84618b89eeed508651752abbb9b3",
@@ -80,7 +80,7 @@
         "_shared/tools/test_reconcile.py": "28daeb34d5c9762989768dd9ab806fae74953d10587676d523844e43ed58ca13",
         "_shared/tools/test_report_model.py": "e14e0f1a8d1df9a8b6e00e6a78103ccfc79becc6de14f25ed08a722324da7fb2",
         "_shared/tools/test_semantic_model.py": "3d74e2cdad641cdab26e3eaa1e5b7be7ec87134f1cb3d1c9d80f671501b2049f",
-        "_shared/tools/test_snapshot.py": "805978cd0a76102c91d98859210db674f438852989255b542768b12be04fa1e7",
+        "_shared/tools/test_snapshot.py": "7878c4f2d9f5b43b5b98ef21284d7a8aa47c74bea9e3bddb47a28ecb8ff5dc4e",
         "_shared/tools/test_tmdl.py": "b871f3c4ba1c139d9d62ed75b621800fd14e39881623ef0c6a82c1432f15e242",
         "_shared/tools/tmdl.py": "3aeb9ceef96ede1d0954e64bffe64d93a8939dfc40c88149c4b10e4ee62f254e"
       }
@@ -419,7 +419,7 @@
       ],
       "sha256": {
         "ea-reporting-database/SKILL.md": "dbe67fd532ce83d8b7ea929f4b34f1b3cfcc96316c7158d43dab156fbe39ce03",
-        "ea-reporting-database/references/the-extract-snapshot.md": "009411bec742a41e42bab4c57e558a13b606940e8082e28f35cfeac2089b7b69",
+        "ea-reporting-database/references/the-extract-snapshot.md": "c2bc55636411193f400fc9127a7e7bf16648f0c488e12013a0ad4648918a720c",
         "ea-reporting-database/references/the-governance-gate.md": "042267320fa3f485ee79d61a47cd88396b5029e16973af0ae9874883d937bc4f",
         "ea-reporting-database/references/the-schema.md": "7ecfee38ded20cd4c0b00eea67539608b5b3dd3eb28541fa1f7f77040ab172a7"
       }
