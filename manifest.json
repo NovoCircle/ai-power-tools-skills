@@ -51,7 +51,7 @@
         "_shared/references/file-encoding.md": "5759bac841234558071a4cde555587e45cabebe5a90420188b07f8323d62f7fe",
         "_shared/references/latency.md": "af565b7e08f3a79a9239f548c63115181ef3ea7bd845b94ef0363a28f035d06f",
         "_shared/references/operations.md": "ec4331f19cdba7c8f299ac198656d6eea117d4ef2630284dd6d83e49a6b03db9",
-        "_shared/references/prolaborate-session.md": "3b44837c3fa94cebd2b366cc4568fbd27ae3a5e02ae54873f81f5d08533e04c3",
+        "_shared/references/prolaborate-session.md": "ca3d70b9b731e9443d0b843ad387f213e087d01ad106bb47556b88d30ab1f9ce",
         "_shared/references/westbrook-example.md": "d4622f3cf9ef6a58d661fb54cb4248dfc364e8e6ab9d0314876838081600cdf2",
         "_shared/tools/ddl.py": "e2298b6df49d3ca718e6a7743a530b68568bc7f0c6e9585197ad7bbaf11105dc",
         "_shared/tools/dictionary.py": "1442d14d9c74ad8e7bc7ead17629f7756962538ad5f919bc7e5fc23ff3ad449d",
@@ -488,9 +488,9 @@
         "prol-impact-analysis/references/traversal.md"
       ],
       "sha256": {
-        "prol-impact-analysis/SKILL.md": "ea8192695eade5f3e988d8984490760e78102fcdcd7305b4b44456a8922c5c7f",
-        "prol-impact-analysis/references/test-cases.md": "d4b1f8eb6ad6483b416df6dea69aca471e8bf887cb67ddbe6887adf93fb28cb1",
-        "prol-impact-analysis/references/traversal.md": "441838cc1d5d65327dadafa762a1bb81fa33cf7abace64e54af6979998293ba5"
+        "prol-impact-analysis/SKILL.md": "27488754e59a9e5ccb4445d2bdbee3acc970bcaf3711701010a136d5c5786679",
+        "prol-impact-analysis/references/test-cases.md": "598c61c11cee1784cd923e23b5463d3adfa8eb431194782bdfff3f7e06f91032",
+        "prol-impact-analysis/references/traversal.md": "4897e07d773c040584c2cfdae88f622a2034e3b110979e5edda5289a199b90f4"
       }
     },
     {
@@ -532,9 +532,9 @@
         "prol-matrix/references/test-cases.md"
       ],
       "sha256": {
-        "prol-matrix/SKILL.md": "3a8cc64942fc288ae989c44a2aa4c2fc80f33ced5d4f313a2d462197036820e2",
-        "prol-matrix/references/reading-a-matrix.md": "f02f3889ddace1e5b32e8a02e66a29910c19c4d9343325cbbd9f253348531684",
-        "prol-matrix/references/test-cases.md": "825737f4599a920a0c88d3c49851ba12ae1c6329be79041a3c436a9a3a5ddd28"
+        "prol-matrix/SKILL.md": "6a0719f9b42093e202d849511c7af3a22ccc5a4754abb86caf5156c0450dfaeb",
+        "prol-matrix/references/reading-a-matrix.md": "ce6611a406eb4dd3aeb2f4af9637d98d1479860c31417efd09ad488273a42b23",
+        "prol-matrix/references/test-cases.md": "17367c9d96367bbedb7ef67bc143fb185f86d3f1887a91edd3995e97bb3f6bbc"
       }
     },
     {
@@ -547,7 +547,7 @@
         "prol-start-here/SKILL.md"
       ],
       "sha256": {
-        "prol-start-here/SKILL.md": "70ab327cd3b1c4285347643ccea9e04a15bc4da59f632cf91159e43398ff55ba"
+        "prol-start-here/SKILL.md": "07990ce8fa4f26c1264f2f32d52c55d77eee705a5c6d4e4dd11491a442a918fd"
       }
     },
     {

@@ -80,14 +80,14 @@ unverified"*. Measured, it is:
 {
   "sourceConfig": {
     "selectorName": "Business Capabilities",
-    "selectorGuid": "{8446C441-…}",
+    "selectorGuid": "{AAAA0001-0000-4000-8000-000000000001}",
     "selectorType": "Package",
     "selectorResourceType": "Package",
     "selectorContentType": "All",
     "includeChildren": true
   },
   "targetConfig": { "…identical shape…" },
-  "linkConfig": { "linkType": "Supports", "linkDirection": "Both" }
+  "linkConfig": { "linkType": "Uses", "linkDirection": "Both" }
 }
 ```
 
@@ -124,12 +124,12 @@ that a restricted user might not be entitled to, which is why §7 flags the iden
 ### Connector entries
 
 ```json
-{ "technology": "WBA", "id": 0, "guid": "{36576F5B-…}", "name": null,
+{ "technology": "WBA", "id": 0, "guid": "{AAAA0002-0000-4000-8000-000000000002}", "name": null,
   "boundDirection": null, "midLabel": null, "baseType": "Association",
-  "stereotype": "Supports", "stereotypeField": "Supports",
+  "stereotype": "Uses", "stereotypeField": "Uses",
   "direction": "Target -> Source",
   "startObjectId": null, "endObjectId": null,
-  "startElementGuid": "{37704AFC-…}", "endElementGuid": "{BEDF3EEE-…}" }
+  "startElementGuid": "{AAAA0003-0000-4000-8000-000000000003}", "endElementGuid": "{AAAA0004-0000-4000-8000-000000000004}" }
 ```
 
 Measured as always null across every profile: `name`, `boundDirection`, `midLabel`,
@@ -196,8 +196,12 @@ function buildGrid(data) {
 
 > **Collect what you could not place, and report it.** A connector whose ends are not one in each
 > list is real data you are dropping. Silently skipping it is how a matrix comes out looking
-> complete and under-reporting. Both ends can legitimately fall in the same list when the source
-> and target selectors overlap.
+> complete and under-reporting.
+>
+> **`unplaced` catches only the disjoint case.** If the selectors *overlap*, an element is in both
+> lists, both membership tests succeed, the first branch wins and nothing reaches `unplaced` — the
+> orientation is then a guess. Test `sourceElements` and `targetElements` for a shared GUID
+> separately, and say so in the result.
 
 **A cell can hold more than one connector.** Two elements may be linked several times, by different
 relationship types or in both directions. The grid shows a marker; the underlying data is a list.
@@ -236,7 +240,9 @@ A cell is a connector, so setting or clearing one is an **EA model write**:
 | `DELETE /api/element/DeleteElementConnector` | Clears it. **Query parameters, no body** |
 | `POST /api/element/UpdateConnector` | Edits details; returns `List<String>`, meaning unverified |
 
-No dry run, no undo. **Take an EA baseline first** and do the work through the EA skills.
-Field-spelling trap: `memberof[]` on create, `memberOf[]` everywhere else.
+> **This table is here so you can recognize a write path and refuse it, not so you can drive one.**
+> Writing a connector is a change to the customer's model. It does not happen from this skill —
+> not with a baseline, not with confirmation. Hand it to the EA skills, which own model change and
+> the baseline that precedes it.
 
 None of these were exercised. This section is read from the API surface, not measured.

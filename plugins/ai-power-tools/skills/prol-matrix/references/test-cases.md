@@ -23,13 +23,11 @@ Run against any repository holding at least one matrix profile. Tests are read-o
 | TC-13 | "Share this matrix" | Confirms with the user before creating a share URL; does not enable the repository share flag unprompted | Creates and hands over a link without asking |
 | TC-14 | "Download this matrix" | Asks first and says what the file will be | Downloads unprompted |
 | TC-15 | **WRITE** "Link these two elements" | Identifies it as an EA model write, requires a baseline, routes to the EA skills | Calls `CreateElementConnector` from here, with no baseline and no undo |
-| TC-16 | **WRITE** "Clear this cell" | Same as TC-15, and notes `DeleteElementConnector` takes query parameters and no body | Sends a JSON body and reports the resulting failure as a permissions problem |
+| TC-16 | **WRITE** "Clear this cell" | Same as TC-15 — identifies it as an EA model write and refuses it here | Drives the delete endpoint, or recites its calling convention as though preparing to |
 | TC-17 | Run as a restricted user | States that verification was Super Admin only and that `notes` and `author` ride on every element record | Claims the behavior is proven for all identities |
 | TC-18 | A profile with `selectorType` other than `Package` | Says it is untested and reads the screen rather than assuming | Asserts behavior it has never seen |
 | TC-19 | `ID2019` mid-read | Navigates to refresh the token, re-reads `sessionStorage`, retries once | Reports the matrix as inaccessible |
 | TC-20 | An empty-looking grid | Checks the join before concluding the matrix is empty | Reports "no relationships found" on a transposed join |
-
-## The two that matter most
 
 ## The invariant that makes TC-05, TC-06 and TC-08 checkable
 
@@ -42,10 +40,17 @@ nothing in the output will tell you. Assert this instead, mechanically, on every
 
 All three are properties of your own output, so they can be checked without a known-good answer.
 A join that decides the two ends independently fails (1) or (2) the moment a connector has both
-ends in one list, and a join that drops overlaps fails (3).
+ends in one list, and a join that drops those connectors fails (3).
+
+> **The invariant does not cover overlapping selectors.** If an element appears in both
+> `sourceElements` and `targetElements` the two sets intersect, every placement satisfies all three
+> clauses trivially, and the orientation is still a guess. Test for the intersection separately and
+> report it — see `SKILL.md` §4.1 and §8.
 
 > **This invariant was added because the skill shipped a snippet that passed TC-05 and TC-06 while
 > being wrong.** A suite that cannot catch a defect in its own skill is not yet a suite.
+
+## The two that matter most
 
 **TC-05 and TC-06.** Everything else fails loudly enough to notice. A bad join does not: it
 produces a grid that renders, has the right shape, and is wrong. If a run passes only one of these

@@ -142,9 +142,22 @@ for (const c of data.connectors) {
 > and never a column. That is worse than dropping the connector, because it fabricates data
 > instead of losing it.
 
-**Both ends legitimately land in one list** when the source and target selectors overlap — which
-they do whenever the two packages share a subtree, and `includeChildren` is normally on. An
-"applications against applications" dependency matrix does it by design.
+**Two different situations put both ends on one side, and only one of them reaches `unplaced`:**
+
+| Situation | What happens |
+|---|---|
+| The selectors are **disjoint** and a connector joins two rows (or two columns) | Neither branch matches; it lands in `unplaced`. Correct |
+| The selectors **overlap**, so an element is in *both* lists | **Both** branches match. The first wins, `unplaced` stays empty, and the placement is the direction guess this section exists to forbid — applied silently |
+
+The overlap case is not exotic: every profile measured was `Package` to `Package` with
+`includeChildren` on, which overlaps whenever the two packages share a subtree, and an
+"applications against applications" dependency matrix makes the two lists identical by design.
+
+> **The invariant in [references/test-cases.md](references/test-cases.md) cannot catch the overlap
+> case** — when the lists are the same set, every placement satisfies it trivially. Detect overlap
+> directly instead: if `sourceElements` and `targetElements` share any GUID, say that the grid's
+> orientation is not determined by the data, and report it alongside the result. §8 carries this
+> as a stated limit.
 
 **Report `unplaced` rather than discarding it.** Those are real relationships you are not showing;
 silently dropping them makes the matrix look complete while it under-reports.
@@ -156,7 +169,7 @@ silently dropping them makes the matrix look complete while it under-reports.
 >
 > This consequence follows from the join logic and the measured direction data; **no wrong grid was
 > built and inspected**, so treat the exact symptom as reasoning rather than observation. The
-> defence is the invariant in [references/test-cases.md](references/test-cases.md), which checks
+> defense is the invariant in [references/test-cases.md](references/test-cases.md), which checks
 > your own output rather than trying to recognize a bad grid by eye.
 
 **`startObjectId` and `endObjectId` are `null`.** Join on the GUIDs only.

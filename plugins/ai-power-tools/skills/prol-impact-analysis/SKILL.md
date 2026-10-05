@@ -61,7 +61,7 @@ not reach.
 | "Show me everything affected" | **Push back.** Offer a bounded answer and name the bound. An unbounded claim is one you cannot support |
 
 > **Never describe a traversal you capped as a complete blast radius.** Say "three hops along
-> Supports and Aggregation, 61 elements, stopped at depth 3" — not "everything that is affected".
+> Uses and Aggregation, 61 elements, stopped at depth 3" — not "everything that is affected".
 
 ---
 
@@ -75,6 +75,9 @@ not reach.
 > - **Never delete a view this session did not create.** §8 says view visibility is undetermined,
 >   so you cannot establish whose a view is or who is relying on it. "Tidy up the Analyzers list"
 >   is not authorization to remove someone else's saved work — list what is there and ask.
+> - **The same applies to editing one.** Adding nodes, changing the layout or renaming someone
+>   else's saved view changes what they see next time they open it. §1 calls renaming *safe*, and
+>   that is about link stability only — it says nothing about whether the change is wanted.
 
 1. **Analyzers → Create View.** Opens a canvas in a new tab.
 2. **Set the title.** Top-left, editable. Do this before saving (§1).

@@ -37,6 +37,7 @@ person must sign in themselves. **Never enter credentials on their behalf.**
 ```js
 const key = Object.keys(sessionStorage).find(k => k.startsWith('oidc.user:'));
 const user = key ? JSON.parse(sessionStorage.getItem(key)) : null;
+const token = user && user.access_token;   // narrow immediately; never carry the whole object
 ```
 
 No key means the SPA has not been loaded in this tab yet — navigate to the app root first. The
@@ -67,7 +68,7 @@ prefer API reads over markup assumptions and say plainly which parts are unverif
 
 ```js
 await fetch('/api/repository/GetAllActiveRepositories',
-  { headers: { Authorization: 'Bearer ' + user.access_token } }).then(r => r.json());
+  { headers: { Authorization: 'Bearer ' + token } }).then(r => r.json());
 ```
 
 Returns the repositories this person has access to, with `id`, `name` and `status`. Confirm the
@@ -126,10 +127,12 @@ These hold across every `prol-` skill.
 > This matters more here than it looks: the documented read path goes through the API, which
 > returns `notes` **raw**, bypassing the render-time filtering the web interface applies.
 
-> **Anonymize before writing anything down.** What you read is a customer's repository — real
-> organization names, system names, people in `author` fields, free text in `notes`. If you write
-> findings into a file, a note or a commit message, convert examples to the shared Westbrook Bank
-> vocabulary first. The rule applies to anything that persists, including commit messages.
+> **Repository content stays in the conversation.** What you read is the customer's own data —
+> system names, people in `author` fields, free text in `notes`. Do not write element names,
+> `notes` or `author` values into a file, a note or a commit message unless the person asked you
+> to produce that artifact; if they did, quote the minimum that answers the question. Never
+> substitute different names to make content look safe — in the customer's own repository their
+> real names *are* the correct answer, and swapping them produces a confident, worthless report.
 
 > **Read through the API, act through the interface.** Use the bearer token from `sessionStorage`
 > to read structured JSON for anything you need to know or verify. Drive the UI for anything you
@@ -141,7 +144,7 @@ These hold across every `prol-` skill.
 
 > **State the identity on consequential actions.** Anything you change is attributed to the
 > signed-in person, so say who that is before doing it — deleting a dashboard, creating or
-> removing an Analyzer view, sharing a matrix, uploading a file. **This is not a procedure for the
+> removing an Analyzer view, sharing a matrix, saving a change to a dashboard someone else uses. **This is not a procedure for the
 > areas in §2.** Approving a review, deleting a user and changing access permissions are not
 > gated by announcing who you are; there is no skill for them and the answer is to stop.
 

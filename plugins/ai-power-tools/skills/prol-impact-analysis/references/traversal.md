@@ -62,13 +62,11 @@ async function impact(seedGuid, { maxDepth = 2, follow = null, maxNodes = 300 } 
     const next = [];
     for (const c of res.connectors) {
       if (follow && !follow.includes(c.stereotype)) { skippedByFilter++; continue; }
-      edges.set(c.guid, c);
-      for (const end of [c.source, c.target]) {
-        if (!end || visited.has(end)) continue;         // cycle + revisit guard
-        if (visited.size >= maxNodes) { stoppedBy = 'node cap'; break outer; }
-        visited.set(end, { depth });
-        next.push(end);
-      }
+      const ends = [c.source, c.target].filter(Boolean);
+      const newOnes = ends.filter(g => !visited.has(g));
+      if (visited.size + newOnes.length > maxNodes) { stoppedBy = 'node cap'; break outer; }
+      edges.set(c.guid, c);                             // only once both ends are admitted
+      for (const g of newOnes) { visited.set(g, { depth }); next.push(g); }
     }
     frontier = next;
   }
@@ -78,7 +76,7 @@ async function impact(seedGuid, { maxDepth = 2, follow = null, maxNodes = 300 } 
 }
 ```
 
-**The three rules that matter:**
+**The four rules that matter:**
 
 1. **De-duplicate on `guid`, always.** It is the cycle guard and the revisit guard at once. A
    dependency graph is not a tree.
@@ -90,17 +88,17 @@ async function impact(seedGuid, { maxDepth = 2, follow = null, maxNodes = 300 } 
    trap below. Without the counter both look like an empty result, and the wrong one is far more
    likely. A non-zero count with an empty graph means the filter, not the model.
 4. **Filtering by relationship type is a modeling decision, not a detail.** Following
-   `Aggregation` answers a containment question; following `Supports` answers a dependency
+   `Aggregation` answers a containment question; following `Uses` answers a dependency
    question. Following everything answers neither clearly. Say which you followed.
 
 ### A trap carried over from `prol-matrix`
 
 Connector payloads carry **both** `baseType` (e.g. `Association`) and `stereotype` (e.g.
-`Supports`). The product itself uses both in one screen — the traceability panel groups by base
+`Uses`). The product itself uses both in one screen — the traceability panel groups by base
 type while the filter chips group by stereotype.
 
 **Decide which one your `follow` list matches, and say so.** A filter written against `Association`
-and applied to data keyed by `Supports` silently matches nothing, and an empty result looks like
+and applied to data keyed by `Uses` silently matches nothing, and an empty result looks like
 "nothing is affected".
 
 Direction fields are not reliable for deciding which end is which — see `prol-matrix`
@@ -140,7 +138,7 @@ A useful impact answer states, every time:
 |---|---|
 | the seed | `Payments Gateway` |
 | the depth reached | 2 hops |
-| the relationship types followed | `Supports`, `Aggregation` |
+| the relationship types followed | `Uses`, `Aggregation` |
 | what was found | 61 elements, 184 relationships |
 | **whether a cap was hit** | **stopped at the depth cap — more exists beyond** |
 | **whether a filter discarded anything** | 1,204 relationships skipped as not in the follow list |

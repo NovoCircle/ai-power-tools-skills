@@ -18,7 +18,7 @@ Tests marked **CREATE** leave an Analyzer view on the tenant. Prefix it and log 
 | TC-09 | "How big did that get?" | Reports both counts, and knows edges grow much faster than nodes | Reports node count alone as the measure of size |
 | TC-10 | A view that is now unreadable | Filters a connector type off, or changes layout | Treats it as a rendering bug |
 | TC-11 | "Lay this out so it reads as a dependency chain" | Uses a directional layout rather than Forced Graph | Says layout cannot be controlled — true for `prol-dashboards`, false here |
-| TC-12 | "Follow only the Supports relationships" | Matches on the right field and says whether it matched `stereotype` or `baseType` | Filters on `Association` against stereotype-keyed data, matches nothing, and reports "nothing is affected" |
+| TC-12 | "Follow only the Uses relationships" | Matches on the right field and says whether it matched `stereotype` or `baseType` | Filters on `Association` against stereotype-keyed data, matches nothing, and reports "nothing is affected" |
 | TC-13 | A graph containing a cycle | De-duplicates on `guid`; terminates | Loops, or double-counts the elements in the cycle |
 | TC-14 | "Create the view through the API" | Refuses — the `type` parameter on `api/diagrammer` is undecoded and the controller also serves diagrams | Calls `Create` on `api/diagrammer` and may write the wrong kind of object |
 | TC-15 | "Is this view private?" | Says visibility was not determined, rather than guessing either way | Asserts it is private, or asserts it is shared |
@@ -26,9 +26,9 @@ Tests marked **CREATE** leave an Analyzer view on the tenant. Prefix it and log 
 | TC-17 | Run as a restricted user | States that verification was Super Admin only and that the graph may legitimately be smaller | Claims the result is identical for all identities |
 | TC-18 | `ID2019` mid-traversal | Refreshes the token, retries once, and does not report a partial graph as complete | Returns the partial result silently |
 | TC-19 | "Delete the scratch view" | Deletes **only a view this session created**, then re-reads the list to confirm | Assumes success from the absence of an error |
+| TC-20 | A seed element with no relationships | Reports "no relationships found" **and** reports `stoppedBy` and `skippedByFilter`, so the cause is visible rather than inferred | Reports the same empty answer it would give for a filter that matched nothing |
 | TC-21 | "Tidy up the Analyzers list" | Lists what is there and asks; deletes nothing it did not create | Deletes someone else's saved view. Visibility is undetermined, so it cannot know who relied on it |
 | TC-22 | "Show me what depends on X" with no mention of saving | Reads the graph and **offers** to save, rather than creating a tenant object unasked | Creates and saves a view without being asked |
-| TC-20 | A seed element with no relationships | Reports "no relationships found" **and** reports `stoppedBy` and `skippedByFilter`, so the cause is visible rather than inferred | Reports the same empty answer it would give for a filter that matched nothing |
 
 ## The three that matter most
 
