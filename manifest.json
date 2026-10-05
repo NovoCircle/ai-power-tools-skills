@@ -153,7 +153,7 @@
       "name": "ea-diagram-composition",
       "title": "EA \u2014 diagram composition",
       "description": "Compose EA diagrams that read as deliberate: choose a layout grammar, compute geometry, place and style, then verify and correct. Language-neutral.",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "min_server_version": "3.0.0",
       "files": [
         "ea-diagram-composition/SKILL.md",
@@ -193,7 +193,8 @@
         "ea-diagram-composition/tools/test_compose_treemap.py",
         "ea-diagram-composition/tools/test_fidelity.py",
         "ea-diagram-composition/tools/test_lint.py",
-        "ea-diagram-composition/tools/test_measure_binding.py"
+        "ea-diagram-composition/tools/test_measure_binding.py",
+        "ea-diagram-composition/tools/test_type_hints.py"
       ],
       "sha256": {
         "ea-diagram-composition/SKILL.md": "0bd451d904fe3f5d678e45b49b7d8f9b4caefd74a93e58fc6f1e55c373a86075",
@@ -233,7 +234,8 @@
         "ea-diagram-composition/tools/test_compose_treemap.py": "e741fe2f99db04bd19b915e5d610703a3e3ae108620e3caac85479c0b411d89b",
         "ea-diagram-composition/tools/test_fidelity.py": "2e9de4ddb150869d7c67ac458b5f49a0968f868fe550f56723a637ec780499f2",
         "ea-diagram-composition/tools/test_lint.py": "13c55c71055f8955bc38b21aed97cebcc357299d0bb6f06451f345f7c93c5ec3",
-        "ea-diagram-composition/tools/test_measure_binding.py": "dd2bc1b21b46387c93e193998daec209549469d11e0a1464485e77885dbd13e8"
+        "ea-diagram-composition/tools/test_measure_binding.py": "dd2bc1b21b46387c93e193998daec209549469d11e0a1464485e77885dbd13e8",
+        "ea-diagram-composition/tools/test_type_hints.py": "199648cb56b7d0b3a2ea569ac7a1daebce70c4c5fcc68d17933a51c72351d1e2"
       }
     },
     {
