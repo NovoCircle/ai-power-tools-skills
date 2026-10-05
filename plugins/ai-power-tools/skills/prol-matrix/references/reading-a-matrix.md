@@ -138,10 +138,16 @@ Measured as always null across every profile: `name`, `boundDirection`, `midLabe
 
 `stereotype` and `stereotypeField` carried the same value throughout.
 
-> **`technology` is shown null deliberately.** A real payload may carry an MDG id here, but
-> connector stereotypes are stored bare and are declared by no MDG — so printing a technology id
-> beside a stereotype would imply that technology owns it, which for connectors is never true.
-> Never read a technology value as ownership of the stereotype beside it.
+> **`technology` is shown null deliberately.** A real payload may carry an MDG id here.
+>
+> **An MDG *can* declare connector stereotypes, and when one does, the stereotype is stored with
+> its technology id prepended** — `prol-dashboards`' `references/data-probes.md` states that rule
+> and it holds generally. What is specific rather than general is the Westbrook reference model:
+> its MDG declares **no** connector stereotypes, so its connector stereotypes are stored bare and
+> an example pairing `WBA` with one would imply ownership that does not exist there.
+>
+> So the safe reading is narrower than "never": **a technology value beside a stereotype is not by
+> itself evidence that the technology declares it.** Check the MDG before concluding either way.
 
 ## 5. The direction measurement
 

@@ -51,8 +51,9 @@ ends in one list, and a join that drops those connectors fails (3).
 
 > **The invariant does not cover overlapping selectors.** When **both** ends of a connector lie in
 > the intersection of the two lists, every clause is satisfied whichever way round the placement
-> went, so the invariant passes and the orientation is still a guess. Partial overlap is still
-> caught — a connector with one end outside the intersection fails clause 2 if placed wrongly.
+> went, so the invariant passes and the orientation is still a guess. A connector with one end
+> outside the intersection is still caught — placed wrongly it fails clause 1 if that end is
+> target-only, clause 2 if it is source-only.
 > Test for the intersection separately and report it — see `SKILL.md` §4.1 and §8.
 
 > **This invariant was added because the skill shipped a snippet that passed TC-05 and TC-06 while

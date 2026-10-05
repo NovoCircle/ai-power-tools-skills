@@ -275,7 +275,7 @@
     {
       "name": "ea-mdg-assess",
       "title": "ea-mdg-assess",
-      "description": "Work out what modelling-language situation a repository is actually in before acting \u2014 which technologies are loaded, embedded or merely registered, and how much of the model conforms",
+      "description": "Work out what modeling-language situation a repository is actually in before acting \u2014 which technologies are loaded, embedded or merely registered, and how much of the model conforms",
       "version": "1.2.0",
       "min_server_version": "2.2.0",
       "files": [
@@ -532,9 +532,9 @@
         "prol-matrix/references/test-cases.md"
       ],
       "sha256": {
-        "prol-matrix/SKILL.md": "97d1564f27f4073fc3990c2b20db7467edbd49d809113297d7a0f2cc424a69f0",
-        "prol-matrix/references/reading-a-matrix.md": "9922839e21b38f49c7a440c40d6d4882c606171abd6d22999e6305662b9b529b",
-        "prol-matrix/references/test-cases.md": "52375541799768bd428160ed097fb604561b8f7980327cc8eded334715ed9c14"
+        "prol-matrix/SKILL.md": "6eca9af485009e7c2878b3d08af5ed28316762f0930c71f160f4f3ccd540bd2e",
+        "prol-matrix/references/reading-a-matrix.md": "52a73fd760c1d4c20413aa4145717aca81a4a19c1095ffc3bc893d66ff074233",
+        "prol-matrix/references/test-cases.md": "ae3dec9ba612ed590307f5f45276dc0a1135b3e278ad52fd7cd71597afa35779"
       }
     },
     {

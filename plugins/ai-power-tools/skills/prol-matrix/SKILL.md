@@ -147,7 +147,7 @@ for (const c of data.connectors) {
 | Situation | What happens |
 |---|---|
 | The selectors are **disjoint** and a connector joins two rows (or two columns) | Neither branch matches; it lands in `unplaced`. Correct |
-| The selectors **overlap**, so an element is in *both* lists | **Both** branches match. The first wins, `unplaced` stays empty, and the placement is the direction guess this section exists to forbid — applied silently |
+| **Both ends** of a connector lie in the intersection of the two lists | **Both** branches match. The first wins, `unplaced` stays empty, and the placement is the direction guess this section exists to forbid — applied silently. A connector with only *one* end in the intersection still places correctly |
 
 **How common is this? Unknown — and do not repeat the guess that it is common.** Every profile
 measured was `Package` to `Package` with `includeChildren` on, which *can* overlap when the two
@@ -158,9 +158,11 @@ direction table argues most of them did not: identical lists would put every con
 What is certain is that the shape is reachable by design — an "applications against applications"
 dependency matrix has it deliberately. Test for it rather than assuming either way.
 
-> **The invariant in [references/test-cases.md](references/test-cases.md) cannot catch the overlap
-> case** — when the lists are the same set, every placement satisfies it trivially. Detect overlap
-> directly instead: if `sourceElements` and `targetElements` share any GUID, say that the grid's
+> **The invariant in [references/test-cases.md](references/test-cases.md) cannot catch this case**
+> — whenever both ends of a connector are in the intersection, every clause passes whichever way
+> round the placement went. Identical lists are the extreme of that, not the condition for it:
+> **partial overlap is enough.** Detect it directly instead: if `sourceElements` and
+> `targetElements` share any GUID, say that the grid's
 > orientation is not determined by the data, and report it alongside the result. §8 carries this
 > as a stated limit.
 
