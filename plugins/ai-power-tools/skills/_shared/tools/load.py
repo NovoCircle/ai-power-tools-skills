@@ -86,6 +86,42 @@ class LoadResult:
         }
 
 
+def pivot_warnings(pivot_result) -> list[str]:
+    """What a build must TELL somebody about, whichever sink it writes to.
+
+    Shared between `build_database` and `parquet_out.build_parquet` rather than
+    restated, because a sink that reports less than its sibling is exactly the
+    silent under-reporting this capability family has already produced once -
+    and the two had already diverged on `unplaced` before this was factored out.
+    """
+    out = []
+    if pivot_result.unplaced:
+        out.append(
+            f"{len(pivot_result.unplaced)} tag row(s) reached no table - see the "
+            "pivot result; these are empty values on untyped elements")
+    # A warning, not a note: a value the technology says is a boolean and the
+    # repository says is "maybe" is a data-quality finding somebody should see
+    # (APT-2026-0225).
+    if pivot_result.uncoercible:
+        out.append(
+            f"{len(pivot_result.uncoercible)} value(s) could not be stored as the "
+            "type their column declares and were left NULL - see the pivot result")
+    return out
+
+
+def pivot_notes(pivot_result) -> list[str]:
+    """Reported, deliberately NOT warnings.
+
+    Populated values left out by the scope rule, which the governance gate
+    already put in front of a human before the build. A warning here would make
+    the ordinary case look like a fault (APT-2026-0226).
+    """
+    if not pivot_result.excluded:
+        return []
+    return [f"{len(pivot_result.excluded)} populated tag value(s) excluded with "
+            "their element, which landed in no entity table"]
+
+
 def entity_columns(model: ReportModel) -> dict[str, list[str]]:
     """Column order per entity table, matching `ddl.entity_table_ddl` exactly.
 
@@ -180,26 +216,8 @@ def build_database(path,
     path.parent.mkdir(parents=True, exist_ok=True)
 
     ent_cols = entity_columns(model)
-    if pivot_result.unplaced:
-        result.warnings.append(
-            f"{len(pivot_result.unplaced)} tag row(s) reached no table - see the "
-            "pivot result; these are empty values on untyped elements")
-    # Reported, deliberately NOT a warning. These are populated values left out
-    # by the scope rule, which the governance gate already put in front of a
-    # human before the build. A warning here would make the ordinary case look
-    # like a fault (APT-2026-0226).
-    # A warning, not a note: a value the technology says is a boolean and the
-    # repository says is "maybe" is a data-quality finding somebody should see
-    # (APT-2026-0225).
-    if pivot_result.uncoercible:
-        result.warnings.append(
-            f"{len(pivot_result.uncoercible)} value(s) could not be stored as the "
-            "type their column declares and were left NULL - see the pivot result")
-    if pivot_result.excluded:
-        result.notes.append(
-            f"{len(pivot_result.excluded)} populated tag value(s) excluded with "
-            "their element, which landed in no entity table")
-
+    result.warnings.extend(pivot_warnings(pivot_result))
+    result.notes.extend(pivot_notes(pivot_result))
     conn = sqlite3.connect(str(path))
     try:
         w = _Writer(conn, result.sql_log)
