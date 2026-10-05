@@ -80,23 +80,39 @@ from report_model import BOOLEAN_FALSE, BOOLEAN_TRUE, ReportModel
 #: `PARQUET_TYPES`'s `double` bit for bit. **Not `real`**, which SQL Server
 #: defines as `float(24)` and which would be a second 32-bit truncation.
 #:
-#: Only INTEGER and REAL are ever looked up: `_coerced_value` returns the trimmed
-#: value for every other declared type before it reaches `TRY_CAST`. TEXT is
-#: therefore carried here for the diff against the other three maps and is NOT
-#: read - and `nvarchar(max)` is the type the VIEW projects, not the type of the
-#: underlying column, which is `nvarchar(255)` on `t_objectproperties.Value`.
+#: `TEXT` is carried for the diff against the other three maps. `NUMERIC_TYPES`
+#: below is what `_coerced_value` actually keys on, derived from this map, so a
+#: declared type that is not here is never cast at all. It is NOT the type any
+#: column has: a TEXT column emits no cast, and `business_application.criticality`
+#: reads back from `sys.columns` as `nvarchar(255)` - the width of
+#: `t_objectproperties.Value`, which is what it is projected from. MEASURED.
 #:
-#: The seven `CAST(NULL AS bigint)` placeholders elsewhere in this module do not
-#: read this map - they are literals in hand-written projections, not coerced
-#: values - but they are written 64-bit **so the view's column types match
-#: `PARQUET_TYPES` even on the columns where no value ever flows.** A placeholder
-#: narrower than the column it stands in for is a trap for whoever makes a value
-#: flow there later.
+#: Every column `FRAME_DDL` declares INTEGER is emitted 64-bit, including the
+#: typed-NULL placeholders in the empty-model branches. That is not belt and
+#: braces: SQLite's INTEGER is 64-bit and `PARQUET_TYPES` maps INTEGER to
+#: `int64`, so a view projecting EA's own 32-bit `int` would declare a NARROWER
+#: type than either sibling path, and the empty and populated branches of the
+#: same view would disagree with each other. MEASURED after this change against
+#: SQL Server: 19 integer and real view columns, **0 still 32-bit**.
+#:
+#: Widen both arms of a recursive CTE together or neither. A head shipped with
+#: `bigint` in `_pkg`'s anchor and `int` in its recursive member, and SQL Server
+#: refused the whole view with Msg 240 while 411 hermetic tests passed over it.
+#: `test_both_arms_of_the_recursive_cte_agree_on_every_column_type` is the guard.
 SQLSERVER_TYPES = {
     "TEXT": "nvarchar(max)",
     "INTEGER": "bigint",
     "REAL": "float",
 }
+
+#: The declared types `_coerced_value` casts, DERIVED rather than restated. An
+#: earlier version hard-coded `("INTEGER", "REAL")` in the early return, which
+#: meant a fourth numeric type in `report_model.SQL_TYPES` would be intercepted
+#: there and projected as **uncast text** - MEASURED, by adding a DECIMAL type -
+#: while a comment beside it claimed a `KeyError` would name the omission. Now
+#: the omission really does raise, because the early return and the lookup read
+#: the same source.
+NUMERIC_TYPES = frozenset(SQLSERVER_TYPES) - {"TEXT"}
 
 #: Dialects with a tested emitter. An unsupported backend is told so rather than
 #: handed SQL nobody has ever run - `APT-2026-0218` is already open on an
@@ -314,7 +330,7 @@ def _keymap_view(model: ReportModel) -> str:
         f"SELECT o.ea_guid,\n"
         f"       CASE\n{case}\n"
         f"       END AS entity_table,\n"
-        f"       o.Package_ID AS package_id\n"
+        f"       CAST(o.Package_ID AS bigint) AS package_id\n"
         f"FROM t_object o\n"
         f"WHERE CASE\n{case}\n"
         f"      END IS NOT NULL;"
@@ -349,8 +365,10 @@ def _pkg_view() -> str:
     return (
         f"CREATE VIEW {_q(physical('pkg'))} AS\n"
         f"WITH tree AS (\n"
-        f"    SELECT p.Package_ID, CAST(NULL AS bigint) AS Parent_ID, p.Name,\n"
-        f"           CAST(COALESCE(p.Name, '') AS nvarchar(max)) AS path, 0 AS depth\n"
+        f"    SELECT CAST(p.Package_ID AS bigint) AS Package_ID,\n"
+        f"           CAST(NULL AS bigint) AS Parent_ID, p.Name,\n"
+        f"           CAST(COALESCE(p.Name, '') AS nvarchar(max)) AS path,\n"
+        f"           CAST(0 AS bigint) AS depth\n"
         f"    FROM t_package p\n"
         # A package whose parent does not exist, or which is its own parent,
         # is treated as a ROOT rather than dropped - matching
@@ -364,9 +382,10 @@ def _pkg_view() -> str:
         f"       OR NOT EXISTS (SELECT 1 FROM t_package q\n"
         f"                      WHERE q.Package_ID = p.Parent_ID)\n"
         f"    UNION ALL\n"
-        f"    SELECT c.Package_ID, c.Parent_ID, c.Name,\n"
+        f"    SELECT CAST(c.Package_ID AS bigint), CAST(c.Parent_ID AS bigint),\n"
+        f"           c.Name,\n"
         f"           CAST(t.path + '/' + COALESCE(c.Name, '') AS nvarchar(max)),\n"
-        f"           t.depth + 1\n"
+        f"           CAST(t.depth + 1 AS bigint)\n"
         f"    FROM t_package c\n"
         f"    JOIN tree t ON t.Package_ID = c.Parent_ID\n"
         f"                AND c.Parent_ID <> c.Package_ID\n"
@@ -388,7 +407,7 @@ def _rel_all_view() -> str:
     hub = _q(physical("element"))
     return (
         f"CREATE VIEW {_q(physical('rel_all'))} AS\n"
-        f"SELECT c.Connector_ID AS connector_id,\n"
+        f"SELECT CAST(c.Connector_ID AS bigint) AS connector_id,\n"
         f"       so.ea_guid AS source_guid,\n"
         f"       eo.ea_guid AS target_guid,\n"
         f"       COALESCE(c.Connector_Type, '') AS connector_type,\n"
@@ -558,11 +577,11 @@ def _tag_coverage_view(model: ReportModel) -> str:
         for c in t.columns:
             parts.append(
                 f"SELECT {_lit(t.name)} AS table_name, {_lit(c.source_tag)} AS tag,\n"
-                f"       COALESCE(SUM(CASE WHEN p.Property IS NOT NULL THEN 1 ELSE 0 END), 0)"
-                f" AS present,\n"
-                f"       COALESCE(SUM(CASE WHEN LTRIM(RTRIM(COALESCE(p.Value, ''))) <> ''"
-                f" THEN 1 ELSE 0 END), 0) AS populated,\n"
-                f"       COUNT(DISTINCT o.ea_guid) AS total,\n"
+                f"       CAST(COALESCE(SUM(CASE WHEN p.Property IS NOT NULL"
+                f" THEN 1 ELSE 0 END), 0) AS bigint) AS present,\n"
+                f"       CAST(COALESCE(SUM(CASE WHEN LTRIM(RTRIM(COALESCE(p.Value, '')))"
+                f" <> '' THEN 1 ELSE 0 END), 0) AS bigint) AS populated,\n"
+                f"       CAST(COUNT(DISTINCT o.ea_guid) AS bigint) AS total,\n"
                 # Divided by COUNT(DISTINCT), the same denominator `total`
                 # uses. COUNT(*) counts JOINED rows, and `t_objectproperties`
                 # carries no unique index on (Object_ID, Property) - so a
@@ -683,7 +702,7 @@ def _coerced_value(column) -> str:
     of this function took it.
     """
     value = "LTRIM(RTRIM(COALESCE(p.Value, '')))"
-    if column.sql_type not in ("INTEGER", "REAL"):
+    if column.sql_type not in NUMERIC_TYPES:
         return value
     lines = [f"CASE WHEN {value} = {_lit('')} THEN NULL"]
     if column.sql_type == "INTEGER":
@@ -691,11 +710,13 @@ def _coerced_value(column) -> str:
             in_list = ", ".join(_lit(s) for s in sorted(literals))
             lines.append(f"{_VALUE_INDENT}WHEN LOWER({value}) IN ({in_list})"
                          f" THEN {result}")
-    # Subscript, not `.get` with a fallback: the early return above means only
-    # INTEGER and REAL reach this line, so a fallback would be unreachable code
-    # standing in for a case that cannot occur. If `SQL_TYPES` ever gains a
-    # fourth numeric type, a KeyError here is the correct outcome - it names the
-    # omission instead of silently casting to something plausible.
+    # Subscript, not `.get` with a fallback: the early return reads
+    # `NUMERIC_TYPES`, which is derived from this map, so anything reaching this
+    # line is in it and a fallback would be unreachable code standing in for a
+    # case that cannot occur. A declared type added to `SQL_TYPES` but not here
+    # is caught by the early return instead, and
+    # `test_every_sql_type_the_model_can_declare_is_coerced_in_the_view` fails
+    # naming it - which is the loud outcome, and the one that actually happens.
     cast = SQLSERVER_TYPES[column.sql_type]
     lines.append(f"{_VALUE_INDENT}ELSE TRY_CAST({value} AS {cast}) END")
     return "\n".join(lines)
@@ -802,24 +823,26 @@ def build_views(model: ReportModel, *, dialect: str = "sqlserver",
         # catalog built from this legitimately shows fewer than half of them.
         physical("diagram"): (
             f"CREATE VIEW {_q(physical('diagram'))} AS\n"
-            f"SELECT d.Diagram_ID AS diagram_id, COALESCE(d.Name, '') AS name,\n"
+            f"SELECT CAST(d.Diagram_ID AS bigint) AS diagram_id,\n"
+            f"       COALESCE(d.Name, '') AS name,\n"
             f"       COALESCE(d.Diagram_Type, '') AS diagram_type,\n"
-            f"       d.Package_ID AS package_id\n"
+            f"       CAST(d.Package_ID AS bigint) AS package_id\n"
             f"FROM t_diagram d;"),
         physical("diagram_object"): _simple_join_view(
             physical("diagram_object"),
-            "do.Diagram_ID AS diagram_id, o.ea_guid AS ea_guid",
+            "CAST(do.Diagram_ID AS bigint) AS diagram_id, o.ea_guid AS ea_guid",
             "t_diagramobjects do\nJOIN t_object o ON o.Object_ID = do.Object_ID",
             "o.ea_guid"),
         physical("attribute"): _simple_join_view(
             physical("attribute"),
-            "a.ID AS attribute_id, o.ea_guid AS element_guid, COALESCE(a.Name, '') AS name,\n"
+            "CAST(a.ID AS bigint) AS attribute_id, o.ea_guid AS element_guid,\n"
+            "COALESCE(a.Name, '') AS name,\n"
             "       COALESCE(a.Type, '') AS attr_type, COALESCE(a.Scope, '') AS scope",
             "t_attribute a\nJOIN t_object o ON o.Object_ID = a.Object_ID",
             "o.ea_guid"),
         physical("operation"): _simple_join_view(
             physical("operation"),
-            "op.OperationID AS operation_id, o.ea_guid AS element_guid,\n"
+            "CAST(op.OperationID AS bigint) AS operation_id, o.ea_guid AS element_guid,\n"
             "       COALESCE(op.Name, '') AS name, COALESCE(op.Type, '') AS return_type, COALESCE(op.Scope, '') AS scope",
             "t_operation op\nJOIN t_object o ON o.Object_ID = op.Object_ID",
             "o.ea_guid"),

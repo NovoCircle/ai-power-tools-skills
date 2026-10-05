@@ -28,6 +28,8 @@ defect has sat in one clause while the one beside it was already right.
 """
 from __future__ import annotations
 
+import re
+
 import pytest
 
 from ddl import FRAME_DDL, physical
@@ -327,14 +329,77 @@ def test_a_stereotype_name_containing_a_pipe_still_splits_correctly():
     assert "o.Object_Type = N'Component'" in placement_predicate(t)
 
 
+def _cast_types(clause: str) -> list[str]:
+    """Every `CAST(... AS <type>)` in a clause, in projection order."""
+    return [m.lower() for m in re.findall(r"CAST\s*\([^()]*AS\s+(\w+)\s*\)", clause)]
+
+
+def test_both_arms_of_the_recursive_cte_agree_on_every_column_type():
+    """SQL Server REFUSES a recursive CTE whose two arms disagree on a column
+    type, and nothing in this file can see it.
+
+        Msg 240 ... Types don't match between the anchor and the recursive part
+        in column "Parent_ID" of recursive query "tree".
+
+    MEASURED: a head shipped with `bigint` in the anchor and `int` in the
+    recursive member, so `_pkg` did not compile at all - and because this file
+    touches no database, 411 tests passed over it. Three closed blockers encode
+    behavior that lives in that view, so all three were unreachable.
+
+    This is the cheap half of the guard: the arms must declare the same cast
+    types in the same order. It cannot prove the SQL runs, but it catches the
+    class of mistake that produced the Msg 240 without needing a server."""
+    sql = build_views(model()).views[physical("pkg")]
+    anchor, recursive = _cast_types(pkg_anchor(sql)), _cast_types(pkg_recursive(sql))
+    assert anchor == recursive, (
+        "the two arms must cast identically, or SQL Server rejects the view:\n"
+        "  anchor:    %s\n  recursive: %s" % (anchor, recursive))
+    assert anchor, "the arms must cast explicitly rather than inherit source types"
+
+
+def test_every_integer_column_is_emitted_64_bit():
+    """`FRAME_DDL` is the authority on which columns are INTEGER, and SQLite's
+    INTEGER is 64-bit while `parquet_out.PARQUET_TYPES` maps INTEGER to `int64`.
+    A view projecting a source column of EA's own 32-bit `int` therefore
+    declares a NARROWER type than either sibling path.
+
+    Derived from `FRAME_DDL` rather than listed, because the partial widening
+    that preceded this guard covered three of fourteen columns while its comment
+    claimed all of them, and left the same view with two schemas depending on
+    whether the model was empty. MEASURED against SQL Server after this change:
+    19 integer and real view columns, 0 still 32-bit."""
+    views = build_views(model()).views
+    for key, cols in FRAME_DDL.items():
+        name = physical(key)
+        if name not in views:
+            continue
+        sql = views[name]
+        for col, sql_type in cols:
+            if sql_type != "INTEGER":
+                continue
+            # The column is projected either as an explicit 64-bit cast, or - in
+            # the empty-model branch - as a typed NULL. Both must be 64-bit.
+            assert re.search(r"AS\s+bigint\s*\)(?:\s+AS\s+%s\b)?" % re.escape(col),
+                             sql, re.IGNORECASE), (
+                "%s.%s is declared INTEGER but is not emitted 64-bit" % (name, col))
+
+
 def test_package_depth_is_zero_based_like_frame_package_rows():
     """`frame.package_rows` computes `len(names) - 1`, so a root is 0. The view
     anchored at 1 and was off by one on EVERY row of a shipped, customer-visible
     column - and the live acceptance could not see it, because it compared row
     counts only."""
     sql = build_views(model()).views[physical("pkg")]
-    assert "0 AS depth" in sql
-    assert "1 AS depth" not in sql
+    # Asserted on the VALUE the anchor seeds, not on a literal spelling: the
+    # previous form matched the string "0 AS depth" and broke the moment the
+    # column was widened to `bigint`, which says nothing about depth. A test
+    # that fails when an unrelated type changes is a test nobody can refactor
+    # past without guessing at its intent.
+    seed = re.search(r"CAST\(\s*(-?\d+)\s+AS\s+\w+\s*\)\s+AS depth|(-?\d+)\s+AS depth",
+                     pkg_anchor(sql))
+    assert seed, "the anchor must seed depth with a literal"
+    assert int(seed.group(1) or seed.group(2)) == 0, "a root is depth 0, not 1"
+    assert "depth + 1" in pkg_recursive(sql), "and each level adds one"
 
 
 def test_an_orphan_or_self_parented_package_is_a_ROOT_not_dropped():
@@ -357,8 +422,13 @@ def test_an_orphan_or_self_parented_package_is_a_ROOT_not_dropped():
     anchor = pkg_anchor(sql)
     assert "p.Parent_ID = p.Package_ID" in anchor
     assert "NOT EXISTS" in anchor
-    assert "CAST(NULL AS bigint) AS Parent_ID" in anchor, \
-        "a kept root must not carry the parent that made it one"
+    want = "CAST(NULL AS %s) AS Parent_ID" % SQLSERVER_TYPES[
+        dict(FRAME_DDL["pkg"])["parent_id"]]
+    assert want in anchor, (
+        "a kept root must not carry the parent that made it one - and the "
+        "placeholder's type is DERIVED from FRAME_DDL plus SQLSERVER_TYPES, "
+        "because a hand-written literal here is exactly how a 32-bit anchor "
+        "shipped against a 64-bit recursive member")
     assert "COALESCE(p.Name, '')" in anchor, "nor a NULL name into its path"
 
 
@@ -427,7 +497,8 @@ def test_a_dangling_or_self_parent_is_NULL_not_a_pointer_out_of_the_view():
     assert rows[3]["parent_id"] is None, "self-parent -> NULL"
 
     anchor = pkg_anchor(build_views(model()).views[physical("pkg")])
-    assert "CAST(NULL AS bigint) AS Parent_ID" in anchor
+    assert "CAST(NULL AS %s) AS Parent_ID" % SQLSERVER_TYPES[
+        dict(FRAME_DDL["pkg"])["parent_id"]] in anchor
     assert "p.Parent_ID," not in anchor, \
         "NULLIF(Parent_ID, 0) in the outer SELECT strips zero and nothing else"
 
