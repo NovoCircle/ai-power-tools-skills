@@ -353,6 +353,31 @@ def test_a_leading_digit_is_quoted_because_model_content_reaches_it():
     assert ident("target_2024") == "target_2024"
 
 
+def test_a_leading_digit_source_column_is_bare():
+    """The same reachable name on the OTHER half of the column block.
+
+    `render_column` quotes the declaration and leaves `sourceColumn` bare,
+    because TMDL property values run to end of line. That asymmetry is
+    deliberate, but the evidence for it - Power BI's own files writing
+    `sourceColumn: Sales Amount` with a space - covers a SPACE and says nothing
+    about a LEADING DIGIT, and the name is ordinary model content either way.
+
+    This pins what we emit so the asymmetry is visible and a change to it is
+    deliberate. It does NOT establish that Power BI accepts it; only Power BI
+    can do that.
+    """
+    from semantic_model import SemanticColumn, SemanticTable
+    from tmdl import render_column
+
+    table = SemanticTable(name="entity_0")
+    lines = render_column(table, SemanticColumn(name="2024_target"))
+    body = "\n".join(lines)
+
+    assert "column '2024_target'" in body, "the declaration must be quoted"
+    assert "sourceColumn: 2024_target" in body, "the property value is bare"
+    assert "sourceColumn: '2024_target'" not in body
+
+
 def test_non_ascii_letters_are_quoted():
     """`str.isalnum()` is true for Greek, Cyrillic and accented letters, which
     are not safe to leave bare in TMDL."""

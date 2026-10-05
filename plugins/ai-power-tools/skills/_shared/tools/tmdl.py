@@ -210,12 +210,20 @@ def render_column(table: SemanticTable, column) -> list[str]:
             # quotes part of the name and breaking a mapping that is verified
             # working.
             #
-            # UNTESTED: a source column whose name starts with a digit. The
-            # declaration above IS quoted for that case; whether the property
-            # value needs it too has not been put in front of Power BI. Nothing
-            # produces such a name today - `ea_census.snake_case` output is the
-            # only thing that reaches here - so this is recorded rather than
-            # guessed at.
+            # UNVERIFIED, and REACHABLE: a source column whose name starts with
+            # a digit. `ea_census.snake_case` output is the only thing that
+            # reaches here, and it produces exactly that - a tagged value named
+            # "2024 Target" becomes `2024_target`, as `ident()` above documents.
+            # So this is ordinary model content, not a hypothetical.
+            #
+            # The declaration above IS quoted for that case. The property value
+            # is left bare because property values run to end of line and Power
+            # BI's own files write `sourceColumn: Sales Amount` bare, with a
+            # space in it - which is good evidence for a SPACE and says nothing
+            # about a LEADING DIGIT. `test_a_leading_digit_source_column_is_bare`
+            # pins what we emit so the behaviour is visible and a change to it
+            # is deliberate; it does not establish that Power BI accepts it.
+            # Putting it in front of Power BI is the only thing that would.
             f"{T}{T}sourceColumn: {column.source_column}",
             "",
             # `Automatic` alongside an explicit `summarizeBy` looks like a
