@@ -76,16 +76,27 @@ from report_model import BOOLEAN_FALSE, BOOLEAN_TRUE, ReportModel
 #: Power BI maps `bigint` and `int` both to Int64, so this costs the `.pbip`
 #: identity nothing.
 #:
-#: TEXT is listed for completeness and is never cast: `_coerced_value` returns
-#: the trimmed value before it reaches `TRY_CAST`, because text needs no
-#: conversion and `nvarchar(max)` is what the column already is.
+#: `REAL` is `float`, which is `float(53)` - IEEE 754 binary64, matching
+#: `PARQUET_TYPES`'s `double` bit for bit. **Not `real`**, which SQL Server
+#: defines as `float(24)` and which would be a second 32-bit truncation.
+#:
+#: Only INTEGER and REAL are ever looked up: `_coerced_value` returns the trimmed
+#: value for every other declared type before it reaches `TRY_CAST`. TEXT is
+#: therefore carried here for the diff against the other three maps and is NOT
+#: read - and `nvarchar(max)` is the type the VIEW projects, not the type of the
+#: underlying column, which is `nvarchar(255)` on `t_objectproperties.Value`.
+#:
+#: The seven `CAST(NULL AS bigint)` placeholders elsewhere in this module do not
+#: read this map - they are literals in hand-written projections, not coerced
+#: values - but they are written 64-bit **so the view's column types match
+#: `PARQUET_TYPES` even on the columns where no value ever flows.** A placeholder
+#: narrower than the column it stands in for is a trap for whoever makes a value
+#: flow there later.
 SQLSERVER_TYPES = {
     "TEXT": "nvarchar(max)",
     "INTEGER": "bigint",
     "REAL": "float",
 }
-
-DEFAULT_SQLSERVER_TYPE = "nvarchar(max)"
 
 #: Dialects with a tested emitter. An unsupported backend is told so rather than
 #: handed SQL nobody has ever run - `APT-2026-0218` is already open on an
@@ -295,7 +306,7 @@ def _keymap_view(model: ReportModel) -> str:
         return (f"CREATE VIEW {_q(physical('element'))} AS\n"
                 f"SELECT CAST(NULL AS nvarchar(40)) AS ea_guid,\n"
                 f"       CAST(NULL AS nvarchar(255)) AS entity_table,\n"
-                f"       CAST(NULL AS int) AS package_id\n"
+                f"       CAST(NULL AS bigint) AS package_id\n"
                 f"WHERE 1 = 0;")
     case = "\n".join(whens)
     return (
@@ -322,7 +333,7 @@ def _pkg_view() -> str:
     and round a self-reference. `frame.package_rows` nulls both cases - a
     self-parent at `parent_of[pid] = None if parent == pid else parent`, a
     dangling one at `parent_of.get(pid) if ... in name_of else None` - so the
-    anchor carries `CAST(NULL AS int)` and agrees with it by construction
+    anchor carries `CAST(NULL AS bigint)` and agrees with it by construction
     rather than by the outer `NULLIF`, which only ever caught zero.
 
     `Name` IS NULLABLE AND `path` IS COMPUTED FROM IT
@@ -338,7 +349,7 @@ def _pkg_view() -> str:
     return (
         f"CREATE VIEW {_q(physical('pkg'))} AS\n"
         f"WITH tree AS (\n"
-        f"    SELECT p.Package_ID, CAST(NULL AS int) AS Parent_ID, p.Name,\n"
+        f"    SELECT p.Package_ID, CAST(NULL AS bigint) AS Parent_ID, p.Name,\n"
         f"           CAST(COALESCE(p.Name, '') AS nvarchar(max)) AS path, 0 AS depth\n"
         f"    FROM t_package p\n"
         # A package whose parent does not exist, or which is its own parent,
@@ -528,9 +539,9 @@ def _load_run_view(model: ReportModel, ea_build: str) -> str:
         f"       CAST({_lit(model.technology_name or model.technology_id)}"
         f" AS nvarchar(255)) AS repository,\n"
         f"       CAST({_lit(ea_build or '')} AS nvarchar(100)) AS spec_hash,\n"
-        f"       CAST(NULL AS int) AS rows_loaded,\n"
-        f"       CAST(NULL AS int) AS reconciled,\n"
-        f"       CAST(NULL AS int) AS mismatches;"
+        f"       CAST(NULL AS bigint) AS rows_loaded,\n"
+        f"       CAST(NULL AS bigint) AS reconciled,\n"
+        f"       CAST(NULL AS bigint) AS mismatches;"
     )
 
 
@@ -574,8 +585,8 @@ def _tag_coverage_view(model: ReportModel) -> str:
         return (f"CREATE VIEW {_q(physical('tag_coverage'))} AS\n"
                 f"SELECT CAST(NULL AS nvarchar(255)) AS table_name,\n"
                 f"       CAST(NULL AS nvarchar(255)) AS tag,\n"
-                f"       CAST(NULL AS int) AS present, CAST(NULL AS int) AS populated,\n"
-                f"       CAST(NULL AS int) AS total, CAST(NULL AS float) AS coverage\n"
+                f"       CAST(NULL AS bigint) AS present, CAST(NULL AS bigint) AS populated,\n"
+                f"       CAST(NULL AS bigint) AS total, CAST(NULL AS float) AS coverage\n"
                 f"WHERE 1 = 0;")
     return (f"CREATE VIEW {_q(physical('tag_coverage'))} AS\n"
             + "\nUNION ALL\n".join(parts) + ";")
@@ -626,7 +637,26 @@ def _coerced_value(column) -> str:
        expression runs to a paragraph per column and still misses most of the
        Unicode space category. The exposure is a tagged value padded with
        something other than a space, which is rare and visible in `tag_value`.
-       Documented here so the next person meets a decision rather than a puzzle.
+
+       **AND THE LIMIT IS WIDER THAN WHITESPACE.** `TRY_CAST` is narrower than
+       `int()`/`float()` in four further MEASURED ways, so the paragraph above
+       states the smallest version of this divergence rather than all of it:
+
+         value        | Python          | this view
+         -------------|-----------------|----------
+         `'1_000'`    | 1000            | NULL
+         `'\\u0663'`   | 3               | NULL
+         `'1e400'`    | `inf`           | NULL
+         subnormal    | the subnormal   | flushed to zero
+
+       **On the last two the VIEW is the better path.** `coerce_value` returning
+       `inf` for `'1e400'` is a `report_model` defect, not something for the
+       views to reproduce, and it belongs with `APT-2026-0239`'s family of
+       pivot-versus-view divergences. The first two are the view being narrower
+       and are the same accepted trade as the whitespace case.
+
+       Stated in full here so the next person meets the whole decision rather
+       than the comfortable quarter of it.
     2. EMPTY ON A TYPED COLUMN IS NULL, never 0 and never ''. Empty means nobody
        filled it in, which is a coverage fact; a 0 there would invent data and
        make `tag_coverage` disagree with the column it describes. On TEXT an
@@ -661,7 +691,12 @@ def _coerced_value(column) -> str:
             in_list = ", ".join(_lit(s) for s in sorted(literals))
             lines.append(f"{_VALUE_INDENT}WHEN LOWER({value}) IN ({in_list})"
                          f" THEN {result}")
-    cast = SQLSERVER_TYPES.get(column.sql_type, DEFAULT_SQLSERVER_TYPE)
+    # Subscript, not `.get` with a fallback: the early return above means only
+    # INTEGER and REAL reach this line, so a fallback would be unreachable code
+    # standing in for a case that cannot occur. If `SQL_TYPES` ever gains a
+    # fourth numeric type, a KeyError here is the correct outcome - it names the
+    # omission instead of silently casting to something plausible.
+    cast = SQLSERVER_TYPES[column.sql_type]
     lines.append(f"{_VALUE_INDENT}ELSE TRY_CAST({value} AS {cast}) END")
     return "\n".join(lines)
 

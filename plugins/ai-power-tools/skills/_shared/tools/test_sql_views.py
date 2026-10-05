@@ -357,7 +357,7 @@ def test_an_orphan_or_self_parented_package_is_a_ROOT_not_dropped():
     anchor = pkg_anchor(sql)
     assert "p.Parent_ID = p.Package_ID" in anchor
     assert "NOT EXISTS" in anchor
-    assert "CAST(NULL AS int) AS Parent_ID" in anchor, \
+    assert "CAST(NULL AS bigint) AS Parent_ID" in anchor, \
         "a kept root must not carry the parent that made it one"
     assert "COALESCE(p.Name, '')" in anchor, "nor a NULL name into its path"
 
@@ -427,7 +427,7 @@ def test_a_dangling_or_self_parent_is_NULL_not_a_pointer_out_of_the_view():
     assert rows[3]["parent_id"] is None, "self-parent -> NULL"
 
     anchor = pkg_anchor(build_views(model()).views[physical("pkg")])
-    assert "CAST(NULL AS int) AS Parent_ID" in anchor
+    assert "CAST(NULL AS bigint) AS Parent_ID" in anchor
     assert "p.Parent_ID," not in anchor, \
         "NULLIF(Parent_ID, 0) in the outer SELECT strips zero and nothing else"
 
@@ -536,10 +536,22 @@ def test_an_integer_column_is_64_bit_like_every_other_path():
     `TRY_CAST(N'3000000000' AS int)` is NULL. 2147483647 agreed; 2147483648 did
     not - a boundary no fixture contains.
 
-    Derived from `PARQUET_TYPES` rather than asserting the literal `bigint`,
-    because the defect was a hand-written type expectation sitting beside value
-    oracles that were all derived. A hand-written expectation agrees with
-    whatever the code does."""
+    NOT a derivation, and deliberately so. An earlier version of this docstring
+    claimed one, and that claim was false: this pins `PARQUET_TYPES["INTEGER"] ==
+    "int64"` AND the literal `bigint`, which is strictly stronger than asserting
+    the two maps agree with each other. MEASURED by mutation: narrowing **both**
+    maps to 32 bits together still fails this test, where a width-equality
+    derivation would have passed and called two wrong answers consistent.
+
+    The authority is not either map. It is SQLite's INTEGER being 64-bit, and
+    `bigint` is the exact shared ceiling rather than a wider guess - at 2**63
+    both `sqlite3` and `pyarrow.array(..., type=pa.int64())` raise, so no wider
+    type improves parity.
+
+    The defect this guards was a hand-written type expectation sitting beside
+    value oracles that were all derived, and a hand-written expectation agrees
+    with whatever the code does. The answer to that is not "derive everything" -
+    it is to pin against the external authority, which is what this does."""
     from parquet_out import PARQUET_TYPES
 
     assert PARQUET_TYPES["INTEGER"] == "int64", "the other path is 64-bit"
@@ -556,7 +568,7 @@ def test_an_integer_column_is_64_bit_like_every_other_path():
 
 
 def test_the_multi_value_separator_is_the_only_one_supported():
-    """`pivot()` parameterises the separator and `build_views` does not thread it
+    """`pivot()` parameterizes the separator and `build_views` does not thread it
     through, so the generated `STRING_SPLIT` hardcodes a comma. That is a real
     limit rather than a bug - but it is only safe while the default is the only
     value in use, so assert exactly that and fail loudly if the default moves."""
