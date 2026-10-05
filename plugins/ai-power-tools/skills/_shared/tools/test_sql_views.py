@@ -254,12 +254,12 @@ def test_the_shape_is_chosen_from_profile_not_by_sniffing_the_key():
     both `|` and `::`. Sniffing the key would read that as profile-bound,
     compare it against `fqname`, match nothing, and leave the table silently
     empty. `profile` says what the census already decided."""
-    t = Table(name="odd", entity_key="Profile::Name|Class", stereotype="Name",
+    t = Table(name="odd", entity_key="WBA::Name|Class", stereotype="Name",
               profile="", declared=False)
     sql = placement_predicate(t)
     assert "sb.stereo_name = N'Name'" in sql
     assert "o.Object_Type = N'Class'" in sql
-    assert "sb.fqname = N'Profile::Name|Class'" not in sql
+    assert "sb.fqname = N'WBA::Name|Class'" not in sql
 
 
 def test_a_stereotype_name_containing_a_pipe_still_splits_correctly():

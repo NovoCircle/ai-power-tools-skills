@@ -82,7 +82,7 @@
         "_shared/tools/test_reconcile.py": "28daeb34d5c9762989768dd9ab806fae74953d10587676d523844e43ed58ca13",
         "_shared/tools/test_report_model.py": "e14e0f1a8d1df9a8b6e00e6a78103ccfc79becc6de14f25ed08a722324da7fb2",
         "_shared/tools/test_semantic_model.py": "3d74e2cdad641cdab26e3eaa1e5b7be7ec87134f1cb3d1c9d80f671501b2049f",
-        "_shared/tools/test_sql_views.py": "9b83faef2e1fc750cec7b5848d1b02341a073fa2c6f579b4adefecc5c9a8f97d",
+        "_shared/tools/test_sql_views.py": "46ff114fac049c1c9340ce50c2c1e690a4d15fc56ea444ad4c0434a0660b1c60",
         "_shared/tools/test_tmdl.py": "b871f3c4ba1c139d9d62ed75b621800fd14e39881623ef0c6a82c1432f15e242",
         "_shared/tools/tmdl.py": "3aeb9ceef96ede1d0954e64bffe64d93a8939dfc40c88149c4b10e4ee62f254e"
       }
