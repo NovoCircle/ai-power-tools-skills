@@ -204,26 +204,37 @@ def render_column(table: SemanticTable, column) -> list[str]:
     out += [f"{T}{T}lineageTag: {lineage_tag('column', path)}",
             f"{T}{T}summarizeBy: {column.summarize_by}",
             # NOT run through `ident()`, deliberately. This is a property VALUE,
-            # not an object declaration: TMDL property values run to end of line
-            # and Power BI's own files write `sourceColumn: Sales Amount` bare,
-            # with a space and no quotes. Quoting here would risk making the
-            # quotes part of the name and breaking a mapping that is verified
-            # working.
+            # not an object declaration: property values run to end of line, and
+            # Power BI's own files write `sourceColumn: Sales Amount` bare, with
+            # a space and no quotes. Quoting would risk making the quotes part
+            # of the name and breaking a mapping that is verified working.
             #
             # UNVERIFIED, and REACHABLE: a source column whose name starts with
-            # a digit. `ea_census.snake_case` output is the only thing that
-            # reaches here, and it produces exactly that - a tagged value named
-            # "2024 Target" becomes `2024_target`, as `ident()` above documents.
-            # So this is ordinary model content, not a hypothetical.
+            # a digit. `ea_census.snake_case` produces exactly that - a tagged
+            # value named "2024 Target" becomes `2024_target`, as `ident()` above
+            # documents - so it is ordinary model content, not a hypothetical.
+            # The declaration above IS quoted for it; this property value is not.
+            # Power BI writing a SPACE bare is good evidence about a space and
+            # says nothing about a leading digit.
+            # `test_a_leading_digit_source_column_is_bare` pins what we emit, so
+            # the asymmetry is visible and a change to it is deliberate. It does
+            # NOT establish that Power BI accepts it; only Power BI can.
             #
-            # The declaration above IS quoted for that case. The property value
-            # is left bare because property values run to end of line and Power
-            # BI's own files write `sourceColumn: Sales Amount` bare, with a
-            # space in it - which is good evidence for a SPACE and says nothing
-            # about a LEADING DIGIT. `test_a_leading_digit_source_column_is_bare`
-            # pins what we emit so the behaviour is visible and a change to it
-            # is deliberate; it does not establish that Power BI accepts it.
-            # Putting it in front of Power BI is the only thing that would.
+            # What actually reaches here, since an earlier version of this
+            # comment claimed `snake_case` was the only thing and that was false:
+            #   - frame column names, straight from `ddl.FRAME_DDL`
+            #   - `ea_guid`, `name`, `metaclass`, hardcoded in `_entity_columns`
+            #   - tag column names, from `ea_census.snake_case`
+            # All three are `[a-z0-9_]` today. But `source_column` is a PUBLIC
+            # dataclass field that `__post_init__` fills from `name` only when it
+            # is empty, so a caller may set it to anything at all and nothing
+            # here validates or escapes it. The field exists precisely so a
+            # column can be mapped onto a differently-named source column, so
+            # "no caller does that" is a statement about today, not an invariant.
+            # A caller passing `Sales Amount` - the very string offered above as
+            # evidence - writes an unchecked caller value into a TMDL property.
+            # That is S-0211-01's shape, and it is why this says what reaches
+            # here rather than asserting that nothing troubling can.
             f"{T}{T}sourceColumn: {column.source_column}",
             "",
             # `Automatic` alongside an explicit `summarizeBy` looks like a
