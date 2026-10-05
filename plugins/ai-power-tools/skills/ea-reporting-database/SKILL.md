@@ -83,25 +83,25 @@ letting the thinner output pass as the normal one.
 
 ### 3.2 Extract
 
-Run this locally against the open repository. **Do not pull the row data through
-`execute_sql`**: a mid-sized model is a few thousand rows across ten tables, `execute_sql` has no
-row cap and returns every result twice (APT-2026-0221), and none of it needs to pass through the
-conversation to reach the database.
+Run this locally against the open repository. **Mint the `run_id` first and pass it to both the
+extract and the load** — that is what ties a build to the rows it was built from.
 
 ```bash
-python <skills-dir>/_shared/tools/extract.py --out ./out
+python <skills-dir>/_shared/tools/extract.py --out ./extracts \
+    --run-id <run-id> --run-at '<YYYY-MM-DD HH:MM:SS>' [--package-id N]
 ```
 
-Add `--package-id N` to scope to one subtree; omit it for the whole repository. Add
-`--server-path <dir>` if `ea_mcp_server` is not importable — it is needed only for the row parser.
+It writes one JSON file per table plus `extract-manifest.json` into `./extracts/<run-id>/`.
+**Read the printed counts.** An unexpectedly small `object` or `objectproperties` count means the
+scope is wrong, and it is much cheaper to notice here than after the reconciliation.
 
-It writes one JSON file per table plus `extract-manifest.json`, and prints the row counts and the
-elapsed SQL time. Read the counts. An unexpectedly small `object` or `objectproperties` count
-means the scope is wrong, and it is much cheaper to notice here than after the reconciliation.
-
-**Scope resolution has no depth cap.** `resolve_scope` walks the whole package tree and reports
-the depth it reached. The shipped `_package_subtree_ids` stops at depth 8 and skips anything
-deeper with no warning (APT-2026-0216), which is why this does its own walk.
+**The snapshot is kept, not overwritten.** It is the only record of what the repository contained
+at that instant, and a build can be replayed from it with no EA connection at all, producing a
+byte-identical database. Retention is bounded at **10 runs** (measured: 244 KiB per snapshot on the
+~300-element reference model) and pruning **prints what it removed** — pass that on, because a
+figure stops being defensible the moment its evidence goes. Flags, why not `execute_sql`, the
+uncapped scope walk, the digest, pruning and replay:
+[`references/the-extract-snapshot.md`](references/the-extract-snapshot.md).
 
 ### 3.2b The governance gate — run this before you build anything
 
@@ -134,7 +134,7 @@ verification: [`references/the-governance-gate.md`](references/the-governance-ga
 All of this is local Python. Every decision is in the modules; this is the order they go in.
 
 ```python
-import json, pathlib, sys, uuid, datetime
+import json, pathlib, sys
 sys.path.insert(0, r"<skills-dir>/_shared/tools")
 
 from ea_census import build_stereotype_index, census_elements, tag_coverage
@@ -145,13 +145,17 @@ from pivot import pivot
 from load import build_database, database_counts, scalar_counts, record_reconciliation
 from reconcile import reconcile, domain_violations, format_report
 from dictionary import data_dictionary, manifest as build_manifest
+from extract import open_snapshot
 
 out = pathlib.Path("./out")
-load_json = lambda n: json.loads((out / f"{n}.json").read_text(encoding="utf-8"))
-objects, xrefs, props = load_json("object"), load_json("xref"), load_json("objectproperties")
-packages, connectors = load_json("package"), load_json("connector")
-attributes, operations = load_json("attribute"), load_json("operation")
-diagrams, diagram_objects = load_json("diagram"), load_json("diagramobjects")
+# Minted before the extract and passed to it (§3.2), not invented here.
+run_id, run_at = "<run-id>", "<YYYY-MM-DD HH:MM:SS>"
+# The same call replays an old build: pass the extract's run_id, not this run's.
+snap = open_snapshot("./extracts", run_id)
+objects, xrefs, props = snap.tables["object"], snap.tables["xref"], snap.tables["objectproperties"]
+packages, connectors = snap.tables["package"], snap.tables["connector"]
+attributes, operations = snap.tables["attribute"], snap.tables["operation"]
+diagrams, diagram_objects = snap.tables["diagram"], snap.tables["diagramobjects"]
 mdg = json.loads(pathlib.Path("mdg.json").read_text(encoding="utf-8"))
 
 # --- census: which stereotype, from which technology, on how many elements
@@ -191,28 +195,25 @@ checkable = dict(frame_rows, tag_value=result.tag_value, overflow_tag=result.ove
 assert not dangling(checkable), dangling(checkable)[:5]
 
 # --- load
-run_id = str(uuid.uuid4())
-run_at = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 loaded = build_database(out / "reporting.sqlite", model, result, frame_rows,
                         run_id=run_id, run_at=run_at, repository="<model file>",
+                        extract_run_id=snap.run_id, extract_digest=snap.digest,
                         overwrite=False)
 ```
 
 **The two parameters with placeholders above.** `namespace` is the profile namespace as it appears
 in `t_xref` FQNames, which is **not** the technology id — the id is often a short code where the
-namespace is the long form. Do not guess at it: `infer_technology_namespace(census, declared)` reads
-it off the census, where `declared` is `{s["name"] for s in mdg["stereotypes"]}`. `strip_prefix` is
-the stereotype prefix to drop when naming tables, so `WBABusinessApplication` becomes
-`business_application` rather than `wba_business_application`; pass `""` to keep it. Neither is
-load-bearing for correctness — a wrong namespace costs readable table names, not accuracy.
+namespace is the long form. Do not guess: `infer_technology_namespace(census, declared)` reads it
+off the census, where `declared` is `{s["name"] for s in mdg["stereotypes"]}`. `strip_prefix` is the
+stereotype prefix to drop when naming tables, so `WBABusinessApplication` becomes
+`business_application`; pass `""` to keep it. Neither is load-bearing for correctness.
 
-`run_id` and `run_at` are **yours to supply.** The loader has no clock, deliberately: a module
-that stamps its own timestamp cannot be tested for the value it stamps, and the run identity
-belongs to the pipeline that owns the run.
+`run_id` and `run_at` are **yours to supply**, to the extract and the loader alike: neither has a
+clock, because a module that stamps its own timestamp cannot be tested for the value it stamps.
 
-`overwrite=False` is the default and it refuses an existing file. A refresh that silently
-replaces the database somebody is reporting off is not a refresh — delete it deliberately or pass
-`overwrite=True` deliberately.
+`overwrite=False` is the default and refuses an existing file. A refresh that silently replaces the
+database somebody is reporting off is not a refresh — delete it, or pass `overwrite=True`,
+deliberately.
 
 ### 3.4 Reconcile, then write the deliverables
 
@@ -367,14 +368,12 @@ be exactly the excluded machinery before the figure was changed.
 recorded — do not treat it as success.
 
 **A later spot-check in EA disagrees with the database by a few rows.** The reconciliation proves
-the database matches **the extract**, and the extract is a point-in-time snapshot. On a shared
-repository someone else's work lands between the extract and the spot-check and the two legitimately
-differ. Observed while building this skill: a package count moved three times in twenty minutes
-because another session was creating and deleting scratch packages, and every build still reconciled
-because both sides of every check derive from the one snapshot. That is the design, not a flaw — but
-it means `load_run.run_at` is the figure's as-of date, and a disputed number has to be compared
-against the snapshot that produced it rather than against the model an hour later. Say the as-of
-date whenever a figure is going to be quoted back at you.
+the database matches **the extract**, and the extract is a point-in-time snapshot; on a shared
+repository someone else's work lands in between and the two legitimately differ. That is the
+design, not a flaw. `load_run.run_at` is the figure's as-of date and the retained snapshot is the
+evidence behind it, so a disputed number is compared against the build it came from — replay it —
+not against the model an hour later. Say the as-of date whenever a figure may be quoted back at
+you. [`references/the-extract-snapshot.md`](references/the-extract-snapshot.md) §1.
 
 **Jet (`.eapx`) is untested.** Everything here is measured against SQLite-backed `.qea` only
 (APT-2026-0218). Say so rather than implying coverage.
@@ -388,6 +387,8 @@ quote a refresh window from it.
 
 - [`references/the-schema.md`](references/the-schema.md) — every frame table, column by column,
   and worked queries for the questions people actually ask
+- [`references/the-extract-snapshot.md`](references/the-extract-snapshot.md) — retention, the
+  digest, pruning, and how to replay a build with no EA connection
 - [`references/the-governance-gate.md`](references/the-governance-gate.md) — the pre-build gate:
   the three outcomes, how to apply a stereotype so it binds to the technology, and what to say
   when the customer declines

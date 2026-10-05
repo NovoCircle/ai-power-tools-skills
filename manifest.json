@@ -43,6 +43,7 @@
         "_shared/tools/test_reconcile.py",
         "_shared/tools/test_report_model.py",
         "_shared/tools/test_semantic_model.py",
+        "_shared/tools/test_snapshot.py",
         "_shared/tools/test_tmdl.py",
         "_shared/tools/tmdl.py"
       ],
@@ -53,14 +54,14 @@
         "_shared/references/operations.md": "ec4331f19cdba7c8f299ac198656d6eea117d4ef2630284dd6d83e49a6b03db9",
         "_shared/references/prolaborate-session.md": "6c129892dd6e247673302954ab89f78c36e31f4b0c7dc93dbba541ccfecab2ca",
         "_shared/references/westbrook-example.md": "d4622f3cf9ef6a58d661fb54cb4248dfc364e8e6ab9d0314876838081600cdf2",
-        "_shared/tools/ddl.py": "e2298b6df49d3ca718e6a7743a530b68568bc7f0c6e9585197ad7bbaf11105dc",
+        "_shared/tools/ddl.py": "7dafe7fb35c29100ce70f54f475c4637f3014f789bbb17a9dc653769a777da39",
         "_shared/tools/dictionary.py": "1442d14d9c74ad8e7bc7ead17629f7756962538ad5f919bc7e5fc23ff3ad449d",
         "_shared/tools/ea_census.py": "2ce1c555e3a75c020dc1c6f35afb33cec8fe67155ed2fe06f173ca40efe563d7",
-        "_shared/tools/extract.py": "c521189562e9f8b87777026eef7d793c9ea666133104346edd25ce5277cc97a4",
+        "_shared/tools/extract.py": "3723336d325054ffb260ba6c1c7588af0c029652919dd1667163a64d70dfa98b",
         "_shared/tools/frame.py": "31cf98c6e860d7ee8c4b24b76c5b646ff3c7e4d44578e4338c6d1d90f84d504e",
         "_shared/tools/governance_gap.py": "6d50f395bd193088ce9c223add0a3f11bd4b9cc2a80739be74435a902585e611",
-        "_shared/tools/load.py": "c19a739a3b049ff394fed711747bbd7a951f5e09d2e3c398a0a0b7b9a069b128",
-        "_shared/tools/parquet_out.py": "17197cda427329fa7430b08223cccc83b6ab424e7c08e726c34708643c45a76d",
+        "_shared/tools/load.py": "d3d5005d4613d0982a7730f86190b6507af34b4f5c111107d8e80bf01c29a4c5",
+        "_shared/tools/parquet_out.py": "7b5ee150a5841695d8117a148cc529494a1ea4017a754be2fb5f5dcf943867f9",
         "_shared/tools/pbip.py": "2f5647383368527217608bbbf7eb7fb858936c2c3fbdd0b42508faab9d024b07",
         "_shared/tools/pivot.py": "498207768d5c72c337a81339c60fcd4a9f179cd0809ab7c34e77e2e5943c8b2e",
         "_shared/tools/reconcile.py": "80f90ba230b15b53aad17073c2a3ad0f46709de449f7877e2dd2476d88194118",
@@ -79,6 +80,7 @@
         "_shared/tools/test_reconcile.py": "28daeb34d5c9762989768dd9ab806fae74953d10587676d523844e43ed58ca13",
         "_shared/tools/test_report_model.py": "e14e0f1a8d1df9a8b6e00e6a78103ccfc79becc6de14f25ed08a722324da7fb2",
         "_shared/tools/test_semantic_model.py": "3d74e2cdad641cdab26e3eaa1e5b7be7ec87134f1cb3d1c9d80f671501b2049f",
+        "_shared/tools/test_snapshot.py": "79c5be8315485bae4a2aa99e127337eb07ae6b481d5d94007261a72baa1ab85b",
         "_shared/tools/test_tmdl.py": "b871f3c4ba1c139d9d62ed75b621800fd14e39881623ef0c6a82c1432f15e242",
         "_shared/tools/tmdl.py": "3aeb9ceef96ede1d0954e64bffe64d93a8939dfc40c88149c4b10e4ee62f254e"
       }
@@ -411,13 +413,15 @@
       "min_server_version": "3.0.0",
       "files": [
         "ea-reporting-database/SKILL.md",
+        "ea-reporting-database/references/the-extract-snapshot.md",
         "ea-reporting-database/references/the-governance-gate.md",
         "ea-reporting-database/references/the-schema.md"
       ],
       "sha256": {
-        "ea-reporting-database/SKILL.md": "44ca128cd798046beca26cee720dfc372da938bb32dc3a78e9c2741e319cc3eb",
+        "ea-reporting-database/SKILL.md": "b12f86907545a13cacb783c9fba474004c223bad4e1c552236193258b1e43098",
+        "ea-reporting-database/references/the-extract-snapshot.md": "4bcc5effe5df0a534176e87432665f85ef111873e2c6c534a4612e70f795e479",
         "ea-reporting-database/references/the-governance-gate.md": "042267320fa3f485ee79d61a47cd88396b5029e16973af0ae9874883d937bc4f",
-        "ea-reporting-database/references/the-schema.md": "f4e0d7656b90fb38d3705cddb6cac3a50ede9ebaf2d110002f25489c9bf5db2f"
+        "ea-reporting-database/references/the-schema.md": "7ecfee38ded20cd4c0b00eea67539608b5b3dd3eb28541fa1f7f77040ab172a7"
       }
     },
     {
