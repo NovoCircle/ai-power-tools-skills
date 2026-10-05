@@ -74,7 +74,7 @@ sets one per call:
 result = ea_model(operation="create_element_in_language", params={
     "package_id": app_pkg_id,
     "name": "Customer Portal",
-    "language_id": "WestbrookBankArchitecture",  # MDG Technology ID
+    "language_id": "WBA",                     # registered technology id, not the profile display name
     "language_type": "WBABusinessApplication",   # stereotype name within that MDG
     "properties": {"Note": "Internet banking front-end"},
 })
@@ -101,7 +101,7 @@ ea_model(operation="create_elements_bulk", params={"specs": [
     {
         "package_id": app_pkg_id,
         "name": "Customer Portal",
-        "language_id": "WestbrookBankArchitecture",
+        "language_id": "WBA",
         "language_type": "WBABusinessApplication",
         "tagged_values": {"criticality": "Mission-Critical"},
     },
