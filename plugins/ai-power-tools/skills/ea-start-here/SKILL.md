@@ -96,6 +96,7 @@ neither.
 | Building an MDG from a profile model that already exists inside a repository | **ea-mdg-model-build** |
 | Installing an MDG into a model or machine, and proving it works | **ea-mdg-deploy** |
 | Querying, rolling up or reporting across a whole model rather than element by element — or getting EA content into a database a BI tool can read | **ea-reporting-database** |
+| Getting EA content into Power BI — a dataset, a `.pbip`, TMDL, a semantic model, or a question about refreshing one | **ea-power-bi** |
 | Writing YAML conformance rules, or running a ruleset against a model | **ea-validation** |
 | Building a complete ruleset for a modeling language from scratch | **ea-ruleset-author** |
 | Driving EA from Python via the COM API rather than through MCP | **ea-com** |

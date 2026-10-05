@@ -404,10 +404,27 @@
       }
     },
     {
+      "name": "ea-power-bi",
+      "title": "EA - Power BI",
+      "description": "Put an EA repository into Power BI as a generated semantic model - a complete .pbip project with TMDL, deliberately defined relationships, graph-traversal measures and the plumbing hidden - over Parquet from a reporting database or Parquet emitted straight from EA. Asks which path the customer's estate allows, and says plainly that the result is a snapshot.",
+      "version": "1.0.0",
+      "min_server_version": "3.0.0",
+      "files": [
+        "ea-power-bi/SKILL.md",
+        "ea-power-bi/references/measured-power-bi-behavior.md",
+        "ea-power-bi/references/the-path-choice.md"
+      ],
+      "sha256": {
+        "ea-power-bi/SKILL.md": "8bb16534003b889d133d1e2b57a4ef5481323ef399b47fd77999e3c11952e501",
+        "ea-power-bi/references/measured-power-bi-behavior.md": "ea7247172b92e068e7187104ed69a2b05d33261b0a3a303979b6bea6b5aeb454",
+        "ea-power-bi/references/the-path-choice.md": "78f64800a3a3be3277df3bb9b031fd98439614094ad4d6cb403ad0c81fa5ef36"
+      }
+    },
+    {
       "name": "ea-reporting-database",
       "title": "EA - reporting database",
       "description": "Build a queryable relational database from an EA repository - elements, relationships, tagged values, attributes and diagram placements, typed by the technology that governs them - and reconcile it back against the repository. SQLite, with a data dictionary and an issued-SQL log.",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "min_server_version": "3.0.0",
       "files": [
         "ea-reporting-database/SKILL.md",
@@ -415,7 +432,7 @@
         "ea-reporting-database/references/the-schema.md"
       ],
       "sha256": {
-        "ea-reporting-database/SKILL.md": "44ca128cd798046beca26cee720dfc372da938bb32dc3a78e9c2741e319cc3eb",
+        "ea-reporting-database/SKILL.md": "4d378d48ecdd93300566882d39ebc8ec6022579adc6c215db85467a56af26fbd",
         "ea-reporting-database/references/the-governance-gate.md": "042267320fa3f485ee79d61a47cd88396b5029e16973af0ae9874883d937bc4f",
         "ea-reporting-database/references/the-schema.md": "f4e0d7656b90fb38d3705cddb6cac3a50ede9ebaf2d110002f25489c9bf5db2f"
       }
@@ -454,13 +471,13 @@
       "name": "ea-start-here",
       "title": "EA \u2014 start here",
       "description": "Entry point for any Sparx EA task: session preflight, then routing to the right skill",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "min_server_version": "2.2.0",
       "files": [
         "ea-start-here/SKILL.md"
       ],
       "sha256": {
-        "ea-start-here/SKILL.md": "d9270d1b03a476814ce70f98dce4127a9d1b883e1052637397ee204c441367ce"
+        "ea-start-here/SKILL.md": "9a2e25544ce98e098606950eaf28f6ba7c5385cab154a3e3e587de8e5cb174ac"
       }
     },
     {

@@ -31,9 +31,9 @@ Five files per build:
 | `issued-sql.log` | Every statement the load issued, in order, with row counts |
 
 **Not produced, on purpose:** no `.sql` DDL file (SQLite carries its own schema and nothing
-would read it), no Parquet, no CSV, no Excel. If a caller asks for one of those, the answer is
-that the database is the deliverable and a portable target gets its own DDL generated *for that
-target* — not retrofitted from SQLite's dialect.
+would read it), no CSV, no Excel. The database is the deliverable, and a portable target gets its
+own DDL generated *for that target* — never retrofitted from SQLite's dialect. **Parquet and
+Power BI belong to `ea-power-bi`**, which continues from §3.3 here.
 
 ---
 
