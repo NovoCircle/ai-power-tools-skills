@@ -51,7 +51,7 @@
         "_shared/references/file-encoding.md": "5759bac841234558071a4cde555587e45cabebe5a90420188b07f8323d62f7fe",
         "_shared/references/latency.md": "af565b7e08f3a79a9239f548c63115181ef3ea7bd845b94ef0363a28f035d06f",
         "_shared/references/operations.md": "ec4331f19cdba7c8f299ac198656d6eea117d4ef2630284dd6d83e49a6b03db9",
-        "_shared/references/prolaborate-session.md": "7acff23585a2b5d32196f2029992783d4c244971da959eeeb1063f543b3e19e6",
+        "_shared/references/prolaborate-session.md": "0e714db9ee43690a396333f220d45a268ff115f7e0c9d9397abe66fab36b105e",
         "_shared/references/westbrook-example.md": "d4622f3cf9ef6a58d661fb54cb4248dfc364e8e6ab9d0314876838081600cdf2",
         "_shared/tools/ddl.py": "e2298b6df49d3ca718e6a7743a530b68568bc7f0c6e9585197ad7bbaf11105dc",
         "_shared/tools/dictionary.py": "1442d14d9c74ad8e7bc7ead17629f7756962538ad5f919bc7e5fc23ff3ad449d",
@@ -533,8 +533,8 @@
       ],
       "sha256": {
         "prol-matrix/SKILL.md": "97d1564f27f4073fc3990c2b20db7467edbd49d809113297d7a0f2cc424a69f0",
-        "prol-matrix/references/reading-a-matrix.md": "a133b2952a9d632eccfa12d1d17c15a48e542ffbca95818eaf9b3c829c7d74a4",
-        "prol-matrix/references/test-cases.md": "07aada7933d36a38ffa9ead257384f560f7daf1f7f0c903eab6de96eb87686e5"
+        "prol-matrix/references/reading-a-matrix.md": "9922839e21b38f49c7a440c40d6d4882c606171abd6d22999e6305662b9b529b",
+        "prol-matrix/references/test-cases.md": "52375541799768bd428160ed097fb604561b8f7980327cc8eded334715ed9c14"
       }
     },
     {
@@ -547,7 +547,7 @@
         "prol-start-here/SKILL.md"
       ],
       "sha256": {
-        "prol-start-here/SKILL.md": "719aef2e5afb9e4a951da6ea96cbb5b09c8b48313e08d7ed9c55bd3b45459f40"
+        "prol-start-here/SKILL.md": "6eb719a0b7c4bc8f7807878723a7334c38ec47f6daf5046c8c05f1cbc5ac536a"
       }
     },
     {

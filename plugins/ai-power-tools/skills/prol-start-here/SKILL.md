@@ -131,9 +131,10 @@ These hold across every `prol-` skill.
 
 > **Repository content stays in the conversation.** Do not write element names, `notes` or
 > `author` values into a file, a note, a report or a commit message unless the person asked for
-> that artifact. **Never substitute different names to make content look safe** — in the
-> customer's own repository the real names *are* the answer. Anything that leaves the engagement
-> is the opposite rule and carries no customer content at all. Both destinations are set out in
+> that artifact. In the customer's own repository the real names *are* the answer, so never
+> substitute different ones to make content look safe. **Anything that leaves the engagement — a
+> shipped skill, a demo, published documentation — is the opposite rule and carries no customer
+> content at all.** Both destinations are set out in
 > [`_shared/references/prolaborate-session.md`](../_shared/references/prolaborate-session.md) §2.
 
 > **Read through the API, act through the interface.** Use the bearer token from `sessionStorage`

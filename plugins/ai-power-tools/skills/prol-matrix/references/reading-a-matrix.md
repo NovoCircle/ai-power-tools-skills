@@ -45,7 +45,7 @@ The route `CheckUserHasMatrixAccess` maps to a method named `CheckMatrixAccess`.
 ## 2. `GetAllMatrixProfiles`
 
 ```json
-[ { "id": "Applications to Capabilities", "name": "Applications to Capabilities",
+[ { "id": "Westbrook Capability Map", "name": "Westbrook Capability Map",
     "type": 0, "isSupported": true } ]
 ```
 
@@ -58,7 +58,7 @@ The route `CheckUserHasMatrixAccess` maps to a method named `CheckMatrixAccess`.
 ### The URL is double-encoded
 
 ```
-/repositories/Matrix/View/repId/<repo-guid>/Applications%2520to%2520Capabilities/0
+/repositories/Matrix/View/repId/<repo-guid>/Westbrook%2520Capability%2520Map/0
 ```
 
 `%2520` is an encoded `%20` — the name is encoded, then the encoded form is encoded again. Prefer
