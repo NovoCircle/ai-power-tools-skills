@@ -30,7 +30,14 @@ Supporting calls:
 |---|---|
 | `POST /api/relationshipmatrix/CheckUserHasMatrixAccess` | a single `hasAccess` bool |
 | `GET /api/relationshipmatrix/CheckIsMatrixShareEnabled` | repository-level share flag |
-| `GET /api/relationshipmatrix/GetMatrixShareURL?RepositoryId=&ProfileId=&ProfileType=` | private share URL |
+| `GET /api/relationshipmatrix/GetMatrixShareURL?RepositoryId=&ProfileId=&ProfileType=` | private share URL. **Not a read — ask first.** See below |
+
+> **`GetMatrixShareURL` is a write wearing a read's clothes.** It is a GET, it sits in a table of
+> supporting calls, and under a doctrine whose headline rule is *read through the API* it looks
+> like one. It is not: it mints a distribution URL for a customer's matrix. **Confirm with the
+> person before calling it**, and never enable the repository-level share flag on their behalf.
+> It does fire on page load, so seeing it in a network log is not evidence that calling it
+> yourself is harmless.
 
 Verb choices are not intuitive: `GetEAMatrixData` is a **POST**, `GetMatrixShareURL` is a **GET**.
 The route `CheckUserHasMatrixAccess` maps to a method named `CheckMatrixAccess`.
@@ -44,7 +51,7 @@ The route `CheckUserHasMatrixAccess` maps to a method named `CheckMatrixAccess`.
 
 **`id` and `name` hold the same string.** A matrix profile has no GUID in this API.
 
-- **Skip `isSupported: false`.** Not observed on the test tenant; the field exists, so honour it.
+- **Skip `isSupported: false`.** Not observed on the test tenant; the field exists, so honor it.
 - All eleven profiles were `type: 0`. `MatrixType` declares `Type0`…`Type7`; the others are
   **undecoded**.
 
@@ -151,7 +158,7 @@ For every connector in every profile, the test was: is `startElementGuid` a memb
 
 What this establishes:
 
-**The profile's `linkDirection` is not a usable signal.** Eight of eleven say `Both`; their
+**The profile's `linkDirection` is not a usable signal.** Nine of eleven say `Both`; their
 connectors come back in all three states. M2 is the clearest refutation — profile `Both`, all 550
 connectors `Target -> Source`, zero starting in the source list.
 

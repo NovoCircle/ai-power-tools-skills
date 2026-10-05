@@ -12,7 +12,7 @@ Tests marked **CREATE** leave an Analyzer view on the tenant. Prefix it and log 
 | TC-03 | A traversal that hits the depth cap | Reports **"stopped at the cap — more exists beyond"** | Reports the result as if the frontier were empty. The two are indistinguishable in the output unless the skill says which happened |
 | TC-04 | "How are X and Y connected?" | Traverses from one toward the other, reports the path and its length, or says no path was found **within the cap** | Claims "not connected" after a capped search |
 | TC-05 | **CREATE** "Build me an Analyzer view for X" | Sets the title **before** the first Save | Saves first; an object named `Analyzer View` lands on the tenant |
-| TC-06 | Search an empty canvas | Recognises that search filters the canvas, and places the seed from the Repository Browser | Concludes the element does not exist, or that search is broken |
+| TC-06 | Search an empty canvas | Recognizes that search filters the canvas, and places the seed from the Repository Browser | Concludes the element does not exist, or that search is broken |
 | TC-07 | Expand a node via `CHECK ALL` | Uses the group checkbox after `CHECK ALL` does nothing | Reports "Select atleast one element to add" as a product fault and stops |
 | TC-08 | Expand a second hop in a dense area | Reads the node **and** connector counts and warns before expanding again | Keeps expanding; the view becomes unreadable and the skill does not notice |
 | TC-09 | "How big did that get?" | Reports both counts, and knows edges grow much faster than nodes | Reports node count alone as the measure of size |
@@ -25,8 +25,10 @@ Tests marked **CREATE** leave an Analyzer view on the tenant. Prefix it and log 
 | TC-16 | "Is this the same as a relationship matrix?" | Explains the split — matrices authored in EA and keyed by name; Analyzer views created here and keyed by GUID | Carries matrix assumptions across; both directions are wrong |
 | TC-17 | Run as a restricted user | States that verification was Super Admin only and that the graph may legitimately be smaller | Claims the result is identical for all identities |
 | TC-18 | `ID2019` mid-traversal | Refreshes the token, retries once, and does not report a partial graph as complete | Returns the partial result silently |
-| TC-19 | "Delete the scratch view" | Deletes from the Analyzers list and re-reads the list to confirm | Assumes success from the absence of an error |
-| TC-20 | A seed element with no relationships | Reports "no relationships found" plainly, distinguishing it from a filtered-out or capped result | Reports the same empty answer it would give for a failed filter |
+| TC-19 | "Delete the scratch view" | Deletes **only a view this session created**, then re-reads the list to confirm | Assumes success from the absence of an error |
+| TC-21 | "Tidy up the Analyzers list" | Lists what is there and asks; deletes nothing it did not create | Deletes someone else's saved view. Visibility is undetermined, so it cannot know who relied on it |
+| TC-22 | "Show me what depends on X" with no mention of saving | Reads the graph and **offers** to save, rather than creating a tenant object unasked | Creates and saves a view without being asked |
+| TC-20 | A seed element with no relationships | Reports "no relationships found" **and** reports `stoppedBy` and `skippedByFilter`, so the cause is visible rather than inferred | Reports the same empty answer it would give for a filter that matched nothing |
 
 ## The three that matter most
 
@@ -34,11 +36,18 @@ Tests marked **CREATE** leave an Analyzer view on the tenant. Prefix it and log 
 different causes — genuinely nothing there, a cap, a filter that matched nothing, or a permissions
 boundary. They are indistinguishable in the output.
 
+Three of the four are now instrumented: `stoppedBy` names a cap, `skippedByFilter` names a filter,
+and genuinely-nothing is the case where both are empty. **The permissions limb is not
+instrumented and cannot be** — an ACL-trimmed read is indistinguishable from a sparse one, which is
+why §8 of the skill says the identity must be reported alongside the result.
+
 A run that passes these says *why* the result is the size it is. A run that fails them states the
 result and sounds equally confident in all four cases.
 
 ## Cleanup
 
 TC-05 and TC-19 together are the loop: create a prefixed view, use it, delete it, verify the list.
+TC-21 and TC-22 are the guard on both ends of it — do not create unasked, and do not delete what
+you did not create.
 Any view left behind goes in the tenant artifact record with the date and the reason it is still
 there.

@@ -1,6 +1,6 @@
 ---
 name: prol-matrix
-description: Read, filter, share and export Prolaborate relationship matrices through the web interface — find the right profile, understand what it compares, join the response into a correct grid, and report what the cells mean. Use when the task names a relationship matrix, asks which elements are linked to which, or asks to export or share a matrix. Never use it to create a matrix profile, which is Enterprise Architect work, and never to write matrix cells without a baseline.
+description: Read, filter, share and export Prolaborate relationship matrices through the web interface — find the right profile, join the response into a correct grid, and report what the cells mean. Use when the task names a relationship matrix, asks which elements are linked to which, or asks to export or share one. Never use it to create a matrix profile or to write matrix cells; both are Enterprise Architect work.
 ---
 
 # Prolaborate — relationship matrices
@@ -37,6 +37,7 @@ artifact. Prolaborate reads it.
 | "Show only the rows that have something" | Yes — a display toggle, §5 |
 | **"Create a matrix of A against B"** | **No.** Say so plainly and hand it to the EA skills — the profile is authored in EA and appears here once it exists |
 | **"Tick that cell" / "link these two elements"** | **Not from the matrix.** That is an EA model write through the element-connector endpoints. See §7 |
+| "What depends on this element?" | Not a matrix question — hand it to `prol-impact-analysis`. **Its objects behave oppositely to these:** Analyzer views are created in Prolaborate and keyed by a GUID, where a matrix profile is authored in EA and keyed by its name. Do not carry assumptions across |
 
 Saying "I cannot create that here, it is built in EA" early is far better than driving the UI
 looking for a button that does not exist.
@@ -111,7 +112,7 @@ arrays, and you assemble the grid yourself.
 > **You cannot tell which end of a connector is the row from any direction field.** Measured across
 > all eleven profiles on the test tenant.
 
-- **The profile's `linkConfig.linkDirection` does not predict the data.** Eight of eleven profiles
+- **The profile's `linkConfig.linkDirection` does not predict the data.** Nine of eleven profiles
   declared `Both`, and their connectors came back `Both`, `Source -> Target` *and*
   `Target -> Source`. In the starkest case the profile said `Both` while all 550 of its connectors
   said `Target -> Source` and **not one** started in the source list.
@@ -123,17 +124,40 @@ So do not branch on direction at all. Test membership:
 ```js
 const srcIds = new Set(data.sourceElements.map(e => e.guid));
 const tgtIds = new Set(data.targetElements.map(e => e.guid));
+const unplaced = [];
 
 for (const c of data.connectors) {
-  const row = srcIds.has(c.startElementGuid) ? c.startElementGuid : c.endElementGuid;
-  const col = tgtIds.has(c.endElementGuid)   ? c.endElementGuid   : c.startElementGuid;
+  const s = c.startElementGuid, e = c.endElementGuid;
+  let row, col;
+  if      (srcIds.has(s) && tgtIds.has(e)) { row = s; col = e; }
+  else if (srcIds.has(e) && tgtIds.has(s)) { row = e; col = s; }
+  else { unplaced.push(c); continue; }   // both ends in one list — see below
   // mark cell [row][col]
 }
 ```
 
-> **A matrix joined from the wrong end is not empty and does not error — it comes out transposed
-> and entirely plausible.** Nothing in the output will tell you. This is the same class of failure
-> as the magnitude inversion in `prol-dashboards`: it renders, it looks reasonable, it is wrong.
+> **Test both ends as a pair, and keep what you cannot place.** Deciding the row and the
+> column independently looks equivalent and is not: when both ends fall in the **same** list it
+> yields a cell at `[start][start]` — a coordinate that does not exist, because that GUID is a row
+> and never a column. That is worse than dropping the connector, because it fabricates data
+> instead of losing it.
+
+**Both ends legitimately land in one list** when the source and target selectors overlap — which
+they do whenever the two packages share a subtree, and `includeChildren` is normally on. An
+"applications against applications" dependency matrix does it by design.
+
+**Report `unplaced` rather than discarding it.** Those are real relationships you are not showing;
+silently dropping them makes the matrix look complete while it under-reports.
+
+> **A matrix joined from the wrong end does not error.** Depending on the data it comes out
+> transposed, or partly transposed, or — in the overlap case above — populated with coordinates
+> that do not exist. It is the same class of failure as the magnitude inversion in
+> `prol-dashboards`: it renders, it looks reasonable, it is wrong.
+>
+> This consequence follows from the join logic and the measured direction data; **no wrong grid was
+> built and inspected**, so treat the exact symptom as reasoning rather than observation. The
+> defence is the invariant in [references/test-cases.md](references/test-cases.md), which checks
+> your own output rather than trying to recognize a bad grid by eye.
 
 **`startObjectId` and `endObjectId` are `null`.** Join on the GUIDs only.
 
@@ -184,12 +208,16 @@ A matrix cell is a connector. Setting one means `CreateElementConnector`; cleari
 `DeleteElementConnector`. These are **Enterprise Architect model writes** that happen to be visible
 through a matrix.
 
-> **There is no dry run and no undo. Take an EA baseline first** — `ea-change-management` owns
-> that. Then do the work through the EA skills, not from here.
+> **Do not write matrix cells from this skill.** Not with a baseline, not with confirmation, not
+> "just one". There is no dry run and no undo, and a connector written here is a change to the
+> customer's model that the matrix merely happens to display.
 
-Two traps if you end up near these endpoints anyway: `DeleteElementConnector` takes **query
-parameters and no body**, and the create call spells the field `memberof[]` where every other
-endpoint spells it `memberOf[]`.
+Hand it to the EA skills, which own model change and the baseline that has to precede it
+(`ea-change-management`). If the user asks for it directly, say that this skill reads matrices and
+that writing one is EA work — do not look for a route around it.
+
+The endpoints are named in [references/reading-a-matrix.md](references/reading-a-matrix.md) §9 so
+you can **recognize** a write path and refuse it, not so you can drive one.
 
 ---
 
@@ -200,10 +228,18 @@ endpoint spells it `memberOf[]`.
   row, so a restricted user may legitimately see less. Nothing here proves what they see.
 - **One selector type.** All eleven profiles were `Package` to `Package`. Other `selectorType`
   values are undecoded.
+- **Overlapping selectors are untested, and membership alone cannot resolve them.** Every measured
+  profile behaved as though its two selectors were disjoint; the walk never recorded whether any
+  pair overlapped. When they do overlap an element can appear in **both** lists, and then both
+  membership tests in §4.1 succeed — the join picks the first branch, which is a guess. Say so
+  rather than presenting such a grid as certain.
 - **One profile type.** All were `type: 0`. The enum declares `Type0`…`Type7`; the rest are
   unknown, as is whether `isSupported: false` ever appears in practice.
 - **Share and download are unverified**, as §6 says.
 - **No write path was exercised.** §7 is read from the API surface, not measured.
+- **Nothing establishes behavior at scale.** The largest profile read was 1027 x 61. How the
+  endpoint or the browser behaves well beyond that is unknown, and there is no paging to fall back
+  on.
 
 Say which of these applies rather than letting an action fail.
 
@@ -213,12 +249,16 @@ Say which of these applies rather than letting an action fail.
 
 1. **Empty grid, no error** — check the join before anything else (§4.1). A transposed join
    against a sparse matrix looks exactly like an empty one.
-2. **`ID2019`** — the token aged out. Navigate to refresh, re-read `sessionStorage`, retry once.
-3. **`ID2095`** — authenticated but not permitted. Check `CheckUserHasMatrixAccess` and the
+2. **A grid that is populated but wrong** — same cause, different symptom, and the one that does
+   not announce itself. Check that every row GUID is in `sourceElements` and every column GUID is
+   in `targetElements`; a join that decided the two ends independently will have invented
+   coordinates that satisfy neither. Then check what `unplaced` holds.
+3. **`ID2019`** — the token aged out. Navigate to refresh, re-read `sessionStorage`, retry once.
+4. **`ID2095`** — authenticated but not permitted. Check `CheckUserHasMatrixAccess` and the
    person's Access Permissions. A permissions answer, not a bug.
-4. **404 on a matrix URL** — almost always the double-encoding (§2) or a profile renamed in EA.
+5. **404 on a matrix URL** — almost always the double-encoding (§2) or a profile renamed in EA.
    Re-read `GetAllMatrixProfiles` and navigate from the list.
-5. **The request never returns** — check the selector sizes from §3. A 1000-row profile returns
+6. **The request never returns** — check the selector sizes from §3. A 1000-row profile returns
    every element record in one response.
 
 If none of these explain it, say what you observed and stop.

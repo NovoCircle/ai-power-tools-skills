@@ -51,6 +51,24 @@ const user = key ? JSON.parse(sessionStorage.getItem(key)) : null;
 const token = user && user.access_token;
 ```
 
+> ### These are live credentials. They never leave the page.
+>
+> **Never write a token anywhere.** Not into a file, a research note, a commit, a report, a chat
+> message, a URL or a log line. Not "redacted except the last few characters". If you need to show
+> that you have one, say whether it is present and when it expires — never its value.
+>
+> **Read `access_token` and nothing else.** Narrow immediately, as the snippet above does. Do not
+> return, print or pass around the enclosing object, and be careful with evaluation tools that echo
+> the value of the last expression — `const` avoids that, which is why it is used here.
+>
+> **Never read `refresh_token` at all.** The access token expires in 240 seconds and is close to
+> self-limiting. The refresh token is **long-lived**: it mints new access tokens until it is
+> revoked, so leaking one hands over the person's session rather than four minutes of it. Nothing
+> any skill does requires it.
+>
+> `id_token` is not a bearer credential but it carries identity claims about a real person. Treat
+> it the same way.
+
 Then call the API as the signed-in person, with their exact permissions:
 
 ```js
@@ -81,7 +99,7 @@ not, which reads like a permissions problem and is not.
 
 **Re-read the key immediately before each burst of calls.** Do not cache it across steps.
 
-### Recognising expiry
+### Recognizing expiry
 
 ```
 401  WWW-Authenticate: Bearer error="invalid_token",
@@ -93,7 +111,7 @@ not, which reads like a permissions problem and is not.
 > Recover by navigating the app — any in-app navigation triggers renewal — then re-read
 > `sessionStorage` and retry once. Report a failure only if it recurs after a renewal.
 
-Other codes worth recognising on sight:
+Other codes worth recognizing on sight:
 
 | Code | Meaning |
 |---|---|
@@ -125,7 +143,7 @@ const claims = JSON.parse(atob(seg.replace(/-/g, '+').replace(/_/g, '/')));
 > **The rule: a Super Admin session is not a test of what a normal user sees.**
 > Super Admin short-circuits Prolaborate's authorization checks. A flow verified only as an
 > administrator proves nothing about a restricted user, and this is the single easiest way to
-> ship a skill that fails for the people who will actually run it. When a skill's behaviour
+> ship a skill that fails for the people who will actually run it. When a skill's behavior
 > depends on permissions, say which identity you verified it with.
 
 ---

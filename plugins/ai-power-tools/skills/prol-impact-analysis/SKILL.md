@@ -1,6 +1,6 @@
 ---
 name: prol-impact-analysis
-description: Trace dependencies and analyse the impact of change in Prolaborate using Analyzer views — seed a graph from an element, expand it one hop at a time, keep it readable, and report what is actually affected. Use when the task asks what depends on something, what breaks if an element changes, how two elements are connected, or asks to build or read an Analyzer view. Never promise a complete blast radius — the product has no depth traversal, and §2 says what that means.
+description: Trace dependencies and analyze the impact of change in Prolaborate using Analyzer views — seed a graph from an element, expand it one hop at a time, keep it readable, and report what is actually affected. Use when the task asks what depends on something, what breaks if an element changes, how two elements are connected, or asks to build or read an Analyzer view. Never promise a complete blast radius — the product has no depth traversal, and §2 says what that means.
 ---
 
 # Prolaborate — impact analysis
@@ -67,31 +67,41 @@ not reach.
 
 ## 3. Building a view
 
+> **A saved view is an object on the customer's tenant, and there is no undo.** Baselines are an
+> EA mechanism and do not reach Prolaborate's own objects.
+>
+> - **Ask before creating one.** Reading a graph does not require saving it; offer the save, do not
+>   assume it.
+> - **Never delete a view this session did not create.** §8 says view visibility is undetermined,
+>   so you cannot establish whose a view is or who is relying on it. "Tidy up the Analyzers list"
+>   is not authorization to remove someone else's saved work — list what is there and ask.
+
 1. **Analyzers → Create View.** Opens a canvas in a new tab.
 2. **Set the title.** Top-left, editable. Do this before saving (§1).
 3. **Place the seed from the Repository Browser** — the folder icon in the left rail. Expand to the
    element and select it. **Not from the search box** (§4).
 4. **Select a node to expand it.** The left panel becomes a Traceability panel for that node.
-5. **Tick neighbours, then Add Selected.**
+5. **Tick neighbors, then Add Selected.**
 6. **Save.**
 
 ### The traceability panel
 
-Selecting a node lists its one-hop neighbours as a three-level tree:
+Selecting a node lists its one-hop neighbors as a three-level tree:
 
 ```
 <element type>
   └── <connector type>
-        └── <neighbour>
+        └── <neighbor>
 ```
 
 Two things about it that are measured, not guessed:
 
-- **Neighbours already on the canvas come back pre-ticked and visually distinct.** This is how you
+- **Neighbors already on the canvas come back pre-ticked and visually distinct.** This is how you
   see what is genuinely new at this hop, and re-adding does not duplicate.
-- **`CHECK ALL` in the panel header does not tick anything.** Pressing it and then Add Selected
-  fails with *"Select atleast one element to add."* **Use the group-level checkbox instead** — it
-  cascades to its children and enables the button.
+- **`CHECK ALL` in the panel header did not tick anything when tried.** Pressing it and then Add
+  Selected failed with *"Select atleast one element to add."* Whether it is broken or wants a
+  different interaction was not established — so do not report it as a product defect. **Use the
+  group-level checkbox**, which cascades to its children and enables the button.
 
 ---
 
@@ -116,7 +126,7 @@ the edge you followed to reach it. Measured:
 | After | Nodes | Connectors |
 |---|---|---|
 | seed placed | 1 | 0 |
-| 25 one-hop neighbours added | 26 | 25 |
+| 25 one-hop neighbors added | 26 | 25 |
 | **2 more added at hop two** | **28** | **63** |
 
 Two nodes brought **thirty-eight** connectors, and the graph went from a readable star to an
@@ -178,6 +188,10 @@ A traversal: seed with `GetTraceability`, expand the frontier in batches with
 - **Download and Save as were not exercised.**
 - **Cycles were not encountered**, so de-duplication was confirmed only on a direct back-reference.
   Implement cycle handling anyway.
+- **Nothing establishes behavior at scale.** The largest view built was **28 nodes**. The scale
+  advice in §5 is extrapolated from that, not measured at hundreds.
+- **`GetConnectedElementsList` carries `[CheckForAPILimit]` and the limit is unknown.** Two
+  endpoints share its contract with different rate limiting.
 
 ---
 
@@ -185,8 +199,8 @@ A traversal: seed with `GetTraceability`, expand the frontier in batches with
 
 1. **Search finds nothing** — check whether the canvas is empty (§4). This is the most common
    confusion in this screen.
-2. **Add Selected refuses** with *"Select atleast one element to add"* — `CHECK ALL` did not tick
-   anything. Use the group checkbox (§3).
+2. **Add Selected refuses** with *"Select atleast one element to add"* — `CHECK ALL` appears not to
+   have ticked anything. Use the group checkbox (§3).
 3. **The view became unreadable** — that is §5, not a rendering fault. Filter a connector type off,
    or switch layout (§6).
 4. **`ID2019`** — the token aged out. Navigate to refresh, re-read `sessionStorage`, retry once.

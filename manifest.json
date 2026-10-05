@@ -8,7 +8,7 @@
       "name": "_shared",
       "title": "Shared references",
       "description": "Reference material several EA skills link to: the Westbrook Bank canonical example, EA latency guidance, and file-encoding guidance. Not a skill \u2014 it has no SKILL.md and does not load as one. It installs beside the skills so their relative links resolve.",
-      "version": "1.3.0",
+      "version": "1.4.0",
       "min_server_version": "2.3.0",
       "files": [
         "_shared/references/ea-ui-verification.md",
@@ -51,7 +51,7 @@
         "_shared/references/file-encoding.md": "5759bac841234558071a4cde555587e45cabebe5a90420188b07f8323d62f7fe",
         "_shared/references/latency.md": "af565b7e08f3a79a9239f548c63115181ef3ea7bd845b94ef0363a28f035d06f",
         "_shared/references/operations.md": "ec4331f19cdba7c8f299ac198656d6eea117d4ef2630284dd6d83e49a6b03db9",
-        "_shared/references/prolaborate-session.md": "6c129892dd6e247673302954ab89f78c36e31f4b0c7dc93dbba541ccfecab2ca",
+        "_shared/references/prolaborate-session.md": "3b44837c3fa94cebd2b366cc4568fbd27ae3a5e02ae54873f81f5d08533e04c3",
         "_shared/references/westbrook-example.md": "d4622f3cf9ef6a58d661fb54cb4248dfc364e8e6ab9d0314876838081600cdf2",
         "_shared/tools/ddl.py": "e2298b6df49d3ca718e6a7743a530b68568bc7f0c6e9585197ad7bbaf11105dc",
         "_shared/tools/dictionary.py": "1442d14d9c74ad8e7bc7ead17629f7756962538ad5f919bc7e5fc23ff3ad449d",
@@ -479,7 +479,7 @@
     {
       "name": "prol-impact-analysis",
       "title": "prol-impact-analysis",
-      "description": "Trace dependencies and analyse change impact using Prolaborate Analyzer views",
+      "description": "Trace dependencies and analyze change impact using Prolaborate Analyzer views",
       "version": "1.0.0",
       "min_server_version": "1.0.0",
       "files": [
@@ -488,9 +488,9 @@
         "prol-impact-analysis/references/traversal.md"
       ],
       "sha256": {
-        "prol-impact-analysis/SKILL.md": "bc7b6e69d69b84b3e9635c27ba39eae8b2c8877d55566d38b3530fa637a4ca16",
-        "prol-impact-analysis/references/test-cases.md": "5bb5be0d92385dfb0f66f677ae0cd2cd07583b8d8110d63c17a781fe5d6a83e8",
-        "prol-impact-analysis/references/traversal.md": "25b231bf050113fc53148bb76109bf0c324d89d4787e8351a944013e494ba5d3"
+        "prol-impact-analysis/SKILL.md": "ea8192695eade5f3e988d8984490760e78102fcdcd7305b4b44456a8922c5c7f",
+        "prol-impact-analysis/references/test-cases.md": "d4b1f8eb6ad6483b416df6dea69aca471e8bf887cb67ddbe6887adf93fb28cb1",
+        "prol-impact-analysis/references/traversal.md": "441838cc1d5d65327dadafa762a1bb81fa33cf7abace64e54af6979998293ba5"
       }
     },
     {
@@ -532,9 +532,9 @@
         "prol-matrix/references/test-cases.md"
       ],
       "sha256": {
-        "prol-matrix/SKILL.md": "da29bd44fa4ab024a570106d52f210e8d8f6290e8ce01ec9c5ccb2dc57967f8d",
-        "prol-matrix/references/reading-a-matrix.md": "48c6eb2171df755668f81b2157ff4d1acfdebd6071778f7882a39010c8d59a29",
-        "prol-matrix/references/test-cases.md": "31577b5cd621b5e3e6b54c40a4194db28721265940c8b963c072ef22eb767c37"
+        "prol-matrix/SKILL.md": "3a8cc64942fc288ae989c44a2aa4c2fc80f33ced5d4f313a2d462197036820e2",
+        "prol-matrix/references/reading-a-matrix.md": "f02f3889ddace1e5b32e8a02e66a29910c19c4d9343325cbbd9f253348531684",
+        "prol-matrix/references/test-cases.md": "825737f4599a920a0c88d3c49851ba12ae1c6329be79041a3c436a9a3a5ddd28"
       }
     },
     {
@@ -547,7 +547,7 @@
         "prol-start-here/SKILL.md"
       ],
       "sha256": {
-        "prol-start-here/SKILL.md": "4754b6dc4d2998a35354e5f40f48f84dc7404a8e6e6df247d1b82fe7a5f743d9"
+        "prol-start-here/SKILL.md": "70ab327cd3b1c4285347643ccea9e04a15bc4da59f632cf91159e43398ff55ba"
       }
     },
     {
