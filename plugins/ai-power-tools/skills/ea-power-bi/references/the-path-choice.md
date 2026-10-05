@@ -71,7 +71,7 @@ Consequently, identical across A and B:
 
 | | |
 |---|---|
-| The tables | the vocabulary tables, plus eleven `_`-prefixed plumbing tables |
+| The tables | the vocabulary tables, plus ten `_`-prefixed plumbing tables |
 | The relationships | the hub shape, with exactly one relationship inactive by design |
 | The measures | the traversal measures, both bare and zero-filled |
 | The descriptions | from the technology, on tables, columns and measures |

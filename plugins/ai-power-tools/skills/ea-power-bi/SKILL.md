@@ -149,9 +149,20 @@ Use `on_disk` as the database side of every comparison below.
 ```python
 from ddl import FRAME_DDL, physical
 
-entity_counts = {t.name: pq.rows_by_table[t.name] for t in model.tables}
-db_scalars = {k: pq.rows_by_table[physical(k)] for k in FRAME_DDL}
+def counted(name):
+    # A table whose file failed to write is ABSENT from on_disk, not zero. Say
+    # which one, rather than raising a bare KeyError from inside a comprehension.
+    if name not in on_disk:
+        raise KeyError(f"no parquet file was written for {name!r} - "
+                       f"the build did not produce what it reported")
+    return on_disk[name]
+
+entity_counts = {t.name: counted(t.name) for t in model.tables}
+db_scalars = {k: counted(physical(k)) for k in FRAME_DDL}
 ```
+
+`on_disk` is keyed by file stem, which is the physical table name, and for an entity table the
+physical name and the model name are the same - so it drops in with no re-keying.
 
 Pass `entity_counts` where that skill passes `database_counts(...)`, and `db_scalars` where it
 passes `scalar_counts(...)`. Everything else about the call is unchanged. A Parquet-only build that
@@ -167,7 +178,7 @@ from pbip import project_files
 
 sm = build_semantic_model(model)
 source = ParquetSource(directory=str((out / "parquet").resolve()))
-files = project_files(sm, source, name="WestbrookReporting")
+files = project_files(sm, source, name="EAReporting")
 ```
 
 `build_semantic_model` owns the relationships, the hidden plumbing and the traversal measures.
@@ -187,11 +198,19 @@ enough; do not vary it between runs of the same model or the folders multiply.
 ### 4.5 Write the files. `newline=""` is load-bearing
 
 ```python
+# The project root. Keep it SHORT and keep it out of the Parquet directory:
+# ParquetSource baked an absolute path into the partition above, so the project
+# belongs to the folder it was generated for, and Power BI has a 260-character
+# path limit that a deep root will breach.
+project_root = out / "pbip"
+
 for rel, text in files.items():
     path = project_root / rel
     path.parent.mkdir(parents=True, exist_ok=True)
     with open(path, "w", encoding="utf-8", newline="") as fh:
         fh.write(text)
+
+print(f"project written to {project_root.resolve()}")
 ```
 
 **Every string the emitters return is CRLF-terminated, UTF-8 without a BOM**, because that is what
@@ -204,12 +223,12 @@ normalizes CRLF to LF and breaks a round trip.
 
 ## 5. Opening it, and regenerating it
 
-Open the `.pbip` at the top of the project folder. Expect the semantic model to load, then the
-report.
+Open `<name>.pbip` at the top of `project_root` - the path §4.5 printed. Expect the semantic model
+to load, then the report.
 
 **A regenerated model re-applies to an existing project without rebuilding the report** -
 established in earlier research and **not re-run in the live acceptance**, so treat it as expected
-behaviour rather than something we measured on this build. With
+behavior rather than something we measured on this build. With
 *Detect and reload external PBIP changes* enabled, Power BI notices the files changed on disk and
 offers to apply the external changes. It warns that unsaved in-app edits will be overwritten,
 which is correct: **the generated files are the source of truth.** Anyone who edits the model
@@ -299,7 +318,7 @@ model this was measured on. Say so rather than implying coverage.
   will get.
 - **It does not fix data quality.** Nothing in THIS skill changes a model at all. The one narrow
   case where the product offers to apply a stereotype belongs to `ea-reporting-database`'s
-  governance gate, not here - do not claim it as this skill's behaviour.
+  governance gate, not here - do not claim it as this skill's behavior.
 - **It does not replace Prolaborate, EA's own reporting, or a data warehouse.** It gets
   architecture data into the reporting tool the organization already has.
 
@@ -315,5 +334,7 @@ model this was measured on. Say so rather than implying coverage.
   census, governance gate, transform, load, reconciliation
 - [`../_shared/references/westbrook-example.md`](../_shared/references/westbrook-example.md) - the
   canonical example model
-- `../_shared/tools/` - the emitters. All four are pure: no COM, no clock, no network. Their tests
-  run with `python -m pytest ../_shared/tools -q` and need neither EA nor Power BI.
+- `../_shared/tools/` - the emitters. None of them touches COM, a clock or the network, so their
+  tests run with `python -m pytest ../_shared/tools -q` and need neither EA nor Power BI.
+  `semantic_model`, `tmdl` and `pbip` are pure in the full sense - they return strings and write
+  nothing. `parquet_out` writes, creates and deletes files, so it is the one that owns a directory.

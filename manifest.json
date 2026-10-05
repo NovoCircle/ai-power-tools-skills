@@ -415,9 +415,9 @@
         "ea-power-bi/references/the-path-choice.md"
       ],
       "sha256": {
-        "ea-power-bi/SKILL.md": "e0747f88c13990335bc2cd07f8d6224b943d6520e4129df76b37d035a48f759c",
+        "ea-power-bi/SKILL.md": "b7c56eda6adfc717e7444ea85afcf2da515dc3adc6c18dcc8ef3a116201f0488",
         "ea-power-bi/references/measured-power-bi-behavior.md": "ea7247172b92e068e7187104ed69a2b05d33261b0a3a303979b6bea6b5aeb454",
-        "ea-power-bi/references/the-path-choice.md": "c009124f5fb2d98d95ef8b2ca4644798b23708bdf99206747e4ffeb3dc881091"
+        "ea-power-bi/references/the-path-choice.md": "7ae2926ddfbdbb55a701818f4d90fae0adce01f069ff9e8f19afe101d3846cc7"
       }
     },
     {
@@ -432,7 +432,7 @@
         "ea-reporting-database/references/the-schema.md"
       ],
       "sha256": {
-        "ea-reporting-database/SKILL.md": "4d378d48ecdd93300566882d39ebc8ec6022579adc6c215db85467a56af26fbd",
+        "ea-reporting-database/SKILL.md": "0724432f7b12d8a33c1eea9c4f9efac5b8541be3d426d05e911b8650bacf07df",
         "ea-reporting-database/references/the-governance-gate.md": "042267320fa3f485ee79d61a47cd88396b5029e16973af0ae9874883d937bc4f",
         "ea-reporting-database/references/the-schema.md": "f4e0d7656b90fb38d3705cddb6cac3a50ede9ebaf2d110002f25489c9bf5db2f"
       }
@@ -477,7 +477,7 @@
         "ea-start-here/SKILL.md"
       ],
       "sha256": {
-        "ea-start-here/SKILL.md": "9a2e25544ce98e098606950eaf28f6ba7c5385cab154a3e3e587de8e5cb174ac"
+        "ea-start-here/SKILL.md": "f6573663f3cb0675de177ac3beff30d9ecf3d2511e7311dd73eba67b1e808614"
       }
     },
     {
