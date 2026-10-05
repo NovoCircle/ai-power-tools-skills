@@ -109,7 +109,7 @@ partition by hand - a hand-edited TMDL file is rejected whole, not line by line.
 
 ## 5. How to put the choice
 
-Offer all three, in one message, with the consequence attached to each - not one option at a time,
+Put all three on the table, in one message, with the consequence attached to each - not one option at a time,
 and not a recommendation dressed as a question. The customer is choosing between things that are
 differently true about their estate, and they can only do that if they can see the three together.
 

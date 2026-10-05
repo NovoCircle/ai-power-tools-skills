@@ -130,7 +130,21 @@ database sink raises, from the same function, and they include tag rows that rea
 ### 4.3 Reconcile, on either path
 
 Path A reconciles exactly as `ea-reporting-database` §3.4 describes. **Path B still reconciles** -
-against the Parquet, with the repository side computed from the raw extract rows as before:
+against the Parquet **read back from disk**, with the repository side computed from the raw
+extract rows as before.
+
+Read the files back rather than trusting `pq.rows_by_table`: those counts come from the rows the
+emitter held in memory, so comparing against them asserts the write rather than verifying it, and
+a self-consistent output that under-reports is the failure this whole discipline exists to catch.
+`pyarrow` is already present on this path, so the read-back is free:
+
+```python
+import pyarrow.parquet as pq_read
+on_disk = {p.stem: pq_read.read_metadata(p).num_rows
+           for p in (out / "parquet").glob("*.parquet")}
+```
+
+Use `on_disk` as the database side of every comparison below.
 
 ```python
 from ddl import FRAME_DDL, physical
@@ -193,7 +207,9 @@ normalizes CRLF to LF and breaks a round trip.
 Open the `.pbip` at the top of the project folder. Expect the semantic model to load, then the
 report.
 
-**A regenerated model re-applies to an existing project without rebuilding the report.** With
+**A regenerated model re-applies to an existing project without rebuilding the report** -
+established in earlier research and **not re-run in the live acceptance**, so treat it as expected
+behaviour rather than something we measured on this build. With
 *Detect and reload external PBIP changes* enabled, Power BI notices the files changed on disk and
 offers to apply the external changes. It warns that unsaved in-app edits will be overwritten,
 which is correct: **the generated files are the source of truth.** Anyone who edits the model
@@ -245,7 +261,9 @@ so the project cannot even be saved.
 generator - but it means a single hand edit costs the entire apply. Regenerate instead of patching.
 
 **A table visual is missing rows.** `SUMMARIZECOLUMNS` drops rows where every measure is BLANK -
-measured, 65 of 145 rows returned where the zero-filled measures returned all 145. Use the
+measured on the Westbrook Bank reference model, 65 of 145 rows returned where the zero-filled
+measures returned all 145. That ratio is illustrative of the shape of the problem, not a figure to
+expect. Use the
 zero-filled measures.
 
 **Inbound and outbound edge counts are identical everywhere.** Something is reading the active
@@ -276,11 +294,12 @@ model this was measured on. Say so rather than implying coverage.
   use the phrase "medallion architecture".
 - **No performance or scale figures.** Everything measured sits at roughly 300 elements.
 - **No live connection from this skill**, and no date for one.
-- **Never a real customer, model or technology name.** Every example is Westbrook Bank.
+- **Never a real customer, model or modeling-language name.** Every example is Westbrook Bank.
 - **Reference-model figures are always attributed as such**, never presented as what a customer
   will get.
-- **It does not fix data quality.** It finds problems and, in one narrow case and only with
-  approval, offers to apply a stereotype.
+- **It does not fix data quality.** Nothing in THIS skill changes a model at all. The one narrow
+  case where the product offers to apply a stereotype belongs to `ea-reporting-database`'s
+  governance gate, not here - do not claim it as this skill's behaviour.
 - **It does not replace Prolaborate, EA's own reporting, or a data warehouse.** It gets
   architecture data into the reporting tool the organization already has.
 
