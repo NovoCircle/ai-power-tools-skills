@@ -34,8 +34,8 @@ from ddl import FRAME_DDL, physical
 from frame import package_rows
 from report_model import (BOOLEAN_FALSE, BOOLEAN_TRUE, SQL_TYPES, UNCOERCIBLE,
                           Column, ReportModel, Table, coerce_value)
-from sql_views import (SUPPORTED_DIALECTS, DialectError, build_views,
-                       drop_script, placement_predicate)
+from sql_views import (SQLSERVER_TYPES, SUPPORTED_DIALECTS, DialectError,
+                       build_views, drop_script, placement_predicate)
 
 #: The shared fixture's own examples, and NOT all TEXT. `report_model.SQL_TYPES`
 #: maps a declared boolean to INTEGER and a decimal or double to REAL, so a
@@ -521,6 +521,53 @@ def test_every_sql_type_the_model_can_declare_is_coerced_in_the_view():
         assert "LTRIM(RTRIM(" in expr, "the pivot strips before it coerces"
         assert ("TRY_CAST" in expr) == (sql_type != "TEXT"), \
             f"{sql_type} is {'typed' if sql_type != 'TEXT' else 'text'}"
+        if sql_type != "TEXT":
+            assert f"AS {SQLSERVER_TYPES[sql_type]})" in expr, \
+                f"{sql_type} must cast to the DECLARED target type"
+
+
+def test_an_integer_column_is_64_bit_like_every_other_path():
+    """The type is part of the value, so the WIDTH is too.
+
+    SQLite's INTEGER is 64-bit and `parquet_out.PARQUET_TYPES` maps INTEGER to
+    `int64`, so casting to SQL Server's 32-bit `int` publishes a different value
+    at the boundary. MEASURED against the live instance: a tagged value of
+    3000000000 is 3000000000 in the reporting database and in Parquet, and
+    `TRY_CAST(N'3000000000' AS int)` is NULL. 2147483647 agreed; 2147483648 did
+    not - a boundary no fixture contains.
+
+    Derived from `PARQUET_TYPES` rather than asserting the literal `bigint`,
+    because the defect was a hand-written type expectation sitting beside value
+    oracles that were all derived. A hand-written expectation agrees with
+    whatever the code does."""
+    from parquet_out import PARQUET_TYPES
+
+    assert PARQUET_TYPES["INTEGER"] == "int64", "the other path is 64-bit"
+    assert PARQUET_TYPES["REAL"] == "double"
+    # 64-bit there must mean 64-bit here. `int` is 32-bit; `bigint` is not.
+    assert SQLSERVER_TYPES["INTEGER"] == "bigint"
+    assert SQLSERVER_TYPES["REAL"] == "float", "SQL Server float is 64-bit"
+
+    sql = build_views(model([declared(cols=(("n", "INTEGER"),))])).views[
+        "business_application"]
+    expr = column_expr(sql, "n")
+    assert "AS bigint)" in expr
+    assert "AS int)" not in expr, "a 32-bit cast silently nulls 3000000000"
+
+
+def test_the_multi_value_separator_is_the_only_one_supported():
+    """`pivot()` parameterises the separator and `build_views` does not thread it
+    through, so the generated `STRING_SPLIT` hardcodes a comma. That is a real
+    limit rather than a bug - but it is only safe while the default is the only
+    value in use, so assert exactly that and fail loudly if the default moves."""
+    import inspect
+
+    from pivot import pivot
+
+    default = inspect.signature(pivot).parameters["separator"].default
+    assert default == ",", (
+        "pivot's separator default changed; the views hardcode ',' in "
+        "STRING_SPLIT and would now disagree with the Python path")
 
 
 def test_a_single_valued_tag_is_trimmed_where_the_pivot_strips_it():

@@ -62,6 +62,31 @@ from dataclasses import dataclass, field
 from ddl import FRAME_DDL, physical
 from report_model import BOOLEAN_FALSE, BOOLEAN_TRUE, ReportModel
 
+#: Declared SQL type -> SQL Server type. The fourth leg of the same journey as
+#: `report_model.SQL_TYPES`, `parquet_out.PARQUET_TYPES` and
+#: `semantic_model.TMDL_TYPES`, named here so all four are greppable together -
+#: and declared rather than inlined because the width is part of the value.
+#:
+#: INTEGER is **bigint, not int**. SQLite's INTEGER is 64-bit and
+#: `PARQUET_TYPES` maps INTEGER to `int64`, so a 32-bit `int` here is a
+#: NARROWER type than every other path: MEASURED, a tagged value of 3000000000
+#: is 3000000000 in the database and in Parquet and `TRY_CAST(... AS int)`
+#: silently makes it NULL in the view. 2147483647 agrees and 2147483648 does
+#: not, which is exactly the kind of boundary a fixture never contains.
+#: Power BI maps `bigint` and `int` both to Int64, so this costs the `.pbip`
+#: identity nothing.
+#:
+#: TEXT is listed for completeness and is never cast: `_coerced_value` returns
+#: the trimmed value before it reaches `TRY_CAST`, because text needs no
+#: conversion and `nvarchar(max)` is what the column already is.
+SQLSERVER_TYPES = {
+    "TEXT": "nvarchar(max)",
+    "INTEGER": "bigint",
+    "REAL": "float",
+}
+
+DEFAULT_SQLSERVER_TYPE = "nvarchar(max)"
+
 #: Dialects with a tested emitter. An unsupported backend is told so rather than
 #: handed SQL nobody has ever run - `APT-2026-0218` is already open on an
 #: unparenthesized join that may not survive Jet, and generated SQL multiplies
@@ -589,6 +614,19 @@ def _coerced_value(column) -> str:
     ------------------------------------------
     1. TRIM FIRST. `pivot` strips before it coerces, so `' 7 '` is 7 and not
        uncoercible, and `'Business-Critical '` is one member rather than two.
+
+       **KNOWN LIMIT, not parity.** `LTRIM`/`RTRIM` remove the SPACE character
+       only, where Python's `str.strip()` removes every Unicode whitespace. So a
+       value padded with a TAB or a non-breaking space keeps its padding here and
+       loses it in the database, and `'\\t1'` on an INTEGER column publishes NULL
+       where the database holds 1. MEASURED on SQL Server 2022.
+
+       Accepted rather than closed: `TRIM(chars FROM ...)` is 2022-only, nested
+       `REPLACE` would rewrite interiors as well as edges, and a `PATINDEX`
+       expression runs to a paragraph per column and still misses most of the
+       Unicode space category. The exposure is a tagged value padded with
+       something other than a space, which is rare and visible in `tag_value`.
+       Documented here so the next person meets a decision rather than a puzzle.
     2. EMPTY ON A TYPED COLUMN IS NULL, never 0 and never ''. Empty means nobody
        filled it in, which is a coverage fact; a 0 there would invent data and
        make `tag_coverage` disagree with the column it describes. On TEXT an
@@ -603,6 +641,16 @@ def _coerced_value(column) -> str:
        data-quality finding; the finding has nowhere to go in a view, so the
        view publishes the same NULL and nothing else. `TRY_CAST` is how: it
        yields NULL exactly where `int()`/`float()` raise.
+
+    THE WIDTH IS PART OF THE TYPE
+    -----------------------------
+    The target type comes from `SQLSERVER_TYPES`, declared at the top of this
+    module, and INTEGER is **bigint**. A 32-bit `int` is a narrower type than
+    SQLite's 64-bit INTEGER and than Parquet's `int64`, so it is a different
+    value: MEASURED, 3000000000 survives both other paths and `TRY_CAST(... AS
+    int)` silently makes it NULL. That is this docstring's own argument - the
+    type is part of the value - applied one step further than the first version
+    of this function took it.
     """
     value = "LTRIM(RTRIM(COALESCE(p.Value, '')))"
     if column.sql_type not in ("INTEGER", "REAL"):
@@ -613,7 +661,7 @@ def _coerced_value(column) -> str:
             in_list = ", ".join(_lit(s) for s in sorted(literals))
             lines.append(f"{_VALUE_INDENT}WHEN LOWER({value}) IN ({in_list})"
                          f" THEN {result}")
-    cast = "int" if column.sql_type == "INTEGER" else "float"
+    cast = SQLSERVER_TYPES.get(column.sql_type, DEFAULT_SQLSERVER_TYPE)
     lines.append(f"{_VALUE_INDENT}ELSE TRY_CAST({value} AS {cast}) END")
     return "\n".join(lines)
 
