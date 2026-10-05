@@ -56,10 +56,40 @@ def lineage_tag(kind: str, path: str) -> str:
 
 
 def ident(name: str) -> str:
-    """A TMDL identifier, quoted only when it has to be."""
-    if name and all(c.isalnum() or c in "_" for c in name):
+    """A TMDL identifier, quoted only when it has to be.
+
+    A LEADING DIGIT must be quoted, and that case is reachable from ordinary
+    model content: a tagged value named "2024 Target" becomes the column
+    `2024_target` through `ea_census.snake_case`, with no hand-editing. Left
+    unquoted it is invalid TMDL and Power BI rejects the project.
+
+    ASCII only. `str.isalnum()` is true for Greek, Cyrillic and accented
+    letters, which are not safe to leave bare.
+    """
+    if (name and not name[0].isdigit()
+            and all(("a" <= c <= "z") or ("A" <= c <= "Z") or ("0" <= c <= "9")
+                    or c == "_" for c in name)):
         return name
     return "'" + name.replace("'", "''") + "'"
+
+
+def m_literal(value: str) -> str:
+    """A Power Query M text literal, escaped.
+
+    M has TWO escapes and both matter. `"` is escaped by doubling, and `#`
+    introduces an escape sequence when followed by `(` - so `#(lf)` in a path
+    silently becomes a newline, and an unknown sequence is a parse error.
+
+    Nothing model-derived reaches here today: every table and column name passes
+    through `ea_census.snake_case`, which reduces any input to `[a-z0-9_]`. But
+    that invariant lives two modules away and is enforced by nothing here, and a
+    caller sourcing a directory or server name from model content - or from an
+    LLM - would turn a robustness gap into an injection. M is a capable
+    language and a partition expression runs on refresh, on the analyst's
+    machine. Escaping at the sink costs nothing and does not depend on a
+    promise made elsewhere.
+    """
+    return value.replace("#", "#(23)").replace('"', '""')
 
 
 def description_lines(text: str, indent: str) -> list[str]:
@@ -90,7 +120,7 @@ class ParquetSource:
         path = f"{self.directory}{sep}{table.source_name}{self.suffix}"
         return [
             "let",
-            f'    Source = Parquet.Document(File.Contents("{path}"))',
+            f'    Source = Parquet.Document(File.Contents("{m_literal(path)}"))',
             "in",
             "    Source",
         ]
@@ -112,9 +142,10 @@ class SqlSource:
     def expression(self, table: SemanticTable) -> list[str]:
         return [
             "let",
-            f'    Source = Sql.Database("{self.server}", "{self.database}"),',
-            f'    Data = Source{{[Schema="{self.schema}",'
-            f'Item="{table.source_name}"]}}[Data]',
+            f'    Source = Sql.Database("{m_literal(self.server)}", '
+            f'"{m_literal(self.database)}"),',
+            f'    Data = Source{{[Schema="{m_literal(self.schema)}",'
+            f'Item="{m_literal(table.source_name)}"]}}[Data]',
             "in",
             "    Data",
         ]

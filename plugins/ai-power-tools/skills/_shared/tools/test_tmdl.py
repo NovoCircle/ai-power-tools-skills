@@ -20,6 +20,7 @@ from ddl import physical
 from report_model import Column, ReportModel, Table
 from semantic_model import DEFAULT_MEASURE_HOST, HUB, build_semantic_model
 from tmdl import (NEWLINE, ParquetSource, SqlSource, ident, lineage_tag,
+                  m_literal,
                   render_culture, render_definition, render_model,
                   render_relationships, render_table)
 
@@ -275,7 +276,7 @@ def test_the_parquet_partition_imports_and_names_the_source_table():
 
 
 def test_the_sql_partition_is_direct_query_by_default():
-    """DirectQuery is primary for APT-2026-0230, per Ryan 2026-10-02."""
+    """DirectQuery is the primary mode for APT-2026-0230, decided 2026-10-02."""
     text = render_table(semantic().table("entity_0"), SQL)
     assert "\t\tmode: directQuery" in text
     assert 'Sql.Database("SERVER\\INSTANCE", "EARepository")' in text
@@ -337,3 +338,54 @@ def test_the_definition_holds_one_file_per_table_plus_four():
     assert "model.tmdl" in files
     assert "relationships.tmdl" in files
     assert "cultures/en-US.tmdl" in files
+
+
+# ---------------------------------------------- escaping at the boundary
+
+
+def test_a_leading_digit_is_quoted_because_model_content_reaches_it():
+    """MEASURED reachability: a tagged value named "2024 Target" becomes the
+    column `2024_target` through `ea_census.snake_case` with no hand-editing.
+    Unquoted it is invalid TMDL and Power BI rejects the whole project."""
+    assert ident("2024_target") == "'2024_target'"
+    assert ident("target_2024") == "target_2024"
+
+
+def test_non_ascii_letters_are_quoted():
+    """`str.isalnum()` is true for Greek, Cyrillic and accented letters, which
+    are not safe to leave bare in TMDL."""
+    assert ident("naive") == "naive"
+    assert ident("na\u00efve").startswith("'")
+    assert ident("\u03b1\u03b2\u03b3").startswith("'")
+
+
+def test_an_m_literal_escapes_the_quote_that_would_end_it():
+    """A `"` terminates the literal and admits arbitrary M, which runs on
+    refresh on the analyst's machine."""
+    assert m_literal('a"b') == 'a""b'
+    assert '""' in m_literal('x" & Web.Contents("http://example.invalid") & "')
+
+
+def test_an_m_literal_escapes_the_hash_that_introduces_an_escape():
+    """`#(lf)` in a path silently becomes a newline; an unknown sequence is a
+    parse error. Both are the same character doing the damage."""
+    assert m_literal("a#(lf)b") == "a#(23)(lf)b"
+    assert "#" not in m_literal("c#d").replace("#(23)", "")
+
+
+def test_the_partition_sources_actually_use_the_escaper():
+    """The point is escaping at the SINK. The safety that makes this
+    unreachable today lives in `ea_census.snake_case`, two modules away, and is
+    enforced by nothing here."""
+    sm = semantic()
+    hostile = ParquetSource(directory=r'C:\out" & Web.Contents("http://x") & "')
+    line = next(l for l in render_table(sm.table("entity_0"), hostile).split(NEWLINE)
+                if "Parquet.Document" in l)
+    # Every quote from the injected value survives as a DOUBLED quote, so the
+    # literal is never terminated early and the M that follows stays data.
+    assert '""' in line
+    assert line.count('"') % 2 == 0
+    sql = render_table(sm.table("entity_0"),
+                       SqlSource(server='s"x', database='d#(lf)y'))
+    assert 's""x' in sql
+    assert "#(23)(lf)" in sql
