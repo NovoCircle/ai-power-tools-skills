@@ -149,9 +149,14 @@ for (const c of data.connectors) {
 | The selectors are **disjoint** and a connector joins two rows (or two columns) | Neither branch matches; it lands in `unplaced`. Correct |
 | The selectors **overlap**, so an element is in *both* lists | **Both** branches match. The first wins, `unplaced` stays empty, and the placement is the direction guess this section exists to forbid — applied silently |
 
-The overlap case is not exotic: every profile measured was `Package` to `Package` with
-`includeChildren` on, which overlaps whenever the two packages share a subtree, and an
-"applications against applications" dependency matrix makes the two lists identical by design.
+**How common is this? Unknown — and do not repeat the guess that it is common.** Every profile
+measured was `Package` to `Package` with `includeChildren` on, which *can* overlap when the two
+packages share a subtree, but the walk never recorded whether any pair actually did. The measured
+direction table argues most of them did not: identical lists would put every connector's start in
+`sourceElements`, and three profiles show **0** of 550, 62 and 384.
+
+What is certain is that the shape is reachable by design — an "applications against applications"
+dependency matrix has it deliberately. Test for it rather than assuming either way.
 
 > **The invariant in [references/test-cases.md](references/test-cases.md) cannot catch the overlap
 > case** — when the lists are the same set, every placement satisfies it trivially. Detect overlap

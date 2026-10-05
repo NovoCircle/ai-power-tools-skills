@@ -490,7 +490,7 @@
       "sha256": {
         "prol-impact-analysis/SKILL.md": "27488754e59a9e5ccb4445d2bdbee3acc970bcaf3711701010a136d5c5786679",
         "prol-impact-analysis/references/test-cases.md": "598c61c11cee1784cd923e23b5463d3adfa8eb431194782bdfff3f7e06f91032",
-        "prol-impact-analysis/references/traversal.md": "4897e07d773c040584c2cfdae88f622a2034e3b110979e5edda5289a199b90f4"
+        "prol-impact-analysis/references/traversal.md": "f21f6d4d9ca9c1e5816d1ca3290ec8460bca0970734d669c14f9d8d436e62225"
       }
     },
     {
@@ -532,9 +532,9 @@
         "prol-matrix/references/test-cases.md"
       ],
       "sha256": {
-        "prol-matrix/SKILL.md": "7bd9dd3a4e3ea6df1b2ea22768813268aab78c9ab003a40c65137b169552cfe1",
-        "prol-matrix/references/reading-a-matrix.md": "53f56d3bec42c56549f7128f0275e2fcb10dbb47ceae974488a82d0d1efd7534",
-        "prol-matrix/references/test-cases.md": "c800754dc38b6e47d6d3725cc838c18446d8d3cf845328bd57ac1efbed8b0b30"
+        "prol-matrix/SKILL.md": "97d1564f27f4073fc3990c2b20db7467edbd49d809113297d7a0f2cc424a69f0",
+        "prol-matrix/references/reading-a-matrix.md": "a133b2952a9d632eccfa12d1d17c15a48e542ffbca95818eaf9b3c829c7d74a4",
+        "prol-matrix/references/test-cases.md": "07aada7933d36a38ffa9ead257384f560f7daf1f7f0c903eab6de96eb87686e5"
       }
     },
     {

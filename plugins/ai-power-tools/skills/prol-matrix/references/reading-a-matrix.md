@@ -124,7 +124,7 @@ that a restricted user might not be entitled to, which is why §7 flags the iden
 ### Connector entries
 
 ```json
-{ "technology": "WBA", "id": 0, "guid": "{AAAA0002-0000-4000-8000-000000000002}", "name": null,
+{ "technology": null, "id": 0, "guid": "{AAAA0002-0000-4000-8000-000000000002}", "name": null,
   "boundDirection": null, "midLabel": null, "baseType": "Association",
   "stereotype": "Uses", "stereotypeField": "Uses",
   "direction": "Target -> Source",
@@ -137,6 +137,11 @@ Measured as always null across every profile: `name`, `boundDirection`, `midLabe
 `startObjectId`, `endObjectId`. **Only the GUIDs are usable for the join.**
 
 `stereotype` and `stereotypeField` carried the same value throughout.
+
+> **`technology` is shown null deliberately.** A real payload may carry an MDG id here, but
+> connector stereotypes are stored bare and are declared by no MDG — so printing a technology id
+> beside a stereotype would imply that technology owns it, which for connectors is never true.
+> Never read a technology value as ownership of the stereotype beside it.
 
 ## 5. The direction measurement
 
@@ -199,10 +204,14 @@ function buildGrid(data) {
 > list is real data you are dropping. Silently skipping it is how a matrix comes out looking
 > complete and under-reporting.
 >
-> **`unplaced` catches only the disjoint case.** If the selectors *overlap*, an element is in both
-> lists, both membership tests succeed, the first branch wins and nothing reaches `unplaced` — the
-> orientation is then a guess. Test `sourceElements` and `targetElements` for a shared GUID
-> separately, and say so in the result.
+> **`unplaced` catches only the disjoint case.** If **both** ends of a connector lie in the
+> intersection of the two lists, both membership tests succeed, the first branch wins and nothing
+> reaches `unplaced` — the orientation is then a guess. A connector with one end in the
+> intersection and one outside still places correctly.
+>
+> Test `sourceElements` and `targetElements` for a shared GUID and report it. That test is
+> deliberately conservative: it flags any overlap, including profiles where every connector happens
+> to place correctly. Over-reporting an uncertainty is the safe direction.
 
 **A cell can hold more than one connector.** Two elements may be linked several times, by different
 relationship types or in both directions. The grid shows a marker; the underlying data is a list.

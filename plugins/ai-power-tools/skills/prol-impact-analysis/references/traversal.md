@@ -156,3 +156,11 @@ The last two lines are the ones people omit and the ones that make the answer tr
 - **ACL behavior for a restricted user.** Everything was read as Super Admin.
 - **Large-graph behavior.** The largest view built was 28 nodes. Nothing here establishes how the
   canvas or the endpoints behave at hundreds.
+
+**One known under-count, which is a property of the algorithm rather than something unmeasured.**
+`GetElementsConnectors` is only ever called on the previous frontier, so an edge between two nodes
+that are *both* first reached at the final depth is never fetched. Executed: `maxDepth 1` over
+`S–A`, `S–B`, `A–B` returns 3 elements and **2** relationships; the `A–B` edge is real and missing.
+
+So the relationship total is a floor, not a count. **Say "at least N relationships" whenever
+`stoppedBy` is set**, and remember §4 tells the reader to budget on exactly this number.

@@ -43,10 +43,11 @@ All three are properties of your own output, so they can be checked without a kn
 A join that decides the two ends independently fails (1) or (2) the moment a connector has both
 ends in one list, and a join that drops those connectors fails (3).
 
-> **The invariant does not cover overlapping selectors.** If an element appears in both
-> `sourceElements` and `targetElements` the two sets intersect, every placement satisfies all three
-> clauses trivially, and the orientation is still a guess. Test for the intersection separately and
-> report it — see `SKILL.md` §4.1 and §8.
+> **The invariant does not cover overlapping selectors.** When **both** ends of a connector lie in
+> the intersection of the two lists, every clause is satisfied whichever way round the placement
+> went, so the invariant passes and the orientation is still a guess. Partial overlap is still
+> caught — a connector with one end outside the intersection fails clause 2 if placed wrongly.
+> Test for the intersection separately and report it — see `SKILL.md` §4.1 and §8.
 
 > **This invariant was added because the skill shipped a snippet that passed TC-05 and TC-06 while
 > being wrong.** A suite that cannot catch a defect in its own skill is not yet a suite.
