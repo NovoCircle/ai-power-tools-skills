@@ -93,7 +93,8 @@ any behavior you describe.
 
 ### 4.1 Up to the point the paths diverge
 
-Follow `ea-reporting-database` §3.1 to §3.3. It ends holding exactly what both paths need:
+Follow `ea-reporting-database` §3.1 to §3.3, up to but not including `build_database`. It ends
+holding exactly what both paths need:
 
 | | |
 |---|---|
@@ -144,7 +145,7 @@ on_disk = {p.stem: pq_read.read_metadata(p).num_rows
            for p in (out / "parquet").glob("*.parquet")}
 ```
 
-Use `on_disk` as the database side of every comparison below.
+On path B, use `on_disk` as the database side of every comparison below.
 
 ```python
 from ddl import FRAME_DDL, physical
@@ -169,19 +170,26 @@ passes `scalar_counts(...)`. Everything else about the call is unchanged. A Parq
 skips the count-back is the exact failure this capability family has already produced once: a
 self-consistent output that under-reports and passes every validation while doing it.
 
-**On path B, stop at `reconcile(...)` and `format_report(...)`.** The lines after them in
-`ea-reporting-database` §3.4 write into the database, and on this path there is no database.
-`record_reconciliation` raises `no such table: _load_run` **and leaves a 0-byte `reporting.sqlite`
-behind** — it connects before it queries — which is residue on the one path that promises to leave
-none; `build_manifest` then raises on `loaded`, which path B never produced. Report the verdict in
-your own output instead. Path B has nowhere to record it, and `APT-2026-0212` is where a Parquet-side
-recorder belongs.
+**On path B, skip these calls in `ea-reporting-database` §3.4 by name: `record_reconciliation`,
+`build_manifest` and the `issued-sql.log` write.** Skip by name rather than stopping at a point in
+the listing — `record_reconciliation` comes *before* `format_report` there, so a reader who stops at
+a position has already run it. It raises `no such table: _load_run` **and leaves a 0-byte
+`reporting.sqlite` behind** — it connects before it queries — which is residue on the one path that
+promises to leave none. The other two read `loaded`, which path B never produced, so they raise
+`NameError` while their arguments are evaluated; `build_manifest` is never entered. The rest stands:
+`format_report` and `data_dictionary` need no database at all, so `reconciliation.txt` and
+`data-dictionary.md` are both path-B deliverables. Report the reconciliation verdict in your own
+output: path B has nowhere to record it, and `APT-2026-0212` is where a Parquet-side recorder belongs.
 
 **On path A, read the Parquet back too.** The database reconciliation proves the database matches the
 repository; it says nothing about the files Power BI actually reads, and path A writes Parquet from
-the same `result` before emitting the project. Run the same `on_disk` read-back above against
-`out / "parquet"` and compare it with `database_counts(...)`. Two cheap lines, and without them the
-last hop before the customer's report is the only one nothing checks.
+the same `result` before emitting the project. After §3.4's reconciliation has run, build
+`entity_counts` and `db_scalars` from the `on_disk` read-back above against `out / "parquet"`, then
+compare `entity_counts` with `database_counts(...)` and `db_scalars` with `scalar_counts(...)`. Do
+not compare `on_disk` itself with either: it holds every Parquet file, while `database_counts`
+returns the entity tables only, so the two are unequal on a healthy build. Both comparisons are
+needed — without the frame side the eleven `_`-prefixed files, `_keymap` among them, go unchecked,
+and Power BI reads those too.
 
 ### 4.4 Emit the project
 

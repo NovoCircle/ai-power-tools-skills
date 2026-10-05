@@ -166,8 +166,8 @@ contradiction beside an explicit setting, because it records that the *client* c
 `1` (Default) are Power BI's own `RowNumber` columns. A model that *does* sum was open on a second
 engine at the same time as a control, so this is not a reading taken in the absence of a contrast.
 
-Without it, a numeric tagged value arrives pre-aggregated and the field list offers a sum of
-something nobody asked to add up.
+Without that explicit `summarizeBy: none` on every column, a numeric tagged value falls to the
+default aggregation and the field list offers a sum of something nobody asked to add up.
 
 ---
 

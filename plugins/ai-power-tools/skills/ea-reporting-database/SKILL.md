@@ -1,6 +1,6 @@
 ---
 name: ea-reporting-database
-description: Build a queryable relational database from a Sparx EA repository - every element, relationship, tagged value, attribute and diagram placement, typed by the technology that governs them - and prove it matches the repository by counting back. Use when someone wants to query, roll up, or report across a whole model rather than element by element, wants EA content in a database an agent or a SQL client can read, or asks for a refreshable extract. Also use when a count taken from EA is disputed and you need a reconciled figure. For Power BI specifically - a dataset, a .pbip, TMDL or a semantic model - follow sections 3.1 to 3.3 here and then continue with ea-power-bi, which decides whether a relational database is built at all.
+description: Build a queryable relational database from a Sparx EA repository - every element, relationship, tagged value, attribute and diagram placement, typed by the technology that governs them - and prove it matches the repository by counting back. Use when someone wants to query, roll up, or report across a whole model rather than element by element, wants EA content in a database an agent or a SQL client can read, or asks for a refreshable extract. Also use when a count taken from EA is disputed and you need a reconciled figure. For Power BI specifically - a dataset, a .pbip, TMDL or a semantic model - follow sections 3.1 to 3.3 here, up to but not including build_database, and then continue with ea-power-bi, which decides whether a relational database is built at all.
 ---
 
 # A reporting database from an EA repository
@@ -32,8 +32,8 @@ Five files per build:
 
 **Not produced, on purpose:** no `.sql` DDL file (SQLite carries its own schema and nothing
 would read it), no CSV, no Excel. The database is the deliverable, and a portable target gets its
-own DDL generated *for that target* — never retrofitted from SQLite's dialect. **Parquet and
-Power BI belong to `ea-power-bi`**, which continues from §3.3 here.
+own DDL generated *for that target* — never retrofitted from SQLite's dialect. **Parquet and Power
+BI belong to `ea-power-bi`**, which continues from §3.3 here and decides whether `build_database` runs.
 
 ---
 
