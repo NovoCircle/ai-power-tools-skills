@@ -517,6 +517,32 @@ def _entity_view(table) -> str:
     The tagged-value pivot: one correlated subquery per column, generated once
     at setup from the census. Column ORDER matches `ddl.entity_table_ddl` and
     `load.entity_columns`, so a column maps to the same place on every path.
+
+    `ORDER BY p.PropertyID DESC` IS LOAD-BEARING, AND IT ENCODES A DEFECT
+    --------------------------------------------------------------------
+    `t_objectproperties` carries no unique index on `(Object_ID, Property)`, and
+    the reference model really does hold duplicates: each of six tags on one
+    element appears twice, once populated and once NULL, the NULL having the
+    higher `PropertyID`.
+
+    `pivot` assigns column values in extract order and lets later rows
+    overwrite, so the NULL duplicate wins and the populated value is LOST - that
+    element's six columns are empty in the database while its `tag_value` rows
+    carry the real values. Taking the highest `PropertyID` reproduces that
+    exactly, which is what the identical-output contract requires.
+
+    Without an ORDER BY, `TOP 1` is NONDETERMINISTIC: it happened to return the
+    populated row, so the view silently disagreed with the database on one
+    element. Row counts cannot see that, and it is what the value-level
+    comparison was added to catch.
+
+    **The underlying behaviour is a defect in `pivot`, not here** - a populated
+    value should not lose to an empty duplicate. Reproducing it is the correct
+    move for THIS module; fixing it belongs to `pivot.py` and would change what
+    the shipped reporting database contains.
+
+    `COALESCE(p.Value, '')` keeps the distinction the pivot makes: a tag that is
+    present but empty is `''`, a tag that is absent is NULL.
     """
     cols = [
         "       o.ea_guid,",
@@ -525,9 +551,11 @@ def _entity_view(table) -> str:
     ]
     for c in table.columns:
         cols.append(
-            f"       (SELECT TOP 1 p.Value FROM t_objectproperties p\n"
+            f"       (SELECT TOP 1 COALESCE(p.Value, '')\n"
+            f"          FROM t_objectproperties p\n"
             f"         WHERE p.Object_ID = o.Object_ID\n"
-            f"           AND p.Property = {_lit(c.source_tag)}) AS {_q(c.name)},")
+            f"           AND p.Property = {_lit(c.source_tag)}\n"
+            f"         ORDER BY p.PropertyID DESC) AS {_q(c.name)},")
     body = "\n".join(cols).rstrip(",")
     return (
         f"CREATE VIEW {_q(table.name)} AS\n"
