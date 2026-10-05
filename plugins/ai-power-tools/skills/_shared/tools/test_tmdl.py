@@ -408,8 +408,16 @@ def test_a_BARE_hash_is_left_alone_because_M_allows_it():
 
 
 def test_an_m_literal_escapes_line_breaks_and_tabs():
-    """The spec limits text literals to graphic characters, and a raw newline
-    independently breaks the enclosing TMDL block."""
+    """A raw newline breaks the enclosing TMDL block, which is
+    indentation-structured. TAB is escaped too, which the block structure does
+    not require - that is set by leading indentation - but which keeps the
+    emitted file readable.
+
+    The spec does NOT restrict literals to graphic characters: it admits any
+    character except `"` and `#(`, which is the premise
+    `test_a_BARE_hash_is_left_alone_because_M_allows_it` rests on. An earlier
+    version of this docstring said otherwise, in two places; this is the second
+    copy, and both are now corrected."""
     assert m_literal("a" + chr(13) + chr(10) + "b") == "a#(cr)#(lf)b"
     assert m_literal("a" + chr(9) + "b") == "a#(tab)b"
 
@@ -447,17 +455,25 @@ def test_the_partition_sources_actually_use_the_escaper():
 def test_the_other_two_sinks_escape_as_well():
     """SIX values reach a Power Query literal, not three.
 
-    The test above covers `directory`, `server` and `database`, and `suffix` by
-    the same whole-path escape. Removing `m_literal` from `schema` or from
-    `table.source_name` left the whole suite GREEN - so the uncovered set was
-    exactly those two of the six, and the suite was agreeing with S-0211-01
-    while failing to cover a third of it. Established by mutation, not by
-    counting: dropping the escaper from `directory` or `suffix` already failed
-    the earlier test.
+    The test above covers `directory`, `server` and `database`. **THREE of the
+    six were uncovered - a half, not a third:** `schema`, `table.source_name`,
+    and `suffix`.
 
-    Asserted against the exact escaped substring rather than against quote
-    parity: parity passes when the escaper is dropped from ONE of two sinks on
-    the same line, which is precisely the case that was uncovered."""
+    `suffix` was the one nobody caught, through two review passes. A pass
+    mutated the SHARED `m_literal(path)` call and saw a failure, then inferred
+    `suffix` was covered - but that failure comes through `directory`, and this
+    test was blind to `suffix` because `m_literal(x + ".parquet")` happens to
+    equal `m_literal(x) + ".parquet"`. MEASURED: escaping the stem and
+    appending `suffix` RAW left the whole suite green while emitting
+    `File.Contents("C:\\out\\entity_0".parquet")`, whose literal ends early.
+    `suffix` is never assigned a non-default value anywhere in the repository,
+    which is why nothing noticed - and exactly why a public field at a sink
+    needs a test rather than an argument.
+
+    So each of the six is now asserted against its own exact escaped substring,
+    and `suffix` carries a hostile value of its own. Not quote parity: parity is
+    blind to every state that stays even, including both sinks on a line losing
+    their escaper together."""
     hostile = 'x" & Web.Contents("http://example.invalid") & "'
     escaped = m_literal(hostile)
     table = SemanticTable(name="entity_0", source_name=hostile,
@@ -474,6 +490,18 @@ def test_the_other_two_sinks_escape_as_well():
                 .split(NEWLINE) if "Parquet.Document" in l)
     assert m_literal("C:\\out\\" + hostile + ".parquet") in line
     assert hostile not in line
+
+    # `suffix` is its own sink, and `m_literal(x + s) == m_literal(x) + s` for a
+    # harmless `s`, so a default suffix cannot discriminate. Give it a hostile
+    # value of its own: appending it raw emits a literal that ends early, which
+    # the whole-path assertion above cannot see.
+    hostile_suffix = '.parquet" & Web.Contents("http://example.invalid") & "'
+    pq = ParquetSource(directory=r"C:\out", suffix=hostile_suffix)
+    line = next(l for l in render_table(table, pq).split(NEWLINE)
+                if "Parquet.Document" in l)
+    assert m_literal("C:\\out\\" + hostile + hostile_suffix) in line, \
+        "suffix reached the literal unescaped"
+    assert hostile_suffix not in line
 
 
 def test_an_identifier_containing_a_line_break_is_refused():

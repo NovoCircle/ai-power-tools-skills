@@ -92,13 +92,26 @@ def m_literal(value: str) -> str:
     - `"` doubled, or it ends the literal and admits arbitrary M.
     - `#(` escaped as `#(#)(`, the spec's own example. Left alone, `#(lf)` in a
       path silently becomes a newline and `#(zz)` is a parse error.
-    - CR, LF and TAB replaced with `#(cr)`, `#(lf)`, `#(tab)`, because a raw
-      newline or tab breaks the enclosing TMDL block, which is
-      indentation-structured. **Only those three.** Every other control
-      character - NUL, U+0085, U+2028, U+2029 among them - passes through raw
-      and round-trips, which is narrower than the spec's own restriction to
-      graphic characters. None of them is a .NET line terminator, so none
-      breaks the block; this is a known narrowing, not an oversight.
+    - CR and LF replaced with `#(cr)` and `#(lf)`, because a raw newline breaks
+      the enclosing TMDL block, which is indentation-structured. TAB is replaced
+      with `#(tab)` as well, which the block structure does not require - that is
+      set by LEADING indentation - but which keeps the emitted file readable and
+      diffable.
+
+      **Only those three, and the narrowing is REAL.** Over the whole of Unicode
+      `m_literal` alters exactly four code points - `"` U+0022, TAB U+0009,
+      LF U+000A, CR U+000D - plus the two-character sequence `#(`. Every other
+      non-graphic character passes through raw and round-trips, including NUL,
+      VT, FF U+000C, NEL U+0085, LS U+2028 and PS U+2029.
+
+      **MEASURED, .NET 8.0.31:** FF, NEL, LS and PS *are* line terminators to
+      `String.ReplaceLineEndings` and `Span.EnumerateLines`; only the legacy
+      `StringReader.ReadLine` ignores them. So an earlier version of this
+      docstring claiming "none of them is a .NET line terminator" was FALSE, and
+      three of the four it named were counter-examples. **Whether the reader
+      behind TMDL honors them is UNVERIFIED and nothing here covers it** -
+      widening the escape to all four leaves the suite green, so no test pins
+      the narrowing either way. Recorded as an open narrowing, not as safe.
 
     **Order matters here**, unlike the first version of this function: `#(` is
     escaped FIRST, so the `#(lf)` this function itself inserts afterwards is not
