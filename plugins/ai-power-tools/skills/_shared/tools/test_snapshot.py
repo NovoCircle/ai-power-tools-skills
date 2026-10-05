@@ -33,11 +33,13 @@ import pathlib
 import re
 import shutil
 import sqlite3
+import subprocess
 import sys
 import types
 
 import pytest
 
+import extract as extract_module
 from ea_census import build_stereotype_index, census_elements, tag_coverage
 from extract import (
     CENSUS_QUERIES,
@@ -55,6 +57,7 @@ from extract import (
     main,
     open_snapshot,
     prune_snapshots,
+    resolve_scope,
     snapshot_dir,
     snapshot_digest,
     validate_run_id,
@@ -108,7 +111,7 @@ _CONNECTOR_STEREO_FLOWS = "@STEREO;Name=Flows;GUID={03};@ENDSTEREO;"
 #:
 #: EVERY ONE OF THE TEN TABLES HAS MORE THAN ONE ROW, and for each one its
 #: query's `ORDER BY` is the only thing deciding the sequence - which is the
-#: property `test_the_determinism_net_can_fail_for_every_one_of_the_ten_queries`
+#: property `test_a_dropped_order_by_column_moves_the_digest_for_all_ten_queries`
 #: measures and W19 found missing. Five of these tables used to hold a single
 #: row, so `reversed()` was a no-op and the determinism test compared a file
 #: against itself: the five shipped queries could be given a non-total `ORDER BY`
@@ -386,6 +389,37 @@ def test_a_second_run_does_not_overwrite_the_first(tmp_path):
     assert len(open_snapshot(tmp_path, "run-b").tables["object"]) == 1
 
 
+def test_a_manifests_sql_log_is_its_own_and_does_not_grow_afterwards(tmp_path):
+    """W31. `manifest["sql_log"] = ex.sql_log` stored the Extractor's live list by
+    reference, so a second extract through the same Extractor retro-edited the
+    first manifest. Measured:
+
+        after run 1: returned manifest sql_log length = 10
+        after run 2: run 1's RETURNED manifest sql_log length = 20
+        r1 ON-DISK sql_log: 10 | r2 ON-DISK: 20 | same list object: True
+
+    The on-disk copies were fine - they were serialized at write time - but the
+    returned manifest is what a caller records from, and run 2's own manifest
+    claims twenty statements, ten of which produced a *different* snapshot. That
+    contradicts the acceptance criterion that the issued SQL travels with the
+    snapshot it produced. Nothing shipped constructs an `Extractor`, so this is not
+    reachable from a documented path; it is one word, and `extract()` is a public
+    function.
+    """
+    root = tmp_path / "extracts"
+    ex = fake_extractor()
+    first = extract(ex, root, run_id="r1", run_at="2026-10-01 08:00:00")
+    issued = len(first["sql_log"])
+    second = extract(ex, root, run_id="r2", run_at="2026-10-02 08:00:00")
+
+    assert issued == 10
+    assert len(first["sql_log"]) == 10, "run 1's manifest was edited by run 2"
+    assert first["sql_log"] is not second["sql_log"]
+    assert first["sql_log"] == json.loads(
+        (snapshot_dir(root, "r1") / MANIFEST_NAME).read_text(
+            encoding="utf-8"))["sql_log"]
+
+
 def test_the_snapshot_carries_scope_counts_and_issued_sql(tmp_path):
     """"Enough on its own": a replayed build has to be able to state what it was
     built from without inferring any of it."""
@@ -461,10 +495,34 @@ def test_every_shipped_query_orders_its_rows():
     """The mechanism the claim above rests on, pinned where it lives. A query added
     later without an `ORDER BY` makes the digest non-deterministic for that table
     and nothing else here would notice - the fixtures would still agree with
-    themselves."""
+    themselves.
+
+    W30. This used to iterate the two query dicts only, so "EVERY QUERY ORDERS ITS
+    ROWS" (`extract.py:70`) and "every query carries an `ORDER BY`"
+    (`the-extract-snapshot.md:132`) were both false against an ELEVENTH statement
+    the check could not see: `resolve_scope`'s `t_package` walk. Measured in a
+    scoped manifest's own `sql_log`:
+
+        11 statements; last: SELECT Package_ID, Parent_ID FROM t_package
+        has ORDER BY: False
+
+    Its order cannot move the digest - the ids are re-sorted host-side - but
+    `sql_log` is a shipped deliverable and its CONTENT is order-dependent, and a
+    universal claim with one exception in it is what two rounds of review kept
+    finding in this module. So the check now counts the statements the module
+    actually issues rather than the ones that happen to live in a dict.
+    """
     for name, sql in {**CENSUS_QUERIES, **STRUCTURE_QUERIES}.items():
         assert "ORDER BY" in sql.upper(), f"{name} has no deterministic order"
     assert len(TABLE_NAMES) == 10
+
+    ex = fake_extractor()
+    resolve_scope(ex, 1)
+    assert len(ex.sql_log) == 1, "resolve_scope issues exactly one statement"
+    for entry in ex.sql_log:
+        assert "ORDER BY" in entry["sql"].upper(), (
+            f"{entry['label']} has no deterministic order, so the shipped claim "
+            f"that every query orders its rows is false for it")
 
 
 def _with_a_weaker_order(sql):
@@ -480,7 +538,7 @@ def _with_a_weaker_order(sql):
             ).rstrip()
 
 
-def test_the_determinism_net_can_fail_for_every_one_of_the_ten_queries(
+def test_a_dropped_order_by_column_moves_the_digest_for_all_ten_queries(
         tmp_path, monkeypatch):
     """W19. The test above asserts two digests are EQUAL, so it proves nothing
     unless weakening a query's order can make them differ - and for half the
@@ -499,11 +557,30 @@ def test_the_determinism_net_can_fail_for_every_one_of_the_ten_queries(
     tie-breaks `extract.py` singles out - so for `t_xref` and `t_objectproperties`
     the fake emulated NO tie-break at all.
 
-    So this is the net's own test. For each of the ten shipped queries in turn,
-    its order is weakened by one column and the digests MUST then differ. Ten
-    assertions that each fail if that query's ordering has stopped being the only
-    thing deciding the sequence - whether because the fixture lost its second row
-    or because the fake stopped honoring a tie-break.
+    So this is the net's own test, and W32 narrows what it claims. For each of
+    the ten shipped queries in turn, its order is weakened BY DROPPING THE LAST
+    `ORDER BY` COLUMN and the digests must then differ. That one mutation class is
+    what is proven here - 10 of 10 - and it is the mistake a reviewer actually
+    makes: a tie-break left off, or a single-column order deleted outright.
+
+    IT IS NOT "the net can fail for any weakening of any query", which is what the
+    old name and docstring said. Replacing a query's whole `ORDER BY` with a
+    different single column is a weaker mutation and the fixture does not catch
+    two of them: `connector ORDER BY Stereotype` and `attribute ORDER BY [Scope]`
+    leave the digest stable, because the fixture has no TIE on either substituted
+    column, so the rows come back in one sequence either way. Measured, with the
+    other three for contrast:
+
+        connector     ORDER BY Stereotype     digest moved: False
+        attribute     ORDER BY [Scope]        digest moved: False
+        connectortag  ORDER BY Property       digest moved: True
+        operation     ORDER BY [Scope]        digest moved: True
+        diagram       ORDER BY Diagram_Type   digest moved: True
+
+    Giving those two fixtures a tie on the substituted column would close the gap
+    and is deliberately not done here: the dropped-column class is the one the
+    design rests on, and widening the fixture to chase a weaker class would change
+    the rows every other test in this file measures against.
     """
     for name in TABLE_NAMES:
         source = CENSUS_QUERIES if name in CENSUS_QUERIES else STRUCTURE_QUERIES
@@ -816,6 +893,173 @@ def test_a_replacement_that_fails_mid_commit_puts_the_old_snapshot_back(tmp_path
             encoding="utf-8"))) == 1
 
 
+def _refuse_the_commit_and_the_putback(root, run_id):
+    """The double failure: the commit rename refused AND the putback of the aside.
+
+    The narrowest failure `_commit` has - two independent refusals of the same
+    directory inside one call - and the only one that does not leave a snapshot
+    under the `run_id`. Both W23 and W24 are about what the module SAYS in that
+    state, so both need it.
+    """
+    real_rename = pathlib.Path.rename
+    out_dir = snapshot_dir(root, run_id)
+    aside = root / f"{SUPERSEDED_PREFIX}{run_id}"
+
+    def refuse(self, target):
+        target = pathlib.Path(target)
+        if target == out_dir and (self.name.startswith(INCOMPLETE_PREFIX)
+                                  or self == aside):
+            raise PermissionError(5, "Access is denied")
+        return real_rename(self, target)
+
+    return refuse
+
+
+def test_a_failed_putback_says_both_sets_of_rows_will_be_pruned(tmp_path):
+    """W23. `_commit`'s docstring promised "every failure leaves one whole snapshot
+    under it" and the shipped reference promised "at every instant that `run_id`
+    holds one whole, loadable snapshot ... the retained snapshot stays readable and
+    replayable UNDER ITS OWN NAME". One path breaks both, and it is a path the same
+    function implements: the commit rename is refused and so is the putback.
+    Reproduced:
+
+        dirs: ['.incomplete-r1', '.superseded-r1']        <- no r1
+        list_snapshots: []
+        does the message mention pruning will reclaim?   False
+        NEXT PRUNE destroys both:
+          [('.incomplete-r1','incomplete'), ('.superseded-r1','superseded')]
+        on disk after: []
+
+    The rows are all there, and that part of the message was true. What was missing
+    is the one thing the operator needed: nothing is retained under `r1`, so
+    retention cannot see either copy, and THE NEXT PRUNE RECLAIMS BOTH - including
+    the retained snapshot it was just told to keep. This was the only one of the
+    four failure messages in `_commit` that omitted the pruning disclosure; the
+    other three say "pruning will reclaim" in those words.
+
+    And `superseded` reported the retained snapshot's only copy as "the copy a
+    re-run of that run_id replaced", which on this path is false twice over.
+    """
+    root = tmp_path / "extracts"
+    first = take_snapshot(root, run_id="r1", run_at="2026-10-01 08:00:00")
+
+    with pytest.MonkeyPatch.context() as patched:
+        patched.setattr(pathlib.Path, "rename",
+                        _refuse_the_commit_and_the_putback(root, "r1"))
+        with pytest.raises(SnapshotError) as refusal:
+            take_snapshot(root, run_id="r1", run_at="2026-10-02 08:00:00",
+                          tables=dict(TABLES, object=TABLES["object"][:1]))
+
+    message = str(refusal.value)
+    assert sorted(p.name for p in root.iterdir()) == [
+        f"{INCOMPLETE_PREFIX}r1", f"{SUPERSEDED_PREFIX}r1"]
+    assert list_snapshots(root) == [], "nothing is retained under r1"
+    assert "BOTH sets of rows are on disk" in message, "the true part, kept"
+    assert "BEFORE THE NEXT PRUNE" in message, (
+        "the operator is told to keep a directory that the next prune deletes")
+    assert "reclaim BOTH" in message
+
+    # The rows really are both there and really are both reclaimed, so the
+    # disclosure is about this store and not a sentence added for the test.
+    assert snapshot_digest(root / f"{SUPERSEDED_PREFIX}r1") == first["digest"]
+    removed = prune_snapshots(root, keep=KEEP_RUNS)
+    assert sorted((s["run_id"], s["status"]) for s in removed) == [
+        (f"{INCOMPLETE_PREFIX}r1", "incomplete"),
+        (f"{SUPERSEDED_PREFIX}r1", "superseded")]
+    assert list(root.iterdir()) == []
+
+
+def test_rows_moved_aside_are_not_reported_as_pruned_or_never_kept(tmp_path):
+    """W24. In that same state `open_snapshot(root, 'r1')` answered "it has been
+    pruned, or was never kept" - verbatim, with the rows sitting in
+    `.superseded-r1`. That is the exact false message CR-0229-05(b) was refused
+    for, surviving on a narrower path, and it contradicts the refusal the operator
+    had just been handed: that one says both sets of rows are on disk.
+
+    The two facts are different and a replay has to be told which it is. Pruned
+    means the evidence is gone and the figure cannot be defended. This means the
+    evidence is on disk under a name nothing reads, and one rename recovers it.
+    """
+    root = tmp_path / "extracts"
+    first = take_snapshot(root, run_id="r1", run_at="2026-10-01 08:00:00")
+    with pytest.MonkeyPatch.context() as patched:
+        patched.setattr(pathlib.Path, "rename",
+                        _refuse_the_commit_and_the_putback(root, "r1"))
+        with pytest.raises(SnapshotError):
+            take_snapshot(root, run_id="r1", run_at="2026-10-02 08:00:00")
+
+    with pytest.raises(SnapshotError) as refusal:
+        open_snapshot(root, "r1", expect_digest=first["digest"])
+    message = str(refusal.value)
+    assert "has been pruned, or was never kept" not in message
+    assert f"{SUPERSEDED_PREFIX}r1" in message and f"{INCOMPLETE_PREFIX}r1" in message
+    assert "its rows are" in message
+    assert "Nothing has been deleted" in message
+
+    # And the rename the message names does recover the build's own evidence.
+    (root / f"{SUPERSEDED_PREFIX}r1").rename(snapshot_dir(root, "r1"))
+    assert open_snapshot(root, "r1", expect_digest=first["digest"]).run_id == "r1"
+
+    # A genuinely pruned snapshot still gets the pruned message, so the new branch
+    # did not simply replace one wrong answer with another.
+    shutil.rmtree(snapshot_dir(root, "r1"))
+    shutil.rmtree(root / f"{INCOMPLETE_PREFIX}r1")
+    take_snapshot(root, run_id="other", run_at="2026-10-03 08:00:00")
+    with pytest.raises(SnapshotError, match="has been pruned, or was never kept"):
+        open_snapshot(root, "r1")
+
+
+def test_a_case_collision_against_rows_moved_aside_is_refused_too(tmp_path):
+    """W25. `validate_new_run_id` compared `d.name.casefold()` against the new
+    `run_id`, and the debris names carry the run_id's OWN case - so
+    `.incomplete-Run-A` never casefold-matched a bare `run-a` and the collision
+    scan walked past it. From the W23 state, which is reachable without an operator
+    mistake and where those rows are the ONLY copy:
+
+        state: ['.incomplete-Run-A', '.superseded-Run-A']
+        the .incomplete- rows the previous message promised were intact: 3 objects
+        run as 'run-a': ACCEPTED.  state: ['.superseded-Run-A', 'run-a']
+          -> .incomplete-Run-A was silently reclaimed: True
+        replay of the FIRST build: "extract snapshot 'Run-A' hashes to c46bbc2b...,
+          but the build recorded e60e6f58..."
+
+    `extract()` treats `.incomplete-<run_id>` as leftovers of "this run_id" and
+    reclaims it, and NTFS makes `.incomplete-Run-A` that directory for `run-a`. So
+    the case collision CR-0229-05(a) was refused for is reached one directory over,
+    it destroys rows a refusal message promised were intact, and it is misreported
+    as tampering - all three of that finding's consequences.
+
+    The refusal has to name the `run_id` to pass, not the prefixed directory, which
+    is not a valid `run_id` and could not be passed to anything.
+    """
+    root = tmp_path / "extracts"
+    first = take_snapshot(root, run_id="Run-A", run_at="2026-10-01 08:00:00")
+    with pytest.MonkeyPatch.context() as patched:
+        patched.setattr(pathlib.Path, "rename",
+                        _refuse_the_commit_and_the_putback(root, "Run-A"))
+        with pytest.raises(SnapshotError):
+            take_snapshot(root, run_id="Run-A", run_at="2026-10-02 08:00:00")
+    assert sorted(p.name for p in root.iterdir()) == [
+        f"{INCOMPLETE_PREFIX}Run-A", f"{SUPERSEDED_PREFIX}Run-A"]
+
+    with pytest.raises(SnapshotError, match="differs only in case") as refusal:
+        take_snapshot(root, run_id="run-a", run_at="2026-10-03 08:00:00")
+    assert "Pass 'Run-A'" in str(refusal.value), (
+        "the prefixed name is not a run_id and cannot be passed to anything")
+
+    assert sorted(p.name for p in root.iterdir()) == [
+        f"{INCOMPLETE_PREFIX}Run-A", f"{SUPERSEDED_PREFIX}Run-A"], "nothing went"
+    assert snapshot_digest(root / f"{SUPERSEDED_PREFIX}Run-A") == first["digest"]
+
+    # The reverse direction, and from a plain retained snapshot, both still hold.
+    (root / f"{SUPERSEDED_PREFIX}Run-A").rename(snapshot_dir(root, "Run-A"))
+    with pytest.raises(SnapshotError, match="differs only in case"):
+        take_snapshot(root, run_id="RUN-A", run_at="2026-10-03 08:00:00")
+    # And re-running the same run_id is still the one way to replace a snapshot.
+    assert take_snapshot(root, run_id="Run-A", run_at="2026-10-04 08:00:00")[
+        "run_at"] == "2026-10-04 08:00:00"
+
+
 def test_the_debris_of_a_killed_run_is_not_a_snapshot_and_is_swept(tmp_path):
     """CR-0229-04's other half: bounded has to hold for a run killed so hard that
     nothing cleaned up after it. The leftover is named so that it can never be
@@ -876,6 +1120,215 @@ def test_a_plain_named_directory_that_is_not_a_snapshot_is_swept_too(tmp_path):
     assert [s["run_id"] for s in list_snapshots(root)] == ["good"]
 
 
+def test_an_unrelated_directory_in_the_store_root_is_not_touched_by_a_prune(
+        tmp_path, capsys):
+    """CR-0229-08, and the reason this test exists rather than an assertion
+    somewhere smaller. The sweep CR-0229-06 added tested only "is it a directory,
+    and was it not a loadable snapshot" - which is not a rule about debris at all.
+    `--out` is free text, nothing checks that the root belongs to this tool, and
+    there is no confirmation step, so pointing it at a populated directory
+    reclaimed every subdirectory in it. Reproduced through `main()` with NO failure
+    of any kind, against a path an operator could plausibly type:
+
+        before: ['.git', 'README.md', 'docs', 'extracts', 'research', 'src']
+        exit: 0
+        after:  ['README.md', 'x']
+        SWEPT .git (0 KiB) - ... which is what a delete stopped by a held file
+          leaves. Nothing could be replayed from it ...
+
+    `.git` and the working tree gone, irreversibly, each deletion reported as 0 KiB
+    of something no held file had anything to do with, and the run reporting
+    SUCCESS. The item's own repro uses `--out ./out`; `--out .` does this to a
+    checkout. It was a regression of that round: at the two earlier heads the sweep
+    matched `.incomplete-*` and left such directories alone.
+
+    So the sweep answers from POSITIVE evidence - `_is_debris`: one of the two
+    prefixes this module writes, or at least one `<table>.json` - and this test
+    drives the whole thing through `main()`, because every cheaper check passed
+    while the defect was live.
+
+    Two assertions carry the weight. Everything unrelated is STILL THERE after a
+    successful run, `.git` included. And nothing unrelated is REPORTED, because a
+    sweep report is a list of what went and a line naming a directory that did not
+    go is the same false statement in a quieter form.
+    """
+    root = tmp_path / "an-operator-typed-this"
+    root.mkdir()
+    for name in (".git", "docs", "extracts", "research", "src"):
+        (root / name).mkdir()
+        (root / name / "payload.txt").write_text("x" * 100, encoding="utf-8")
+    (root / ".git" / "HEAD").write_text("ref: refs/heads/main", encoding="utf-8")
+    (root / "README.md").write_text("not a directory, and never was at risk",
+                                    encoding="utf-8")
+    before = sorted(p.name for p in root.iterdir())
+
+    with pytest.MonkeyPatch.context() as patched:
+        _ea_is_reachable(patched)
+        code = main(["--out", str(root), "--run-id", "x",
+                     "--run-at", "2026-10-05 08:00:00"])
+
+    assert code == 0, "the run succeeded, which is exactly why this was dangerous"
+    assert sorted(p.name for p in root.iterdir()) == sorted(before + ["x"]), (
+        "a prune reclaimed directories in the store root that this tool never "
+        "wrote and cannot identify as its own")
+    assert (root / ".git" / "HEAD").read_text(encoding="utf-8") == (
+        "ref: refs/heads/main")
+    assert "SWEPT" not in capsys.readouterr().out, (
+        "nothing was swept, so nothing may be reported as swept")
+
+    # And the function on its own, so the property is not only true via the CLI.
+    assert prune_snapshots(root, keep=KEEP_RUNS, protect=("x",)) == []
+    assert sorted(p.name for p in root.iterdir()) == sorted(before + ["x"])
+
+
+def test_the_sweep_still_takes_both_debris_shapes_beside_an_untouched_directory(
+        tmp_path):
+    """The other half of CR-0229-08: the narrowing must not undo CR-0229-06. Both
+    real debris producers are here at once, beside directories that are not this
+    tool's and must survive - which is the combination neither finding's own test
+    covers on its own.
+
+    `.incomplete-killed` is the prefix route. `legacy-1` is the plain-named husk a
+    stopped delete leaves, identified by the table file it still holds, which is
+    what CR-0229-06 was refused for missing. `docs` and `archive-2026-09` hold no
+    table file at their top level and carry no prefix, so nothing here can say what
+    they are - and a tool that cannot say what something is does not delete it.
+
+    `archive-2026-09` is the case that makes the rule matter rather than just being
+    safe: a whole loadable snapshot one directory down. The old sweep destroyed one
+    and reported it as `unreadable`, 0 KiB, "nothing could be replayed from it" -
+    measured at 5,349 real bytes of replayable rows.
+    """
+    root = tmp_path / "extracts"
+    take_snapshot(root, run_id="good", run_at="2026-10-01 08:00:00")
+
+    killed = root / f"{INCOMPLETE_PREFIX}killed"
+    killed.mkdir()
+    (killed / "object.json").write_text("[]", encoding="utf-8")
+    husk = root / "legacy-1"
+    husk.mkdir()
+    (husk / "object.json").write_text(json.dumps(TABLES["object"], indent=1),
+                                      encoding="utf-8")
+    (root / "docs").mkdir()
+    (root / "docs" / "notes.md").write_text("mine, not yours", encoding="utf-8")
+    archive = root / "archive-2026-09"
+    archive.mkdir()
+    shutil.copytree(snapshot_dir(root, "good"), archive / "inner")
+    replayable = snapshot_digest(archive / "inner")
+
+    removed = prune_snapshots(root, keep=KEEP_RUNS)
+
+    assert [(s["run_id"], s["status"]) for s in removed] == [
+        (f"{INCOMPLETE_PREFIX}killed", "incomplete"), ("legacy-1", "unreadable")]
+    assert all(s["bytes"] > 0 for s in removed), "report what it reclaimed"
+    assert sorted(p.name for p in root.iterdir()) == [
+        "archive-2026-09", "docs", "good"]
+    assert snapshot_digest(archive / "inner") == replayable, (
+        "a loadable snapshot nested under a plain name was destroyed and reported "
+        "as 0 KiB of something nothing could be replayed from")
+
+
+def test_a_directory_junction_in_the_store_root_is_left_alone(tmp_path):
+    """W34, which the CR-0229-08 narrowing is supposed to close, so it is checked
+    rather than assumed. A junction is a directory to `is_dir()` and the old sweep
+    therefore tried to reclaim one on every prune - and could not, because
+    `shutil.rmtree` refuses a reparse point. Measured at the previous head:
+
+        sweep reported: [('shortcut', 'held', 8)]   junction still present: True
+        TARGET survived: True                       main() exit: 1
+
+    So it sat in the HELD block for ever and `main()` returned 1 for ever, with the
+    store reported as over its bound by a directory retention was never entitled to
+    delete. The good news was measured too and holds: no traversal through the
+    junction, the target and its contents were never at risk.
+
+    It carries no prefix and holds no table file, so `_is_debris` now says no and
+    the retry budget is not spent on it at all.
+    """
+    root = tmp_path / "extracts"
+    take_snapshot(root, run_id="good", run_at="2026-10-01 08:00:00")
+    target = tmp_path / "somewhere-else"
+    target.mkdir()
+    (target / "precious.txt").write_text("not retention's to delete",
+                                         encoding="utf-8")
+    made = subprocess.run(["cmd", "/c", "mklink", "/J",
+                           str(root / "shortcut"), str(target)],
+                          capture_output=True, text=True)
+    if made.returncode != 0:
+        pytest.skip(f"no directory junction available here: "
+                    f"{made.stderr.strip() or made.stdout.strip()}")
+
+    assert prune_snapshots(root, keep=KEEP_RUNS) == [], (
+        "a junction was reported as debris retention meant to remove")
+    assert (root / "shortcut").is_dir()
+    assert (target / "precious.txt").is_file()
+
+    with pytest.MonkeyPatch.context() as patched:
+        _ea_is_reachable(patched)
+        assert main(["--out", str(root), "--run-id", "fresh",
+                     "--run-at", "2026-10-05 08:00:00"]) == 0, (
+            "a junction in the root used to make every run return 1 for ever")
+
+
+def test_a_swept_directorys_size_is_counted_all_the_way_down(tmp_path):
+    """CR-0229-08's report limb, and W27. `bytes` summed `d.iterdir()`, top level
+    only, so a swept TREE was reported as 0 KiB - measured at 0 against 5,353 real
+    bytes. Against the module's own rule that silently discarding the evidence
+    behind a quoted figure is the failure retention exists to prevent, a deletion
+    announced as nothing is not meaningfully louder than a silent one.
+
+    Kept separate from the narrowing because it survives it: debris legitimately
+    has subdirectories - a killed run writes its table files one level down from
+    nothing, and a copied store brings whatever was in it.
+    """
+    root = tmp_path / "extracts"
+    take_snapshot(root, run_id="good", run_at="2026-10-01 08:00:00")
+    debris = root / f"{INCOMPLETE_PREFIX}killed"
+    (debris / "nested").mkdir(parents=True)
+    (debris / "object.json").write_text("[]", encoding="utf-8")
+    (debris / "nested" / "rows.json").write_text("y" * 4000, encoding="utf-8")
+    real = sum(f.stat().st_size for f in debris.rglob("*") if f.is_file())
+
+    removed = prune_snapshots(root, keep=KEEP_RUNS)
+    assert [s["bytes"] for s in removed] == [real]
+    assert real > 4000, "the fixture has to have more below the top level than in it"
+
+
+def test_the_swept_report_claims_no_cause_it_did_not_check(tmp_path):
+    """W28. The `unreadable` sentence told the operator the directory was "what a
+    delete stopped by a held file leaves", and `main()` added "Nothing could be
+    replayed from it". Neither was checked, and in every CR-0229-08 reproduction
+    both were false: no held file was involved anywhere, and one of the
+    directories was a loadable snapshot.
+
+    `superseded` had the same shape - "the copy a re-run of that run_id replaced" -
+    which is false on the one path where it is the ONLY copy and nothing replaced
+    it (see the putback test below).
+
+    This asserts the absence of a claim, which is a weak test on its own, so it
+    pins the mechanism too: a status may not be swept without a sentence, and the
+    sentences are keyed to exactly the statuses `_debris_status` can return.
+    """
+    reasons = extract_module._SWEPT_REASON
+    assert set(reasons) == {"incomplete", "superseded", "unreadable"}
+    for status, reason in reasons.items():
+        assert "held" not in reason, (
+            f"{status} asserts a held file as the cause; nothing checked for one")
+        assert "replay" not in reason, (
+            f"{status} asserts nothing could be replayed from it; the sweep never "
+            f"looked, and a superseded aside is a full set of rows")
+    assert "replaced" not in reasons["superseded"], (
+        "a superseded aside is the only copy on the putback-failure path")
+
+    root = tmp_path / "extracts"
+    take_snapshot(root, run_id="good", run_at="2026-10-01 08:00:00")
+    husk = root / "legacy-1"
+    husk.mkdir()
+    (husk / "object.json").write_text("[]", encoding="utf-8")
+    assert [s["status"] for s in prune_snapshots(root, keep=KEEP_RUNS)] == [
+        "unreadable"], "and the keying is live, not just a constant"
+
+
 def test_a_prune_stopped_by_a_held_file_is_reported_not_raised(tmp_path):
     """CR-0229-06's second producer - and the same lesson as CR-0229-05, applied to
     the delete retention has always done. Measured with one table file held open:
@@ -908,6 +1361,161 @@ def test_a_prune_stopped_by_a_held_file_is_reported_not_raised(tmp_path):
     assert [(s["run_id"], s["status"]) for s in prune_snapshots(root, keep=1)] == [
         ("drop", "unreadable")]
     assert [p.name for p in root.iterdir()] == ["keep"]
+
+
+def test_a_held_prune_target_can_be_gutted_and_held_does_not_deny_it(
+        tmp_path, capsys):
+    """W38. `shutil.rmtree` stops at the first file it cannot remove - AFTER
+    deleting everything ahead of it - so whether a refused prune leaves a loadable
+    snapshot or a husk depends on where the locked file sorts against
+    `extract-manifest.json`. The test above holds `object.json`, which sorts
+    *after* it, so the manifest goes and the directory degrades into swept
+    `unreadable` debris. That is the benign variant, and it was the only one
+    covered. Both measured:
+
+        holding connector.json (sorts BEFORE the manifest):
+          files 11 -> 10; manifest survived: True; missing: ['attribute.json']
+          still LISTED as a snapshot: ['keep','drop']
+          the KiB figure counts it: 10495 | open_snapshot('drop') -> raw
+          FileNotFoundError
+
+        holding object.json (sorts AFTER the manifest):
+          files 11 -> 5; manifest survived: False; still LISTED: ['keep']
+
+    The first variant is the `held` path manufacturing a snapshot that is listed,
+    counted toward `keep` and no longer replayable out of one that was whole - and
+    the shipped status table said `held` means it "is still there", which reads as
+    a promise that it is intact.
+
+    Scope, honestly: only snapshots already outside `keep` reach the delete, so
+    this is confined to directories already selected for deletion and it
+    self-heals on the next prune. That is why the fix is the REPORT rather than the
+    deletion, and why this test pins the wording and the self-healing rather than
+    asserting the gutting cannot happen.
+    """
+    root = tmp_path / "extracts"
+    take_snapshot(root, run_id="keep", run_at="2026-10-02 08:00:00")
+    take_snapshot(root, run_id="drop", run_at="2026-10-01 08:00:00")
+    target = snapshot_dir(root, "drop")
+    assert sorted(p.name for p in target.iterdir())[0] < MANIFEST_NAME, (
+        "connector.json has to sort before the manifest or this tests nothing")
+
+    with open(target / "connector.json", encoding="utf-8"):
+        removed = prune_snapshots(root, keep=1)
+        assert [(s["run_id"], s["status"]) for s in removed] == [("drop", "held")]
+        # The gutting: the manifest outlived files that sorted ahead of it, so the
+        # directory is still a listed snapshot and still occupies a retention slot.
+        assert (target / MANIFEST_NAME).is_file()
+        assert not (target / "attribute.json").exists()
+        assert [s["run_id"] for s in list_snapshots(root)] == ["keep", "drop"]
+
+    with pytest.MonkeyPatch.context() as patched:
+        _ea_is_reachable(patched)
+        with open(snapshot_dir(root, "drop") / "connector.json", encoding="utf-8"):
+            code = main(["--out", str(root), "--run-id", "fresh", "--keep", "1",
+                         "--run-at", "2026-10-05 08:00:00"])
+    assert code == 1, "main() reports a directory it could not fully remove"
+    held_block = capsys.readouterr().err
+    assert "COULD NOT BE FULLY REMOVED" in held_block
+    assert "may no longer be loadable" in held_block, (
+        "`held` read as a promise the directory is intact, and it is not")
+
+    # The next prune does reclaim it, so the store is not permanently over bound.
+    assert [s["status"] for s in prune_snapshots(root, keep=1, protect=("fresh",))
+            if s["run_id"] == "drop"] == ["pruned"]
+    assert not snapshot_dir(root, "drop").exists()
+
+
+def test_a_manifest_that_does_not_parse_does_not_stop_the_whole_store(tmp_path):
+    """W36, W26 and W9, which are one edit. `list_snapshots` read the manifest with
+    a bare `json.loads` and an unguarded `man["run_at"]`, and `prune_snapshots`
+    calls it BEFORE the sweep - so one unreadable manifest raised out of every
+    prune, that directory survived for ever, and it blocked the reclamation of
+    everything else in the store. Three classes, all measured:
+
+        truncated manifest -> JSONDecodeError out of list_snapshots AND
+          prune_snapshots; dirs after a full prune: ['good', 'legacy-1'];
+          main() exit 1, stderr "Unterminated string starting at: line 1
+          column 24" and the message names NO path
+        valid JSON that is not an object ([]) -> AttributeError: 'list' object has
+          no attribute 'get', which main() did not catch at all
+        a manifest with no `run_at` -> KeyError('run_at'), uncaught, a traceback
+          where the exit-1 contract promises a message - and this is the case
+          `test_main_prints_the_reference_before_it_prunes`'s own docstring names
+
+    Reachable without an operator mistake: a partial copy while restoring an
+    archived snapshot, which the shipped reference tells operators to do, or a
+    disk-full during the manifest write.
+
+    A directory this function cannot read is not a snapshot - which is all it ever
+    needed to be. It is then debris like any other, swept if it holds table files,
+    and `main()` completes.
+    """
+    for label, body in (("truncated", '{"run_id": "legacy-1", "run_a'),
+                        ("not an object", "[]"),
+                        ("no run_at", '{"run_id": "legacy-1"}')):
+        root = tmp_path / label
+        take_snapshot(root, run_id="good", run_at="2026-10-01 08:00:00")
+        bad = root / "legacy-1"
+        bad.mkdir()
+        (bad / MANIFEST_NAME).write_text(body, encoding="utf-8")
+        (bad / "object.json").write_text("[]", encoding="utf-8")
+
+        assert [s["run_id"] for s in list_snapshots(root)] == ["good"], label
+        removed = prune_snapshots(root, keep=KEEP_RUNS)
+        assert [(s["run_id"], s["status"]) for s in removed] == [
+            ("legacy-1", "unreadable")], label
+        assert [p.name for p in root.iterdir()] == ["good"], label
+
+        with pytest.MonkeyPatch.context() as patched:
+            _ea_is_reachable(patched)
+            assert main(["--out", str(root), "--run-id", "fresh",
+                         "--run-at", "2026-10-05 08:00:00"]) == 0, label
+
+    # And the DELIBERATE refusal is not folded in with them: a manifest that parses
+    # and names a different run_id is a real disagreement about which evidence is
+    # meant, and is still loud.
+    root = tmp_path / "two-names"
+    take_snapshot(root, run_id="archived", run_at="2026-10-01 08:00:00")
+    shutil.copytree(snapshot_dir(root, "archived"), root / "archived-restored")
+    with pytest.raises(SnapshotError, match="holds a manifest naming"):
+        list_snapshots(root)
+
+
+def test_a_snapshot_under_another_name_is_refused_not_opened_under_the_manifests(
+        tmp_path):
+    """W29. `open_snapshot` did not enforce the directory/manifest agreement
+    `list_snapshots` does, and it returned the MANIFEST's `run_id` as the
+    snapshot's identity. Observed:
+
+        open_snapshot(root, 'run-archived-restored').run_id == 'run-archived'
+
+    The documented build passes `extract_run_id=snap.run_id` (`SKILL.md:200`), so
+    that call persists a provenance claim naming a directory the build did not
+    read - and the next replay of that build looks up `run-archived`, finds the
+    original, and reconciles perfectly against the wrong rows. The shipped refusal
+    table already promised this one: "Two directories claiming one `run_id` ->
+    `SnapshotError` naming both" (`the-extract-snapshot.md:297`), which was true
+    for `list_snapshots` and `prune_snapshots` and false here.
+    """
+    root = tmp_path / "extracts"
+    original = take_snapshot(root, run_id="run-archived", run_at="2026-10-01 08:00:00")
+    shutil.copytree(snapshot_dir(root, "run-archived"), root / "run-archived-restored")
+
+    with pytest.raises(SnapshotError, match="holds a manifest naming") as refusal:
+        open_snapshot(root, "run-archived-restored")
+    assert "'run-archived'" in str(refusal.value), "it names both"
+
+    # Even with the right digest in hand, because the identity is the point: the
+    # two directories hash the same, so the digest check could never catch this.
+    assert snapshot_digest(root / "run-archived-restored") == original["digest"]
+    with pytest.raises(SnapshotError, match="holds a manifest naming"):
+        open_snapshot(root, "run-archived-restored",
+                      expect_digest=original["digest"])
+
+    # The snapshot under its own name is untouched by the new check.
+    assert open_snapshot(root, "run-archived",
+                         expect_digest=original["digest"]).run_id == "run-archived"
 
 
 def test_main_prints_the_reference_before_it_prunes(tmp_path, capsys):
@@ -946,6 +1554,125 @@ def test_main_prints_the_reference_before_it_prunes(tmp_path, capsys):
     assert "holds a manifest naming" in printed.err, "and says what is wrong"
     assert code == 1
     assert open_snapshot(root, "fresh").manifest["counts"]["object"] == 3
+
+
+def test_main_exits_zero_and_reports_the_snapshots_it_pruned(tmp_path, capsys):
+    """W39. `main()` was exercised by exactly ONE test, and it was the exit-1 path -
+    so the whole `retention:` / `PRUNED` / `SWEPT` print block shipped unexercised.
+    That is how CR-0229-08's wording and W37's exit-code contradiction stayed
+    invisible through two rounds: both live in output nothing read.
+
+    Exit 0 with a prune that actually removes something, which is the ordinary
+    run: the retention line, and the PRUNED block saying out loud that a figure
+    quoted from those builds can no longer be reproduced from its own rows.
+    """
+    root = tmp_path / "extracts"
+    for day in (1, 2, 3):
+        take_snapshot(root, run_id=f"old-{day}", run_at=f"2026-10-0{day} 08:00:00")
+
+    with pytest.MonkeyPatch.context() as patched:
+        _ea_is_reachable(patched)
+        code = main(["--out", str(root), "--run-id", "fresh", "--keep", "2",
+                     "--run-at", "2026-10-05 08:00:00"])
+
+    printed = capsys.readouterr()
+    assert code == 0, printed.err
+    assert "snapshot fresh retained at" in printed.out
+    assert "retention: 2 snapshot(s) kept, limit 2" in printed.out
+    assert "PRUNED 2 snapshot(s)" in printed.out
+    assert "can no longer be reproduced from its own rows" in printed.out
+    assert "old-1  taken 2026-10-01 08:00:00" in printed.out
+    assert "old-2  taken 2026-10-02 08:00:00" in printed.out
+    assert [s["run_id"] for s in list_snapshots(root)] == ["fresh", "old-3"]
+    assert open_snapshot(root, "fresh").manifest["counts"]["object"] == 3
+
+
+def test_main_reports_a_superseded_sweep_the_shipped_table_documents(
+        tmp_path, capsys):
+    """W39's second half. `superseded` is in the shipped status table
+    (`the-extract-snapshot.md`) and in `_SWEPT_REASON`, and NO test ever produced
+    it - so the one status whose wording W23 found false was documented, shipped,
+    and never once observed by the suite.
+
+    Here a re-run's aside cannot be deleted at the time, which is the state the
+    status exists for, and the next run reports it.
+    """
+    root = tmp_path / "extracts"
+    take_snapshot(root, run_id="r1", run_at="2026-10-01 08:00:00")
+    real_reclaim = extract_module._reclaim
+
+    with pytest.MonkeyPatch.context() as patched:
+        patched.setattr(extract_module, "_reclaim",
+                        lambda d: False if pathlib.Path(d).name.startswith(
+                            SUPERSEDED_PREFIX) else real_reclaim(d))
+        take_snapshot(root, run_id="r1", run_at="2026-10-02 08:00:00")
+
+    assert (root / f"{SUPERSEDED_PREFIX}r1").is_dir(), "the aside stayed behind"
+    assert [s["run_id"] for s in list_snapshots(root)] == ["r1"], (
+        "and the commit still succeeded, which is why it is not a failure"
+    )
+
+    with pytest.MonkeyPatch.context() as patched:
+        _ea_is_reachable(patched)
+        code = main(["--out", str(root), "--run-id", "fresh",
+                     "--run-at", "2026-10-05 08:00:00"])
+
+    printed = capsys.readouterr()
+    assert code == 0, printed.err
+    assert f"SWEPT {SUPERSEDED_PREFIX}r1" in printed.out
+    assert "renamed aside under this tool's replacement prefix" in printed.out
+    assert "replaced" not in printed.out, (
+        "on the putback-failure path it is the only copy and nothing replaced it")
+    assert "could be replayed" not in printed.out, (
+        "an aside is a full set of rows; the sweep never looked, so it may not "
+        "tell the operator nothing could have been replayed from what it deleted")
+    assert not (root / f"{SUPERSEDED_PREFIX}r1").exists()
+
+
+def test_a_refused_snapshot_write_exits_two_not_the_code_that_promises_a_digest(
+        tmp_path, capsys):
+    """W37. The eleven snapshot `write_text` calls are the one step this whole
+    commit is premised on being refusable, and nothing retried them and nothing
+    caught them: `main()`'s `try` took `SnapshotError` only. Reproduced by refusing
+    the sixth write:
+
+        main() -> UNCAUGHT PermissionError: [Errno 5] Access is denied
+        process exit 1 | a digest line was printed: False | store contents: []
+
+    Exit 1 is DOCUMENTED as "the snapshot is retained and its digest is printed but
+    retention did not complete". Here nothing was retained, no digest was printed
+    and the store was empty, so an operator or a CI step keying off exit 1 is told
+    its provenance is recoverable when there is no provenance at all. 2 is the code
+    that means nothing was retained, and that is what this is.
+    """
+    root = tmp_path / "extracts"
+    take_snapshot(root, run_id="already-here", run_at="2026-10-01 08:00:00")
+    real_write = pathlib.Path.write_text
+    written = []
+
+    def refuse_the_sixth_table_file(self, *args, **kwargs):
+        if self.suffix == ".json":
+            written.append(self.name)
+            if len(written) == 6:
+                raise PermissionError(5, "Access is denied")
+        return real_write(self, *args, **kwargs)
+
+    with pytest.MonkeyPatch.context() as patched:
+        _ea_is_reachable(patched)
+        patched.setattr(pathlib.Path, "write_text", refuse_the_sixth_table_file)
+        code = main(["--out", str(root), "--run-id", "r2",
+                     "--run-at", "2026-10-05 08:00:00"])
+
+    printed = capsys.readouterr()
+    assert code == 2, "exit 1 promises a retained snapshot and a printed digest"
+    assert "digest" not in printed.out, "and there is no digest to print"
+    assert "the extract did not complete" in printed.err
+    assert "Nothing was retained" in printed.err
+
+    # The store is as it was: the work directory is cleared and the snapshot that
+    # was already retained is untouched and still replayable.
+    assert [p.name for p in root.iterdir()] == ["already-here"]
+    assert open_snapshot(root, "already-here").manifest["counts"]["object"] == 3
 
 
 # --- a run never deletes the snapshot it has just reported as retained -------

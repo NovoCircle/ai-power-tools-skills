@@ -81,7 +81,9 @@ what `build_database` needs and it refuses half a reference — so a problem in 
 other directory in the store must not cost you them. Exit codes: **0** done; **1**
 the snapshot is retained and its digest is printed but retention did not complete, so
 the store needs attention before the next run; **2** nothing was retained, and the
-message says what to do about it.
+message says what to do about it. The two are not interchangeable: 1 is a promise that
+the digest above it is real and the build can record provenance, so anything that leaves
+the store without a snapshot — a refused rename, a refused *write* — is 2.
 
 **Scope resolution has no depth cap.** `resolve_scope` walks the whole package tree
 host-side and reports the depth it reached, because recursive CTEs are not portable and
@@ -129,11 +131,13 @@ the same, which is the useful property. It is what turns the reference in `_load
 from a label into an identity, and it is what lets a snapshot be *proven* to be the
 one a figure came from.
 
-That property rests on something: **every query carries an `ORDER BY`**, because the
-digest is over file *bytes* and no backend promises a row order without one. Each is a
-total order — a primary key, or the grouping columns plus a key, or every selected
-column, where a tie is then two byte-identical rows whose order cannot change the
-file. `t_objectproperties` is the one that matters: it has no unique index on
+That property rests on something: **every query carries an `ORDER BY`** — all eleven,
+including `resolve_scope`'s `t_package` walk, which is the one statement that is not a
+table dump and whose rows are re-sorted host-side anyway. The digest is over file *bytes*
+and no backend promises a row order without one; the `sql_log` is a deliverable and its
+content is order-dependent too. Each order is a total order — a primary key, or the
+grouping columns plus a key, or every selected column, where a tie is then two
+byte-identical rows whose order cannot change the file. `t_objectproperties` is the one that matters: it has no unique index on
 `(Object_ID, Property)`, so one element can carry two tags of the same name and which
 came back first was otherwise the backend's choice. Long-text columns are deliberately
 *not* sorted on — `t_xref.Description` is a memo, and a backend that will not sort one
@@ -178,9 +182,9 @@ mtime — a snapshot that has been copied or restored keeps the moment the extra
 |---|---|
 | `pruned` | A snapshot that aged out. The loud one — a figure quoted from that build can no longer be reproduced from its own rows |
 | `incomplete` | A `.incomplete-*` write that never finished |
-| `superseded` | The copy a re-run of the same `run_id` replaced, left behind because deleting it was refused at the time |
-| `unreadable` | Any other directory in the store that is not a loadable snapshot — what a delete stopped part-way leaves |
-| `held` | It could not be removed and **is still there**. Reported, not raised, so one locked directory cannot cost you the report of everything that did go |
+| `superseded` | Rows renamed aside under `.superseded-*` for a re-run of that `run_id` and not deleted at the time. *Usually* the copy the re-run replaced — on the double-failure path described under re-running a `run_id` it is the only copy there is, which is why the status does not claim otherwise |
+| `unreadable` | A plain-named directory holding snapshot table files with no loadable manifest — what a delete stopped part-way leaves |
+| `held` | It could not be **fully** removed, and what is left of it is on disk. Reported, not raised, so one locked directory cannot cost you the report of everything that did go. Not a promise that it is intact: a refused delete stops at the file it cannot remove *after* deleting everything ahead of it, so a `held` snapshot may no longer be loadable. It is reclaimed by the next prune |
 
 **`protect` takes a collection, and a bare string is refused.** `protect="backfill"`
 iterates into its characters and protects nothing: it deleted `backfill` with no
@@ -220,31 +224,53 @@ because `list_snapshots` only recognizes a directory with a manifest: a half-wri
 one would be invisible to pruning *and* to the KiB-on-disk figure, and so would never
 be reclaimed.
 
-**The next `prune_snapshots` sweeps every directory in the store that is not a
-loadable snapshot**, whatever it is called, and reports each one — `incomplete` for
-the prefix this tool writes, `unreadable` for anything else, both separately from the
-snapshots that aged out. Matching the prefix alone was not enough: debris does not
-only arrive by the route designed for it. A delete stopped by a held file leaves a
-directory under a *plain* name with its manifest already gone, which no function
-could see and no prefix match would catch, and that survived a full prune forever.
-Nothing can be replayed from any of it, and `open_snapshot` refuses the names it can.
+**The next `prune_snapshots` sweeps the debris this tool can identify as its own**,
+and reports each one — `incomplete` or `superseded` for the two prefixes it writes,
+`unreadable` for a plain-named directory holding snapshot table files with no loadable
+manifest, all separately from the snapshots that aged out. Matching the prefixes alone
+was not enough: debris does not only arrive by the route designed for it. A delete
+stopped by a held file leaves a directory under a *plain* name with its manifest already
+gone, which no function could see and no prefix match would catch, and that survived a
+full prune forever.
+
+**Everything else in the store root is left alone, and that is deliberate.**
+"Every directory that is not a loadable snapshot" was the rule once, and it is not a
+rule about debris: `--out` is free text, nothing checks that the root belongs to this
+tool, and so `--out .` at a checkout reclaimed `.git`, `docs`, `research` and `src` and
+exited reporting success. Point `--out` wherever you like; the store root may hold
+whatever else you keep there. A directory this tool cannot identify is not reported
+either — a sweep report is a list of what *went*.
+
+A directory whose manifest does not parse, or parses to something that is not an object
+carrying `run_at`, is simply not a snapshot — a partial copy or a disk-full during the
+manifest write puts one there. It used to stop `list_snapshots` and therefore every
+prune, so it survived for ever and blocked the reclamation of everything else.
 
 The rename is the commit, and on Windows it needs exclusive access to the whole
 subtree — a scanner holding a file written a moment ago can refuse it. Every step is
 retried, 4 attempts over 0.75 s, and that includes the destructive ones: a *delete*
 is refused by a held file exactly as readily as a rename.
 
-**Re-running a `run_id` replaces its snapshot without ever leaving the name empty.**
-The retained directory is renamed *aside*, the new one is renamed into place, and only
-then is the aside deleted — so at every instant that `run_id` holds one whole,
-loadable snapshot. Deleting first opened a window in which it held neither, and a held
-file inside that window destroyed the old manifest, left half its table files under
-the snapshot's own name, and told the earlier build its evidence "has been pruned".
-If any step is refused the run **says so and keeps both sets of rows**: the retained
-snapshot stays readable and replayable under its own name, and the new rows stay under
-the temp name rather than being discarded after a COM round trip against a repository
-which has since moved on. Rename that directory to the `run_id` to retain it; until
-then nothing reads it, and pruning will reclaim it.
+**Re-running a `run_id` replaces its snapshot without ever deleting the only copy of
+anything.** The retained directory is renamed *aside*, the new one is renamed into place,
+and only then is the aside deleted. Deleting first opened a window in which the name held
+neither, and a held file inside that window destroyed the old manifest, left half its table
+files under the snapshot's own name, and told the earlier build its evidence "has been
+pruned".
+
+If a step is refused the run **says so and keeps both sets of rows**, and in every
+single-step failure the retained snapshot is readable and replayable under its own name
+while the new rows wait under the temp name. Rename that directory to the `run_id` to
+retain it; until then nothing reads it, and pruning will reclaim it.
+
+**One state leaves nothing under the `run_id` itself, and the message says so.** If the
+commit rename is refused *and* putting the aside back is refused too — two independent
+refusals of the same directory inside one call — the store holds `.superseded-<run-id>`
+and `.incomplete-<run-id>` and nothing under `<run-id>`. Both sets of rows are intact,
+but `list_snapshots` reports neither, `open_snapshot` names them rather than claiming the
+snapshot was pruned, and **the next prune reclaims both**. Rename `.superseded-<run-id>`
+to `<run-id>` to restore what was retained, or `.incomplete-<run-id>` to complete the
+run — before the next prune, not after it.
 
 ---
 
@@ -287,6 +313,7 @@ success.
 | Situation | What happens |
 |---|---|
 | Snapshot pruned or never kept | `SnapshotError` naming the `run_id`, saying it has been pruned, and listing what **is** retained |
+| Nothing under the `run_id`, but its rows are under `.superseded-` or `.incomplete-` | `SnapshotError` naming those directories and the rename that recovers each — *not* "it has been pruned", which would be false while the rows are on disk. Do it before the next prune |
 | A different extract under the same `run_id` | `SnapshotError` — the recorded digest and the files disagree |
 | Files edited since it was written | `SnapshotError` — it no longer matches its own manifest, so it is not evidence of anything |
 | Build recorded no extract at all | `LoadError` — builds predating retention are in this state |
@@ -294,8 +321,9 @@ success.
 | A recorded `extract_run_id` with no digest | `LoadError` — half a reference names a snapshot with nothing to verify it against |
 | A `run_id` that is not one safe path component | `SnapshotError` — it would put the snapshot outside retention's reach, or under a name the filesystem changes |
 | A `run_id` differing from a retained one only in case | `SnapshotError` naming both — the filesystem cannot tell them apart, so writing it would replace that snapshot's rows and the replay would read the loss as tampering |
-| Two directories claiming one `run_id` | `SnapshotError` naming both — restore a snapshot under its own `run_id`, or remove the copy |
-| A finished extract that cannot be moved into place | `SnapshotError`, exit 2 — nothing is deleted. The retained snapshot stays under its own name and the new rows stay under the temp name |
+| Two directories claiming one `run_id` | `SnapshotError` naming both, from `list_snapshots`, `prune_snapshots` **and** `open_snapshot` — restore a snapshot under its own `run_id`, or remove the copy. `open_snapshot` returns the directory's name as the snapshot's `run_id`, because that is the name a build can find it under again |
+| A finished extract that cannot be moved into place | `SnapshotError`, exit 2 — nothing is deleted. Both sets of rows are on disk, and the message says which rename recovers which. On every single-step failure the retained snapshot is still under its own name |
+| A snapshot file that cannot be written | `SnapshotError` or the underlying `OSError`, exit 2 — nothing was retained and no digest was printed, so there is nothing for a build to record. Deliberately **not** exit 1, which promises the opposite |
 
 Only the asked-for `run_id` is ever read. The failure mode being designed out is the
 quiet one: a store containing one perfectly loadable snapshot that is *not* the right
