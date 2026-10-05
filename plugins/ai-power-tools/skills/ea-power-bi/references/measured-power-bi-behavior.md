@@ -159,6 +159,16 @@ promised would be their own vocabulary. The host renders as a measure group - me
 
 The alternative, a synthetic one-row measure table, was rejected: it needs a constant partition.
 
+**`SummarizationSetBy = Automatic` does not override an explicit `summarizeBy`** — 2026-10-05,
+instrument `$SYSTEM.TMSCHEMA_COLUMNS` against the live engine. The annotation reads as a
+contradiction beside an explicit setting, because it records that the *client* chose. It reported
+`SummarizeBy = 2` (None) on all **235 real columns**, the INTEGER ones included; the 40 columns at
+`1` (Default) are Power BI's own `RowNumber` columns. A model that *does* sum was open on a second
+engine at the same time as a control, so this is not a reading taken in the absence of a contrast.
+
+Without it, a numeric tagged value arrives pre-aggregated and the field list offers a sum of
+something nobody asked to add up.
+
 ---
 
 ## 7. Parquet, and the connector
@@ -171,6 +181,10 @@ The alternative, a synthetic one-row measure table, was rejected: it needs a con
 - **The connector takes one file per pass.** No folder option, no multi-select. Forty tables would
   be forty passes, which is why the Parquet is paired with a `.pbip` rather than shipped loose.
 - Basic mode asks for a **URL** and accepted a local absolute path.
+- **Power BI has no SQLite connector.** Checked against the Power Query connector index: Access,
+  SQL Server, Oracle, MySQL, MariaDB, DB2 and ODBC are all present; SQLite is not. This is why the
+  reporting database is never read directly and paths A and B converge on the same Parquet.
+  **No date was recorded for this check** — it is stated undated rather than given a plausible one.
 - **Untested: UNC and OneLake paths**, and ingestion by Fabric or Azure SQL. The UNC case is what
   Power BI Service refresh would need.
 - Types are **declared**, from the technology, never inferred from the data - otherwise a refresh

@@ -169,6 +169,20 @@ passes `scalar_counts(...)`. Everything else about the call is unchanged. A Parq
 skips the count-back is the exact failure this capability family has already produced once: a
 self-consistent output that under-reports and passes every validation while doing it.
 
+**On path B, stop at `reconcile(...)` and `format_report(...)`.** The lines after them in
+`ea-reporting-database` §3.4 write into the database, and on this path there is no database.
+`record_reconciliation` raises `no such table: _load_run` **and leaves a 0-byte `reporting.sqlite`
+behind** — it connects before it queries — which is residue on the one path that promises to leave
+none; `build_manifest` then raises on `loaded`, which path B never produced. Report the verdict in
+your own output instead. Path B has nowhere to record it, and `APT-2026-0212` is where a Parquet-side
+recorder belongs.
+
+**On path A, read the Parquet back too.** The database reconciliation proves the database matches the
+repository; it says nothing about the files Power BI actually reads, and path A writes Parquet from
+the same `result` before emitting the project. Run the same `on_disk` read-back above against
+`out / "parquet"` and compare it with `database_counts(...)`. Two cheap lines, and without them the
+last hop before the customer's report is the only one nothing checks.
+
 ### 4.4 Emit the project
 
 ```python
@@ -198,10 +212,14 @@ enough; do not vary it between runs of the same model or the folders multiply.
 ### 4.5 Write the files. `newline=""` is load-bearing
 
 ```python
-# The project root. Keep it SHORT and keep it out of the Parquet directory:
-# ParquetSource baked an absolute path into the partition above, so the project
-# belongs to the folder it was generated for, and Power BI has a 260-character
-# path limit that a deep root will breach.
+# The project root, beside the Parquet rather than inside it. ParquetSource
+# baked an ABSOLUTE path into the partition above, so the project belongs to the
+# folder it was generated for - move either one and the partition is wrong.
+#
+# Keep the root SHORT. Windows has a 260-character MAX_PATH, and a deep root
+# plus the project's own nested paths can reach it. Whether Power BI itself
+# imposes a limit is NOT measured - treat this as ordinary Windows caution, not
+# as a figure we established.
 project_root = out / "pbip"
 
 for rel, text in files.items():
