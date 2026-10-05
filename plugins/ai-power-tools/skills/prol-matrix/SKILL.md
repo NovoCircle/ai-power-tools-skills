@@ -83,7 +83,7 @@ const cfg = await fetch('/api/relationshipmatrix/GetEAMatrixProfileSettings',
                     "selectorResourceType": "Package", "selectorContentType": "All",
                     "includeChildren": true },
   "targetConfig": { "…same shape…" },
-  "linkConfig":   { "linkType": "supports", "linkDirection": "Both" }
+  "linkConfig":   { "linkType": "Uses", "linkDirection": "Both" }
 }
 ```
 

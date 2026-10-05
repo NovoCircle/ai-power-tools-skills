@@ -532,8 +532,8 @@
         "prol-matrix/references/test-cases.md"
       ],
       "sha256": {
-        "prol-matrix/SKILL.md": "6a0719f9b42093e202d849511c7af3a22ccc5a4754abb86caf5156c0450dfaeb",
-        "prol-matrix/references/reading-a-matrix.md": "ce6611a406eb4dd3aeb2f4af9637d98d1479860c31417efd09ad488273a42b23",
+        "prol-matrix/SKILL.md": "7bd9dd3a4e3ea6df1b2ea22768813268aab78c9ab003a40c65137b169552cfe1",
+        "prol-matrix/references/reading-a-matrix.md": "53f56d3bec42c56549f7128f0275e2fcb10dbb47ceae974488a82d0d1efd7534",
         "prol-matrix/references/test-cases.md": "c800754dc38b6e47d6d3725cc838c18446d8d3cf845328bd57ac1efbed8b0b30"
       }
     },
@@ -547,7 +547,7 @@
         "prol-start-here/SKILL.md"
       ],
       "sha256": {
-        "prol-start-here/SKILL.md": "5b196d0817840a6244f25e84dfb53f2034361acf49926bbd87f0c7942c9ca5d4"
+        "prol-start-here/SKILL.md": "719aef2e5afb9e4a951da6ea96cbb5b09c8b48313e08d7ed9c55bd3b45459f40"
       }
     },
     {

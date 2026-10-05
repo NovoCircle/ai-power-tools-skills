@@ -129,7 +129,8 @@ that a restricted user might not be entitled to, which is why §7 flags the iden
   "stereotype": "Uses", "stereotypeField": "Uses",
   "direction": "Target -> Source",
   "startObjectId": null, "endObjectId": null,
-  "startElementGuid": "{AAAA0003-0000-4000-8000-000000000003}", "endElementGuid": "{AAAA0004-0000-4000-8000-000000000004}" }
+  "startElementGuid": "{AAAA0003-0000-4000-8000-000000000003}",
+  "endElementGuid":   "{AAAA0004-0000-4000-8000-000000000004}" }
 ```
 
 Measured as always null across every profile: `name`, `boundDirection`, `midLabel`,
