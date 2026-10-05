@@ -58,7 +58,7 @@ overwrites in place rather than creating a duplicate.
 ### MDG-native element creation — `create_element_in_language`
 
 When the target element type is defined by an MDG profile (ArchiMate3, BPMN2.0, or a
-custom MDG like WBA), prefer `create_element_in_language` over plain `create_element`.
+your organization's own MDG), prefer `create_element_in_language` over plain `create_element`.
 It resolves the stereotype's base metaclass from the technology and passes it to
 `create_element` as `type`, so the element cannot be created as the wrong EA type. The
 `t_xref` profile binding itself is not specific to it: a plain `create_element` whose `type`
@@ -192,20 +192,23 @@ path you use.
 
 ### How each tool writes stereotypes
 
+`<technology-id>` is the id EA registers the MDG technology under; `<profile>` is the profile
+name that prefixes the stereotype's FQName in `t_xref`. They can be different strings.
+
 ```
-ea_model(operation="create_element", params={"type": "Component", "stereotype": "WBABusinessApplication", ...})
-  -> writes t_object.Stereotype = "WBABusinessApplication"
+ea_model(operation="create_element", params={"type": "<base-metaclass>", "stereotype": "<stereotype>", ...})
+  -> writes t_object.Stereotype = "<stereotype>"
   -> writes t_xref row (MDG profile application) when the stereotype matches a loaded
-     MDG profile, with FQName=WestbrookBankArchitecture::WBABusinessApplication
+     MDG profile, with FQName=<profile>::<stereotype>
   -> `type` is yours to get right; a wrong base metaclass can make EA reject the stereotype
 
-ea_model(operation="create_element_in_language", params={"language_id": "WestbrookBankArchitecture", "language_type": "WBABusinessApplication", ...})
-  -> writes t_object.Stereotype = "WBABusinessApplication"
-  -> writes t_object.StereotypeEx = "WBABusinessApplication=WestbrookBankArchitecture::WBABusinessApplication;"
+ea_model(operation="create_element_in_language", params={"language_id": "<technology-id>", "language_type": "<stereotype>", ...})
+  -> writes t_object.Stereotype = "<stereotype>"
+  -> writes t_object.StereotypeEx = "<stereotype>=<profile>::<stereotype>;"
   -> writes t_xref row (MDG profile application, BaseClass="element")
   -> resolves the base metaclass for you; same binding as create_element, without the type risk
 
-ea_model(operation="update_element", params={"element_id": ..., "properties": {"StereotypeEx": "WBABusinessApplication=WestbrookBankArchitecture::WBABusinessApplication;"}})
+ea_model(operation="update_element", params={"element_id": ..., "properties": {"StereotypeEx": "<stereotype>=<profile>::<stereotype>;"}})
   -> writes t_object.StereotypeEx
   -> does two Update() calls internally (first for other props, second specifically for StereotypeEx)
   -> returns stereotype_warning if EA rejected the value (readback is empty after Update)

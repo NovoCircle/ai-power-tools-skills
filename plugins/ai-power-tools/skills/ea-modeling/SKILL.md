@@ -163,7 +163,7 @@ if encoded. Full create → verify → fix sequence:
 
 | Scenario | Use |
 |---|---|
-| MDG-profile elements (ArchiMate, BPMN, custom MDG like WBA) | `create_element_in_language` — resolves the base metaclass from the technology, so `type` cannot be wrong |
+| MDG-profile elements (ArchiMate, BPMN, or your organization's own MDG) | `create_element_in_language` — resolves the base metaclass from the technology, so `type` cannot be wrong |
 | Generic UML elements | `create_element` |
 | >~5 elements at once | `create_elements_bulk` — idempotent; supports `language_id`+`language_type` per spec |
 | Plain `create_element` with MDG `stereotype=` | Works when `type` is the stereotype's base metaclass, and binds the profile the same way (§4.5); `create_element_in_language` looks the metaclass up instead of trusting you to |
@@ -172,11 +172,8 @@ Set tagged values inline at creation (`tagged_values={...}`) on `create_element`
 `create_elements_bulk` spec — one with `language_id`+`language_type` is the one-call route for a
 tagged MDG element — not via a `set_tagged_value` loop after. **`create_element_in_language`
 rejects `tagged_values`** (`unknown_parameters`): tag what it creates with `update_element`
-(`element_id`, `tagged_values={...}`) in one call, or `set_tagged_value` per tag. Canonical WBA tags: 6 base tags on every stereotype, 4 AI-only tags on
-`WBAAIGateway`/`WBAAIService`/`WBAAIModel` — see `_shared/references/westbrook-example.md` §3
-for exact names/values (`criticality` is hyphenated: `Mission-Critical`, not `Mission
-Critical`). Full code patterns and the complete tag table:
-[`references/element_creation.md`](references/element_creation.md) §1.
+(`element_id`, `tagged_values={...}`) in one call, or `set_tagged_value` per tag. Full code
+patterns: [`references/element_creation.md`](references/element_creation.md) §1.
 
 Attributes, operations, and operation parameters on an already-created element (`create_attribute`,
 `update_attribute`, `create_operation`, `add_parameter`, and related calls) are a separate layer

@@ -380,11 +380,11 @@
         "ea-modeling/references/wba_mdg_reference.md"
       ],
       "sha256": {
-        "ea-modeling/SKILL.md": "291449777031736a4e5eec731703ada05b49102dfa750a7e3e2d14c31a56e514",
+        "ea-modeling/SKILL.md": "bbdf6c44102924d3196ea620b6adc913c4aeb4b1ff15262e1edcf4ac7442fc8b",
         "ea-modeling/references/class-modeling.md": "25db3027ad038312fec8268b2af7b5918fb4b70134fb708bb55d82c3e281214c",
         "ea-modeling/references/diagnostics_and_ui.md": "cfc1304b820bfe63fdb99602ad99ea0a411092aaf707a7795f99d2600a709645",
         "ea-modeling/references/diagrams_and_connectors.md": "a17bc2fa215d7db33de591fd779b00914ed849875307edcf373f59b0d32d5b6a",
-        "ea-modeling/references/element_creation.md": "592cb64e6b81b1d4b43b92819ac18ddab0050fa8c6b416de4f14f4f25a0af30e",
+        "ea-modeling/references/element_creation.md": "89a26f3d2be6999b2fc7262b62e23805e79c074fc30d0a93def4ce2fc72fa411",
         "ea-modeling/references/package_and_defects.md": "2caaada73b4a77d2b4fea6190ff4b66f4a565e4cd366b4c614d99b3ae34ee8b5",
         "ea-modeling/references/sql_schema.md": "b59d3c2407d6e47a73df63e6b12aeb81823cf23b4c3936496caa440fbeb5b7b6",
         "ea-modeling/references/token_and_session_management.md": "a90be8a3a47ce10b8654e764b946ae175b554436898f83521f5f901c5f228d78",
