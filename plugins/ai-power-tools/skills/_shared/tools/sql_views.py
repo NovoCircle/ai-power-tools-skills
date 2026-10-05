@@ -60,7 +60,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 from ddl import FRAME_DDL, physical
-from report_model import ReportModel
+from report_model import BOOLEAN_FALSE, BOOLEAN_TRUE, ReportModel
 
 #: Dialects with a tested emitter. An unsupported backend is told so rather than
 #: handed SQL nobody has ever run - `APT-2026-0218` is already open on an
@@ -122,6 +122,22 @@ def _lit(text: str) -> str:
     return "N'" + text.replace("'", "''") + "'"
 
 
+def _comment(text: str) -> str:
+    """Comment text with every line break removed.
+
+    A `--` comment runs to end of LINE, so a CR or LF inside an interpolated
+    value closes the comment and leaves the remainder of that value as
+    EXECUTABLE DDL in a script the customer runs with schema rights. Comment
+    text is the one place in this module that does not reach the parser, and
+    that is exactly what makes it the one place it would be reached from.
+
+    These values come out of a model - `technology_name`, `namespace`, an EA
+    build string - not out of our own constants, so they are input and are
+    treated as input, the same as every literal routed through `_lit`.
+    """
+    return text.replace("\r\n", " ").replace("\r", " ").replace("\n", " ")
+
+
 def placement_predicate(table) -> str:
     """The test that places an element in one vocabulary table.
 
@@ -169,8 +185,8 @@ def _header(model: ReportModel, dialect: str, ea_build: str) -> str:
         "-- Logical reporting views over an Enterprise Architect repository.",
         "-- GENERATED - do not hand-edit. Regenerate instead.",
         "--",
-        f"-- technology : {model.technology_name or model.technology_id}",
-        f"-- namespace  : {model.namespace}",
+        f"-- technology : {_comment(model.technology_name or model.technology_id)}",
+        f"-- namespace  : {_comment(model.namespace)}",
         f"-- tables     : {len(model.tables)} vocabulary + {len(FRAME_DDL)} plumbing",
         f"-- dialect    : {dialect}",
     ]
@@ -179,8 +195,8 @@ def _header(model: ReportModel, dialect: str, ea_build: str) -> str:
         # t_xref encoding between builds, and in this path that break lands in
         # views the CUSTOMER owns, silently, on upgrade. Stamping the build is
         # the cheapest thing that makes the breakage diagnosable.
-        lines.append(f"-- ea build   : {ea_build}  <- these views were written "
-                     f"against this schema")
+        lines.append(f"-- ea build   : {_comment(ea_build)}  <- these views were "
+                     f"written against this schema")
     lines += ["--", "-- " + REGENERATION_TRIGGER.replace(". ", ".\n-- "), ""]
     return "\n".join(lines)
 
@@ -270,12 +286,35 @@ def _keymap_view(model: ReportModel) -> str:
 
 
 def _pkg_view() -> str:
-    """The package tree, with path and depth, by recursive CTE."""
+    """The package tree, with path and depth, by recursive CTE.
+
+    AN ANCHOR ROW IS A ROOT IN EVERY COLUMN, NOT ONLY IN THE `WHERE`
+    ---------------------------------------------------------------
+    The anchor deliberately keeps a package whose parent is missing, zero, or
+    itself. A root that still CARRIES the broken parent is worse than dropping
+    it would have been: `parent_id` is a shipped `INTEGER` column and anything
+    walking the chain follows it to a row this view does not contain, or round
+    and round a self-reference. `frame.package_rows` nulls both cases - a
+    self-parent at `parent_of[pid] = None if parent == pid else parent`, a
+    dangling one at `parent_of.get(pid) if ... in name_of else None` - so the
+    anchor carries `CAST(NULL AS int)` and agrees with it by construction
+    rather than by the outer `NULLIF`, which only ever caught zero.
+
+    `Name` IS NULLABLE AND `path` IS COMPUTED FROM IT
+    -------------------------------------------------
+    `NULL + '/' + 'x'` is NULL in SQL Server, so one NULL package name emptied
+    `path` for that package AND for every descendant - the recursion propagates
+    it the whole way down. The outer `SELECT` already coalesced the projected
+    `name`; `path` was missed because it is built rather than projected, which
+    is the kind of column a NULL-versus-empty-string pass walks straight past.
+    `frame.package_rows` coalesces at `name_of[pid] = p.get("Name") or ""`, so
+    a NULL-named child of `Model` is `'Model/'` there and now here.
+    """
     return (
         f"CREATE VIEW {_q(physical('pkg'))} AS\n"
         f"WITH tree AS (\n"
-        f"    SELECT p.Package_ID, p.Parent_ID, p.Name,\n"
-        f"           CAST(p.Name AS nvarchar(max)) AS path, 0 AS depth\n"
+        f"    SELECT p.Package_ID, CAST(NULL AS int) AS Parent_ID, p.Name,\n"
+        f"           CAST(COALESCE(p.Name, '') AS nvarchar(max)) AS path, 0 AS depth\n"
         f"    FROM t_package p\n"
         # A package whose parent does not exist, or which is its own parent,
         # is treated as a ROOT rather than dropped - matching
@@ -290,7 +329,8 @@ def _pkg_view() -> str:
         f"                      WHERE q.Package_ID = p.Parent_ID)\n"
         f"    UNION ALL\n"
         f"    SELECT c.Package_ID, c.Parent_ID, c.Name,\n"
-        f"           CAST(t.path + '/' + c.Name AS nvarchar(max)), t.depth + 1\n"
+        f"           CAST(t.path + '/' + COALESCE(c.Name, '') AS nvarchar(max)),\n"
+        f"           t.depth + 1\n"
         f"    FROM t_package c\n"
         f"    JOIN tree t ON t.Package_ID = c.Parent_ID\n"
         f"                AND c.Parent_ID <> c.Package_ID\n"
@@ -348,6 +388,14 @@ def _tag_value_view(model: ReportModel) -> str:
     that decision refuses to guess and so does this one: a team name like
     "Risk, Compliance & Audit" is ONE value containing a comma, and the
     technology declares it the same way it declares a genuinely multi-valued tag.
+
+    BOTH ARMS TRIM, because `pivot` stores every tagged value as
+    `(r.get("Value") or "").strip()` before anything else sees it. The split arm
+    trimmed each part and the single arm did not, which is not a difference a
+    row count can see: `'Business-Critical '` and `'Business-Critical'` are the
+    same member of the same column in the database and two different members in
+    Power BI, which is the same failure the blank-versus-empty-string pass was
+    about.
     """
     multi = sorted({c.source_tag for t in model.tables for c in t.columns
                     if c.multi_valued})
@@ -370,7 +418,7 @@ def _tag_value_view(model: ReportModel) -> str:
         single_filter = ""
     return (
         f"CREATE VIEW {_q(physical('tag_value'))} AS\n"
-        f"SELECT k.ea_guid, p.Property AS tag, p.Value AS value\n"
+        f"SELECT k.ea_guid, p.Property AS tag, LTRIM(RTRIM(p.Value)) AS value\n"
         f"FROM t_objectproperties p\n"
         f"JOIN t_object o ON o.Object_ID = p.Object_ID\n"
         f"JOIN {hub} k ON k.ea_guid = o.ea_guid\n"
@@ -511,12 +559,77 @@ def _tag_coverage_view(model: ReportModel) -> str:
 # -------------------------------------------------------------- vocabulary
 
 
+#: Where a multi-line `CASE` in an entity column lines up under the `TOP 1`.
+_VALUE_INDENT = " " * 26
+
+
+def _coerced_value(column) -> str:
+    """One tagged value as its DECLARED type - `report_model.coerce_value` in SQL.
+
+    THE TYPE IS PART OF THE VALUE, AND THIS IS THE ONLY TYPED COPY
+    --------------------------------------------------------------
+    `pivot` runs every entity-column value through `coerce_value` because the
+    flattened column is the only typed copy of it - `tag_value` is a bridge over
+    tags of every type at once and stays text. Emitting `COALESCE(p.Value, '')`
+    for every column regardless of type published a DIFFERENT VALUE under the
+    same column name on a column the database and Parquet both type:
+
+        tag value, INTEGER column | database / Parquet | emitted before
+        --------------------------|--------------------|---------------
+        'true'                    | 1                  | 'true'
+        ''                        | NULL               | ''
+        'maybe'                   | NULL + a report row| 'maybe', silently
+
+    `WHERE audit_logging_enabled = 1` is the measure that matches nothing, and
+    `report_model.coerce_value` states that consequence in advance. A column that
+    "maps to the same place on every path" with a different type and a different
+    value does not satisfy this module's contract.
+
+    FOUR THINGS, IN `coerce_value`'s OWN ORDER
+    ------------------------------------------
+    1. TRIM FIRST. `pivot` strips before it coerces, so `' 7 '` is 7 and not
+       uncoercible, and `'Business-Critical '` is one member rather than two.
+    2. EMPTY ON A TYPED COLUMN IS NULL, never 0 and never ''. Empty means nobody
+       filled it in, which is a coverage fact; a 0 there would invent data and
+       make `tag_coverage` disagree with the column it describes. On TEXT an
+       empty value stays `''`, which is what every build before this one wrote.
+    3. BOOLEAN STRINGS ON EVERY INTEGER COLUMN. EA has no boolean tagged-value
+       type - a declared boolean arrives as whatever the editor or the profile
+       default put there - and `coerce_value` applies the mapping on the SQL
+       type, which is all either path can see. `LOWER()` because the Python
+       lowercases and a case-sensitive server collation would otherwise disagree
+       with it on `'TRUE'`.
+    4. UNCOERCIBLE IS NULL HERE. `pivot` leaves the column unset and records a
+       data-quality finding; the finding has nowhere to go in a view, so the
+       view publishes the same NULL and nothing else. `TRY_CAST` is how: it
+       yields NULL exactly where `int()`/`float()` raise.
+    """
+    value = "LTRIM(RTRIM(COALESCE(p.Value, '')))"
+    if column.sql_type not in ("INTEGER", "REAL"):
+        return value
+    lines = [f"CASE WHEN {value} = {_lit('')} THEN NULL"]
+    if column.sql_type == "INTEGER":
+        for literals, result in ((BOOLEAN_TRUE, "1"), (BOOLEAN_FALSE, "0")):
+            in_list = ", ".join(_lit(s) for s in sorted(literals))
+            lines.append(f"{_VALUE_INDENT}WHEN LOWER({value}) IN ({in_list})"
+                         f" THEN {result}")
+    cast = "int" if column.sql_type == "INTEGER" else "float"
+    lines.append(f"{_VALUE_INDENT}ELSE TRY_CAST({value} AS {cast}) END")
+    return "\n".join(lines)
+
+
 def _entity_view(table) -> str:
     """One view per stereotype, in the customer's own business vocabulary.
 
     The tagged-value pivot: one correlated subquery per column, generated once
     at setup from the census. Column ORDER matches `ddl.entity_table_ddl` and
     `load.entity_columns`, so a column maps to the same place on every path.
+
+    Every column is coerced to its declared type by `_coerced_value`, because
+    the flattened column is the only TYPED copy of a tagged value and `pivot`
+    types it. A tag that is present but empty is `''` on TEXT and NULL on a
+    typed column; a tag that is ABSENT is NULL on either, because the subquery
+    returns no row and `pivot` leaves the key unset.
 
     `ORDER BY p.PropertyID DESC` IS LOAD-BEARING, AND IT ENCODES A DEFECT
     --------------------------------------------------------------------
@@ -526,23 +639,34 @@ def _entity_view(table) -> str:
     higher `PropertyID`.
 
     `pivot` assigns column values in extract order and lets later rows
-    overwrite, so the NULL duplicate wins and the populated value is LOST - that
-    element's six columns are empty in the database while its `tag_value` rows
-    carry the real values. Taking the highest `PropertyID` reproduces that
-    exactly, which is what the identical-output contract requires.
+    overwrite, so the later duplicate wins and the populated value is LOST -
+    that element's six columns are empty in the database while its `tag_value`
+    rows carry the real values. This view reproduces that deliberately: the
+    requirement is that the paths agree, and silently disagreeing here would
+    hide the defect rather than settle it.
+
+    THE CLAIM THIS CAN HONESTLY MAKE IS NARROWER THAN "REPRODUCES IT EXACTLY".
+    Reproducing extract order by `PropertyID` assumes extract order IS
+    `PropertyID` order, and nothing guarantees that: `extract.py` selects
+    `Object_ID, Property, Value` from `t_objectproperties` with no `ORDER BY`
+    and does not select `PropertyID` at all, so the PYTHON side is the
+    nondeterministic one. The live acceptance run observed the two agreeing on
+    the reference model, which is evidence that the backend returned insertion
+    order, not a guarantee that it will. A deterministic view is still the right
+    choice - the alternative is two nondeterministic paths and a difference that
+    moves between runs - but what it agrees with is the extract order that has
+    been OBSERVED, and a reader should know which of those two it is relying on.
+
+    **The underlying behavior is a defect in `pivot`, not here** - a populated
+    value should not lose to an empty duplicate, and `extract.py` should order
+    what `pivot` reads in order. Both belong to `pivot.py`, and fixing them
+    would change what the shipped reporting database contains, so they are owed
+    their own item rather than a paragraph here.
 
     Without an ORDER BY, `TOP 1` is NONDETERMINISTIC: it happened to return the
     populated row, so the view silently disagreed with the database on one
     element. Row counts cannot see that, and it is what the value-level
     comparison was added to catch.
-
-    **The underlying behaviour is a defect in `pivot`, not here** - a populated
-    value should not lose to an empty duplicate. Reproducing it is the correct
-    move for THIS module; fixing it belongs to `pivot.py` and would change what
-    the shipped reporting database contains.
-
-    `COALESCE(p.Value, '')` keeps the distinction the pivot makes: a tag that is
-    present but empty is `''`, a tag that is absent is NULL.
     """
     cols = [
         "       o.ea_guid,",
@@ -551,7 +675,7 @@ def _entity_view(table) -> str:
     ]
     for c in table.columns:
         cols.append(
-            f"       (SELECT TOP 1 COALESCE(p.Value, '')\n"
+            f"       (SELECT TOP 1 {_coerced_value(c)}\n"
             f"          FROM t_objectproperties p\n"
             f"         WHERE p.Object_ID = o.Object_ID\n"
             f"           AND p.Property = {_lit(c.source_tag)}\n"
