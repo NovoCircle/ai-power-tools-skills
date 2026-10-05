@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-"""Every public class in the tools modules has annotations that resolve.
+"""Every public class and function in the tools modules has annotations that
+resolve.
 
 Run from the repository root:
 
     python -m pytest ea-diagram-composition/tools/test_type_hints.py -q
 
-Hermetic. Imports the modules and evaluates their class annotations; nothing
+Hermetic. Imports the modules and evaluates their annotations; nothing
 here touches Sparx EA, a repository or a COM object.
 
 WHY THIS EXISTS
@@ -19,11 +20,12 @@ the first time anything evaluates it: a validator built on class annotations, a
 schema generator, `typing.get_type_hints`.
 
 So this evaluates them: each public class's own annotations, and those of every
-method and property it defines. The members are not optional. The real case was
-a property's return annotation, which `typing.get_type_hints(cls)` does not
-look at - a class-only check passes with the defect in place. The classes and
-the modules are both enumerated, not listed, so a class or module added later
-is covered without editing this file.
+method and property it defines, and each public module-level function. The
+members are not optional. The real case was a property's return annotation,
+which `typing.get_type_hints(cls)` does not look at - a class-only check passes
+with the defect in place. The modules, classes and functions are all
+enumerated, not listed, so one added later is covered without editing this
+file.
 
 A failure here is not to be suppressed. If a name is imported only under
 `TYPE_CHECKING`, it fails too: import it at runtime, or keep it out of the
@@ -53,6 +55,13 @@ def _public_classes(module_name: str) -> list[type]:
     module = importlib.import_module(module_name)
     return [cls for name, cls in inspect.getmembers(module, inspect.isclass)
             if cls.__module__ == module.__name__ and not name.startswith("_")]
+
+
+def _public_functions(module_name: str) -> list:
+    """Functions the module defines itself, not ones it imports."""
+    module = importlib.import_module(module_name)
+    return [f for name, f in inspect.getmembers(module, inspect.isfunction)
+            if f.__module__ == module.__name__ and not name.startswith("_")]
 
 
 def _annotated(cls: type):
@@ -93,4 +102,16 @@ def test_class_annotations_resolve(module_name):
             except Exception as exc:  # NameError is the case; report any
                 failures.append(f"{module_name}.{label}: "
                                 f"{type(exc).__name__}: {exc}")
+    assert not failures, "\n".join(failures)
+
+
+@pytest.mark.parametrize("module_name", MODULES)
+def test_function_annotations_resolve(module_name):
+    failures = []
+    for func in _public_functions(module_name):
+        try:
+            typing.get_type_hints(func)
+        except Exception as exc:  # NameError is the case; report any
+            failures.append(f"{module_name}.{func.__name__}: "
+                            f"{type(exc).__name__}: {exc}")
     assert not failures, "\n".join(failures)

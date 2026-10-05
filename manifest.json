@@ -235,7 +235,7 @@
         "ea-diagram-composition/tools/test_fidelity.py": "2e9de4ddb150869d7c67ac458b5f49a0968f868fe550f56723a637ec780499f2",
         "ea-diagram-composition/tools/test_lint.py": "13c55c71055f8955bc38b21aed97cebcc357299d0bb6f06451f345f7c93c5ec3",
         "ea-diagram-composition/tools/test_measure_binding.py": "dd2bc1b21b46387c93e193998daec209549469d11e0a1464485e77885dbd13e8",
-        "ea-diagram-composition/tools/test_type_hints.py": "199648cb56b7d0b3a2ea569ac7a1daebce70c4c5fcc68d17933a51c72351d1e2"
+        "ea-diagram-composition/tools/test_type_hints.py": "3948b539de3386d67273fecce90b14ef3d7918d988b95b689c9d680b6a397b59"
       }
     },
     {
