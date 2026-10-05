@@ -16,10 +16,20 @@ two ways a replay could go quietly wrong: the snapshot has been pruned, or a
 different snapshot is sitting under the same name. Both have to be loud. A replay
 that rebuilt from the wrong rows and reported the result as the original figure is
 worse than one that refused, because nothing downstream would notice.
+
+A COUNT OF PASSING TESTS IS NOT ASSURANCE. This file was green on 385 tests with
+four defects in it that each destroyed or falsified the retained evidence: a replay
+from a substituted extract returning 1 object where the build had 3 and raising
+nothing, pruning deleting a directory outside the snapshot root, an aborted extract
+leaking a directory nothing could see, and a run deleting the snapshot it had just
+reported as retained. Every test added for those carries the measurement that
+motivated it in its docstring, because the next reader's question is not "does this
+pass" but "what would have to break for it to fail".
 """
 from __future__ import annotations
 
 import json
+import pathlib
 import re
 import shutil
 import sqlite3
@@ -28,8 +38,11 @@ import pytest
 
 from ea_census import build_stereotype_index, census_elements, tag_coverage
 from extract import (
+    CENSUS_QUERIES,
+    INCOMPLETE_PREFIX,
     KEEP_RUNS,
     MANIFEST_NAME,
+    STRUCTURE_QUERIES,
     TABLE_NAMES,
     Extractor,
     Snapshot,
@@ -137,6 +150,37 @@ class _EchoRepo:
         return sql
 
 
+_ORDER_BY = re.compile(r"ORDER BY (.+)$", re.IGNORECASE)
+
+
+def _sort_key(v):
+    return (v is not None, isinstance(v, str), v)
+
+
+def _as_the_backend_would_order_them(rows, sql):
+    """Apply the statement's own `ORDER BY`, the way a backend does.
+
+    The fake HAS to do this. A fake that hands back a fixed Python list makes any
+    assertion about row order pass by construction - which is exactly how the
+    digest-determinism claim came to be asserted by a test that could never fail.
+    With the ordering emulated, dropping an `ORDER BY` from a shipped query shows
+    up as a failure instead.
+
+    Columns the projection does not select - a table's primary key, used as the
+    tie-break - are not in these rows, so they leave the stable order alone. That
+    is also what they do to the file's bytes: rows that tie on every SELECTED
+    column are byte-identical, so their order cannot change the digest.
+    """
+    match = _ORDER_BY.search(sql)
+    if not match:
+        return rows
+    cols = [c.strip() for c in match.group(1).split(",")]
+    cols = [c for c in cols if any(c in r for r in rows)]
+    if not cols:
+        return rows
+    return sorted(rows, key=lambda r: tuple(_sort_key(r.get(c)) for c in cols))
+
+
 def fake_extractor(tables=None):
     """An `Extractor` that answers each query from `tables`.
 
@@ -149,7 +193,8 @@ def fake_extractor(tables=None):
     def parse(sql):
         for name, rows in tables.items():
             if re.search(rf"FROM t_{name}\b", sql):
-                return [dict(r) for r in rows]
+                return _as_the_backend_would_order_them(
+                    [dict(r) for r in rows], sql)
         return []
 
     return Extractor(_EchoRepo(), parse)
@@ -276,11 +321,46 @@ def test_the_digest_covers_the_rows_and_changes_when_they_do(tmp_path):
 
 def test_the_digest_ignores_run_identity_so_it_identifies_the_rows(tmp_path):
     """Two extracts of the same repository state hash the same. The digest answers
-    "are these the same rows", not "is this the same run"."""
+    "are these the same rows", not "is this the same run".
+
+    True by construction - the digest covers the ten table files and neither
+    `run_id` nor `run_at` - so the half of this property that CAN fail is row
+    order, and that is the test below.
+    """
     take_snapshot(tmp_path, run_id="a", run_at="2026-10-01 08:00:00")
     take_snapshot(tmp_path, run_id="b", run_at="2026-10-02 08:00:00")
     assert (snapshot_digest(snapshot_dir(tmp_path, "a"))
             == snapshot_digest(snapshot_dir(tmp_path, "b")))
+
+
+def test_the_digest_does_not_depend_on_the_order_the_backend_returned_rows(tmp_path):
+    """W3. The shipped claim is "two extracts of an unchanged repository hash the
+    same", and nothing supported it: none of the ten queries carried an `ORDER BY`,
+    so no backend promised an order. Measured on the branch that shipped without
+    one - the same rows in a different order produced a different digest AND a
+    byte-different database, so two builds of a genuinely unchanged repository could
+    disagree and a customer would read row-order churn as model change.
+
+    `t_objectproperties` is the soft spot: no unique index on
+    (Object_ID, Property), one element can carry two tags of the same name, and
+    which came back first was whatever the backend felt like.
+    """
+    take_snapshot(tmp_path, run_id="in-order", run_at="2026-10-01 08:00:00")
+    take_snapshot(tmp_path, run_id="reversed", run_at="2026-10-02 08:00:00",
+                  tables={name: list(reversed(rows))
+                          for name, rows in TABLES.items()})
+    assert (snapshot_digest(snapshot_dir(tmp_path, "in-order"))
+            == snapshot_digest(snapshot_dir(tmp_path, "reversed")))
+
+
+def test_every_shipped_query_orders_its_rows():
+    """The mechanism the claim above rests on, pinned where it lives. A query added
+    later without an `ORDER BY` makes the digest non-deterministic for that table
+    and nothing else here would notice - the fixtures would still agree with
+    themselves."""
+    for name, sql in {**CENSUS_QUERIES, **STRUCTURE_QUERIES}.items():
+        assert "ORDER BY" in sql.upper(), f"{name} has no deterministic order"
+    assert len(TABLE_NAMES) == 10
 
 
 # --- retention is bounded, and pruning says what it took ---------------------
@@ -319,12 +399,228 @@ def test_pruning_within_the_bound_removes_nothing(tmp_path):
 
 
 def test_keeping_zero_snapshots_is_refused(tmp_path):
-    """`keep=0` would delete the extract behind the build that just ran. If that
-    is genuinely wanted it is a deletion, not a retention policy."""
+    """`keep=0` would delete every snapshot, including the extract behind the build
+    that just ran. If that is genuinely wanted it is a deletion, not a retention
+    policy."""
     take_snapshot(tmp_path)
     with pytest.raises(ValueError, match="at least 1"):
         prune_snapshots(tmp_path, keep=0)
     assert len(list_snapshots(tmp_path)) == 1
+
+
+# --- pruning deletes what it walked, and nothing else ------------------------
+
+def test_pruning_deletes_the_directory_it_walked(tmp_path):
+    """CR-0229-01. Pruning rebuilt the path from the manifest's own `run_id` -
+    `rmtree(snapshot_dir(root, snap["run_id"]))` - instead of deleting the directory
+    `list_snapshots` had just walked, and the manifest is deliberately outside the
+    digest, so that field is unverified by design. What went is now reported as the
+    directory that went."""
+    take_snapshot(tmp_path, run_id="keep", run_at="2026-10-02 08:00:00")
+    take_snapshot(tmp_path, run_id="drop", run_at="2026-10-01 08:00:00")
+
+    removed = prune_snapshots(tmp_path, keep=1)
+    assert [s["dir"] for s in removed] == [snapshot_dir(tmp_path, "drop")]
+    assert [s["status"] for s in removed] == ["pruned"]
+    assert not snapshot_dir(tmp_path, "drop").exists()
+    assert snapshot_dir(tmp_path, "keep").is_dir()
+
+
+def test_a_snapshot_restored_under_another_name_is_refused_not_pruned(tmp_path):
+    """CR-0229-01, benign, and the code's own docstring invites it: ordering by the
+    manifest's `run_at` is justified by a snapshot that "has been copied or
+    restored". Reproduced on the branch: directories `run-archived`,
+    `run-archived-restored` and `run-current`, and `prune_snapshots(keep=2)` deleted
+    the ORIGINAL and kept the copy under a name `open_snapshot` can never find - so
+    every build naming `run-archived` reported "has been pruned" with its rows still
+    on disk, and retention reported it as a routine prune. `keep=1` then raised
+    FileNotFoundError mid-loop, retention half-applied, because the duplicate
+    `run_id` came back twice.
+
+    Two names for one snapshot is now a loud refusal: one of them is wrong, and
+    acting on either means deleting or replaying evidence nobody asked for.
+    """
+    take_snapshot(tmp_path, run_id="run-archived", run_at="2026-10-01 08:00:00")
+    take_snapshot(tmp_path, run_id="run-current", run_at="2026-10-05 08:00:00")
+    shutil.copytree(snapshot_dir(tmp_path, "run-archived"),
+                    tmp_path / "run-archived-restored")
+
+    with pytest.raises(SnapshotError, match="holds a manifest naming"):
+        list_snapshots(tmp_path)
+    with pytest.raises(SnapshotError, match="holds a manifest naming"):
+        prune_snapshots(tmp_path, keep=1)
+
+    assert snapshot_dir(tmp_path, "run-archived").is_dir(), "nothing was deleted"
+    assert snapshot_dir(tmp_path, "run-current").is_dir()
+    assert (tmp_path / "run-archived-restored").is_dir()
+
+
+def test_pruning_cannot_delete_a_directory_outside_the_snapshot_root(tmp_path):
+    """CR-0229-01, the sharp end. Reproduced: editing one manifest's `run_id` to
+    another path made pruning `rmtree` THAT path - an unrelated directory outside the
+    root was deleted, the snapshot meant to be pruned survived, and
+    `prune_snapshots` reported the outside path as removed. Editing the manifest
+    leaves the digest intact, because the digest covers the table files only."""
+    root = tmp_path / "extracts"
+    outside = tmp_path / "not-a-snapshot-store"
+    outside.mkdir()
+    (outside / "evidence.txt").write_text("someone else's", encoding="utf-8")
+
+    take_snapshot(root, run_id="keep", run_at="2026-10-02 08:00:00")
+    take_snapshot(root, run_id="drop", run_at="2026-10-01 08:00:00")
+    manifest_path = snapshot_dir(root, "drop") / MANIFEST_NAME
+    man = json.loads(manifest_path.read_text(encoding="utf-8"))
+    man["run_id"] = str(outside)
+    manifest_path.write_text(json.dumps(man, indent=2), encoding="utf-8",
+                             newline="\n")
+
+    with pytest.raises(SnapshotError, match="holds a manifest naming"):
+        prune_snapshots(root, keep=1)
+    assert (outside / "evidence.txt").is_file(), "deleted outside the root"
+    assert snapshot_dir(root, "drop").is_dir()
+
+
+# --- retention is bounded even when a run dies -------------------------------
+
+def test_an_extract_that_dies_part_way_leaves_nothing_in_the_store(tmp_path):
+    """CR-0229-04. `list_snapshots` skips a directory with no manifest and the
+    manifest is written LAST, so a killed extract left table JSON under a snapshot
+    name that pruning could not see and the "KiB on disk" line could not count -
+    permanently. Reproduced: three such directories beside one good snapshot, and
+    `prune_snapshots(keep=1)` returned [] with all four still on disk.
+
+    The failure is the one the module documents as realistic: EA reports a statement
+    its backend cannot run as a modal dialog that holds the COM connection, every
+    later call appears to hang, and the run gets killed.
+    """
+    root = tmp_path / "extracts"
+    take_snapshot(root, run_id="good", run_at="2026-10-01 08:00:00")
+
+    def dies_on_the_last_table(sql):
+        if re.search(r"FROM t_connectortag\b", sql):
+            raise RuntimeError("the run was killed with the connection held")
+        for name, rows in TABLES.items():
+            if re.search(rf"FROM t_{name}\b", sql):
+                return [dict(r) for r in rows]
+        return []
+
+    with pytest.raises(RuntimeError):
+        extract(Extractor(_EchoRepo(), dies_on_the_last_table), root,
+                run_id="killed", run_at="2026-10-02 08:00:00")
+
+    assert not snapshot_dir(root, "killed").exists()
+    assert [s["run_id"] for s in list_snapshots(root)] == ["good"]
+    assert list(root.iterdir()) == [snapshot_dir(root, "good")]
+
+
+def test_a_snapshot_that_cannot_be_committed_is_kept_not_discarded(tmp_path):
+    """The rename into place is the commit, and on Windows it needs exclusive access
+    to the whole subtree - an external scanner holding a file written a moment ago
+    failed one with ACCESS_DENIED, observed once in about four hundred runs of this
+    suite. It is retried, and if it still will not go the rows are NOT thrown away:
+    they cost a COM extract against a repository that has already moved on. The
+    operator finishes the job with a rename, and nothing reads the directory until
+    they do."""
+    root = tmp_path / "extracts"
+
+    def will_not_rename(self, target):
+        raise PermissionError(5, "Access is denied")
+
+    with pytest.MonkeyPatch.context() as patched:
+        patched.setattr(pathlib.Path, "rename", will_not_rename)
+        with pytest.raises(SnapshotError, match="rows are intact"):
+            take_snapshot(root, run_id="held")
+
+    assert not snapshot_dir(root, "held").exists()
+    debris = root / f"{INCOMPLETE_PREFIX}held"
+    assert len(json.loads((debris / "object.json").read_text(encoding="utf-8"))) == 3
+    assert list_snapshots(root) == [], "and it is not a snapshot until renamed"
+
+
+def test_the_debris_of_a_killed_run_is_not_a_snapshot_and_is_swept(tmp_path):
+    """CR-0229-04's other half: bounded has to hold for a run killed so hard that
+    nothing cleaned up after it. The leftover is named so that it can never be
+    mistaken for a snapshot - it is skipped by retention and refused by a replay -
+    and pruning reclaims it and SAYS SO. A directory nothing can see is a directory
+    nothing ever reclaims, which is the unbounded store by another route."""
+    root = tmp_path / "extracts"
+    take_snapshot(root, run_id="good", run_at="2026-10-01 08:00:00")
+    debris = root / f"{INCOMPLETE_PREFIX}killed"
+    debris.mkdir()
+    (debris / "object.json").write_text("[]", encoding="utf-8")
+
+    assert [s["run_id"] for s in list_snapshots(root)] == ["good"]
+    with pytest.raises(SnapshotError, match="not usable as a snapshot name"):
+        open_snapshot(root, debris.name)
+
+    removed = prune_snapshots(root, keep=KEEP_RUNS)
+    assert [(s["run_id"], s["status"]) for s in removed] == [
+        (debris.name, "incomplete")]
+    assert removed[0]["bytes"] > 0, "the report has to carry what it reclaimed"
+    assert not debris.exists()
+    assert [s["run_id"] for s in list_snapshots(root)] == ["good"]
+
+
+# --- a run never deletes the snapshot it has just reported as retained -------
+
+def test_the_run_just_written_is_never_pruned(tmp_path):
+    """CR-0229-02. `main()` printed "snapshot <id> retained" and "pass
+    extract_run_id and extract_digest to build_database", and THEN pruned on a
+    lexicographic sort over the `--run-at` the operator typed. Reproduced: ten
+    snapshots dated 2026-10-01..10, then `--run-id backfill --run-at
+    '2026-09-01 08:00:00'` - written, and deleted by the same invocation, after the
+    operator had already been told to record `extract_run_id=backfill`.
+
+    Reachable without an error: restating an as-of date, re-extracting an archived
+    model, or clock skew on a second machine.
+    """
+    root = tmp_path / "extracts"
+    for day in range(1, 11):
+        take_snapshot(root, run_id=f"run-{day:02d}",
+                      run_at=f"2026-10-{day:02d} 08:00:00")
+    take_snapshot(root, run_id="backfill", run_at="2026-09-01 08:00:00")
+
+    assert prune_snapshots(root, keep=KEEP_RUNS, protect=("backfill",)) == []
+    assert open_snapshot(root, "backfill").run_id == "backfill"
+
+    # And the sort really does put it last: unprotected, it is the one that goes.
+    assert [s["run_id"] for s in prune_snapshots(root, keep=KEEP_RUNS)] == ["backfill"]
+
+
+def test_a_run_at_the_sort_cannot_order_is_refused(tmp_path):
+    """CR-0229-02's cause. `--run-at` was free text, and retention order is a
+    lexicographic sort over it: `2026-10-05T08:00:00` and `05/10/2026` both sort
+    wrongly against space-separated values, and the sort decides what gets DELETED.
+    Refused before any query is issued - a bad timestamp found after the COM round
+    trip is one found too late."""
+    for bad in ("2026-10-05T08:00:00", "05/10/2026", "2026-10-5 8:00:00",
+                "2026-10-05", "2026-10-05 08:00", "", "yesterday"):
+        with pytest.raises(ValueError, match="YYYY-MM-DD HH:MM:SS"):
+            take_snapshot(tmp_path, run_id="r", run_at=bad)
+    with pytest.raises(ValueError, match="not a real date"):
+        take_snapshot(tmp_path, run_id="r", run_at="2026-13-45 00:00:00")
+    assert list(tmp_path.iterdir()) == [], "refused before anything was written"
+
+
+def test_a_run_id_that_is_a_path_is_refused_rather_than_escaping_the_root(tmp_path):
+    """W4, referred to Security. Verified to escape on the branch: `snapshot_dir`
+    was `Path(root) / str(run_id)`, so `..\\escaped` wrote outside the root and an
+    absolute `run_id` escaped it entirely - pathlib discards the left operand on an
+    absolute right operand. `list_snapshots(root)` then returned [], so the snapshot
+    was invisible to retention and never pruned, while `open_snapshot` still loaded
+    it: a traversal and an unbounded store in one move. At replay time the value
+    comes out of `_load_run` in a database file that may have travelled, so it is
+    not an operator-only input."""
+    root = tmp_path / "extracts"
+    root.mkdir()
+    for bad in ("..", ".", "", "../escaped", "..\\escaped", "a/b", "a\\b",
+                str(tmp_path / "absolute"), ".hidden", "run id"):
+        with pytest.raises(SnapshotError, match="not usable as a snapshot name"):
+            take_snapshot(root, run_id=bad)
+        with pytest.raises(SnapshotError, match="not usable as a snapshot name"):
+            open_snapshot(root, bad)
+    assert list(root.iterdir()) == []
+    assert list_snapshots(root) == []
 
 
 # --- the build records which extract it consumed -----------------------------
@@ -515,6 +811,99 @@ def test_a_build_that_recorded_no_extract_says_so(tmp_path):
 
     with pytest.raises(LoadError, match="recorded no extract snapshot"):
         extract_reference(db, "build-1")
+
+
+def _blank_the_recorded_digest(db):
+    """Leave a `_load_run` row holding a run_id and no digest.
+
+    `build_database` refuses to write that pair now, so the only way to produce one
+    is the way one would really arrive: a row written before the refusal existed, or
+    edited since.
+    """
+    conn = sqlite3.connect(str(db))
+    conn.execute('UPDATE "_load_run" SET "extract_digest" = \'\'')
+    conn.commit()
+    conn.close()
+
+
+def test_a_build_cannot_record_half_an_extract_reference(tmp_path):
+    """CR-0229-03, the first of three gaps that lined up. `extract_run_id` and
+    `extract_digest` defaulted to "" INDEPENDENTLY with nothing validating that they
+    arrive as a pair, so a build could record a snapshot name with nothing to check
+    it against. Measured consequence on the branch: with `extract_digest=""`
+    recorded and the snapshot then replaced by a different extract under the same
+    `run_id`, `replay_snapshot` returned 1 object where the original build had 3 and
+    raised nothing.
+
+    A figure quoted from such a build is worse than one with no snapshot behind it,
+    because it carries provenance that looks checked and is not.
+    """
+    root = tmp_path / "extracts"
+    manifest = take_snapshot(root)
+    tables = open_snapshot(root, RUN).tables
+
+    with pytest.raises(LoadError, match="both or neither"):
+        build(tmp_path / "no-digest.sqlite", tables, run_id="build-1", run_at=AT,
+              extract_run_id=RUN)
+    with pytest.raises(LoadError, match="both or neither"):
+        build(tmp_path / "no-run-id.sqlite", tables, run_id="build-1", run_at=AT,
+              extract_digest=manifest["digest"])
+    assert not (tmp_path / "no-digest.sqlite").exists(), "refused before writing"
+
+
+def test_a_recorded_reference_with_no_digest_is_refused_not_returned(tmp_path):
+    """CR-0229-03, the second gap. `extract_reference` guarded `if not row[0]` only,
+    so a row with a run_id and an empty digest came back as `("run-0001", "")`
+    instead of refusing - and the caller cannot tell that pair from a verified one.
+    """
+    root = tmp_path / "extracts"
+    manifest = take_snapshot(root)
+    db = tmp_path / "r.sqlite"
+    build(db, open_snapshot(root, RUN).tables, run_id="build-1", run_at=AT,
+          extract_run_id=RUN, extract_digest=manifest["digest"])
+    _blank_the_recorded_digest(db)
+
+    with pytest.raises(LoadError, match="half an extract reference"):
+        extract_reference(db, "build-1")
+
+
+def test_an_empty_expected_digest_is_a_refusal_not_a_skipped_check(tmp_path):
+    """CR-0229-03, the third gap. `if expect_digest and digest != expect_digest`
+    short-circuited on an empty string, so the substitution check was skipped by the
+    ABSENCE of a value rather than by a decision. `open_snapshot` is public and
+    reachable directly, so the refusal belongs here too and not only in
+    `extract_reference`.
+
+    `None` is the first build reading the extract it has just taken, which has no
+    recorded figure to check against yet. An empty string is not that case.
+    """
+    take_snapshot(tmp_path)
+    with pytest.raises(SnapshotError, match="empty digest is not a digest"):
+        open_snapshot(tmp_path, RUN, expect_digest="")
+    assert open_snapshot(tmp_path, RUN, expect_digest=None).run_id == RUN
+
+
+def test_a_replay_with_no_recorded_digest_refuses_a_substituted_extract(tmp_path):
+    """CR-0229-03 end to end - the reviewer's reproduction, now a test. The build
+    records a run_id with no digest, the snapshot is replaced by a DIFFERENT extract
+    under the same name, and the replay previously returned 1 object where the
+    original build had 3, raising nothing. This is the failure `load.py` claims is
+    designed out and the one the module calls worse than a missing snapshot: it
+    would reconcile perfectly and still answer about the wrong moment.
+    """
+    root = tmp_path / "extracts"
+    manifest = take_snapshot(root)
+    db = tmp_path / "r.sqlite"
+    build(db, open_snapshot(root, RUN).tables, run_id="build-1", run_at=AT,
+          extract_run_id=RUN, extract_digest=manifest["digest"])
+    _blank_the_recorded_digest(db)
+
+    shutil.rmtree(snapshot_dir(root, RUN))
+    take_snapshot(root, tables=dict(TABLES, object=TABLES["object"][:1]))
+    assert len(open_snapshot(root, RUN).tables["object"]) == 1, "a different extract"
+
+    with pytest.raises(LoadError, match="half an extract reference"):
+        replay_snapshot(db, "build-1", root)
 
 
 def test_a_run_id_that_is_not_in_the_database_is_not_silently_empty(tmp_path):

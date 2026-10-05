@@ -47,6 +47,14 @@ python <skills-dir>/_shared/tools/extract.py --out ./extracts \
 `--package-id N` scopes to one subtree; omit it for the whole repository. `--server-path <dir>`
 is needed only if `ea_mcp_server` is not importable, for the row parser.
 
+**`--run-at` has to be exactly `YYYY-MM-DD HH:MM:SS`, and `--run-id` has to be one path
+component** — letters, digits, dot, dash, underscore, starting with a letter or digit. Both are
+checked before EA is touched, and neither is cosmetic. Retained snapshots are ordered by
+`run_at` as a *string*, so `2026-10-05T08:00:00` or `05/10/2026` sorts wrongly against the
+others, and that sort decides what gets deleted. A `run_id` containing a path separator would
+put the snapshot somewhere retention cannot see it, where it is never pruned but still
+loadable.
+
 **Do not pull the row data through `execute_sql` instead.** A mid-sized model is a few
 thousand rows across ten tables; `execute_sql` has no row cap and returns every result
 *twice*, once parsed and once as raw XML (APT-2026-0221), so a repository-wide pull is
@@ -103,6 +111,19 @@ the same, which is the useful property. It is what turns the reference in `_load
 from a label into an identity, and it is what lets a snapshot be *proven* to be the
 one a figure came from.
 
+That property rests on something: **every query carries an `ORDER BY`**, because the
+digest is over file *bytes* and no backend promises a row order without one. Each is a
+total order — a primary key, or the grouping columns plus a key, or every selected
+column, where a tie is then two byte-identical rows whose order cannot change the
+file. `t_objectproperties` is the one that matters: it has no unique index on
+`(Object_ID, Property)`, so one element can carry two tags of the same name and which
+came back first was otherwise the backend's choice. Long-text columns are deliberately
+*not* sorted on — `t_xref.Description` is a memo, and a backend that will not sort one
+reports it as the modal dialog described above — so `t_xref` orders by `XrefID` and
+`t_objectproperties` by `PropertyID`, neither of which is selected. Without this, the
+same rows in a different order produce a different digest and a byte-different
+database, and a reader would see row-order churn as model change.
+
 ---
 
 ## 4. Retention is bounded, and the bound is stated
@@ -127,21 +148,55 @@ only the ~300-element figure is measured. Say which is which if it matters.
 ### Pruning reports what it removed
 
 ```python
-removed = prune_snapshots(root, keep=10)
+removed = prune_snapshots(root, keep=10, protect=(this_run_id,))
 ```
 
-Returns a list of `{run_id, run_at, bytes}` for everything it deleted, newest-first
-ordering decided by the manifest's own `run_at` rather than by file mtime — a
-snapshot that has been copied or restored keeps the moment the extract was *taken*,
-and that is the moment a figure is as-of.
+Returns a list of `{run_id, run_at, bytes, dir, status}` for everything it deleted,
+newest-first ordering decided by the manifest's own `run_at` rather than by file
+mtime — a snapshot that has been copied or restored keeps the moment the extract was
+*taken*, and that is the moment a figure is as-of.
+
+`dir` is the directory that went, and it is the directory `list_snapshots` walked —
+never a path rebuilt from the manifest's `run_id`. The manifest sits outside the
+digest, so nothing verifies that field, and a path built from an unverified field can
+name any directory on the machine. For the same reason a directory whose manifest
+names a *different* `run_id` is refused rather than acted on: a replay can only find
+a snapshot under its directory name, so one of the two is wrong and guessing which
+means deleting the wrong evidence. If you restore an archived snapshot beside the
+live store, restore it under its own `run_id`.
+
+**`protect` the run that has just been written.** Order is a lexicographic sort over
+a supplied `run_at`, so a backfill or a restated as-of date sorts *oldest* — and a
+run that printed "snapshot retained" and then deleted it has told you to record an
+`extract_run_id` that no longer exists. `extract.py` passes its own `--run-id`
+through. A protected snapshot is kept on top of `keep`, not instead of one.
 
 **Say what went.** Silently discarding the evidence behind a figure somebody has
 already quoted is the failure retention exists to prevent, so pruning never does it
 quietly and neither should you. `extract.py` prints the list; a caller using the
 function is expected to pass it on.
 
-`keep=0` is refused. That would delete the extract behind the build that just ran,
-which is a deletion, not a retention policy.
+`keep=0` is refused. It would delete *every* snapshot, the extract behind the build
+that just ran included, which is a deletion and not a retention policy.
+
+### An extract that does not finish leaves nothing to find
+
+A snapshot is written to `<root>/.incomplete-<run-id>` and renamed into place only
+once its manifest is there. A run killed part-way — the modal dialog over an
+unrunnable statement holds the COM connection, every later call appears to hang, and
+the run gets killed — therefore leaves nothing under a snapshot name. That matters
+because `list_snapshots` only recognizes a directory with a manifest: a half-written
+one would be invisible to pruning *and* to the KiB-on-disk figure, and so would never
+be reclaimed. Whatever a hard kill does leave is swept by the next `prune_snapshots`
+and reported with `status: "incomplete"`, separately from the snapshots that aged
+out. Nothing can be replayed from it, and `open_snapshot` refuses its name.
+
+The rename is the commit, and on Windows it needs exclusive access to the whole
+subtree — a scanner holding a file written a moment ago can refuse it. It is retried,
+and if it still will not go the run **says so and keeps the rows** under the temp
+name rather than discarding an extract that cost a COM round trip against a
+repository which has since moved on. Rename the directory to the `run_id` to retain
+it; until then nothing reads it.
 
 ---
 
@@ -168,7 +223,16 @@ evidence. The two databases then differ in that one cell by design.
 
 `replay_snapshot` composes the digest check rather than leaving it to the caller, on
 purpose: a replay that skipped it could rebuild from a different extract and report
-the result as the original figure.
+the result as the original figure. **Use it rather than `open_snapshot` for a replay.**
+`open_snapshot` reads the snapshot you name and has nothing to compare it against;
+only `replay_snapshot` reaches into `_load_run` for the digest the build recorded.
+
+Not optional means not optional by omission, either. `extract_run_id` and
+`extract_digest` are recorded as a pair or not at all — `build_database` refuses one
+without the other — and an empty digest is a refusal rather than a check nobody asked
+for. There is no value of that pair that reaches a rebuild without the comparison
+happening, because the one that used to was "no digest recorded", which read as
+success.
 
 ### What it refuses, and why loudly
 
@@ -179,6 +243,9 @@ the result as the original figure.
 | Files edited since it was written | `SnapshotError` — it no longer matches its own manifest, so it is not evidence of anything |
 | Build recorded no extract at all | `LoadError` — builds predating retention are in this state |
 | No `_load_run` row for that `run_id` | `LoadError` — different fact from "recorded no extract", and not conflated with it |
+| A recorded `extract_run_id` with no digest | `LoadError` — half a reference names a snapshot with nothing to verify it against |
+| A `run_id` that is not one safe path component | `SnapshotError` — it would put the snapshot outside retention's reach |
+| Two directories claiming one `run_id` | `SnapshotError` naming both — restore a snapshot under its own `run_id`, or remove the copy |
 
 Only the asked-for `run_id` is ever read. The failure mode being designed out is the
 quiet one: a store containing one perfectly loadable snapshot that is *not* the right

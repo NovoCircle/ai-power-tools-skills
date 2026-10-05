@@ -210,6 +210,9 @@ def build_database(path,
     rows came from, so the build can be replayed and a figure quoted from it can
     be traced to the rows behind it. A replay passes a NEW `run_id` and the OLD
     `extract_run_id`: the build is a new build, the evidence is the old evidence.
+    The pair is ALL OR NOTHING - both, for a build with evidence, or neither, for
+    one without. A run_id with no digest names a snapshot without the figure that
+    identifies it, which is a provenance claim no replay can check.
 
     Refuses to overwrite an existing file unless `overwrite=True`. A refresh that
     silently replaces the database somebody is reporting off is not a refresh.
@@ -220,6 +223,14 @@ def build_database(path,
 
     if LOAD_RUN in frame_rows:
         raise LoadError(f"{LOAD_RUN} is written by the loader; do not pass it in")
+    if bool(extract_run_id) != bool(extract_digest):
+        raise LoadError(
+            f"extract_run_id={extract_run_id!r} with extract_digest="
+            f"{extract_digest!r}: an extract reference is both or neither. Half a "
+            f"reference records a snapshot name with nothing to verify it against, "
+            f"and a replay from it would rebuild from whatever is under that name - "
+            f"reporting a figure about the wrong moment as the original, which is "
+            f"the one failure retention exists to prevent.")
     if path.exists() and not overwrite:
         raise LoadError(f"{path} exists; pass overwrite=True to replace it")
 
@@ -312,6 +323,13 @@ def extract_reference(path, run_id: str) -> tuple[str, str]:
     there: an absent row and a build that recorded no extract are different
     facts, and conflating them is how a replay ends up reading whatever snapshot
     is nearest.
+
+    A row holding HALF a reference is a third fact and is refused too. The digest
+    is what makes the reference an identity rather than a label, so returning a
+    run_id with an empty digest hands the caller a check that passes by being
+    absent - which is indistinguishable, downstream, from a check that passed.
+    `build_database` refuses to write such a pair; a row in that state was written
+    before it did, or edited since.
     """
     conn = sqlite3.connect(str(path))
     try:
@@ -323,12 +341,20 @@ def extract_reference(path, run_id: str) -> tuple[str, str]:
         conn.close()
     if row is None:
         raise LoadError(f"no {LOAD_RUN} row for run_id {run_id!r} in {path}")
-    if not row[0]:
+    recorded_run_id, recorded_digest = row[0], row[1]
+    if not recorded_run_id and not recorded_digest:
         raise LoadError(
             f"run {run_id!r} recorded no extract snapshot, so it cannot be "
             f"replayed. Builds from before retention existed are in this state; "
             f"their evidence was overwritten by the next run.")
-    return row[0], row[1]
+    if not recorded_run_id or not recorded_digest:
+        raise LoadError(
+            f"run {run_id!r} recorded half an extract reference "
+            f"(extract_run_id={recorded_run_id!r}, extract_digest="
+            f"{recorded_digest!r}), so a replay from it could not be verified and "
+            f"is refused. One of the two alone cannot tell the extract this build "
+            f"consumed from a different one left under the same name.")
+    return recorded_run_id, recorded_digest
 
 
 def replay_snapshot(path, run_id: str, snapshot_root):
@@ -338,7 +364,11 @@ def replay_snapshot(path, run_id: str, snapshot_root):
     store, hand back the rows the build was made from so it can be rebuilt with
     no EA connection. Composed here rather than left to the caller so the
     digest check is not optional - a replay that skipped it could rebuild from a
-    different extract and report the result as the original figure.
+    different extract and report the result as the original figure. Not optional
+    means not optional by omission either: `extract_reference` refuses a recorded
+    reference with no digest, and `open_snapshot` refuses an empty one rather than
+    reading it as "no check wanted". There is no value of the recorded pair that
+    reaches a rebuild without the comparison happening.
 
     Raises `LoadError` if the database does not name a snapshot, and
     `extract.SnapshotError` if the snapshot is pruned or is not the one recorded.

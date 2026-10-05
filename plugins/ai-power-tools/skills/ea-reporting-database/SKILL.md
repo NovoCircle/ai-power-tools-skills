@@ -150,8 +150,8 @@ from extract import open_snapshot
 out = pathlib.Path("./out")
 # Minted before the extract and passed to it (§3.2), not invented here.
 run_id, run_at = "<run-id>", "<YYYY-MM-DD HH:MM:SS>"
-# The same call replays an old build: pass the extract's run_id, not this run's.
-snap = open_snapshot("./extracts", run_id)
+# An old build is REPLAYED with load.replay_snapshot(db, its_run_id, "./extracts"), not this call:
+snap = open_snapshot("./extracts", run_id)  # that one checks the digest the build recorded.
 objects, xrefs, props = snap.tables["object"], snap.tables["xref"], snap.tables["objectproperties"]
 packages, connectors = snap.tables["package"], snap.tables["connector"]
 attributes, operations = snap.tables["attribute"], snap.tables["operation"]
