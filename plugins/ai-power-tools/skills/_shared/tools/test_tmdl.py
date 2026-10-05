@@ -16,6 +16,8 @@ from __future__ import annotations
 import json
 import re
 
+import pytest
+
 from ddl import physical
 from report_model import Column, ReportModel, Table
 from semantic_model import DEFAULT_MEASURE_HOST, HUB, build_semantic_model
@@ -366,11 +368,37 @@ def test_an_m_literal_escapes_the_quote_that_would_end_it():
     assert '""' in m_literal('x" & Web.Contents("http://example.invalid") & "')
 
 
-def test_an_m_literal_escapes_the_hash_that_introduces_an_escape():
-    """`#(lf)` in a path silently becomes a newline; an unknown sequence is a
-    parse error. Both are the same character doing the damage."""
-    assert m_literal("a#(lf)b") == "a#(23)(lf)b"
-    assert "#" not in m_literal("c#d").replace("#(23)", "")
+def test_an_m_literal_escapes_the_sequence_that_introduces_an_escape():
+    """`#(lf)` in a path silently becomes a newline and `#(zz)` is a parse
+    error. The spec's own escape for it is `#(#)(`."""
+    assert m_literal("a#(lf)b") == "a#(#)(lf)b"
+
+
+def test_a_BARE_hash_is_left_alone_because_M_allows_it():
+    """Only the two-character sequence `#(` is special. A `#` in a Windows path
+    or a SQL instance name is ordinary, and escaping it turned valid input into
+    a parse error - which is what the first version of this function did."""
+    assert m_literal(chr(92) + "run#3") == chr(92) + "run#3"
+    assert m_literal("SRV" + chr(92) + "C#") == "SRV" + chr(92) + "C#"
+
+
+def test_an_m_literal_escapes_line_breaks_and_tabs():
+    """The spec limits text literals to graphic characters, and a raw newline
+    independently breaks the enclosing TMDL block."""
+    assert m_literal("a" + chr(13) + chr(10) + "b") == "a#(cr)#(lf)b"
+    assert m_literal("a" + chr(9) + "b") == "a#(tab)b"
+
+
+def test_the_escapes_do_not_mangle_each_other():
+    """`#(` is escaped FIRST so the `#(lf)` this function inserts afterwards is
+    not then turned into `#(#)(lf)`."""
+    assert m_literal("x" + chr(10) + "y") == "x#(lf)y"
+    assert m_literal("#(a" + chr(10) + "b") == "#(#)(a#(lf)b"
+
+
+def test_a_backslash_is_not_an_m_escape():
+    r"""Windows paths must survive untouched: backslash is not special in M."""
+    assert m_literal(r"C:\out\parquet") == r"C:\out\parquet"
 
 
 def test_the_partition_sources_actually_use_the_escaper():
@@ -388,4 +416,15 @@ def test_the_partition_sources_actually_use_the_escaper():
     sql = render_table(sm.table("entity_0"),
                        SqlSource(server='s"x', database='d#(lf)y'))
     assert 's""x' in sql
-    assert "#(23)(lf)" in sql
+    assert "#(#)(lf)" in sql
+
+
+def test_an_identifier_containing_a_line_break_is_refused():
+    """TMDL is indentation-structured, so a line break inside a name breaks the
+    block whether the name is quoted or not. There is no escape to reach for,
+    unlike an M literal, so this refuses rather than emitting a file that is
+    silently malformed."""
+    with pytest.raises(ValueError, match="line break"):
+        ident("a\nb")
+    with pytest.raises(ValueError, match="line break"):
+        ident("a\tb")

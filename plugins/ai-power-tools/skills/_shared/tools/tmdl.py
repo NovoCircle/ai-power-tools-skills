@@ -66,6 +66,14 @@ def ident(name: str) -> str:
     ASCII only. `str.isalnum()` is true for Greek, Cyrillic and accented
     letters, which are not safe to leave bare.
     """
+    if any(c in name for c in "\r\n\t"):
+        # TMDL is indentation-structured, so a line break inside a name breaks
+        # the enclosing block whether the name is quoted or not. There is no
+        # escape to reach for - unlike an M literal - so this refuses rather
+        # than emitting a file that is silently malformed.
+        raise ValueError(
+            f"{name!r} contains a line break or tab, which cannot appear in a "
+            f"TMDL identifier in any form.")
     if (name and not name[0].isdigit()
             and all(("a" <= c <= "z") or ("A" <= c <= "Z") or ("0" <= c <= "9")
                     or c == "_" for c in name)):
@@ -76,20 +84,36 @@ def ident(name: str) -> str:
 def m_literal(value: str) -> str:
     """A Power Query M text literal, escaped.
 
-    M has TWO escapes and both matter. `"` is escaped by doubling, and `#`
-    introduces an escape sequence when followed by `(` - so `#(lf)` in a path
-    silently becomes a newline, and an unknown sequence is a parse error.
+    Per the M lexical structure spec, a text literal admits any character except
+    `"` and the two-character sequence `#(`. So exactly three things need doing,
+    and a **bare `#` is not one of them** - `C:\\exports\\run#3` and a SQL
+    instance named `C#` are ordinary and must pass through untouched:
+
+    - `"` doubled, or it ends the literal and admits arbitrary M.
+    - `#(` escaped as `#(#)(`, the spec's own example. Left alone, `#(lf)` in a
+      path silently becomes a newline and `#(zz)` is a parse error.
+    - CR, LF and TAB replaced with `#(cr)`, `#(lf)`, `#(tab)`. The spec limits
+      literals to graphic characters, and independently a raw newline breaks the
+      enclosing TMDL block, which is indentation-structured.
+
+    **Order matters here**, unlike the first version of this function: `#(` is
+    escaped FIRST, so the `#(lf)` this function itself inserts afterwards is not
+    then mangled into `#(#)(lf)`.
+
+    `#(23)` was wrong and is the reason this docstring is specific. A short
+    unicode escape takes exactly FOUR hex digits, so `#(23)` matches no
+    production at all - it turned every `#` into a parse error, including ones
+    that were valid before.
 
     Nothing model-derived reaches here today: every table and column name passes
-    through `ea_census.snake_case`, which reduces any input to `[a-z0-9_]`. But
-    that invariant lives two modules away and is enforced by nothing here, and a
-    caller sourcing a directory or server name from model content - or from an
-    LLM - would turn a robustness gap into an injection. M is a capable
-    language and a partition expression runs on refresh, on the analyst's
-    machine. Escaping at the sink costs nothing and does not depend on a
-    promise made elsewhere.
+    through `ea_census.snake_case`, which reduces any input to `[a-z0-9_]`. The
+    reason to escape anyway is that the invariant lives two modules away and is
+    enforced by nothing here, and a caller sourcing a directory or server name
+    from model content - or from an LLM - turns a robustness gap into an
+    injection. A partition expression runs on refresh, on the analyst's machine.
     """
-    return value.replace("#", "#(23)").replace('"', '""')
+    out = value.replace("#(", "#(#)(").replace('"', '""')
+    return out.replace("\r", "#(cr)").replace("\n", "#(lf)").replace("\t", "#(tab)")
 
 
 def description_lines(text: str, indent: str) -> list[str]:
@@ -179,6 +203,19 @@ def render_column(table: SemanticTable, column) -> list[str]:
         out.append(f"{T}{T}formatString: {column.format_string}")
     out += [f"{T}{T}lineageTag: {lineage_tag('column', path)}",
             f"{T}{T}summarizeBy: {column.summarize_by}",
+            # NOT run through `ident()`, deliberately. This is a property VALUE,
+            # not an object declaration: TMDL property values run to end of line
+            # and Power BI's own files write `sourceColumn: Sales Amount` bare,
+            # with a space and no quotes. Quoting here would risk making the
+            # quotes part of the name and breaking a mapping that is verified
+            # working.
+            #
+            # UNTESTED: a source column whose name starts with a digit. The
+            # declaration above IS quoted for that case; whether the property
+            # value needs it too has not been put in front of Power BI. Nothing
+            # produces such a name today - `ea_census.snake_case` output is the
+            # only thing that reaches here - so this is recorded rather than
+            # guessed at.
             f"{T}{T}sourceColumn: {column.source_column}",
             "",
             # `Automatic` alongside an explicit `summarizeBy` looks like a
