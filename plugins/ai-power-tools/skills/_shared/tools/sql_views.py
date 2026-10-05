@@ -27,24 +27,22 @@ and the data is live, so an element stereotyped AFTER generation appears
 immediately, but a NEW STEREOTYPE gets no view until the views are regenerated.
 `REGENERATION_TRIGGER` is that statement, and it is emitted into the DDL header.
 
-HOW AN ELEMENT IS PLACED, AND WHY THE TRAILING SEMICOLON MATTERS
-----------------------------------------------------------------
+HOW AN ELEMENT IS PLACED
+------------------------
 EA records a stereotype application in `t_xref.Description` as one or more
-`@STEREO;...@ENDSTEREO;` blocks. An element is placed by a stereotype only when
-its block carries `FQName=` - a bare `Name=` is an ad-hoc application, which the
-census reports as drift rather than placing. Getting that wrong dropped 24
-elements in the prototype.
+`@STEREO;...@ENDSTEREO;` blocks. `_stereo_block` parses those into one row per
+BLOCK, carrying the stereotype's name and its FQName, and every placement
+predicate reads that view by EQUALITY.
 
-The generator knows every FQName from the census, so it tests for the literal
-rather than parsing blocks in SQL:
+**It is a parser rather than a `LIKE` over the whole Description, and that is
+the point.** `carries an FQName` is a property of a BLOCK, not of the row: a
+multi-stereotype element packs several blocks into one Description, so a
+substring test cannot tell "this element has an ad-hoc Device application" from
+"this element has some other stereotype that happens to be profile-bound". An
+earlier draft of this module did use a `LIKE` with a trailing semicolon to
+avoid prefix collisions; parsing removes the need for that trick entirely.
 
-    Description LIKE '%FQName=<ns>::<name>;%'
-
-**The trailing semicolon is load-bearing.** Without it `WBAVendorSystem` also
-matches `WBAVendorSystemGateway`, and a technology with one name a prefix of
-another would silently over-place every element of the longer one.
-
-A multi-stereotype element matches several of these at once. Measured on the
+A multi-stereotype element matches several predicates at once. Measured on the
 reference model: `WBABusinessApplication` counts 46 by `t_object.Stereotype` and
 **47** by correct block reading, because one element carries two stereotypes and
 the column only mirrors the first.
@@ -79,7 +77,6 @@ REGENERATION_TRIGGER = (
 
 #: EA's own marker for a stereotype application.
 XREF_NAME = "Stereotypes"
-XREF_ELEMENT_TYPE = "element property"
 XREF_CONNECTOR_TYPE = "connector property"
 
 
@@ -113,13 +110,22 @@ def _q(identifier: str) -> str:
 
 
 def _lit(text: str) -> str:
-    return "'" + str(text).replace("'", "''") + "'"
+    """An N-prefixed literal, because every column it is compared against is
+    `nvarchar`.
+
+    Without the `N` the literal is parsed under the database's default
+    collation codepage, so a stereotype or tagged-value name carrying a
+    character outside it becomes `?` and the predicate matches nothing - the
+    silent-empty-table failure again, this time triggered by an international
+    customer's model rather than by our code.
+    """
+    return "N'" + text.replace("'", "''") + "'"
 
 
 def placement_predicate(table) -> str:
     """The test that places an element in one vocabulary table.
 
-    TWO SHAPES, because the census has two. `ea_census.entity_key` keys a
+    THREE SHAPES. `ea_census.entity_key` keys a
     profile-bound application by its FQName and an ad-hoc one by
     `name|metaclass` - a bare name is ambiguous across languages, so the
     metaclass has to carry identity.
@@ -129,8 +135,16 @@ def placement_predicate(table) -> str:
     into the relationship and diagram views. Measured, not hypothetical.
     """
     key = table.entity_key
-    if "|" in key and "::" not in key:
-        name, _, metaclass = key.partition("|")
+    # The SHAPE is decided by `profile`, not by looking for a `|` in the key.
+    # Sniffing the key misclassifies in both directions: a bare
+    # `t_object.Stereotype` holding a qualified name gives a key with BOTH `|`
+    # and `::` and would be read as profile-bound, matching nothing and leaving
+    # the table silently empty; and a stereotype name containing `|` would
+    # mis-split the metaclass. `profile` and `stereotype` are already on the
+    # table and say exactly what is needed.
+    if not table.profile:
+        name = table.stereotype
+        metaclass = key.rpartition("|")[2]
         # THREE shapes, not two. Besides an ad-hoc block in `t_xref`, an element
         # with NO xref entry at all falls back to the bare `t_object.Stereotype`
         # column - `census_elements` says so and two elements on the reference
@@ -139,7 +153,7 @@ def placement_predicate(table) -> str:
         # Missing them left the key map 2 short and emptied both their tables.
         return (f"(EXISTS (SELECT 1 FROM {_q('_stereo_block')} sb\n"
                 f"                WHERE sb.ea_guid = o.ea_guid\n"
-                f"                  AND sb.fqname = ''\n"
+                f"                  AND sb.fqname = {_lit('')}\n"
                 f"                  AND sb.stereo_name = {_lit(name)})\n"
                 f"        OR (NOT EXISTS (SELECT 1 FROM {_q('_stereo_block')} sb2\n"
                 f"                        WHERE sb2.ea_guid = o.ea_guid)\n"
@@ -206,11 +220,18 @@ def _stereo_block_view() -> str:
         f"CREATE VIEW {_q('_stereo_block')} AS\n"
         f"SELECT x.Client AS ea_guid,\n"
         f"       x.Type AS applies_to,\n"
-        f"{field('Name=', 'stereo_name')},\n"
+        f"{field(';Name=', 'stereo_name')},\n"
         f"{field('FQName=', 'fqname')}\n"
         f"FROM t_xref x\n"
         f"CROSS APPLY STRING_SPLIT(\n"
-        f"    REPLACE(CAST(x.Description AS nvarchar(max)),\n"
+        # Any CHAR(1) already in the data is stripped BEFORE it is used as the
+        # separator. Nothing EA writes into a stereotype block should contain
+        # one, but the failure if it did is silent and expensive: the fragment
+        # after it fails the LIKE and is dropped, the fragment before it loses
+        # its FQName, and a profile-bound application quietly demotes to ad-hoc
+        # - which empties a table. One REPLACE removes the assumption.
+        f"    REPLACE(REPLACE(CAST(x.Description AS nvarchar(max)),\n"
+        f"                    CHAR(1), ''),\n"
         f"            '@STEREO;', CHAR(1) + '@STEREO;'), CHAR(1)) b\n"
         f"WHERE x.Name = {_lit(XREF_NAME)}\n"
         f"  AND b.value LIKE '@STEREO;%';"
@@ -226,7 +247,16 @@ def _keymap_view(model: ReportModel) -> str:
     """
     whens = [f"           WHEN {placement_predicate(t)}\n"
              f"           THEN {_lit(t.name)}" for t in model.tables]
-    case = "\n".join(whens) if whens else "           WHEN 1 = 0 THEN NULL"
+    if not whens:
+        # SQL Server rejects a CASE whose only result is the NULL constant
+        # (Msg 8133). The sibling empty-case views use typed CAST(NULL) columns;
+        # this one does the same rather than emitting SQL that will not compile.
+        return (f"CREATE VIEW {_q(physical('element'))} AS\n"
+                f"SELECT CAST(NULL AS nvarchar(40)) AS ea_guid,\n"
+                f"       CAST(NULL AS nvarchar(255)) AS entity_table,\n"
+                f"       CAST(NULL AS int) AS package_id\n"
+                f"WHERE 1 = 0;")
+    case = "\n".join(whens)
     return (
         f"CREATE VIEW {_q(physical('element'))} AS\n"
         f"SELECT o.ea_guid,\n"
@@ -245,16 +275,28 @@ def _pkg_view() -> str:
         f"CREATE VIEW {_q(physical('pkg'))} AS\n"
         f"WITH tree AS (\n"
         f"    SELECT p.Package_ID, p.Parent_ID, p.Name,\n"
-        f"           CAST(p.Name AS nvarchar(max)) AS path, 1 AS depth\n"
+        f"           CAST(p.Name AS nvarchar(max)) AS path, 0 AS depth\n"
         f"    FROM t_package p\n"
+        # A package whose parent does not exist, or which is its own parent,
+        # is treated as a ROOT rather than dropped - matching
+        # `frame.package_rows`, which does this deliberately: losing a package
+        # loses every element under it from the grouping, which is a bigger
+        # error than a path that starts lower than the model root. Dropping it
+        # here would also orphan those elements from `_keymap.package_id`, the
+        # only path to the package tree.
         f"    WHERE p.Parent_ID IS NULL OR p.Parent_ID = 0\n"
+        f"       OR p.Parent_ID = p.Package_ID\n"
+        f"       OR NOT EXISTS (SELECT 1 FROM t_package q\n"
+        f"                      WHERE q.Package_ID = p.Parent_ID)\n"
         f"    UNION ALL\n"
         f"    SELECT c.Package_ID, c.Parent_ID, c.Name,\n"
         f"           CAST(t.path + '/' + c.Name AS nvarchar(max)), t.depth + 1\n"
         f"    FROM t_package c\n"
         f"    JOIN tree t ON t.Package_ID = c.Parent_ID\n"
+        f"                AND c.Parent_ID <> c.Package_ID\n"
         f")\n"
-        f"SELECT Package_ID AS package_id, Parent_ID AS parent_id, Name AS name,\n"
+        f"SELECT Package_ID AS package_id, NULLIF(Parent_ID, 0) AS parent_id,\n"
+        f"       COALESCE(Name, '') AS name,\n"
         f"       path, depth\n"
         f"FROM tree;"
     )
@@ -273,10 +315,10 @@ def _rel_all_view() -> str:
         f"SELECT c.Connector_ID AS connector_id,\n"
         f"       so.ea_guid AS source_guid,\n"
         f"       eo.ea_guid AS target_guid,\n"
-        f"       c.Connector_Type AS connector_type,\n"
-        f"       c.Stereotype AS stereotype,\n"
+        f"       COALESCE(c.Connector_Type, '') AS connector_type,\n"
+        f"       COALESCE(c.Stereotype, '') AS stereotype,\n"
         f"       COALESCE(cs.profile, '') AS profile,\n"
-        f"       c.Name AS name\n"
+        f"       COALESCE(c.Name, '') AS name\n"
         f"FROM t_connector c\n"
         f"JOIN t_object so ON so.Object_ID = c.Start_Object_ID\n"
         f"JOIN t_object eo ON eo.Object_ID = c.End_Object_ID\n"
@@ -432,18 +474,29 @@ def _tag_coverage_view(model: ReportModel) -> str:
         for c in t.columns:
             parts.append(
                 f"SELECT {_lit(t.name)} AS table_name, {_lit(c.source_tag)} AS tag,\n"
-                f"       SUM(CASE WHEN p.Property IS NOT NULL THEN 1 ELSE 0 END) AS present,\n"
-                f"       SUM(CASE WHEN LTRIM(RTRIM(COALESCE(p.Value, ''))) <> ''"
-                f" THEN 1 ELSE 0 END) AS populated,\n"
-                f"       COUNT(*) AS total,\n"
-                f"       CASE WHEN COUNT(*) = 0 THEN 0.0 ELSE\n"
-                f"            CAST(SUM(CASE WHEN LTRIM(RTRIM(COALESCE(p.Value, ''))) <> ''"
-                f" THEN 1 ELSE 0 END) AS float) / COUNT(*) END AS coverage\n"
-                f"FROM {hub} k\n"
-                f"JOIN t_object o ON o.ea_guid = k.ea_guid\n"
+                f"       COALESCE(SUM(CASE WHEN p.Property IS NOT NULL THEN 1 ELSE 0 END), 0)"
+                f" AS present,\n"
+                f"       COALESCE(SUM(CASE WHEN LTRIM(RTRIM(COALESCE(p.Value, ''))) <> ''"
+                f" THEN 1 ELSE 0 END), 0) AS populated,\n"
+                f"       COUNT(DISTINCT o.ea_guid) AS total,\n"
+                # Divided by COUNT(DISTINCT), the same denominator `total`
+                # uses. COUNT(*) counts JOINED rows, and `t_objectproperties`
+                # carries no unique index on (Object_ID, Property) - so a
+                # repeated tag made the ratio disagree with its own numerator
+                # and denominator: 44/48 printed beside total=47.
+                f"       CASE WHEN COUNT(DISTINCT o.ea_guid) = 0 THEN 0.0 ELSE\n"
+                # Rounded to 4 places, as `tag_coverage` does. Without it the
+                # two paths disagree in the tail - 0.9362 against
+                # 0.9361702127659575 - which is a difference no row count can
+                # see and which a report would surface as two different numbers.
+                f"            ROUND(CAST(SUM(CASE WHEN"
+                f" LTRIM(RTRIM(COALESCE(p.Value, ''))) <> ''"
+                f" THEN 1 ELSE 0 END) AS float)\n"
+                f"                  / COUNT(DISTINCT o.ea_guid), 4) END AS coverage\n"
+                f"FROM t_object o\n"
                 f"LEFT JOIN t_objectproperties p\n"
                 f"       ON p.Object_ID = o.Object_ID AND p.Property = {_lit(c.source_tag)}\n"
-                f"WHERE k.entity_table = {_lit(t.name)}")
+                f"WHERE {placement_predicate(t)}")
     if not parts:
         return (f"CREATE VIEW {_q(physical('tag_coverage'))} AS\n"
                 f"SELECT CAST(NULL AS nvarchar(255)) AS table_name,\n"
@@ -467,8 +520,8 @@ def _entity_view(table) -> str:
     """
     cols = [
         "       o.ea_guid,",
-        "       o.Name AS name,",
-        "       o.Object_Type AS metaclass,",
+        "       COALESCE(o.Name, '') AS name,",
+        "       COALESCE(o.Object_Type, '') AS metaclass,",
     ]
     for c in table.columns:
         cols.append(
@@ -514,8 +567,9 @@ def build_views(model: ReportModel, *, dialect: str = "sqlserver",
         # catalog built from this legitimately shows fewer than half of them.
         physical("diagram"): (
             f"CREATE VIEW {_q(physical('diagram'))} AS\n"
-            f"SELECT d.Diagram_ID AS diagram_id, d.Name AS name,\n"
-            f"       d.Diagram_Type AS diagram_type, d.Package_ID AS package_id\n"
+            f"SELECT d.Diagram_ID AS diagram_id, COALESCE(d.Name, '') AS name,\n"
+            f"       COALESCE(d.Diagram_Type, '') AS diagram_type,\n"
+            f"       d.Package_ID AS package_id\n"
             f"FROM t_diagram d;"),
         physical("diagram_object"): _simple_join_view(
             physical("diagram_object"),
@@ -524,14 +578,14 @@ def build_views(model: ReportModel, *, dialect: str = "sqlserver",
             "o.ea_guid"),
         physical("attribute"): _simple_join_view(
             physical("attribute"),
-            "a.ID AS attribute_id, o.ea_guid AS element_guid, a.Name AS name,\n"
-            "       a.Type AS attr_type, a.Scope AS scope",
+            "a.ID AS attribute_id, o.ea_guid AS element_guid, COALESCE(a.Name, '') AS name,\n"
+            "       COALESCE(a.Type, '') AS attr_type, COALESCE(a.Scope, '') AS scope",
             "t_attribute a\nJOIN t_object o ON o.Object_ID = a.Object_ID",
             "o.ea_guid"),
         physical("operation"): _simple_join_view(
             physical("operation"),
             "op.OperationID AS operation_id, o.ea_guid AS element_guid,\n"
-            "       op.Name AS name, op.Type AS return_type, op.Scope AS scope",
+            "       COALESCE(op.Name, '') AS name, COALESCE(op.Type, '') AS return_type, COALESCE(op.Scope, '') AS scope",
             "t_operation op\nJOIN t_object o ON o.Object_ID = op.Object_ID",
             "o.ea_guid"),
     }

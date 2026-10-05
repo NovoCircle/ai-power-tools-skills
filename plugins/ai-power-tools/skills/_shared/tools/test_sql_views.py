@@ -25,13 +25,15 @@ from sql_views import (SUPPORTED_DIALECTS, DialectError, build_views,
 def declared(name="business_application", key="WBA::WBABusinessApplication",
              cols=(("criticality", "TEXT"),), overflow=()):
     return Table(name=name, entity_key=key, stereotype="WBABusinessApplication",
-                 declared=True, overflow_tags=list(overflow),
+                 profile="WBA", declared=True, overflow_tags=list(overflow),
                  columns=[Column(name=c, source_tag=c, sql_type=t) for c, t in cols])
 
 
 def adhoc(name="business_actor", key="BusinessActor|Actor"):
-    return Table(name=name, entity_key=key, stereotype="BusinessActor",
-                 declared=False)
+    # stereotype is derived from the key, because the census keeps them in step
+    # and the emitter now reads  rather than re-parsing the key.
+    return Table(name=name, entity_key=key, stereotype=key.rpartition("|")[0],
+                 profile="", declared=False)
 
 
 def model(tables=None):
@@ -90,7 +92,7 @@ def test_the_drop_script_reverses_the_order_so_a_regeneration_re_runs():
 
 def test_a_profile_bound_table_matches_on_its_FQNAME():
     sql = placement_predicate(declared(key="WBA::WBABusinessApplication"))
-    assert "sb.fqname = 'WBA::WBABusinessApplication'" in sql
+    assert "sb.fqname = N'WBA::WBABusinessApplication'" in sql
     assert "o.Object_Type" not in sql
 
 
@@ -98,9 +100,9 @@ def test_an_ad_hoc_table_matches_on_NAME_AND_METACLASS():
     """`ea_census.entity_key` keys an ad-hoc application `name|metaclass`
     because a bare name is ambiguous across languages."""
     sql = placement_predicate(adhoc(key="BusinessActor|Actor"))
-    assert "sb.stereo_name = 'BusinessActor'" in sql
-    assert "o.Object_Type = 'Actor'" in sql
-    assert "sb.fqname = ''" in sql
+    assert "sb.stereo_name = N'BusinessActor'" in sql
+    assert "o.Object_Type = N'Actor'" in sql
+    assert "sb.fqname = N''" in sql
 
 
 def test_an_ad_hoc_table_also_falls_back_to_the_bare_stereotype_column():
@@ -110,7 +112,7 @@ def test_an_ad_hoc_table_also_falls_back_to_the_bare_stereotype_column():
     empty, while every view still ran without error."""
     sql = placement_predicate(adhoc(key="SystemSoftware|Component"))
     assert "NOT EXISTS" in sql
-    assert "o.Stereotype = 'SystemSoftware'" in sql
+    assert "o.Stereotype = N'SystemSoftware'" in sql
 
 
 def test_reading_only_the_fqname_form_is_what_emptied_fourteen_tables():
@@ -201,7 +203,7 @@ def test_a_multi_valued_tag_is_split_and_a_single_valued_one_is_not():
     t.columns[0].multi_valued = True
     sql = build_views(model([t])).views[physical("tag_value")]
     assert "STRING_SPLIT" in sql
-    assert "NOT IN ('regulatory_scope')" in sql
+    assert "NOT IN (N'regulatory_scope')" in sql
 
 
 # ------------------------------------------------------------ the header
@@ -244,4 +246,90 @@ def test_an_identifier_closing_its_own_bracket_is_escaped():
 
 def test_a_value_closing_its_own_quote_is_escaped():
     sql = placement_predicate(declared(key="WBA::it's"))
-    assert "'WBA::it''s'" in sql
+    assert "N'WBA::it''s'" in sql
+
+
+def test_the_shape_is_chosen_from_profile_not_by_sniffing_the_key():
+    """A bare `t_object.Stereotype` holding a QUALIFIED name yields a key with
+    both `|` and `::`. Sniffing the key would read that as profile-bound,
+    compare it against `fqname`, match nothing, and leave the table silently
+    empty. `profile` says what the census already decided."""
+    t = Table(name="odd", entity_key="Profile::Name|Class", stereotype="Name",
+              profile="", declared=False)
+    sql = placement_predicate(t)
+    assert "sb.stereo_name = N'Name'" in sql
+    assert "o.Object_Type = N'Class'" in sql
+    assert "sb.fqname = N'Profile::Name|Class'" not in sql
+
+
+def test_a_stereotype_name_containing_a_pipe_still_splits_correctly():
+    """The metaclass is taken from the LAST `|`, so a name carrying one does not
+    mis-partition."""
+    t = Table(name="odd", entity_key="we|ird|Component", stereotype="we|ird",
+              profile="", declared=False)
+    assert "o.Object_Type = N'Component'" in placement_predicate(t)
+
+
+def test_package_depth_is_zero_based_like_frame_package_rows():
+    """`frame.package_rows` computes `len(names) - 1`, so a root is 0. The view
+    anchored at 1 and was off by one on EVERY row of a shipped, customer-visible
+    column - and the live acceptance could not see it, because it compared row
+    counts only."""
+    sql = build_views(model()).views[physical("pkg")]
+    assert "0 AS depth" in sql
+    assert "1 AS depth" not in sql
+
+
+def test_an_orphan_or_self_parented_package_is_a_ROOT_not_dropped():
+    """`frame.package_rows` keeps both deliberately: losing a package loses every
+    element under it from the grouping. Dropping it here would also orphan those
+    elements from `_keymap.package_id`, which `semantic_model` calls the only
+    path to the package tree."""
+    sql = build_views(model()).views[physical("pkg")]
+    assert "p.Parent_ID = p.Package_ID" in sql
+    assert "NOT EXISTS" in sql
+
+
+def test_coverage_is_scoped_by_placement_not_by_entity_table():
+    """The same defect `_overflow_tag` documents fixing. `entity_table` names
+    only the FIRST table a multi-stereotype element landed in, so coverage
+    computed a total of 46 against the model's own row_count of 47 - the
+    measured multi-stereotype case, reappearing in a different view."""
+    sql = build_views(model()).views[physical("tag_coverage")]
+    assert "entity_table" not in sql
+    assert "sb.fqname" in sql
+
+
+def test_coverage_counts_distinct_elements_not_joined_rows():
+    """`t_objectproperties` has no unique index on (Object_ID, Property), so a
+    repeated tag would inflate `total` past the model's row count."""
+    assert "COUNT(DISTINCT o.ea_guid)" in build_views(model()).views[physical("tag_coverage")]
+
+
+def test_a_model_with_no_vocabulary_tables_emits_SQL_that_compiles():
+    """SQL Server rejects a CASE whose only result is the NULL constant
+    (Msg 8133). The sibling empty-case views use typed CAST(NULL) columns."""
+    sql = build_views(ReportModel(technology_id="WBA")).views[physical("element")]
+    assert "WHEN 1 = 0 THEN NULL" not in sql
+    assert "CAST(NULL AS nvarchar(40))" in sql
+
+
+def test_literals_are_unicode_because_every_column_they_meet_is_nvarchar():
+    """Without the N the literal is parsed under the database's default
+    collation codepage, so a name outside it becomes `?` and the predicate
+    matches nothing - an empty table caused by a customer's language."""
+    assert "N'" in placement_predicate(declared())
+
+
+def test_the_block_parser_strips_a_separator_already_in_the_data():
+    """If a CHAR(1) ever appeared mid-block the fragment after it would fail the
+    LIKE and be dropped, and the one before it would lose its FQName - silently
+    demoting a profile-bound application to ad-hoc."""
+    sql = build_views(model()).views["_stereo_block"]
+    assert sql.count("REPLACE(") == 2
+
+
+def test_the_name_field_is_not_matched_inside_FQName():
+    """`Name=` is a substring of `FQName=`. Searching `;Name=` disambiguates
+    completely, where the Python parser is order-independent and this was not."""
+    assert "';Name='" in build_views(model()).views["_stereo_block"]
