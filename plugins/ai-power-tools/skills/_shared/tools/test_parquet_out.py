@@ -261,7 +261,6 @@ def test_a_stale_file_is_left_alone_when_overwrite_was_not_asked_for(tmp_path):
     """Deleting a file the caller did not name would be the sink reaching
     outside what it was asked to do."""
     stale = tmp_path / "not_ours.parquet"
-    tmp_path.mkdir(parents=True, exist_ok=True)
     stale.write_bytes(b"not parquet")
     build_parquet(tmp_path, model(), pivot_result(), frame_rows(),
                   run_id="r1", run_at="t")
@@ -281,3 +280,18 @@ def test_the_two_sinks_agree_on_every_row_count(tmp_path):
     # `build_database` keys by pipeline name, this by physical name.
     assert {physical(k): v for k, v in db.rows_by_table.items()} == \
         pq_result.rows_by_table
+
+
+def test_both_sinks_draw_their_warnings_from_the_same_place():
+    """PURE, deliberately not `@needs_pyarrow`. The parity this guards is a
+    property of the shared helper, not of the writer, and on a machine without
+    the wheel the `@needs_pyarrow` version of this assertion does not run at
+    all - which is how the divergence survived in the first place."""
+    import load
+    import parquet_out as po
+    assert po.pivot_warnings is load.pivot_warnings
+    assert po.pivot_notes is load.pivot_notes
+
+    pr = pivot_result()
+    pr.unplaced = [{"ea_guid": "{C}"}]
+    assert any("reached no table" in w for w in load.pivot_warnings(pr))

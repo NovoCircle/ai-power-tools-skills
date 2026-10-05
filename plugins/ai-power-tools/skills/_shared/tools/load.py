@@ -216,10 +216,8 @@ def build_database(path,
     path.parent.mkdir(parents=True, exist_ok=True)
 
     ent_cols = entity_columns(model)
-    for text in pivot_warnings(pivot_result):
-        result.warnings.append(text)
-    for text in pivot_notes(pivot_result):
-        result.notes.append(text)
+    result.warnings.extend(pivot_warnings(pivot_result))
+    result.notes.extend(pivot_notes(pivot_result))
     conn = sqlite3.connect(str(path))
     try:
         w = _Writer(conn, result.sql_log)

@@ -212,7 +212,7 @@ def _entity_columns(table) -> list[SemanticColumn]:
     out = [
         SemanticColumn(name="ea_guid", data_type="string",
                        is_hidden="ea_guid" in HIDDEN_ENTITY_COLUMNS,
-                       description="EA's stable identifier. Join key, hidden."),
+                       description="EA's stable identifier, and the join key."),
         SemanticColumn(name="name", data_type="string",
                        is_hidden="name" in HIDDEN_ENTITY_COLUMNS),
         SemanticColumn(name="metaclass", data_type="string",
@@ -360,13 +360,17 @@ def build_semantic_model(model: ReportModel, *,
     # files by table name, so one simply disappears, and `model.tmdl` emits
     # `ref table` twice. Analysis Services compares table names
     # case-insensitively, so `relationships` and `Relationships` collide too.
-    clash = next((t.name for t in model.tables
-                  if t.name.casefold() == measure_host.casefold()), None)
+    # Checked against the FRAME as well as the vocabulary. A guard that covers
+    # only half the names it shares a namespace with reads as covered while the
+    # failure it exists to make loud is still reachable.
+    taken = {t.name for t in model.tables} | {physical(k) for k in FRAME_DDL}
+    clash = next((n for n in sorted(taken)
+                  if n.casefold() == measure_host.casefold()), None)
     if clash is not None:
         raise ValueError(
-            f"measure_host {measure_host!r} collides with the vocabulary table "
-            f"{clash!r} (names are compared case-insensitively, as Analysis "
-            f"Services does). Pass a different measure_host.")
+            f"measure_host {measure_host!r} collides with the table {clash!r} "
+            f"(names are compared case-insensitively, as Analysis Services "
+            f"does). Pass a different measure_host.")
 
     tables: list[SemanticTable] = []
 

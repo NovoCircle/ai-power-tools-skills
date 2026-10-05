@@ -11,6 +11,8 @@ produces for 29 vocabulary tables, and it is the number a live apply confirmed.
 """
 from __future__ import annotations
 
+import pytest
+
 from ddl import FRAME_DDL, physical
 from report_model import Column, ReportModel, Table
 from semantic_model import (DEFAULT_MEASURE_HOST, HUB, build_semantic_model,
@@ -293,12 +295,21 @@ def test_two_builds_of_the_same_report_model_are_identical():
 def test_a_measure_host_colliding_with_a_vocabulary_table_is_refused():
     """A collision is SILENT otherwise: `render_definition` keys files by table
     name so one disappears, and `model.tmdl` emits `ref table` twice."""
-    import pytest
     with pytest.raises(ValueError, match="collides"):
         build_semantic_model(model(), measure_host="entity_0")
 
 
 def test_the_collision_check_is_case_insensitive_as_analysis_services_is():
-    import pytest
     with pytest.raises(ValueError, match="collides"):
         build_semantic_model(model(), measure_host="ENTITY_0")
+
+
+def test_a_measure_host_colliding_with_a_FRAME_table_is_also_refused():
+    """The first version of this guard checked the vocabulary only, so a frame
+    physical name slipped past and produced two tables with one name - one TMDL
+    file silently lost and `ref table` emitted twice. A guard covering half the
+    names it shares a namespace with reads as covered and is not."""
+    with pytest.raises(ValueError, match="collides"):
+        build_semantic_model(model(), measure_host=physical("element"))
+    with pytest.raises(ValueError, match="collides"):
+        build_semantic_model(model(), measure_host="_TAG_VALUE")
