@@ -469,13 +469,13 @@
       "name": "ea-validation",
       "title": "ea-validation",
       "description": "Author validate_model YAML rule sidecars; run hosted rulesets via URL (v1.2.0+)",
-      "version": "1.0.5",
+      "version": "1.0.6",
       "min_server_version": "2.2.0",
       "files": [
         "ea-validation/SKILL.md"
       ],
       "sha256": {
-        "ea-validation/SKILL.md": "4907139e79b5f1c593c0b41cdb6b455b3bb1301c98d61c333c18847f10ec73bb"
+        "ea-validation/SKILL.md": "85c347e8c629f9318116db87b84905c1e29cebd2dc6bda38fd83d2955dfcb4d9"
       }
     },
     {
