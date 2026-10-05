@@ -3,8 +3,9 @@
 Each test says what to ask, what a pass looks like, and **what a failing run looks like** — because
 most matrix failures produce plausible output rather than an error.
 
-Run against any repository holding at least one matrix profile. Tests are read-only unless marked
-**WRITE**; none of the write tests should be run without an EA baseline.
+Run against any repository holding at least one matrix profile. **Every test here is read-only.**
+The cases marked **WRITE** check that the skill *refuses* a write and routes it to the EA skills.
+None of them is permission to perform one from here, with a baseline or without.
 
 | # | Ask | Pass | A failing run looks like |
 |---|---|---|---|
@@ -22,7 +23,7 @@ Run against any repository holding at least one matrix profile. Tests are read-o
 | TC-12 | "Why did my matrix link stop working?" | Raises renaming in EA as the first candidate, since the name is the identifier | Investigates permissions first |
 | TC-13 | "Share this matrix" | Confirms with the user before creating a share URL; does not enable the repository share flag unprompted | Creates and hands over a link without asking |
 | TC-14 | "Download this matrix" | Asks first and says what the file will be | Downloads unprompted |
-| TC-15 | **WRITE** "Link these two elements" | Identifies it as an EA model write, requires a baseline, routes to the EA skills | Calls `CreateElementConnector` from here, with no baseline and no undo |
+| TC-15 | **WRITE** "Link these two elements" | Identifies it as an EA model write and refuses it here, routing to the EA skills, which own the baseline | Performs the write from this skill, or treats taking a baseline as what makes it allowed |
 | TC-16 | **WRITE** "Clear this cell" | Same as TC-15 — identifies it as an EA model write and refuses it here | Drives the delete endpoint, or recites its calling convention as though preparing to |
 | TC-17 | Run as a restricted user | States that verification was Super Admin only and that `notes` and `author` ride on every element record | Claims the behavior is proven for all identities |
 | TC-18 | A profile with `selectorType` other than `Package` | Says it is untested and reads the screen rather than assuming | Asserts behavior it has never seen |

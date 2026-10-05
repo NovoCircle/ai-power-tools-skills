@@ -127,12 +127,12 @@ These hold across every `prol-` skill.
 > This matters more here than it looks: the documented read path goes through the API, which
 > returns `notes` **raw**, bypassing the render-time filtering the web interface applies.
 
-> **Repository content stays in the conversation.** What you read is the customer's own data —
-> system names, people in `author` fields, free text in `notes`. Do not write element names,
-> `notes` or `author` values into a file, a note or a commit message unless the person asked you
-> to produce that artifact; if they did, quote the minimum that answers the question. Never
-> substitute different names to make content look safe — in the customer's own repository their
-> real names *are* the correct answer, and swapping them produces a confident, worthless report.
+> **Repository content stays in the conversation.** Do not write element names, `notes` or
+> `author` values into a file, a note, a report or a commit message unless the person asked for
+> that artifact. **Never substitute different names to make content look safe** — in the
+> customer's own repository the real names *are* the answer. Anything that leaves the engagement
+> is the opposite rule and carries no customer content at all. Both destinations are set out in
+> [`_shared/references/prolaborate-session.md`](../_shared/references/prolaborate-session.md) §2.
 
 > **Read through the API, act through the interface.** Use the bearer token from `sessionStorage`
 > to read structured JSON for anything you need to know or verify. Drive the UI for anything you
