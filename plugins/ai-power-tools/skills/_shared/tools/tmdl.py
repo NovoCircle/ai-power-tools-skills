@@ -92,9 +92,13 @@ def m_literal(value: str) -> str:
     - `"` doubled, or it ends the literal and admits arbitrary M.
     - `#(` escaped as `#(#)(`, the spec's own example. Left alone, `#(lf)` in a
       path silently becomes a newline and `#(zz)` is a parse error.
-    - CR, LF and TAB replaced with `#(cr)`, `#(lf)`, `#(tab)`. The spec limits
-      literals to graphic characters, and independently a raw newline breaks the
-      enclosing TMDL block, which is indentation-structured.
+    - CR, LF and TAB replaced with `#(cr)`, `#(lf)`, `#(tab)`, because a raw
+      newline or tab breaks the enclosing TMDL block, which is
+      indentation-structured. **Only those three.** Every other control
+      character - NUL, U+0085, U+2028, U+2029 among them - passes through raw
+      and round-trips, which is narrower than the spec's own restriction to
+      graphic characters. None of them is a .NET line terminator, so none
+      breaks the block; this is a known narrowing, not an oversight.
 
     **Order matters here**, unlike the first version of this function: `#(` is
     escaped FIRST, so the `#(lf)` this function itself inserts afterwards is not
@@ -109,21 +113,27 @@ def m_literal(value: str) -> str:
 
     - `ParquetSource.directory` and `.suffix`, `SqlSource.server`, `.database`
       and `.schema` - five caller parameters that pass through nothing at all.
-    - `SemanticTable.source_name`, which is either a hardcoded frame literal
+    - `SemanticTable.source_name` - a PUBLIC field, the second positional one,
+      filled from `name` only when empty, so a caller may set it to anything.
+      `test_the_other_two_sinks_escape_as_well` does exactly that. When
+      `build_semantic_model` fills it, it is either a hardcoded frame literal
       from `ddl.PHYSICAL_NAME`/`FRAME_DDL` or, for a vocabulary table,
       `ea_census.table_name()` output derived from the customer's alias or
-      stereotype. So model-derived content DOES reach here.
+      stereotype - so on the path this package builds, model-derived content
+      reaches here too.
 
     **No column name reaches here**, and `snake_case` is not the gatekeeper an
     earlier version of this docstring claimed: every frame `source_name` begins
     with `_`, and `snake_case("_pkg")` is `"pkg"`, so those eleven names
     provably never passed through it.
 
-    The reason to escape is therefore not belt-and-braces over a safe input. It
-    is that five of the six values are whatever the caller passed, the sixth is
-    derived from the model, and a caller sourcing a directory or server name from
-    model content - or from an LLM - turns a robustness gap into an injection. A
-    partition expression runs on refresh, on the analyst's machine.
+    The reason to escape is therefore not belt-and-braces over a safe input.
+    **All six are whatever the caller passed** - `source_name` is a public field
+    like the other five, not a closed set - and the sixth is ADDITIONALLY
+    model-derived on the path this package builds. A caller sourcing a directory,
+    a server name or a table name from model content, or from an LLM, turns a
+    robustness gap into an injection, and a partition expression runs on refresh,
+    on the analyst's machine.
     """
     out = value.replace("#(", "#(#)(").replace('"', '""')
     return out.replace("\r", "#(cr)").replace("\n", "#(lf)").replace("\t", "#(tab)")
@@ -241,8 +251,12 @@ def render_column(table: SemanticTable, column) -> list[str]:
             # All three are `[a-z0-9_]` today. But `source_column` is a PUBLIC
             # dataclass field that `__post_init__` fills from `name` only when it
             # is empty, so a caller may set it to anything at all and nothing
-            # here validates or escapes it. The field exists precisely so a
-            # column can be mapped onto a differently-named source column, so
+            # here validates or escapes it. Nothing in this tree records WHY the
+            # field exists - no comment, no docstring, no caller sets it - so
+            # that is not asserted here. What can be said is the shape:
+            # `SemanticTable.source_name` is the same public-field-plus-
+            # `__post_init__` pattern and DOES carry its rationale, that a
+            # plumbing table may be surfaced under a business name. Either way
             # "no caller does that" is a statement about today, not an invariant.
             # A caller passing `Sales Amount` - the very string offered above as
             # evidence - writes an unchecked caller value into a TMDL property.

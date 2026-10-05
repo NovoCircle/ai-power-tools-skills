@@ -20,7 +20,8 @@ import pytest
 
 from ddl import physical
 from report_model import Column, ReportModel, Table
-from semantic_model import DEFAULT_MEASURE_HOST, HUB, build_semantic_model
+from semantic_model import (DEFAULT_MEASURE_HOST, HUB, SemanticColumn,
+                            SemanticTable, build_semantic_model)
 from tmdl import (NEWLINE, ParquetSource, SqlSource, ident, lineage_tag,
                   m_literal,
                   render_culture, render_definition, render_model,
@@ -366,7 +367,6 @@ def test_a_leading_digit_source_column_is_bare():
     deliberate. It does NOT establish that Power BI accepts it; only Power BI
     can do that.
     """
-    from semantic_model import SemanticColumn, SemanticTable
     from tmdl import render_column
 
     table = SemanticTable(name="entity_0")
@@ -447,16 +447,17 @@ def test_the_partition_sources_actually_use_the_escaper():
 def test_the_other_two_sinks_escape_as_well():
     """SIX values reach a Power Query literal, not three.
 
-    The test above covers `directory`, `server` and `database`. Removing
-    `m_literal` from `schema` or from `table.source_name` left the whole suite
-    GREEN - and those are two of the five values S-0211-01 named, so the suite
-    was agreeing with the finding while failing to cover half of it.
+    The test above covers `directory`, `server` and `database`, and `suffix` by
+    the same whole-path escape. Removing `m_literal` from `schema` or from
+    `table.source_name` left the whole suite GREEN - so the uncovered set was
+    exactly those two of the six, and the suite was agreeing with S-0211-01
+    while failing to cover a third of it. Established by mutation, not by
+    counting: dropping the escaper from `directory` or `suffix` already failed
+    the earlier test.
 
     Asserted against the exact escaped substring rather than against quote
     parity: parity passes when the escaper is dropped from ONE of two sinks on
     the same line, which is precisely the case that was uncovered."""
-    from semantic_model import SemanticColumn, SemanticTable
-
     hostile = 'x" & Web.Contents("http://example.invalid") & "'
     escaped = m_literal(hostile)
     table = SemanticTable(name="entity_0", source_name=hostile,
