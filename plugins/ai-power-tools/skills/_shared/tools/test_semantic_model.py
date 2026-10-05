@@ -288,3 +288,17 @@ def test_the_model_is_plain_serializable_data():
 def test_two_builds_of_the_same_report_model_are_identical():
     assert build_semantic_model(model(n_tables=4)).to_dict() == \
         build_semantic_model(model(n_tables=4)).to_dict()
+
+
+def test_a_measure_host_colliding_with_a_vocabulary_table_is_refused():
+    """A collision is SILENT otherwise: `render_definition` keys files by table
+    name so one disappears, and `model.tmdl` emits `ref table` twice."""
+    import pytest
+    with pytest.raises(ValueError, match="collides"):
+        build_semantic_model(model(), measure_host="entity_0")
+
+
+def test_the_collision_check_is_case_insensitive_as_analysis_services_is():
+    import pytest
+    with pytest.raises(ValueError, match="collides"):
+        build_semantic_model(model(), measure_host="ENTITY_0")

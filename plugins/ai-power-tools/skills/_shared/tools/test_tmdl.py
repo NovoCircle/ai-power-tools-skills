@@ -232,8 +232,10 @@ def test_endpoints_render_as_table_dot_column():
 
 
 def test_the_model_suppresses_auto_date_tables():
-    """MEASURED: Power BI auto-created LocalDateTable_* and DateTableTemplate_*
-    for `_load_run.run_at`."""
+    """The auto date-table behavior was observed against a DATETIME column.
+    Since APT-2026-0226 the schema exposes none - `date` and `datetime` both map
+    to TEXT - so this asserts the suppression is EMITTED, not that it was
+    re-observed on the current model."""
     assert "annotation __PBI_TimeIntelligenceEnabled = 0" in render_model(semantic())
 
 

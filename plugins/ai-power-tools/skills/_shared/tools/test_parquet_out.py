@@ -218,6 +218,57 @@ def test_existing_files_are_not_replaced_without_being_asked(tmp_path):
 
 
 @needs_pyarrow
+def test_both_sinks_report_the_same_warnings_and_notes(tmp_path):
+    """The reason this test exists: they had already diverged. The Parquet sink
+    replicated `uncoercible` and `excluded` but not `unplaced`, so a customer on
+    the Parquet-only path never heard that tag rows reached no table - which is
+    exactly the silent under-reporting 0212's own criteria name."""
+    m, fr = model(), frame_rows()
+    pr = pivot_result()
+    pr.unplaced = [{"ea_guid": "{C}", "tag": "owner", "value": ""}]
+    pr.uncoercible = [{"ea_guid": "{A}", "table": "business_application",
+                       "column": "audit_logging_enabled", "sql_type": "INTEGER",
+                       "value": "maybe"}]
+    pr.excluded = [{"ea_guid": "{D}", "tag": "criticality", "value": "High"}]
+
+    db = build_database(tmp_path / "r.sqlite", m, pr, fr, run_id="r1", run_at="t")
+    pq_result = build_parquet(tmp_path / "parquet", m, pr, fr,
+                              run_id="r1", run_at="t")
+    assert pq_result.warnings == db.warnings
+    assert pq_result.notes == db.notes
+    assert any("reached no table" in w for w in pq_result.warnings)
+
+
+@needs_pyarrow
+def test_a_table_dropped_from_the_model_does_not_survive_a_re_emit(tmp_path):
+    """The emitter owns the WHOLE set, as `build_database` does by unlinking the
+    database first. Writing file by file would leave a `.parquet` for a table
+    the model no longer has - a table invisible to a reconciliation keyed on the
+    model, which is the failure mode this family has produced before."""
+    build_parquet(tmp_path, model(), pivot_result(), frame_rows(),
+                  run_id="r1", run_at="t")
+    stale = tmp_path / "retired_stereotype.parquet"
+    stale.write_bytes((tmp_path / "business_application.parquet").read_bytes())
+
+    result = build_parquet(tmp_path, model(), pivot_result(), frame_rows(),
+                           run_id="r2", run_at="t", overwrite=True)
+    assert not stale.exists()
+    assert any("retired_stereotype" in n for n in result.notes)
+
+
+@needs_pyarrow
+def test_a_stale_file_is_left_alone_when_overwrite_was_not_asked_for(tmp_path):
+    """Deleting a file the caller did not name would be the sink reaching
+    outside what it was asked to do."""
+    stale = tmp_path / "not_ours.parquet"
+    tmp_path.mkdir(parents=True, exist_ok=True)
+    stale.write_bytes(b"not parquet")
+    build_parquet(tmp_path, model(), pivot_result(), frame_rows(),
+                  run_id="r1", run_at="t")
+    assert stale.exists()
+
+
+@needs_pyarrow
 def test_the_two_sinks_agree_on_every_row_count(tmp_path):
     """THE 0211/0212 GUARANTEE. The same inputs through both sinks must produce
     the same shape - if they can disagree, none of the Power BI findings apply

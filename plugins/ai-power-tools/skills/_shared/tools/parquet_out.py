@@ -45,7 +45,8 @@ import pathlib
 from dataclasses import dataclass, field
 
 from ddl import FRAME_DDL, physical
-from load import LOAD_RUN, entity_columns, frame_columns
+from load import (LOAD_RUN, entity_columns, frame_columns, pivot_notes,
+                  pivot_warnings)
 from report_model import ReportModel
 
 try:  # pragma: no cover - environment-dependent
@@ -205,14 +206,30 @@ def build_parquet(directory,
     directory.mkdir(parents=True, exist_ok=True)
     result = ParquetResult(directory=str(directory), run_id=run_id)
 
-    if pivot_result.uncoercible:
-        result.warnings.append(
-            f"{len(pivot_result.uncoercible)} value(s) could not be stored as the "
-            "type their column declares and were left NULL - see the pivot result")
-    if pivot_result.excluded:
+    # THE SAME warnings the database sink raises, from the same function. They
+    # were copy-pasted here once and had already drifted - `unplaced` was
+    # missing, so a customer on the Parquet-only path never heard that tag rows
+    # reached no table.
+    result.warnings.extend(pivot_warnings(pivot_result))
+    result.notes.extend(pivot_notes(pivot_result))
+
+    # THE EMITTER OWNS THE WHOLE SET. `build_database` unlinks the database
+    # first, so the SQLite sink cannot leave a table behind that the model no
+    # longer has. Writing file-by-file into an existing directory can: drop a
+    # stereotype, re-emit, and its `.parquet` survives as a table that is not in
+    # the model and that a reconciliation keyed on the model cannot see.
+    #
+    # Only when `overwrite` was asked for: a stale file is not something the
+    # caller named, so deleting it uninvited would be the sink reaching outside
+    # what it was asked to do.
+    stale = sorted(p for p in directory.glob("*.parquet")
+                   if p.stem not in schemas) if overwrite else []
+    for p in stale:
+        p.unlink()
+    if stale:
         result.notes.append(
-            f"{len(pivot_result.excluded)} populated tag value(s) excluded with "
-            "their element, which landed in no entity table")
+            f"removed {len(stale)} parquet file(s) for tables no longer in the "
+            f"model: {', '.join(p.stem for p in stale)}")
 
     for name, columns in schemas.items():
         table_rows = rows.get(name, [])

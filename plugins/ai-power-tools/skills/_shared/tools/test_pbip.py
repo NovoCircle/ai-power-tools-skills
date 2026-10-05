@@ -11,6 +11,7 @@ loads the model then crashes every save path.
 from __future__ import annotations
 
 import json
+import re
 
 from report_model import Column, ReportModel, Table
 from semantic_model import build_semantic_model
@@ -89,6 +90,9 @@ def test_every_file_is_crlf():
     for path, text in project_files(semantic(), PARQUET).items():
         assert "\r\n" in text, path
         assert "\r\r\n" not in text, path
+        # The same strictness test_tmdl.py applies. A BARE LF slips past both
+        # checks above, and the report half is exactly where one could hide.
+        assert not re.search(r"(?<!\r)\n", text), f"{path} has a bare LF"
 
 
 def test_every_json_file_is_valid_json():
@@ -99,7 +103,7 @@ def test_every_json_file_is_valid_json():
         if path.endswith(".json") or path.endswith(".pbip") \
                 or path.endswith(".pbism") or path.endswith(".pbir") \
                 or path.endswith(".platform"):
-            json.loads(text), path
+            assert json.loads(text) is not None, path
 
 
 # ------------------------------------------------------------ determinism

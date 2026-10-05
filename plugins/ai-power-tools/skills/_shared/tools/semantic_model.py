@@ -84,17 +84,12 @@ HUB = physical("element")
 #: a measure group and nothing else.
 DEFAULT_MEASURE_HOST = "Relationships"
 
-#: Key columns are hidden on every table. They are join plumbing, and a field
-#: list offering `ea_guid` on 29 tables is noise the customer did not ask for.
+#: Key columns are hidden on every vocabulary table. They are join plumbing, and
+#: a field list offering `ea_guid` on 29 tables is noise the customer did not ask
+#: for. READ by `_entity_columns`, so editing this changes the output - it was
+#: briefly a constant that declared the policy while the policy was hardcoded
+#: elsewhere, which is the restate-and-drift failure these modules avoid.
 HIDDEN_ENTITY_COLUMNS = frozenset({"ea_guid"})
-
-#: Frame tables that carry no relationship at all, and are deliberately left
-#: disconnected rather than wired to something plausible.
-#:
-#: `_tag_coverage` is keyed by table name and tag, not by element, so relating it
-#: would invent a join. `_load_run` is refresh audit. Both are reachable in the
-#: model and neither participates in filtering.
-DISCONNECTED = ("tag_coverage", "load_run")
 
 
 @dataclass
@@ -215,16 +210,20 @@ def _frame_columns(frame_key: str, *, hide_all: bool) -> list[SemanticColumn]:
 def _entity_columns(table) -> list[SemanticColumn]:
     """Columns for one vocabulary table, matching `ddl.entity_table_ddl`."""
     out = [
-        SemanticColumn(name="ea_guid", data_type="string", is_hidden=True,
+        SemanticColumn(name="ea_guid", data_type="string",
+                       is_hidden="ea_guid" in HIDDEN_ENTITY_COLUMNS,
                        description="EA's stable identifier. Join key, hidden."),
-        SemanticColumn(name="name", data_type="string"),
-        SemanticColumn(name="metaclass", data_type="string"),
+        SemanticColumn(name="name", data_type="string",
+                       is_hidden="name" in HIDDEN_ENTITY_COLUMNS),
+        SemanticColumn(name="metaclass", data_type="string",
+                       is_hidden="metaclass" in HIDDEN_ENTITY_COLUMNS),
     ]
     for c in table.columns:
         dt = tmdl_type(c.sql_type)
         out.append(SemanticColumn(
             name=c.name,
             data_type=dt,
+            is_hidden=c.name in HIDDEN_ENTITY_COLUMNS,
             format_string=_format_string(dt),
             description=c.description,
         ))
@@ -264,8 +263,8 @@ def traversal_measures(host: str, hub: str) -> list[Measure]:
     ]
 
 
-def _relationships(entity_tables: list[str], present: set[str],
-                   *, hub: str, host: str) -> list[Relationship]:
+def _relationships(entity_tables: list[str], *,
+                   hub: str, host: str) -> list[Relationship]:
     """The 38-relationship hub shape, scaled to however many entities exist.
 
     Every vocabulary table is a 1:1 extension of the hub. Everything else hangs
@@ -298,14 +297,17 @@ def _relationships(entity_tables: list[str], present: set[str],
         (physical("diagram_object"), "ea_guid",
          "diagram membership; auto-detect deactivated this one silently"),
     ]
+    # No `if table in present` guard. The frame is fixed and `FRAME_DDL` is
+    # always walked in full, so the test could never be false - and it guarded
+    # only five of the nine, so it was not even consistent with itself. A guard
+    # that cannot fire reads like a handled case and is not one.
     for table, column, why in many_to_hub:
-        if table in present:
-            out.append(Relationship(
-                name=_rel_name(table, column, hub),
-                from_table=table, from_column=column,
-                to_table=hub, to_column="ea_guid",
-                why=why,
-            ))
+        out.append(Relationship(
+            name=_rel_name(table, column, hub),
+            from_table=table, from_column=column,
+            to_table=hub, to_column="ea_guid",
+            why=why,
+        ))
 
     out += [
         Relationship(
@@ -353,6 +355,19 @@ def build_semantic_model(model: ReportModel, *,
     hub = HUB
     host_source = physical("rel_all")
 
+    # The measure host sits alongside the vocabulary tables, so its name must
+    # not collide with one. A collision is SILENT: `render_definition` keys its
+    # files by table name, so one simply disappears, and `model.tmdl` emits
+    # `ref table` twice. Analysis Services compares table names
+    # case-insensitively, so `relationships` and `Relationships` collide too.
+    clash = next((t.name for t in model.tables
+                  if t.name.casefold() == measure_host.casefold()), None)
+    if clash is not None:
+        raise ValueError(
+            f"measure_host {measure_host!r} collides with the vocabulary table "
+            f"{clash!r} (names are compared case-insensitively, as Analysis "
+            f"Services does). Pass a different measure_host.")
+
     tables: list[SemanticTable] = []
 
     for t in model.tables:
@@ -383,7 +398,6 @@ def build_semantic_model(model: ReportModel, *,
             columns=_frame_columns(frame_key, hide_all=False),
         ))
 
-    present = {t.name for t in tables} | {t.source_name for t in tables}
     entity_names = [t.name for t in model.tables]
 
     return SemanticModel(
@@ -391,6 +405,6 @@ def build_semantic_model(model: ReportModel, *,
         hub=hub,
         measure_host=measure_host,
         tables=tables,
-        relationships=_relationships(entity_names, present,
+        relationships=_relationships(entity_names,
                                      hub=hub, host=measure_host),
     )

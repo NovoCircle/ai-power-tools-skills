@@ -60,9 +60,8 @@ import uuid
 from dataclasses import dataclass
 
 from semantic_model import SemanticModel
-from tmdl import NS, render_definition
+from tmdl import NEWLINE, NS, render_definition
 
-NEWLINE = "\r\n"
 
 #: Schema and version strings read from a Power BI 2.158 project on disk. They
 #: are version-pinned facts about the host, not preferences, and a guess at any
