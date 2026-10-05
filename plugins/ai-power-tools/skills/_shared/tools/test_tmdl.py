@@ -445,7 +445,7 @@ def test_the_partition_sources_actually_use_the_escaper():
 
 
 def test_the_other_two_sinks_escape_as_well():
-    """FIVE values reach a Power Query literal, not three.
+    """SIX values reach a Power Query literal, not three.
 
     The test above covers `directory`, `server` and `database`. Removing
     `m_literal` from `schema` or from `table.source_name` left the whole suite

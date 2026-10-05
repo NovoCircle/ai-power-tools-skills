@@ -105,12 +105,25 @@ def m_literal(value: str) -> str:
     production at all - it turned every `#` into a parse error, including ones
     that were valid before.
 
-    Nothing model-derived reaches here today: every table and column name passes
-    through `ea_census.snake_case`, which reduces any input to `[a-z0-9_]`. The
-    reason to escape anyway is that the invariant lives two modules away and is
-    enforced by nothing here, and a caller sourcing a directory or server name
-    from model content - or from an LLM - turns a robustness gap into an
-    injection. A partition expression runs on refresh, on the analyst's machine.
+    WHAT REACHES HERE. Six values, and all of them are escaped regardless:
+
+    - `ParquetSource.directory` and `.suffix`, `SqlSource.server`, `.database`
+      and `.schema` - five caller parameters that pass through nothing at all.
+    - `SemanticTable.source_name`, which is either a hardcoded frame literal
+      from `ddl.PHYSICAL_NAME`/`FRAME_DDL` or, for a vocabulary table,
+      `ea_census.table_name()` output derived from the customer's alias or
+      stereotype. So model-derived content DOES reach here.
+
+    **No column name reaches here**, and `snake_case` is not the gatekeeper an
+    earlier version of this docstring claimed: every frame `source_name` begins
+    with `_`, and `snake_case("_pkg")` is `"pkg"`, so those eleven names
+    provably never passed through it.
+
+    The reason to escape is therefore not belt-and-braces over a safe input. It
+    is that five of the six values are whatever the caller passed, the sixth is
+    derived from the model, and a caller sourcing a directory or server name from
+    model content - or from an LLM - turns a robustness gap into an injection. A
+    partition expression runs on refresh, on the analyst's machine.
     """
     out = value.replace("#(", "#(#)(").replace('"', '""')
     return out.replace("\r", "#(cr)").replace("\n", "#(lf)").replace("\t", "#(tab)")
