@@ -56,21 +56,14 @@ def lineage_tag(kind: str, path: str) -> str:
 
 
 def ident(name: str) -> str:
-    """A TMDL identifier, quoted only when it has to be.
+    """A TMDL identifier, quoted unless it is a non-empty run of ASCII letters,
+    digits and `_` that does not start with a digit.
 
-    A LEADING DIGIT must be quoted, and that case is reachable from ordinary
-    model content: a tagged value named "2024 Target" becomes the column
-    `2024_target` through `ea_census.snake_case`, with no hand-editing. Left
-    unquoted it is invalid TMDL and Power BI rejects the project.
-
-    ASCII only. `str.isalnum()` is true for Greek, Cyrillic and accented
-    letters, which are not safe to leave bare.
+    A leading digit is ordinary model content: `ea_census.snake_case` turns a
+    tag named "2024 Target" into `2024_target`. A line break or tab raises
+    `ValueError` instead of being written into a name.
     """
     if any(c in name for c in "\r\n\t"):
-        # TMDL is indentation-structured, so a line break inside a name breaks
-        # the enclosing block whether the name is quoted or not. There is no
-        # escape to reach for - unlike an M literal - so this refuses rather
-        # than emitting a file that is silently malformed.
         raise ValueError(
             f"{name!r} contains a line break or tab, which cannot appear in a "
             f"TMDL identifier in any form.")
@@ -84,69 +77,14 @@ def ident(name: str) -> str:
 def m_literal(value: str) -> str:
     """A Power Query M text literal, escaped.
 
-    Per the M lexical structure spec, a text literal admits any character except
-    `"` and the two-character sequence `#(`. So exactly three things need doing,
-    and a **bare `#` is not one of them** - `C:\\exports\\run#3` and a SQL
-    instance named `C#` are ordinary and must pass through untouched:
+    `"` is doubled, so a value cannot close the literal. `#(` becomes `#(#)(`,
+    so text such as `#(lf)` in a value stays text. A lone `#` is left alone:
+    `C:\\exports\\run#3` passes through unchanged. CR, LF and TAB become
+    `#(cr)`, `#(lf)` and `#(tab)`; `#(` is replaced first, so those three are
+    not re-escaped. Every other character passes through unchanged.
 
-    - `"` doubled, or it ends the literal and admits arbitrary M.
-    - `#(` escaped as `#(#)(`, the spec's own example. Left alone, `#(lf)` in a
-      path silently becomes a newline and `#(zz)` is a parse error.
-    - CR and LF replaced with `#(cr)` and `#(lf)`, because a raw newline breaks
-      the enclosing TMDL block, which is indentation-structured. TAB is replaced
-      with `#(tab)` as well, which the block structure does not require - that is
-      set by LEADING indentation - but which keeps the emitted file readable and
-      diffable.
-
-      **Only those three, and the narrowing is REAL.** Over the whole of Unicode
-      `m_literal` alters exactly four code points - `"` U+0022, TAB U+0009,
-      LF U+000A, CR U+000D - plus the two-character sequence `#(`. Every other
-      non-graphic character passes through raw and round-trips, including NUL,
-      VT, FF U+000C, NEL U+0085, LS U+2028 and PS U+2029.
-
-      **MEASURED, .NET 8.0.31:** FF, NEL, LS and PS *are* line terminators to
-      `String.ReplaceLineEndings` and `Span.EnumerateLines`; only the legacy
-      `StringReader.ReadLine` ignores them. So an earlier version of this
-      docstring claiming "none of them is a .NET line terminator" was FALSE, and
-      three of the four it named were counter-examples. **Whether the reader
-      behind TMDL honors them is UNVERIFIED and nothing here covers it** -
-      widening the escape to all four leaves the suite green, so no test pins
-      the narrowing either way. Recorded as an open narrowing, not as safe.
-
-    **Order matters here**, unlike the first version of this function: `#(` is
-    escaped FIRST, so the `#(lf)` this function itself inserts afterwards is not
-    then mangled into `#(#)(lf)`.
-
-    `#(23)` was wrong and is the reason this docstring is specific. A short
-    unicode escape takes exactly FOUR hex digits, so `#(23)` matches no
-    production at all - it turned every `#` into a parse error, including ones
-    that were valid before.
-
-    WHAT REACHES HERE. Six values, and all of them are escaped regardless:
-
-    - `ParquetSource.directory` and `.suffix`, `SqlSource.server`, `.database`
-      and `.schema` - five caller parameters that pass through nothing at all.
-    - `SemanticTable.source_name` - a PUBLIC field, the second positional one,
-      filled from `name` only when empty, so a caller may set it to anything.
-      `test_the_other_two_sinks_escape_as_well` does exactly that. When
-      `build_semantic_model` fills it, it is either a hardcoded frame literal
-      from `ddl.PHYSICAL_NAME`/`FRAME_DDL` or, for a vocabulary table,
-      `ea_census.table_name()` output derived from the customer's alias or
-      stereotype - so on the path this package builds, model-derived content
-      reaches here too.
-
-    **No column name reaches here**, and `snake_case` is not the gatekeeper an
-    earlier version of this docstring claimed: every frame `source_name` begins
-    with `_`, and `snake_case("_pkg")` is `"pkg"`, so those eleven names
-    provably never passed through it.
-
-    The reason to escape is therefore not belt-and-braces over a safe input.
-    **All six are whatever the caller passed** - `source_name` is a public field
-    like the other five, not a closed set - and the sixth is ADDITIONALLY
-    model-derived on the path this package builds. A caller sourcing a directory,
-    a server name or a table name from model content, or from an LLM, turns a
-    robustness gap into an injection, and a partition expression runs on refresh,
-    on the analyst's machine.
+    Every value written into a partition expression goes through here, and all
+    of them are caller-supplied, `SemanticTable.source_name` included.
     """
     out = value.replace("#(", "#(#)(").replace('"', '""')
     return out.replace("\r", "#(cr)").replace("\n", "#(lf)").replace("\t", "#(tab)")
@@ -239,42 +177,11 @@ def render_column(table: SemanticTable, column) -> list[str]:
         out.append(f"{T}{T}formatString: {column.format_string}")
     out += [f"{T}{T}lineageTag: {lineage_tag('column', path)}",
             f"{T}{T}summarizeBy: {column.summarize_by}",
-            # NOT run through `ident()`, deliberately. This is a property VALUE,
-            # not an object declaration: property values run to end of line, and
-            # Power BI's own files write `sourceColumn: Sales Amount` bare, with
-            # a space and no quotes. Quoting would risk making the quotes part
-            # of the name and breaking a mapping that is verified working.
-            #
-            # UNVERIFIED, and REACHABLE: a source column whose name starts with
-            # a digit. `ea_census.snake_case` produces exactly that - a tagged
-            # value named "2024 Target" becomes `2024_target`, as `ident()` above
-            # documents - so it is ordinary model content, not a hypothetical.
-            # The declaration above IS quoted for it; this property value is not.
-            # Power BI writing a SPACE bare is good evidence about a space and
-            # says nothing about a leading digit.
-            # `test_a_leading_digit_source_column_is_bare` pins what we emit, so
-            # the asymmetry is visible and a change to it is deliberate. It does
-            # NOT establish that Power BI accepts it; only Power BI can.
-            #
-            # What actually reaches here, since an earlier version of this
-            # comment claimed `snake_case` was the only thing and that was false:
-            #   - frame column names, straight from `ddl.FRAME_DDL`
-            #   - `ea_guid`, `name`, `metaclass`, hardcoded in `_entity_columns`
-            #   - tag column names, from `ea_census.snake_case`
-            # All three are `[a-z0-9_]` today. But `source_column` is a PUBLIC
-            # dataclass field that `__post_init__` fills from `name` only when it
-            # is empty, so a caller may set it to anything at all and nothing
-            # here validates or escapes it. Nothing in this tree records WHY the
-            # field exists - no comment, no docstring, no caller sets it - so
-            # that is not asserted here. What can be said is the shape:
-            # `SemanticTable.source_name` is the same public-field-plus-
-            # `__post_init__` pattern and DOES carry its rationale, that a
-            # plumbing table may be surfaced under a business name. Either way
-            # "no caller does that" is a statement about today, not an invariant.
-            # A caller passing `Sales Amount` - the very string offered above as
-            # evidence - writes an unchecked caller value into a TMDL property.
-            # That is S-0211-01's shape, and it is why this says what reaches
-            # here rather than asserting that nothing troubling can.
+            # A property value, written as is: the declaration above goes
+            # through `ident()`, this does not. `source_column` is a public
+            # field and is neither validated nor escaped here. Whether Power BI
+            # accepts a bare value starting with a digit is untested;
+            # `test_a_leading_digit_source_column_is_bare` pins what is emitted.
             f"{T}{T}sourceColumn: {column.source_column}",
             "",
             # `Automatic` alongside an explicit `summarizeBy` looks like a

@@ -347,25 +347,16 @@ def test_the_definition_holds_one_file_per_table_plus_four():
 
 
 def test_a_leading_digit_is_quoted_because_model_content_reaches_it():
-    """MEASURED reachability: a tagged value named "2024 Target" becomes the
-    column `2024_target` through `ea_census.snake_case` with no hand-editing.
-    Unquoted it is invalid TMDL and Power BI rejects the whole project."""
+    """`ea_census.snake_case` turns a tag named "2024 Target" into
+    `2024_target`, so a leading digit is ordinary model content."""
     assert ident("2024_target") == "'2024_target'"
     assert ident("target_2024") == "target_2024"
 
 
 def test_a_leading_digit_source_column_is_bare():
-    """The same reachable name on the OTHER half of the column block.
+    """The declaration is quoted and `sourceColumn` is written bare.
 
-    `render_column` quotes the declaration and leaves `sourceColumn` bare,
-    because TMDL property values run to end of line. That asymmetry is
-    deliberate, but the evidence for it - Power BI's own files writing
-    `sourceColumn: Sales Amount` with a space - covers a SPACE and says nothing
-    about a LEADING DIGIT, and the name is ordinary model content either way.
-
-    This pins what we emit so the asymmetry is visible and a change to it is
-    deliberate. It does NOT establish that Power BI accepts it; only Power BI
-    can do that.
+    This pins what is emitted. It does not establish that Power BI accepts it.
     """
     from tmdl import render_column
 
@@ -379,71 +370,55 @@ def test_a_leading_digit_source_column_is_bare():
 
 
 def test_non_ascii_letters_are_quoted():
-    """`str.isalnum()` is true for Greek, Cyrillic and accented letters, which
-    are not safe to leave bare in TMDL."""
+    """`str.isalnum()` is true for non-ASCII letters; `ident` quotes them."""
     assert ident("naive") == "naive"
     assert ident("na\u00efve").startswith("'")
     assert ident("\u03b1\u03b2\u03b3").startswith("'")
 
 
 def test_an_m_literal_escapes_the_quote_that_would_end_it():
-    """A `"` terminates the literal and admits arbitrary M, which runs on
-    refresh on the analyst's machine."""
+    """A quote is doubled, so the value cannot close the literal."""
     assert m_literal('a"b') == 'a""b'
     assert '""' in m_literal('x" & Web.Contents("http://example.invalid") & "')
 
 
 def test_an_m_literal_escapes_the_sequence_that_introduces_an_escape():
-    """`#(lf)` in a path silently becomes a newline and `#(zz)` is a parse
-    error. The spec's own escape for it is `#(#)(`."""
+    """`#(` becomes `#(#)(`, so `#(lf)` in a value stays text."""
     assert m_literal("a#(lf)b") == "a#(#)(lf)b"
 
 
 def test_a_BARE_hash_is_left_alone_because_M_allows_it():
-    """Only the two-character sequence `#(` is special. A `#` in a Windows path
-    or a SQL instance name is ordinary, and escaping it turned valid input into
-    a parse error - which is what the first version of this function did."""
+    """Only the sequence `#(` is escaped. A lone `#` in a path or an instance
+    name is left alone."""
     assert m_literal(chr(92) + "run#3") == chr(92) + "run#3"
     assert m_literal("SRV" + chr(92) + "C#") == "SRV" + chr(92) + "C#"
 
 
 def test_an_m_literal_escapes_line_breaks_and_tabs():
-    """A raw newline breaks the enclosing TMDL block, which is
-    indentation-structured. TAB is escaped too, which the block structure does
-    not require - that is set by leading indentation - but which keeps the
-    emitted file readable.
-
-    The spec does NOT restrict literals to graphic characters: it admits any
-    character except `"` and `#(`, which is the premise
-    `test_a_BARE_hash_is_left_alone_because_M_allows_it` rests on. An earlier
-    version of this docstring said otherwise, in two places; this is the second
-    copy, and both are now corrected."""
+    """CR, LF and TAB become `#(cr)`, `#(lf)` and `#(tab)`."""
     assert m_literal("a" + chr(13) + chr(10) + "b") == "a#(cr)#(lf)b"
     assert m_literal("a" + chr(9) + "b") == "a#(tab)b"
 
 
 def test_the_escapes_do_not_mangle_each_other():
-    """`#(` is escaped FIRST so the `#(lf)` this function inserts afterwards is
-    not then turned into `#(#)(lf)`."""
+    """`#(` is replaced first, so the `#(lf)` inserted afterwards is not
+    re-escaped."""
     assert m_literal("x" + chr(10) + "y") == "x#(lf)y"
     assert m_literal("#(a" + chr(10) + "b") == "#(#)(a#(lf)b"
 
 
 def test_a_backslash_is_not_an_m_escape():
-    r"""Windows paths must survive untouched: backslash is not special in M."""
+    r"""A backslash is left alone, so Windows paths pass through unchanged."""
     assert m_literal(r"C:\out\parquet") == r"C:\out\parquet"
 
 
 def test_the_partition_sources_actually_use_the_escaper():
-    """The point is escaping at the SINK. The safety that makes this
-    unreachable today lives in `ea_census.snake_case`, two modules away, and is
-    enforced by nothing here."""
+    """A hostile `directory`, `server` and `database` come out escaped."""
     sm = semantic()
     hostile = ParquetSource(directory=r'C:\out" & Web.Contents("http://x") & "')
     line = next(l for l in render_table(sm.table("entity_0"), hostile).split(NEWLINE)
                 if "Parquet.Document" in l)
-    # Every quote from the injected value survives as a DOUBLED quote, so the
-    # literal is never terminated early and the M that follows stays data.
+    # The injected quotes come out doubled.
     assert '""' in line
     assert line.count('"') % 2 == 0
     sql = render_table(sm.table("entity_0"),
@@ -452,28 +427,13 @@ def test_the_partition_sources_actually_use_the_escaper():
     assert "#(#)(lf)" in sql
 
 
-def test_the_other_two_sinks_escape_as_well():
-    """SIX values reach a Power Query literal, not three.
+def test_schema_source_name_and_suffix_are_escaped():
+    """Each is asserted against the exact escaped text expected in the output.
 
-    The test above covers `directory`, `server` and `database`. **THREE of the
-    six were uncovered - a half, not a third:** `schema`, `table.source_name`,
-    and `suffix`.
-
-    `suffix` was the one nobody caught, through two review passes. A pass
-    mutated the SHARED `m_literal(path)` call and saw a failure, then inferred
-    `suffix` was covered - but that failure comes through `directory`, and this
-    test was blind to `suffix` because `m_literal(x + ".parquet")` happens to
-    equal `m_literal(x) + ".parquet"`. MEASURED: escaping the stem and
-    appending `suffix` RAW left the whole suite green while emitting
-    `File.Contents("C:\\out\\entity_0".parquet")`, whose literal ends early.
-    `suffix` is never assigned a non-default value anywhere in the repository,
-    which is why nothing noticed - and exactly why a public field at a sink
-    needs a test rather than an argument.
-
-    So each of the six is now asserted against its own exact escaped substring,
-    and `suffix` carries a hostile value of its own. Not quote parity: parity is
-    blind to every state that stays even, including both sinks on a line losing
-    their escaper together."""
+    `suffix` gets a hostile value of its own: `m_literal(x + ".parquet")` equals
+    `m_literal(x) + ".parquet"`, so a default suffix cannot show whether it was
+    escaped.
+    """
     hostile = 'x" & Web.Contents("http://example.invalid") & "'
     escaped = m_literal(hostile)
     table = SemanticTable(name="entity_0", source_name=hostile,
@@ -484,17 +444,12 @@ def test_the_other_two_sinks_escape_as_well():
     assert f'Item="{escaped}"]' in sql, "source_name reached Item unescaped"
     assert hostile not in sql
 
-    # ParquetSource concatenates source_name into the path, so the whole path
-    # must be escaped after it is built, not before.
+    # source_name is concatenated into the path, which is escaped as a whole.
     line = next(l for l in render_table(table, ParquetSource(directory=r"C:\out"))
                 .split(NEWLINE) if "Parquet.Document" in l)
     assert m_literal("C:\\out\\" + hostile + ".parquet") in line
     assert hostile not in line
 
-    # `suffix` is its own sink, and `m_literal(x + s) == m_literal(x) + s` for a
-    # harmless `s`, so a default suffix cannot discriminate. Give it a hostile
-    # value of its own: appending it raw emits a literal that ends early, which
-    # the whole-path assertion above cannot see.
     hostile_suffix = '.parquet" & Web.Contents("http://example.invalid") & "'
     pq = ParquetSource(directory=r"C:\out", suffix=hostile_suffix)
     line = next(l for l in render_table(table, pq).split(NEWLINE)
@@ -505,10 +460,7 @@ def test_the_other_two_sinks_escape_as_well():
 
 
 def test_an_identifier_containing_a_line_break_is_refused():
-    """TMDL is indentation-structured, so a line break inside a name breaks the
-    block whether the name is quoted or not. There is no escape to reach for,
-    unlike an M literal, so this refuses rather than emitting a file that is
-    silently malformed."""
+    """A line break or tab in an identifier raises instead of being emitted."""
     with pytest.raises(ValueError, match="line break"):
         ident("a\nb")
     with pytest.raises(ValueError, match="line break"):
