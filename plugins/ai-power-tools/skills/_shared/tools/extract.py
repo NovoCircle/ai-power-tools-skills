@@ -1,58 +1,20 @@
 #!/usr/bin/env python3
 """Pull the rows a census and a reporting database need out of a live EA repository.
 
-THIS IS THE ONE IMPURE MODULE IN THE SET, DELIBERATELY. Everything else here is
-a pure function over plain data. This file talks COM and writes files, and it is
-confined to doing exactly that: it fetches rows and dumps them. It computes
-nothing a pure module could compute, so there is one place to look when an
-extraction is wrong and one place to test when it is not.
+The one impure module in the set: it talks COM and writes files, and computes
+nothing a pure module could. Bulk extraction runs here rather than through tool
+calls, so the rows go to disk and never through a context window.
 
-WHY A SCRIPT RATHER THAN TOOL CALLS
------------------------------------
-Bulk extraction cannot go through the agent loop. `execute_sql` returns each
-result BOTH parsed and as raw XML with no row cap (APT-2026-0221), so a
-repository-wide pull is materialized twice and travels through a context window.
-This talks to EA directly and writes to disk; the transform then iterates over
-the dump without re-querying EA, which also sidesteps the measured ~150x variance
-in COM call timing.
+PORTABLE SQL ONLY: plain SELECTs, parenthesized joins, no CTEs and no window
+functions. EA reports a statement its backend cannot run as a modal dialog that
+holds the COM connection, so every later call appears to hang.
 
-PORTABLE SQL ONLY
------------------
-Plain SELECTs, parenthesized multi-table joins, no CTEs, no window functions, no
-backend-specific syntax. This is not fastidiousness: EA reports a statement its
-backend cannot run as a MODAL DIALOG that holds the COM connection until a human
-dismisses it, and every later call then appears to hang rather than erroring.
-Aggregation happens in Python, where it can be tested.
-
-THE EXTRACT IS RETAINED, NOT OVERWRITTEN
-----------------------------------------
-Each run writes a SNAPSHOT under its own `run_id`, and `load_run` records which
-snapshot a build consumed. This is what makes a build replayable with no EA
-connection at all - the slowest, least repeatable part of the pipeline is paid
-for once - and it is also the only record of what the repository contained at
-that instant. The model is shared; a package count was observed moving three
-times in twenty minutes while measurements were running. `load_run.run_at` is
-already the as-of date for any figure quoted from a build, and the snapshot is
-the evidence behind that date.
-
-Retention is BOUNDED and pruning REPORTS what it removed - see `KEEP_RUNS` and
-`prune_snapshots`. Silently discarding the evidence behind a figure somebody has
-quoted is the failure retention exists to prevent, so it is never silent.
-
-Bounded means bounded even when a run dies, which is why a snapshot is built in
-`<root>/.incomplete-<run_id>` and renamed into place only once it is complete: a
-killed extract - the modal dialog above is exactly how one gets killed - leaves
-no half-written directory under a snapshot name. A directory no function can see
-is a directory that is never reclaimed, and that is an unbounded store by another
-route, so `prune_snapshots` sweeps and reports the debris it can POSITIVELY
-IDENTIFY as its own: a directory under one of its two prefixes, or one holding
-snapshot table files without a loadable manifest. Not a prefix match alone -
-debris does not only arrive by the route designed for it, and a prune stopped by
-a held file leaves a plain-named husk whose manifest has already gone. And not
-"every directory that is not a snapshot" either: `--out` is free text, so that
-rule deleted every subdirectory of whatever the operator named - a working tree
-and its `.git` included - and reported success. The store root is not assumed to
-belong to this tool.
+Each run writes a snapshot under its own `run_id`, built in
+`<root>/.incomplete-<run_id>` and renamed into place once complete, and
+`load_run` records which snapshot a build consumed, so a build can be replayed
+without EA. Retention is bounded by `KEEP_RUNS` and `prune_snapshots` reports
+everything it removes. It removes only directories this module wrote, which
+carry `SENTINEL_NAME`; the store root may hold anything else.
 
 Run from a directory where EA is already running with the model open:
 
@@ -63,6 +25,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import pathlib
 import re
 import shutil
@@ -71,29 +34,12 @@ import time
 from dataclasses import dataclass
 from datetime import datetime
 
-#: EVERY QUERY ORDERS ITS ROWS, and that is what makes the digest mean what the
-#: documentation says it means: "two extracts of an unchanged repository hash the
-#: same". Without an ORDER BY no backend promises an order, so the same rows could
-#: be written in a different sequence and hash differently - and a customer would
-#: read row-order churn as model change, the exact misreading the as-of-date
-#: discipline exists to prevent.
-#:
-#: Each ORDER BY is a TOTAL order: either a primary key, or the grouping columns
-#: plus a key, or every selected column (where ties are then byte-identical rows,
-#: so their order cannot change the file). Long-text columns are deliberately NOT
-#: sorted on - t_xref.Description is a memo, and a backend that refuses to sort
-#: one reports it as the modal dialog described above - so t_xref orders by XrefID
-#: and t_objectproperties by PropertyID, neither of which the projection selects.
-#: t_objectproperties especially: it has no unique index on (Object_ID, Property),
-#: one element can carry two tags of the same name with different values, and
-#: which of them came first was previously whatever the backend felt like.
-#:
-#: EVERY means every, including the one statement that is not in the two dicts
-#: below: `resolve_scope`'s `t_package` walk. Its rows are re-sorted host-side so
-#: its order cannot move the digest, but `sql_log` is a deliverable and its
-#: CONTENT is order-dependent - and a claim with one exception in it is the thing
-#: this module keeps shipping by accident, so the statement carries an ORDER BY
-#: and `test_every_shipped_query_orders_its_rows` checks all eleven.
+#: Every query orders its rows totally - by a key, by grouping columns plus a
+#: key, or by every selected column - so two extracts of an unchanged repository
+#: write identical files and hash the same. Long-text columns are not sorted on:
+#: t_xref orders by XrefID and t_objectproperties by PropertyID. `resolve_scope`'s
+#: statement is ordered too, and `test_every_shipped_query_orders_its_rows`
+#: checks every statement.
 
 #: Rows pulled whole. Small, repository-wide, and needed by the census.
 CENSUS_QUERIES = {
@@ -135,6 +81,12 @@ TABLE_NAMES = tuple(CENSUS_QUERIES) + tuple(STRUCTURE_QUERIES)
 
 MANIFEST_NAME = "extract-manifest.json"
 
+#: Written into every directory this module creates, before anything else, and
+#: deleted last when one is removed. The sweep in `prune_snapshots` removes only
+#: directories that carry it. Not a `.json` name, so it is not a table file and
+#: not covered by the digest.
+SENTINEL_NAME = ".extract-snapshot"
+
 #: A snapshot is written under this prefix and renamed into place only once it is
 #: complete. The prefix is not a valid `run_id`, so an in-progress or abandoned
 #: write can never be mistaken for a snapshot.
@@ -146,34 +98,19 @@ INCOMPLETE_PREFIX = ".incomplete-"
 #: if deleting it fails - so the replacement never leaves the store unbounded.
 SUPERSEDED_PREFIX = ".superseded-"
 
-#: How many snapshots are retained, and the bound the acceptance criteria ask to
-#: be STATED rather than guessed. MEASURED on the reference ~300-element model:
-#: its ten table files plus the manifest are 244 KiB for 2,052 rows, about 122
-#: bytes a row. Ten runs therefore cost 2.4 MiB there, and roughly 240 MiB on a
-#: repository a hundred times its size.
-#:
-#: Which is why retention is ON and has no off switch: against the cost of a
-#: build nobody can replay, a few megabytes is not a trade worth offering. The
-#: bound is what keeps it honest - an unbounded store of every extract forever is
-#: a different defect, and on a large repository the JSON is not small.
+#: How many snapshots are retained. On the reference model of about 300 elements
+#: a snapshot is about 244 KiB, so ten runs are about 2.4 MiB. Retention has no
+#: off switch.
 KEEP_RUNS = 10
 
 
 class SnapshotError(Exception):
-    """A retained extract could not be produced as the one that was asked for.
+    """A retained extract could not be produced as asked, or the store cannot be written safely.
 
-    Raised for a snapshot that has been pruned and for one whose rows are not
-    the rows the build recorded. Both are loud on purpose: a replay that quietly
-    used whatever was on disk would produce a figure nobody could defend, which
-    is the whole failure retention exists to prevent.
-
-    Also for the four ways the store itself can stop making sense: a `run_id`
-    that is not one safe path component, a `run_id` the filesystem cannot tell
-    from one already there, two directories claiming one `run_id`, and a finished
-    extract that could not be moved into place. Each of them would otherwise be
-    answered by a guess about which evidence was meant - and the last two are
-    answered on a platform where a delete or a rename can simply be refused, so
-    they are raised only once the store has been left holding whole snapshots.
+    Raised for a snapshot that is missing or whose rows differ from what the build
+    recorded, a `run_id` that is unusable or differs only in case from one in the
+    store, two directories claiming one `run_id`, and a finished extract that could
+    not be moved into place.
     """
 
 
@@ -189,37 +126,21 @@ class Snapshot:
     tables: dict[str, list[dict]]
 
 
-#: A `run_id` names ONE directory under the snapshot root and nothing else.
-#: Validated rather than trusted, because it does not only come from an operator's
-#: `--run-id`: at replay time it comes out of `_load_run` in a database file that
-#: may have traveled. Unvalidated, `..\escaped` writes outside the root and an
-#: absolute run_id escapes it entirely - pathlib discards the left operand on an
-#: absolute right operand - leaving a snapshot that `open_snapshot` still loads
-#: while `list_snapshots` cannot see it, so it is never pruned. That is both a
-#: path traversal and the unbounded store the acceptance criteria rule out.
-#:
-#: A TRAILING DOT is not one safe path component on Windows, which is the platform
-#: this module documents itself as running on: the Win32 path layer strips it, so
-#: `run.` is accepted here and creates a directory called `run`. Observed - the
-#: manifest then names `run.` while the directory is `run`, which is the two-names
-#: refusal in `list_snapshots`, so from that moment every `list_snapshots`,
-#: `prune_snapshots` and retention report raises for the WHOLE store and retention
-#: stops: unbounded again, and every later run dies before printing its digest.
+#: A `run_id` names one directory under the snapshot root. It is validated because
+#: it also comes back out of `_load_run` at replay time, and a path would write
+#: outside the root, where retention cannot see it. It may not end in a dot,
+#: which Windows strips, giving a directory named differently from its manifest.
 _RUN_ID = re.compile(r"[A-Za-z0-9](?:[A-Za-z0-9._-]{0,62}[A-Za-z0-9_-])?")
 
-#: The one `run_at` format the documentation promises. Validated because it is not
-#: decoration: retention order is a lexicographic sort over this string, so
-#: `2026-10-05T08:00:00` and `05/10/2026` both sort wrongly against space-separated
-#: values - and the sort decides what gets DELETED.
+#: The one `run_at` format. Retention orders snapshots by sorting this string.
 _RUN_AT = re.compile(r"[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}")
 
 
 def validate_run_id(run_id: str) -> str:
-    """The `run_id`, or `SnapshotError`. One safe path component, nothing else.
+    """The `run_id`, or `SnapshotError`.
 
-    One component the PLATFORM agrees is one component: it may not end in a dot,
-    because Windows silently strips that and hands back a directory under a
-    different name than the manifest records (see `_RUN_ID`).
+    One path component of letters, digits, dot, dash or underscore, starting with a
+    letter or digit and not ending in a dot.
     """
     if not isinstance(run_id, str) or not _RUN_ID.fullmatch(run_id):
         raise SnapshotError(
@@ -235,30 +156,13 @@ def validate_run_id(run_id: str) -> str:
 
 
 def validate_new_run_id(root, run_id: str) -> str:
-    """The `run_id` for a NEW extract, or `SnapshotError`.
+    """`validate_run_id`, plus a refusal of a case-only collision with the store.
 
-    `validate_run_id`, plus the one check that needs the store to answer it: a
-    `run_id` differing only in CASE from a directory already there is refused.
-
-    THE DECISION, made explicitly because the two answers are not equivalent:
-    the store keeps a `run_id` exactly as it was given and refuses a collision,
-    rather than case-folding names. `run_id` is recorded verbatim in the manifest
-    and in `_load_run.extract_run_id`, and `list_snapshots` refuses a directory
-    whose manifest names a different `run_id` - so folding the directory name
-    would put every snapshot in disagreement with its own manifest, and folding
-    the recorded value too would mean a build's provenance cell no longer holds
-    what the operator passed to it. Refusing keeps one `run_id` meaning one
-    directory and one identity, and it refuses before anything is written.
-
-    Unrefused this is silent destruction, not a cosmetic problem. `_RUN_ID` is
-    case-sensitive, NTFS is not, and neither is `Path.exists`, so `Run-A` and
-    `run-a` are two accepted run_ids and one directory. Observed: after the
-    second run only `run-a` was on disk, `Run-A`'s rows were nowhere,
-    `prune_snapshots` reported `[]` and `list_snapshots` showed one snapshot
-    where the operator believed there were two, and the first build's replay
-    reported "hashes to X, but the build recorded Y" - which this module's own
-    refusal table defines as a DIFFERENT extract under the same `run_id`, i.e.
-    tampering. Evidence destroyed, destruction unreported, cause misattributed.
+    A `run_id` that differs only in case from a directory already in the store,
+    prefixed or not, is refused before anything is written: NTFS does not
+    distinguish case, so writing it would replace that directory's rows under
+    another name. The `run_id` is kept as given rather than case-folded, because it
+    is recorded verbatim in the manifest and in `_load_run`.
     """
     validate_run_id(run_id)
     root = pathlib.Path(root)
@@ -266,21 +170,12 @@ def validate_new_run_id(root, run_id: str) -> str:
     for d in sorted(root.iterdir()) if root.is_dir() else []:
         if not d.is_dir():
             continue
-        # The debris names carry the run_id's OWN case, so a bare comparison
-        # never matches one. Observed: from a store left holding
-        # `.incomplete-Run-A` and `.superseded-Run-A` - the state a failed
-        # putback leaves, where those rows are the only copy and the failure
-        # message promised they were intact - a `run-a` run was ACCEPTED,
-        # reclaimed `.incomplete-Run-A` as leftovers of "this run_id", and the
-        # first build's replay then reported the loss as tampering. That is the
-        # collision this function exists to refuse, reached one directory over.
+        # A prefixed directory belongs to the run_id after its prefix.
         names = [d.name] + [d.name[len(p):] for p in
                             (INCOMPLETE_PREFIX, SUPERSEDED_PREFIX)
                             if d.name.startswith(p)]
         if run_id not in names and any(n.casefold() == folded for n in names):
-            # `names[-1]` is the run_id the directory belongs to: its own name
-            # for a snapshot, the prefix-stripped one for debris. Never the
-            # prefixed name, which is not a valid run_id and could not be passed.
+            # `names[-1]` is the run_id the directory belongs to.
             raise SnapshotError(
                 f"run_id {run_id!r} differs only in case from {d.name!r}, which "
                 f"is already in {root}, and the filesystem does not tell the two "
@@ -293,11 +188,10 @@ def validate_new_run_id(root, run_id: str) -> str:
 
 
 def validate_run_at(run_at: str) -> str:
-    """The `run_at`, or `ValueError`. Exactly `YYYY-MM-DD HH:MM:SS`.
+    """The `run_at`, or `ValueError`: exactly `YYYY-MM-DD HH:MM:SS`, a real date and time.
 
-    Retention order is a lexicographic sort over this value, so a format the sort
-    does not understand is not a cosmetic problem: it decides which snapshot is
-    deleted. A real calendar date too, not just the shape of one.
+    Retention orders snapshots by sorting this string, so another format would sort
+    wrongly against the rest.
     """
     if not isinstance(run_at, str) or not _RUN_AT.fullmatch(run_at):
         raise ValueError(
@@ -336,31 +230,25 @@ def snapshot_digest(directory) -> str:
     return h.hexdigest()
 
 
+def _read_manifest(d: pathlib.Path) -> dict | None:
+    """The manifest in `d` if it parses to an object with a string `run_at`."""
+    try:
+        man = json.loads((d / MANIFEST_NAME).read_text(encoding="utf-8"))
+    except (ValueError, OSError):
+        return None
+    if not isinstance(man, dict) or not isinstance(man.get("run_at"), str):
+        return None
+    return man
+
+
 def list_snapshots(root) -> list[dict]:
     """Retained snapshots, newest first, as `{run_id, run_at, bytes, dir}`.
 
-    `dir` is the directory this function actually walked, and `run_id` is that
-    directory's name. Deliberately not a path re-derived from the manifest: the
-    manifest is outside the digest by design (see `snapshot_digest`), so its
-    contents are unverified, and a path built from an unverified field can name
-    any directory on the machine - which for a caller that DELETES is the whole
-    ballgame.
-
-    Ordered by the manifest's own `run_at`, never by file mtime: a snapshot that
-    has been copied or restored keeps the moment the extract was TAKEN, and that
-    is the moment a figure is as-of.
-
-    A directory whose name is not a usable `run_id` is not a snapshot and is
-    skipped - that is what keeps an in-progress `.incomplete-*` write out of the
-    store. So is one whose manifest does not parse, or parses to something other
-    than an object carrying `run_at`: that is a directory this function cannot
-    read, not a reason to stop reading the store, and stopping meant one
-    truncated manifest blocked every prune permanently.
-
-    A directory whose manifest PARSES and names a DIFFERENT `run_id` is a loud
-    `SnapshotError` rather than something to act on: `open_snapshot` can only find
-    it under its directory name, so one of the two is wrong, and picking one would
-    mean deleting or replaying evidence nobody asked for.
+    `dir` is the directory walked and `run_id` its name, never a path built from
+    the manifest, which the digest does not cover. Ordered by the manifest's
+    `run_at`, not by file time. A directory whose name is not a valid `run_id`, or
+    whose manifest is not readable, is skipped. A readable manifest naming a
+    different `run_id` raises `SnapshotError`.
     """
     root = pathlib.Path(root)
     if not root.is_dir():
@@ -370,28 +258,10 @@ def list_snapshots(root) -> list[dict]:
         manifest = d / MANIFEST_NAME
         if not (d.is_dir() and manifest.is_file() and _RUN_ID.fullmatch(d.name)):
             continue
-        # A manifest that does not PARSE, or parses to something that is not an
-        # object with a `run_at`, makes the directory not a snapshot - it is not
-        # a reason to stop reading the store. Stopping was the worse failure:
-        # `prune_snapshots` calls this first, so one truncated manifest raised
-        # before the sweep and that directory survived every prune forever while
-        # blocking the reclamation of everything else, with a message naming no
-        # path ("Unterminated string starting at: line 1 column 24"). A manifest
-        # that is valid JSON but not an object escaped `main()` entirely as
-        # `AttributeError`, and one simply missing `run_at` as `KeyError`.
-        # Reachable without an operator mistake: a partial copy while restoring
-        # an archived snapshot, which the shipped reference tells operators to
-        # do, or a disk-full during the manifest write.
-        #
-        # The deliberate two-names refusal below is NOT folded into this: a
-        # manifest that parses and names a different run_id is a real
-        # disagreement about which evidence is meant, and guessing would delete
-        # or replay something nobody asked for.
-        try:
-            man = json.loads(manifest.read_text(encoding="utf-8"))
-        except (ValueError, OSError):
-            continue
-        if not isinstance(man, dict) or "run_at" not in man:
+        # An unreadable manifest makes the directory not a snapshot; it does not stop
+        # the rest of the store being read. A readable one naming another run_id does.
+        man = _read_manifest(d)
+        if man is None:
             continue
         if man.get("run_id") != d.name:
             raise SnapshotError(
@@ -410,35 +280,48 @@ def list_snapshots(root) -> list[dict]:
     return sorted(out, key=lambda s: (s["run_at"], s["run_id"]), reverse=True)
 
 
-#: Every destructive step in this module goes through one of the two helpers
-#: below, and both are bounded the same way: 4 attempts over 0.75 s, then the
-#: caller decides. The platform property is the one the commit documents - on
-#: Windows a delete or a rename needs exclusive access to the whole subtree, and
-#: an external scanner holding a file written a moment ago fails it with
-#: ACCESS_DENIED - and it applies to a delete exactly as much as to a rename.
-#: Bounded on purpose: an unbounded retry would mask a persistent lock, where
-#: falling through names the cause and lets the caller refuse or report.
+#: Both helpers below make up to `_ATTEMPTS` attempts, `_BACKOFF_SECONDS` apart,
+#: then let the caller decide. On Windows a delete or rename fails while another
+#: process holds a file inside the directory.
 _ATTEMPTS = 4
 _BACKOFF_SECONDS = 0.25
 
 
 def _reclaim(directory) -> bool:
-    """Delete `directory` and its contents. True if it went, False if it is held.
+    """Delete `directory` with `_remove_tree`, retrying. True if it went, False if not.
 
-    Never raises. A caller that is reclaiming debris has somewhere to put "could
-    not", and an exception here would abandon a half-applied loop silently -
-    `shutil.rmtree` stops at the first file it cannot remove, so the directory it
-    leaves behind is exactly the kind of husk this function exists to clear.
+    Never raises, so a caller removing several directories can report the one that
+    would not go and carry on.
     """
     for attempt in range(_ATTEMPTS):
         try:
-            shutil.rmtree(directory)
+            _remove_tree(pathlib.Path(directory))
             return True
         except OSError:
             if attempt == _ATTEMPTS - 1:
                 return False
             time.sleep(_BACKOFF_SECONDS)
     return False
+
+
+def _remove_tree(directory: pathlib.Path) -> None:
+    """Delete `directory`, its marker last. Stops at the first refusal.
+
+    Deleting the marker last means a delete that is refused part-way leaves a
+    directory that still carries it, so the next sweep can recognize and
+    remove what is left.
+    """
+    marker = directory / SENTINEL_NAME
+    for child in sorted(directory.iterdir()):
+        if child == marker:
+            continue
+        if child.is_dir() and not child.is_symlink():
+            shutil.rmtree(child)
+        else:
+            child.unlink()
+    if marker.exists():
+        marker.unlink()
+    directory.rmdir()
 
 
 def _rename(src: pathlib.Path, dst: pathlib.Path) -> None:
@@ -458,34 +341,23 @@ def _rename(src: pathlib.Path, dst: pathlib.Path) -> None:
 
 
 def _is_debris(d: pathlib.Path) -> bool:
-    """Is `d` something THIS TOOL left behind, or a snapshot husk? Then sweep it.
+    """Whether the sweep may remove `d`.
 
-    THE BLAST RADIUS OF THE SWEEP IS THIS FUNCTION, so it answers from positive
-    evidence and nothing else: the directory carries one of the two prefixes this
-    module writes, or it holds at least one `<table>.json` - which is what a
-    snapshot husk is, and the only thing a directory with no readable manifest can
-    be identified as.
-
-    "A directory in the store that is not a loadable snapshot" was the previous
-    rule, and it is not a rule about debris at all. `--out` is free text, nothing
-    checks that the root belongs to this tool, and there is no confirmation step,
-    so `--out .` at a working tree reclaimed `.git`, `docs`, `research` and `src`
-    - irreversibly, reporting each as 0 KiB of something a held file had left, and
-    exiting 0 with "retention: 1 snapshot(s) kept". Reproduced through `main()`
-    with no failure of any kind. The store root may be a directory an operator
-    keeps other things in, and nothing here is entitled to assume otherwise.
-
-    Both real debris producers still satisfy this: the husk a refused replacement
-    leaves keeps its table files, and so does the husk a prune stopped by a held
-    file leaves - measured at five of ten. A directory junction satisfies neither,
-    which is why one no longer sits in the report as `held` for ever.
-
-    What is left alone is left alone silently, and deliberately: a sweep report is
-    a list of things that WENT, and a line for every unrelated directory an
-    operator keeps beside their extracts would say nothing retention is for.
+    Only a directory this module wrote: one carrying `SENTINEL_NAME`. Under
+    one of the two prefixes it is removed whatever it holds; under any other
+    name only when it has no loadable manifest. An empty directory under a
+    prefix is removed too, which is what a run killed between creating its
+    work directory and writing the marker leaves. A symlink or junction is
+    never removed. Everything else is left alone and not reported.
     """
-    return bool(d.name.startswith((INCOMPLETE_PREFIX, SUPERSEDED_PREFIX))
-                or any((d / f"{n}.json").is_file() for n in TABLE_NAMES))
+    if d.is_symlink() or getattr(os.path, "isjunction", lambda _: False)(d):
+        return False
+    prefixed = d.name.startswith((INCOMPLETE_PREFIX, SUPERSEDED_PREFIX))
+    if prefixed and not any(d.iterdir()):
+        return True
+    if not (d / SENTINEL_NAME).is_file():
+        return False
+    return prefixed or _read_manifest(d) is None
 
 
 def _debris_status(name: str) -> str:
@@ -497,84 +369,41 @@ def _debris_status(name: str) -> str:
     return "unreadable"
 
 
-#: What a swept directory is reported AS. Keyed by the statuses `_debris_status`
-#: returns, so a new kind of debris cannot be swept without a sentence saying
-#: what it was: reclaiming something silently is the thing retention must not do.
-#:
-#: Each sentence says only what the code CHECKED. Two earlier ones asserted a
-#: cause nothing had looked at - every `unreadable` sweep was called "what a
-#: delete stopped by a held file leaves" - and `superseded` called a directory
-#: "the copy a re-run replaced" on the one path where it is the ONLY copy and
-#: nothing replaced it.
+#: What a swept directory is reported as: one sentence per status
+#: `_debris_status` returns, each saying only what the code checked.
 _SWEPT_REASON = {
     "incomplete": "a write under this tool's in-progress prefix that no run "
                   "renamed into place.",
     "superseded": "rows renamed aside under this tool's replacement prefix for "
                   "a re-run of that run_id, and not deleted at the time.",
-    "unreadable": "a directory holding snapshot table files with no loadable "
-                  "manifest, so nothing here can open it as a snapshot.",
+    "unreadable": "a directory this tool wrote that has no loadable manifest, "
+                  "so nothing here can open it as a snapshot.",
 }
 
 
 def prune_snapshots(root, keep: int = KEEP_RUNS, *, protect=()) -> list[dict]:
-    """Delete all but the newest `keep` snapshots. Returns what it removed.
+    """Delete all but the newest `keep` snapshots, and this tool's debris.
 
-    The return value is the point of the function. Silently discarding the
-    evidence behind a figure somebody has already quoted is precisely the failure
-    this guards against, so every removal is reported with its run_id, its date,
-    its size and the directory that went, and the caller is expected to say so out
-    loud. Each entry carries a `status`:
+    Returns what it removed, each entry with a `status`:
 
-      `pruned`      a snapshot that aged out. The loud one: a figure quoted from
-                    that build can no longer be reproduced from its own rows.
-      `incomplete`  a `.incomplete-*` write that no run renamed into place.
-      `superseded`  rows renamed aside under `.superseded-*` for a re-run of that
-                    `run_id` and not deleted at the time. USUALLY the copy the
-                    re-run replaced; on the double-failure path of `_commit` it is
-                    the only copy there is, which is why the status does not
-                    claim otherwise.
-      `unreadable`  a plain-named directory holding snapshot table files with no
-                    loadable manifest - the husk a stopped delete leaves.
-      `held`        it could not be fully removed, and WHAT IS LEFT OF IT IS ON
-                    DISK. Reported rather than raised, so one locked directory
-                    cannot cost the caller the report of everything that did go.
-                    Not a promise that it is intact: `shutil.rmtree` stops at the
-                    first file it cannot remove, after deleting everything ahead
-                    of it, so a `held` snapshot may no longer be loadable.
+      `pruned`      a snapshot that aged out.
+      `incomplete`  a `.incomplete-*` directory no run renamed into place.
+      `superseded`  a `.superseded-*` directory left by a replacement. Usually a
+                    copy of rows a re-run replaced; after a failed putback in
+                    `_commit` it is the only copy.
+      `unreadable`  a directory this tool wrote that has no loadable manifest.
+      `held`        it could not be fully removed, and what is left is on disk. It
+                    may no longer be loadable: a refused delete stops at the file it
+                    cannot remove, after removing the ones before it.
 
-    What goes is the directory `list_snapshots` walked. Never a path rebuilt from
-    manifest content, which is unverified and could name anything.
+    What goes is a directory `list_snapshots` walked, or one `_is_debris` accepts.
+    Anything else in the root is left alone and not reported.
 
-    `protect` names run_ids that are never pruned however the order comes out, and
-    THE RUN THAT HAS JUST BEEN WRITTEN BELONGS IN IT. Order is a lexicographic
-    sort over a supplied `run_at`, so a backfill or a restated as-of date sorts
-    oldest and the run would otherwise delete the snapshot it has just reported as
-    retained. A protected snapshot is kept on top of `keep`, not instead of one.
-    It is a COLLECTION of run_ids, and a bare string is refused rather than
-    iterated into its characters: `protect="backfill"` built the set
-    `{'c','a','i','b','l','f','k'}` and deleted `backfill` with no error and
-    nothing in the report - the exact failure `protect` was added to prevent, in
-    the public API the shipped reference tells a reader to call.
-
-    THIS TOOL'S OWN DEBRIS goes too, and is reported: a directory under one of the
-    two prefixes it writes, or a plain-named one holding snapshot table files with
-    no loadable manifest. Not only the prefixes - debris does not only arrive by
-    the route designed for it, and a delete stopped by a held file leaves a
-    plain-named directory whose manifest has already gone, observed with five of
-    ten table files left, which `list_snapshots` cannot see, the KiB-on-disk
-    figure cannot count and a prefix match walked straight past, so it survived a
-    full prune forever. A directory nothing can see is a directory nothing ever
-    reclaims, which is the unbounded store by another route.
-
-    And NOT "every directory that is not a loadable snapshot", which is what this
-    did and is not a rule about debris: see `_is_debris`. Anything else in the
-    root - a `.git`, a `docs`, a junction, an archive directory - is left alone
-    and not reported, because `--out` is free text and nothing here is entitled to
-    assume the root belongs to this tool.
-
-    Pruning runs at the end of an extract, by which point this run's own write has
-    been renamed into place; a second extract running concurrently is outside the
-    single-writer assumption the store makes everywhere else.
+    `protect` is a collection of run_ids that are never pruned; a bare string is
+    refused. Pass the run just written: order is a sort over a supplied `run_at`, so
+    a backfilled run would otherwise sort oldest. Protected snapshots are kept on
+    top of `keep`. A second extract writing to the same root at the same time is not
+    supported.
     """
     if keep < 1:
         raise ValueError(f"keep must be at least 1, got {keep!r}")
@@ -586,11 +415,8 @@ def prune_snapshots(root, keep: int = KEEP_RUNS, *, protect=()) -> list[dict]:
             f"the report. Pass ({protect!r},).")
     protected = {str(p) for p in protect}
     snapshots = list_snapshots(root)
-    # What the sweep below must not touch, decided BEFORE anything is deleted. A
-    # removal that is refused part-way takes the manifest with it, so by the time
-    # the sweep runs the directory no longer looks like a snapshot - and sweeping
-    # it again in the same call would report one directory twice and spend the
-    # retry budget twice over.
+    # Decided before anything is deleted: a refused removal can take the manifest
+    # with it, and the sweep must not report the same directory a second time.
     was_a_snapshot = {s["dir"] for s in snapshots}
     removed = []
     for snap in snapshots[keep:]:
@@ -606,9 +432,7 @@ def prune_snapshots(root, keep: int = KEEP_RUNS, *, protect=()) -> list[dict]:
         if not _is_debris(d):
             continue
         status = _debris_status(d.name)
-        # rglob, not iterdir: a swept tree reported 0 KiB because every file in
-        # it was one level down. A deletion reported as nothing is not
-        # meaningfully louder than a silent one.
+        # The whole tree, not only the top level.
         entry = {"run_id": d.name, "run_at": "",
                  "bytes": sum(f.stat().st_size
                               for f in d.rglob("*") if f.is_file()),
@@ -620,45 +444,22 @@ def prune_snapshots(root, keep: int = KEEP_RUNS, *, protect=()) -> list[dict]:
 
 
 def open_snapshot(root, run_id: str, *, expect_digest: str | None = None) -> Snapshot:
-    """Reopen the retained extract named `run_id`, or refuse to guess.
+    """Reopen the retained extract named `run_id`, or raise `SnapshotError`.
 
-    Looks only ever at that one run_id's directory, so there is no path by which
-    a replay reads a different extract than the one it asked for. Four failures,
-    all loud, and the first two are the ones that matter:
+    Looks only at that run_id's directory. Refuses a snapshot that is missing,
+    naming what is retained or where a failed commit left its rows; one whose
+    manifest names a different `run_id`; one whose files no longer match its own
+    manifest's digest; and one that does not match `expect_digest`.
 
-    PRUNED - a `load_run` row naming a snapshot that is gone says so plainly, and
-    lists what is still retained, because the alternative is a replay that
-    rebuilds from whatever happened to be on disk and reports the result as the
-    original figure.
-
-    SUBSTITUTED - a snapshot whose rows do not hash to what the build recorded is
-    a DIFFERENT extract under the same name. That is worse than a missing one: it
-    would reconcile perfectly and still answer a question about the wrong moment.
-
-    MOVED ASIDE - the rows are not gone, they are under this run_id's
-    `.superseded-` or `.incomplete-` name because a commit could not be completed.
-    Saying "pruned" there would be false, and it is the one false message a
-    previous round of this module was refused for.
-
-    TWO NAMES - a manifest that names a different `run_id` than its directory.
-    Refused rather than returned, because the caller persists this function's
-    `run_id` as the build's provenance.
-
-    `expect_digest=None` is the first build reading the extract it has just taken:
-    there is no recorded figure to check against yet. An EMPTY STRING is not that
-    case and is refused. Letting `""` mean "no check wanted" is what made the
-    substitution check skippable - the one check that tells a substituted extract
-    from the original, skipped by the absence of a value rather than by a decision.
+    `expect_digest=None` means there is no recorded digest to check yet, as for the
+    first build reading the extract it has just taken. An empty string is refused
+    rather than treated as no check.
     """
     directory = snapshot_dir(root, run_id)
     manifest_path = directory / MANIFEST_NAME
     if not manifest_path.is_file():
-        # Before saying "pruned", look where this run_id's rows actually go when
-        # a commit is refused. On the double-failure path of `_commit` the store
-        # ends holding `.incomplete-<run_id>` and `.superseded-<run_id>` and no
-        # snapshot, and the run's own message told the operator BOTH sets of rows
-        # were on disk - so answering "it has been pruned, or was never kept" is
-        # the same false message CR-0229-05(b) was refused for, one path over.
+        # Before saying pruned, look under this run_id's prefixes, where a failed
+        # commit leaves its rows.
         root = pathlib.Path(root)
         aside = [p for p in (root / f"{SUPERSEDED_PREFIX}{run_id}",
                              root / f"{INCOMPLETE_PREFIX}{run_id}") if p.is_dir()]
@@ -681,13 +482,8 @@ def open_snapshot(root, run_id: str, *, expect_digest: str | None = None) -> Sna
             f"quoted from that build can only be reproduced from its own rows.")
 
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-    # The same directory/manifest agreement `list_snapshots` enforces, enforced
-    # here too. Without it this function returned the MANIFEST's run_id as the
-    # snapshot's identity, so `open_snapshot(root, 'run-archived-restored')` came
-    # back as `run_id='run-archived'` - and the documented build persists
-    # `extract_run_id=snap.run_id`, i.e. a provenance claim naming a directory
-    # the build did not read. The shipped refusal table already promises a
-    # `SnapshotError` naming both for this state.
+    # The directory/manifest agreement `list_snapshots` enforces: the caller
+    # records this run_id as the build's provenance.
     named = manifest.get("run_id") if isinstance(manifest, dict) else None
     if named != run_id:
         raise SnapshotError(
@@ -745,15 +541,11 @@ class Extractor:
 
 
 def resolve_scope(ex: Extractor, root_package_id: int) -> tuple[list[int], int, bool]:
-    """Package ids in the subtree under `root_package_id`, host-side.
+    """Package ids in the subtree under `root_package_id`, walked host-side.
 
-    Returns (package_ids, max_depth_reached, truncated).
-
-    Host-side because recursive CTEs are not portable and Jet has none. NO depth
-    cap: the shipped `_package_subtree_ids` stops at depth 8 and `continue`s past
-    anything deeper with no warning and no flag (APT-2026-0216), so a deep tree
-    silently loses its leaves. This walks the whole tree and reports the depth it
-    reached. The only guard is the `seen` set, against a cycle.
+    Returns (package_ids, max_depth_reached, truncated). Host-side because
+    recursive CTEs are not portable. There is no depth cap; the `seen` set guards
+    against a cycle.
     """
     rows = ex.query("SELECT Package_ID, Parent_ID FROM t_package "
                     "ORDER BY Package_ID", "scope: t_package")
@@ -782,27 +574,17 @@ def resolve_scope(ex: Extractor, root_package_id: int) -> tuple[list[int], int, 
 
 def extract(ex: Extractor, root, root_package_id: int | None = None, *,
             run_id: str, run_at: str) -> dict:
-    """Pull everything into a snapshot under `root/<run_id>`. Returns a manifest.
+    """Pull everything into a snapshot under `root/<run_id>`. Returns its manifest.
 
-    `run_id` and `run_at` are REQUIRED and belong to the pipeline that owns the
-    run, exactly as they do in `load.build_database` and for the same reason: an
-    identity a module invents for itself cannot be tested for the value it
-    stamps, and it cannot afterwards be matched against the build that consumed
-    it. Passing the run's own id here is what ties `load_run` to its evidence.
+    `run_id` and `run_at` are required and belong to the run's pipeline, as in
+    `load.build_database`, so `load_run` can be tied to its evidence. A re-run of a
+    `run_id` replaces that snapshot. A `run_id` differing from one in the store only
+    in case is refused (`validate_new_run_id`).
 
-    No OTHER snapshot is overwritten. A second run with the same `run_id` rewrites
-    that one snapshot; a different `run_id` is a different snapshot beside it. A
-    `run_id` that differs from one already in the store only in CASE is refused
-    rather than treated as a second one, because the filesystem cannot tell them
-    apart - see `validate_new_run_id`.
-
-    The snapshot is built in `<root>/.incomplete-<run_id>` and renamed into place
-    only once the manifest is written, so a run that dies part-way leaves nothing
-    in the store: no half-written directory under a snapshot name, which pruning
-    could not see and the on-disk figure could not count. Both arguments are
-    validated before any query is issued - a bad `--run-at` found after the COM
-    round trip is a bad `--run-at` found too late - and so is the case collision,
-    for the same reason.
+    The snapshot is written in `<root>/.incomplete-<run_id>`, marked with
+    `SENTINEL_NAME` first, and renamed into place by `_commit` once its manifest is
+    written. Both arguments and the case collision are checked before any query is
+    issued.
     """
     validate_run_at(run_at)
     validate_new_run_id(root, run_id)
@@ -811,11 +593,12 @@ def extract(ex: Extractor, root, root_package_id: int | None = None, *,
     if work_dir.exists() and not _reclaim(work_dir):
         raise SnapshotError(
             f"{work_dir} is left over from an earlier run of this run_id and "
-            f"could not be removed: something is holding a file inside it. "
-            f"Nothing has been deleted and no query has been issued. Close "
-            f"whatever has it open, or remove the directory, and run again.")
+            f"could not be removed. No query has been issued. Remove the "
+            f"directory, or whatever is preventing its removal, and run "
+            f"again.")
     try:
         work_dir.mkdir(parents=True)
+        (work_dir / SENTINEL_NAME).write_text("", encoding="utf-8")
     except OSError as e:
         raise SnapshotError(
             f"the snapshot work directory {work_dir} could not be created "
@@ -831,45 +614,18 @@ def extract(ex: Extractor, root, root_package_id: int | None = None, *,
 
 
 def _commit(work_dir: pathlib.Path, out_dir: pathlib.Path) -> None:
-    """Move a finished snapshot into place, or leave what is there and say so.
+    """Move a finished snapshot into place.
 
-    The rename IS the commit, and on Windows it needs exclusive access to the whole
-    subtree: an external scanner holding a file written a moment ago fails it with
-    ACCESS_DENIED. Observed once in about four hundred runs of the test suite, so
-    every step here is retried rather than treated as impossible - including the
-    destructive ones, which is the whole point of this shape.
+    A re-run replaces a retained snapshot by renaming it aside to
+    `.superseded-<run_id>`, renaming the new one into place, and only then deleting
+    the aside, so no moment holds neither. If the new one cannot be renamed into
+    place, the aside is put back. Each failure raises `SnapshotError` saying which
+    directory holds which rows and which rename recovers them.
 
-    A re-run of the same `run_id` has to REPLACE a snapshot, and deleting the old
-    one before the rename is what made replacing it destructive. Deleting first
-    opens a window in which the name holds NEITHER snapshot, and the delete is
-    exactly as exposed to a held file as the rename it guards: observed on a
-    documented repeat `run_id` with one file open, the old manifest was destroyed
-    with five of ten table files left, `list_snapshots` returned `[]`, the husk
-    survived a full prune, the earlier build was told its evidence "has been
-    pruned, or was never kept", and the raw `PermissionError` escaped as a
-    traceback rather than a refusal. Before the commit was made atomic the same
-    interruption left a coherent, visible, loadable snapshot, so this is the step
-    that has to be no worse than an in-place overwrite.
-
-    So: the retained snapshot is renamed ASIDE, the new one is renamed into place,
-    and only then is the aside deleted. No step DELETES anything that is not
-    already duplicated, and no single failure costs a set of rows: whichever step
-    is refused, both sets are still on disk and the message says which rename
-    recovers which.
-
-    One state does not hold a snapshot under the `run_id` itself, and the claim is
-    narrowed to say so rather than left as "every failure leaves one whole
-    snapshot under it": if the commit rename fails AND the putback of the aside
-    fails too, the store holds `.superseded-<run_id>` and `.incomplete-<run_id>`
-    and nothing under `<run_id>`. The rows are intact - both sets - but
-    `list_snapshots` returns nothing for them, `open_snapshot` has to name them
-    explicitly, and the next prune reclaims both, so the message says that too.
-    Two independent refusals of the same directory inside one call is the
-    narrowest failure here, and it is the only one that is not self-healing.
-
-    If the commit cannot go through, the rows are NOT discarded. They cost a COM
-    extract against a repository that has already moved on, and the operator can
-    finish the job with a rename; nothing reads the directory until they do.
+    If the putback fails as well, nothing is under `<run_id>`: the retained rows are
+    under `.superseded-<run_id>`, the new ones under `.incomplete-<run_id>`, and the
+    next prune reclaims both. A `.superseded-<run_id>` left by an earlier
+    replacement is deleted before the aside is made.
     """
     aside = None
     if out_dir.exists():
@@ -887,8 +643,8 @@ def _commit(work_dir: pathlib.Path, out_dir: pathlib.Path) -> None:
         except OSError as e:
             raise SnapshotError(
                 f"the extract finished but the snapshot already retained as "
-                f"{out_dir} could not be moved aside ({e}): something else is "
-                f"holding a file inside it. Nothing has been deleted - that "
+                f"{out_dir} could not be moved aside ({e}). Nothing has been "
+                f"deleted - that "
                 f"snapshot is still readable and still replayable - and the new "
                 f"rows are intact under {work_dir.name}. Close whatever has it "
                 f"open and rename {work_dir.name} to {out_dir.name}, or run "
@@ -898,9 +654,7 @@ def _commit(work_dir: pathlib.Path, out_dir: pathlib.Path) -> None:
         _rename(work_dir, out_dir)
     except OSError as e:
         if aside is not None:
-            # The aside is the ONLY copy of those rows. Putting it back matters
-            # more than reporting this failure, so it happens first and a failure
-            # to put it back replaces the message.
+            # The aside is the only copy of those rows, so it is put back first.
             try:
                 _rename(aside, out_dir)
             except OSError as putback:
@@ -918,25 +672,19 @@ def _commit(work_dir: pathlib.Path, out_dir: pathlib.Path) -> None:
                     f"reclaim BOTH.") from None
         raise SnapshotError(
             f"the extract finished but {work_dir} could not be renamed to "
-            f"{out_dir} ({e}): something else is holding a file inside it. "
+            f"{out_dir} ({e}). "
             f"The rows are intact under that name - rename the directory "
             f"to {out_dir.name} to retain the snapshot. Until then nothing "
             f"reads it, and pruning will reclaim it.") from None
     if aside is not None:
-        # The new snapshot is in place, so the commit has succeeded and a held
-        # aside is not a reason to fail it: what is left is a copy of the rows
-        # this run_id was asked to replace. It is not a snapshot - the prefix is
-        # not a valid run_id - nothing reads it, and the next prune sweeps it and
-        # reports it as `superseded`. Hence the ignored result.
+        # The commit has succeeded. An aside that will not go is swept by the next
+        # prune as `superseded`.
         _reclaim(aside)
 
 
 def _extract_into(ex: Extractor, out_dir: pathlib.Path,
                   root_package_id: int | None, *, run_id: str, run_at: str) -> dict:
-    """Query, filter and write one complete snapshot into `out_dir`.
-
-    Split out so `extract` is only the atomicity: build here, rename there.
-    """
+    """Query, filter to scope, and write one complete snapshot into `out_dir`."""
     data: dict[str, list[dict]] = {}
 
     for name, sql in CENSUS_QUERIES.items():
@@ -1017,11 +765,8 @@ def main(argv=None) -> int:
                     help="path to the ea-mcp-server package, for the XML row parser")
     args = ap.parse_args(argv)
 
-    # Before EA, not after: these three decide where the snapshot lands, how
-    # retention orders it and how much of the store survives, so a bad one found
-    # after the COM round trip is a bad one found too late. The case collision is
-    # checked here too, for the same reason - it is the one check that needs the
-    # store to answer it, and the store is readable without EA.
+    # Checked before EA is reached: a bad value found after the COM round trip is
+    # found too late.
     try:
         validate_new_run_id(args.out, args.run_id)
         validate_run_at(args.run_at)
@@ -1049,19 +794,14 @@ def main(argv=None) -> int:
         manifest = extract(ex, args.out, args.package_id,
                            run_id=args.run_id, run_at=args.run_at)
     except SnapshotError as e:
-        # The rows survive, under the temp name, and the message says how to keep
-        # them. An exit code rather than a traceback: this is a reportable outcome.
+        # The message says where the rows are.
         print(e, file=sys.stderr)
         return 2
-    except OSError as e:
-        # The eleven snapshot writes are the one step this whole shape is
-        # premised on being refusable, and nothing retried or caught them:
-        # measured, refusing the sixth gave a raw PermissionError traceback and
-        # process exit 1 - while exit 1 is DOCUMENTED as "the snapshot is
-        # retained and its digest is printed". It was neither. 2 is the truthful
-        # code, and `extract` has already cleared the work directory, so the
-        # store is as it was.
-        print(f"the extract did not complete: {e}", file=sys.stderr)
+    except Exception as e:
+        # `extract` has cleared its work directory, so nothing was retained, which is
+        # what 2 means. Exit 1 means a retained snapshot whose retention failed.
+        print(f"the extract did not complete: {type(e).__name__}: {e}",
+              file=sys.stderr)
         print("Nothing was retained and no digest was printed, so this build has "
               "nothing to record and must not claim it does. Nothing already in "
               "the store was changed. Exit 1 would have said the snapshot IS "
@@ -1077,14 +817,9 @@ def main(argv=None) -> int:
     total_ms = sum(e["ms"] for e in manifest["sql_log"])
     print(f"{len(manifest['sql_log'])} statements, {total_ms:.0f} ms")
 
-    # THE REFERENCE GOES OUT FIRST, before retention runs. These three lines are
-    # the only output that lets the build record what it was built from, and
-    # `build_database` refuses half a reference - so a store-level problem in a
-    # directory that has nothing to do with this run used to cost the operator the
-    # digest and the build then shipped with no provenance at all. Observed: one
-    # restored copy elsewhere in the store raised out of `prune_snapshots`, which
-    # had no handler, and the retained/digest lines never printed. Nothing below
-    # can prune this run - `protect` names it - so there is nothing to wait for.
+    # The reference is printed before retention runs, so a problem elsewhere in the
+    # store cannot cost this run its digest. `protect` keeps this run from being
+    # pruned.
     print(f"\nsnapshot {args.run_id} retained at "
           f"{snapshot_dir(args.out, args.run_id)}")
     print(f"  digest {manifest['digest']}")
@@ -1102,8 +837,7 @@ def main(argv=None) -> int:
               "dealt with.", file=sys.stderr)
         return 1
 
-    # Pruning announces itself. A figure somebody quoted stops being defensible
-    # the moment its evidence goes, so going is never quiet.
+    # Pruning is always reported.
     print(f"\nretention: {len(retained)} snapshot(s) kept, limit {args.keep}, "
           f"{sum(s['bytes'] for s in retained) / 1024:.0f} KiB on disk")
     pruned = [s for s in removed if s["status"] == "pruned"]
@@ -1121,7 +855,7 @@ def main(argv=None) -> int:
     held = [s for s in removed if s["status"] == "held"]
     if held:
         print(f"HELD: {len(held)} director(ies) retention meant to remove COULD "
-              f"NOT BE FULLY REMOVED - something is holding a file inside them. "
+              f"NOT BE FULLY REMOVED. "
               f"What is left of each is on disk and may no longer be loadable, "
               f"because a refused delete stops at the file it cannot remove "
               f"after deleting everything ahead of it. The store stays over its "

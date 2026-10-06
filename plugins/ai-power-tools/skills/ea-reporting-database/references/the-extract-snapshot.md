@@ -183,7 +183,7 @@ mtime — a snapshot that has been copied or restored keeps the moment the extra
 | `pruned` | A snapshot that aged out. The loud one — a figure quoted from that build can no longer be reproduced from its own rows |
 | `incomplete` | A `.incomplete-*` write that never finished |
 | `superseded` | Rows renamed aside under `.superseded-*` for a re-run of that `run_id` and not deleted at the time. *Usually* the copy the re-run replaced — on the double-failure path described under re-running a `run_id` it is the only copy there is, which is why the status does not claim otherwise |
-| `unreadable` | A plain-named directory holding snapshot table files with no loadable manifest — what a delete stopped part-way leaves |
+| `unreadable` | A directory this tool wrote, under a plain name, with no loadable manifest — for example what a delete stopped part-way leaves |
 | `held` | It could not be **fully** removed, and what is left of it is on disk. Reported, not raised, so one locked directory cannot cost you the report of everything that did go. Not a promise that it is intact: a refused delete stops at the file it cannot remove *after* deleting everything ahead of it, so a `held` snapshot may no longer be loadable. It is reclaimed by the next prune |
 
 **`protect` takes a collection, and a bare string is refused.** `protect="backfill"`
@@ -224,39 +224,34 @@ because `list_snapshots` only recognizes a directory with a manifest: a half-wri
 one would be invisible to pruning *and* to the KiB-on-disk figure, and so would never
 be reclaimed.
 
-**The next `prune_snapshots` sweeps the debris this tool can identify as its own**,
-and reports each one — `incomplete` or `superseded` for the two prefixes it writes,
-`unreadable` for a plain-named directory holding snapshot table files with no loadable
-manifest, all separately from the snapshots that aged out. Matching the prefixes alone
-was not enough: debris does not only arrive by the route designed for it. A delete
-stopped by a held file leaves a directory under a *plain* name with its manifest already
-gone, which no function could see and no prefix match would catch, and that survived a
-full prune forever.
+**The next `prune_snapshots` sweeps the debris this tool wrote, and nothing else.**
+Every directory `extract.py` creates holds a marker file, `.extract-snapshot`, written
+first and deleted last. The sweep removes a marked directory under one of the two
+prefixes (`incomplete`, `superseded`), or a marked directory under a plain name with no
+loadable manifest (`unreadable`), and reports each one separately from the snapshots
+that aged out. Because the marker is deleted last, a delete stopped part-way leaves a
+directory the next prune still recognizes. An empty directory under one of the prefixes
+is swept too.
 
-**Everything else in the store root is left alone, and that is deliberate.**
-"Every directory that is not a loadable snapshot" was the rule once, and it is not a
-rule about debris: `--out` is free text, nothing checks that the root belongs to this
-tool, and so `--out .` at a checkout reclaimed `.git`, `docs`, `research` and `src` and
-exited reporting success. Point `--out` wherever you like; the store root may hold
-whatever else you keep there. A directory this tool cannot identify is not reported
-either — a sweep report is a list of what *went*.
+**Everything else in the store root is left alone and not reported**: any directory
+without the marker, a copy of a snapshot under a name that is not a valid `run_id`, and
+any symlink or junction. Point `--out` wherever you like; the store root may hold
+whatever else you keep there.
 
-A directory whose manifest does not parse, or parses to something that is not an object
-carrying `run_at`, is simply not a snapshot — a partial copy or a disk-full during the
-manifest write puts one there. It used to stop `list_snapshots` and therefore every
-prune, so it survived for ever and blocked the reclamation of everything else.
+A directory whose manifest does not parse, or is not an object with a string `run_at`,
+is not a snapshot; a partial copy or a disk-full during the manifest write can put one
+there. It does not stop the rest of the store being read.
 
 The rename is the commit, and on Windows it needs exclusive access to the whole
 subtree — a scanner holding a file written a moment ago can refuse it. Every step is
 retried, 4 attempts over 0.75 s, and that includes the destructive ones: a *delete*
 is refused by a held file exactly as readily as a rename.
 
-**Re-running a `run_id` replaces its snapshot without ever deleting the only copy of
-anything.** The retained directory is renamed *aside*, the new one is renamed into place,
-and only then is the aside deleted. Deleting first opened a window in which the name held
-neither, and a held file inside that window destroyed the old manifest, left half its table
-files under the snapshot's own name, and told the earlier build its evidence "has been
-pruned".
+**Re-running a `run_id` replaces its snapshot by renaming, not by deleting first.** The
+retained directory is renamed *aside*, the new one is renamed into place, and only then
+is the aside deleted, so there is no moment when the name holds neither. A
+`.superseded-<run-id>` left by an earlier replacement is deleted before the new aside is
+made.
 
 If a step is refused the run **says so and keeps both sets of rows**, and in every
 single-step failure the retained snapshot is readable and replayable under its own name
