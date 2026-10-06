@@ -58,20 +58,23 @@ overwrites in place rather than creating a duplicate.
 ### MDG-native element creation — `create_element_in_language`
 
 When the target element type is defined by an MDG profile (ArchiMate3, BPMN2.0, or a
-custom MDG like WBA), prefer `create_element_in_language` over plain `create_element`.
-It routes through EA's COM `CreateElementInPackage` path which writes the stereotype into
-`t_xref` (the MDG profile application store) rather than only `t_object.Stereotype`, and
-sets the correct base metaclass automatically.
+your organization's own MDG), prefer `create_element_in_language` over plain `create_element`.
+It resolves the stereotype's base metaclass from the technology and passes it to
+`create_element` as `type`, so the element cannot be created as the wrong EA type. The
+`t_xref` profile binding itself is not specific to it: a plain `create_element` whose `type`
+and `stereotype=` match a loaded MDG profile writes the same binding (§2).
 
-`create_element_in_language` has no top-level `tagged_values` parameter — unlike
-`create_element`, it only takes `properties`. Apply governance tags with a follow-up
-`set_tagged_value` call per tag, keyed off the `element_id` the creation call returns:
+`create_element_in_language` has no `tagged_values` parameter — unlike `create_element`, it
+only takes `properties`, and passing `tagged_values` fails the call with `unknown_parameters`.
+Apply governance tags with a follow-up keyed off the `element_id` the creation call returns:
+`update_element` with `tagged_values={...}` sets them all in one call, or `set_tagged_value`
+sets one per call:
 
 ```python
 result = ea_model(operation="create_element_in_language", params={
     "package_id": app_pkg_id,
     "name": "Customer Portal",
-    "language_id": "WestbrookBankArchitecture",  # MDG Technology ID
+    "language_id": "WBA",                     # registered technology id, not the profile display name
     "language_type": "WBABusinessApplication",   # stereotype name within that MDG
     "properties": {"Note": "Internet banking front-end"},
 })
@@ -98,7 +101,7 @@ ea_model(operation="create_elements_bulk", params={"specs": [
     {
         "package_id": app_pkg_id,
         "name": "Customer Portal",
-        "language_id": "WestbrookBankArchitecture",
+        "language_id": "WBA",
         "language_type": "WBABusinessApplication",
         "tagged_values": {"criticality": "Mission-Critical"},
     },
@@ -185,27 +188,32 @@ path you use.
 |---|---|---|---|---|
 | Simple stereotype | `t_object` | `Stereotype` | `ea_model("create_element")` with `stereotype=`, `ea_model("update_element")` with `properties={"Stereotype":}` | EA browser, most queries |
 | StereotypeEx (full MDG path) | `t_object` | `StereotypeEx` | `ea_model("update_element")` with `properties={"StereotypeEx":}` | EA validation, profile-aware tools |
-| MDG profile application | `t_xref` | `Description` | `ea_model("create_element_in_language")`, `ea_model("create_elements_bulk")` with `language_id`+`language_type` | EA MDG engine, diagram rendering |
+| MDG profile application | `t_xref` | `Description` | Whichever of these applies a stereotype matching a loaded MDG profile: `ea_model("create_element_in_language")`, `ea_model("create_element")` with `stereotype=`, `ea_model("create_elements_bulk")` in either form, `ea_model("update_element")` with `StereotypeEx` when EA accepts it | EA MDG engine, diagram rendering |
 
 ### How each tool writes stereotypes
 
+`<technology-id>` is the id EA registers the MDG technology under; `<profile>` is the profile
+name that prefixes the stereotype's FQName in `t_xref`. They can be different strings.
+
 ```
-ea_model(operation="create_element", params={"stereotype": "WBABusinessApplication", ...})
-  -> writes t_object.Stereotype = "WBABusinessApplication"
-  -> does NOT write t_xref (MDG profile not applied)
-  -> element may not render correctly in MDG-aware diagrams
+ea_model(operation="create_element", params={"type": "<base-metaclass>", "stereotype": "<stereotype>", ...})
+  -> writes t_object.Stereotype = "<stereotype>"
+  -> writes t_xref row (MDG profile application) when the stereotype matches a loaded
+     MDG profile, with FQName=<profile>::<stereotype>
+  -> `type` is yours to get right; a wrong base metaclass can make EA reject the stereotype
 
-ea_model(operation="create_element_in_language", params={"language_id": "WestbrookBankArchitecture", "language_type": "WBABusinessApplication", ...})
-  -> writes t_object.Stereotype = "WBABusinessApplication"
-  -> writes t_object.StereotypeEx = "WBABusinessApplication=WestbrookBankArchitecture::WBABusinessApplication;"
+ea_model(operation="create_element_in_language", params={"language_id": "<technology-id>", "language_type": "<stereotype>", ...})
+  -> writes t_object.Stereotype = "<stereotype>"
+  -> writes t_object.StereotypeEx = "<stereotype>=<profile>::<stereotype>;"
   -> writes t_xref row (MDG profile application, BaseClass="element")
-  -> element renders correctly in MDG-aware diagrams
+  -> resolves the base metaclass for you; same binding as create_element, without the type risk
 
-ea_model(operation="update_element", params={"element_id": ..., "properties": {"StereotypeEx": "WBABusinessApplication=WestbrookBankArchitecture::WBABusinessApplication;"}})
+ea_model(operation="update_element", params={"element_id": ..., "properties": {"StereotypeEx": "<stereotype>=<profile>::<stereotype>;"}})
   -> writes t_object.StereotypeEx
   -> does two Update() calls internally (first for other props, second specifically for StereotypeEx)
   -> returns stereotype_warning if EA rejected the value (readback is empty after Update)
-  -> does NOT create t_xref row — less reliable than create_element_in_language
+  -> writes the t_xref row when EA accepts the value; a rejected value (stereotype_warning)
+     leaves no profile binding — less reliable than create_element_in_language
 ```
 
 ### How to verify stereotype persistence
@@ -229,7 +237,9 @@ WHERE Object_ID = <element_id>
 ```
 
 If step 2 returns no rows, the MDG profile was not applied — the element's stereotype
-is cosmetic only. To fix, delete and recreate the element using `create_element_in_language`.
+is cosmetic only. A row whose `Description` has no `FQName` means the technology was not loaded
+when the stereotype was applied. To fix, delete and recreate the element using
+`create_element_in_language`, with the technology loaded.
 
 ### Diagnosing `update_element` StereotypeEx failures
 

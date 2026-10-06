@@ -10,7 +10,7 @@ explanation.
 | Get repo info | `ea_repository("get_repository_info")` | Confirms EA connection; check before any writes |
 | Create package | `ea_model("create_package")` | Verify `&` names (may encode as `&amp;`) |
 | Create one element | `ea_model("create_element")` | Pass `properties=`, `tagged_values=` inline |
-| Create MDG element | `ea_model("create_element_in_language")` | Writes t_xref profile application; prefer over `create_element` for MDG types |
+| Create MDG element | `ea_model("create_element_in_language")` | Resolves the base metaclass; prefer over `create_element` for MDG types. No `tagged_values` — tag after with `update_element` |
 | Create many elements | `ea_model("create_elements_bulk")` | Idempotent; use for >5; supports `language_id`+`language_type` per spec |
 | Set one tag | `ea_model("set_tagged_value")` | Use only for after-the-fact updates |
 | Create connector | `ea_model("create_connector")` | Verify endpoints exist first |

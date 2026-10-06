@@ -163,17 +163,17 @@ if encoded. Full create → verify → fix sequence:
 
 | Scenario | Use |
 |---|---|
-| MDG-profile elements (ArchiMate, BPMN, custom MDG like WBA) | `create_element_in_language` — writes `t_xref`, not just `t_object.Stereotype` |
+| MDG-profile elements (ArchiMate, BPMN, or your organization's own MDG) | `create_element_in_language` — resolves the base metaclass from the technology, so `type` cannot be wrong |
 | Generic UML elements | `create_element` |
 | >~5 elements at once | `create_elements_bulk` — idempotent; supports `language_id`+`language_type` per spec |
-| Plain `create_element` with MDG `stereotype=` | Avoid — may silently fail to render in MDG-aware diagrams |
+| Plain `create_element` with MDG `stereotype=` | Works when `type` is the stereotype's base metaclass, and binds the profile the same way (§4.5); `create_element_in_language` looks the metaclass up instead of trusting you to |
 
-Set tagged values inline at creation (`tagged_values={...}`), not via a `set_tagged_value`
-loop after. Canonical WBA tags: 6 base tags on every stereotype, 4 AI-only tags on
-`WBAAIGateway`/`WBAAIService`/`WBAAIModel` — see `_shared/references/westbrook-example.md` §3
-for exact names/values (`criticality` is hyphenated: `Mission-Critical`, not `Mission
-Critical`). Full code patterns and the complete tag table:
-[`references/element_creation.md`](references/element_creation.md) §1.
+Set tagged values inline at creation (`tagged_values={...}`) on `create_element` or in a
+`create_elements_bulk` spec — one with `language_id`+`language_type` is the one-call route for a
+tagged MDG element — not via a `set_tagged_value` loop after. **`create_element_in_language`
+rejects `tagged_values`** (`unknown_parameters`): tag what it creates with `update_element`
+(`element_id`, `tagged_values={...}`) in one call, or `set_tagged_value` per tag. Full code
+patterns: [`references/element_creation.md`](references/element_creation.md) §1.
 
 Attributes, operations, and operation parameters on an already-created element (`create_attribute`,
 `update_attribute`, `create_operation`, `add_parameter`, and related calls) are a separate layer
@@ -187,10 +187,13 @@ with their own id scheme and a couple of sharp edges — see
 **The most common source of silent failures.** EA stores stereotype info in up to three
 places: `t_object.Stereotype` (`create_element`), the less reliable `t_object.StereotypeEx`
 (`update_element`, returns `stereotype_warning` on rejection), and `t_xref.Description` — the
-MDG profile application, written only by `create_element_in_language`, which is what EA's MDG
-engine and diagram rendering actually read. If an element won't render correctly in an
-MDG-aware diagram, check `t_xref` first — empty means the profile was never applied; fix by
-recreating via `create_element_in_language`. Full verification SQL:
+MDG profile application, which is what EA's MDG engine and diagram rendering actually read.
+Any operation that applies a stereotype matching a loaded MDG profile writes it:
+`create_element_in_language`, plain `create_element` with `stereotype=`, `create_elements_bulk`,
+and `update_element` with `StereotypeEx` when EA accepts it. If an element won't render correctly
+in an MDG-aware diagram, check `t_xref` first — empty means the profile was never applied; a row
+with no `FQName` means the technology was not loaded. Fix by recreating via
+`create_element_in_language` with the technology loaded. Full verification SQL:
 [`references/element_creation.md`](references/element_creation.md) §2.
 
 ---
