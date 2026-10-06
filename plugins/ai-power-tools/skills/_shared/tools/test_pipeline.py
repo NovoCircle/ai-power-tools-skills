@@ -97,6 +97,25 @@ def test_the_reconciliation_fails_when_a_count_read_back_is_wrong(tmp_path):
     assert reconcile_against(p, database_counts(db, p.model), frame).exit_code != 0
 
 
+@pytest.mark.parametrize("table", ["pkg", "rel_all", "attribute", "operation",
+                                   "diagram"])
+def test_a_row_that_never_reaches_the_database_fails_the_reconciliation(
+        tmp_path, table):
+    """The repository side is counted from the extract rows, so a frame row lost
+    between `prepare` and the load is a mismatch rather than agreeing with itself."""
+    p = prepared()
+    assert p.frame_rows[table], f"the fixture needs at least one {table} row"
+    p.frame_rows[table] = p.frame_rows[table][:-1]
+    assert build(tmp_path, p).reconciliation.exit_code != 0
+
+
+def test_a_tag_value_that_never_reaches_the_database_fails_the_reconciliation(
+        tmp_path):
+    p = prepared()
+    p.result.tag_value.pop()
+    assert build(tmp_path, p).reconciliation.exit_code != 0
+
+
 def test_a_frame_count_that_is_missing_fails_rather_than_passing(tmp_path):
     p = prepared()
     build(tmp_path, p)

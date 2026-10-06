@@ -167,8 +167,8 @@ diagram placements, connectors and attributes are left out rather than written a
 resolve against nothing, and the reconciliation counts the same population, under the name
 `element (placed in an entity table)`. `prepare` raises `PipelineError` if a row still dangles.
 
-`run_id` and `run_at` are **yours to supply**: no module has a clock, because a module that stamps
-its own timestamp cannot be tested for the value it stamps. `overwrite=False` is the default and
+`run_id` and `run_at` are **yours to supply**: no module stamps its own time, because one that did
+could not be tested for the value it stamps. `overwrite=False` is the default and
 refuses an existing database — a refresh that silently replaces the one somebody is reporting off
 is not a refresh.
 

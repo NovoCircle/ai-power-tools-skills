@@ -282,8 +282,7 @@ snap = replay_snapshot("reporting.sqlite", run_id, snapshot_root)
 ```
 
 Then pass `snap.tables` to `pipeline.prepare` and build, as in §3.3. With the same
-`run_id`
-and `run_at` the result is **byte-identical** to the original database: determinism
+`run_id` and `run_at` the result is **byte-identical** to the original database: determinism
 is already a requirement here, so that is the honest check, and it is the acceptance
 test for this behavior (`test_snapshot.py`).
 

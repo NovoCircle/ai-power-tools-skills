@@ -114,10 +114,10 @@ p = prepare(snap.tables, mdg, namespace="<profile namespace>",
 | `p.model` | the `ReportModel` - tables, columns, declared types, domains |
 | `p.result` | the `PivotResult` - entity rows, `tag_value`, `overflow`, `coverage` |
 | `p.frame_rows` | the frame: `pkg`, `element`, `rel_all`, `diagram`, `diagram_object`, `attribute`, `operation` |
-| `run_id`, `run_at` | yours to supply; no module has a clock |
+| `run_id`, `run_at` | yours to supply; no module stamps its own time |
 
-**On path A**, now run `build_reporting_database(p, out, ...)` exactly as `ea-reporting-database`
-§3.3 shows, then carry on here. **On path B, do not.** Nothing else differs: the census, the report
+**On path A**, now call `build_reporting_database(p, out, ...)` with the arguments
+`ea-reporting-database` §3.3 passes, then carry on here; leave out that block's `sys.exit`. **On path B, do not.** Nothing else differs: the census, the report
 model and the pivot are the same code, which is what makes the two paths produce the same dataset.
 
 The governance gate in `ea-reporting-database` §3.2b is **not optional on either path**. An element
