@@ -4,42 +4,18 @@
     set APT_SQLSERVER_INSTANCE=<instance>
     python -m pytest _shared/tools/test_sql_views_sqlserver.py -q
 
-WHY THIS EXISTS IN THE REPOSITORY AND NOT IN A SCRATCH DIRECTORY
-----------------------------------------------------------------
-`test_sql_views.py` says in its own header that it touches no database, and that
-is the right design for it - but it means the three worst defects this emitter
-has shipped were all invisible to it, because all three were COMPILE-TIME
-errors:
+`test_sql_views.py` touches no database, so it cannot see a view SQL Server
+refuses: two arms of a recursive CTE that disagree on a column type, or a
+`CASE` whose only result is NULL. This file compiles every view in three model
+states and reads the column types back from `sys.columns`.
 
-  * a recursive CTE whose two arms disagreed on a column type, which SQL Server
-    refuses outright with `Msg 240`, while 411 hermetic tests passed over a view
-    that did not exist;
-  * a `CASE` whose only result was the bare `NULL` constant (`Msg 8133`);
-  * the same `Msg 240` a second time, on a column a hermetic guard could not
-    see.
+Without `APT_SQLSERVER_INSTANCE`, or without `sqlcmd`, every test is skipped
+with a reason. With the instance set, an unreachable server or a refused
+`CREATE DATABASE` is a failure.
 
-The check that caught them was run by hand from an unversioned directory and
-hard-coded an absolute path into a transient worktree, so it worked on exactly
-one machine for about a day, and a reviewer who tried to reproduce it could not.
-A check nobody else can run is not a check. This is that harness, in the repo,
-gated so that it costs nothing when there is no server.
-
-IT NEVER FAILS FOR THE ABSENCE OF A SERVER
-------------------------------------------
-No `APT_SQLSERVER_INSTANCE`, or no `sqlcmd`, means SKIPPED with a reason that
-says what to set. If the instance IS configured and then cannot be reached or
-refuses `CREATE DATABASE`, that is a failure rather than a skip: having opted
-in, a silent pass would be worse than useless.
-
-IT NEEDS NO MODEL AND NO FIXTURE
---------------------------------
-The nine EA tables the views read are declared BELOW, with EA's own physical
-types - the identity columns deliberately 32-bit `int`, which is the whole point
-of the exercise: the views must declare 64-bit over a 32-bit source. Nothing
-here opens a `.qea`, attaches a repository, or reads any existing database, so
-it runs against any instance the caller can create a database on and asserts
-nothing about the caller's own models. Scratch database names carry the process
-id and are dropped in teardown even when an assertion fails.
+It declares the tables the views read itself, so it opens no `.qea` and reads
+no existing database. The scratch database is named for the process and is
+dropped in teardown, including after a failed assertion.
 """
 from __future__ import annotations
 
@@ -53,28 +29,20 @@ import test_sql_views as hermetic
 from report_model import Column, ReportModel, Table
 from sql_views import build_views
 
-#: The instance to compile against - an empty value is what makes this file a
-#: no-op. Named rather than defaulted: a default would point at one developer's
-#: machine, which is how the unversioned predecessor became unrunnable.
+#: The instance to compile against. Unset, every test here is skipped.
 INSTANCE = os.environ.get("APT_SQLSERVER_INSTANCE", "").strip()
 
 SQLCMD = os.environ.get("APT_SQLCMD", "").strip() or shutil.which("sqlcmd") or ""
 
-#: Trusted connection only. A password in an environment variable read by a test
-#: is a credential this repository should not teach anyone to set.
+#: Trusted connection only; no password is read from the environment.
 needs_server = pytest.mark.skipif(
     not INSTANCE or not SQLCMD,
     reason="set APT_SQLSERVER_INSTANCE (and have sqlcmd on PATH, or set "
            "APT_SQLCMD) to compile the emitted views against a real instance; "
            "absence skips rather than fails")
 
-#: EA's own schema for the nine tables the views read, reduced to the columns
-#: they reference. The identity columns are `int` BECAUSE EA's are: every one of
-#: `Package_ID`, `Parent_ID`, `Object_ID`, `Connector_ID`, `Diagram_ID`,
-#: `t_attribute.ID` and `OperationID` is 32-bit in a live repository, so a view
-#: that declares `bigint` over them is widening a real narrowing rather than
-#: restating a type. `Description` is `ntext`, which is why `_stereo_block` has
-#: to cast it before `STRING_SPLIT` will take it.
+#: The tables the views read, reduced to the columns they reference, with EA's
+#: SQL Server types: 32-bit `int` identity columns and an `ntext` Description.
 EA_TABLES = {
     "t_package": "Package_ID int, Parent_ID int, Name nvarchar(255)",
     "t_object": ("Object_ID int, ea_guid nvarchar(40), Name nvarchar(255), "
@@ -97,18 +65,15 @@ EA_TABLES = {
                     "Type nvarchar(255), Scope nvarchar(255)"),
 }
 
-#: Types that would mean a column came back NARROWER than the logical model
-#: declares. `real` is in the list because SQL Server's `real` is `float(24)`,
-#: a 32-bit truncation of the `float`/`float(53)` a REAL column must be.
+#: Types narrower than the 64-bit `bigint` and `float` the views declare.
 NARROW_TYPES = ("int", "smallint", "tinyint", "real")
 
 
 def _second_table():
-    """A second declared stereotype, so the multi-table branch is compiled too.
+    """A second declared stereotype, so the multi-table branch is compiled.
 
-    `test_sql_views.declared()` fixes one stereotype, and two tables sharing a
-    stereotype would give both the same placement predicate - which compiles,
-    but would not be the two-table shape.
+    It uses a different stereotype from `test_sql_views.declared()`, so the two
+    tables get different placement predicates.
     """
     return Table(name="business_service", entity_key="WBA::WBABusinessService",
                  stereotype="WBABusinessService", profile="WBA", declared=True,
@@ -117,10 +82,8 @@ def _second_table():
                           for c, t in hermetic.TYPED_COLS])
 
 
-#: The three states the emitter branches on. The empty one is not a curiosity:
-#: its views type their columns with `CAST(NULL AS ...)` placeholders, and a
-#: shipped head had those placeholders 64-bit while the populated branch of the
-#: same view was 32-bit.
+#: The three states the emitter branches on. The empty model types its columns
+#: with `CAST(NULL AS ...)` placeholders instead of projecting EA's.
 MODEL_STATES = {
     "one declared table": lambda: hermetic.model(),
     "two declared tables": lambda: hermetic.model([hermetic.declared(),
@@ -151,9 +114,7 @@ def _rows(sql, database):
 def scratch():
     """A database of our own, created and dropped, named for this process.
 
-    Dropped in teardown whether or not the assertions passed, and the drop is
-    confirmed: a check that litters databases across a developer's instance
-    stops being run, and then stops being true.
+    The drop is confirmed in teardown, whether or not the assertions passed.
     """
     name = "APT_ViewCompile_%d" % os.getpid()
     _sqlcmd("IF DB_ID('%s') IS NOT NULL BEGIN ALTER DATABASE [%s] SET SINGLE_USER "
@@ -172,15 +133,10 @@ def scratch():
 
 
 def _compile_state(scratch, state):
-    """Drop EVERY view in the scratch database, then submit this state's.
+    """Drop every view in the scratch database, then submit this state's.
 
-    Every view, not just the ones about to be replaced: a state that emits
-    FEWER views than the one before it would otherwise read back the leftovers
-    as if they were its own. Measured while writing this - the empty model
-    reported 21 integer/real columns instead of its own 17, because the two
-    entity views from the previous parametrization were still there. A check
-    whose numbers depend on what ran before it is a check that will eventually
-    certify the wrong thing.
+    Every view, not just the ones about to be replaced: a state that emits fewer
+    views than the one before would otherwise read back the leftovers as its own.
     """
     stale = _rows("SELECT name FROM sys.objects WHERE type = 'V'", scratch)
     for name in stale:
@@ -199,12 +155,7 @@ def _compile_state(scratch, state):
 @needs_server
 @pytest.mark.parametrize("state", list(MODEL_STATES))
 def test_every_emitted_view_compiles(scratch, state):
-    """The assertion no hermetic test can make: SQL Server accepts the SQL.
-
-    Parameterized over all three model states, because two of the three
-    compile-time defects this file exists for were in a branch the default
-    fixture does not reach.
-    """
+    """SQL Server accepts every emitted view, in each model state."""
     views, refused = _compile_state(scratch, state)
     assert not refused, (
         "%d of %d views do not compile with a %s:\n%s"
@@ -215,12 +166,10 @@ def test_every_emitted_view_compiles(scratch, state):
 @needs_server
 @pytest.mark.parametrize("state", list(MODEL_STATES))
 def test_no_view_column_comes_back_32_bit(scratch, state):
-    """Read the compiled schema back out of `sys.columns` rather than trusting
-    the SQL we just sent.
+    """No integer or real view column comes back narrower than 64-bit.
 
-    This is the check that distinguishes "the widening was written" from "the
-    widening took effect". A head passed the first and failed the second on 10
-    of 16 columns, because a declared type is only what the server says it is.
+    Read from `sys.columns` after compiling, rather than from the SQL that was
+    sent.
     """
     views, refused = _compile_state(scratch, state)
     assert not refused, "views must compile before their types can be read back"
@@ -240,14 +189,10 @@ def test_no_view_column_comes_back_32_bit(scratch, state):
 
 @needs_server
 def test_the_package_tree_returns_its_roots_rather_than_only_compiling(scratch):
-    """Compiling is necessary and not sufficient: `_pkg` is a recursive CTE, and
-    the defects it has carried were about which ROWS it returns.
+    """`_pkg` keeps a dangling and a self-parented package as roots with NULL parents.
 
-    A package whose parent is missing and a package that is its own parent are
-    both kept as ROOTS with a NULL parent, matching `frame.package_rows`. Both
-    were dropped by an earlier head, which silently lost every element beneath
-    them. Neither malformation exists in a model EA built, which is exactly why
-    they went unexamined - so they are inserted here deliberately.
+    Neither shape occurs in a model EA built, so both are inserted here. The
+    expected rows match `frame.package_rows`.
     """
     views, refused = _compile_state(scratch, "one declared table")
     assert not refused, "views must compile before their rows can be read"

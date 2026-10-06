@@ -4,56 +4,27 @@
 PURE. No repository calls, no COM, no file or network I/O, no clock, no
 randomness. Report model in, `CREATE VIEW` text out.
 
-This is the third emitter on the shared contract (`APT-2026-0230`). Where
-`load.build_database` and `parquet_out.build_parquet` produce a SNAPSHOT our
-toolchain wrote, this produces DDL the customer owns and runs once, after which
-Power BI reads their repository live and we have no runtime involvement at all.
+The third emitter on the shared contract (`APT-2026-0230`), beside
+`load.build_database` and `parquet_out.build_parquet`. Those write a snapshot;
+this writes DDL the customer runs once, after which Power BI reads the
+repository live.
 
     census + technology -> report model -> +- SQLite + Parquet   (0211)
                                            +- Parquet            (0212)
                                            +- SQL view DDL       (THIS)
 
-WHY GENERATING SQL IS DEFENSIBLE HERE AND WAS NOT IN 0210
----------------------------------------------------------
-`PLAN-APT-0210` §4.4 rejected SQL for the pivot: it "would be generated per
-stereotype per run: unvalidatable and different every time someone adds a tagged
-value." That objection does not transfer. Here the SQL is generated ONCE at
-setup, from the census plus the technology, and is then static DDL the customer
-can read, review and put in source control. Regenerating per RUN was the
-complaint; regenerating per SCHEMA CHANGE is ordinary database work.
+The views are generated once, from the census and the technology, and are then
+static. An element stereotyped later appears immediately; a new stereotype or
+tagged value needs the views regenerated. `REGENERATION_TRIGGER` says so in the
+DDL header.
 
-The consequence has to be stated rather than discovered: the views are static
-and the data is live, so an element stereotyped AFTER generation appears
-immediately, but a NEW STEREOTYPE gets no view until the views are regenerated.
-`REGENERATION_TRIGGER` is that statement, and it is emitted into the DDL header.
+Placement reads `_stereo_block`, which parses `t_xref.Description` into one row
+per `@STEREO;...@ENDSTEREO;` block. Whether an application carries an FQName is
+a property of a block, not of the row: a multi-stereotype element packs several
+blocks into one Description, and matches one table per block.
 
-HOW AN ELEMENT IS PLACED
-------------------------
-EA records a stereotype application in `t_xref.Description` as one or more
-`@STEREO;...@ENDSTEREO;` blocks. `_stereo_block` parses those into one row per
-BLOCK, carrying the stereotype's name and its FQName, and every placement
-predicate reads that view by EQUALITY.
-
-**It is a parser rather than a `LIKE` over the whole Description, and that is
-the point.** `carries an FQName` is a property of a BLOCK, not of the row: a
-multi-stereotype element packs several blocks into one Description, so a
-substring test cannot tell "this element has an ad-hoc Device application" from
-"this element has some other stereotype that happens to be profile-bound". An
-earlier draft of this module did use a `LIKE` with a trailing semicolon to
-avoid prefix collisions; parsing removes the need for that trick entirely.
-
-A multi-stereotype element matches several predicates at once. Measured on the
-reference model: `WBABusinessApplication` counts 46 by `t_object.Stereotype` and
-**47** by correct block reading, because one element carries two stereotypes and
-the column only mirrors the first.
-
-WHAT THESE VIEWS DELIBERATELY DO NOT DO
----------------------------------------
-Coverage, declared-versus-observed drift, exclusion counts and the governance
-gate. Settled 2026-10-02: those stay in AI Power Tools running against EA, which
-talks to whatever backend the customer has. Re-implementing the census rules a
-second time in a second language is exactly what `APT-2026-0210` structured
-itself to prevent.
+Coverage, drift, exclusion counts and the governance gate are not reproduced
+here. They run in AI Power Tools against EA.
 """
 from __future__ import annotations
 
@@ -62,86 +33,26 @@ from dataclasses import dataclass, field
 from ddl import FRAME_DDL, physical
 from report_model import BOOLEAN_FALSE, BOOLEAN_TRUE, ReportModel
 
-#: Declared SQL type -> SQL Server type. The fourth leg of the same journey as
-#: `report_model.SQL_TYPES`, `parquet_out.PARQUET_TYPES` and
-#: `semantic_model.TMDL_TYPES`, named here so all four are greppable together -
-#: and declared rather than inlined because the width is part of the value.
-#:
-#: INTEGER is **bigint, not int**. SQLite's INTEGER is 64-bit and
-#: `PARQUET_TYPES` maps INTEGER to `int64`, so a 32-bit `int` here is a
-#: NARROWER type than every other path: MEASURED, a tagged value of 3000000000
-#: is 3000000000 in the database and in Parquet and `TRY_CAST(... AS int)`
-#: silently makes it NULL in the view. 2147483647 agrees and 2147483648 does
-#: not, which is exactly the kind of boundary a fixture never contains.
-#: Power BI maps `bigint` and `int` both to Int64, so this costs the `.pbip`
-#: identity nothing.
-#:
-#: `REAL` is `float`, which is `float(53)` - IEEE 754 binary64, matching
-#: `PARQUET_TYPES`'s `double` bit for bit. **Not `real`**, which SQL Server
-#: defines as `float(24)` and which would be a second 32-bit truncation.
-#:
-#: `TEXT` is carried for the diff against the other three maps. `NUMERIC_TYPES`
-#: below is what `_coerced_value` actually keys on, derived from this map, so a
-#: declared type that is not here is never cast at all. It is NOT the type any
-#: column has: a TEXT column emits no cast, and `business_application.criticality`
-#: reads back from `sys.columns` as `nvarchar(255)` - the width of
-#: `t_objectproperties.Value`, which is what it is projected from. MEASURED.
-#:
-#: Every column `FRAME_DDL` declares INTEGER is emitted 64-bit, including the
-#: typed-NULL placeholders in the empty-model branches, so the same view does
-#: not have one schema on an empty model and another on a populated one.
-#: MEASURED against SQL Server in all three model states, reading the compiled
-#: schema back out of `sys.columns` rather than trusting the SQL that was sent:
-#: 13 of 13 views compile with one declared table and 19 integer/real columns,
-#: 14 of 14 with two and 21 columns, 12 of 12 on an empty model with 17 - and
-#: **0 still 32-bit** in each. `test_sql_views_sqlserver.py` is that check, in
-#: the repository and gated on an environment variable, because the version of
-#: it that lived in a scratch directory could not be rerun by anyone else.
-#:
-#: Widen both arms of a recursive CTE together or neither. A head shipped with
-#: `bigint` in `_pkg`'s anchor and `int` in its recursive member, and SQL Server
-#: refused the whole view with Msg 240 while 411 hermetic tests passed over it.
-#: `test_both_arms_of_the_recursive_cte_agree_on_every_column_type` is the guard,
-#: and `test_every_integer_column_is_emitted_64_bit` is the per-column one.
+#: Declared SQL type -> SQL Server type, beside `report_model.SQL_TYPES`,
+#: `parquet_out.PARQUET_TYPES` and `semantic_model.TMDL_TYPES`. INTEGER is
+#: `bigint` and REAL is `float` so a view column is as wide as the 64-bit
+#: SQLite and Parquet columns. Every numeric type the emitter writes is read
+#: from here; `test_the_numeric_types_are_written_only_in_the_type_map`
+#: enforces that.
 SQLSERVER_TYPES = {
     "TEXT": "nvarchar(max)",
     "INTEGER": "bigint",
     "REAL": "float",
 }
 
-#: The widths, bound once and interpolated everywhere the emitter needs them.
-#: The map above exists so that a width is written in ONE place, and until this
-#: binding existed the emitter contradicted it: the literal `bigint` appeared at
-#: 23 separate string-literal sites, and the head that widened `_pkg` changed
-#: some of them and not others. That is the whole mechanism behind the Msg 240 -
-#: not a typo, but a width stored in 23 places. A partial widening is now
-#: impossible by construction rather than policed after the fact.
 _BIGINT = SQLSERVER_TYPES["INTEGER"]
 _FLOAT = SQLSERVER_TYPES["REAL"]
 _NTEXT = SQLSERVER_TYPES["TEXT"]
 
-#: Every entry in the map except TEXT, which is the only non-numeric one today -
-#: NOT a positive definition of "numeric", and `_coerced_value` is what keys on
-#: it. Derived rather than restated: an earlier version hard-coded
-#: `("INTEGER", "REAL")` in the early return, so a fourth numeric type in
-#: `report_model.SQL_TYPES` was intercepted there and projected as **uncast
-#: text** - MEASURED, by adding a DECIMAL type.
-#:
-#: What reading one source bought is that the two sites can no longer drift: a
-#: numeric type added to `SQLSERVER_TYPES` is CAST rather than intercepted
-#: (MEASURED: with `"DECIMAL": "decimal(38,10)"` added the emitter produces
-#: `TRY_CAST(... AS decimal(38,10))`). It did NOT make the omission raise, and
-#: a comment here claimed it had. It cannot: this set is a subset of the map's
-#: keys, so every `sql_type` reaching `SQLSERVER_TYPES[...]` is a key by
-#: construction and the `KeyError` is unreachable. A type added to `SQL_TYPES`
-#: alone is caught by the totality test over `SQL_TYPES` instead, which fails
-#: naming it - see `_coerced_value`, whose own comment says the same thing.
+#: The declared types `_coerced_value` casts: every entry except TEXT.
 NUMERIC_TYPES = frozenset(SQLSERVER_TYPES) - {"TEXT"}
 
-#: Dialects with a tested emitter. An unsupported backend is told so rather than
-#: handed SQL nobody has ever run - `APT-2026-0218` is already open on an
-#: unparenthesized join that may not survive Jet, and generated SQL multiplies
-#: that exposure.
+#: Dialects with a tested emitter. Any other is refused rather than emitted.
 SUPPORTED_DIALECTS = ("sqlserver",)
 
 REGENERATION_TRIGGER = (
@@ -181,35 +92,25 @@ class ViewSet:
 
 
 def _q(identifier: str) -> str:
-    """Bracket-quote. SQL Server's own form, and it tolerates a leading `_`."""
+    """Bracket-quote an identifier, doubling any `]` inside it."""
     return "[" + identifier.replace("]", "]]") + "]"
 
 
 def _lit(text: str) -> str:
-    """An N-prefixed literal, because every column it is compared against is
-    `nvarchar`.
+    """An N-prefixed string literal with `'` doubled.
 
-    Without the `N` the literal is parsed under the database's default
-    collation codepage, so a stereotype or tagged-value name carrying a
-    character outside it becomes `?` and the predicate matches nothing - the
-    silent-empty-table failure again, this time triggered by an international
-    customer's model rather than by our code.
+    The `N` matters because every column it is compared against is `nvarchar`:
+    without it, a character outside the database's code page becomes `?` and
+    the predicate matches nothing.
     """
     return "N'" + text.replace("'", "''") + "'"
 
 
 def _comment(text: str) -> str:
-    """Comment text with every line break removed.
+    """Comment text with every line break replaced by a space.
 
-    A `--` comment runs to end of LINE, so a CR or LF inside an interpolated
-    value closes the comment and leaves the remainder of that value as
-    EXECUTABLE DDL in a script the customer runs with schema rights. Comment
-    text is the one place in this module that does not reach the parser, and
-    that is exactly what makes it the one place it would be reached from.
-
-    These values come out of a model - `technology_name`, `namespace`, an EA
-    build string - not out of our own constants, so they are input and are
-    treated as input, the same as every literal routed through `_lit`.
+    The header interpolates model values into `--` comments. A line break in
+    one would end the comment and leave the rest of the value as DDL.
     """
     return text.replace("\r\n", " ").replace("\r", " ").replace("\n", " ")
 
@@ -217,32 +118,18 @@ def _comment(text: str) -> str:
 def placement_predicate(table) -> str:
     """The test that places an element in one vocabulary table.
 
-    THREE SHAPES. `ea_census.entity_key` keys a
-    profile-bound application by its FQName and an ad-hoc one by
-    `name|metaclass` - a bare name is ambiguous across languages, so the
-    metaclass has to carry identity.
-
-    Reading only the FQName form silently emptied 14 of 29 tables on the
-    reference model and left the key map 14 elements short, which then cascaded
-    into the relationship and diagram views. Measured, not hypothetical.
+    A profile-bound table matches a block by FQName. An ad-hoc table matches a
+    block with no FQName by stereotype name and metaclass, or, for an element
+    with no stereotype block at all, `t_object.Stereotype` and metaclass. The
+    two ad-hoc shapes follow `ea_census.entity_key` and `census_elements`.
     """
     key = table.entity_key
-    # The SHAPE is decided by `profile`, not by looking for a `|` in the key.
-    # Sniffing the key misclassifies in both directions: a bare
-    # `t_object.Stereotype` holding a qualified name gives a key with BOTH `|`
-    # and `::` and would be read as profile-bound, matching nothing and leaving
-    # the table silently empty; and a stereotype name containing `|` would
-    # mis-split the metaclass. `profile` and `stereotype` are already on the
-    # table and say exactly what is needed.
+    # The shape is decided by `profile`, not by looking for `|` in the key: a
+    # qualified name held in `t_object.Stereotype` gives a key containing both
+    # `|` and `::`, and a stereotype name may itself contain `|`.
     if not table.profile:
         name = table.stereotype
         metaclass = key.rpartition("|")[2]
-        # THREE shapes, not two. Besides an ad-hoc block in `t_xref`, an element
-        # with NO xref entry at all falls back to the bare `t_object.Stereotype`
-        # column - `census_elements` says so and two elements on the reference
-        # model are exactly that: an Actor stereotyped BusinessActor and a
-        # Component stereotyped SystemSoftware, each with zero xref rows.
-        # Missing them left the key map 2 short and emptied both their tables.
         return (f"(EXISTS (SELECT 1 FROM {_q('_stereo_block')} sb\n"
                 f"                WHERE sb.ea_guid = o.ea_guid\n"
                 f"                  AND sb.fqname = {_lit('')}\n"
@@ -267,10 +154,8 @@ def _header(model: ReportModel, dialect: str, ea_build: str) -> str:
         f"-- dialect    : {dialect}",
     ]
     if ea_build:
-        # EA's physical schema is not a public contract: Sparx can change the
-        # t_xref encoding between builds, and in this path that break lands in
-        # views the CUSTOMER owns, silently, on upgrade. Stamping the build is
-        # the cheapest thing that makes the breakage diagnosable.
+        # EA's physical schema is not a public contract and can change between
+        # builds. Stamping the build makes such a break diagnosable.
         lines.append(f"-- ea build   : {_comment(ea_build)}  <- these views were "
                      f"written against this schema")
     lines += ["--", "-- " + REGENERATION_TRIGGER.replace(". ", ".\n-- "), ""]
@@ -281,22 +166,12 @@ def _header(model: ReportModel, dialect: str, ea_build: str) -> str:
 
 
 def _stereo_block_view() -> str:
-    """ONE ROW PER STEREOTYPE BLOCK, with its name and FQName pulled out.
+    """One row per stereotype block, with its name and FQName.
 
-    This is the SQL equivalent of `ea_census.parse_stereotype_blocks`, and it is
-    a view rather than a substring test for a reason: a multi-stereotype element
-    packs several `@STEREO;...@ENDSTEREO;` blocks into ONE `t_xref.Description`,
-    and `A has an FQName` is a property of a BLOCK, not of the row. Matching
-    against the whole string cannot tell "this element has an ad-hoc Device
-    application" from "this element has some other stereotype that happens to be
-    profile-bound".
-
-    Splitting: `STRING_SPLIT` takes a single-character separator, so each block
-    start is prefixed with CHAR(1) and the string is split on that. CHAR(1) is
-    not a character EA writes into a stereotype block.
-
-    `Name=` is also a substring of `FQName=`, so the name is read from the FIRST
-    occurrence - EA always writes Name first within a block.
+    The SQL counterpart of `ea_census.parse_stereotype_blocks`. `STRING_SPLIT`
+    takes a one-character separator, so each block start is prefixed with
+    CHAR(1) and the text is split on it. The name is read after `;Name=`,
+    which does not occur inside `;FQName=`.
     """
     def field(prefix: str, alias: str) -> str:
         n = len(prefix)
@@ -316,19 +191,10 @@ def _stereo_block_view() -> str:
         f"{field('FQName=', 'fqname')}\n"
         f"FROM t_xref x\n"
         f"CROSS APPLY STRING_SPLIT(\n"
-        # Any CHAR(1) already in the data is stripped BEFORE it is used as the
-        # separator. Nothing EA writes into a stereotype block should contain
-        # one, but the failure if it did is silent and expensive: the fragment
-        # after it fails the LIKE and is dropped, the fragment before it loses
-        # its FQName, and a profile-bound application quietly demotes to ad-hoc
-        # - which empties a table. One REPLACE removes the assumption.
-        #
-        # The one width this module spells out rather than taking from
-        # `SQLSERVER_TYPES`, deliberately: `t_xref.Description` is EA's `ntext`
-        # and `STRING_SPLIT` will not take it, so this cast is what makes the
-        # split legal. It declares no `FRAME_DDL` column's type, and binding it
-        # to the TEXT entry would mean a change to the logical model's TEXT type
-        # silently retyped an internal operand.
+        # Any CHAR(1) already in the text is removed before it is used as the
+        # separator. The cast is there because `Description` is `ntext`; it
+        # types no logical-model column, so it is not read from
+        # `SQLSERVER_TYPES`.
         f"    REPLACE(REPLACE(CAST(x.Description AS nvarchar(max)),\n"
         f"                    CHAR(1), ''),\n"
         f"            '@STEREO;', CHAR(1) + '@STEREO;'), CHAR(1)) b\n"
@@ -338,18 +204,16 @@ def _stereo_block_view() -> str:
 
 
 def _keymap_view(model: ReportModel) -> str:
-    """The hub: one row per PLACED element.
+    """The hub: one row per placed element.
 
-    `entity_table` names the FIRST table in model order for a multi-stereotype
-    element, which is what `frame.element_rows` writes. A CASE evaluated in
-    model order gives exactly that, because CASE returns on first match.
+    `entity_table` is the first table in model order that places the element,
+    as `frame.element_rows` writes it; a `CASE` returns its first match.
     """
     whens = [f"           WHEN {placement_predicate(t)}\n"
              f"           THEN {_lit(t.name)}" for t in model.tables]
     if not whens:
-        # SQL Server rejects a CASE whose only result is the NULL constant
-        # (Msg 8133). The sibling empty-case views use typed CAST(NULL) columns;
-        # this one does the same rather than emitting SQL that will not compile.
+        # A CASE whose only result is the NULL constant does not compile, so an
+        # empty model gets typed NULL columns, like the other empty views.
         return (f"CREATE VIEW {_q(physical('element'))} AS\n"
                 f"SELECT CAST(NULL AS nvarchar(40)) AS ea_guid,\n"
                 f"       CAST(NULL AS nvarchar(255)) AS entity_table,\n"
@@ -371,27 +235,11 @@ def _keymap_view(model: ReportModel) -> str:
 def _pkg_view() -> str:
     """The package tree, with path and depth, by recursive CTE.
 
-    AN ANCHOR ROW IS A ROOT IN EVERY COLUMN, NOT ONLY IN THE `WHERE`
-    ---------------------------------------------------------------
-    The anchor deliberately keeps a package whose parent is missing, zero, or
-    itself. A root that still CARRIES the broken parent is worse than dropping
-    it would have been: `parent_id` is a shipped `INTEGER` column and anything
-    walking the chain follows it to a row this view does not contain, or round
-    and round a self-reference. `frame.package_rows` nulls both cases - a
-    self-parent at `parent_of[pid] = None if parent == pid else parent`, a
-    dangling one at `parent_of.get(pid) if ... in name_of else None` - so the
-    anchor carries `CAST(NULL AS bigint)` and agrees with it by construction
-    rather than by the outer `NULLIF`, which only ever caught zero.
-
-    `Name` IS NULLABLE AND `path` IS COMPUTED FROM IT
-    -------------------------------------------------
-    `NULL + '/' + 'x'` is NULL in SQL Server, so one NULL package name emptied
-    `path` for that package AND for every descendant - the recursion propagates
-    it the whole way down. The outer `SELECT` already coalesced the projected
-    `name`; `path` was missed because it is built rather than projected, which
-    is the kind of column a NULL-versus-empty-string pass walks straight past.
-    `frame.package_rows` coalesces at `name_of[pid] = p.get("Name") or ""`, so
-    a NULL-named child of `Model` is `'Model/'` there and now here.
+    A package whose parent is missing, zero or itself is a root with a NULL
+    parent, as in `frame.package_rows`; dropping it would drop every element
+    under it. A NULL name contributes `''` to `path`, also as there, so it does
+    not empty the path of its subtree. Depth starts at 0. Both arms of the CTE
+    cast every column to the same type, which a recursive CTE requires.
     """
     return (
         f"CREATE VIEW {_q(physical('pkg'))} AS\n"
@@ -401,13 +249,6 @@ def _pkg_view() -> str:
         f"           CAST(COALESCE(p.Name, '') AS {_NTEXT}) AS path,\n"
         f"           CAST(0 AS {_BIGINT}) AS depth\n"
         f"    FROM t_package p\n"
-        # A package whose parent does not exist, or which is its own parent,
-        # is treated as a ROOT rather than dropped - matching
-        # `frame.package_rows`, which does this deliberately: losing a package
-        # loses every element under it from the grouping, which is a bigger
-        # error than a path that starts lower than the model root. Dropping it
-        # here would also orphan those elements from `_keymap.package_id`, the
-        # only path to the package tree.
         f"    WHERE p.Parent_ID IS NULL OR p.Parent_ID = 0\n"
         f"       OR p.Parent_ID = p.Package_ID\n"
         f"       OR NOT EXISTS (SELECT 1 FROM t_package q\n"
@@ -462,26 +303,11 @@ def _rel_all_view() -> str:
 
 
 def _tag_value_view(model: ReportModel) -> str:
-    """The multi-value bridge: ONE ROW PER VALUE, never per tag.
+    """The multi-value bridge: one row per value, never per tag.
 
-    This is the table the whole capability's headline number depends on. A
-    flattened column breaks aggregation silently - exact-match counting a tag
-    holding both "GLBA" and "GLBA, FFIEC" understates by about half. Measured on
-    the reference model: 31 applications in regulatory scope through the bridge,
-    14 counted naively.
-
-    Only tags the caller declared multi-valued are split. The module that owns
-    that decision refuses to guess and so does this one: a team name like
-    "Risk, Compliance & Audit" is ONE value containing a comma, and the
-    technology declares it the same way it declares a genuinely multi-valued tag.
-
-    BOTH ARMS TRIM, because `pivot` stores every tagged value as
-    `(r.get("Value") or "").strip()` before anything else sees it. The split arm
-    trimmed each part and the single arm did not, which is not a difference a
-    row count can see: `'Business-Critical '` and `'Business-Critical'` are the
-    same member of the same column in the database and two different members in
-    Power BI, which is the same failure the blank-versus-empty-string pass was
-    about.
+    Only tags the model declares multi-valued are split on `,`, because a single
+    value may itself contain a comma. Both arms trim, as `pivot` strips every
+    tagged value, and empty values are dropped.
     """
     multi = sorted({c.source_tag for t in model.tables for c in t.columns
                     if c.multi_valued})
@@ -529,16 +355,9 @@ def _simple_join_view(view: str, select: str, source: str,
 def _overflow_tag_view(model: ReportModel) -> str:
     """Sparse tags, which became rows rather than columns.
 
-    NO empty-value filter, deliberately, and this is the one place the frame's
-    two bridges disagree: `pivot` writes an overflow row for every tag it finds
-    on a placed element whether or not the value is populated, while `tag_value`
-    writes only populated ones. Measured: 69 overflow rows in the database
-    against 2 once empties are filtered out.
-
-    The view matches the pivot, because the requirement is that the paths agree.
-    Whether the pivot SHOULD write empty overflow rows is a separate question
-    about `pivot.py`, and silently differing here would hide it rather than
-    settle it.
+    Empty values are kept, matching `pivot`, which writes an overflow row for
+    every such tag on a placed element whether or not it is populated.
+    `_tag_value` drops empty values; the two bridges differ here on purpose.
     """
     overflow = sorted({tag for t in model.tables for tag in t.overflow_tags})
     hub = _q(physical("element"))
@@ -548,17 +367,10 @@ def _overflow_tag_view(model: ReportModel) -> str:
                 f"       CAST(NULL AS nvarchar(255)) AS tag,\n"
                 f"       CAST(NULL AS {_NTEXT}) AS value\n"
                 f"WHERE 1 = 0;")
-    # SCOPED PER TABLE. A tag is overflow for ONE stereotype - it fell below the
-    # column threshold there - and may be a perfectly ordinary column on
-    # another. Matching the tag name globally emitted 553 rows where the
-    # database held 69, because every placed element contributed its value for
-    # any tag that was sparse anywhere.
-    # Scoped by PLACEMENT, not by `_keymap.entity_table`. `entity_table` names
-    # only the FIRST table a multi-stereotype element landed in, so scoping on
-    # it drops that element's overflow rows for every other table it belongs to
-    # - measured, 2 rows emitted against the 69 the pivot writes. The pivot
-    # walks each table and writes overflow for the elements placed IN it, so
-    # the view has to use the same predicate the entity views use.
+    # Scoped per table, by that table's placement predicate. A tag is overflow
+    # for one stereotype and may be an ordinary column on another, and
+    # `_keymap.entity_table` names only the first table a multi-stereotype
+    # element is placed in.
     parts = []
     for t in model.tables:
         if not t.overflow_tags:
@@ -575,12 +387,11 @@ def _overflow_tag_view(model: ReportModel) -> str:
 
 
 def _load_run_view(model: ReportModel, ea_build: str) -> str:
-    """There is no build on this path, so this describes the CONNECTION.
+    """There is no build on this path, so this describes the connection.
 
-    It exists because the semantic model is shared across all three paths and
-    expects the same table set. Saying "live" rather than inventing a run id is
-    the honest reading: `reconciled` is NULL because nothing reconciled this -
-    the quality apparatus runs against EA, not in these views.
+    It exists because the semantic model expects the same table set on every
+    path. `run_id` is `live`, and the counts are NULL because nothing is
+    reconciled here.
     """
     return (
         f"CREATE VIEW {_q(physical('load_run'))} AS\n"
@@ -596,41 +407,25 @@ def _load_run_view(model: ReportModel, ea_build: str) -> str:
 
 
 def _tag_coverage_view(model: ReportModel) -> str:
-    """Coverage, computed live rather than loaded.
-
-    Non-negotiable in the database and non-negotiable here: a roll-up over a
-    partly-populated tag produces a confident wrong number, and a BI report is
-    exactly where that gets believed.
-    """
+    """Coverage per declared column, computed live."""
     hub = _q(physical("element"))
     parts = []
     for t in model.tables:
         for c in t.columns:
             parts.append(
-                # These three casts wrap the RESULT, not the accumulator: `SUM`
-                # still accumulates in `int` and `COUNT` still returns one, so
-                # both still overflow at 2**31 exactly as they did before the
-                # column was widened. Only the DECLARED type moved, which is all
-                # this change claims - "emitted 64-bit" is not a statement about
-                # the arithmetic. `COUNT_BIG` and `SUM(CAST(... AS bigint))` are
-                # the forms that widen the arithmetic too, and they are not used
-                # here because a count of EA elements cannot reach 2**31.
+                # The casts set the column type; the sums still accumulate in
+                # `int`.
                 f"SELECT {_lit(t.name)} AS table_name, {_lit(c.source_tag)} AS tag,\n"
                 f"       CAST(COALESCE(SUM(CASE WHEN p.Property IS NOT NULL"
                 f" THEN 1 ELSE 0 END), 0) AS {_BIGINT}) AS present,\n"
                 f"       CAST(COALESCE(SUM(CASE WHEN LTRIM(RTRIM(COALESCE(p.Value, '')))"
                 f" <> '' THEN 1 ELSE 0 END), 0) AS {_BIGINT}) AS populated,\n"
                 f"       CAST(COUNT(DISTINCT o.ea_guid) AS {_BIGINT}) AS total,\n"
-                # Divided by COUNT(DISTINCT), the same denominator `total`
-                # uses. COUNT(*) counts JOINED rows, and `t_objectproperties`
-                # carries no unique index on (Object_ID, Property) - so a
-                # repeated tag made the ratio disagree with its own numerator
-                # and denominator: 44/48 printed beside total=47.
+                # Divided by COUNT(DISTINCT), the denominator `total` uses,
+                # because `t_objectproperties` can hold the same tag twice for
+                # one element.
                 f"       CASE WHEN COUNT(DISTINCT o.ea_guid) = 0 THEN 0.0 ELSE\n"
-                # Rounded to 4 places, as `tag_coverage` does. Without it the
-                # two paths disagree in the tail - 0.9362 against
-                # 0.9361702127659575 - which is a difference no row count can
-                # see and which a report would surface as two different numbers.
+                # Rounded as `tag_coverage` rounds.
                 f"            ROUND(CAST(SUM(CASE WHEN"
                 f" LTRIM(RTRIM(COALESCE(p.Value, ''))) <> ''"
                 f" THEN 1 ELSE 0 END) AS {_FLOAT})\n"
@@ -658,87 +453,18 @@ _VALUE_INDENT = " " * 26
 
 
 def _coerced_value(column) -> str:
-    """One tagged value as its DECLARED type - `report_model.coerce_value` in SQL.
+    """One tagged value as its declared type: `report_model.coerce_value` in SQL.
 
-    THE TYPE IS PART OF THE VALUE, AND THIS IS THE ONLY TYPED COPY
-    --------------------------------------------------------------
-    `pivot` runs every entity-column value through `coerce_value` because the
-    flattened column is the only typed copy of it - `tag_value` is a bridge over
-    tags of every type at once and stays text. Emitting `COALESCE(p.Value, '')`
-    for every column regardless of type published a DIFFERENT VALUE under the
-    same column name on a column the database and Parquet both type:
+    Trimmed first, as `pivot` strips before it coerces. TEXT is returned trimmed
+    and uncast, so an empty value stays `''`. On a typed column an empty value
+    is NULL; on INTEGER, EA's boolean strings map to 1 and 0, compared
+    lowercased as the Python does; anything else goes through `TRY_CAST`, so a
+    value that does not convert is NULL where `pivot` leaves the column unset.
 
-        tag value, INTEGER column | database / Parquet | emitted before
-        --------------------------|--------------------|---------------
-        'true'                    | 1                  | 'true'
-        ''                        | NULL               | ''
-        'maybe'                   | NULL + a report row| 'maybe', silently
-
-    `WHERE audit_logging_enabled = 1` is the measure that matches nothing, and
-    `report_model.coerce_value` states that consequence in advance. A column that
-    "maps to the same place on every path" with a different type and a different
-    value does not satisfy this module's contract.
-
-    FOUR THINGS, IN `coerce_value`'s OWN ORDER
-    ------------------------------------------
-    1. TRIM FIRST. `pivot` strips before it coerces, so `' 7 '` is 7 and not
-       uncoercible, and `'Business-Critical '` is one member rather than two.
-
-       **KNOWN LIMIT, not parity.** `LTRIM`/`RTRIM` remove the SPACE character
-       only, where Python's `str.strip()` removes every Unicode whitespace. So a
-       value padded with a TAB or a non-breaking space keeps its padding here and
-       loses it in the database, and `'\\t1'` on an INTEGER column publishes NULL
-       where the database holds 1. MEASURED on SQL Server 2022.
-
-       Accepted rather than closed: `TRIM(chars FROM ...)` is 2022-only, nested
-       `REPLACE` would rewrite interiors as well as edges, and a `PATINDEX`
-       expression runs to a paragraph per column and still misses most of the
-       Unicode space category. The exposure is a tagged value padded with
-       something other than a space, which is rare and visible in `tag_value`.
-
-       **AND THE LIMIT IS WIDER THAN WHITESPACE.** `TRY_CAST` is narrower than
-       `int()`/`float()` in four further MEASURED ways, so the paragraph above
-       states the smallest version of this divergence rather than all of it:
-
-         value        | Python          | this view
-         -------------|-----------------|----------
-         `'1_000'`    | 1000            | NULL
-         `'\\u0663'`   | 3               | NULL
-         `'1e400'`    | `inf`           | NULL
-         subnormal    | the subnormal   | flushed to zero
-
-       **On the last two the VIEW is the better path.** `coerce_value` returning
-       `inf` for `'1e400'` is a `report_model` defect, not something for the
-       views to reproduce, and it belongs with `APT-2026-0239`'s family of
-       pivot-versus-view divergences. The first two are the view being narrower
-       and are the same accepted trade as the whitespace case.
-
-       Stated in full here so the next person meets the whole decision rather
-       than the comfortable quarter of it.
-    2. EMPTY ON A TYPED COLUMN IS NULL, never 0 and never ''. Empty means nobody
-       filled it in, which is a coverage fact; a 0 there would invent data and
-       make `tag_coverage` disagree with the column it describes. On TEXT an
-       empty value stays `''`, which is what every build before this one wrote.
-    3. BOOLEAN STRINGS ON EVERY INTEGER COLUMN. EA has no boolean tagged-value
-       type - a declared boolean arrives as whatever the editor or the profile
-       default put there - and `coerce_value` applies the mapping on the SQL
-       type, which is all either path can see. `LOWER()` because the Python
-       lowercases and a case-sensitive server collation would otherwise disagree
-       with it on `'TRUE'`.
-    4. UNCOERCIBLE IS NULL HERE. `pivot` leaves the column unset and records a
-       data-quality finding; the finding has nowhere to go in a view, so the
-       view publishes the same NULL and nothing else. `TRY_CAST` is how: it
-       yields NULL exactly where `int()`/`float()` raise.
-
-    THE WIDTH IS PART OF THE TYPE
-    -----------------------------
-    The target type comes from `SQLSERVER_TYPES`, declared at the top of this
-    module, and INTEGER is **bigint**. A 32-bit `int` is a narrower type than
-    SQLite's 64-bit INTEGER and than Parquet's `int64`, so it is a different
-    value: MEASURED, 3000000000 survives both other paths and `TRY_CAST(... AS
-    int)` silently makes it NULL. That is this docstring's own argument - the
-    type is part of the value - applied one step further than the first version
-    of this function took it.
+    Known limit: `LTRIM`/`RTRIM` remove spaces only, where `str.strip()`
+    removes all whitespace, and `TRY_CAST` accepts fewer numeric spellings than
+    `int()`/`float()`. Such a value can be NULL here and populated in the
+    reporting database.
     """
     value = "LTRIM(RTRIM(COALESCE(p.Value, '')))"
     if column.sql_type not in NUMERIC_TYPES:
@@ -749,13 +475,7 @@ def _coerced_value(column) -> str:
             in_list = ", ".join(_lit(s) for s in sorted(literals))
             lines.append(f"{_VALUE_INDENT}WHEN LOWER({value}) IN ({in_list})"
                          f" THEN {result}")
-    # Subscript, not `.get` with a fallback: the early return reads
-    # `NUMERIC_TYPES`, which is derived from this map, so anything reaching this
-    # line is in it and a fallback would be unreachable code standing in for a
-    # case that cannot occur. A declared type added to `SQL_TYPES` but not here
-    # is caught by the early return instead, and
-    # `test_every_sql_type_the_model_can_declare_is_coerced_in_the_view` fails
-    # naming it - which is the loud outcome, and the one that actually happens.
+    # A subscript: everything past the early return is a key of the map.
     cast = SQLSERVER_TYPES[column.sql_type]
     lines.append(f"{_VALUE_INDENT}ELSE TRY_CAST({value} AS {cast}) END")
     return "\n".join(lines)
@@ -764,52 +484,15 @@ def _coerced_value(column) -> str:
 def _entity_view(table) -> str:
     """One view per stereotype, in the customer's own business vocabulary.
 
-    The tagged-value pivot: one correlated subquery per column, generated once
-    at setup from the census. Column ORDER matches `ddl.entity_table_ddl` and
-    `load.entity_columns`, so a column maps to the same place on every path.
+    One correlated `TOP 1` subquery per column, coerced by `_coerced_value`.
+    Column order matches `ddl.entity_table_ddl` and `load.entity_columns`. An
+    absent tag is NULL on any column type.
 
-    Every column is coerced to its declared type by `_coerced_value`, because
-    the flattened column is the only TYPED copy of a tagged value and `pivot`
-    types it. A tag that is present but empty is `''` on TEXT and NULL on a
-    typed column; a tag that is ABSENT is NULL on either, because the subquery
-    returns no row and `pivot` leaves the key unset.
-
-    `ORDER BY p.PropertyID DESC` IS LOAD-BEARING, AND IT ENCODES A DEFECT
-    --------------------------------------------------------------------
-    `t_objectproperties` carries no unique index on `(Object_ID, Property)`, and
-    the reference model really does hold duplicates: each of six tags on one
-    element appears twice, once populated and once NULL, the NULL having the
-    higher `PropertyID`.
-
-    `pivot` assigns column values in extract order and lets later rows
-    overwrite, so the later duplicate wins and the populated value is LOST -
-    that element's six columns are empty in the database while its `tag_value`
-    rows carry the real values. This view reproduces that deliberately: the
-    requirement is that the paths agree, and silently disagreeing here would
-    hide the defect rather than settle it.
-
-    THE CLAIM THIS CAN HONESTLY MAKE IS NARROWER THAN "REPRODUCES IT EXACTLY".
-    Reproducing extract order by `PropertyID` assumes extract order IS
-    `PropertyID` order, and nothing guarantees that: `extract.py` selects
-    `Object_ID, Property, Value` from `t_objectproperties` with no `ORDER BY`
-    and does not select `PropertyID` at all, so the PYTHON side is the
-    nondeterministic one. The live acceptance run observed the two agreeing on
-    the reference model, which is evidence that the backend returned insertion
-    order, not a guarantee that it will. A deterministic view is still the right
-    choice - the alternative is two nondeterministic paths and a difference that
-    moves between runs - but what it agrees with is the extract order that has
-    been OBSERVED, and a reader should know which of those two it is relying on.
-
-    **The underlying behavior is a defect in `pivot`, not here** - a populated
-    value should not lose to an empty duplicate, and `extract.py` should order
-    what `pivot` reads in order. Both belong to `pivot.py`, and fixing them
-    would change what the shipped reporting database contains, so they are owed
-    their own item rather than a paragraph here.
-
-    Without an ORDER BY, `TOP 1` is NONDETERMINISTIC: it happened to return the
-    populated row, so the view silently disagreed with the database on one
-    element. Row counts cannot see that, and it is what the value-level
-    comparison was added to catch.
+    `ORDER BY p.PropertyID DESC` makes `TOP 1` deterministic and takes the later
+    of two rows for the same tag. That reproduces `pivot`, which lets a later
+    row overwrite an earlier one, so a populated value can lose to an empty
+    duplicate. It is a `pivot` defect (`APT-2026-0239`), reproduced here so the
+    paths agree, and it agrees only where extract order is `PropertyID` order.
     """
     cols = [
         "       o.ea_guid,",
@@ -837,8 +520,7 @@ def build_views(model: ReportModel, *, dialect: str = "sqlserver",
     """Every view expressing the logical model, in dependency order.
 
     `_stereo_block` first because the key map reads it, then the key map because
-    everything else is scoped to it - the same ordering reason the loader has
-    for writing the frame before the entity tables.
+    everything else is scoped to it.
     """
     if dialect not in SUPPORTED_DIALECTS:
         raise DialectError(
@@ -856,10 +538,8 @@ def build_views(model: ReportModel, *, dialect: str = "sqlserver",
         physical("overflow_tag"): _overflow_tag_view(model),
         physical("tag_coverage"): _tag_coverage_view(model),
         physical("load_run"): _load_run_view(model, ea_build),
-        # NOT scoped to the key map: a diagram exists whether or not anything on
-        # it is placed. Measured on the reference model, 10 of 25 diagrams hold
-        # no logical object at all - use case, sequence, activity, state - so a
-        # catalog built from this legitimately shows fewer than half of them.
+        # Not scoped to the key map: a diagram exists whether or not anything
+        # on it is placed.
         physical("diagram"): (
             f"CREATE VIEW {_q(physical('diagram'))} AS\n"
             f"SELECT CAST(d.Diagram_ID AS {_BIGINT}) AS diagram_id,\n"
