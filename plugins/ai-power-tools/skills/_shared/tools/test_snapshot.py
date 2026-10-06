@@ -26,7 +26,7 @@ import types
 import pytest
 
 import extract as extract_module
-from ea_census import build_stereotype_index, census_elements, tag_coverage
+from pipeline import prepare
 from extract import (
     CENSUS_QUERIES,
     INCOMPLETE_PREFIX,
@@ -49,16 +49,12 @@ from extract import (
     snapshot_digest,
     validate_run_id,
 )
-from frame import (attribute_rows, diagram_object_rows, diagram_rows, element_rows,
-                   operation_rows, package_rows, relationship_rows)
 from load import (
     LoadError,
     build_database,
     extract_reference,
     replay_snapshot,
 )
-from pivot import pivot
-from report_model import build_report_model
 
 NS = "WestbrookBankArchitecture"
 STEREO = "WBABusinessApplication"
@@ -297,54 +293,9 @@ def _ea_is_reachable(patched, tables=None):
 
 def build(db_path, tables, *, run_id, run_at,
           extract_run_id="", extract_digest=""):
-    """The documented build, over extract rows.
-
-    Follows `ea-reporting-database/SKILL.md` rather than taking a shortcut through
-    the census dataclasses, because the replay guarantee is a property of that
-    pipeline.
-    """
-    objects, xrefs = tables["object"], tables["xref"]
-    props, packages = tables["objectproperties"], tables["package"]
-
-    xref_index = build_stereotype_index(xrefs)
-    census = census_elements(objects, xref_index)
-    guid_by_id = {int(o["Object_ID"]): o["ea_guid"] for o in objects}
-
-    def guid_of_property(row):
-        return guid_by_id.get(int(row["Object_ID"]), "")
-
-    tag_stats = {e.key: tag_coverage(e, props, guid_of_property)
-                 for e in census.entities}
-    model = build_report_model(census, tag_stats, MDG,
-                               namespace=NS, strip_prefix="WBA")
-    result = pivot(model, objects, props, census.placement,
-                   excluded_guids=census.excluded_guids,
-                   guid_of_property=guid_of_property)
-
-    in_scope = {o["ea_guid"] for o in objects} - census.excluded_guids
-
-    def profile_of(guid):
-        return next((s.profile for s in xref_index.get(guid, []) if s.profile), "")
-
-    frame_rows = {
-        "pkg": package_rows(packages),
-        "element": element_rows(objects, model, census.placement,
-                                excluded_guids=census.excluded_guids),
-        "rel_all": relationship_rows(tables["connector"], guid_by_id,
-                                     guids_in_scope=in_scope,
-                                     profile_of=profile_of),
-        "diagram": diagram_rows(tables["diagram"]),
-        "attribute": attribute_rows(tables["attribute"], guid_by_id,
-                                    guids_in_scope=in_scope),
-        "operation": operation_rows(tables["operation"], guid_by_id,
-                                    guids_in_scope=in_scope),
-    }
-    frame_rows["diagram_object"] = diagram_object_rows(
-        tables["diagramobjects"], guid_by_id,
-        diagram_ids={r["diagram_id"] for r in frame_rows["diagram"]},
-        guids_in_scope=in_scope)
-
-    return build_database(db_path, model, result, frame_rows,
+    """The documented build, over extract rows: `pipeline.prepare`, then the load."""
+    p = prepare(tables, MDG, namespace=NS, strip_prefix="WBA")
+    return build_database(db_path, p.model, p.result, p.frame_rows,
                           run_id=run_id, run_at=run_at,
                           repository="WestbrookBank.qea",
                           extract_run_id=extract_run_id,
