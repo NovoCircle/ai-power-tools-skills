@@ -263,6 +263,15 @@ def _ours(directory):
     return directory
 
 
+def _junction(link, target):
+    """Make `link` a directory junction to `target`, or skip the test."""
+    made = subprocess.run(["cmd", "/c", "mklink", "/J", str(link), str(target)],
+                          capture_output=True, text=True)
+    if made.returncode != 0:
+        pytest.skip(f"no directory junction available here: "
+                    f"{made.stderr.strip() or made.stdout.strip()}")
+
+
 def _ea_is_reachable(patched, tables=None):
     """Put a fake `win32com.client` and row parser into `sys.modules`.
 
@@ -1280,7 +1289,7 @@ def test_a_directory_this_tool_did_not_write_is_never_swept_whatever_it_holds(
 
 
 def test_a_copied_snapshot_under_an_unusable_name_is_left_alone(tmp_path):
-    """A snapshot copied by Explorer keeps its marker and its manifest
+    """A copy of a snapshot keeps its marker and its manifest
     under a name that is not a valid run_id. It has a loadable manifest, so it is
     not swept."""
     root = tmp_path / "extracts"
@@ -1326,6 +1335,143 @@ def test_an_extract_failure_that_is_not_an_os_error_exits_two(tmp_path, capsys):
     assert "RuntimeError" in printed.err
     assert "Nothing was retained" in printed.err
     assert [p.name for p in root.iterdir()] == ["already-here"]
+
+
+def test_an_expired_snapshot_that_is_a_junction_is_not_followed(tmp_path):
+    """A junction to a snapshot elsewhere is not listed, so it is never pruned,
+    and what it points to is untouched."""
+    root = tmp_path / "extracts"
+    take_snapshot(root, run_id="newer", run_at="2026-10-05 08:00:00")
+    archive = tmp_path / "archive"
+    take_snapshot(archive, run_id="older", run_at="2026-10-01 08:00:00")
+    digest = snapshot_digest(snapshot_dir(archive, "older"))
+    _junction(root / "older", snapshot_dir(archive, "older"))
+
+    assert [s["run_id"] for s in list_snapshots(root)] == ["newer"]
+    assert prune_snapshots(root, keep=1) == []
+    assert snapshot_digest(snapshot_dir(archive, "older")) == digest
+
+
+def test_a_junction_under_a_work_or_aside_name_is_refused_not_emptied(tmp_path):
+    """`extract` and `_commit` remove a leftover `.incomplete-` or `.superseded-`
+    directory before they use the name. A junction there is refused, and what
+    it points to is untouched."""
+    for prefix in (INCOMPLETE_PREFIX, SUPERSEDED_PREFIX):
+        root = tmp_path / prefix.strip(".-") / "extracts"
+        take_snapshot(root, run_id="r1", run_at="2026-10-01 08:00:00")
+        target = tmp_path / prefix.strip(".-") / "elsewhere"
+        target.mkdir()
+        (target / "keep.txt").write_text("not this tool's", encoding="utf-8")
+        (target / "sub").mkdir()
+        (target / "sub" / "keep.txt").write_text("nor this", encoding="utf-8")
+        _junction(root / f"{prefix}r1", target)
+
+        with pytest.raises(SnapshotError):
+            take_snapshot(root, run_id="r1", run_at="2026-10-02 08:00:00")
+        assert (target / "keep.txt").is_file(), prefix
+        assert (target / "sub" / "keep.txt").is_file(), prefix
+        assert open_snapshot(root, "r1").run_at == "2026-10-01 08:00:00", prefix
+
+
+def test_a_manifest_that_cannot_be_read_now_is_left_for_the_next_prune(
+        tmp_path, capsys):
+    """A manifest another process holds is not a missing manifest. The directory
+    is left alone, and the run just written is never swept."""
+    root = tmp_path / "extracts"
+    take_snapshot(root, run_id="good", run_at="2026-10-01 08:00:00")
+    real_read = pathlib.Path.read_text
+
+    def held(self, *args, **kwargs):
+        if self.name == MANIFEST_NAME and self.parent.name in ("good", "fresh"):
+            raise PermissionError(32, "The process cannot access the file")
+        return real_read(self, *args, **kwargs)
+
+    with pytest.MonkeyPatch.context() as patched:
+        _ea_is_reachable(patched)
+        patched.setattr(pathlib.Path, "read_text", held)
+        assert prune_snapshots(root, keep=KEEP_RUNS) == []
+        code = main(["--out", str(root), "--run-id", "fresh",
+                     "--run-at", "2026-10-05 08:00:00"])
+
+    printed = capsys.readouterr()
+    assert code == 0, printed.err
+    assert "SWEPT" not in printed.out
+    assert open_snapshot(root, "good").manifest["counts"]["object"] == 3
+    assert open_snapshot(root, "fresh").manifest["counts"]["object"] == 3
+
+
+def test_a_protected_run_is_never_swept_even_with_a_malformed_manifest(tmp_path):
+    """`protect` holds for the sweep as well as for pruning."""
+    root = tmp_path / "extracts"
+    take_snapshot(root, run_id="fresh", run_at="2026-10-05 08:00:00")
+    (snapshot_dir(root, "fresh") / MANIFEST_NAME).write_text("{", encoding="utf-8")
+
+    assert prune_snapshots(root, keep=KEEP_RUNS, protect=("fresh",)) == []
+    assert (snapshot_dir(root, "fresh") / "object.json").is_file()
+
+
+def test_a_failed_extract_whose_cleanup_is_refused_is_swept_later(tmp_path):
+    """The failure cleanup removes the marker last, so a work directory it could
+    not fully remove is still recognized and swept by the next prune."""
+    root = tmp_path / "extracts"
+    take_snapshot(root, run_id="good", run_at="2026-10-01 08:00:00")
+    real_unlink = pathlib.Path.unlink
+
+    def write_then_fail(ex, out_dir, *args, **kwargs):
+        (out_dir / "object.json").write_text("[]", encoding="utf-8")
+        raise RuntimeError("the row parser could not read the response")
+
+    def refuse_the_table_file(self, *args, **kwargs):
+        if self.name == "object.json":
+            raise PermissionError(32, "The process cannot access the file")
+        return real_unlink(self, *args, **kwargs)
+
+    with pytest.MonkeyPatch.context() as patched:
+        patched.setattr(extract_module, "_extract_into", write_then_fail)
+        patched.setattr(extract_module, "_BACKOFF_SECONDS", 0)
+        patched.setattr(pathlib.Path, "unlink", refuse_the_table_file)
+        with pytest.raises(RuntimeError):
+            take_snapshot(root, run_id="r2", run_at="2026-10-02 08:00:00")
+
+    leftover = root / f"{INCOMPLETE_PREFIX}r2"
+    assert (leftover / SENTINEL_NAME).is_file(), "the marker went before the rows"
+    assert [(s["run_id"], s["status"])
+            for s in prune_snapshots(root, keep=KEEP_RUNS)] == [
+        (leftover.name, "incomplete")]
+    assert [p.name for p in root.iterdir()] == ["good"]
+
+
+def test_a_manifest_with_no_string_run_at_cannot_be_replayed(tmp_path):
+    """What the sweep calls unreadable, `open_snapshot` refuses too."""
+    root = tmp_path / "extracts"
+    take_snapshot(root, run_id="r1", run_at="2026-10-01 08:00:00")
+    manifest = snapshot_dir(root, "r1") / MANIFEST_NAME
+    body = json.loads(manifest.read_text(encoding="utf-8"))
+    body["run_at"] = None
+    manifest.write_text(json.dumps(body), encoding="utf-8")
+
+    with pytest.raises(SnapshotError, match="cannot be replayed"):
+        open_snapshot(root, "r1")
+
+
+def test_a_marker_that_cannot_be_written_leaves_no_work_directory(tmp_path):
+    """If the marker write fails, the extract is refused and the empty work
+    directory is removed."""
+    root = tmp_path / "extracts"
+    take_snapshot(root, run_id="good", run_at="2026-10-01 08:00:00")
+    real_write = pathlib.Path.write_text
+
+    def refuse_the_marker(self, *args, **kwargs):
+        if self.name == SENTINEL_NAME:
+            raise PermissionError(5, "Access is denied")
+        return real_write(self, *args, **kwargs)
+
+    with pytest.MonkeyPatch.context() as patched:
+        patched.setattr(pathlib.Path, "write_text", refuse_the_marker)
+        with pytest.raises(SnapshotError, match="no extract was taken"):
+            take_snapshot(root, run_id="r2", run_at="2026-10-02 08:00:00")
+
+    assert [p.name for p in root.iterdir()] == ["good"]
 
 
 # --- a run never deletes the snapshot it has just reported as retained -------

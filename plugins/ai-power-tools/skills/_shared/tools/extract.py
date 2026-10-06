@@ -13,8 +13,9 @@ Each run writes a snapshot under its own `run_id`, built in
 `<root>/.incomplete-<run_id>` and renamed into place once complete, and
 `load_run` records which snapshot a build consumed, so a build can be replayed
 without EA. Retention is bounded by `KEEP_RUNS` and `prune_snapshots` reports
-everything it removes. It removes only directories this module wrote, which
-carry `SENTINEL_NAME`; the store root may hold anything else.
+everything it removes: snapshots that aged out, and leftover directories that
+carry `SENTINEL_NAME`, which only this module writes. Anything else in the
+store root is left alone, and no link is ever followed.
 
 Run from a directory where EA is already running with the model open:
 
@@ -29,6 +30,7 @@ import os
 import pathlib
 import re
 import shutil
+import stat
 import sys
 import time
 from dataclasses import dataclass
@@ -231,14 +233,29 @@ def snapshot_digest(directory) -> str:
 
 
 def _read_manifest(d: pathlib.Path) -> dict | None:
-    """The manifest in `d` if it parses to an object with a string `run_at`."""
+    """The manifest in `d`, or None if it is missing or is not an object with a
+    string `run_at`. Raises `OSError` if it exists and cannot be read.
+    """
     try:
         man = json.loads((d / MANIFEST_NAME).read_text(encoding="utf-8"))
-    except (ValueError, OSError):
+    except FileNotFoundError:
+        return None
+    except ValueError:
         return None
     if not isinstance(man, dict) or not isinstance(man.get("run_at"), str):
         return None
     return man
+
+
+def _is_link(p: pathlib.Path) -> bool:
+    """A symlink, or on Windows any reparse point, which includes a junction."""
+    if p.is_symlink():
+        return True
+    try:
+        attributes = getattr(os.lstat(p), "st_file_attributes", 0)
+    except OSError:
+        return False
+    return bool(attributes & stat.FILE_ATTRIBUTE_REPARSE_POINT)
 
 
 def list_snapshots(root) -> list[dict]:
@@ -256,11 +273,16 @@ def list_snapshots(root) -> list[dict]:
     out = []
     for d in sorted(root.iterdir()):
         manifest = d / MANIFEST_NAME
-        if not (d.is_dir() and manifest.is_file() and _RUN_ID.fullmatch(d.name)):
+        if not (d.is_dir() and not _is_link(d) and manifest.is_file()
+                and _RUN_ID.fullmatch(d.name)):
             continue
-        # An unreadable manifest makes the directory not a snapshot; it does not stop
-        # the rest of the store being read. A readable one naming another run_id does.
-        man = _read_manifest(d)
+        # A missing or malformed manifest makes the directory not a snapshot, and
+        # one that cannot be read now is skipped; neither stops the rest of the
+        # store being read. A readable one naming another run_id does.
+        try:
+            man = _read_manifest(d)
+        except OSError:
+            continue
         if man is None:
             continue
         if man.get("run_id") != d.name:
@@ -290,9 +312,11 @@ _BACKOFF_SECONDS = 0.25
 def _reclaim(directory) -> bool:
     """Delete `directory` with `_remove_tree`, retrying. True if it went, False if not.
 
-    Never raises, so a caller removing several directories can report the one that
-    would not go and carry on.
+    A link is refused, never followed. Never raises, so a caller removing several
+    directories can report the one that would not go and carry on.
     """
+    if _is_link(pathlib.Path(directory)):
+        return False
     for attempt in range(_ATTEMPTS):
         try:
             _remove_tree(pathlib.Path(directory))
@@ -315,7 +339,9 @@ def _remove_tree(directory: pathlib.Path) -> None:
     for child in sorted(directory.iterdir()):
         if child == marker:
             continue
-        if child.is_dir() and not child.is_symlink():
+        if _is_link(child):
+            raise OSError(f"{child} is a link, which is never followed")
+        if child.is_dir():
             shutil.rmtree(child)
         else:
             child.unlink()
@@ -345,12 +371,13 @@ def _is_debris(d: pathlib.Path) -> bool:
 
     Only a directory this module wrote: one carrying `SENTINEL_NAME`. Under
     one of the two prefixes it is removed whatever it holds; under any other
-    name only when it has no loadable manifest. An empty directory under a
-    prefix is removed too, which is what a run killed between creating its
-    work directory and writing the marker leaves. A symlink or junction is
-    never removed. Everything else is left alone and not reported.
+    name only when its manifest is missing or is not an object with a string
+    `run_at`. An empty directory under a prefix is removed too, which is what a
+    run killed between creating its work directory and writing the marker
+    leaves. A link is never removed. Raises `OSError` if the manifest exists
+    and cannot be read, and the caller leaves the directory alone.
     """
-    if d.is_symlink() or getattr(os.path, "isjunction", lambda _: False)(d):
+    if _is_link(d):
         return False
     prefixed = d.name.startswith((INCOMPLETE_PREFIX, SUPERSEDED_PREFIX))
     if prefixed and not any(d.iterdir()):
@@ -397,7 +424,9 @@ def prune_snapshots(root, keep: int = KEEP_RUNS, *, protect=()) -> list[dict]:
                     cannot remove, after removing the ones before it.
 
     What goes is a directory `list_snapshots` walked, or one `_is_debris` accepts.
-    Anything else in the root is left alone and not reported.
+    Anything else in the root is left alone and not reported, and so is a
+    directory whose manifest cannot be read at the moment. A protected `run_id`
+    is never removed.
 
     `protect` is a collection of run_ids that are never pruned; a bare string is
     refused. Pass the run just written: order is a sort over a supplied `run_at`, so
@@ -427,9 +456,12 @@ def prune_snapshots(root, keep: int = KEEP_RUNS, *, protect=()) -> list[dict]:
 
     root = pathlib.Path(root)
     for d in sorted(root.iterdir()) if root.is_dir() else []:
-        if not d.is_dir() or d in was_a_snapshot:
+        if not d.is_dir() or d in was_a_snapshot or d.name in protected:
             continue
-        if not _is_debris(d):
+        try:
+            if not _is_debris(d):
+                continue
+        except OSError:
             continue
         status = _debris_status(d.name)
         # The whole tree, not only the top level.
@@ -481,7 +513,11 @@ def open_snapshot(root, run_id: str, *, expect_digest: str | None = None) -> Sna
             f"replayed, and no other snapshot is a substitute for it - a figure "
             f"quoted from that build can only be reproduced from its own rows.")
 
-    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest = _read_manifest(directory)
+    if manifest is None:
+        raise SnapshotError(
+            f"extract snapshot {run_id!r} under {root} has a manifest that is not "
+            f"an object with a run_at, so it cannot be replayed.")
     # The directory/manifest agreement `list_snapshots` enforces: the caller
     # records this run_id as the build's provenance.
     named = manifest.get("run_id") if isinstance(manifest, dict) else None
@@ -600,14 +636,16 @@ def extract(ex: Extractor, root, root_package_id: int | None = None, *,
         work_dir.mkdir(parents=True)
         (work_dir / SENTINEL_NAME).write_text("", encoding="utf-8")
     except OSError as e:
+        if work_dir.is_dir():
+            _reclaim(work_dir)
         raise SnapshotError(
             f"the snapshot work directory {work_dir} could not be created "
-            f"({e}), so no extract was taken and nothing was changed.") from None
+            f"({e}), so no extract was taken.") from None
     try:
         manifest = _extract_into(ex, work_dir, root_package_id,
                                  run_id=run_id, run_at=run_at)
     except BaseException:
-        shutil.rmtree(work_dir, ignore_errors=True)
+        _reclaim(work_dir)
         raise
     _commit(work_dir, out_dir)
     return manifest
@@ -798,14 +836,13 @@ def main(argv=None) -> int:
         print(e, file=sys.stderr)
         return 2
     except Exception as e:
-        # `extract` has cleared its work directory, so nothing was retained, which is
-        # what 2 means. Exit 1 means a retained snapshot whose retention failed.
+        # Nothing was retained, which is what 2 means. Exit 1 means a retained
+        # snapshot whose retention failed.
         print(f"the extract did not complete: {type(e).__name__}: {e}",
               file=sys.stderr)
         print("Nothing was retained and no digest was printed, so this build has "
-              "nothing to record and must not claim it does. Nothing already in "
-              "the store was changed. Exit 1 would have said the snapshot IS "
-              "retained; on this path it is not.", file=sys.stderr)
+              "nothing to record and must not claim it does. Exit 1 would have "
+              "said the snapshot IS retained; on this path it is not.", file=sys.stderr)
         return 2
 
     for k, v in manifest["counts"].items():
