@@ -79,10 +79,18 @@ FRAME_DDL: dict[str, list[tuple[str, str]]] = {
         ("return_type", "TEXT"), ("scope", "TEXT"),
     ],
     # Refresh audit, and where the source reconciliation result is persisted.
+    #
+    # `extract_run_id` and `extract_digest` name the extract snapshot the build
+    # consumed. `run_at` was already the as-of date for any figure quoted from a
+    # build; these two are the evidence behind that date, so a disputed figure
+    # can be settled against the rows it came from rather than against a
+    # repository that has moved on. The digest is what makes it an identity and
+    # not just a label: a snapshot can be proven to be the one that was used.
     "load_run": [
         ("run_id", "TEXT"), ("run_at", "TEXT"), ("repository", "TEXT"),
         ("spec_hash", "TEXT"), ("rows_loaded", "INTEGER"),
         ("reconciled", "INTEGER"), ("mismatches", "INTEGER"),
+        ("extract_run_id", "TEXT"), ("extract_digest", "TEXT"),
     ],
 }
 

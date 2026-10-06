@@ -30,6 +30,15 @@ A row dict carrying a key the table has no column for raises `LoadError`. The
 tempting alternative - ignore it and insert the rest - is precisely the silent
 data loss this whole capability exists to prevent, and it would be invisible in
 the reconciliation because the row count would still match.
+
+THE BUILD RECORDS WHICH EXTRACT IT CONSUMED
+-------------------------------------------
+`load_run.extract_run_id` and `load_run.extract_digest` name the retained extract
+snapshot the rows came from. `run_at` was already documented as the as-of date for
+any figure quoted from a build; these two are the evidence behind that date, so a
+figure disputed a month later can be settled against the rows that produced it
+rather than against a repository that has moved on. `replay_snapshot` is the way
+back, and it refuses rather than guesses - see `extract.open_snapshot`.
 """
 from __future__ import annotations
 
@@ -38,6 +47,7 @@ import sqlite3
 from dataclasses import dataclass, field
 
 from ddl import FRAME_DDL, generate_ddl, physical, quote
+from extract import open_snapshot
 from report_model import ReportModel
 
 
@@ -185,6 +195,8 @@ def build_database(path,
                    run_at: str,
                    repository: str = "",
                    spec_hash: str = "",
+                   extract_run_id: str = "",
+                   extract_digest: str = "",
                    overwrite: bool = False) -> LoadResult:
     """Create the database at `path` and load it.
 
@@ -193,6 +205,14 @@ def build_database(path,
     of the frame - `pkg`, `element`, `rel_all`, `diagram`, `diagram_object`,
     `attribute`, `operation` - as table name -> row dicts. `load_run` is written
     by this function and must not appear in `frame_rows`.
+
+    `extract_run_id` and `extract_digest` name the retained extract snapshot these
+    rows came from, so the build can be replayed and a figure quoted from it can
+    be traced to the rows behind it. A replay passes a NEW `run_id` and the OLD
+    `extract_run_id`: the build is a new build, the evidence is the old evidence.
+    The pair is ALL OR NOTHING - both, for a build with evidence, or neither, for
+    one without. A run_id with no digest names a snapshot without the figure that
+    identifies it, which is a provenance claim no replay can check.
 
     Refuses to overwrite an existing file unless `overwrite=True`. A refresh that
     silently replaces the database somebody is reporting off is not a refresh.
@@ -203,6 +223,14 @@ def build_database(path,
 
     if LOAD_RUN in frame_rows:
         raise LoadError(f"{LOAD_RUN} is written by the loader; do not pass it in")
+    if bool(extract_run_id) != bool(extract_digest):
+        raise LoadError(
+            f"extract_run_id={extract_run_id!r} with extract_digest="
+            f"{extract_digest!r}: an extract reference is both or neither. Half a "
+            f"reference records a snapshot name with nothing to verify it against, "
+            f"and a replay from it would rebuild from whatever is under that name - "
+            f"reporting a figure about the wrong moment as the original, which is "
+            f"the one failure retention exists to prevent.")
     if path.exists() and not overwrite:
         raise LoadError(f"{path} exists; pass overwrite=True to replace it")
 
@@ -247,6 +275,7 @@ def build_database(path,
             "run_id": run_id, "run_at": run_at, "repository": repository,
             "spec_hash": spec_hash, "rows_loaded": None,
             "reconciled": None, "mismatches": None,
+            "extract_run_id": extract_run_id, "extract_digest": extract_digest,
         }])
 
         for name in list(FRAME_DDL) + list(ent_cols):
@@ -285,6 +314,67 @@ def record_reconciliation(path, run_id: str, reconciliation) -> bool:
         return cur.rowcount == 1
     finally:
         conn.close()
+
+
+def extract_reference(path, run_id: str) -> tuple[str, str]:
+    """The `(extract_run_id, extract_digest)` a build recorded.
+
+    Raises rather than returning a pair of empty strings for a run that is not
+    there: an absent row and a build that recorded no extract are different
+    facts, and conflating them is how a replay ends up reading whatever snapshot
+    is nearest.
+
+    A row holding HALF a reference is a third fact and is refused too. The digest
+    is what makes the reference an identity rather than a label, so returning a
+    run_id with an empty digest hands the caller a check that passes by being
+    absent - which is indistinguishable, downstream, from a check that passed.
+    `build_database` refuses to write such a pair; a row in that state was written
+    before it did, or edited since.
+    """
+    conn = sqlite3.connect(str(path))
+    try:
+        row = conn.execute(
+            f"SELECT {quote('extract_run_id')}, {quote('extract_digest')} "
+            f"FROM {quote(physical(LOAD_RUN))} WHERE {quote('run_id')} = ?",
+            (run_id,)).fetchone()
+    finally:
+        conn.close()
+    if row is None:
+        raise LoadError(f"no {LOAD_RUN} row for run_id {run_id!r} in {path}")
+    recorded_run_id, recorded_digest = row[0], row[1]
+    if not recorded_run_id and not recorded_digest:
+        raise LoadError(
+            f"run {run_id!r} recorded no extract snapshot, so it cannot be "
+            f"replayed. Builds from before retention existed are in this state; "
+            f"their evidence was overwritten by the next run.")
+    if not recorded_run_id or not recorded_digest:
+        raise LoadError(
+            f"run {run_id!r} recorded half an extract reference "
+            f"(extract_run_id={recorded_run_id!r}, extract_digest="
+            f"{recorded_digest!r}), so a replay from it could not be verified and "
+            f"is refused. One of the two alone cannot tell the extract this build "
+            f"consumed from a different one left under the same name.")
+    return recorded_run_id, recorded_digest
+
+
+def replay_snapshot(path, run_id: str, snapshot_root):
+    """Reopen the extract a build consumed, verified against what it recorded.
+
+    The whole point of retention, in one call: given a database and a snapshot
+    store, hand back the rows the build was made from so it can be rebuilt with
+    no EA connection. Composed here rather than left to the caller so the
+    digest check is not optional - a replay that skipped it could rebuild from a
+    different extract and report the result as the original figure. Not optional
+    means not optional by omission either: `extract_reference` refuses a recorded
+    reference with no digest, and `open_snapshot` refuses an empty one rather than
+    reading it as "no check wanted". There is no value of the recorded pair that
+    reaches a rebuild without the comparison happening.
+
+    Raises `LoadError` if the database does not name a snapshot, and
+    `extract.SnapshotError` if the snapshot is pruned or is not the one recorded.
+    """
+    extract_run_id, digest = extract_reference(path, run_id)
+    return open_snapshot(snapshot_root, extract_run_id, expect_digest=digest)
 
 
 def database_counts(path, model: ReportModel) -> dict[str, int]:
