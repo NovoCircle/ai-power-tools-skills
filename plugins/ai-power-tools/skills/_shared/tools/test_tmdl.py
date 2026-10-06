@@ -388,8 +388,8 @@ def test_an_m_literal_escapes_the_sequence_that_introduces_an_escape():
 
 
 def test_a_BARE_hash_is_left_alone_because_M_allows_it():
-    """Only the sequence `#(` is escaped. A lone `#` in a path or an instance
-    name is left alone."""
+    """A lone `#` in a path or an instance name is left alone; `#(` is the
+    sequence that gets escaped."""
     assert m_literal(chr(92) + "run#3") == chr(92) + "run#3"
     assert m_literal("SRV" + chr(92) + "C#") == "SRV" + chr(92) + "C#"
 
@@ -408,7 +408,7 @@ def test_the_escapes_do_not_mangle_each_other():
 
 
 def test_a_backslash_is_not_an_m_escape():
-    r"""A backslash is left alone, so Windows paths pass through unchanged."""
+    r"""A backslash is left alone."""
     assert m_literal(r"C:\out\parquet") == r"C:\out\parquet"
 
 
@@ -460,7 +460,7 @@ def test_schema_source_name_and_suffix_are_escaped():
 
 
 def test_an_identifier_containing_a_line_break_is_refused():
-    """A line break or tab in an identifier raises instead of being emitted."""
+    """CR, LF or TAB in an identifier raises instead of being emitted."""
     with pytest.raises(ValueError, match="line break"):
         ident("a\nb")
     with pytest.raises(ValueError, match="line break"):

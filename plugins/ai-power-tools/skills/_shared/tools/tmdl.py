@@ -60,7 +60,7 @@ def ident(name: str) -> str:
     digits and `_` that does not start with a digit.
 
     A leading digit is ordinary model content: `ea_census.snake_case` turns a
-    tag named "2024 Target" into `2024_target`. A line break or tab raises
+    tag named "2024 Target" into `2024_target`. CR, LF or TAB raises
     `ValueError` instead of being written into a name.
     """
     if any(c in name for c in "\r\n\t"):
