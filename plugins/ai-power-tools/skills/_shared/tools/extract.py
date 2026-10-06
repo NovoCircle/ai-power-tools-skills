@@ -13,9 +13,8 @@ Each run writes a snapshot under its own `run_id`, built in
 `<root>/.incomplete-<run_id>` and renamed into place once complete, and
 `load_run` records which snapshot a build consumed, so a build can be replayed
 without EA. Retention is bounded by `KEEP_RUNS` and `prune_snapshots` reports
-everything it removes: snapshots that aged out, and leftover directories that
-carry `SENTINEL_NAME`, which only this module writes. Anything else in the
-store root is left alone, and no link is ever followed.
+everything it removes: snapshots that aged out, and leftover directories
+`_is_debris` identifies as this module's own.
 
 Run from a directory where EA is already running with the model open:
 
