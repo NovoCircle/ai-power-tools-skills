@@ -345,40 +345,40 @@ About 5,200 icons across these files, all in the same format. Nothing needs to b
 the vendors' marks, already on the user's machine through their EA license.
 
 **Importing a library file does NOT make its icons assignable.** Each icon is an Artifact
-element stereotyped `Image`, and its picture is an attached external document, so an import adds
-elements and `t_document` rows and nothing to `list_images`. `ImageID=` resolves only against
-`t_image`. Pull the PNG out of the file and `add_image` it instead:
+element stereotyped `Image` whose picture is an attached document, so an import adds elements and
+`t_document` rows and nothing to `list_images`; `ImageID=` resolves only against `t_image`. Use
+the two operations built for this instead — they read the libraries in place:
 
 ```python
-import base64, io, re, zipfile
+# 1. Search the user's own install. Each match carries an `icon` id, its provider and
+#    vintage, how it matched, and `loaded_image_id` when the model already holds it.
+hits = ea_diagram(operation="find_icon", params={
+    "query": "Lambda", "provider": "AWS",   # provider optional: AWS, Azure, Google, ...
+})
 
-def icons(xmi_path):
-    """Yield (icon name, PNG bytes) for every icon in one of EA's icon-library files."""
-    text = open(xmi_path, encoding="windows-1252", errors="replace").read()
-    attr = re.compile(r'([\w:.]+)="([^"]*)"')   # attribute ORDER differs between files
-    names = {}
-    for m in re.finditer(r'<UML:Class\b([^>]*)>(.*?)</UML:Class>', text, re.S):
-        a = dict(attr.findall(m.group(1)))
-        if '<UML:Stereotype name="Image"/>' in m.group(2):
-            names[a["xmi.id"][5:].replace("_", "-").upper()] = a["name"]
-    for m in re.finditer(r'<UML:TaggedValue\b([^>]*)>([^<]*)</UML:TaggedValue>', text):
-        a = dict(attr.findall(m.group(1)))
-        guid = a.get("docid", "").strip("{}").upper()   # the owning element's GUID
-        if a.get("tag") == "tdoc2" and a.get("type") == "ExtDoc" and guid in names:
-            payload = base64.b64decode(re.sub(r"\s+", "", m.group(2)))
-            # The document is zipped: one member, str.dat, which IS the PNG.
-            yield names[guid], zipfile.ZipFile(io.BytesIO(payload)).read("str.dat")
+# 2. Put the chosen one on a placed element. Loads it into the image library only if the
+#    model does not already have it (`image: "added"` / `"existing"`), then sets it.
+ea_diagram(operation="set_element_icon", params={
+    "diagram_id": <id>, "element_id": <id>,
+    "icon": hits["matches"][0]["icon"],
+    "name_under_image": True,
+})
 ```
 
-Write the PNG you chose to a temporary file, then `add_image` it with a name that keeps its
-provenance, e.g. `"AWS v19 - AWS Lambda"`, and `set_element_image` as above.
+The stored image is named `"<provider> <vintage> - <name>"`, e.g. `"AWS v19 - AWS Lambda"`; where
+one library has same-named icons whose pictures differ, each name carries a short ID in
+brackets. `set_element_icon` inherits `add_image`'s rule that loading needs a `.qea`/`.qeax`
+project — on another backend, load the artwork through EA's Image Manager and use
+`set_element_image`. `find_icon` returns `icon_libraries_not_found` when it cannot locate
+`ModelPatterns`; the `EA_MODEL_PATTERNS` environment variable points it at the folder.
 
 **Choose the icon; don't match names automatically.** A diagram's captions are not icon names.
 `Amazon S3 output bucket` wants `Amazon Simple Storage Service (S3)` or `Bucket with objects`,
 `Function App` wants `Function Apps`, and `SQL Database` wants `SQL Databases`. Containers and
-labels (`Region 1`, `Web Tier`) never had one. Search the names for each element's concept, prefer
-the newest vintage, show the user the candidates when more than one fits, and load only the icons
-the diagram uses. The full set is tens of MB.
+labels (`Region 1`, `Web Tier`) never had one. Search for each element's concept with
+`find_icon`, prefer the newest vintage, show the user the candidates when more than one fits, and
+set only the icons the diagram uses — the full set is tens of MB. Some glyphs are simply not in
+the libraries (there is no plain AWS key, for one); say so rather than substituting a near miss.
 
 ---
 
