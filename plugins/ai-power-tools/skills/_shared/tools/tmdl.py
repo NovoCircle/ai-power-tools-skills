@@ -56,10 +56,38 @@ def lineage_tag(kind: str, path: str) -> str:
 
 
 def ident(name: str) -> str:
-    """A TMDL identifier, quoted only when it has to be."""
-    if name and all(c.isalnum() or c in "_" for c in name):
+    """A TMDL identifier, quoted unless it is a non-empty run of ASCII letters,
+    digits and `_` that does not start with a digit.
+
+    A leading digit is ordinary model content: `ea_census.snake_case` turns a
+    tag named "2024 Target" into `2024_target`. CR, LF or TAB raises
+    `ValueError` instead of being written into a name.
+    """
+    if any(c in name for c in "\r\n\t"):
+        raise ValueError(
+            f"{name!r} contains a line break or tab, which cannot appear in a "
+            f"TMDL identifier in any form.")
+    if (name and not name[0].isdigit()
+            and all(("a" <= c <= "z") or ("A" <= c <= "Z") or ("0" <= c <= "9")
+                    or c == "_" for c in name)):
         return name
     return "'" + name.replace("'", "''") + "'"
+
+
+def m_literal(value: str) -> str:
+    """A Power Query M text literal, escaped.
+
+    `"` is doubled, so a value cannot close the literal. `#(` becomes `#(#)(`,
+    so text such as `#(lf)` in a value stays text. A lone `#` is left alone:
+    `C:\\exports\\run#3` passes through unchanged. CR, LF and TAB become
+    `#(cr)`, `#(lf)` and `#(tab)`; `#(` is replaced first, so those three are
+    not re-escaped. Every other character passes through unchanged.
+
+    Every value written into a partition expression goes through here, and all
+    of them are caller-supplied, `SemanticTable.source_name` included.
+    """
+    out = value.replace("#(", "#(#)(").replace('"', '""')
+    return out.replace("\r", "#(cr)").replace("\n", "#(lf)").replace("\t", "#(tab)")
 
 
 def description_lines(text: str, indent: str) -> list[str]:
@@ -90,7 +118,7 @@ class ParquetSource:
         path = f"{self.directory}{sep}{table.source_name}{self.suffix}"
         return [
             "let",
-            f'    Source = Parquet.Document(File.Contents("{path}"))',
+            f'    Source = Parquet.Document(File.Contents("{m_literal(path)}"))',
             "in",
             "    Source",
         ]
@@ -112,9 +140,10 @@ class SqlSource:
     def expression(self, table: SemanticTable) -> list[str]:
         return [
             "let",
-            f'    Source = Sql.Database("{self.server}", "{self.database}"),',
-            f'    Data = Source{{[Schema="{self.schema}",'
-            f'Item="{table.source_name}"]}}[Data]',
+            f'    Source = Sql.Database("{m_literal(self.server)}", '
+            f'"{m_literal(self.database)}"),',
+            f'    Data = Source{{[Schema="{m_literal(self.schema)}",'
+            f'Item="{m_literal(table.source_name)}"]}}[Data]',
             "in",
             "    Data",
         ]
@@ -148,6 +177,11 @@ def render_column(table: SemanticTable, column) -> list[str]:
         out.append(f"{T}{T}formatString: {column.format_string}")
     out += [f"{T}{T}lineageTag: {lineage_tag('column', path)}",
             f"{T}{T}summarizeBy: {column.summarize_by}",
+            # A property value, written as is: the declaration above goes
+            # through `ident()`, this does not. `source_column` is a public
+            # field and is neither validated nor escaped here. Whether Power BI
+            # accepts a bare value starting with a digit is untested;
+            # `test_a_leading_digit_source_column_is_bare` pins what is emitted.
             f"{T}{T}sourceColumn: {column.source_column}",
             "",
             # `Automatic` alongside an explicit `summarizeBy` looks like a
