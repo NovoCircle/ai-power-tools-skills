@@ -124,6 +124,7 @@ def _arrow_schema(columns: list[tuple[str, str]]):
 
 def _table_rows(model: ReportModel, pivot_result, frame_rows: dict,
                 *, run_id: str, run_at: str, repository: str, spec_hash: str,
+                extract_run_id: str, extract_digest: str,
                 rows_loaded: int | None) -> dict[str, list[dict]]:
     """Rows per PHYSICAL table name, in the same order `build_database` loads."""
     derived = {
@@ -146,6 +147,7 @@ def _table_rows(model: ReportModel, pivot_result, frame_rows: dict,
         "run_id": run_id, "run_at": run_at, "repository": repository,
         "spec_hash": spec_hash, "rows_loaded": rows_loaded,
         "reconciled": None, "mismatches": None,
+        "extract_run_id": extract_run_id, "extract_digest": extract_digest,
     }]
     return out
 
@@ -159,6 +161,8 @@ def build_parquet(directory,
                   run_at: str,
                   repository: str = "",
                   spec_hash: str = "",
+                  extract_run_id: str = "",
+                  extract_digest: str = "",
                   overwrite: bool = False,
                   compression: str = "snappy") -> ParquetResult:
     """Write one Parquet file per table into `directory`.
@@ -190,7 +194,8 @@ def build_parquet(directory,
     schemas = parquet_schema(model)
     rows = _table_rows(model, pivot_result, frame_rows, run_id=run_id,
                        run_at=run_at, repository=repository,
-                       spec_hash=spec_hash, rows_loaded=None)
+                       spec_hash=spec_hash, extract_run_id=extract_run_id,
+                       extract_digest=extract_digest, rows_loaded=None)
     # Counted before writing, so the audit row can carry the true total rather
     # than being patched afterwards the way the database does it.
     total = sum(len(r) for name, r in rows.items() if name != physical(LOAD_RUN))

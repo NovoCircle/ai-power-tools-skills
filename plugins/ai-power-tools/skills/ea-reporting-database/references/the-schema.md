@@ -61,7 +61,7 @@ carry the tag at all; `populated` is how many have a non-empty value; `coverage`
 | `_diagram_object` | `diagram_id`, `ea_guid` |
 | `_attribute` | `attribute_id`, `element_guid`, `name`, `attr_type`, `scope` |
 | `_operation` | `operation_id`, `element_guid`, `name`, `return_type`, `scope` |
-| `_load_run` | `run_id`, `run_at`, `repository`, `spec_hash`, `rows_loaded`, `reconciled`, `mismatches` |
+| `_load_run` | `run_id`, `run_at`, `repository`, `spec_hash`, `rows_loaded`, `reconciled`, `mismatches`, `extract_run_id`, `extract_digest` |
 
 A row in `_rel_all`, `_diagram_object`, `_attribute` or `_operation` whose element is out of
 scope is **dropped at load time** rather than written with an unresolvable key. A dangling row
@@ -342,6 +342,11 @@ SELECT run_id, run_at, rows_loaded, reconciled, mismatches
 `reconciled` is 1 only when every check ran and matched, NULL when nothing has checked yet, and 0
 when the count-back failed. `mismatches` counts failures **and** skips, because a check that did
 not run is not a check that passed.
+
+`extract_run_id` and `extract_digest` name the retained extract snapshot the build consumed, so a
+figure can be traced to the rows behind it and the build can be replayed without touching EA. A
+build whose `extract_run_id` is empty predates retention and cannot be replayed. See
+[`the-extract-snapshot.md`](the-extract-snapshot.md).
 
 Sparse tags that never became columns:
 
