@@ -90,7 +90,7 @@ def pkg_recursive(sql: str) -> str:
 
 def adhoc(name="business_actor", key="BusinessActor|Actor"):
     # stereotype is derived from the key, because the census keeps them in step
-    # and the emitter now reads  rather than re-parsing the key.
+    # and the emitter now reads the stereotype rather than re-parsing the key.
     return Table(name=name, entity_key=key, stereotype=key.rpartition("|")[0],
                  profile="", declared=False)
 
@@ -98,6 +98,22 @@ def adhoc(name="business_actor", key="BusinessActor|Actor"):
 def model(tables=None):
     return ReportModel(technology_id="WBA", namespace="WBA",
                        tables=list(tables) if tables else [declared()])
+
+
+def empty_model():
+    """A technology with no declared table - the branch `model()` cannot reach.
+
+    `model(tables=None)` substitutes `[declared()]` for anything falsy, so
+    `model([])` is a POPULATED model and there was no way to ask this file for
+    an empty one. Several views take a different branch entirely when there is
+    nothing to project, typing their columns with `CAST(NULL AS ...)`
+    placeholders instead of projecting EA's own, and nothing asserted on those
+    branches - which is where a content-dependent schema hid for two review
+    rounds. A model with no declared table is also a real state, not a
+    contrivance: it is what a technology registered but not yet stereotyped
+    against produces.
+    """
+    return ReportModel(technology_id="WBA", namespace="WBA", tables=[])
 
 
 # ------------------------------------------------------------- the dialect
@@ -329,9 +345,101 @@ def test_a_stereotype_name_containing_a_pipe_still_splits_correctly():
     assert "o.Object_Type = N'Component'" in placement_predicate(t)
 
 
-def _cast_types(clause: str) -> list[str]:
-    """Every `CAST(... AS <type>)` in a clause, in projection order."""
-    return [m.lower() for m in re.findall(r"CAST\s*\([^()]*AS\s+(\w+)\s*\)", clause)]
+def _casts(clause: str) -> list[tuple[str, str]]:
+    """Every `CAST`/`TRY_CAST` in a clause as `(target type, alias)`, in order.
+
+    PAREN-AWARE ON PURPOSE, AND THAT IS THE WHOLE POINT
+    ---------------------------------------------------
+    The regex this replaced matched the operand with `[^()]*`, which cannot
+    cross a parenthesis - so a cast whose OPERAND or whose TYPE contains one was
+    invisible to it. `_pkg.path` is exactly that, in both arms:
+
+        anchor:     CAST(COALESCE(p.Name, '') AS nvarchar(max)) AS path
+        recursive:  CAST(t.path + '/' + COALESCE(c.Name, '') AS nvarchar(max))
+
+    so both arms reported three of their four cast columns and `path` was never
+    compared at all. MEASURED: narrowing the recursive arm's `path` cast alone
+    left the whole suite green, while SQL Server refused the view with the same
+    `Msg 240 ... column "path"` the arm guard exists to prevent. A guard that
+    cannot fail for the defect it was written to catch is not a guard.
+
+    The target type is everything after the LAST TOP-LEVEL `AS` inside the cast,
+    so a parameterized type keeps its width - `nvarchar(max)` and
+    `decimal(38,10)` come back whole rather than truncated to the first word.
+    Quoted literals are skipped during the walk, so a parenthesis or an ` AS `
+    inside a string constant cannot unbalance it. The word `CAST` inside a
+    string constant would still be picked up as a cast - no emitted view
+    contains one, and this says so rather than implying a completeness it does
+    not have.
+
+    The alias is the `AS <name>` immediately following the closing paren, or
+    `''` where there is none: a recursive member projects positionally, and
+    `_tag_coverage.coverage` is computed inside `ROUND(...)`/`CASE`, so neither
+    can be bound by alias. Callers must say which of the two they are doing
+    rather than fall back to "this view casts to the right type SOMEWHERE",
+    which is the hole that let eight columns be narrowed with the suite green.
+    """
+    out = []
+    for m in re.finditer(r"\b(?:TRY_)?CAST\s*\(", clause, re.IGNORECASE):
+        i, depth, quoted, as_at = m.end() - 1, 0, False, None
+        while i < len(clause):
+            ch = clause[i]
+            if quoted:
+                quoted = ch != "'"
+            elif ch == "'":
+                quoted = True
+            elif ch == "(":
+                depth += 1
+            elif ch == ")":
+                depth -= 1
+                if depth == 0:
+                    break
+            elif depth == 1 and clause[i:i + 4].upper() == " AS ":
+                as_at = i + 4
+            i += 1
+        if as_at is None or i >= len(clause):
+            continue
+        alias = re.match(r"\s+AS\s+\[?(\w+)\]?", clause[i + 1:])
+        out.append((clause[as_at:i].strip().lower(),
+                    alias.group(1) if alias else ""))
+    return out
+
+
+def _cast_by_alias(sql: str) -> dict[str, set[str]]:
+    """Alias -> every type cast to it, lowercased.
+
+    A SET rather than one type, because `_tag_coverage` is a `UNION ALL` with
+    one branch per declared column: a model with two tables emits the same
+    alias in several branches, and widening one branch while leaving another
+    narrow is a partial widening that a last-one-wins dict would hide.
+    """
+    got: dict[str, set[str]] = {}
+    for sql_type, alias in _casts(sql):
+        if alias:
+            got.setdefault(alias.lower(), set()).add(sql_type)
+    return got
+
+
+def _model_states():
+    """Both branches of every view, because `model()` only reaches one.
+
+    Every assertion in this file used to be taken from `build_views(model())`,
+    and `model()` always declares a table - so the empty-model branches were
+    never inspected by anything. That is the exact code path whose two schemas
+    were a blocking finding: one head emitted `_keymap.package_id` and the
+    `_tag_coverage` counters 64-bit on an empty model and 32-bit on a populated
+    one, and MEASURED at that head the split is visible as 8 of 16 columns
+    64-bit empty against 4 of 16 populated.
+    """
+    return (("populated", build_views(model()).views),
+            ("empty", build_views(empty_model()).views))
+
+
+def _declared_as(views: dict, sql_type: str) -> list[tuple[str, str]]:
+    """Every emitted view column `FRAME_DDL` declares as `sql_type`."""
+    return [(physical(key), col)
+            for key, cols in FRAME_DDL.items() if physical(key) in views
+            for col, declared_type in cols if declared_type == sql_type]
 
 
 def test_both_arms_of_the_recursive_cte_agree_on_every_column_type():
@@ -348,13 +456,22 @@ def test_both_arms_of_the_recursive_cte_agree_on_every_column_type():
 
     This is the cheap half of the guard: the arms must declare the same cast
     types in the same order. It cannot prove the SQL runs, but it catches the
-    class of mistake that produced the Msg 240 without needing a server."""
+    class of mistake that produced the Msg 240 without needing a server - and it
+    now covers `path` as well, which it did not when its extractor could not
+    read a cast through a function call. See `_casts`."""
     sql = build_views(model()).views[physical("pkg")]
-    anchor, recursive = _cast_types(pkg_anchor(sql)), _cast_types(pkg_recursive(sql))
+    anchor = [t for t, _ in _casts(pkg_anchor(sql))]
+    recursive = [t for t, _ in _casts(pkg_recursive(sql))]
     assert anchor == recursive, (
         "the two arms must cast identically, or SQL Server rejects the view:\n"
         "  anchor:    %s\n  recursive: %s" % (anchor, recursive))
     assert anchor, "the arms must cast explicitly rather than inherit source types"
+    # The column the old extractor could not see. Named explicitly so that a
+    # future narrowing of the extractor cannot quietly stop covering it while
+    # the equality above still passes on a shorter pair of lists.
+    assert SQLSERVER_TYPES["TEXT"] in anchor, (
+        "`path` is cast through COALESCE in both arms and is the column a "
+        "paren-blind extractor silently skipped")
 
 
 def test_every_integer_column_is_emitted_64_bit():
@@ -363,25 +480,109 @@ def test_every_integer_column_is_emitted_64_bit():
     A view projecting a source column of EA's own 32-bit `int` therefore
     declares a NARROWER type than either sibling path.
 
-    Derived from `FRAME_DDL` rather than listed, because the partial widening
-    that preceded this guard covered three of fourteen columns while its comment
-    claimed all of them, and left the same view with two schemas depending on
-    whether the model was empty. MEASURED against SQL Server after this change:
-    19 integer and real view columns, 0 still 32-bit."""
-    views = build_views(model()).views
-    for key, cols in FRAME_DDL.items():
-        name = physical(key)
-        if name not in views:
-            continue
-        sql = views[name]
-        for col, sql_type in cols:
-            if sql_type != "INTEGER":
-                continue
-            # The column is projected either as an explicit 64-bit cast, or - in
-            # the empty-model branch - as a typed NULL. Both must be 64-bit.
-            assert re.search(r"AS\s+bigint\s*\)(?:\s+AS\s+%s\b)?" % re.escape(col),
-                             sql, re.IGNORECASE), (
-                "%s.%s is declared INTEGER but is not emitted 64-bit" % (name, col))
+    BOUND PER COLUMN BY ALIAS, which is the correction this guard needed. Its
+    first form made the column name OPTIONAL - `(?:\\s+AS\\s+%s\\b)?` - so the
+    pattern degenerated to `AS bigint)`, "this view casts something to 64-bit
+    somewhere", and any view with two INTEGER columns passed while one of them
+    was narrow. MEASURED by dropping each cast on its own: it bound 5 of 16
+    columns, 8 columns plus 4 empty-branch sites could be narrowed with the
+    whole suite green, and the failure message named a column it never examined.
+
+    Derived from `FRAME_DDL` and `SQLSERVER_TYPES` rather than listed, and no
+    type literal is written here. The partial widening that preceded this guard
+    reached 4 of these 16 columns on a populated model while its comment claimed
+    all of them - and 8 of 16 on an empty one, which is the same view carrying
+    two different schemas. Both numbers MEASURED at that head, against the
+    authority this test reads."""
+    want = {SQLSERVER_TYPES["INTEGER"]}
+    checked = 0
+    for state, views in _model_states():
+        for name, col in _declared_as(views, "INTEGER"):
+            got = _cast_by_alias(views[name]).get(col.lower())
+            assert got == want, (
+                "%s.%s is declared INTEGER, so every cast aliased to it must be "
+                "%s - got %s in the %s-model branch"
+                % (name, col, sorted(want), sorted(got) if got else got, state))
+            checked += 1
+    # A census, not a formality: the count this guard's own docstring quotes is
+    # the kind of number that has been wrong three passes running, so it is
+    # asserted rather than asserted-about. 16 INTEGER columns in two model
+    # states. Re-measure and update deliberately if FRAME_DDL gains one.
+    assert checked == 32, (
+        "expected 16 INTEGER columns in each of 2 model states, bound %d"
+        % checked)
+
+
+def test_every_real_column_is_emitted_64_bit():
+    """The REAL width had no guard of its own - only a line inside a test named
+    for INTEGER - and `_tag_coverage.coverage`, the only REAL column `FRAME_DDL`
+    declares, had no derived cover at all.
+
+    SQL Server's `real` is `float(24)`, a second 32-bit truncation, while
+    `PARQUET_TYPES` maps REAL to `double`; `float` is `float(53)` and matches it
+    bit for bit. So `real` here would be the same defect as `int`, one type over.
+
+    WEAKER THAN THE INTEGER GUARD, AND SAYING SO RATHER THAN IMPLYING OTHERWISE.
+    The empty branch types the column `CAST(NULL AS float) AS coverage`, which
+    binds by alias exactly as the INTEGER guard does. The populated branch
+    cannot: `coverage` is computed, its cast sits on the numerator inside
+    `ROUND(...)` and the `AS coverage` belongs to the enclosing `CASE`, so there
+    is no alias to bind to. For that branch this asserts the two things that are
+    true of it - the view casts to the 64-bit type, and it casts to the narrow
+    one nowhere - which is view-scoped, not column-scoped. It would not catch a
+    second REAL column added to the same view and left narrow; the per-column
+    binding above is the form to copy if one ever is."""
+    want = SQLSERVER_TYPES["REAL"]
+    checked = 0
+    for state, views in _model_states():
+        for name, col in _declared_as(views, "REAL"):
+            sql = views[name]
+            got = _cast_by_alias(sql).get(col.lower())
+            if got is not None:
+                assert got == {want}, (
+                    "%s.%s is declared REAL, so every cast aliased to it must "
+                    "be %s - got %s in the %s-model branch"
+                    % (name, col, want, sorted(got), state))
+            else:
+                types = [t for t, _ in _casts(sql)]
+                assert want in types, (
+                    "%s.%s is declared REAL and is computed rather than "
+                    "aliased, so %s must cast to %s somewhere - it casts to %s"
+                    % (name, col, name, want, sorted(set(types))))
+                assert "real" not in types, (
+                    "%s casts to `real`, which is float(24) - a 32-bit "
+                    "truncation of the REAL column %s" % (name, col))
+            checked += 1
+    assert checked == 2, (
+        "expected 1 REAL column in each of 2 model states, bound %d" % checked)
+
+
+def test_a_view_declares_the_same_types_whether_or_not_the_model_is_populated():
+    """One view, one schema. A shipped head emitted `_keymap.package_id` and the
+    `_tag_coverage` counters as `bigint` when the model declared no table and as
+    `int` when it declared one, so the SAME view had two different schemas
+    depending on its CONTENT - and a report binding to it would have bound to
+    whichever it happened to be built against.
+
+    This is the oracle those branches never had, and it is deliberately NOT
+    expressed in terms of `FRAME_DDL`: the two guards above ask whether each
+    declared column matches the type map, which is the right question and also
+    the question that was being answered correctly in one branch and wrongly in
+    the other. This asks the orthogonal one - whether the two branches agree
+    with EACH OTHER - so a type that is wrong CONSISTENTLY is caught above,
+    and a type that is wrong in one branch only is caught here."""
+    (_, populated), (_, empty) = _model_states()
+    shared = sorted(set(populated) & set(empty))
+    assert len(shared) >= 9, (
+        "the empty-model branch should still emit the frame views, got %s"
+        % shared)
+    for name in shared:
+        here, there = _cast_by_alias(populated[name]), _cast_by_alias(empty[name])
+        for alias in sorted(set(here) & set(there)):
+            assert here[alias] == there[alias], (
+                "%s.%s is cast to %s with a declared table and %s without one "
+                "- one view must not have two schemas"
+                % (name, alias, sorted(here[alias]), sorted(there[alias])))
 
 
 def test_package_depth_is_zero_based_like_frame_package_rows():
