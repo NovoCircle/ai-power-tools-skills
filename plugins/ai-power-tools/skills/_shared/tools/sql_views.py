@@ -23,8 +23,8 @@ per `@STEREO;...@ENDSTEREO;` block. Whether an application carries an FQName is
 a property of a block, not of the row: a multi-stereotype element packs several
 blocks into one Description, and matches one table per block.
 
-Coverage, drift, exclusion counts and the governance gate are not reproduced
-here. They run in AI Power Tools against EA.
+Declared-versus-observed drift, exclusion counts and the governance gate are
+not reproduced here. They run in AI Power Tools against EA.
 """
 from __future__ import annotations
 
@@ -238,8 +238,7 @@ def _pkg_view() -> str:
     A package whose parent is missing, zero or itself is a root with a NULL
     parent, as in `frame.package_rows`; dropping it would drop every element
     under it. A NULL name contributes `''` to `path`, also as there, so it does
-    not empty the path of its subtree. Depth starts at 0. Both arms of the CTE
-    cast every column to the same type, which a recursive CTE requires.
+    not empty the path of its subtree. Depth starts at 0.
     """
     return (
         f"CREATE VIEW {_q(physical('pkg'))} AS\n"
@@ -448,7 +447,7 @@ def _tag_coverage_view(model: ReportModel) -> str:
 # -------------------------------------------------------------- vocabulary
 
 
-#: Where a multi-line `CASE` in an entity column lines up under the `TOP 1`.
+#: Indent for the continuation lines of a multi-line `CASE` in an entity column.
 _VALUE_INDENT = " " * 26
 
 

@@ -313,9 +313,10 @@ def test_a_stereotype_name_containing_a_pipe_still_splits_correctly():
 
 
 def test_the_numeric_types_are_written_only_in_the_type_map():
-    """No string in the emitter names a numeric SQL Server type except the
-    values of `SQLSERVER_TYPES`, so every view reads its widths from one place.
-    `test_sql_views_sqlserver.py` checks the compiled column types."""
+    """No string in the emitter names a numeric SQL Server type, in any case,
+    except the keys and values of `SQLSERVER_TYPES` and lookups into it, so
+    every view reads its widths from one place. `test_sql_views_sqlserver.py`
+    checks the compiled column types."""
     import ast
 
     import sql_views
@@ -328,9 +329,12 @@ def test_the_numeric_types_are_written_only_in_the_type_map():
     type_map = next(n.value for n in tree.body if isinstance(n, ast.Assign)
                     and any(getattr(t, "id", "") == "SQLSERVER_TYPES"
                             for t in n.targets))
-    allowed = {id(v) for v in type_map.values}
+    allowed = {id(c) for c in type_map.keys + type_map.values}
+    allowed |= {id(n.slice) for n in ast.walk(tree)
+                if isinstance(n, ast.Subscript)
+                and getattr(n.value, "id", "") == "SQLSERVER_TYPES"}
     numeric = re.compile(r"\b(bigint|int|smallint|tinyint|float|real|decimal|"
-                         r"numeric|money)\b")
+                         r"numeric|money)\b", re.IGNORECASE)
     found = [n.value for n in ast.walk(tree)
              if isinstance(n, ast.Constant) and isinstance(n.value, str)
              and id(n) not in docstrings and id(n) not in allowed
