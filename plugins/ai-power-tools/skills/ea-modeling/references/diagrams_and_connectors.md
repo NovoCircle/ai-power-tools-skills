@@ -324,15 +324,61 @@ ea_diagram(operation="verify_diagram", params={"diagram_id": <id>,
 | `ok: true` means the token is stored, not that the picture renders | Both operations re-read after writing and report `verified`. Rendering is `verify_diagram`'s job |
 | Clearing keeps the artwork | `clear_element_image` writes `ImageID=0` on that one placement. The `t_image` row survives, so other placements using it are unaffected |
 
-### EA's shipped icon libraries are NOT image-library rows
+### Where to get more icons: EA's own shipped libraries
 
-Importing one of EA's cloud-icon pattern files (AWS, Azure, Google Cloud) adds nothing to
-`list_images`. In those files each icon is an **Artifact element** carrying the `Image`
-stereotype from EA's own built-in profile, with its PNG as an attached document, so it
-imports as elements plus documents. `ImageID=` resolves against `t_image`, which is a separate store — EA's own
-example model has 56 of those elements and 143 image-library rows, and the two name sets do
-not intersect. If a customer already has the icon files on disk, `add_image` each file; the
-library import is an element gallery and does not substitute for it.
+**Check `list_images` first.** An icon already in the model needs no second copy.
+`add_image` is idempotent on content anyway, but the name you search for may already be there.
+
+**The source for anything missing is the user's own EA install.** Sparx ships AWS, Azure and
+Google Cloud icon sets as model-pattern files in `<EA install>\ModelPatterns\`
+(typically `%ProgramFiles%\Sparx Systems\EA\ModelPatterns\`). Measured on EA 17.1 build 1716;
+a different build can ship different files, so list the folder rather than assuming names.
+
+| File | Provider |
+|---|---|
+| `analytics_amazon-aws-web-images_v1.xml`, `_v5`, `_v7`, `_v19` | AWS (`v19` newest) |
+| `Azure_icons-and-images.xml`, `_Nov_22`, `_Feb_24` | Azure (`Feb_24` newest) |
+| `analytics_google-web-images_v1_0.xml`, `_v1_5` | Google Cloud (`v1_5` newest) |
+| `dwa-01-data-storage-images.xml`, `-iot-`, `-pii-`, `-visualization-images.xml` | Generic data-platform icons |
+
+About 5,200 icons across these files, all in the same format. Nothing needs to be downloaded or shipped. The icons are
+the vendors' marks, already on the user's machine through their EA license.
+
+**Importing a library file does NOT make its icons assignable.** Each icon is an Artifact
+element stereotyped `Image` whose picture is an attached document, so an import adds elements and
+`t_document` rows and nothing to `list_images`; `ImageID=` resolves only against `t_image`. Use
+the two operations built for this instead — they read the libraries in place:
+
+```python
+# 1. Search the user's own install. Each match carries an `icon` id, its provider and
+#    vintage, how it matched, and `loaded_image_id` when the model already holds it.
+hits = ea_diagram(operation="find_icon", params={
+    "query": "Lambda", "provider": "AWS",   # provider optional: AWS, Azure, Google, ...
+})
+
+# 2. Put the chosen one on a placed element. Loads it into the image library only if the
+#    model does not already have it (`image: "added"` / `"existing"`), then sets it.
+ea_diagram(operation="set_element_icon", params={
+    "diagram_id": <id>, "element_id": <id>,
+    "icon": hits["matches"][0]["icon"],
+    "name_under_image": True,
+})
+```
+
+The stored image is named `"<provider> <vintage> - <name>"`, e.g. `"AWS v19 - AWS Lambda"`; where
+one library has same-named icons whose pictures differ, each name carries a short ID in
+brackets. `set_element_icon` inherits `add_image`'s rule that loading needs a `.qea`/`.qeax`
+project — on another backend, load the artwork through EA's Image Manager and use
+`set_element_image`. `find_icon` returns `icon_libraries_not_found` when it cannot locate
+`ModelPatterns`; the `EA_MODEL_PATTERNS` environment variable points it at the folder.
+
+**Choose the icon; don't match names automatically.** A diagram's captions are not icon names.
+`Amazon S3 output bucket` wants `Amazon Simple Storage Service (S3)` or `Bucket with objects`,
+`Function App` wants `Function Apps`, and `SQL Database` wants `SQL Databases`. Containers and
+labels (`Region 1`, `Web Tier`) never had one. Search for each element's concept with
+`find_icon`, prefer the newest vintage, show the user the candidates when more than one fits, and
+set only the icons the diagram uses — the full set is tens of MB. Some glyphs are simply not in
+the libraries (there is no plain AWS key, for one); say so rather than substituting a near miss.
 
 ---
 
