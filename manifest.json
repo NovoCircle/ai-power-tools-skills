@@ -26,6 +26,7 @@
         "_shared/tools/load.py",
         "_shared/tools/parquet_out.py",
         "_shared/tools/pbip.py",
+        "_shared/tools/pipeline.py",
         "_shared/tools/pivot.py",
         "_shared/tools/reconcile.py",
         "_shared/tools/report_model.py",
@@ -40,6 +41,7 @@
         "_shared/tools/test_load.py",
         "_shared/tools/test_parquet_out.py",
         "_shared/tools/test_pbip.py",
+        "_shared/tools/test_pipeline.py",
         "_shared/tools/test_pivot.py",
         "_shared/tools/test_reconcile.py",
         "_shared/tools/test_report_model.py",
@@ -66,6 +68,7 @@
         "_shared/tools/load.py": "c8e413e7d629b597568aca6f9ed7e09dfc3f84618b89eeed508651752abbb9b3",
         "_shared/tools/parquet_out.py": "7b5ee150a5841695d8117a148cc529494a1ea4017a754be2fb5f5dcf943867f9",
         "_shared/tools/pbip.py": "2f5647383368527217608bbbf7eb7fb858936c2c3fbdd0b42508faab9d024b07",
+        "_shared/tools/pipeline.py": "23e3e4f1c2591c4e5e2b79088eed0f175bb5f0a4e5f63ba0caa2f341b09461b6",
         "_shared/tools/pivot.py": "498207768d5c72c337a81339c60fcd4a9f179cd0809ab7c34e77e2e5943c8b2e",
         "_shared/tools/reconcile.py": "80f90ba230b15b53aad17073c2a3ad0f46709de449f7877e2dd2476d88194118",
         "_shared/tools/report_model.py": "7e1a9b0ed310dbc03332abdc3f118c18dcba1e69d501e5487cac7ec6222d9975",
@@ -80,11 +83,12 @@
         "_shared/tools/test_load.py": "62bf8818ddff1fa26476c318d219fc3286b0d7ddd5cd1cd85d96477bbe016f32",
         "_shared/tools/test_parquet_out.py": "1190a991a93ff0485f8ca5d890ce4fe859966dd5cee6ed750d30dc9b34735c61",
         "_shared/tools/test_pbip.py": "088457d22fdb81a00b9f184a93b6166ca569071bd818a7c8a769fee1d85017c5",
+        "_shared/tools/test_pipeline.py": "372d4616bbb28c44e78f05cee19c371fc188144910691ca6e257b4f8d27113c8",
         "_shared/tools/test_pivot.py": "797bf3a2ca16b24e595474d74e1f3fec2d78beef64b36bf2d933bebe48e1db4a",
         "_shared/tools/test_reconcile.py": "28daeb34d5c9762989768dd9ab806fae74953d10587676d523844e43ed58ca13",
         "_shared/tools/test_report_model.py": "e14e0f1a8d1df9a8b6e00e6a78103ccfc79becc6de14f25ed08a722324da7fb2",
         "_shared/tools/test_semantic_model.py": "3d74e2cdad641cdab26e3eaa1e5b7be7ec87134f1cb3d1c9d80f671501b2049f",
-        "_shared/tools/test_snapshot.py": "121d51100c446c0bac12e8152251752b14ecf1f0e7c39acb6fc32ad53e0644c1",
+        "_shared/tools/test_snapshot.py": "fbc6cb972b812feeb48666b3e95b3c6593d951409fa03c9f0fa5cab04d6ef697",
         "_shared/tools/test_sql_views.py": "56a2749464f836a80371ffbf30b3a2bab1a525844420702c8d63959a61d0988e",
         "_shared/tools/test_sql_views_sqlserver.py": "eb0ee0c39a16a1620646fa4931c9d5698780a4484b12b67cdd522091fb28f8a0",
         "_shared/tools/test_tmdl.py": "ad6e2b63fd5936501b13540df18c42e5915396d73d877cda25a72b4326b5bd96",
@@ -423,7 +427,7 @@
         "ea-power-bi/references/the-path-choice.md"
       ],
       "sha256": {
-        "ea-power-bi/SKILL.md": "601bddfe1a65932ec7ad16b42850010ad80078805e71948b2d340e86c53fc5d9",
+        "ea-power-bi/SKILL.md": "07a91de016ed01823cad2ece908e59e0f8d8d5fea2b5fe5cad9e53bc3c12946e",
         "ea-power-bi/references/measured-power-bi-behavior.md": "fd12c6f6c7fee1577f6c45c18f89e01fca5333191c5b527cc911e239c2c66c14",
         "ea-power-bi/references/the-path-choice.md": "3b7d2e642c6c693f772868ccbc93a8ad950a655716a22d272865346eb2bef479"
       }
@@ -441,8 +445,8 @@
         "ea-reporting-database/references/the-schema.md"
       ],
       "sha256": {
-        "ea-reporting-database/SKILL.md": "60ed7e3ea8fc9fd6e8dedef25556dbe9d032f684e5aa653aa2985b1a1f35b19f",
-        "ea-reporting-database/references/the-extract-snapshot.md": "75cb743a40167ea20576a0b2057bb64441e21ed47917a028027d0b26f2defae0",
+        "ea-reporting-database/SKILL.md": "6aea54501210e5d5da3345785ed7452e504d3dfb85146d31887f7cc0ef2aa6ea",
+        "ea-reporting-database/references/the-extract-snapshot.md": "b786f8dbb2c86f4f0b96700c3f0e7f659d0854ff6810a7d9ce5c53f965d5e74e",
         "ea-reporting-database/references/the-governance-gate.md": "042267320fa3f485ee79d61a47cd88396b5029e16973af0ae9874883d937bc4f",
         "ea-reporting-database/references/the-schema.md": "7ecfee38ded20cd4c0b00eea67539608b5b3dd3eb28541fa1f7f77040ab172a7"
       }

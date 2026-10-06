@@ -1,6 +1,6 @@
 ---
 name: ea-reporting-database
-description: Build a queryable relational database from a Sparx EA repository - every element, relationship, tagged value, attribute and diagram placement, typed by the technology that governs them - and prove it matches the repository by counting back. Use when someone wants to query, roll up, or report across a whole model rather than element by element, wants EA content in a database an agent or a SQL client can read, or asks for a refreshable extract. Also use when a count taken from EA is disputed and you need a reconciled figure. For Power BI specifically - a dataset, a .pbip, TMDL or a semantic model - follow sections 3.1 to 3.3 here, up to but not including build_database, and then continue with ea-power-bi, which decides whether a relational database is built at all.
+description: Build a queryable relational database from a Sparx EA repository - every element, relationship, tagged value, attribute and diagram placement, typed by the technology that governs them - and prove it matches the repository by counting back. Use when someone wants to query, roll up, or report across a whole model rather than element by element, wants EA content in a database an agent or a SQL client can read, or asks for a refreshable extract. Also use when a count taken from EA is disputed and you need a reconciled figure. For Power BI specifically - a dataset, a .pbip, TMDL or a semantic model - follow sections 3.1 and 3.2 here, then continue with ea-power-bi, which decides whether a relational database is built at all.
 ---
 
 # A reporting database from an EA repository
@@ -32,8 +32,8 @@ Five files per build:
 
 **Not produced, on purpose:** no `.sql` DDL file (SQLite carries its own schema and nothing
 would read it), no CSV, no Excel. The database is the deliverable, and a portable target gets its
-own DDL generated *for that target* — never retrofitted from SQLite's dialect. **Parquet and Power
-BI belong to `ea-power-bi`**, which continues from §3.3 here and decides whether `build_database` runs.
+own DDL generated *for that target* — never retrofitted from SQLite's dialect. Parquet and Power BI
+belong to `ea-power-bi`, which continues from `prepare` in §3.3.
 
 ---
 
@@ -95,12 +95,9 @@ It writes one JSON file per table plus `extract-manifest.json` into `./extracts/
 **Read the printed counts.** An unexpectedly small `object` or `objectproperties` count means the
 scope is wrong, and it is much cheaper to notice here than after the reconciliation.
 
-**The snapshot is kept, not overwritten.** It is the only record of what the repository contained
-at that instant, and a build can be replayed from it with no EA connection at all, producing a
-byte-identical database. Retention is bounded at **10 runs** (measured: 244 KiB per snapshot on the
-~300-element reference model) and pruning **prints what it removed** — pass that on, because a
-figure stops being defensible the moment its evidence goes. Flags, why not `execute_sql`, the
-uncapped scope walk, the digest, pruning and replay:
+**The snapshot is kept, not overwritten**, so a build can be replayed from it with no EA
+connection, byte-identical. Retention keeps **10 runs** and pruning **prints what it removed** —
+pass that on. Flags, the digest, pruning and replay:
 [`references/the-extract-snapshot.md`](references/the-extract-snapshot.md).
 
 ### 3.2b The governance gate — run this before you build anything
@@ -129,142 +126,59 @@ If the customer declines, say plainly which elements will not be in the database
 declining is a valid answer. The call, row mapping, loaded-technology precondition and
 verification: [`references/the-governance-gate.md`](references/the-governance-gate.md).
 
-### 3.3 Transform and load
+### 3.3 Transform, load and reconcile
 
-All of this is local Python. Every decision is in the modules; this is the order they go in.
+All of this is local Python, and the order is in `_shared/tools/pipeline.py`. Call it; do not
+reassemble the steps by hand.
 
 ```python
 import json, pathlib, sys
 sys.path.insert(0, r"<skills-dir>/_shared/tools")
-
-from ea_census import build_stereotype_index, census_elements, tag_coverage
-from report_model import build_report_model
-from frame import (package_rows, element_rows, relationship_rows, diagram_rows,
-                   diagram_object_rows, attribute_rows, operation_rows, dangling)
-from pivot import pivot
-from load import build_database, database_counts, scalar_counts, record_reconciliation
-from reconcile import reconcile, domain_violations, format_report
-from dictionary import data_dictionary, manifest as build_manifest
 from extract import open_snapshot
+from pipeline import prepare, build_reporting_database
 
-out = pathlib.Path("./out")
-# Minted before the extract and passed to it (§3.2), not invented here.
-run_id, run_at = "<run-id>", "<YYYY-MM-DD HH:MM:SS>"
-# An old build is REPLAYED with load.replay_snapshot(db, its_run_id, "./extracts"), not this call:
-snap = open_snapshot("./extracts", run_id)  # that one checks the digest the build recorded.
-objects, xrefs, props = snap.tables["object"], snap.tables["xref"], snap.tables["objectproperties"]
-packages, connectors = snap.tables["package"], snap.tables["connector"]
-attributes, operations = snap.tables["attribute"], snap.tables["operation"]
-diagrams, diagram_objects = snap.tables["diagram"], snap.tables["diagramobjects"]
+run_id, run_at = "<run-id>", "<YYYY-MM-DD HH:MM:SS>"   # the ones passed to the extract (§3.2)
+snap = open_snapshot("./extracts", run_id)
 mdg = json.loads(pathlib.Path("mdg.json").read_text(encoding="utf-8"))
 
-# --- census: which stereotype, from which technology, on how many elements
-xref_index = build_stereotype_index(xrefs)
-census = census_elements(objects, xref_index)
-guid_by_id = {int(o["Object_ID"]): o["ea_guid"] for o in objects}
-tag_stats = {e.key: tag_coverage(e, props, lambda r: guid_by_id.get(int(r["Object_ID"]), ""))
-             for e in census.entities}
-
-# --- model: tables, columns, types, domains
-model = build_report_model(census, tag_stats, mdg,
-                           namespace="<profile namespace>", strip_prefix="<stereotype prefix>")
-
-# --- rows
-result = pivot(model, objects, props, census.placement,
-               excluded_guids=census.excluded_guids,
-               guid_of_property=lambda r: guid_by_id.get(int(r["Object_ID"]), ""))
-
-in_scope = {o["ea_guid"] for o in objects} - census.excluded_guids
-profile_of = lambda g: next((s.profile for s in xref_index.get(g, []) if s.profile), "")
-frame_rows = {
-    "pkg": package_rows(packages),
-    "element": element_rows(objects, model, census.placement,
-                            excluded_guids=census.excluded_guids),
-    "rel_all": relationship_rows(connectors, guid_by_id, guids_in_scope=in_scope,
-                                 profile_of=profile_of),
-    "diagram": diagram_rows(diagrams),
-    "attribute": attribute_rows(attributes, guid_by_id, guids_in_scope=in_scope),
-    "operation": operation_rows(operations, guid_by_id, guids_in_scope=in_scope),
-}
-frame_rows["diagram_object"] = diagram_object_rows(
-    diagram_objects, guid_by_id,
-    diagram_ids={r["diagram_id"] for r in frame_rows["diagram"]}, guids_in_scope=in_scope)
-
-# Every guid reference must resolve against the key map. Should be empty; check, do not assume.
-checkable = dict(frame_rows, tag_value=result.tag_value, overflow_tag=result.overflow)
-assert not dangling(checkable), dangling(checkable)[:5]
-
-# --- load
-loaded = build_database(out / "reporting.sqlite", model, result, frame_rows,
-                        run_id=run_id, run_at=run_at, repository="<model file>",
-                        extract_run_id=snap.run_id, extract_digest=snap.digest,
-                        overwrite=False)
+p = prepare(snap.tables, mdg, namespace="<profile namespace>",
+            strip_prefix="<stereotype prefix>")
+build = build_reporting_database(p, "./out", run_id=run_id, run_at=run_at,
+                                 repository="<model file>",
+                                 extract_run_id=snap.run_id, extract_digest=snap.digest)
+print(build.reconciliation.summary())
+sys.exit(build.reconciliation.exit_code)
 ```
 
-**The two parameters with placeholders above.** `namespace` is the profile namespace as it appears
-in `t_xref` FQNames, which is **not** the technology id — the id is often a short code where the
-namespace is the long form. Do not guess: `infer_technology_namespace(census, declared)` reads it
-off the census, where `declared` is `{s["name"] for s in mdg["stereotypes"]}`. `strip_prefix` is the
-stereotype prefix to drop when naming tables, so `WBABusinessApplication` becomes
-`business_application`; pass `""` to keep it. Neither is load-bearing for correctness.
+To rebuild an old build from its own rows, get the snapshot with
+`load.replay_snapshot(db, its_run_id, "./extracts")` instead of `open_snapshot`: it checks the
+digest that build recorded.
 
-`run_id` and `run_at` are **yours to supply**, to the extract and the loader alike: neither has a
-clock, because a module that stamps its own timestamp cannot be tested for the value it stamps.
+**`namespace` and `strip_prefix`.** `namespace` is the profile namespace as it appears in `t_xref`
+FQNames, which is **not** the technology id — the id is often a short code where the namespace is
+the long form. Do not guess: `pipeline.infer_namespace(snap.tables, mdg)` reads it off the census.
+`strip_prefix` is the stereotype
+prefix to drop when naming tables, so `WBABusinessApplication` becomes `business_application`;
+pass `""` to keep it. `prepare` also takes `sparse_threshold=` and `multi_valued=` (§5).
 
-`overwrite=False` is the default and refuses an existing file. A refresh that silently replaces the
-database somebody is reporting off is not a refresh — delete it, or pass `overwrite=True`,
-deliberately.
+**Only placed elements are in the frame.** The key map holds the elements that landed in an entity
+table, so `prepare` scopes every row that refers to an element to that set. An untyped element's
+diagram placements, connectors and attributes are left out rather than written as rows that
+resolve against nothing, and the reconciliation counts the same population, under the name
+`element (placed in an entity table)`. `prepare` raises `PipelineError` if a row still dangles.
 
-### 3.4 Reconcile, then write the deliverables
+`run_id` and `run_at` are **yours to supply**: no module stamps its own time, because one that did
+could not be tested for the value it stamps. `overwrite=False` is the default and
+refuses an existing database — a refresh that silently replaces the one somebody is reporting off
+is not a refresh.
 
-```python
-db_scalars = scalar_counts(out / "reporting.sqlite")
-oids = {int(o["Object_ID"]) for o in objects if o["ea_guid"] in in_scope}
-rec = reconcile(census, database_counts(out / "reporting.sqlite", model),
-                entity_key_of_table={t.name: t.entity_key for t in model.tables},
-                scalars={
-                    "pkg": (len(packages), db_scalars["pkg"]),
-                    "element (in scope)": (len(in_scope), db_scalars["element"]),
-                    "rel_all": (sum(1 for c in connectors
-                                    if guid_by_id.get(int(c["Start_Object_ID"] or -1)) in in_scope
-                                    and guid_by_id.get(int(c["End_Object_ID"] or -1)) in in_scope),
-                                db_scalars["rel_all"]),
-                    "tag_value": (sum(1 for p in props if (p.get("Value") or "").strip()
-                                      and guid_by_id.get(int(p["Object_ID"])) in in_scope),
-                                  db_scalars["tag_value"]),
-                    "attribute": (sum(1 for a in attributes if int(a["Object_ID"]) in oids),
-                                  db_scalars["attribute"]),
-                    "operation": (sum(1 for o in operations if int(o["Object_ID"]) in oids),
-                                  db_scalars["operation"]),
-                    "diagram": (len(diagrams), db_scalars["diagram"]),
-                })
-violations = domain_violations(model, result.rows)
-record_reconciliation(out / "reporting.sqlite", run_id, rec)
-
-(out / "reconciliation.txt").write_text(format_report(rec) + "\n", encoding="utf-8", newline="\n")
-(out / "data-dictionary.md").write_text(
-    data_dictionary(model, run_id=run_id, run_at=run_at, repository="<model file>",
-                    reconciliation=rec, domain_violations=violations),
-    encoding="utf-8", newline="\n")
-(out / "manifest.json").write_text(json.dumps(build_manifest(
-    model, loaded, run_id=run_id, run_at=run_at, repository="<model file>",
-    reconciliation=rec, domain_violations=violations), indent=2),
-    encoding="utf-8", newline="\n")
-(out / "issued-sql.log").write_text("\n".join(loaded.sql_log) + "\n",
-                                    encoding="utf-8", newline="\n")
-
-print(rec.summary())
-sys.exit(rec.exit_code)
-```
-
-**Compute each repository-side figure from the raw extract rows**, as above — not by calling the
-same function that produced the database side. A figure taken from both sides by one function
-checks nothing, and would have hidden the frame bug that shipped an empty `element` table while
-reporting a reconciled build.
-
-`rec.exit_code` is 0 only when every check **ran** and matched. A skipped check is not a pass:
-pass `None` on a side you genuinely cannot supply and it records as SKIPPED, which fails. The
-prototype printed NOT RECONCILED and returned 0, so every pipeline reading the status saw success.
+`build_reporting_database` loads `reporting.sqlite`, reconciles it, records the verdict in
+`_load_run`, and writes the other four files of §1. The repository side of every count is computed
+from the raw extract rows, never by the function that produced the database side, because a figure
+taken from both sides by one function checks nothing. `exit_code` is 0 only when every check **ran**
+and matched: a count that could not be read back records as SKIPPED, which fails.
+`build.recorded` is False if no `_load_run` row matched the `run_id`; then nothing was recorded, so
+do not report the verdict as stored.
 
 ---
 
@@ -306,14 +220,14 @@ one-to-many, and joining names with a separator would reintroduce the comma haza
 
 **A sparse tag is routed, not dropped.** Below the threshold (default 5% populated coverage) a
 tag becomes `_overflow_tag` rows instead of a column, and the data dictionary names which ones.
-`sparse_threshold=` on `build_report_model` is a default that behaved sensibly on one model, not
-a measured constant. Override it deliberately.
+`sparse_threshold=` on `prepare` is a default that behaved sensibly on one model, not a measured
+constant. Override it deliberately.
 
 **Multi-valued tags are reported, never guessed.** `model.multi_value_candidates` lists tags whose
 values often contain a comma. A genuinely multi-valued tag and a free-text field containing a
 comma are both declared `String` and are indistinguishable by type — `Risk, Compliance & Audit` is
-one team name. Pass `multi_valued={"tagName"}` to `build_report_model` only when a human or a
-convention has decided. Guessing wrong splits data silently.
+one team name. Pass `multi_valued={"tagName"}` to `prepare` only when a human or a convention
+has decided. Guessing wrong splits data silently.
 
 **An unknown column is refused, not dropped.** `build_database` raises `LoadError` on a row
 carrying a key the table has no column for, because the row count would still have matched and the
@@ -331,11 +245,9 @@ count per value. An observed domain cannot be violated — it is by construction
 so only declared domains are checkable, and the dictionary says which kind each column has.
 
 **A domain violation is not a failed build.** The value is in the repository and it is in the
-database, so the load was faithful, which is the only question the reconciliation answers. An
-earlier version counted violations as reconciliation failures; the first real run then reported
-NOT RECONCILED over a database that had loaded every element correctly, and it would have done
-that on every model carrying any governance drift at all. Violations travel in the dictionary and
-the manifest. The reconciliation stays a statement about load fidelity.
+database, so the load was faithful, which is the only question the reconciliation answers.
+Violations travel in the dictionary and the manifest; gating on them would fail every model
+carrying any governance drift.
 
 For the full drift picture — stereotypes declared and never used, observed and never declared,
 metaclass mismatches, probable misassignments by tag shape — use `ea-mdg-assess`, which runs the
@@ -361,19 +273,12 @@ is why the generated SQL stays inside a narrow portable subset.
 repository-side figure scoped differently from the load fails for the wrong reason — EA's own
 machinery (report packages, model documents) is deliberately excluded from the load, so counting
 its tagged values on the repository side compares two different populations. **Verify the
-expectation before you correct it**: on the demo model a 41-row gap in `tag_value` was confirmed to
-be exactly the excluded machinery before the figure was changed.
-
-**`record_reconciliation` returns False.** No `load_run` row matched that `run_id`. Nothing was
-recorded — do not treat it as success.
+expectation before you correct it.**
 
 **A later spot-check in EA disagrees with the database by a few rows.** The reconciliation proves
-the database matches **the extract**, and the extract is a point-in-time snapshot; on a shared
-repository someone else's work lands in between and the two legitimately differ. That is the
-design, not a flaw. `load_run.run_at` is the figure's as-of date and the retained snapshot is the
-evidence behind it, so a disputed number is compared against the build it came from — replay it —
-not against the model an hour later. Say the as-of date whenever a figure may be quoted back at
-you. [`references/the-extract-snapshot.md`](references/the-extract-snapshot.md) §1.
+the database matches **the extract**, a point-in-time snapshot, and on a shared repository other
+work lands in between. Compare a disputed number against the build it came from — replay it — and
+say the as-of date (`load_run.run_at`) whenever a figure may be quoted back at you.
 
 **Jet (`.eapx`) is untested.** Everything here is measured against SQLite-backed `.qea` only
 (APT-2026-0218). Say so rather than implying coverage.
@@ -385,16 +290,12 @@ quote a refresh window from it.
 
 ## Reference files
 
-- [`references/the-schema.md`](references/the-schema.md) — every frame table, column by column,
-  and worked queries for the questions people actually ask
-- [`references/the-extract-snapshot.md`](references/the-extract-snapshot.md) — retention, the
-  digest, pruning, and how to replay a build with no EA connection
-- [`references/the-governance-gate.md`](references/the-governance-gate.md) — the pre-build gate:
-  the three outcomes, how to apply a stereotype so it binds to the technology, and what to say
-  when the customer declines
+- [`references/the-schema.md`](references/the-schema.md) — every frame table, and worked queries
+- [`references/the-extract-snapshot.md`](references/the-extract-snapshot.md) — retention and replay
+- [`references/the-governance-gate.md`](references/the-governance-gate.md) — the pre-build gate
 - [`../_shared/references/ea-ui-verification.md`](../_shared/references/ea-ui-verification.md) —
   the modal-dialog trap
 - [`../_shared/references/westbrook-example.md`](../_shared/references/westbrook-example.md) — the
   canonical example model
-- `../_shared/tools/` — the modules. Every one but `extract.py` and `load.py` is pure: no COM, no
-  I/O, no clock. Their tests run with `python -m pytest ../_shared/tools -q` and need no EA.
+- `../_shared/tools/` — the modules, `pipeline.py` first. Their tests run with
+  `python -m pytest ../_shared/tools -q` and need no EA.

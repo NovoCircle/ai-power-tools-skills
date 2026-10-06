@@ -93,19 +93,32 @@ any behavior you describe.
 
 ### 4.1 Up to the point the paths diverge
 
-Follow `ea-reporting-database` §3.1 to §3.3, up to but not including `build_database`. It ends
-holding exactly what both paths need:
+Follow `ea-reporting-database` §3.1 and §3.2, then build the half both paths share:
+
+```python
+import json, pathlib, sys
+sys.path.insert(0, r"<skills-dir>/_shared/tools")
+from extract import open_snapshot
+from pipeline import prepare
+
+out = pathlib.Path("./out")
+run_id, run_at = "<run-id>", "<YYYY-MM-DD HH:MM:SS>"   # the ones passed to the extract
+snap = open_snapshot("./extracts", run_id)
+mdg = json.loads(pathlib.Path("mdg.json").read_text(encoding="utf-8"))
+p = prepare(snap.tables, mdg, namespace="<profile namespace>",
+            strip_prefix="<stereotype prefix>")
+```
 
 | | |
 |---|---|
-| `model` | the `ReportModel` - tables, columns, declared types, domains |
-| `result` | the `PivotResult` - entity rows, `tag_value`, `overflow`, `coverage` |
-| `frame_rows` | the frame: `pkg`, `element`, `rel_all`, `diagram`, `diagram_object`, `attribute`, `operation` |
-| `run_id`, `run_at` | yours to supply; the loader and the sink both have no clock |
+| `p.model` | the `ReportModel` - tables, columns, declared types, domains |
+| `p.result` | the `PivotResult` - entity rows, `tag_value`, `overflow`, `coverage` |
+| `p.frame_rows` | the frame: `pkg`, `element`, `rel_all`, `diagram`, `diagram_object`, `attribute`, `operation` |
+| `run_id`, `run_at` | yours to supply; no module stamps its own time |
 
-**On path B, stop before `build_database`.** Nothing else changes: the census, the report model and
-the pivot are the same code, which is what makes the two paths produce the same dataset. On path A,
-run `build_database` as that skill describes and then carry on here.
+**On path A**, now call `build_reporting_database(p, out, ...)` with the arguments
+`ea-reporting-database` §3.3 passes, then carry on here; leave out that block's `sys.exit`. **On path B, do not.** Nothing else differs: the census, the report
+model and the pivot are the same code, which is what makes the two paths produce the same dataset.
 
 The governance gate in `ea-reporting-database` §3.2b is **not optional on either path**. An element
 with no stereotype reaches no table, so it reaches no Power BI field list either, and a customer
@@ -116,7 +129,7 @@ must not discover that by failing to find a system in a report.
 ```python
 from parquet_out import build_parquet
 
-pq = build_parquet(out / "parquet", model, result, frame_rows,
+pq = build_parquet(out / "parquet", p.model, p.result, p.frame_rows,
                    run_id=run_id, run_at=run_at, repository="<model file>")
 print(f"{len(pq.files)} files, {pq.rows_written} rows")
 for w in pq.warnings:
@@ -130,9 +143,9 @@ database sink raises, from the same function, and they include tag rows that rea
 
 ### 4.3 Reconcile, on either path
 
-Path A reconciles exactly as `ea-reporting-database` §3.4 describes. **Path B still reconciles** -
-against the Parquet **read back from disk**, with the repository side computed from the raw
-extract rows as before.
+Path A reconciled inside `build_reporting_database`. **Path B reconciles too** - against the
+Parquet **read back from disk**, with the repository side computed from the raw extract rows by the
+same function.
 
 Read the files back rather than trusting `pq.rows_by_table`: those counts come from the rows the
 emitter held in memory, so comparing against them asserts the write rather than verifying it, and
@@ -141,14 +154,10 @@ a self-consistent output that under-reports is the failure this whole discipline
 
 ```python
 import pyarrow.parquet as pq_read
-on_disk = {p.stem: pq_read.read_metadata(p).num_rows
-           for p in (out / "parquet").glob("*.parquet")}
-```
-
-On path B, use `on_disk` as the database side of every comparison below.
-
-```python
 from ddl import FRAME_DDL, physical
+
+on_disk = {f.stem: pq_read.read_metadata(f).num_rows
+           for f in (out / "parquet").glob("*.parquet")}
 
 def counted(name):
     # A table whose file failed to write is ABSENT from on_disk, not zero. Say
@@ -158,38 +167,37 @@ def counted(name):
                        f"the build did not produce what it reported")
     return on_disk[name]
 
-entity_counts = {t.name: counted(t.name) for t in model.tables}
-db_scalars = {k: counted(physical(k)) for k in FRAME_DDL}
+entity_counts = {t.name: counted(t.name) for t in p.model.tables}
+frame_counts = {k: counted(physical(k)) for k in FRAME_DDL}
 ```
 
-`on_disk` is keyed by file stem, which is the physical table name, and for an entity table the
-physical name and the model name are the same - so it drops in with no re-keying.
+**On path B**, reconcile against those counts and write the two reports that need no database:
 
-Pass `entity_counts` where that skill passes `database_counts(...)`, and `db_scalars` where it
-passes `scalar_counts(...)`. Everything else about the call is unchanged. A Parquet-only build that
-skips the count-back is the exact failure this capability family has already produced once: a
-self-consistent output that under-reports and passes every validation while doing it.
+```python
+from pipeline import reconcile_against, write_reports
 
-**On path B, skip these calls in `ea-reporting-database` §3.4 by name: `record_reconciliation`,
-`build_manifest` and the `issued-sql.log` write.** Skip by name rather than stopping at a point in
-the listing — `record_reconciliation` comes *before* `format_report` there, so a reader who stops at
-a position has already run it. It raises `no such table: _load_run` **and leaves a 0-byte
-`reporting.sqlite` behind** — it connects before it queries — which is residue on the one path that
-promises to leave none. The other two read `loaded`, which path B never produced, so they raise
-`NameError` while their arguments are evaluated; `build_manifest` is never entered. The rest stands:
-`format_report` and `data_dictionary` need no database at all, so `reconciliation.txt` and
-`data-dictionary.md` are both path-B deliverables. Report the reconciliation verdict in your own
-output: path B has nowhere to record it, and `APT-2026-0212` is where a Parquet-side recorder belongs.
+rec = reconcile_against(p, entity_counts, frame_counts)
+write_reports(p, rec, out, run_id=run_id, run_at=run_at, repository="<model file>")
+print(rec.summary())
+```
 
-**On path A, read the Parquet back too.** The database reconciliation proves the database matches the
-repository; it says nothing about the files Power BI actually reads, and path A writes Parquet from
-the same `result` before emitting the project. After §3.4's reconciliation has run, build
-`entity_counts` and `db_scalars` from the `on_disk` read-back above against `out / "parquet"`, then
-compare `entity_counts` with `database_counts(...)` and `db_scalars` with `scalar_counts(...)`. Do
-not compare `on_disk` itself with either: it holds every Parquet file, while `database_counts`
-returns the entity tables only, so the two are unequal on a healthy build. Both comparisons are
-needed — without the frame side the eleven `_`-prefixed files, `_keymap` among them, go unchecked,
-and Power BI reads those too.
+`reconciliation.txt` and `data-dictionary.md` are path-B deliverables. Report the verdict in your
+own output: path B has no database to record it in.
+
+**On path A, check the Parquet too.** The database reconciliation proves the database matches the
+repository; it says nothing about the files Power BI actually reads. Compare the read-back with the
+database, both halves:
+
+```python
+from load import database_counts, scalar_counts
+
+db = out / "reporting.sqlite"
+assert entity_counts == database_counts(db, p.model)
+assert frame_counts == scalar_counts(db)
+```
+
+Without the frame half the eleven `_`-prefixed files, `_keymap` among them, go unchecked, and Power
+BI reads those too.
 
 ### 4.4 Emit the project
 
@@ -198,7 +206,7 @@ from semantic_model import build_semantic_model
 from tmdl import ParquetSource
 from pbip import project_files
 
-sm = build_semantic_model(model)
+sm = build_semantic_model(p.model)
 source = ParquetSource(directory=str((out / "parquet").resolve()))
 files = project_files(sm, source, name="EAReporting")
 ```
