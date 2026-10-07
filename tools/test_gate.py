@@ -60,6 +60,24 @@ class TestForbiddenIdentifiers:
         f = _write(library, "s/SKILL.md", f"# s\n\n{line}\n")
         assert expect.lower() in _findings(f).lower()
 
+    @pytest.mark.parametrize("line", [
+        "Probe for TEA Framework, APM and BCM, which ship with EA.",
+        "Stereotypes in the `TEA Framework::Capability` namespace are Sparx's own.",
+    ])
+    def test_the_sparx_shipped_tea_framework_is_allowed(self, library, line):
+        f = _write(library, "s/SKILL.md", f"# s\n\n{line}\n")
+        assert "TEA" not in _findings(f)
+
+    @pytest.mark.parametrize("line", [
+        "Install the TEA Framework Extension first.",
+        "Our TEA Framework custom MDG adds two stereotypes.",
+        "Load the TEA Framework Profile.",
+        "Apply TEA::Capability to the element.",
+    ])
+    def test_a_customer_extension_of_tea_framework_is_caught(self, library, line):
+        f = _write(library, "s/SKILL.md", f"# s\n\n{line}\n")
+        assert "tea" in _findings(f).lower()
+
     def test_a_personal_identifier_is_caught(self, library):
         f = _write(library, "s/SKILL.md", "# s\n\nAsk rschmierer about it.\n")
         assert "personal identifier" in _findings(f)
