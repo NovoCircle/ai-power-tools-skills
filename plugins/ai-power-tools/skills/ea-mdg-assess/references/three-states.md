@@ -53,13 +53,18 @@ ea_mdg(operation="get_embedded_mdgs", params={})
 }
 ```
 
-Zero results, on a repository that has WBA visibly loaded (elements stereotyped with it, and
-`list_registered_technologies` confirms a workstation-file registration). The `ea17_note` explains
-why: EA 17+ simply doesn't record technology imports in `t_document`, the table this call reads.
-An empty result from this call is not evidence of anything. It answers "did EA 17 happen to write
-a `t_document` row for this," which is a narrower and less useful question than "embedded mdgs"
-implies. Don't use it to conclude a technology isn't embedded — use `list_registered_technologies`
-or the EA UI's Manage Technology dialog instead, per the note.
+Zero results, on a repository that has WBA visibly loaded. That payload is from a server up to
+3.5.0, and the note's explanation is wrong: EA 17.1 does store in-model technologies, in one of
+two places the call did not read. Measured on EA 17.1 build 1716:
+
+| Manage Technology Location | Stored in | Written by |
+|---|---|---|
+| `Model` | one `t_document` row, `DocType='TECHNOLOGY'`: a ZIP holding the whole MDG file | Import MDG Technology ▸ Import to Model; `ImportPackageAsMDGTechnology` |
+| `Project` | `t_trxtypes` rows: UML profiles and diagram profile, no toolbox pages | `ImportTechnology` (`install_mdg(scope="embedded")`) |
+
+The call read only `DocType='MDGXml'`, which neither route writes. From the release after 3.5.0
+it lists each stored copy with its `location`, the version that copy declares, and the table it
+came from. WBA in the Westbrook Bank model is at Location: Project.
 
 ---
 
@@ -109,11 +114,18 @@ Fourteen stereotypes, each with its metaclass and its tagged values, and the thr
 read out of the technology EA has loaded. `provenance.origin` says which of the two places that
 was:
 
-- `model` — the technology was imported into this model, and EA keeps the profiles it imported
-  inside the model file.
+- `model` — the technology was imported into this model. From the release after 3.5.0,
+  `provenance.location` says where: `Project` (`t_trxtypes`, as above) or `Model` (`t_document`
+  TECHNOLOGY). Up to 3.5.0 only `Project` was read, so a Location: Model technology answered
+  `mdg_loaded_no_definition`.
 - `registered_file` — the technology is an `.xml` in a folder EA loads at startup (the per-user
   MDGTechnologies folder, a configured search path, or EA's own install). `provenance.detail`
   carries the path, which is what to open when a deployment looks stale.
+
+When the model holds the same id at both Locations, the answer comes from the Project copy (EA's
+own precedence, measured on EA 17.1 build 1716) and `provenance.also_stored` lists the other, with
+the version it declares. `provenance.enabled` is `IsTechnologyEnabled`: a technology disabled in
+Manage Technology still reports `loaded: true`, and `source` is then `registered_not_enabled`.
 
 `version_reported_by_ea` is `GetTechnologyVersion` for that id. When it disagrees with the version
 in the definitions read, the response carries `provenance.version_mismatch` — EA is loading a
@@ -135,8 +147,12 @@ kind of nothing it found:
   not a guess. EA's COM surface can't enumerate custom technology ids, so this only confirms the
   one string you passed; the real registration may exist under a different id.
 
-Two further `source` values sit between those: `registered_not_loaded`, where the definitions were
-found but EA does not have the technology loaded right now, and `session_parse`, where the only
+A Location: Model copy that cannot be decoded answers `{"error": "model_technology_unreadable",
+"unreadable": [...]}`, naming the copy and the reason, rather than `mdg_loaded_no_definition`.
+
+Further `source` values sit between those: `registered_not_enabled`, where EA has it loaded but it
+is disabled in Manage Technology; `registered_not_loaded`, where the definitions were
+found but EA does not have the technology loaded right now; and `session_parse`, where the only
 definitions available are those `parse_mdg_xml` was handed this session — which is not necessarily
 what EA loaded. Both are still worth reading; neither is evidence of what the session is actually
 modeling with.

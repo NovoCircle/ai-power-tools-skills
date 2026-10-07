@@ -293,8 +293,8 @@ reserved-word gotcha) is in [`references/sql_schema.md`](references/sql_schema.m
 
 ## 10. Working with the WBA MDG
 
-Confirm the MDG is loaded before tagging (query `t_document` for `DocType='MDGXml'` — empty
-means not imported; use `ea-mdg-deploy` first). Tag rule: base 6 apply to all 14 stereotypes,
+Confirm the MDG is loaded and enabled before tagging (`get_mdg_from_runtime` with
+`tech_id="WBA"` answers `source: "live"`; otherwise use `ea-mdg-deploy` first). Tag rule: base 6 apply to all 14 stereotypes,
 AI 4 apply only to the 3 AI stereotypes. Full verification SQL and a canon correction to a
 tag matrix: [`references/wba_mdg_reference.md`](references/wba_mdg_reference.md).
 

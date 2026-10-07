@@ -5,16 +5,25 @@ description: Deploy and test a Sparx EA MDG Technology — embed it into a .qea 
 
 # Deploying and Testing a Sparx EA MDG Technology
 
-*Verified against EA 17.0 Build 1704.*
+*Verified against EA 17.0 Build 1704; the two in-model storages below measured on EA 17.1 Build 1716.*
 
-## Two Deployment Modes
+## Deployment Modes
 
-| Mode | Location | Who gets it | When to use |
-|------|----------|-------------|-------------|
-| **Model-embedded** | Inside `.qea` project file | Anyone who opens the .qea | Preferred — travels with the model |
-| **Application-level** | `%APPDATA%\Sparx Systems\EA\MDGTechnologies\` | This machine only | Legacy; requires install per user |
+A technology stored **inside the model** reaches everyone who opens it. EA 17.1 keeps it in one
+of two places, and Manage Technology's **Location** field says which:
 
-**Never have both at the same time for the same tech ID** — EA will show a duplicate entry with an asterisk (`*`) in Manage Technologies, and the asterisk entry cannot be removed via the UI.
+| Mode | Location (Manage Technology) | Written by | Stored in | Keeps |
+|------|------------------------------|------------|-----------|-------|
+| **In the model, whole technology** | `Model` | Specialize ▸ Publish Technology ▸ Import MDG Technology ▸ **Import to Model**; `Repository.ImportPackageAsMDGTechnology`; `install_mdg(scope="model")` | one `t_document` row, `DocType='TECHNOLOGY'` | Everything, **toolbox pages included** |
+| **In the model, legacy route** | `Project` | `Repository.ImportTechnology`; `install_mdg(scope="embedded")` | `t_trxtypes` rows | UML profiles and the diagram profile. **No toolbox pages**: EA shows an automatic page built from the stereotypes |
+| **This machine only** | the file name (in APPDATA) | a copy in `%APPDATA%\Sparx Systems\EA\MDGTechnologies\`; `install_mdg(scope="user")` | the file | Everything |
+
+**Prefer Location: Model.** Sparx documents `ImportTechnology` as the pre-7.0 route; it still suits
+a technology with no toolbox pages, and `install_mdg(scope="embedded")` lists what it did not store.
+**Never keep one tech ID at two Locations**: EA lists both and answers from the Project copy.
+Measurements and details: [references/in-model-locations.md](references/in-model-locations.md).
+An application-level copy of an id the model also holds shows as a duplicate entry with an
+asterisk (`*`), which cannot be removed via the UI.
 
 ### Model vs. runtime technologies — and the search-path auto-registration trap
 
@@ -39,19 +48,39 @@ path is shadowing the copy you meant to test.
 
 | Operation | Use |
 |-----------|-----|
-| Model-embedded install (preferred) | `ea_mdg(operation="install_mdg", params={"scope": "embedded"})` |
-| Model-embedded install fallback | COM `repo.ImportTechnology(xml_str)` via `ea-com` |
+| In the model, from an «mdg technology» package (preferred; server later than 3.5.0) | `ea_mdg(operation="install_mdg", params={"scope": "model", "package_id": <id>})` |
+| In the model, from an XML file, whole technology | EA UI: Specialize ▸ Publish Technology ▸ Import MDG Technology ▸ **Import to Model** (no COM route exists) |
+| In the model, legacy route (no toolbox pages) | `ea_mdg(operation="install_mdg", params={"scope": "embedded"})` — read `not_stored` in the response |
 | Application-level install | `ea_mdg(operation="install_mdg", params={"scope": "user"})` |
-| Verify MDG loaded | COM `repo.IsTechnologyLoaded("WBA")` → True |
-| Verify Location: Project | EA UI → Specialize → Technologies → Manage Technology |
+| Verify MDG loaded **and enabled** | COM `repo.IsTechnologyLoaded(tech_id)` and `repo.IsTechnologyEnabled(tech_id)` with your technology id — a technology disabled in Manage Technology still reports loaded |
+| Verify what the model stores | `ea_mdg(operation="get_embedded_mdgs", params={})` (server later than 3.5.0: both Locations), then EA UI → Specialize → Technologies → Manage Technology |
 | Dismiss overwrite dialog | Computer use → screenshot → click Yes → screenshot again |
 | Fix wrong `Object_Type` in database | COM `repo.Execute()` DML (NOT `elem.Type` setter) |
 
 ---
 
-## Deploy: Model-Embedded (Preferred)
+## Deploy: In the Model at Location: Model (preferred)
 
-Uses `Repository.ImportTechnology(xml_string)` via COM. This writes the MDG directly into the `.qea` SQLite database.
+**From an «mdg technology» source package** (server later than 3.5.0):
+
+```
+ea_mdg(operation="install_mdg", params={"scope": "model", "package_id": <id>})
+```
+
+It runs `Repository.ImportPackageAsMDGTechnology` with EA's dialogs suppressed and reads the stored
+row back: id, declared version, sections, and stereotype, diagram type and toolbox page counts.
+`status: "installed_shadowed"` means the model also holds the id at Location: Project; pass
+`replace_project_copy: true` to remove that copy. **Restart EA before checking the toolbox**: until
+then it may not switch to the new pages ([references/in-model-locations.md](references/in-model-locations.md)).
+
+**From an XML file:** EA has no COM call that imports a file to Location: Model, so do it in EA:
+Specialize ▸ Publish Technology ▸ Import MDG Technology, choose **Import to Model**.
+
+## Deploy: In the Model at Location: Project (legacy route)
+
+Uses `Repository.ImportTechnology(xml_string)` via COM; `install_mdg(scope="embedded")` does the same.
+It keeps the UML profiles and the diagram profile and **drops the toolbox pages**, so use it only
+for a technology that has none, or when nothing else is available.
 
 ```python
 import os
@@ -82,7 +111,8 @@ print("Done. Restart EA to verify.")
 ```
 
 **What happens after ImportTechnology:**
-- The technology registers in **`t_trxtypes`** in the `.qea` file. Not `t_document`, and not `t_propertytypes` or `t_stereotypes` — an earlier version of this line named those two and they are wrong, which matters because a reader who checks them finds nothing and cannot tell a failed embed from a successful one. `SELECT Description, TRX FROM t_trxtypes` is the query
+- The technology registers in **`t_trxtypes`** in the `.qea` file: an `MDGTechnology` row (diagram profile in `Style`) and one `UMLTechProfile` row per UML profile (in `Notes`). `SELECT Description, TRX FROM t_trxtypes` is the query. Manage Technology shows it at Location: **Project**
+- Toolbox pages (`<UIToolboxes>`) are not stored ([references/in-model-locations.md](references/in-model-locations.md)). Nothing goes to `t_propertytypes` or `t_stereotypes` either
 - EA must be restarted for the new/updated technology to take full effect
 - `ImportTechnology` returns `False` if EA shows an error dialog — common causes:
   - `id=` attribute longer than 12 characters → shorten it
@@ -173,10 +203,10 @@ not the same command and the names do not say which is which:**
 | Command | What it does | Leaves behind |
 |---|---|---|
 | **Save Package as MDG Technology** | Assembles the technology and writes it to a file | an `.xml` on disk. Nothing is installed |
-| **Import Package as MDG Technology** | Loads the technology into the **session runtime** | nothing on disk, nothing embedded |
+| **Import Package as MDG Technology** | Assembles the technology and imports it into the open model | a `t_document` TECHNOLOGY row: Location: **Model**, whole technology, available to every user of the model |
 
-**If you want a deployable artifact, use Save.** Import is for trying a technology out in the
-current session.
+**Save gives you a file to keep or ship; Import deploys into the open model.** Both are right
+for a model-driven technology, and `install_mdg(scope="model")` is the scriptable Import.
 
 ### Procedure — Save Package as MDG Technology
 
@@ -189,26 +219,17 @@ current session.
 6. **Version-stamp the file.** Generated technologies come out with an empty `version` attribute,
    and setting the package `Version` beforehand does not carry through. Two unversioned builds are
    indistinguishable in Manage Technologies.
-7. Deploy the resulting `.xml` by either route above — model-embedded or application-level. This
-   command does not install anything.
+7. Deploy the resulting `.xml` by one of the routes above. This command does not install
+   anything.
 
-The technology id is the **package name truncated to 12 characters** (`WBA Technology` →
-`WBA Technolo`), so name the package for the id you want before publishing.
+Name the «mdg technology» package for the id you want: the id comes from the package name, and a
+name over 12 characters has been seen truncated (`WBA Technology` → `WBA Technolo`) on one route
+and kept whole on another.
 
-### Import Package as MDG Technology — what it does and does not do
-
-⚠ **It reports success without leaving evidence.** `Repository.ImportPackageAsMDGTechnology(<package GUID>)`
-is present on `Repository` and returns `True` for a valid GUID. Measured against a populated
-14-stereotype source model: it returned `True` and **changed nothing** — `t_trxtypes` stayed at its
-previous row count and the embedded profile blob stayed byte-identical.
-
-So do not take `True`, or the UI's `MDG Technology successfully loaded into current model`, as
-proof of a deploy. If you use this command, verify with **`repo.IsTechnologyLoaded(<id>)`** — the
-session-runtime question, which is what this command actually affects. Checking `t_trxtypes` is
-the wrong test and will report failure on a command that worked as designed.
-
-Whether it can be made to embed with `SuppressEADialogs = True` / `EnableUIUpdates = False`, the
-way `install_mdg` pushes `ImportTechnology` past its confirmation dialog, is **untested**.
+**Import Package as MDG Technology** writes one `t_document` TECHNOLOGY row and does not touch
+`t_trxtypes`, so check the right table; measured behavior is in
+[references/in-model-locations.md](references/in-model-locations.md). `install_mdg(scope="model")`
+is the scriptable form.
 
 ### Version gate
 
@@ -257,15 +278,16 @@ ea2 = ea.close_and_reopen()  # save + shutdown + relaunch + reconnect
 
 After deploying and restarting EA, verify each of these:
 
-> **EA 17 note on `get_embedded_mdgs`:** The `get_embedded_mdgs` MCP tool queries `t_document`
-> for embedded MDG XML. In EA 17, `ImportTechnology()` does not store the MDG in `t_document` —
-> it uses a different internal location. `get_embedded_mdgs` will return empty even when the MDG
-> is correctly embedded. Use COM verification (`IsTechnologyLoaded`) or the EA UI instead.
+> **`get_embedded_mdgs` and server versions.** Up to 3.5.0 it read only a document type none of
+> EA 17.1's import routes writes, so it returned empty for every in-model technology. Later servers list each
+> copy the model stores, at Location `Model` and `Project`, with the version each declares.
 
 **Verification order (most reliable first):**
-1. **COM:** `repo.IsTechnologyLoaded("WBA")` must return `True`
-2. **EA UI:** Specialize → Technologies → Manage Technology → Location column shows **Project**
-3. **MCP:** `ea_mdg(operation="get_embedded_mdgs", params={})` ← note: unreliable for model-embedded MDGs in EA 17
+1. **COM:** `repo.IsTechnologyLoaded(tech_id)` and `repo.IsTechnologyEnabled(tech_id)` must both return `True` (`"WBA"` in the Westbrook example)
+2. **EA UI:** Specialize → Technologies → Manage Technology → exactly one entry for the id, at the
+   Location you installed to (**Model** for `scope="model"` or Import to Model, **Project** for `scope="embedded"`)
+3. **MCP:** `ea_mdg(operation="get_mdg_from_runtime", params={"tech_id": "<id>"})` — `source: "live"`;
+   on a server later than 3.5.0 also `provenance.location` as expected and no `provenance.also_stored`
 
 ### 1. COM check (scripted)
 ```python
@@ -278,10 +300,10 @@ with EA() as ea:
 ```
 
 ### 2. Manage Technologies dialog
-- Open: **Specialise → Technologies → Manage Technologies** (or **Settings → MDG Technologies**)
+- Open: **Specialize → Technologies → Manage Technologies** (or **Settings → MDG Technologies**)
 - Look for your technology entry
-- ✅ `Location` column shows **Project** (not APPDATA)
-- ✅ Only **one entry** — no asterisk (`*`) duplicate
+- ✅ `Location` shows where you installed it: **Model** or **Project** (not APPDATA)
+- ✅ Only **one entry** for the id — no asterisk (`*`) duplicate, and not one at each Location
 - ✅ Version matches your `<Documentation version=">` value
 
 ### 3. Diagram types
@@ -292,9 +314,11 @@ with EA() as ea:
 
 ### 4. Toolbox
 - With a custom diagram open, look at the Toolbox panel
-- If auto-switching doesn't happen, click the filter icon (≡) and select your technology
-- ✅ Your toolbox page(s) appear (e.g., "WBA ArchiMate Elements", "WBA UML Elements")
+- Check after an EA restart; before one, auto-switching may not happen (≡ ▸ your technology lists the pages)
+- ✅ Your toolbox page(s) appear (e.g., "WBA ArchiMate", "WBA BPMN", "WBA UML" for WBA 1.1.1)
 - ✅ All expected stereotypes are listed
+- A single automatic page named after the profile, listing every stereotype, means the copy EA is
+  using is at Location: Project, which keeps no toolbox pages. Install at Location: Model.
 
 ### 5. Stereotype application + tagged values
 - Drag an element from your toolbox page onto a diagram
@@ -332,7 +356,9 @@ sequence around the overwrite-confirmation dialog.
 | Technology shows but toolbox is empty | `ToolboxPage name` doesn't match `toolbox` property value in DiagramProfile | Make them identical |
 | Diagram type missing from New Diagram dialog | DiagramProfile not loaded or wrong `Apply type` | Verify DiagramProfile section uses `Apply type="Diagram_Logical"` (not `"Logical"`) |
 | Tagged values don't appear | Stereotype name mismatch between Profile and Toolbox | Verify `WBA::WBABusinessApplication` format — prefix must match UMLProfile Documentation `id` |
-| `DeleteTechnology()` returns True but entry persists | COM removes from registry but not memory | Restart EA — deletion takes effect after restart |
+| Only an automatic toolbox page, no designed pages | The technology was installed at Location: Project (`ImportTechnology`, `install_mdg(scope="embedded")`), which stores no toolbox pages | Install at Location: Model: `install_mdg(scope="model", package_id=...)`, or Import MDG Technology ▸ Import to Model |
+| Two entries for one id, Location Project and Model | Installed by both routes | Keep one. EA answers from the Project copy. `install_mdg(scope="model", replace_project_copy=True)` removes the Project copy; if it answers `installed_shadowed`, reopen the project and call again |
+| `DeleteTechnology()` returns True but a Location: Model entry remains | `DeleteTechnology` removes the Location: Project rows (`t_trxtypes`) only; measured on EA 17.1 build 1716, the `t_document` row stays | Remove a Location: Model copy in Manage Technology (Remove) |
 | MDG file rejected on load | Encoding declaration mismatch | Declare `encoding="utf-8"` in the XML prolog and save the file as UTF-8 |
 
 ---

@@ -137,7 +137,7 @@ against the Westbrook Bank repository:
 | Question | Call | What it actually told us |
 |---|---|---|
 | Is a technology registered anywhere EA would show it in Manage Technology? | `list_registered_technologies` | `WBA` (enabled) **and** `WestbrookBankArchitecture` (disabled) both listed — two registrations of what a person would assume is "the same" technology |
-| Does the model file itself carry a copy? | `get_embedded_mdgs` | Empty — `count: 0`, with a note that EA 17+ doesn't record this in `t_document` at all. Empty here proves nothing either way |
+| Does the model file itself carry a copy? | `get_embedded_mdgs` | On a server up to 3.5.0: empty, because it read a document type none of EA 17.1's import routes writes — proves nothing. Later servers list each stored copy with its Location: `Model` (`t_document` TECHNOLOGY, whole technology) or `Project` (`t_trxtypes`, no toolbox pages) |
 | Does EA have it loaded right now, for this session? | `get_mdg_from_runtime`, `params={"tech_id": "WBA"}` | 14 stereotypes with their metaclasses, 10 tagged values and 3 diagram types, `"source": "live"`, and a `provenance` block naming where the definitions were read from and what EA reports the version as |
 
 `get_mdg_from_runtime` reads the technology EA loaded — from the copy imported into the model, or
@@ -147,6 +147,7 @@ technology's, not a description of one. Read `source` before you read anything e
 | `source` | What it means for your conclusion |
 |---|---|
 | `live` | Definitions read from the loaded technology. Safe to reason about as deployed. |
+| `registered_not_enabled` | (Server later than 3.5.0.) The definitions exist and EA reports the technology loaded, but it is **disabled** in Manage Technology: its toolbox, diagram types and quick links are not offered. A disabled technology still answers `IsTechnologyLoaded` True, so `loaded` alone is not "in use". |
 | `registered_not_loaded` | The definitions exist, but EA does not currently have the technology loaded. Modeling against it will not behave as described until it is enabled in Manage Technology. |
 | `session_parse` | These came from a file handed to `parse_mdg_xml` this session, which is not necessarily what EA loaded. |
 | `unavailable` | The call declines to answer. `error` says why: `mdg_loaded_no_definition` (loaded, but its XML is neither registered nor in the model — export it and run `parse_mdg_xml`), `unknown_mdg` (EA reports nothing loaded under that exact id), `cannot_determine` (EA could not be probed at all). |
@@ -190,7 +191,9 @@ profile packages), pick `ea-mdg-model-build` over `ea-mdg-author` regardless of 
 | Symptom | Cause | Fix |
 |---|---|---|
 | `get_mdg_from_runtime` returns `missing_required_params` | It requires `tech_id` — it does not assess the whole repository, only one named technology | Pass `params={"tech_id": "WBA"}` (or whatever `assess_mdg_situation`'s `loaded_mdgs` named) |
-| `get_embedded_mdgs` returns `count: 0` on a repository with a technology clearly loaded | EA 17+ doesn't write technology imports to `t_document` | Don't treat this as "nothing embedded" — treat it as "this call can't see EA 17-style registrations," and check `list_registered_technologies` instead |
+| `get_embedded_mdgs` returns `count: 0` on a repository with a technology clearly loaded | Server up to 3.5.0: it read only `t_document` rows of type `MDGXml`, which none of EA 17.1's import routes writes. EA 17.1 stores an in-model technology as `t_document` `TECHNOLOGY` (Location: Model) or in `t_trxtypes` (Location: Project) | On those servers treat empty as "this call cannot see it". Later servers read both |
+| `get_mdg_from_runtime` says `mdg_loaded_no_definition` for a technology imported to the model | Server up to 3.5.0 cannot read Location: Model (`t_document` TECHNOLOGY) | Upgrade, or export from Manage Technology and run `parse_mdg_xml` |
+| The same technology appears twice in Manage Technology, Location `Project` and `Model` | It was installed by both routes. EA answers `GetTechnologyVersion` from the Project copy | Keep one; see `ea-mdg-deploy` |
 | `get_mdg_from_runtime` returns `"source": "unavailable"` with `mdg_loaded_no_definition` | EA has the technology loaded, but its XML is neither registered in a technology folder nor imported into the model, so there is nothing to read | Export it from Specialize > Technologies > Manage Technology and run `parse_mdg_xml` on the file |
 | Same technology name appears twice in `list_registered_technologies` with different `enabled` values | Two separate registrations (for example a workstation file copy under one id, and a differently-named entry under a display name) legitimately coexist | Not a bug — read `location` and `enabled` per row, don't assume one row speaks for the technology |
 | `recommended_next_skill` names a skill directory that doesn't exist | Server/source drift — see section 5 | Never route on this field alone; confirm against `ea-start-here` and the actual directory listing |

@@ -53,14 +53,19 @@ When automating MDG work, pick the right tool tier:
 | Census a repository's existing usage | `_shared/tools/ea_census.py` — profile-aware. **Not** `summarize_stereotype_usage`, which reads the bare stereotype column and cannot see the language |
 | Parse and validate MDG XML | `ea_mdg(operation="parse_mdg_xml", params={"path_or_content": "..."})` |
 | Install MDG at application scope | `ea_mdg(operation="install_mdg", params={"scope": "user"})` |
-| Install MDG as model-embedded | `ea_mdg(operation="install_mdg", params={"scope": "embedded"})` — or COM `repo.ImportTechnology()` if MCP times out |
-| Verify MDG is loaded | COM: `repo.IsTechnologyLoaded("WBA")` — **not** `get_embedded_mdgs` (unreliable in EA 17) |
+| Install MDG into the model, whole technology | EA UI: Specialize ▸ Publish Technology ▸ Import MDG Technology ▸ **Import to Model** (Location: Model). EA has no COM call that imports a file there |
+| Install MDG into the model, legacy route | `ea_mdg(operation="install_mdg", params={"scope": "embedded"})` (Location: Project). **Drops toolbox pages**; the response's `not_stored` says so |
+| Verify MDG is loaded | COM: `repo.IsTechnologyLoaded(tech_id)` and `repo.IsTechnologyEnabled(tech_id)` with your technology id (a disabled technology still reports loaded) |
 | Fix `Object_Type` in database | `repo.Execute()` DML — **not** `elem.Type` COM setter (silently fails for ArchiMate types) |
 | Dismiss EA dialogs | Computer use screenshot → click → screenshot again |
 
-> **`get_embedded_mdgs` is unreliable in EA 17+ for model-embedded MDGs.** Use
-> `repo.IsTechnologyLoaded("WBA")` or check Specialize → Technologies → Manage Technology
-> in the EA UI instead.
+> **`get_embedded_mdgs` up to server 3.5.0 returns empty** for every in-model technology on EA
+> 17.1: it read a document type none of EA 17.1's import routes writes. Later servers list both in-model Locations.
+> Either way, Manage Technology (Specialize → Technologies) is the authoritative view.
+
+A technology with toolbox pages that will be maintained belongs in a source model
+(`ea-mdg-model-build`), from where `install_mdg(scope="model")` (server later than 3.5.0) installs it
+at Location: Model in one call.
 
 ---
 

@@ -8,16 +8,18 @@ tag-applicability rule.
 
 ## Confirm MDG is active before tagging
 
-Before setting any WBA tagged values, confirm the MDG is loaded:
+Before setting any WBA tagged values, confirm the MDG is loaded and enabled:
 ```
-ea_analyze(operation="execute_sql", params={"sql": """
-    SELECT * FROM t_document
-    WHERE DocType = 'MDGXml' AND DocName = 'WestbrookBankArchitecture'
-"""})
+ea_mdg(operation="get_mdg_from_runtime", params={"tech_id": "WBA"})
 ```
 
-If the result is empty, the MDG has not been imported into the model. Import it with the
-`ea-mdg-deploy` skill before proceeding.
+`source: "live"` means EA has it loaded and enabled. Anything else — `registered_not_enabled`,
+`unavailable` — means deploy or enable it with the `ea-mdg-deploy` skill before proceeding.
+
+Do not test for it with SQL against `t_document` `DocType='MDGXml'`: none of EA 17.1's import routes writes that
+document type, so the query is empty whether or not the technology is in the model. An in-model
+technology is a `t_document` row with `DocType='TECHNOLOGY'` (Location: Model) or rows in
+`t_trxtypes` (Location: Project); WBA in the Westbrook Bank model is the second.
 
 ## Tagged value namespace confirmation
 
