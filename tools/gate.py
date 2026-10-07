@@ -37,9 +37,18 @@ from _layout import source_path as _source_path, asset_dirs as _asset_dirs  # no
 # Only a *real* username or our own working tree is a violation.
 PLACEHOLDER_PATH = re.compile(r"[A-Za-z]:\\{1,2}Users\\{1,2}[<%{$]")
 
+# "TEA Framework" is a technology that genuinely ships with stock Sparx
+# Enterprise Architect, so that exact phrase is allowed. Anything that reads as a
+# CUSTOMER extension of it is not: TEA on its own, TEA:: as a stereotype prefix,
+# TEA inside a customer's own identifier like "CA EDD TEA", and "TEA Framework"
+# followed by extension wording (Extension, Custom, Customization, Profile, MDG,
+# Toolbox, Add-in). A customer MDG built on the Sparx technology therefore still
+# trips the gate for a human decision. The same rule is in the server repo's gate.
 FORBIDDEN = [
     (re.compile(r"\bTVO\b"), "real customer identifier 'TVO'"),
-    (re.compile(r"\bTEA\b"), "real customer identifier 'TEA'"),
+    (re.compile(r"\bTEA\b(?!\s+Framework\b(?!\s+(?i:Extensions?|Extended|Custom|"
+                r"Customi[sz](?:ed|ation)|Profiles?|MDG|Toolbox(?:es)?|Add-?ins?)\b))"),
+     "real customer identifier 'TEA'"),
     (re.compile(r"\bCA\s+EDD\b|\bEDD\b"), "real customer identifier 'EDD'"),
     (re.compile(r"TechVentures", re.I), "non-canonical example org 'TechVentures'"),
     (re.compile(r"RyanSchmierer|rschmierer", re.I), "personal identifier"),
@@ -135,6 +144,9 @@ KNOWN_SPACED_IDS = (
     "FEAF Diagrams",
     "ZF Interface", "ZF Owner", "ZF Designer", "ZF Planner", "ZF Builder",
     "ZF Subcontractor",
+    # Sparx-shipped (see the TEA note under Rule 1). Its own namespace is
+    # allowed; a customer extension's namespace is not.
+    "TEA Framework",
 )
 QEA_FILE = re.compile(r"\b([A-Za-z][A-Za-z0-9_-]*)\.(?:qea|eapx|eap|feap)\b")
 MDG_NS = re.compile(r"\b([A-Z][A-Za-z0-9_]{1,30})::")
