@@ -55,7 +55,7 @@ When automating MDG work, pick the right tool tier:
 | Install MDG at application scope | `ea_mdg(operation="install_mdg", params={"scope": "user"})` |
 | Install MDG into the model, whole technology | EA UI: Specialize ▸ Publish Technology ▸ Import MDG Technology ▸ **Import to Model** (Location: Model). EA has no COM call that imports a file there |
 | Install MDG into the model, legacy route | `ea_mdg(operation="install_mdg", params={"scope": "embedded"})` (Location: Project). **Drops toolbox pages**; the response's `not_stored` says so |
-| Verify MDG is loaded | COM: `repo.IsTechnologyLoaded("WBA")` and `repo.IsTechnologyEnabled("WBA")` (a disabled technology still reports loaded) |
+| Verify MDG is loaded | COM: `repo.IsTechnologyLoaded(tech_id)` and `repo.IsTechnologyEnabled(tech_id)` with your technology id (a disabled technology still reports loaded) |
 | Fix `Object_Type` in database | `repo.Execute()` DML — **not** `elem.Type` COM setter (silently fails for ArchiMate types) |
 | Dismiss EA dialogs | Computer use screenshot → click → screenshot again |
 
@@ -64,8 +64,8 @@ When automating MDG work, pick the right tool tier:
 > Either way, Manage Technology (Specialize → Technologies) is the authoritative view.
 
 A technology with toolbox pages that will be maintained belongs in a source model
-(`ea-mdg-model-build`), from where `install_mdg(scope="model")` installs it at Location: Model
-in one call.
+(`ea-mdg-model-build`), from where `install_mdg(scope="model")` (server later than 3.5.0) installs it
+at Location: Model in one call.
 
 ---
 

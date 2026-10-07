@@ -319,7 +319,7 @@
         "ea-mdg-author/references/xml-skeleton.md"
       ],
       "sha256": {
-        "ea-mdg-author/SKILL.md": "23fcc8f523b77c80d100fcb593ffae46b2715c7e29a804b9dbb2b38c6fce71d4",
+        "ea-mdg-author/SKILL.md": "d59a44ba3b19fee4094c88f06dc8ad77888f49965559bcda3eb68db44e6dd4e3",
         "ea-mdg-author/references/diagrams-toolboxes.md": "e81b5bff2094768ee93b73e5d33bb233057a1133434f773c4941c6328fc8d557",
         "ea-mdg-author/references/post-install-migration.md": "b2e3f1a2f047042a917eea2b201ebb454df7886ef0136d316bc092f997dd3cec",
         "ea-mdg-author/references/quick-linker.md": "1b0e4e93230bce9138b650aa403f73e370cc6592807009949404b8f06ade232a",
@@ -339,8 +339,8 @@
         "ea-mdg-deploy/references/in-model-locations.md"
       ],
       "sha256": {
-        "ea-mdg-deploy/SKILL.md": "3fb7a08d1fe685e61672ed1f3087aebf71b7de593cf2737b504acf9fe009a022",
-        "ea-mdg-deploy/references/in-model-locations.md": "b84cb7681afef598f0374bc90beecfb218a016f7d25e091b598d2d4bff811185"
+        "ea-mdg-deploy/SKILL.md": "d7a6839d68786ff8d9024639fd96f06eb44fda77e1da85e7fe813c2239fc5891",
+        "ea-mdg-deploy/references/in-model-locations.md": "8182bdc9e080224c8b37fcb7ecf5851d029dc9c5a38b4769fe8f4ba61cb57e7e"
       }
     },
     {
@@ -354,7 +354,7 @@
         "ea-mdg-model-build/references/generating-from-a-census.md"
       ],
       "sha256": {
-        "ea-mdg-model-build/SKILL.md": "ba7affdc0c4f7a819263d885c34e28326747f6a02f8a56acb02c46360eee436b",
+        "ea-mdg-model-build/SKILL.md": "493a202039b851385e868143ea893fd677e6f71d91c03e890c062f6b78fa6770",
         "ea-mdg-model-build/references/generating-from-a-census.md": "70e682c06efc17d9b80081daa6c6344a5d45ee0b6e462beac30143a50487957d"
       }
     },

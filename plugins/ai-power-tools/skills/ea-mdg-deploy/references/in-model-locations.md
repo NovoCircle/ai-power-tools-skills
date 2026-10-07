@@ -10,7 +10,7 @@ the Westbrook Bank reference model, or read from Sparx's 17.1 user guide and EA'
 | Written by | Specialize ▸ Publish Technology ▸ Import MDG Technology ▸ Import to Model; `Repository.ImportPackageAsMDGTechnology(<package GUID>)`; `install_mdg(scope="model")` | `Repository.ImportTechnology(xml)`; `install_mdg(scope="embedded")` |
 | Stored in | one `t_document` row: `DocType='TECHNOLOGY'`, `DocName` = the technology id, `BinContent` = a ZIP holding `str.dat`, the whole MDG file in UTF-16 | `t_trxtypes`: an `MDGTechnology` row (diagram profile in `Style`) and one `UMLTechProfile` row per UML profile (in `Notes`) |
 | Toolbox pages | kept; the designed pages appear and switch with the diagram type | **not kept**: an input with three toolbox pages left none; EA shows one automatic page built from the stereotypes |
-| Sparx's guide says | Import to Model makes a technology "available to all users of the model" | `ImportTechnology` "applies to technologies imported into pre-7.0 versions of Enterprise Architect" |
+| Sparx's guide says | Import to Model stores the technology in the model, for every user of that model | `ImportTechnology` "applies to technologies imported into pre-7.0 versions of Enterprise Architect" |
 
 EA's COM interface has exactly two technology-import methods, `ImportTechnology` and
 `ImportPackageAsMDGTechnology`. None imports a technology **file** at Location: Model; for a file,

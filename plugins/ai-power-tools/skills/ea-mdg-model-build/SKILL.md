@@ -250,8 +250,9 @@ Two halves, and only the first is scriptable today. The sequence matters and sev
 
    Two things to know before relying on it:
 
-   - **The technology id is the package name truncated to 12 characters.** `WBA Technology`
-     becomes `WBA Technolo`. Name the package for the id you want.
+   - **The technology id comes from the package name**, and a name over 12 characters has been
+     seen truncated (`WBA Technology` became `WBA Technolo`) on one route and kept whole on
+     another. Name the package for the id you want, in 12 characters or fewer.
    - **Generated files come out with an empty `version` attribute**, and setting the package
      `Version` beforehand does not carry through. Stamp it afterwards — two unversioned builds are
      indistinguishable in Manage Technologies, which is a mistake that has already been made here.

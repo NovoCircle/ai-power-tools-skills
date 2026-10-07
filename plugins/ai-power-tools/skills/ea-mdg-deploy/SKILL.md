@@ -52,7 +52,7 @@ path is shadowing the copy you meant to test.
 | In the model, from an XML file, whole technology | EA UI: Specialize ▸ Publish Technology ▸ Import MDG Technology ▸ **Import to Model** (no COM route exists) |
 | In the model, legacy route (no toolbox pages) | `ea_mdg(operation="install_mdg", params={"scope": "embedded"})` — read `not_stored` in the response |
 | Application-level install | `ea_mdg(operation="install_mdg", params={"scope": "user"})` |
-| Verify MDG loaded **and enabled** | COM `repo.IsTechnologyLoaded("WBA")` and `repo.IsTechnologyEnabled("WBA")` — a technology disabled in Manage Technology still reports loaded |
+| Verify MDG loaded **and enabled** | COM `repo.IsTechnologyLoaded(tech_id)` and `repo.IsTechnologyEnabled(tech_id)` with your technology id — a technology disabled in Manage Technology still reports loaded |
 | Verify what the model stores | `ea_mdg(operation="get_embedded_mdgs", params={})` (server later than 3.5.0: both Locations), then EA UI → Specialize → Technologies → Manage Technology |
 | Dismiss overwrite dialog | Computer use → screenshot → click Yes → screenshot again |
 | Fix wrong `Object_Type` in database | COM `repo.Execute()` DML (NOT `elem.Type` setter) |
@@ -283,11 +283,11 @@ After deploying and restarting EA, verify each of these:
 > copy the model stores, at Location `Model` and `Project`, with the version each declares.
 
 **Verification order (most reliable first):**
-1. **COM:** `repo.IsTechnologyLoaded("WBA")` and `repo.IsTechnologyEnabled("WBA")` must both return `True`
+1. **COM:** `repo.IsTechnologyLoaded(tech_id)` and `repo.IsTechnologyEnabled(tech_id)` must both return `True` (`"WBA"` in the Westbrook example)
 2. **EA UI:** Specialize → Technologies → Manage Technology → exactly one entry for the id, at the
    Location you installed to (**Model** for `scope="model"` or Import to Model, **Project** for `scope="embedded"`)
-3. **MCP:** `ea_mdg(operation="get_mdg_from_runtime", params={"tech_id": "WBA"})` — `source: "live"`,
-   `provenance.location` as expected, and no `provenance.also_stored`
+3. **MCP:** `ea_mdg(operation="get_mdg_from_runtime", params={"tech_id": "<id>"})` — `source: "live"`;
+   on a server later than 3.5.0 also `provenance.location` as expected and no `provenance.also_stored`
 
 ### 1. COM check (scripted)
 ```python
