@@ -357,7 +357,7 @@ sequence around the overwrite-confirmation dialog.
 | Diagram type missing from New Diagram dialog | DiagramProfile not loaded or wrong `Apply type` | Verify DiagramProfile section uses `Apply type="Diagram_Logical"` (not `"Logical"`) |
 | Tagged values don't appear | Stereotype name mismatch between Profile and Toolbox | Verify `WBA::WBABusinessApplication` format — prefix must match UMLProfile Documentation `id` |
 | Only an automatic toolbox page, no designed pages | The technology was installed at Location: Project (`ImportTechnology`, `install_mdg(scope="embedded")`), which stores no toolbox pages | Install at Location: Model: `install_mdg(scope="model", package_id=...)`, or Import MDG Technology ▸ Import to Model |
-| Two entries for one id, Location Project and Model | Installed by both routes | Keep one. EA answers from the Project copy. `install_mdg(scope="model", replace_project_copy=True)` removes the Project copy |
+| Two entries for one id, Location Project and Model | Installed by both routes | Keep one. EA answers from the Project copy. `install_mdg(scope="model", replace_project_copy=True)` removes the Project copy; if it answers `installed_shadowed`, reopen the project and call again |
 | `DeleteTechnology()` returns True but a Location: Model entry remains | `DeleteTechnology` removes the Location: Project rows (`t_trxtypes`) only; measured on EA 17.1 build 1716, the `t_document` row stays | Remove a Location: Model copy in Manage Technology (Remove) |
 | MDG file rejected on load | Encoding declaration mismatch | Declare `encoding="utf-8"` in the XML prolog and save the file as UTF-8 |
 
