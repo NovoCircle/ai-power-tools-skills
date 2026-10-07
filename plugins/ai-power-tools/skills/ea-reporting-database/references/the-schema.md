@@ -299,8 +299,6 @@ SELECT stereotype, COUNT(*) AS n
 ```
 
 ```
-Uses         10
-Flows         5
 Serving       3
 access        2
 Realization   1
@@ -315,20 +313,22 @@ SELECT profile, stereotype, COUNT(*) AS n
 ```
 
 ```
-BMM                Uses          9
-StandardProfileL2  Realization   6
-BPMN1.1            Assignment    5
-BIZBOK             realizes      4
-GML                Composition   1
+WestbrookBankArchitecture  Uses          18
+StandardProfileL2          Realization    6
+BPMN1.1                    Assignment     5
+WestbrookBankArchitecture  Flows          5
+WestbrookBankArchitecture  realizes       4
+BMM                        Uses           1
+GML                        Composition    1
 ```
 
-**`Uses` appears on both lists** — 9 bound to `BMM`, 10 bound to nothing. Same name on the
-connector, two different things in the repository, and no report built on the bare stereotype
-name can tell them apart. That is the whole argument for resolving provenance rather than reading
-the stereotype column.
+**`Uses` appears under two profiles** — 18 bound to `WestbrookBankArchitecture`, the model's own
+technology, and 1 bound to `BMM`, a shipped language. Same name on the connector, two different
+things in the repository, and no report built on the bare stereotype name can tell them apart.
+That is the whole argument for resolving provenance rather than reading the stereotype column.
 
-It also shows what EA ships enabled: five languages in use on connectors in a model whose own
-technology defines none of them.
+It also shows what EA ships enabled: four shipped languages (`StandardProfileL2`, `BPMN1.1`,
+`BMM`, `GML`) in use on connectors beside the model's own technology.
 
 ---
 

@@ -68,14 +68,16 @@ object twin.
 ### `no_candidate` — there is nothing to apply
 
 The loaded technology extends no stereotype for that element's metaclass, so no stereotype can
-legally be applied to it. On the reference model this is **15 Nodes** — cloud platforms,
-database platforms, infrastructure — because the technology extends `Component`, `Class` and
-`Activity` only.
+legally be applied to it. On the reference model, run over the Westbrook Bank package, this is
+**46 elements**: 10 Requirements and 36 UML behavior elements (use cases, actions, states,
+actors), because the technology extends `Component`, `Class`, `Activity` and `Node` only. (The
+15 infrastructure Nodes were this case until WBA 1.1.1 declared `WBATechnologyNode`; see
+`unrankable` below.)
 
 The useful answer here is not a suggestion. It is:
 
-> Your technology defines no stereotype for a Node. Fifteen infrastructure elements therefore
-> cannot be included. Either extend the technology to cover them, or accept the exclusion.
+> Your technology defines no stereotype for a Requirement. Ten requirements therefore cannot be
+> included. Either extend the technology to cover them, or accept the exclusion.
 
 Extending the technology is `ea-mdg-model-build`'s job, and generating one from what a
 repository already contains is exactly what that capability does.
@@ -90,16 +92,18 @@ A suggestion is only made when something in the repository distinguishes one can
 signal that does this in practice is **package locality**: what stereotype do the element's
 stereotyped neighbors carry?
 
-On the reference model the three governed Components sit in a package whose other three
-stereotyped elements are all `WBAVendorSystem`. That is a suggestion with a stated basis, and
-the `reason` field carries it:
+Under WBA 1.0 the three governed Components on the reference model came out this way: they sit
+in a package whose other three stereotyped elements are all `WBAVendorSystem`. That is a
+suggestion with a stated basis, and the `reason` field carries it:
 
 ```
 3 stereotyped element(s) in the same package carry 'WBAVendorSystem', and no other
 candidate for metaclass Component is backed by that evidence.
 ```
 
-Offer it **with the reason**. Do not present it as certain — it is evidence, not proof, and the
+Under 1.1.1 the same three elements, from the same snapshot, come out `unrankable` instead (see
+below), so the reference model no longer shows a `ranked` outcome. Offer a ranked suggestion
+**with the reason**. Do not present it as certain — it is evidence, not proof, and the
 customer knows their model.
 
 ### `unrankable` — several candidates, nothing to separate them
@@ -107,9 +111,23 @@ customer knows their model.
 Say so and ask. Do not pick one.
 
 This is not a weakness in the implementation, it is a property of most technologies. On the
-reference technology **twelve of the fourteen stereotypes declare an identical six-tag set**, so
-tag overlap scores five plausible Component stereotypes at exactly 1.0. Choosing the
-alphabetically first would be a guess wearing a number.
+reference technology (1.1.1) **ten of the fifteen element stereotypes declare an identical
+six-tag set**, so for an element carrying those six tags, tag overlap scores three of the seven
+Component stereotypes at exactly 1.0 (`WBABusinessService`, `WBARegulatedFunction`,
+`WBASystemOfRecord`); `WBABusinessApplication` scores 0.857, `WBAVendorSystem` 0.667 and the two
+AI stereotypes 0.6. Choosing the alphabetically first would be a guess wearing a number.
+
+Run over the Westbrook Bank package (WBA 1.1.1, 2026-10-07), 65 elements carry no stereotype: 3
+governed, none ranked, 19 needing a choice and 46 with no candidate. The 19 are:
+
+- **The three governed Components.** `WBAVendorSystem` still has the three sibling votes, but it
+  now declares nine tags (`vendor`, `product` and `pciScopeJustification` on top of the six), so
+  it scores below four other candidates on tag fit, and a suggestion is made only when one
+  candidate leads on both. The report lists `WBAVendorSystem` first, among five to choose from.
+- **The 15 Nodes.** There is now one candidate, `WBATechnologyNode`, but the Nodes carry no tags
+  and no neighbor carries it, so nothing in the repository backs it. The report lists it and
+  asks; it does not rank on the metaclass alone.
+- **One Activity**, with three candidates and nothing to separate them.
 
 ---
 

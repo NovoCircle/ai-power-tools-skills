@@ -79,10 +79,11 @@ MDG = {
 
 _STEREO_BLOCK = (f"@STEREO;Name={STEREO};GUID={{01}};"
                  f"FQName={NS}::{STEREO};@ENDSTEREO;")
-#: Connector stereotypes, deliberately UNQUALIFIED - no `FQName`, no `WBA::`. The
-#: reference technology declares no connector stereotype at all, so a prefixed one
-#: would assert something the MDG does not; a bare string on
-#: `t_connector.Stereotype` that comes from no MDG is what a real model carries.
+#: Connector stereotypes, deliberately UNBOUND - no `FQName`, no `WBA::`. They model a
+#: bare string on `t_connector.Stereotype` that comes from no technology, which a real
+#: model carries. The reference technology (WBA 1.1.1) does declare `Uses` and `Flows`;
+#: a bound connector still stores the bare string and carries
+#: `FQName=WestbrookBankArchitecture::Uses` in `t_xref`, a case these rows do not model.
 #: See `_shared/references/westbrook-example.md` §6, whose observed-counts table
 #: these two names come from rather than from an invented vocabulary.
 _CONNECTOR_STEREO_USES = "@STEREO;Name=Uses;GUID={02};@ENDSTEREO;"

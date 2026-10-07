@@ -189,9 +189,10 @@ Two things it makes obvious that are easy to get wrong:
 Every example across these skills uses **Westbrook Bank**, a fictitious organization, with the
 `WBA` technology. It is not a real customer and its model is not a real model.
 
-The canonical definition — the 14 stereotypes, their metaclasses, the 10 tagged values, the
-diagram types and toolbox pages — is in `_shared/references/westbrook-example.md`. Read it before
-writing a new example, rather than inventing a parallel vocabulary.
+The canonical definition — the 15 element stereotypes and 3 connector stereotypes, their
+metaclasses, the tagged values, the diagram types and toolbox pages — is in
+`_shared/references/westbrook-example.md`. Read it before writing a new example, rather than
+inventing a parallel vocabulary.
 
 ## Verify in EA's UI
 

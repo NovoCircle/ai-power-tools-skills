@@ -20,11 +20,12 @@ Back to [SKILL.md](../SKILL.md).
 </Stereotype>
 ```
 
-This is the real `WBAApplicationView` diagram stereotype. Its `toolbox` value must be the *exact*
-toolbox page name declared in Section 3 below (`WBA ArchiMate Elements`) — not the technology's
-namespace-style label. The shipped Westbrook demo MDG gets this wrong (it points at
-`WBA::WBA ArchiMate`, which no toolbox page is named), so its custom diagrams fail to bind to
-their toolbox. Treat that as a pitfall to avoid, not a pattern to copy.
+This is the `WBAApplicationView` diagram stereotype, with `toolbox` set to the toolbox page name
+declared in Section 3 below (`WBA ArchiMate Elements`). The shipped Westbrook demo MDG (1.1.1)
+instead reads `WBA::WBA ArchiMate` — `<technology id>::<name of the toolbox's UML profile>` — and
+its diagrams resolve and switch the toolbox on (measured on EA 17.1, 2026-10-07; its 1.0 and 1.1.0
+builds, with the same string, never resolved their diagrams, and 1.1.1 differs by naming the
+diagram profile `WBA`). Try your form on a scratch diagram before relying on it.
 
 **Rules:**
 - `Apply type="Diagram_Logical"` — the correct value for EA 17 custom diagrams (NOT `"Logical"`)
@@ -38,7 +39,8 @@ their toolbox. Treat that as a pitfall to avoid, not a pattern to copy.
 
 ```xml
 <!-- Each toolbox page is one Stereotype with Apply type="ToolboxPage" -->
-<!-- This is the real "WBA ArchiMate Elements" page — one of the WBA technology's three -->
+<!-- A shortened "WBA ArchiMate Elements" page — one of the WBA technology's three. The shipped
+     1.1.1 page lists 12 items, in the form WestbrookBankArchitecture::WBABusinessApplication(UML::Component) -->
 <Stereotype name="WBA ArchiMate Elements" notes="">
   <AppliesTo>
     <Apply type="ToolboxPage"/>
@@ -54,7 +56,7 @@ their toolbox. Treat that as a pitfall to avoid, not a pattern to copy.
 </Stereotype>
 
 <!-- PROPOSED EXTENSION — not part of the shipped WBA technology (see Section 1 -
-     Connector Stereotype above: WBA ships no connector stereotypes today). Shown only
+     Connector Stereotype above: WBA ships `Uses`, `Flows` and `realizes`, not this one). Shown only
      to teach how a connector toolbox page is wired up. -->
 <Stereotype name="WBA Connectors (proposed)" notes="">
   <AppliesTo>
@@ -67,7 +69,7 @@ their toolbox. Treat that as a pitfall to avoid, not a pattern to copy.
 ```
 
 **Rules:**
-- The `Stereotype name=` (e.g., `"WBA ArchiMate Elements"`) is the toolbox page name — it must exactly match the `toolbox` Property value in the DiagramProfile
+- The `Stereotype name=` (e.g., `"WBA ArchiMate Elements"`) is the toolbox page name — match it to the `toolbox` Property value in the DiagramProfile (the shipped 1.1.1 file names the toolbox's UML profile instead, `WBA::WBA ArchiMate`, and works; see Section 2)
 - The `Tag name=` prefix (`WBA::`) must match the UMLProfile Documentation `id`
 - Multiple pages allowed — one `Stereotype` per page, all inside the same UIToolboxes `<Content>`. The real WBA technology ships three: `WBA ArchiMate Elements`, `WBA BPMN Elements`, `WBA UML Elements`.
 

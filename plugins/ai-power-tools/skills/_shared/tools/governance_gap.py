@@ -18,16 +18,17 @@ So the build asks BEFORE it generates, not after.
 
 WHAT THIS MODULE REFUSES TO DO
 ------------------------------
-Rank candidates it cannot tell apart. On the reference technology twelve of the
-fourteen stereotypes declare an identical six-tag set, so tag overlap scores all
-five plausible Component stereotypes at exactly 1.0. Returning the
+Rank candidates it cannot tell apart. On the reference technology (WBA 1.1.1) ten of
+the fifteen element stereotypes declare an identical six-tag set, so for an element
+carrying exactly those six tags, tag overlap scores three of the seven Component
+stereotypes at exactly 1.0. Returning the
 alphabetically-first one dressed as a recommendation would be a guess wearing a
 number.
 
 Three outcomes, kept distinct on purpose:
 
   NO_CANDIDATE  the technology extends no stereotype for this metaclass, so
-                there is nothing to apply. Fifteen Nodes on the reference model.
+                there is nothing to apply. Ten Requirements on the reference model.
                 The answer is to extend the technology - which is R1's job - or
                 to accept the exclusion. Never a suggestion.
   RANKED        one candidate is backed by evidence the others lack, and the
@@ -41,10 +42,13 @@ toolchain: "a CANDIDATE list, never an instruction."
 THE SIGNALS, IN THE ORDER THEY DISCRIMINATE
 -------------------------------------------
 1. Base metaclass. A hard filter, not a tiebreak. It eliminates every candidate
-   for a Node and narrows a Component to seven.
+   for a Requirement and narrows a Component to seven.
 2. Package locality. What stereotype do this element's stereotyped neighbors
-   carry? This is what actually decided the three real cases on the reference
-   model, where three siblings in the same package were all the same stereotype.
+   carry? This is what decided the three real cases on the reference model under
+   WBA 1.0, where three siblings in the same package were all the same stereotype.
+   Under 1.1.1 it does not: `WBAVendorSystem` declares nine tags and so scores below
+   four other Component candidates on tag fit, and `assess` ranks only a candidate
+   that leads on both signals, so those three come out UNRANKABLE.
 3. Tag signature. Weak as a discriminator because the declared sets collide, but
    it does one useful job: an element carrying only the common tags should not
    be offered a stereotype that declares four more it does not have.

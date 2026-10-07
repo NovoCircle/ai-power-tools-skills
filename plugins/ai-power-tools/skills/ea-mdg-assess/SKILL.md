@@ -140,6 +140,11 @@ against the Westbrook Bank repository:
 | Does the model file itself carry a copy? | `get_embedded_mdgs` | On a server up to 3.5.0: empty, because it read a document type none of EA 17.1's import routes writes — proves nothing. Later servers list each stored copy with its Location: `Model` (`t_document` TECHNOLOGY, whole technology) or `Project` (`t_trxtypes`, no toolbox pages) |
 | Does EA have it loaded right now, for this session? | `get_mdg_from_runtime`, `params={"tech_id": "WBA"}` | 14 stereotypes with their metaclasses, 10 tagged values and 3 diagram types, `"source": "live"`, and a `provenance` block naming where the definitions were read from and what EA reports the version as |
 
+The first and third rows were observed against WBA 1.0. The model now holds WBA 1.1.1 at Location:
+Model: `get_mdg_from_runtime` answers 18 stereotypes (15 element and 3 connector), 3 diagram types
+and 3 toolbox pages, and Manage Technology lists one enabled `WBA` with the two older builds
+disabled.
+
 `get_mdg_from_runtime` reads the technology EA loaded — from the copy imported into the model, or
 from the registered `.xml` EA loads at startup — so its stereotype list is the deployed
 technology's, not a description of one. Read `source` before you read anything else:

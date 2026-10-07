@@ -3,7 +3,9 @@
 Detail supporting [`../SKILL.md`](../SKILL.md) Section 3. Read that section first for what each
 operation answers and how to read the result; this file carries the complete tables from a live
 run against the Westbrook Bank demo model, for reference and as a template for reading your own
-results.
+results. The tables were captured on 2026-09-23 against WBA 1.0; the technology has since moved to
+1.1.1 (15 element stereotypes), which declares `pciScopeJustification`, `product` and `vendor` on
+some of them, so "not declared" readings below describe 1.0.
 
 ---
 
@@ -87,7 +89,7 @@ ea_analyze(operation="summarize_tagged_value_usage", params={"stereotype": "WBAB
 | `pciScopeJustification` | **2** | **4%** | 2 |
 
 All six WBA base tags are present on every one of the 52 `WBABusinessApplication` elements --
-the healthy result, matching the canon's rule that the base set applies to all 14 stereotypes.
+the healthy result, matching the canon's rule that the base set applies to all 15 element stereotypes.
 `pciScopeJustification` is not one of the WBA canon's ten tagged values at all, and is set on
 only 2 of the 52 elements (`"Card issuance platform -- PCI DSS scoped"`,
 `"Network connectivity -- PCI DSS scoped"`). That is an ad hoc field two elements picked up,

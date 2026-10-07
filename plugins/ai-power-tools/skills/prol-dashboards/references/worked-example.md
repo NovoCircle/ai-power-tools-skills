@@ -28,12 +28,13 @@ Run the census ([data-probes.md](data-probes.md) §2). The things that decide th
 | `criticality` has **4** distinct values | a Pie is appropriate — under the seven-value limit |
 | `lifecycle` has **5** | a good second dimension for a stack |
 | Applications number in the dozens | "which depend on most" needs a **top-N**, not all of them |
-| `Uses` connectors exist, stored **bare** (no MDG declares them) | dependency counting is possible; filter on the bare name |
+| `Uses` connectors exist, stored **bare** in `t_connector.Stereotype` | dependency counting is possible; filter on the bare name |
 
 > **Check the stereotype storage form before writing the filter.** Westbrook's connector
-> stereotypes come from no MDG and are stored bare. An MDG-declared one would be qualified. Reading
-> the resolved value from Execute's Identified Placeholders settles it in seconds; guessing costs
-> hours.
+> stereotypes are stored bare in `t_connector.Stereotype`, including `Uses`, which the WBA
+> technology now declares (the binding is in `t_xref`). What Prolaborate itself holds for a
+> declared one was not re-measured. Reading the resolved value from Execute's Identified
+> Placeholders settles it in seconds; guessing costs hours.
 
 ## Step 2 — the four metric cards
 

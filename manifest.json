@@ -8,7 +8,7 @@
       "name": "_shared",
       "title": "Shared references",
       "description": "Reference material several EA skills link to: the Westbrook Bank canonical example, EA latency guidance, and file-encoding guidance. Not a skill \u2014 it has no SKILL.md and does not load as one. It installs beside the skills so their relative links resolve.",
-      "version": "1.5.0",
+      "version": "1.5.1",
       "min_server_version": "2.3.0",
       "files": [
         "_shared/references/ea-ui-verification.md",
@@ -58,13 +58,13 @@
         "_shared/references/latency.md": "af565b7e08f3a79a9239f548c63115181ef3ea7bd845b94ef0363a28f035d06f",
         "_shared/references/operations.md": "ec4331f19cdba7c8f299ac198656d6eea117d4ef2630284dd6d83e49a6b03db9",
         "_shared/references/prolaborate-session.md": "0e714db9ee43690a396333f220d45a268ff115f7e0c9d9397abe66fab36b105e",
-        "_shared/references/westbrook-example.md": "d4622f3cf9ef6a58d661fb54cb4248dfc364e8e6ab9d0314876838081600cdf2",
+        "_shared/references/westbrook-example.md": "48a4a968b8538e9c06b4b4445bfaecb9e9ded8d9dad06ded66daab0ca5cb96b5",
         "_shared/tools/ddl.py": "7dafe7fb35c29100ce70f54f475c4637f3014f789bbb17a9dc653769a777da39",
         "_shared/tools/dictionary.py": "1442d14d9c74ad8e7bc7ead17629f7756962538ad5f919bc7e5fc23ff3ad449d",
         "_shared/tools/ea_census.py": "2ce1c555e3a75c020dc1c6f35afb33cec8fe67155ed2fe06f173ca40efe563d7",
         "_shared/tools/extract.py": "9bb5dce2353bd09e74ae27d21d471e63dff50334329f290f47dc976b05285309",
         "_shared/tools/frame.py": "31cf98c6e860d7ee8c4b24b76c5b646ff3c7e4d44578e4338c6d1d90f84d504e",
-        "_shared/tools/governance_gap.py": "6d50f395bd193088ce9c223add0a3f11bd4b9cc2a80739be74435a902585e611",
+        "_shared/tools/governance_gap.py": "5315a2aabfb0dd97b26cfe4cd753bbcfb46158ff44c76b52e78aee36b2f83e45",
         "_shared/tools/load.py": "c8e413e7d629b597568aca6f9ed7e09dfc3f84618b89eeed508651752abbb9b3",
         "_shared/tools/parquet_out.py": "7b5ee150a5841695d8117a148cc529494a1ea4017a754be2fb5f5dcf943867f9",
         "_shared/tools/pbip.py": "2f5647383368527217608bbbf7eb7fb858936c2c3fbdd0b42508faab9d024b07",
@@ -79,7 +79,7 @@
         "_shared/tools/test_ea_census.py": "3213f816d8f22c564e98b9d6306cae5a45e3afeb17ba83b3c026fef298063e38",
         "_shared/tools/test_extract.py": "13b61f5812068afe0f3a535fd6ef204c6e96c808d6708d3df6dd67441ac39e04",
         "_shared/tools/test_frame.py": "e2b52f577977a998cdf82e6944217e990fc10d46e07c3aad7ca8832328bb761e",
-        "_shared/tools/test_governance_gap.py": "e39e2f43392c909b62f460e8403e77c1d5879185cb86746a0a77a2b70bba2aaa",
+        "_shared/tools/test_governance_gap.py": "3a26a96a92687dfce672e37aca582041613e35d1a00c60014f15fc06e8c72fb2",
         "_shared/tools/test_load.py": "62bf8818ddff1fa26476c318d219fc3286b0d7ddd5cd1cd85d96477bbe016f32",
         "_shared/tools/test_parquet_out.py": "1190a991a93ff0485f8ca5d890ce4fe859966dd5cee6ed750d30dc9b34735c61",
         "_shared/tools/test_pbip.py": "088457d22fdb81a00b9f184a93b6166ca569071bd818a7c8a769fee1d85017c5",
@@ -88,7 +88,7 @@
         "_shared/tools/test_reconcile.py": "28daeb34d5c9762989768dd9ab806fae74953d10587676d523844e43ed58ca13",
         "_shared/tools/test_report_model.py": "e14e0f1a8d1df9a8b6e00e6a78103ccfc79becc6de14f25ed08a722324da7fb2",
         "_shared/tools/test_semantic_model.py": "3d74e2cdad641cdab26e3eaa1e5b7be7ec87134f1cb3d1c9d80f671501b2049f",
-        "_shared/tools/test_snapshot.py": "fbc6cb972b812feeb48666b3e95b3c6593d951409fa03c9f0fa5cab04d6ef697",
+        "_shared/tools/test_snapshot.py": "7618de1717038649ecd9520f826f8ec74802d9dc7611a996e0e041a52fe44cfd",
         "_shared/tools/test_sql_views.py": "56a2749464f836a80371ffbf30b3a2bab1a525844420702c8d63959a61d0988e",
         "_shared/tools/test_sql_views_sqlserver.py": "eb0ee0c39a16a1620646fa4931c9d5698780a4484b12b67cdd522091fb28f8a0",
         "_shared/tools/test_tmdl.py": "ad6e2b63fd5936501b13540df18c42e5915396d73d877cda25a72b4326b5bd96",
@@ -290,7 +290,7 @@
       "name": "ea-mdg-assess",
       "title": "ea-mdg-assess",
       "description": "Work out what modeling-language situation a repository is actually in before acting \u2014 which technologies are loaded, embedded or merely registered, and how much of the model conforms",
-      "version": "1.3.0",
+      "version": "1.3.1",
       "min_server_version": "2.2.0",
       "files": [
         "ea-mdg-assess/SKILL.md",
@@ -298,8 +298,8 @@
         "ea-mdg-assess/references/verification-walkthrough.md"
       ],
       "sha256": {
-        "ea-mdg-assess/SKILL.md": "166060f20afc671d72ad9cc2ca8648eaad504c1a87913666c2275239deb5edd1",
-        "ea-mdg-assess/references/three-states.md": "7cd1589bbf63032690a797b6efb100b0d3b4032cf23774de09f57a1f60277f16",
+        "ea-mdg-assess/SKILL.md": "f4196ac684e483fe75bee81b088a8235d055cff2d8633087e41b11a8d014544e",
+        "ea-mdg-assess/references/three-states.md": "8de928edaab2da95eebf2c945dd03d98edfc365f8eeb34effca0e74d5f722592",
         "ea-mdg-assess/references/verification-walkthrough.md": "a98249cc9934336eb9931ec52391df87fff2fae294354c722dab6ccee513b95f"
       }
     },
@@ -307,7 +307,7 @@
       "name": "ea-mdg-author",
       "title": "ea-mdg-author",
       "description": "Author MDG Technology XML files for Sparx EA \u2014 stereotypes, tagged values, toolbox pages, Quick Linker rules, and validation sidecars",
-      "version": "1.4.0",
+      "version": "1.4.1",
       "min_server_version": "2.2.0",
       "files": [
         "ea-mdg-author/SKILL.md",
@@ -319,11 +319,11 @@
         "ea-mdg-author/references/xml-skeleton.md"
       ],
       "sha256": {
-        "ea-mdg-author/SKILL.md": "d59a44ba3b19fee4094c88f06dc8ad77888f49965559bcda3eb68db44e6dd4e3",
-        "ea-mdg-author/references/diagrams-toolboxes.md": "e81b5bff2094768ee93b73e5d33bb233057a1133434f773c4941c6328fc8d557",
+        "ea-mdg-author/SKILL.md": "735cde34c6697d0c8075caf04a4695c2f4598d9d519390cb38856ce87fcc75c0",
+        "ea-mdg-author/references/diagrams-toolboxes.md": "384918bad2126adc0195a967e8dc0c74e98c57e047a89a2f74f1a2e66db8f73c",
         "ea-mdg-author/references/post-install-migration.md": "b2e3f1a2f047042a917eea2b201ebb454df7886ef0136d316bc092f997dd3cec",
-        "ea-mdg-author/references/quick-linker.md": "1b0e4e93230bce9138b650aa403f73e370cc6592807009949404b8f06ade232a",
-        "ea-mdg-author/references/stereotypes.md": "fbaccd04bb4d61eb5daf3e3cbfe32d879103eb919b81fe217e4c4f246c4397f3",
+        "ea-mdg-author/references/quick-linker.md": "c1e77c9410344baa29706fb81d9adbf8b19c0453b076dd3f1b97dca187233dd4",
+        "ea-mdg-author/references/stereotypes.md": "9f5c25fa132902dce4f4d7b5979f75019561d17ddc787dba6e7dffc075f36ec4",
         "ea-mdg-author/references/validation-sidecar.md": "1bf0e67a310bcc2bb7165f236cb3bff2d24ca2c2820fbc69c56bbc79ec25e96d",
         "ea-mdg-author/references/xml-skeleton.md": "8473e0e43432bd622673edf23e51ba11c3ee690655fc63b9c324b1428c3ecf69"
       }
@@ -362,7 +362,7 @@
       "name": "ea-model-hygiene",
       "title": "ea-model-hygiene",
       "description": "Finding and fixing model decay \u2014 orphans, inconsistent stereotype and tagged-value usage, and safe deletion with pre-delete checks",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "min_server_version": "2.3.0",
       "files": [
         "ea-model-hygiene/SKILL.md",
@@ -370,16 +370,16 @@
         "ea-model-hygiene/references/pre-delete-safety.md"
       ],
       "sha256": {
-        "ea-model-hygiene/SKILL.md": "8e3c136a8a62968488ba739cab858086c4c2cd4aa2e255eab2207f979961fc5d",
-        "ea-model-hygiene/references/consistency-audits.md": "cb1081ce92e215680904659e4f743b9462dae1a7281c09491d330709fdc46521",
-        "ea-model-hygiene/references/pre-delete-safety.md": "663fbc1d6cd171049ad40f83990541c8bd8a4a8872e79d4df20e8b5894b9f810"
+        "ea-model-hygiene/SKILL.md": "7653a983e1b438536e1bd85683cfe24d496d68cbbe785069c0955776691278d2",
+        "ea-model-hygiene/references/consistency-audits.md": "e32e2e861afa517410bbd33e7ac3b9c4ed1ef7db050e8cebe23267126ae07a5c",
+        "ea-model-hygiene/references/pre-delete-safety.md": "5fa73dc0d9879fa53e91992c77e2b929e1c8c4649197df43fdda7c8c29b3c46b"
       }
     },
     {
       "name": "ea-modeling",
       "title": "ea-modeling",
       "description": "Build EA models via the MCP server \u2014 phases, defects, verification",
-      "version": "1.2.3",
+      "version": "1.2.4",
       "min_server_version": "3.0.0",
       "files": [
         "ea-modeling/SKILL.md",
@@ -394,16 +394,16 @@
         "ea-modeling/references/wba_mdg_reference.md"
       ],
       "sha256": {
-        "ea-modeling/SKILL.md": "759163794d62f6a32be65db44d95c98cefb525722384fedbeac05caf1beb77f4",
+        "ea-modeling/SKILL.md": "b672138a8992b405122a92e9b69a3063aecee04c522115d405587f69a237e8e5",
         "ea-modeling/references/class-modeling.md": "25db3027ad038312fec8268b2af7b5918fb4b70134fb708bb55d82c3e281214c",
         "ea-modeling/references/diagnostics_and_ui.md": "cfc1304b820bfe63fdb99602ad99ea0a411092aaf707a7795f99d2600a709645",
-        "ea-modeling/references/diagrams_and_connectors.md": "a172087c13ecf8f39085133eba27e92b4a410bd18214669c0bf4c3443083cc69",
+        "ea-modeling/references/diagrams_and_connectors.md": "f646220ca3971190f0039719c9df20e68be4154f6467743dd320d6164a8313c1",
         "ea-modeling/references/element_creation.md": "785970cd157d6517e400a3d1997f4e84e4a04e8ded6cc5300e69c76f2e1c20f0",
         "ea-modeling/references/package_and_defects.md": "2caaada73b4a77d2b4fea6190ff4b66f4a565e4cd366b4c614d99b3ae34ee8b5",
         "ea-modeling/references/sql_schema.md": "b59d3c2407d6e47a73df63e6b12aeb81823cf23b4c3936496caa440fbeb5b7b6",
         "ea-modeling/references/token_and_session_management.md": "a90be8a3a47ce10b8654e764b946ae175b554436898f83521f5f901c5f228d78",
         "ea-modeling/references/tool_quick_reference.md": "3f557ddccd4e17a3650d2e998acd2b97782373f458061b91034f7370272119b8",
-        "ea-modeling/references/wba_mdg_reference.md": "1778aea1228c674d8c1fdfb1332982656ffd91a38610c8bda56ccc25315721a2"
+        "ea-modeling/references/wba_mdg_reference.md": "26b1451b7906a45698dccc963c3d82e98c1e208f88c8c4b4bd3d14fd0b29ea74"
       }
     },
     {
@@ -440,7 +440,7 @@
       "name": "ea-reporting-database",
       "title": "EA - reporting database",
       "description": "Build a queryable relational database from an EA repository - elements, relationships, tagged values, attributes and diagram placements, typed by the technology that governs them - and reconcile it back against the repository. SQLite, with a data dictionary and an issued-SQL log.",
-      "version": "1.1.1",
+      "version": "1.1.2",
       "min_server_version": "3.0.0",
       "files": [
         "ea-reporting-database/SKILL.md",
@@ -451,8 +451,8 @@
       "sha256": {
         "ea-reporting-database/SKILL.md": "6aea54501210e5d5da3345785ed7452e504d3dfb85146d31887f7cc0ef2aa6ea",
         "ea-reporting-database/references/the-extract-snapshot.md": "b786f8dbb2c86f4f0b96700c3f0e7f659d0854ff6810a7d9ce5c53f965d5e74e",
-        "ea-reporting-database/references/the-governance-gate.md": "042267320fa3f485ee79d61a47cd88396b5029e16973af0ae9874883d937bc4f",
-        "ea-reporting-database/references/the-schema.md": "7ecfee38ded20cd4c0b00eea67539608b5b3dd3eb28541fa1f7f77040ab172a7"
+        "ea-reporting-database/references/the-governance-gate.md": "562caba37587129e5bc2b352a8825195abe2db6a078159828f88bfa38a929d66",
+        "ea-reporting-database/references/the-schema.md": "04dfbb9da6d24b820a1b098a80e67287f690d8d1898f3eb2fca685269546176f"
       }
     },
     {
@@ -474,14 +474,14 @@
       "name": "ea-stakeholder-reporting",
       "title": "ea-stakeholder-reporting",
       "description": "Turn a model into answers a non-modeller can act on \u2014 portfolio roll-ups by tagged value, business-language display terms, and checking coverage before presenting a figure",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "min_server_version": "2.2.0",
       "files": [
         "ea-stakeholder-reporting/SKILL.md",
         "ea-stakeholder-reporting/references/coverage-data.md"
       ],
       "sha256": {
-        "ea-stakeholder-reporting/SKILL.md": "1f0f3af69ef5c266ffebaeaf0f73b5fca40c5f88c17bbb93b0b5e497d4a3dc3a",
+        "ea-stakeholder-reporting/SKILL.md": "a1508d91a7f5b54bf9847549af485299b3f3e386eb02fd5d412c978cd2d29c0c",
         "ea-stakeholder-reporting/references/coverage-data.md": "51dd954af09d18a32515715012bb3069689a526284bcacea5b39f4a1d252e101"
       }
     },
@@ -489,13 +489,13 @@
       "name": "ea-start-here",
       "title": "EA \u2014 start here",
       "description": "Entry point for any Sparx EA task: session preflight, then routing to the right skill",
-      "version": "1.2.0",
+      "version": "1.2.1",
       "min_server_version": "2.2.0",
       "files": [
         "ea-start-here/SKILL.md"
       ],
       "sha256": {
-        "ea-start-here/SKILL.md": "f6573663f3cb0675de177ac3beff30d9ecf3d2511e7311dd73eba67b1e808614"
+        "ea-start-here/SKILL.md": "7be489c5e52042f01b0f170b2a8b484674d3753d07a039f7cb575b13d52f06bb"
       }
     },
     {
@@ -532,7 +532,7 @@
       "name": "prol-dashboards",
       "title": "prol-dashboards",
       "description": "Build and read Prolaborate dashboards through the web interface",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "min_server_version": "1.0.0",
       "files": [
         "prol-dashboards/SKILL.md",
@@ -545,21 +545,21 @@
         "prol-dashboards/references/worked-example.md"
       ],
       "sha256": {
-        "prol-dashboards/SKILL.md": "e28dbd28e29038f58647a66648c8088ad3cf756f76b9a5490e7bb5e725faddcb",
+        "prol-dashboards/SKILL.md": "b30024c794af084827b092e91a37b9543d8c705bd7e70777546de02685e96268",
         "prol-dashboards/references/chart-types.md": "25b8a9e8aea129e693abcb7217c9404efeac59d4fd64d0145e8e9292f0d5a684",
-        "prol-dashboards/references/data-probes.md": "445c9f7c725d9c173a8504bf6e3ae8e650441796ca15aa2f5500e2edda1f6190",
+        "prol-dashboards/references/data-probes.md": "51e1ae081c22f17b68b6dccf5a0b2d0146f274ec7ecdfb1f840fd8e8f94de213",
         "prol-dashboards/references/layout.md": "a9906964d2c6514052dee3301ee1224818a864a39fd9dd47a1803f123260f2ae",
         "prol-dashboards/references/payloads.md": "6b7275c1a467f265818309f4374a853d59443e370a3199c38a5c49f9d7d370e3",
         "prol-dashboards/references/query-contracts.md": "ca17edd572b467b6fd88b3b8d92a77900024a0298452a8ace63962b695fd9753",
         "prol-dashboards/references/test-cases.md": "f79103249494d384f48dec30ccaa4e647b5f4261e2b48e1129ee109f65611707",
-        "prol-dashboards/references/worked-example.md": "c649d23bd01cd1db9f136a1fa2bb14f8e116ded885ecda1a1eb3bc489bea4751"
+        "prol-dashboards/references/worked-example.md": "462ad52bc9496fe9deca87a073766c572a9d1ac1c9d8c62c023b994cfdc3b701"
       }
     },
     {
       "name": "prol-matrix",
       "title": "prol-matrix",
       "description": "Read, filter, share and export Prolaborate relationship matrices",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "min_server_version": "1.0.0",
       "files": [
         "prol-matrix/SKILL.md",
@@ -568,7 +568,7 @@
       ],
       "sha256": {
         "prol-matrix/SKILL.md": "6eca9af485009e7c2878b3d08af5ed28316762f0930c71f160f4f3ccd540bd2e",
-        "prol-matrix/references/reading-a-matrix.md": "52a73fd760c1d4c20413aa4145717aca81a4a19c1095ffc3bc893d66ff074233",
+        "prol-matrix/references/reading-a-matrix.md": "904f2981154faa3b99a2d37e25f320864fb0c6fe444dbadaba2c3a3f122c7214",
         "prol-matrix/references/test-cases.md": "ae3dec9ba612ed590307f5f45276dc0a1135b3e278ad52fd7cd71597afa35779"
       }
     },

@@ -97,12 +97,14 @@ Note the duplicate edge entries (`79 -> 140` and `79 -> 143` each appear twice) 
 relationships to review, not a count of connectors.
 
 Also note the connector stereotype here is `realizes`, lower case, `Connector_Type: Realisation`
--- not the capitalised `Realizes` that the shared Westbrook canon documents as one of the four
-real unqualified connector stereotypes in this model. A repository-wide check
+-- not the capitalised `Realizes` that `WBA-LFY-001` compares against (the technology declares
+lower-case `realizes`, and EA stores it bare). A repository-wide check
 (`SELECT Stereotype, Connector_Type, COUNT(*) FROM t_connector GROUP BY Stereotype, Connector_Type`)
-confirms the live model's actual connector-stereotype set is `Uses` (16), blank (5), `extends`
-(3), `Requires` (3), `Equivalent` (2), `part-of` (2), `Flows` (1), and `realizes` (1) --
-casing and vocabulary drift from the documented four, on the model's own connectors. This is
+confirmed, on 2026-09-23, the live model's connector-stereotype set: `Uses` (16), blank (5), `extends`
+(3), `Requires` (3), `Equivalent` (2), `part-of` (2), `Flows` (1), and `realizes` (1). WBA 1.1.1
+has since declared `Uses`, `Flows` and `realizes` and the model has bound them; the stored strings
+did not change, so this is still casing and vocabulary drift from the four names `WBA-LFY-001`
+matches, on the model's own connectors. This is
 flagged here rather than silently normalized; it is exactly the class of decay Section 3 of the
 main skill teaches you to look for, just on connectors instead of elements -- and the server's
 meta-tools have no dedicated connector-stereotype summarizer, so `execute_sql` against

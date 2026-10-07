@@ -19,7 +19,8 @@ ea_mdg(operation="get_mdg_from_runtime", params={"tech_id": "WBA"})
 Do not test for it with SQL against `t_document` `DocType='MDGXml'`: none of EA 17.1's import routes writes that
 document type, so the query is empty whether or not the technology is in the model. An in-model
 technology is a `t_document` row with `DocType='TECHNOLOGY'` (Location: Model) or rows in
-`t_trxtypes` (Location: Project); WBA in the Westbrook Bank model is the second.
+`t_trxtypes` (Location: Project). WBA in the Westbrook Bank model is at Location: Model since 1.1.1 was deployed
+(it was at Location: Project under 1.0).
 
 ## Tagged value namespace confirmation
 
@@ -31,9 +32,10 @@ active and the tag schema is being honored.
 
 The rule is simpler than a per-stereotype matrix suggests: the **base set of 6** tags
 (`criticality`, `lifecycle`, `businessOwner`, `technicalOwner`, `dataClassification`,
-`regulatoryScope`) applies to **all 14** WBA stereotypes. The **AI set of 4**
+`regulatoryScope`) applies to **all 15** WBA element stereotypes. The **AI set of 4**
 (`modelGovernanceClass`, `humanInLoopRequired`, `auditLoggingEnabled`, `dataResidency`)
-applies **only** to the three AI stereotypes: `WBAAIGateway`, `WBAAIService`, `WBAAIModel`.
+applies **only** to the three AI stereotypes: `WBAAIGateway`, `WBAAIService`, `WBAAIModel`. Three further
+tags (`pciScopeJustification`, `product`, `vendor`) are declared on only some stereotypes.
 See `_shared/references/westbrook-example.md` section 3 for the canonical list — this file
 does not repeat it so there is exactly one source of truth for tag names and enum values.
 

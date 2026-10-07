@@ -202,13 +202,14 @@ in `t_diagramlinks`. Check in this order:
 | Plain association | `Association` | *(blank)* |
 
 > **Canon note (flagged, not changed in this split):** `_shared/references/westbrook-example.md`
-> section 6 states the WBA MDG defines *no* connector stereotypes, and that any connector
-> stereotype example should use plain unstereotyped UML types. That rule is about inventing
-> vocabulary, and it does not apply here: `Uses`, `ConsumesService`, `Realizes` and `Flows` are
-> stereotypes the Westbrook demo model actually applies to connectors, and the demo's own tests
-> query them. EA allows a stereotype string on a connector that no MDG declares, which is exactly
-> what the model does. Write them unqualified, as below — never as `WBA::Uses`, because they are
-> not MDG-declared. See canon section 6(b).
+> section 6 records that the WBA MDG (1.1.1) declares three connector stereotypes: `Uses`,
+> `Flows` and lower-case `realizes`. EA stores them bare in `t_connector.Stereotype`, so write
+> them unqualified, as below — never as `WBA::Uses`. What binds a connector to the technology is
+> its `t_xref` row (`FQName=WestbrookBankArchitecture::Uses`), set by passing `StereotypeEx`
+> `WestbrookBankArchitecture::Uses` to `update_connector`. Whether a connector created with only
+> the bare `stereotype` below is bound to WBA, to another language, or to nothing was not
+> measured. `ConsumesService` and capitalized `Realizes` are not declared; the demo's own tests
+> query the strings. See canon section 6.
 
 ### Governance rule: WBA-LFY-001 and connector stereotypes
 

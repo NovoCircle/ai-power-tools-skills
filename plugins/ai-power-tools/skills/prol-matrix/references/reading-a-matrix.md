@@ -140,11 +140,11 @@ Measured as always null across every profile: `name`, `boundDirection`, `midLabe
 
 > **`technology` is shown null deliberately.** A real payload may carry an MDG id here.
 >
-> **An MDG *can* declare connector stereotypes, and when one does, the stereotype is stored with
-> its technology id prepended** — `prol-dashboards`' `references/data-probes.md` states that rule
-> and it holds generally. What is specific rather than general is the Westbrook reference model:
-> its MDG declares **no** connector stereotypes, so its connector stereotypes are stored bare and
-> an example pairing `WBA` with one would imply ownership that does not exist there.
+> **An MDG *can* declare connector stereotypes**, and the Westbrook reference model's does: WBA
+> 1.1.1 declares `Uses`, `Flows` and `realizes`. In `t_connector.Stereotype` they are still stored
+> bare (the binding is in `t_xref`; measured 2026-10-07), and what Prolaborate's own payload would
+> carry in `technology` for them was not re-measured, which is why the example above still shows
+> null. `prol-dashboards`' `references/data-probes.md` covers the storage form.
 >
 > So the safe reading is narrower than "never": **a technology value beside a stereotype is not by
 > itself evidence that the technology declares it.** Check the MDG before concluding either way.

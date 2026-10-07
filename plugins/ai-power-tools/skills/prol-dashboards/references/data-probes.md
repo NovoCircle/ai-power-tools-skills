@@ -105,12 +105,13 @@ Confirm by counting: **parent-child connectors should equal (elements − roots)
 > Aggregation rather than an Association, and a Type filter that looks harmless hides it completely.
 > This cost a full day during verification.
 
-**Whether the stereotype is stored qualified depends on whether an MDG declares it.** In Westbrook
-Bank the connector stereotypes come from no MDG and are stored bare — `part-of`, `Uses`. A
-connector stereotype that an MDG does declare is stored with its technology id prepended and
-separated by a double colon. **Read the resolved value from Execute's Identified Placeholders
-rather than guessing either form** — element stereotypes are stored bare either way, so the two
-tables disagree and a filter that works on one fails silently on the other.
+**Do not assume the stereotype is stored qualified because an MDG declares it.** In Westbrook Bank
+the WBA technology declares the connector stereotypes `Uses`, `Flows` and `realizes`, and
+`t_connector.Stereotype` still holds them bare (measured on the model, EA 17.1, 2026-10-07); the
+binding to the technology is in `t_xref` (`FQName=WestbrookBankArchitecture::Uses`). Others, such
+as `part-of`, come from no technology. What Prolaborate itself holds for a declared connector
+stereotype was not re-measured. **Read the resolved value from Execute's Identified Placeholders
+rather than guessing either form** — a filter written for one form fails silently on the other.
 
 Depth must be probed one level at a time with self-joins — the single-`SELECT` restriction forbids a
 recursive CTE.

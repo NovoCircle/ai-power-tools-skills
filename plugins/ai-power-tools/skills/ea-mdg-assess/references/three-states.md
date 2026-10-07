@@ -5,6 +5,11 @@ Every one of these payloads was captured live against the Westbrook Bank demo re
 Nothing here was constructed from the spec — where a call's answer looks incomplete or odd,
 that's what it actually returned.
 
+The WBA payloads were captured while the model held WBA 1.0 at Location: Project. The model now
+holds WBA 1.1.1 at Location: Model (`t_trxtypes` empty): `get_mdg_from_runtime` answers 18
+stereotypes (15 element and 3 connector), 3 diagram types and 3 toolbox pages, and Manage
+Technology lists one enabled `WBA` with the two older builds disabled.
+
 ---
 
 ## `list_registered_technologies` — what EA's Manage Technology dialog would show
@@ -64,7 +69,7 @@ two places the call did not read. Measured on EA 17.1 build 1716:
 
 The call read only `DocType='MDGXml'`, which neither route writes. From the release after 3.5.0
 it lists each stored copy with its `location`, the version that copy declares, and the table it
-came from. WBA in the Westbrook Bank model is at Location: Project.
+came from. WBA in the Westbrook Bank model was at Location: Project when this was captured.
 
 ---
 
