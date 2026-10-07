@@ -262,11 +262,11 @@ Two halves, and only the first is scriptable today. The sequence matters and sev
    Technology`. Needs the `.mts` described below, and needs the profile exports from step 1. Use it
    only when the EA in front of you predates 17.1.
 
-   ⚠ **Do not confuse `Save Package as MDG Technology` with `Import Package as MDG Technology`.**
-   The second is on the same menu and does something different: it loads the technology into the
-   **session runtime** and writes no file. It reports success either way — measured, it returned
-   `True` while `t_trxtypes` stayed untouched and the embedded profile blob stayed byte-identical.
-   If you want a file, use Save.
+   ⚠ **`Save Package as MDG Technology` and `Import Package as MDG Technology` do different
+   things.** Save writes a file and installs nothing. Import builds the same technology and imports
+   it into the open model at Location: Model (one `t_document` TECHNOLOGY row, toolbox pages
+   included) and writes no file. Measured on EA 17.1 build 1716; `t_trxtypes` is not touched by
+   Import, so checking it reports a failure that did not happen. Deploying is Phase 7.
 
 ```python
 ea_mdg(operation="publish_package_as_profile", params={
@@ -330,18 +330,22 @@ Checklist:
 
 ## Phase 7 — Deploy
 
-An MDG is deployed either **into the repository** (a model technology, picked up by everyone connecting to it) or **as a file registered on a workstation** (a runtime technology, seen only by that machine). They look identical in Manage Technology apart from the `Location` field. See `ea-mdg-deploy`'s Two Deployment Modes table for the deployment-mode mechanics; this phase is about the specific traps that show up once a *model-driven* build is what's landing on top of them.
+An MDG is deployed either **into the repository** (a model technology, picked up by everyone connecting to it) or **as a file registered on a workstation** (a runtime technology, seen only by that machine). They look identical in Manage Technology apart from the `Location` field. See `ea-mdg-deploy`'s Deployment Modes table for the mechanics; this phase is about the traps that show up once a *model-driven* build is what's landing on top of them.
 
-| Location | Scope |
-|---|---|
-| `Model` | Every user of that repository |
-| A file path | That workstation only |
+| Location | Scope | How a model-driven build gets there |
+|---|---|---|
+| `Model` | Every user of that repository, whole technology | `install_mdg(scope="model", package_id=<«mdg technology» package>)` (server later than 3.5.0), or Import Package as MDG Technology in the UI |
+| `Project` | Every user of that repository, **without toolbox pages** | `install_mdg(scope="embedded")` with the saved file. Avoid for a technology that has toolbox pages |
+| A file path | That workstation only | `install_mdg(scope="user")` with the saved file |
+
+A model-driven technology belongs at **Location: Model**: it is the only in-model Location that keeps
+the toolbox profiles this skill builds in Phase 4.
 
 ⚠ **EA auto-registers any MDG file found on its search path.** The path list is at `Manage Technology ▸ Advanced`, and it routinely includes a user's `Downloads` folder. A build written there registers itself silently, shadows the model copy, and makes deployment appear to succeed on the author's desktop while nothing changes for anyone else. The search path is **not** recursive — a subfolder is safe.
 
 **Before validating any deployment**, check Manage Technology with "Hide disabled Technologies" unticked and confirm one entry, at `Location: Model`, at the expected version. More than one entry for the same technology means something is shadowing something else.
 
-Then: import, confirm **enabled** rather than merely present, and validate on a scratch diagram — toolbox page, Quick Linker, tag dropdowns — before any content is touched.
+Then: import, confirm **enabled** rather than merely present, **restart EA** (until then the toolbox may not switch to the new pages, though they are already loaded), and validate on a scratch diagram — toolbox page, Quick Linker, tag dropdowns — before any content is touched. Measured for WBA 1.1.1 after a restart: each of the three diagram types opened its own page (12, 5 and 5 items), and a dragged item came out bound to `WestbrookBankArchitecture::`.
 
 ---
 
@@ -359,7 +363,9 @@ Then: import, confirm **enabled** rather than merely present, and validate on a 
 | Published profile carries the wrong version | `version` was omitted, so EA supplied its cached value — always pass it |
 | Connector tagged value not applied | `update_connector` ignores it as a property — use `set_connector_tagged_value` instead |
 | `get_mdg_from_runtime` says `unknown_mdg` | EA reports nothing loaded under that exact id, and neither a registered technology file nor the model holds its XML. The registered id often differs from the display name — confirm it in Manage Technology |
-| `get_embedded_mdgs` returns empty | EA 17 no longer records imported technologies in `t_document`. Confirm in the UI |
+| `get_embedded_mdgs` returns empty on a server up to 3.5.0 | Those servers read a document type none of EA 17.1's import routes writes. Later servers list both in-model Locations. Confirm in the UI |
+| Designed toolbox pages missing; one automatic page instead | The technology is at Location: Project, which stores no toolbox pages. Install at Location: Model |
+| `get_mdg_from_runtime` answers from version A while Manage Technology shows version B | The same id is stored at both Locations and EA answers from Project. Remove one; `provenance.also_stored` names the other |
 | Only the author sees the new version | File-based registration shadowing the model copy |
 | Export produces the previous version's content | `.mts` still referencing old filenames |
 | A query hangs and EA shows "SQL API Open FAILED" | The SQL used a function this backend lacks (e.g. `OCTET_LENGTH` on a `.qea`). Click OK on the dialog; use `LENGTH(...)` |

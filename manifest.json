@@ -290,7 +290,7 @@
       "name": "ea-mdg-assess",
       "title": "ea-mdg-assess",
       "description": "Work out what modeling-language situation a repository is actually in before acting \u2014 which technologies are loaded, embedded or merely registered, and how much of the model conforms",
-      "version": "1.2.0",
+      "version": "1.3.0",
       "min_server_version": "2.2.0",
       "files": [
         "ea-mdg-assess/SKILL.md",
@@ -298,8 +298,8 @@
         "ea-mdg-assess/references/verification-walkthrough.md"
       ],
       "sha256": {
-        "ea-mdg-assess/SKILL.md": "da88c0201bfba2af9f8f0cb21a3c797c7f09a38b0d5a18b404a2a516f05a9738",
-        "ea-mdg-assess/references/three-states.md": "b6cba289449191da6280975c5106ea94098d015d7d6f7f48fa4c30478edb7786",
+        "ea-mdg-assess/SKILL.md": "166060f20afc671d72ad9cc2ca8648eaad504c1a87913666c2275239deb5edd1",
+        "ea-mdg-assess/references/three-states.md": "7cd1589bbf63032690a797b6efb100b0d3b4032cf23774de09f57a1f60277f16",
         "ea-mdg-assess/references/verification-walkthrough.md": "a98249cc9934336eb9931ec52391df87fff2fae294354c722dab6ccee513b95f"
       }
     },
@@ -307,7 +307,7 @@
       "name": "ea-mdg-author",
       "title": "ea-mdg-author",
       "description": "Author MDG Technology XML files for Sparx EA \u2014 stereotypes, tagged values, toolbox pages, Quick Linker rules, and validation sidecars",
-      "version": "1.3.0",
+      "version": "1.4.0",
       "min_server_version": "2.2.0",
       "files": [
         "ea-mdg-author/SKILL.md",
@@ -319,7 +319,7 @@
         "ea-mdg-author/references/xml-skeleton.md"
       ],
       "sha256": {
-        "ea-mdg-author/SKILL.md": "10eef8350e1f47c2635bf8b04d84624e45c40060b3d650d2dfda7df2a49695d7",
+        "ea-mdg-author/SKILL.md": "23fcc8f523b77c80d100fcb593ffae46b2715c7e29a804b9dbb2b38c6fce71d4",
         "ea-mdg-author/references/diagrams-toolboxes.md": "e81b5bff2094768ee93b73e5d33bb233057a1133434f773c4941c6328fc8d557",
         "ea-mdg-author/references/post-install-migration.md": "b2e3f1a2f047042a917eea2b201ebb454df7886ef0136d316bc092f997dd3cec",
         "ea-mdg-author/references/quick-linker.md": "1b0e4e93230bce9138b650aa403f73e370cc6592807009949404b8f06ade232a",
@@ -332,27 +332,29 @@
       "name": "ea-mdg-deploy",
       "title": "ea-mdg-deploy",
       "description": "Deploy and test an EA MDG Technology",
-      "version": "1.2.0",
+      "version": "1.3.0",
       "min_server_version": "1.0.3",
       "files": [
-        "ea-mdg-deploy/SKILL.md"
+        "ea-mdg-deploy/SKILL.md",
+        "ea-mdg-deploy/references/in-model-locations.md"
       ],
       "sha256": {
-        "ea-mdg-deploy/SKILL.md": "b99d5ce83017435803386d78a7f8f02c63d8b07a49ad98e6c5524888d156ea34"
+        "ea-mdg-deploy/SKILL.md": "3fb7a08d1fe685e61672ed1f3087aebf71b7de593cf2737b504acf9fe009a022",
+        "ea-mdg-deploy/references/in-model-locations.md": "b84cb7681afef598f0374bc90beecfb218a016f7d25e091b598d2d4bff811185"
       }
     },
     {
       "name": "ea-mdg-model-build",
       "title": "ea-mdg-model-build",
       "description": "Build a Sparx EA MDG Technology from a source model inside a repository \u2014 profile packages, toolbox/diagram profiles, reference data, and the export/build/deploy procedure",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "min_server_version": "2.3.0",
       "files": [
         "ea-mdg-model-build/SKILL.md",
         "ea-mdg-model-build/references/generating-from-a-census.md"
       ],
       "sha256": {
-        "ea-mdg-model-build/SKILL.md": "32237f057d11c39547e08bc7521b219790dad8b6c97e697e333a2c4592a5eb13",
+        "ea-mdg-model-build/SKILL.md": "ba7affdc0c4f7a819263d885c34e28326747f6a02f8a56acb02c46360eee436b",
         "ea-mdg-model-build/references/generating-from-a-census.md": "70e682c06efc17d9b80081daa6c6344a5d45ee0b6e462beac30143a50487957d"
       }
     },
@@ -377,7 +379,7 @@
       "name": "ea-modeling",
       "title": "ea-modeling",
       "description": "Build EA models via the MCP server \u2014 phases, defects, verification",
-      "version": "1.2.2",
+      "version": "1.2.3",
       "min_server_version": "3.0.0",
       "files": [
         "ea-modeling/SKILL.md",
@@ -392,7 +394,7 @@
         "ea-modeling/references/wba_mdg_reference.md"
       ],
       "sha256": {
-        "ea-modeling/SKILL.md": "bbdf6c44102924d3196ea620b6adc913c4aeb4b1ff15262e1edcf4ac7442fc8b",
+        "ea-modeling/SKILL.md": "759163794d62f6a32be65db44d95c98cefb525722384fedbeac05caf1beb77f4",
         "ea-modeling/references/class-modeling.md": "25db3027ad038312fec8268b2af7b5918fb4b70134fb708bb55d82c3e281214c",
         "ea-modeling/references/diagnostics_and_ui.md": "cfc1304b820bfe63fdb99602ad99ea0a411092aaf707a7795f99d2600a709645",
         "ea-modeling/references/diagrams_and_connectors.md": "a172087c13ecf8f39085133eba27e92b4a410bd18214669c0bf4c3443083cc69",
@@ -401,7 +403,7 @@
         "ea-modeling/references/sql_schema.md": "b59d3c2407d6e47a73df63e6b12aeb81823cf23b4c3936496caa440fbeb5b7b6",
         "ea-modeling/references/token_and_session_management.md": "a90be8a3a47ce10b8654e764b946ae175b554436898f83521f5f901c5f228d78",
         "ea-modeling/references/tool_quick_reference.md": "3f557ddccd4e17a3650d2e998acd2b97782373f458061b91034f7370272119b8",
-        "ea-modeling/references/wba_mdg_reference.md": "87de6511c18bd520788d5bf46e77d8582c72d60197222d54ad09d6c79b6c05d1"
+        "ea-modeling/references/wba_mdg_reference.md": "1778aea1228c674d8c1fdfb1332982656ffd91a38610c8bda56ccc25315721a2"
       }
     },
     {
