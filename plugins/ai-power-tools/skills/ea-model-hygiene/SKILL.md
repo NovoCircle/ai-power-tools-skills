@@ -179,9 +179,10 @@ The six base WBA tags (`criticality`, `lifecycle`, `businessOwner`, `technicalOw
 element count -- every element carries the tag, even if the value is blank. A tag present on a
 small fraction of elements of the same stereotype is either optional-by-design (say so in the
 model's own documentation if it is) or a field only some contributors knew to fill in. The live
-data has exactly this case: `pciScopeJustification` -- not one of the WBA canon's ten tags at all
--- appears on 2 of the 52 `WBABusinessApplication` elements. That is an ad hoc tag someone added
-for two elements, not a modeling standard.
+data had exactly this case on 2026-09-23, under WBA 1.0: `pciScopeJustification` -- which 1.0 did
+not declare -- appeared on 2 of the 52 `WBABusinessApplication` elements, an ad hoc tag someone
+added for two elements. WBA 1.1.1 now declares it on `WBABusinessApplication` and `WBAVendorSystem`,
+so the same low count would now be a declared tag that few elements fill in.
 
 **`summarize_observed_metaclasses`** -- requires a `stereotype`, answers "does every element with
 this stereotype use the metaclass the MDG declares for it":

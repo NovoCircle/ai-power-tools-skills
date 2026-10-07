@@ -21,9 +21,10 @@ COMMON = frozenset({"criticality", "lifecycle", "businessOwner",
 AI_EXTRA = COMMON | {"modelGovernanceClass", "dataResidency",
                      "auditLoggingEnabled", "humanInLoopRequired"}
 
-#: Modeled on the reference technology, including the fact that most declared
-#: stereotypes share one identical tag set - which is exactly why tag overlap
-#: cannot rank them.
+#: Modeled on the reference technology as of WBA 1.0, including the fact that most
+#: declared stereotypes share one identical tag set - which is exactly why tag overlap
+#: cannot rank them. (WBA 1.1.1 differs: `WBABusinessApplication` and `WBAVendorSystem`
+#: declare extra tags, which changes the ranked case on the real model.)
 DECLARED = {
     "WBABusinessApplication": Shape(metaclass="Component", tag_names=COMMON),
     "WBABusinessService": Shape(metaclass="Component", tag_names=COMMON),
@@ -93,7 +94,8 @@ def test_ordering_is_deterministic():
 # --- the three outcomes ------------------------------------------------
 
 def test_a_metaclass_the_technology_does_not_extend_yields_no_candidate():
-    """The 15 Nodes on the reference model. A suggestion here would be invented."""
+    """A metaclass the technology does not extend: the 10 Requirements on the reference
+    model. (The 15 Nodes were this case until WBA 1.1.1.) A suggestion here would be invented."""
     rows = [el("{N}", "AWS Cloud Platform", "Node")]
     f = assess(find_ungoverned(rows, []), DECLARED, rows)[0]
     assert f.outcome == NO_CANDIDATE
@@ -105,7 +107,7 @@ def test_a_metaclass_the_technology_does_not_extend_yields_no_candidate():
 
 
 def test_sibling_evidence_produces_a_ranked_suggestion_with_its_basis():
-    """The three real Components: three siblings in the package, all one stereotype."""
+    """The three real Components under WBA 1.0: three siblings in the package, all one stereotype."""
     rows = [el("{A}", "Portfolio Analytics Engine", "Component", package_id=7),
             el("{S1}", "Sib 1", "Component", package_id=7, stereotype="WBAVendorSystem"),
             el("{S2}", "Sib 2", "Component", package_id=7, stereotype="WBAVendorSystem"),

@@ -209,8 +209,10 @@ Ordered cheapest first.
 3. **`No results found`?** Suspect the dialect before the data. Compare against `VIEW SAMPLE`.
 4. **Chart renders but looks wrong?** Check §5 — a silent presentation toggle, not the query.
 5. **Numbers disagree with the model?** Check whether the connector stereotype is qualified. Element
-   stereotypes are stored bare; a connector stereotype declared by an MDG is stored qualified. **Read
-   the resolved value from Execute's Identified Placeholders rather than guessing either form.**
+   stereotypes are stored bare, and so are Westbrook's MDG-declared connector stereotypes in
+   `t_connector.Stereotype` (the binding is in `t_xref`); what Prolaborate itself holds for a declared
+   one was not re-measured. **Read the resolved value from Execute's Identified Placeholders rather
+   than guessing either form.**
 6. **Two failed attempts at the same thing is the signal.** Stop, say what you observed, and hand
    back rather than improvising.
 

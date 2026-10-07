@@ -11,10 +11,13 @@ When using `write_mdg_xml` to emit your MDG XML, declare QL rules directly on ea
 stereotype in the intermediate metamodel dict:
 
 > As in Section 1 above, `WBA::WBARunsOn` here is a **proposed extension** — the shipped WBA
-> technology defines no connector stereotypes. A QL rule targeting a real, un-stereotyped
-> relationship (e.g. `Dependency` between two WBA elements) needs no `quicklinker_rules` entry at
-> all; EA's default UML QL entries already offer plain `Dependency`/`Realization`/`Association`.
-> The pattern below is for the day you add your own connector stereotype.
+> technology (1.1.1) defines the connector stereotypes `Uses`, `Flows` and `realizes`, not
+> `WBARunsOn`. Its own Quick Linker rules use them, for example `WBAVendorSystem` offers
+> `WestbrookBankArchitecture::Uses` to `WestbrookBankArchitecture::WBATechnologyNode`. A QL rule
+> targeting a real, un-stereotyped relationship (e.g. `Dependency` between two WBA elements)
+> needs no `quicklinker_rules` entry at all; EA's default UML QL entries already offer plain
+> `Dependency`/`Realization`/`Association`. The pattern below is for the day you add your own
+> connector stereotype.
 
 ```python
 {
@@ -125,4 +128,4 @@ see `ea-mdg-model-build`. If you are writing the XML directly, use the forms abo
 this route exists for the model-first workflow.
 
 > `WBA::WBARunsOn` is used here only to match the proposed-extension example above. The shipped
-> WBA technology defines no connector stereotypes.
+> WBA technology defines `Uses`, `Flows` and `realizes`, not `WBARunsOn`.

@@ -114,10 +114,12 @@ Then close and reopen the project to flush EA's in-memory cache.
 
 ## Section 1 — Connector Stereotype
 
-> **The shipped WBA technology defines no connector stereotypes.** For relationships between WBA
-> elements, use a plain UML connector type with no stereotype — `Dependency`, `Realization`,
-> `Association`, `Aggregation`. The pattern below shows how you *would* add one, labelled plainly
-> as a proposed extension so it is never mistaken for part of the shipped technology.
+> **The shipped WBA technology (1.1.1) defines three connector stereotypes:** `Uses` (Association),
+> `Flows` (InformationFlow) and `realizes` (Realisation). For a relationship between WBA elements,
+> use one where it fits, otherwise a plain UML connector type with no stereotype — `Dependency`,
+> `Realization`, `Association`, `Aggregation`. The pattern below shows how you *would* add
+> another, labelled plainly as a proposed extension so it is never mistaken for part of the
+> shipped technology.
 
 ```xml
 <!-- PROPOSED EXTENSION — not part of the shipped WBA technology. -->

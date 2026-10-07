@@ -219,10 +219,12 @@ the stereotype name and tagged values instead. The full safe/dangerous base-type
 
 ### Section 1 — Connector Stereotype
 
-**The shipped WBA technology defines no connector stereotypes.** For relationships between WBA
-elements, use a plain UML connector type with no stereotype (`Dependency`, `Realization`,
+**The shipped WBA technology (1.1.1) defines three connector stereotypes:** `Uses` (Association),
+`Flows` (InformationFlow) and `realizes` (Realisation), each with the tags `dataFlowClassification`,
+`integrationPattern` and `slaTier`. For a relationship between WBA elements, use one of them where it
+fits, otherwise a plain UML connector type with no stereotype (`Dependency`, `Realization`,
 `Association`, `Aggregation`). [references/stereotypes.md](references/stereotypes.md) shows how
-you *would* add one — the example is a `WBARunsOn` connector labelled **PROPOSED EXTENSION — not
+you *would* add another — the example is a `WBARunsOn` connector labelled **PROPOSED EXTENSION — not
 part of the shipped WBA technology**, kept only to teach the pattern.
 
 ### Section 2 — Custom Diagram Type
@@ -231,12 +233,13 @@ A diagram stereotype uses `Apply type="Diagram_Logical"` and points at a toolbox
 *exact* name via a `toolbox` property. The full XML and rules are in
 [references/diagrams-toolboxes.md](references/diagrams-toolboxes.md).
 
-**Pitfall — toolbox binding is a literal string match, not a namespace lookup.** The shipped
-Westbrook demo MDG gets this wrong: its diagram profile points its `toolbox` property at
-`WBA::WBA ArchiMate`, but no toolbox page is named that — the real page is `WBA ArchiMate
-Elements`. Because the two strings don't match, the demo's custom diagrams never bind to their
-toolbox. Treat that as a pitfall to avoid, not a pattern to copy — the `toolbox` value must equal
-the toolbox page's `Stereotype name=` exactly.
+**Pitfall — check what `toolbox` must equal on a scratch diagram.** The Westbrook demo MDG's
+`toolbox` property reads `WBA::WBA ArchiMate` (`<technology id>::<name of the toolbox's UML profile>`),
+while the toolbox page is named `WBA ArchiMate Elements`. Its 1.0 and 1.1.0 builds never resolved
+their custom diagrams. 1.1.1 keeps the same `toolbox` string, names its diagram profile `WBA`, and
+its diagrams resolve and switch the toolbox on (measured on EA 17.1, 2026-10-07). The pattern below
+uses the toolbox page's `Stereotype name=`; the shipped file uses the profile name. Try your form
+on a scratch diagram before relying on it.
 
 ### Section 3 — Toolbox Pages
 
@@ -259,7 +262,7 @@ Before deploying, verify:
 - [ ] `<Documentation id="WBA">` (top-level)
 - [ ] UMLProfile `<Documentation id="WBA">` — **must match technology id**
 - [ ] All toolbox `Tag name=` values: `WBA::WBABusinessApplication` etc.
-- [ ] DiagramProfile `Property name="toolbox" value="WBA::WBA ArchiMate Elements"`
+- [ ] DiagramProfile `Property name="toolbox" value="WBA::WBA ArchiMate Elements"` (the shipped 1.1.1 uses `WBA::WBA ArchiMate`; see Section 2)
 - [ ] COM calls: `Repository.IsTechnologyLoaded("WBA")`
 
 ---

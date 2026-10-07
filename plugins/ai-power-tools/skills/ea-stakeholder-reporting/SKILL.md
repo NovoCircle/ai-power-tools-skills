@@ -183,9 +183,9 @@ a well-populated `WBABusinessApplication`:
 ```
 
 That's a complete stakeholder-ready summary in one call -- both endpoints of the
-connection are already given business names, and the connector itself carries no
-stereotype (`Uses` is one of the unqualified connector labels the demo model actually
-uses; see the canon reference, section 6 -- do not prefix it `WBA::`).
+connection are already given business names, and the label `Uses` is a connector
+stereotype the WBA technology declares (the model stores it bare; see the canon
+reference, section 6 -- do not prefix it `WBA::`).
 
 **What happens when a tag isn't set:** the property is left out of the list entirely,
 not shown with an empty value. A `WBADataAsset` element (which, per Step 0, never carries
