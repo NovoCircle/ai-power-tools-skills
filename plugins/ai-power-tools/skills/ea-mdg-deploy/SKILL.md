@@ -300,7 +300,7 @@ with EA() as ea:
 ```
 
 ### 2. Manage Technologies dialog
-- Open: **Specialise → Technologies → Manage Technologies** (or **Settings → MDG Technologies**)
+- Open: **Specialize → Technologies → Manage Technologies** (or **Settings → MDG Technologies**)
 - Look for your technology entry
 - ✅ `Location` shows where you installed it: **Model** or **Project** (not APPDATA)
 - ✅ Only **one entry** for the id — no asterisk (`*`) duplicate, and not one at each Location
