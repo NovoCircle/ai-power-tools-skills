@@ -205,7 +205,10 @@ census.placement.get(guid)   # -> ['WestbrookBankArchitecture::WBAVendorSystem']
 ## 5. If the customer declines
 
 Declining is a valid answer, not an error. Say plainly what the consequence is, then build the
-reporting layer without them:
+reporting layer without them. Leave unstereotyped diagram furniture (`Package`, `Note`, `Text`,
+`Boundary`) out of the count you report: it is never model content and never gets a table, as
+`the-inclusion-choice.md` says, so counting it as "will not appear" would alarm the reader for
+nothing.
 
 > Six elements will not appear in the reporting layer, three of which carry governance
 > tagged values including one marked GLBA.

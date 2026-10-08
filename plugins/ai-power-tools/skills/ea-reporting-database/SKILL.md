@@ -246,7 +246,7 @@ same alignment summary). It checks two things:
    profile-bound connector whose two ends are placed lands in a combination, none outside one;
    every admitted element is in at least one entity table, and every element in two was flagged
    at preflight; each connector table's rows equal the definition's own placement.
-   `alignment.aligned` is the verdict.
+   `alignment.aligned` is the verdict; if it is false, read `references/troubleshooting.md` first.
 2. **Values** (`include_values`, on by default): every name, `package_path`, tag column,
    connector end, base type and connector tag compared against an **independent read through
    EA**. It returns `cells` and `differences`; zero differences is the verdict. The open
