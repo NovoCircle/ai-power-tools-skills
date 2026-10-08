@@ -62,6 +62,35 @@ get their own rules in §5.
 
 ---
 
+## 2b. The inclusion choice - settle this before the build steps
+
+Before any extract, census the repository against the MDG and ask the user what the database
+includes. Never decide it for them. Full detail:
+[`references/the-inclusion-choice.md`](references/the-inclusion-choice.md); code:
+`../_shared/tools/inclusion.py`.
+
+1. **Census elements and connectors** with `ea_census` (`census_elements`, `census_connectors`),
+   then `inclusion.analyze(...)`.
+2. **Stop on unbound connectors.** A connector whose stereotype is qualified text with no `FQName` is
+   a data defect, not a gap. Show the fix the analysis suggests (bind it to the MDG's own stereotype,
+   or clear it; baseline first) and re-run the census. No profile is produced until none remain.
+3. **Flag elements with two declared stereotypes.** They are placed in both tables if the user
+   continues; ask.
+4. **Put the three-way question, with the counts** - every time a profile is created:
+   1. *Only what my MDG defines.*
+   2. *Everything in the repository*, keyed by observed stereotype, or metaclass where there is none.
+   3. *Show me the gaps*: per gap (element stereotypes and connector keys, each with its count and an
+      example name), include it, exclude it, or update the MDG to declare it. Updating the MDG is a
+      hand-off to the MDG skills followed by a new census - not an answer.
+5. **Record the answer** with `resolve_answer`: its `inclusion` goes into the scope profile and its
+   `record()` beside it. A refresh calls `new_since_saved` and flags what is new instead of
+   deciding it.
+
+This changes what is built, not the governance gate of §3.2b, which still applies to elements that
+carry no stereotype.
+
+---
+
 ## 3. The build, step by step
 
 ### 3.1 Get the technology definition
@@ -295,6 +324,7 @@ quote a refresh window from it.
 - [`references/the-schema.md`](references/the-schema.md) — every frame table, and worked queries
 - [`references/the-extract-snapshot.md`](references/the-extract-snapshot.md) — retention and replay
 - [`references/the-governance-gate.md`](references/the-governance-gate.md) — the pre-build gate
+- [`references/the-inclusion-choice.md`](references/the-inclusion-choice.md) — the three-way choice, its counts, and the refresh
 - [`../_shared/references/ea-ui-verification.md`](../_shared/references/ea-ui-verification.md) —
   the modal-dialog trap
 - [`../_shared/references/westbrook-example.md`](../_shared/references/westbrook-example.md) — the
