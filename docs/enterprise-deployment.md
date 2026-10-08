@@ -95,9 +95,11 @@ Two things to know about this route:
 - A marketplace on a **network location must be declared in user or managed
   settings**. Project and local scope are refused for network sources, so
   managed settings is the correct admin-trusted home for it.
-- `ref` pins the marketplace to a git ref. Pin it to a release tag in any
-  environment where an unreviewed skill change would be unwelcome. Omit `ref`
-  and machines track the default branch.
+- `ref` pins the marketplace to a git ref. Omit it and machines track the
+  default branch, whose marketplace entry always points at a released, tagged
+  plugin tree in `NovoCircle/ai-power-tools-releases` (never at the development
+  tree), so they follow the latest release. Pin `ref` to a release tag to hold
+  the fleet on one release until you choose to move it.
 
 ## How updates work
 
@@ -105,36 +107,32 @@ Updates differ by route, and only one of them is automatic.
 
 | Route | How a new version arrives | Automatic? |
 |---|---|---|
-| A — marketplace, per user | `claude plugin marketplace update novocircle` then `claude plugin update ai-power-tools` | No — user runs it |
+| A — marketplace, per user | `claude plugin marketplace update novocircle` then `claude plugin update ai-power-tools@novocircle` | No — user runs it |
 | B — desktop upload | Re-upload the new `.plugin` | No — and nothing prompts |
-| C — managed settings, unpinned | Marketplace refresh picks up the default branch | Yes |
+| C — managed settings, unpinned | Marketplace refresh picks up the latest release | Yes |
 | C — managed settings, pinned | Edit `ref` in the policy; machines follow on next refresh | Yes, once you bump the ref |
 
-A plugin update needs a **restart to apply** — the new version is staged, not
-swapped into a running session.
+A running session keeps the version it loaded: run `/reload-plugins` or start a
+new session to pick up an update.
 
 `install_skills` is retired. It still exists on machines that have it, but from 3.5.0 it declines once the plugin supplies the same skills and points at the migration script instead of writing a second copy.
 
 ## Cutting a release that serves every route
 
-Three files carry the version and must agree:
+The marketplace never serves this repository's development tree. A release
+publishes the built plugin tree to `NovoCircle/ai-power-tools-releases`, tags it
+`v<version>`, and only then pins this repository's marketplace entry to that tag
+and its commit (`tools/publish-plugin.py`). Customers switch when the pin merges
+to `main`. The full sequence, and why each step comes where it does, is in the
+README's **Release process** and **Ordering across the two repositories**.
 
-- `manifest.json` → `bundle_version`
-- `plugins/ai-power-tools/.claude-plugin/plugin.json` → `version`
-- `.claude-plugin/marketplace.json` → the `ai-power-tools` entry's `version`
+Three files carry the version and must agree — `manifest.json` `bundle_version`,
+`plugins/ai-power-tools/.claude-plugin/plugin.json` `version`, and the
+`ai-power-tools` entry in `.claude-plugin/marketplace.json`. `tools/build-plugin.py`
+refuses to build when they disagree.
 
-`tools/build-plugin.py` refuses to build when they disagree, so drift fails at
-build time rather than reaching a customer as two version numbers for the same
-skills.
-
-```bash
-python tools/regen-manifest.py     # refresh hashes
-python tools/gate.py               # release blocker if red
-python tools/build-plugin.py       # emits dist/ai-power-tools.plugin
-```
-
-Tag the release, attach `dist/ai-power-tools.plugin` alongside the existing
-flattened bundle assets, and bump any pinned `ref` in customer policies.
+After a release, bump any pinned `ref` in your own policies when you are ready to
+move the fleet.
 
 ## Constraints worth knowing before you hit them
 
