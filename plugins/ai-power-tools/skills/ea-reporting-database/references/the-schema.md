@@ -1,355 +1,232 @@
-# The schema, and queries that answer real questions
+# The schema
 
-Every query here was run against a built database before being written down. The figures are from
-the Westbrook Bank reference model and are there to show the *shape* of an answer, not as numbers
-to expect.
+What the build produces, table kind by table kind. The shape is the same on every path - direct
+access, reporting database and Parquet - and is written into the definition JSON that
+`ea-power-bi` reads, so nothing downstream re-derives it. Examples use Westbrook Bank's `WBA`
+technology as an illustration; a customer's tables are named by their own technology.
 
 ---
 
-## 1. Two kinds of table, and you can tell them apart by name
+## 1. Entity tables
 
-**Unprefixed tables are the business vocabulary.** One per stereotype found in the repository,
-named from the technology's alias: `business_application`, `vendor_system`, `data_asset`. These
-are what a report is built on. The list differs per repository, because it is discovered from
-what the model actually contains rather than from what the technology declares.
+One per element stereotype the inclusion choice admits.
 
-**Tables prefixed `_` are plumbing.** Keys, bridges, coverage and audit. They sort to the bottom
-of any table list and they are not where a report gets its facts — but several of them are where
-a report gets its facts *right*, so they are not optional either.
+**Name.** The stereotype's alias; with no alias, the stereotype name; where two stereotypes share
+an alias, the alias plus the stereotype name. Exactly as the technology writes it - no prefix
+stripping, no case change, spaces kept: `Business Application`.
 
-On the reference model that is **29 vocabulary tables and 11 plumbing tables**.
+**Elements outside the technology** that the inclusion choice admits get one table per observed
+stereotype (or per base metaclass where an element has none), named with the suffix
+` (not in MDG)`: `VendorApplication (not in MDG)`.
 
-### `_keymap` — the one that makes the rest work
+**Columns**
 
-| Column | |
+| Column | Type | Holds |
+|---|---|---|
+| `ea_guid` | text | EA's stable identifier for the element. The key the other tables join on |
+| `name` | text | The element's name |
+| `metaclass` | text | The base type (`Component`, `Class`, `Requirement`, ...) |
+| `package_path` | text | The element's package, as a path from the root. On every entity table, including those with no tags |
+| one per declared tag | typed | The tag's value, typed from the tag's declared type (§5) |
+
+An element in two entity tables has one row in each. Rows for the same element are identical in
+the columns they share.
+
+---
+
+## 2. `Con_` tables
+
+One per **allowed combination** (source stereotype, connector stereotype, target stereotype) from
+the technology's relationship constraints, so the tables match the metamodel diagram one for one.
+
+**Name.** `Con_<source table> <connector stereotype> <target table>`, for example `Con_Business
+Application Uses System of Record`. A combination outside the technology that the inclusion choice
+admits is marked ` (not in MDG)`.
+
+**Columns**
+
+| Column | Type | Holds |
+|---|---|---|
+| `connector_guid` | text | EA's identifier for the connector |
+| `connector_id` | integer | EA's numeric id |
+| `name` | text | The connector's name |
+| `source_guid`, `target_guid` | text | The `ea_guid` of the entity rows at each end |
+| `direction` | text | EA's direction setting |
+| `base_type` | text | The base connector type (`Association`, `Dependency`, ...) |
+| one per connector tag | text | The tag's value |
+
+A connector joins its combination by its **own profile binding** (the `FQName` in its stereotype
+record) plus membership of its two ends. A combination whose source and target are the same entity
+type is a self-join: both `source_guid` and `target_guid` join to the same entity table, and a
+report needs to say which end it means.
+
+A connector the technology does not allow between its two stereotypes, and the inclusion choice
+does not admit, has no `Con_` table. It stays in EA's physical tables and is counted by the
+alignment check (`outside_every_allowed_combination`).
+
+---
+
+## 3. Tag-row tables
+
+Present **only where a column cannot hold the data**:
+
+- tags the technology does not declare (on `(not in MDG)` entities and on any element or connector
+  carrying an undeclared tag);
+- declared tags of type **RefGUIDList**, which EA stores as `{guid},{guid},...` in one value. The
+  table has one row per referenced element GUID (`value`), so a report joins it to the entity tables
+  on `ea_guid`. Measured on EA 17.1; no other predefined tag type stores several values.
+  **CheckList stays a column**: it holds the stored flags (`1,1,0`), which mean nothing without the
+  type's item labels.
+
+Named `<table> tags`. Columns: for an entity table, `ea_guid`, `tag`, `value`, `property_id`; for a
+`Con_` table, `connector_guid`, `tag`, `value`. The Table Directory says which tags a tag-row table
+holds.
+
+---
+
+## 4. Table Directory
+
+One row per business table, so a reader (or an agent) can find a table without knowing the
+technology.
+
+| Column | Holds |
 |---|---|
-| `ea_guid` | EA's stable natural key. Primary key. Survives a rebuild where a row number does not |
-| `entity_table` | Which vocabulary table this element landed in. **The first table only** for a multi-stereotype element |
-| `package_id` | Joins to `_pkg` |
+| `table_name` | The table's name |
+| `kind` | `element`, `connector`, `element tag rows` or `connector tag rows` |
+| `stereotype` | The stereotype's `FQName` for an element table or the connector key for a `Con_` table; blank for tag rows |
+| `alias` | The technology's alias, where there is one |
+| `metaclass` | The base type, for element tables |
+| `source_table`, `target_table` | For a `Con_` table, the entity tables at its two ends; for a tag-row table, `source_table` is the table it belongs to |
+| `in_mdg` | `yes` when the technology declares it, otherwise `no` |
+| `description` | From the technology's notes |
 
-It carries no `name`, no `metaclass` and no `stereotype`, because those belong to the vocabulary
-tables and duplicating them here is what used to make the database read as EA's metamodel.
+---
 
-**Why it exists at all:** a reference to "any of 29 vocabulary tables" is polymorphic, and a
-relational model has exactly three ways to express that — a discriminator column, one bridge
-table per type, or a shared key table. This is the third. Diagram membership and relationship
-endpoints resolve against it, never against a vocabulary table.
+## 5. Types
 
-**Every row in it landed somewhere.** `entity_table` is never NULL. An element carrying no
-stereotype has no vocabulary term, so it is not in the database at all — see §6.
+A declared tag becomes a typed column:
 
-### `_tag_value` — the multi-value bridge
-
-`ea_guid`, `tag`, `value`. **One row per value**, not per tag. Keyed by element rather than by
-table, so a multi-stereotype element's values appear once and counts taken through it are not
-doubled.
-
-### `_tag_coverage` — read before trusting any aggregate
-
-`table_name`, `tag`, `present`, `populated`, `total`, `coverage`. `present` is how many elements
-carry the tag at all; `populated` is how many have a non-empty value; `coverage` is
-`populated / total`.
-
-### The rest
-
-| Table | Columns |
+| Declared in the technology | Column |
 |---|---|
-| `_pkg` | `package_id`, `parent_id`, `name`, `path`, `depth` — `path` is the `/`-joined name chain |
-| `_rel_all` | `connector_id`, `source_guid`, `target_guid`, `connector_type`, `stereotype`, `profile`, `name` |
-| `_overflow_tag` | `ea_guid`, `tag`, `value` — tags too sparse to earn a column, kept rather than dropped |
-| `_diagram` | `diagram_id`, `name`, `diagram_type`, `package_id`. Geometry is deliberately not captured |
-| `_diagram_object` | `diagram_id`, `ea_guid` |
-| `_attribute` | `attribute_id`, `element_guid`, `name`, `attr_type`, `scope` |
-| `_operation` | `operation_id`, `element_guid`, `name`, `return_type`, `scope` |
-| `_load_run` | `run_id`, `run_at`, `repository`, `spec_hash`, `rows_loaded`, `reconciled`, `mismatches`, `extract_run_id`, `extract_digest` |
+| `string`, `enumeration`, `date`, `datetime` | text |
+| `boolean`, `int`, `integer` | integer (a Boolean is `1` or `0`) |
+| `decimal`, `double` | real |
+| anything else | text |
 
-A row in `_rel_all`, `_diagram_object`, `_attribute` or `_operation` whose element is out of
-scope is **dropped at load time** rather than written with an unresolvable key. A dangling row
-inflates a count and makes an inner join quietly return fewer rows than the total being read.
+Values are trimmed. An empty value on an integer or real column is NULL; on a text column it stays empty. **Two tags with the same name on one element:** the column shows the first (lowest property id),
+as EA's Properties window does, and the preflight flags `duplicate_tag_names`. **A Memo tag's** value
+is read from its Notes, where EA keeps the text. **EA writes
+NULL and empty text identically, so the two cannot be told apart in any result.** A value that does
+not convert to its declared type is NULL on a typed column, and the value check reports it.
 
----
-
-## 2. Counting something, honestly
-
-```sql
-SELECT criticality, COUNT(*) AS n
-  FROM business_application
- GROUP BY criticality
- ORDER BY n DESC;
-```
-
-```
-Business-Critical  21
-Mission-Critical   11
-Standard            8
-Important           6
-                    1     <- empty, and it will be in every such result
-```
-
-Then, always, the coverage that count rests on:
-
-```sql
-SELECT tag, populated, total, ROUND(coverage * 100, 1) AS pct
-  FROM _tag_coverage
- WHERE table_name = 'business_application'
- ORDER BY coverage;
-```
-
-```
-businessOwner       44  47   93.6
-regulatoryScope     44  47   93.6
-technicalOwner      46  47   97.9
-criticality         47  47  100.0
-dataClassification  47  47  100.0
-lifecycle           47  47  100.0
-```
-
-`criticality` is fully populated, so the roll-up above is sound. `businessOwner` is not, so a
-roll-up by owner is missing three applications and must say so.
-
-The worst-covered columns across the whole database, which is the first thing to look at on an
-unfamiliar model:
-
-```sql
-SELECT table_name, tag, populated, total, ROUND(coverage * 100, 1) AS pct
-  FROM _tag_coverage
- WHERE total > 0
- ORDER BY coverage ASC
- LIMIT 10;
-```
-
-```
-vendor_system       pciScopeJustification   2  35    5.7
-regulated_activity  technicalOwner          2   3   66.7
-business_application businessOwner         44  47   93.6
-```
-
-A tag populated on 2 of 35 is not a dimension. Grouping by it produces a chart that is 94% one
-empty bar.
+Table names are limited to 123 characters (SQL Server's 128, less the `Con_` prefix and room for a
+suffix); a longer name stops the build with the offending names listed.
 
 ---
 
-## 3. The multi-value trap, measured
+## 6. EA's physical tables
 
-"How many applications are in scope for GLBA?"
+The nine EA tables the business tables read, in **EA's own shape**: EA's column names, EA's types,
+and (in a reporting database) EA's indexes. The business layer is built from them, and they stay in
+the model, hidden, so a report can reach anything EA holds that a business table does not carry.
 
-**Right** — through the bridge:
+| Table | Holds | Joins |
+|---|---|---|
+| `t_package` | Packages | `Package_ID`, `Parent_ID` |
+| `t_object` | Elements. `ea_guid` joins an element to its entity row | `Package_ID` to `t_package`; `Object_ID` |
+| `t_objectproperties` | Element tagged values | `Object_ID` to `t_object` |
+| `t_connector` | Connectors | `Start_Object_ID`, `End_Object_ID` to `t_object` |
+| `t_connectortag` | Connector tagged values | `ElementID` to `t_connector.Connector_ID` |
+| `t_diagram` | Diagrams | `Package_ID` to `t_package` |
+| `t_diagramobjects` | Diagram placements | `Diagram_ID`, `Object_ID` |
+| `t_attribute` | Attributes | `Object_ID` to `t_object` |
+| `t_operation` | Operations | `Object_ID` to `t_object` |
 
-```sql
-SELECT COUNT(DISTINCT ea_guid) AS n
-  FROM _tag_value
- WHERE tag = 'regulatoryScope' AND value = 'GLBA';
-```
-→ **31**
+**Scoped.** Excluded areas never appear. A kept link that crosses into an excluded area is kept,
+and the far end is an `(excluded)` stub: a row that shows the element type, never the name.
 
-**Wrong** — exact match on the flattened column:
+**Where they live.**
 
-```sql
-SELECT COUNT(*) AS n FROM business_application WHERE regulatory_scope = 'GLBA';
-```
-→ **14**
-
-Same question, same data, and the second answer is 45% of the first. The flattened column holds
-`GLBA, FFIEC` and `GLBA, SOX, FFIEC` as single strings; an exact match sees none of them. `LIKE
-'%GLBA%'` is not the fix either — it would match a hypothetical `GLBA-adjacent` and miss nothing
-only by luck.
-
-The flattened column is for display. The bridge is for counting.
-
----
-
-## 4. Gaps — the questions that find missing data
-
-Elements missing a value somebody needs:
-
-```sql
-SELECT name
-  FROM business_application
- WHERE business_owner IS NULL OR TRIM(business_owner) = ''
- ORDER BY name;
-```
-
-Governed content nobody has drawn:
-
-```sql
-SELECT k.entity_table, COUNT(*) AS n
-  FROM _keymap k
-  LEFT JOIN _diagram_object d ON d.ea_guid = k.ea_guid
- WHERE d.ea_guid IS NULL
- GROUP BY k.entity_table
- ORDER BY n DESC;
-```
-
-```
-business_application   7
-vendor_system          5
-application_function   2
-technology_function    1
-```
-
-And the reverse, which is the one people do not think to ask — diagrams holding no governed
-content at all:
-
-```sql
-SELECT COUNT(*) FROM _diagram dg
- WHERE NOT EXISTS (SELECT 1 FROM _diagram_object d WHERE d.diagram_id = dg.diagram_id);
-```
-→ **10 of 25**
-
-That is not a defect. Those are use-case, sequence, activity and state diagrams, whose content is
-UML behavior rather than architecture vocabulary. A diagram catalog built from this database will
-legitimately show fewer than half the diagrams in the repository, and a reader needs telling
-once.
-
----
-
-## 5. Traversal
-
-What uses what, with both endpoints resolved against the key map:
-
-```sql
-SELECT s.entity_table AS source, r.connector_type, r.stereotype, t.entity_table AS target
-  FROM _rel_all r
-  INNER JOIN _keymap s ON s.ea_guid = r.source_guid
-  INNER JOIN _keymap t ON t.ea_guid = r.target_guid
- WHERE r.stereotype = 'Uses'
- ORDER BY source, target;
-```
-
-```
-ai_gateway  Association  Uses  ai_service
-ai_service  Association  Uses  ai_model
-...                                          19 rows
-```
-
-To get element names, join each side on to its vocabulary table — the key map tells you which
-one. Roll up by where things live:
-
-```sql
-SELECT p.path, COUNT(*) AS elements
-  FROM _keymap k
-  INNER JOIN _pkg p ON p.package_id = k.package_id
- GROUP BY p.path
- ORDER BY elements DESC;
-```
-
----
-
-## 6. What is NOT in the database, and why
-
-The database holds the business vocabulary. An element carrying no stereotype has no vocabulary
-term, so it is not here. On the reference model that is **153 of 298 elements**:
-
-| | |
+| Path | The physical tables are |
 |---|---|
-| Package twins — EA stores every package as an object as well as a tree node | 85 |
-| UML behavior and requirements — actors, use cases, actions, states | 68 |
+| Direct access | Scoped views in the profile's schema, named as EA's tables, over EA's own tables |
+| Reporting database | Tables in `dbo`, loaded from the post-cut extract |
+| Parquet | One file per table |
 
-Neither is a loss. The package tree is in `_pkg`; the behavioral content is a different kind of
-modeling that no architecture technology types.
-
-**The case that costs something** is an element carrying governance tagged values and no
-stereotype. On the reference model there are three — Business-Critical, GLBA-scoped platforms
-somebody classified deliberately and nobody stereotyped. They are not here, and their eighteen
-tag values are not here either, which is why the GLBA count in §3 reads 31 rather than 34.
-
-That is why the build runs a **governance gate before it generates anything** — see
-[`the-governance-gate.md`](the-governance-gate.md). Applying a stereotype to one of those three
-brings it, its tags and its relationships into the database on the next build.
+A reporting database also holds `_scope_boundary` (one row per crossing: `kind`, `from_id`,
+`excluded_object_id`, `detail`) and `_scope_load` (when the load ran, the profile and the counts).
 
 ---
 
-## 7. Elements that are several things at once
+## 7. Worked queries
 
-`_keymap.entity_table` names the first table only, so finding these needs a UNION across the
-vocabulary tables — generated per model, because the table list is discovered from the data.
+Names with spaces are quoted. `logical` is the default schema.
+
+**Applications by criticality**
 
 ```sql
-SELECT ea_guid, COUNT(*) AS n, GROUP_CONCAT(t, ' + ') AS tables
-  FROM (SELECT ea_guid, 'business_application' AS t FROM business_application
-        UNION ALL
-        SELECT ea_guid, 'system_of_record' AS t FROM system_of_record
-        /* ...one SELECT per vocabulary table; take the list from manifest.json */)
- GROUP BY ea_guid
-HAVING n > 1;
+SELECT [criticality], COUNT(*) AS applications
+FROM [logical].[Business Application]
+GROUP BY [criticality];
 ```
 
-On the reference model that returns exactly one element, in `business_application +
-system_of_record`. It is deliberate fixture content: an element that genuinely is both.
+**What each application uses** - join a `Con_` table to its two ends by GUID:
 
-Cheaper check when you only want to know *whether* any exist: compare the summed vocabulary-table
-row counts in `manifest.json` against `SELECT COUNT(*) FROM _keymap`. Any excess is
-multi-stereotype placements.
+```sql
+SELECT s.[name] AS application, t.[name] AS system_of_record
+FROM [logical].[Con_Business Application Uses System of Record] c
+JOIN [logical].[Business Application] s ON s.[ea_guid] = c.[source_guid]
+JOIN [logical].[System of Record]     t ON t.[ea_guid] = c.[target_guid];
+```
+
+**A self-join names both ends** - applications that use applications:
+
+```sql
+SELECT s.[name] AS caller, t.[name] AS callee
+FROM [logical].[Con_Business Application Uses Business Application] c
+JOIN [logical].[Business Application] s ON s.[ea_guid] = c.[source_guid]
+JOIN [logical].[Business Application] t ON t.[ea_guid] = c.[target_guid];
+```
+
+**A tag that holds several values is one value in its column.** `GLBA, FFIEC` is a single string:
+
+```sql
+SELECT COUNT(*) FROM [logical].[Business Application] WHERE [regulatoryScope] = 'GLBA';      -- exact: misses it
+SELECT COUNT(*) FROM [logical].[Business Application] WHERE [regulatoryScope] LIKE '%GLBA%';  -- finds both
+```
+
+**Which tables exist**
+
+```sql
+SELECT [table_name], [kind], [in_mdg] FROM [logical].[Table Directory] ORDER BY [kind], [table_name];
+```
 
 ---
 
-## 8. Governance drift, from the database
+## 8. Rules that are not obvious and cost real money when broken
 
-Values outside a declared enumeration are reported in `manifest.json` under `domain_violations`
-and in the data dictionary. They are findings, not load failures.
+**Join a connector to its ends by GUID.** A `Con_` table's `source_guid` and `target_guid` are the
+`ea_guid` of the entity tables it names. A combination whose source and target are the same entity
+type (an application that uses applications) is a genuine self-join; name both sides.
 
-Connector stereotype provenance is reported as drift by the census
-(`compare_connectors_declared_observed`) and is also queryable in the database:
+**An element in two tables is counted twice by design.** A connector ending at it appears in both
+entities' connector tables, so counts per entity double-count it. Use the Table Directory and the
+alignment result to see which elements these are.
 
-```sql
-SELECT stereotype, COUNT(*) AS n
-  FROM _rel_all
- WHERE stereotype <> '' AND (profile IS NULL OR profile = '')
- GROUP BY stereotype ORDER BY n DESC;
-```
+**A connector is matched to its table by its own profile binding.** One that is ad hoc rather than
+bound to the technology's profile appears only when the inclusion choice admits it, in a
+`(not in MDG)` table. One the technology does not allow and the choice does not admit stays in
+EA's physical tables and is reported by the alignment check.
 
-```
-Serving       3
-access        2
-Realization   1
-Assignment    1
-```
+**A string tag that holds several values is one value in its column.** Only a RefGUIDList tag is
+split into rows, so `GLBA, FFIEC` in a string tag is a single string: matching it exactly counts it
+once, and `LIKE '%GLBA%'` finds both. Say so when a roll-up depends on it.
 
-Those carry an ad-hoc stereotype application — a name typed in, bound to no technology. Against:
+**A blank is a blank.** EA writes NULL and an empty string identically, so the two cannot be told
+apart in any result.
 
-```sql
-SELECT profile, stereotype, COUNT(*) AS n
-  FROM _rel_all WHERE profile <> '' GROUP BY profile, stereotype ORDER BY n DESC;
-```
+**A sparse tag is still a column.** A declared tag is a typed column on its table however few
+elements fill it. Only undeclared tags become tag-row tables.
 
-```
-WestbrookBankArchitecture  Uses          18
-StandardProfileL2          Realization    6
-BPMN1.1                    Assignment     5
-WestbrookBankArchitecture  Flows          5
-WestbrookBankArchitecture  realizes       4
-BMM                        Uses           1
-GML                        Composition    1
-```
-
-**`Uses` appears under two profiles** — 18 bound to `WestbrookBankArchitecture`, the model's own
-technology, and 1 bound to `BMM`, a shipped language. Same name on the connector, two different
-things in the repository, and no report built on the bare stereotype name can tell them apart.
-That is the whole argument for resolving provenance rather than reading the stereotype column.
-
-It also shows what EA ships enabled: four shipped languages (`StandardProfileL2`, `BPMN1.1`,
-`BMM`, `GML`) in use on connectors beside the model's own technology.
-
----
-
-## 9. What the last build did
-
-```sql
-SELECT run_id, run_at, rows_loaded, reconciled, mismatches
-  FROM _load_run ORDER BY run_at DESC;
-```
-
-`reconciled` is 1 only when every check ran and matched, NULL when nothing has checked yet, and 0
-when the count-back failed. `mismatches` counts failures **and** skips, because a check that did
-not run is not a check that passed.
-
-`extract_run_id` and `extract_digest` name the retained extract snapshot the build consumed, so a
-figure can be traced to the rows behind it and the build can be replayed without touching EA. A
-build whose `extract_run_id` is empty predates retention and cannot be replayed. See
-[`the-extract-snapshot.md`](the-extract-snapshot.md).
-
-Sparse tags that never became columns:
-
-```sql
-SELECT tag, COUNT(*) AS n FROM _overflow_tag GROUP BY tag ORDER BY n DESC;
-```
+**A reader that cannot read is an error.** An unreadable query result from EA fails the operation;
+it is never turned into "no rows".

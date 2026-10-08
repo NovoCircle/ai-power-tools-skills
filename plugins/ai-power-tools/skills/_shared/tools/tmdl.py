@@ -272,12 +272,9 @@ def render_model(model: SemanticModel) -> str:
         # 0 suppresses Power BI's automatic LocalDateTable_* and
         # DateTableTemplate_* tables.
         #
-        # That behavior was observed against a DATETIME-typed column. Since
-        # APT-2026-0226 the schema exposes none - `report_model.SQL_TYPES` maps
-        # both `date` and `datetime` to TEXT - so the current model does not
-        # stress it, and this annotation is emitted to keep the suppression true
-        # if a datetime column is ever exposed rather than because it was
-        # re-observed here.
+        # The suppression is emitted whether or not a model has a DATETIME
+        # column, so a column added later never brings the automatic tables
+        # (and their noise in the field list) with it.
         "annotation __PBI_TimeIntelligenceEnabled = 0",
         "",
         "annotation PBI_QueryOrder = [%s]" % ",".join('"%s"' % n for n in names),
