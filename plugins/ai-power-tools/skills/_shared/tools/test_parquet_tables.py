@@ -139,8 +139,9 @@ def test_names_windows_cannot_hold_are_refused(name):
 def test_a_bad_table_name_writes_nothing(defn, tmp_path):
     d = parquet_defn(defn)
     d["entities"][0]["name"] = "bad/name"
-    rows = {n: [] for n in [e["name"] for e in d["entities"]]}
-    with pytest.raises(ParquetTablesError):
+    rows = {spec["name"]: [] for spec in (list(d["entities"]) + list(d["connectors"]) + list(d["tag_row_tables"])
+                                         + [d["directory"]] + list(d["physical"]))}
+    with pytest.raises(ParquetTablesError, match="Windows file name"):
         write_parquet(d, rows, tmp_path / "out")
     assert not (tmp_path / "out").exists()
 

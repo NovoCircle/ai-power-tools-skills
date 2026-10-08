@@ -94,7 +94,7 @@
         "_shared/tools/test_inclusion.py": "d52cf8e01acdbe543abd7acf2d4a47982d724b41c88d737a313ca691fda3b5d4",
         "_shared/tools/test_load.py": "62bf8818ddff1fa26476c318d219fc3286b0d7ddd5cd1cd85d96477bbe016f32",
         "_shared/tools/test_parquet_out.py": "1190a991a93ff0485f8ca5d890ce4fe859966dd5cee6ed750d30dc9b34735c61",
-        "_shared/tools/test_parquet_tables.py": "faa08f9713f4b7e64fb25e78d0eb5f95a509d5195f97d47ff960eaa3bbcf56f0",
+        "_shared/tools/test_parquet_tables.py": "c96c63a53ee44e11b50ee6c18881dd15feb70f0e309ddbf854166c5338e2ab7a",
         "_shared/tools/test_pbip.py": "088457d22fdb81a00b9f184a93b6166ca569071bd818a7c8a769fee1d85017c5",
         "_shared/tools/test_pipeline.py": "372d4616bbb28c44e78f05cee19c371fc188144910691ca6e257b4f8d27113c8",
         "_shared/tools/test_pivot.py": "797bf3a2ca16b24e595474d74e1f3fec2d78beef64b36bf2d933bebe48e1db4a",
