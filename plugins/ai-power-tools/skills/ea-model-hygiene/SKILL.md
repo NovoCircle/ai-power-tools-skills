@@ -5,7 +5,7 @@ description: Find and safely fix model decay in a Sparx EA repository -- element
 
 # EA Model Hygiene
 
-*Tools: `ea_model`, `ea_analyze` (AI Power Tools for Sparx EA, v2.1.0+)*
+*Tools: `ea_model`, `ea_analyze` (AI Power Tools for Sparx EA, v2.3.0+)*
 
 A model that has been built up over months accumulates decay the same way a codebase does:
 elements nobody wired a connector to, composite-diagram links where the diagram and the

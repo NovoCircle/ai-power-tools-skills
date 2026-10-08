@@ -204,6 +204,37 @@ class TestSkillLineLimit:
         assert "over the" not in _findings(f)
 
 
+
+class TestStatedServerVersion:
+    """APT-2026-0337: the tools line and the manifest floor must agree."""
+
+    def _setup(self, root: Path, tools_line: str, floor: str = "3.6.0") -> None:
+        _write(root, "s/SKILL.md",
+               f"# s\n\n{tools_line}\n\nBody v1.0.0+ is not the tools line.\n")
+        payload = {"manifest_version": 1, "bundle_version": "9.9.9",
+                   "skills": [{"name": "s", "min_server_version": floor,
+                               "files": ["s/SKILL.md"], "sha256": {}}]}
+        (root / "manifest.json").write_text(json.dumps(payload), encoding="utf-8")
+
+    def test_a_stated_version_other_than_the_floor_is_caught(self, library):
+        self._setup(library, "*Tools: `ea_model` (AI Power Tools for EA, v2.1.0+)*")
+        found = gate.check_stated_server_version()
+        assert len(found) == 1
+        assert "states v2.1.0+" in found[0] and "is 3.6.0" in found[0]
+
+    def test_a_stated_version_on_a_continuation_line_is_read(self, library):
+        self._setup(library, "*Tools: `ea_model` and `ea_analyze`,\nAI Power Tools v2.1.0+*")
+        assert len(gate.check_stated_server_version()) == 1
+
+    def test_a_matching_version_passes(self, library):
+        self._setup(library, "*Tools: `ea_model` (AI Power Tools for EA, v3.6.0+)*")
+        assert gate.check_stated_server_version() == []
+
+    def test_no_stated_version_passes_and_body_versions_are_ignored(self, library):
+        self._setup(library, "*Tools: `ea_model`*")
+        assert gate.check_stated_server_version() == []
+
+
 # ---------------------------------------------------------------------------
 # Manifest integrity — the check that caught the v1.4.1 CRLF bug
 # ---------------------------------------------------------------------------

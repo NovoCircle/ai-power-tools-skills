@@ -7,7 +7,7 @@ description: Turn a Sparx EA model into an answer a non-modeller can act on -- p
 
 *Tools: `ea_analyze(operation="get_element_business_view"|"summarize_tagged_value_usage"|"summarize_stereotype_usage", params={...})`,
 `ea_repository(operation="aggregate_portfolio", params={...})`,
-`ea_mdg(operation="resolve_display_term", params={...})` (AI Power Tools for EA, v2.1.0+)*
+`ea_mdg(operation="resolve_display_term", params={...})` (AI Power Tools for EA, v3.6.0+)*
 
 This skill is read-only. None of the calls below create, update, or delete anything, and
 none require a write confirmation. If a task built on this skill ever needs a scratch
@@ -28,12 +28,11 @@ is done.
   belongs in front of every roll-up, not just the ones that look suspicious.
 
 **When to reach for `ea-reporting-database` instead.** This skill answers a question by asking EA
-directly, which is right for a question or two. Switch to building a reporting database when the
-question spans the whole model, when the same questions recur and someone wants a refreshable
-extract, when the answer has to come back **reconciled** against the repository because a figure is
-disputed, or when a tagged value is multi-valued -- `aggregate_portfolio` counts a tag holding
-`GLBA, FFIEC` as its own distinct value, where a database with a value-level bridge counts it as
-both. See `../ea-reporting-database/SKILL.md`.
+directly, which is right for a question or two. Build the reporting layer when the question spans
+the whole model, when the same questions recur and someone wants a refreshable source for Power BI,
+or when a figure is disputed and has to be checked against the repository: the layer has one table
+per stereotype with its tags as columns, and `check_business_layer` compares every cell with an
+independent read through EA. See `../ea-reporting-database/SKILL.md`.
 
 ## The gap this closes
 
@@ -73,7 +72,8 @@ if you don't check:
    criticality." See `references/coverage-data.md` for the full transcript.
 2. **`WBABusinessService` and everything except `lifecycle`.** The tag *is* set on all 8
    elements -- but the value is an empty string on every one of them. A check that only
-   asks "is the tag present" reports 100% coverage. The real, usable coverage is 0%.
+   asks "is the tag present" reports 100% coverage. The real, usable coverage is 0%, and
+   `populated_count` is the figure that shows it.
 3. **`WBABusinessApplication` and the ownership/classification tags.** Real elements, real
    gaps: `businessOwner` is missing on 10 of 52, `technicalOwner` on 8, `dataClassification`
    on 7, `regulatoryScope` on 10. `criticality` and `lifecycle` happen to be fully
@@ -93,9 +93,12 @@ came from here). Then:
 ea_analyze(operation="summarize_tagged_value_usage", params={"stereotype": "WBABusinessApplication"})
 ```
 
-gives you, per tag, a `count` and the `distinct_value_count` / `sample_values`. Read it as:
-does `count` equal the denominator? Does the sample list include `""` as a value? If either
-answer is concerning, don't present the roll-up as complete -- say what fraction it covers.
+gives you, per tag, a `count`, a `populated_count` and the `distinct_value_count` /
+`sample_values`. `count` is how many tag rows exist; EA adds the tag when the stereotype is
+applied, filled in or not, so it is not coverage. `populated_count` is how many
+have a non-blank value, and that is the coverage figure. Read it as: does `populated_count`
+equal the denominator? If not, don't present the roll-up as complete -- say what fraction it
+covers.
 
 The `technicalOwner` note for `WBAVendorSystem`: coverage is structurally 35/35, but 8
 real assignments to one team are split across two spellings --
@@ -146,11 +149,14 @@ Useful, verified behavior of this operation:
   There is no separate "stereotype not found" error. If a roll-up comes back empty,
   confirm the stereotype name against `summarize_stereotype_usage` before concluding
   anything about the data.
-- A tag whose values are free-text and sometimes hold **multiple values in one string**
-  (Westbrook's `regulatoryScope` does this -- `"GLBA, FFIEC"` is one value, not two) means
-  the group-by buckets by exact string. "How many applications are in GLBA scope" is not
-  just the `"GLBA"` bucket; it's every bucket containing `GLBA` as a substring. Getting this
-  wrong silently undercounts. See `references/coverage-data.md` for the worked numbers.
+- A tag that holds **several values in one string** (Westbrook's `regulatoryScope`:
+  `"GLBA, FFIEC"`) is grouped whole by default, so `"GLBA"` and `"GLBA, FFIEC"` are separate
+  groups and the `"GLBA"` group alone undercounts. The response's `multi_valued_count` says
+  how many of the matched elements hold a comma-joined value. When it is not 0, pass
+  `split_values: true`: each value is split on commas and the element is counted under each
+  part, so the `"GLBA"` group counts every element in GLBA scope. Group counts then sum to
+  more than `total_elements`, so quote each group against `total_elements`, not against the
+  sum. See `references/coverage-data.md` for the worked numbers.
 
 ---
 
@@ -160,32 +166,34 @@ Useful, verified behavior of this operation:
 ea_analyze(operation="get_element_business_view", params={"element_id": 91})
 ```
 
-This is the per-element version of the same translation: stereotype names and tag keys
-become business labels, and connections come out in plain language too. Real result for
-a well-populated `WBABusinessApplication`:
+This is the per-element view: every tag with its value, and the element's connections.
+For a technology your organization built, each `label` is the tag's technical name, and
+`type` and `target_type` are the stereotype's technical name unless the technology's XML
+was parsed this session (see Display terms below). Translate them before handing the result
+to a stakeholder.
+Result for a well-populated `WBABusinessApplication`:
 
 ```json
 {
   "name": "Westbrook Fraud Decision Engine",
-  "type": "Business Application",
+  "type": "WBABusinessApplication",
   "properties": [
-    {"label": "Business Owner", "value": "Fraud Risk Management", "technical_name": "businessOwner"},
-    {"label": "Criticality", "value": "Mission-Critical", "technical_name": "criticality"},
-    {"label": "Data Classification", "value": "Confidential", "technical_name": "dataClassification"},
-    {"label": "Lifecycle", "value": "Current", "technical_name": "lifecycle"},
-    {"label": "Regulatory Scope", "value": "FFIEC", "technical_name": "regulatoryScope"},
-    {"label": "Technical Owner", "value": "Risk Technology Team", "technical_name": "technicalOwner"}
+    {"label": "businessOwner", "value": "Fraud Risk Management", "technical_name": "businessOwner"},
+    {"label": "criticality", "value": "Mission-Critical", "technical_name": "criticality"},
+    {"label": "dataClassification", "value": "Confidential", "technical_name": "dataClassification"},
+    {"label": "lifecycle", "value": "Current", "technical_name": "lifecycle"},
+    {"label": "regulatoryScope", "value": "FFIEC", "technical_name": "regulatoryScope"},
+    {"label": "technicalOwner", "value": "Risk Technology Team", "technical_name": "technicalOwner"}
   ],
   "connections": [
-    {"direction": "uses", "label": "Uses", "target_name": "NICE Actimize Fraud Risk Management", "target_type": "Vendor System"}
+    {"direction": "uses", "label": "Uses", "target_name": "NICE Actimize Fraud Risk Management", "target_type": "WBAVendorSystem"}
   ]
 }
 ```
 
-That's a complete stakeholder-ready summary in one call -- both endpoints of the
-connection are already given business names, and the label `Uses` is a connector
-stereotype the WBA technology declares (the model stores it bare; see the canon
-reference, section 6 -- do not prefix it `WBA::`).
+One call gives everything a stakeholder summary needs. The label `Uses` is a connector
+stereotype the WBA technology declares (the model stores it bare; see the canon reference,
+section 6 -- do not prefix it `WBA::`).
 
 **What happens when a tag isn't set:** the property is left out of the list entirely,
 not shown with an empty value. A `WBADataAsset` element (which, per Step 0, never carries
@@ -195,10 +203,10 @@ properties:
 ```json
 {
   "name": "Customer Master Data",
-  "type": "Data Asset",
+  "type": "WBADataAsset",
   "properties": [
-    {"label": "Data Classification", "value": "Confidential", "technical_name": "dataClassification"},
-    {"label": "Regulatory Scope", "value": "GLBA, FFIEC", "technical_name": "regulatoryScope"}
+    {"label": "dataClassification", "value": "Confidential", "technical_name": "dataClassification"},
+    {"label": "regulatoryScope", "value": "GLBA, FFIEC", "technical_name": "regulatoryScope"}
   ],
   "connections": []
 }
@@ -213,43 +221,44 @@ inferring it from one element's output.
 
 ## Display terms: `resolve_display_term`
 
-Stereotype names resolve reliably:
-
 ```
-ea_mdg(operation="resolve_display_term", params={"kind": "stereotype", "technical_name": "WBABusinessApplication", "mdg_id": "WBA"})
--> {"alias": "Business Application", "found": true}
+ea_mdg(operation="resolve_display_term", params={"kind": "stereotype", "technical_name": "ApplicationComponent"})
+-> {"alias": "Application", "mdg_id": "ArchiMate3", "found": true}
 ```
 
-`mdg_id` is optional for a stereotype lookup -- omitting it still resolved
-`WBADataAsset` to `"Data Asset"` correctly in testing.
+`kind` is one of `stereotype`, `tagged_value`, `connector_stereotype` and `diagram_type`. A
+tag is `tagged_value`; there is no `tag`. A kind the server does not recognize is not
+rejected: it comes back `found: false`, exactly like a genuine miss, so check the spelling
+before concluding a term has no business name.
 
-**Tag names do not resolve the same way**, at least against this model at this server
-version:
+**It resolves terms from the server's own tables, not from the technology EA has loaded.**
+Those tables cover languages that ship with EA, such as ArchiMate, plus the stereotypes of
+any technology parsed with `ea_mdg(operation="parse_mdg_xml", ...)` in this session, which
+adds them with their aliases. Nothing adds a technology's tags. So for a technology your
+organization built, tags never resolve, and stereotypes resolve only after its XML has been
+parsed this session. Run on 2026-10-08 against the 3.6.0 server source, with Westbrook's
+technology standing in for yours and no XML parsed:
 
 ```
-ea_mdg(operation="resolve_display_term", params={"kind": "tag", "technical_name": "criticality", "mdg_id": "WBA"})
--> {"alias": "criticality", "found": false, "mdg_id": ""}
+ea_mdg(operation="resolve_display_term", params={"kind": "stereotype", "technical_name": "WBABusinessApplication"})
+-> {"alias": "WBABusinessApplication", "mdg_id": "", "found": false}
+ea_mdg(operation="resolve_display_term", params={"kind": "tagged_value", "technical_name": "criticality"})
+-> {"alias": "criticality", "mdg_id": "", "found": false}
 ```
 
-`found` is `false` for every base tag tried (`criticality`, and the rest behave the
-same). The alias comes back as the raw technical name, unresolved. `resolve_display_term`
-matches tags against its own alias table rather than against the tag definitions
-`get_mdg_from_runtime` reads out of the loaded technology, so a tag-kind lookup finds
-nothing even when the technology declares the tag.
+`get_element_business_view` (`type`, each `label`, `target_type`) and `aggregate_portfolio`
+(`alias`) take their labels from the same lookup, so for your own technology the tag labels
+are always technical names, and the stereotype names are too unless its XML was parsed.
+When you need a business term:
 
-**This is not a blocker** -- `get_element_business_view` and `aggregate_portfolio` both
-already produce correct business labels for tags (`"Business Owner"`, `"Regulatory
-Scope"`, and so on) through their own internal formatting, verified in the examples
-above. When you need a tag's display label:
-
-- If you're already calling `get_element_business_view` or `aggregate_portfolio`, use the
-  `label`/`alias` field they return -- don't make a separate `resolve_display_term` call
-  for a tag, it won't find one.
-- If you need a label with neither of those in hand, title-case the camelCase technical
-  name yourself (`businessOwner` -> "Business Owner") rather than relying on
-  `resolve_display_term` to do it.
-- Reserve `resolve_display_term(kind="stereotype", ...)` for stereotype names -- that path
-  works.
+- **A stereotype:** use the alias your technology declares. `ea_mdg(operation="get_mdg_from_runtime",
+  params={"tech_id": "<id>"})` returns each stereotype with its `alias` without changing what
+  the lookup knows; the reporting layer names its tables by the same alias.
+- **A tag, or a stereotype with no alias:** derive it. Split the camelCase name
+  (`businessOwner` -> "Business Owner") and drop the technology's prefix from a stereotype
+  (`WBABusinessApplication` -> "Business Application").
+- Call `resolve_display_term` for terms from a language that ships with EA, or for a
+  stereotype of a technology parsed this session, where it does find them.
 
 ---
 
@@ -271,14 +280,16 @@ above. When you need a tag's display label:
   `Infrastructure &amp; Cloud Team` is the concrete case here; treat any roll-up with a
   suspiciously large number of near-duplicate group values as a signal to check for this
   before reporting team-by-team counts.
-- **Comma-joined multi-value tags undercount a substring roll-up.** See the
-  `regulatoryScope` example above; a plain `group_by_tag` equality match will miss any
-  element whose value combines the term you're looking for with another.
+- **Comma-joined multi-value tags undercount a whole-value roll-up.** When
+  `multi_valued_count` is not 0, roll up again with `split_values: true`; see the
+  `regulatoryScope` example above.
 - **A missing property in `get_element_business_view` doesn't self-explain.** It's silent
   on whether the field is unset or not tracked for that stereotype. Cross-check against
   `summarize_tagged_value_usage` for that stereotype when it matters.
-- **`resolve_display_term(kind="tag", ...)` will not find a Westbrook base tag.** Get the
-  label from the business-view/roll-up output instead, as above.
+- **Your own technology's terms come back as technical names.** `resolve_display_term`,
+  the business view and the roll-up know the languages that ship with EA and the stereotypes
+  of a technology parsed this session, never its tags. Take a stereotype's alias from
+  `get_mdg_from_runtime` and derive a tag's label, as above.
 
 Full worked numbers, including the complete per-stereotype coverage matrix and the
 `regulatoryScope` multi-value breakdown, are in `references/coverage-data.md`.

@@ -74,6 +74,64 @@ def ident(name: str) -> str:
     return "'" + name.replace("'", "''") + "'"
 
 
+#: Partition modes this module emits. `mode:` is written bare, so anything else
+#: is refused rather than written. APT-2026-0248.
+PARTITION_MODES = frozenset({"import", "directQuery", "dual"})
+
+#: Characters Windows refuses in a file name, plus `%`, which `table_file_name`
+#: uses as its own escape and so must escape too.
+_FILE_UNSAFE = set('<>:"/\\|?*%')
+_RESERVED_DEVICES = frozenset(
+    {"CON", "PRN", "AUX", "NUL"}
+    | {f"COM{i}" for i in range(1, 10)} | {f"LPT{i}" for i in range(1, 10)})
+
+
+def property_value(field: str, value: str) -> str:
+    """A bare TMDL property value (`sourceColumn: x`), validated.
+
+    A property value ends at the line break, so CR, LF or TAB would start
+    another property; leading or trailing whitespace would be trimmed and no
+    longer name the source. Both raise `ValueError` naming the field rather
+    than being written. APT-2026-0248.
+    """
+    if any(c in value for c in "\r\n\t"):
+        raise ValueError(
+            f"{field} {value!r} contains a line break or tab, which would "
+            f"start another TMDL property.")
+    if not value or value != value.strip():
+        raise ValueError(
+            f"{field} {value!r} is empty or has leading or trailing "
+            f"whitespace, which a bare TMDL value cannot carry.")
+    return value
+
+
+def table_file_name(name: str) -> str:
+    """The file a table is written to under `tables/`, without `.tmdl`.
+
+    A name that is safe as a Windows file name is used unchanged, so ordinary
+    projects are byte-identical to before. Otherwise each unsafe character
+    (`<>:"/\\|?*%`, control characters, a trailing dot or space) becomes
+    `%XX`, and a reserved device name (`CON`, `NUL`, ...) gets its first
+    character encoded, so no table name can resolve outside `tables/`. The
+    table's name in the model comes from the `table` declaration inside the
+    file, not from the file name. Whether Power BI opens a project whose file
+    name differs from its table name is untested; no tested name needs it.
+    APT-2026-0248.
+    """
+    def enc(c: str) -> str:
+        return "".join(f"%{b:02X}" for b in c.encode("utf-8"))
+
+    out = "".join(enc(c) if c in _FILE_UNSAFE or ord(c) < 32 else c
+                  for c in name)
+    stripped = out.rstrip(". ")
+    out = stripped + "".join(enc(c) for c in out[len(stripped):])
+    if out.split(".")[0].upper() in _RESERVED_DEVICES:
+        out = enc(out[0]) + out[1:]
+    if not out:
+        raise ValueError("SemanticTable.name is empty; a table needs a name.")
+    return out
+
+
 def m_literal(value: str) -> str:
     """A Power Query M text literal, escaped.
 
@@ -155,6 +213,10 @@ def partition_block(table: SemanticTable, source) -> list[str]:
     `test_tmdl.py` asserts that: render a model for two sources and everything
     outside this block is byte-identical.
     """
+    if source.mode not in PARTITION_MODES:
+        raise ValueError(
+            f"partition mode {source.mode!r} is not one of "
+            f"{sorted(PARTITION_MODES)}.")
     out = [f"{T}partition {ident(table.name)} = m",
            f"{T}{T}mode: {source.mode}",
            f"{T}{T}source ="]
@@ -177,12 +239,13 @@ def render_column(table: SemanticTable, column) -> list[str]:
         out.append(f"{T}{T}formatString: {column.format_string}")
     out += [f"{T}{T}lineageTag: {lineage_tag('column', path)}",
             f"{T}{T}summarizeBy: {column.summarize_by}",
-            # A property value, written as is: the declaration above goes
-            # through `ident()`, this does not. `source_column` is a public
-            # field and is neither validated nor escaped here. Whether Power BI
-            # accepts a bare value starting with a digit is untested;
+            # A bare property value: the declaration above goes through
+            # `ident()`, this goes through `property_value()`, which refuses
+            # what a bare value cannot carry. Whether Power BI accepts a bare
+            # value starting with a digit is untested;
             # `test_a_leading_digit_source_column_is_bare` pins what is emitted.
-            f"{T}{T}sourceColumn: {column.source_column}",
+            f"{T}{T}sourceColumn: "
+            f"{property_value('SemanticColumn.source_column', column.source_column)}",
             "",
             # `Automatic` alongside an explicit `summarizeBy` looks like a
             # contradiction - it says the CLIENT chose. VERIFIED 2026-10-05
@@ -234,7 +297,7 @@ def render_relationship(rel: Relationship) -> list[str]:
     # Tables, columns and measures DO take descriptions. Relationships do not.
     # `Relationship.why` is kept on the dataclass because the rationale is worth
     # having - it just cannot travel in the TMDL.
-    out = [f"relationship {rel.name}"]
+    out = [f"relationship {ident(rel.name)}"]
     if not rel.is_active:
         out.append(f"{T}isActive: false")
     if rel.cross_filtering != "automatic":
@@ -319,5 +382,5 @@ def render_definition(model: SemanticModel, source) -> dict[str, str]:
         f"cultures/{model.culture}.tmdl": render_culture(model.culture),
     }
     for table in model.tables:
-        out[f"tables/{table.name}.tmdl"] = render_table(table, source)
+        out[f"tables/{table_file_name(table.name)}.tmdl"] = render_table(table, source)
     return out

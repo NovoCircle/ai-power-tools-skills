@@ -494,3 +494,89 @@ def test_an_identifier_containing_a_line_break_is_refused():
         ident("a\nb")
     with pytest.raises(ValueError, match="line break"):
         ident("a\tb")
+
+
+# ------------------------- APT-2026-0248: the four caller-value sites
+
+
+@pytest.mark.parametrize("bad", ["a\nb", "a\r\nb", "a\tb", " lead", "trail ", ""])
+def test_a_source_column_a_bare_value_cannot_carry_is_refused(bad):
+    """A newline would start a second property; whitespace would be trimmed."""
+    from tmdl import render_column
+
+    table = SemanticTable(name="entity_0")
+    column = SemanticColumn(name="x", source_column="x")
+    column.source_column = bad
+    with pytest.raises(ValueError, match="SemanticColumn.source_column"):
+        render_column(table, column)
+
+
+def test_a_source_column_with_spaces_and_punctuation_inside_is_written_as_is():
+    """Only what ends or trims the value is refused; a tag name is not mangled."""
+    from tmdl import render_column
+
+    lines = render_column(SemanticTable(name="t"),
+                          SemanticColumn(name="x", source_column="Owner's (name): A/B"))
+    assert "\t\tsourceColumn: Owner's (name): A/B" in lines
+
+
+@pytest.mark.parametrize("bad", ["gen_a\ngen_b", "gen_a\tb"])
+def test_a_relationship_name_with_a_line_break_is_refused(bad):
+    sm = semantic()
+    sm.relationships[0].name = bad
+    with pytest.raises(ValueError, match="line break"):
+        render_relationships(sm)
+
+
+def test_a_relationship_name_goes_through_ident():
+    """Its delimiter is the identifier quote: a quote is doubled, not closing."""
+    sm = semantic()
+    sm.relationships[0].name = "rel 'x'"
+    text = render_relationships(sm)
+    assert "relationship 'rel ''x'''" in text
+    assert "relationship gen_con_target" in text, "a plain name stays bare"
+
+
+@pytest.mark.parametrize("name", [
+    "../../evil", "..", ".", "a/b", "a\\b", "..\\..\\evil", "C:evil", "a\nb", "trail.", "NUL", "con.x"])
+def test_a_table_file_cannot_resolve_outside_tables(name):
+    from tmdl import table_file_name
+
+    key = f"tables/{table_file_name(name)}.tmdl"
+    stem = key[len("tables/"):-len(".tmdl")]
+    assert "/" not in stem and "\\" not in stem and ":" not in stem
+    assert stem not in ("", ".", "..")
+    assert not stem.endswith((".", " "))
+    assert all(ord(c) >= 32 for c in stem)
+    assert stem.split(".")[0].upper() not in ("NUL", "CON")
+
+
+def test_a_safe_table_name_keeps_its_file_name_and_encodings_do_not_collide():
+    from tmdl import table_file_name
+
+    assert table_file_name(CON) == CON, "ordinary names are unchanged"
+    assert table_file_name("a/b") != table_file_name("a%2Fb")
+
+
+def test_the_definition_writes_a_hostile_table_name_inside_tables():
+    sm = semantic()
+    sm.tables[0].name = "../../evil"
+    files = render_definition(sm, PARQUET)
+    tables = [k for k in files if k.startswith("tables/")]
+    assert len(tables) == len(sm.tables)
+    assert "tables/..%2F..%2Fevil.tmdl" in files
+    assert "table '../../evil'" in files["tables/..%2F..%2Fevil.tmdl"]
+
+
+@pytest.mark.parametrize("bad", ["import\n\t\tisHidden", "directQuery\t", "Import", "push"])
+def test_a_partition_mode_outside_the_known_set_is_refused(bad):
+    for source in (ParquetSource(directory="C:\\x", mode=bad),
+                   SqlSource(server="s", database="d", mode=bad)):
+        with pytest.raises(ValueError, match="partition mode"):
+            render_table(semantic().tables[0], source)
+
+
+def test_the_three_modes_render():
+    for mode in ("import", "directQuery", "dual"):
+        text = render_table(semantic().tables[0], SqlSource(server="s", database="d", mode=mode))
+        assert f"\t\tmode: {mode}\r\n" in text

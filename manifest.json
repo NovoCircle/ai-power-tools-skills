@@ -57,8 +57,8 @@
         "_shared/tools/test_pbip.py": "aee1f1dc0bc7ec1e4120fd07fc980f630afc79bff63a2af0b5c9cadd782247c7",
         "_shared/tools/test_powerbi_model.py": "977f8d1f018e871f51c1d75829a31690330912b6fcea131029f8c2910f1283a2",
         "_shared/tools/test_semantic_model.py": "2ffd32d43849752c8563fd74df56132949559890db62b0d873e9a5b1a66eb325",
-        "_shared/tools/test_tmdl.py": "80cfd7823b853ac1ffe475e0f7b2efeeb39fe67b4c0a6987a69515c7d72b3db8",
-        "_shared/tools/tmdl.py": "ec8c551bffa8befde813c758d4ad3354e589bc7f20bd246ab2a343358af4f022"
+        "_shared/tools/test_tmdl.py": "8848582e68ff77c4adeb68cff5653864a8076f487175c71a716a6fce2cbe3566",
+        "_shared/tools/tmdl.py": "f884904f522623475f35369bee717255771927214bbf628b040047775384cdc0"
       }
     },
     {
@@ -73,7 +73,7 @@
         "ea-change-management/references/worked-example.md"
       ],
       "sha256": {
-        "ea-change-management/SKILL.md": "a0bbb1771ff1da29850cc2ecd4aaa510bf3b8969807949e6395d589396531622",
+        "ea-change-management/SKILL.md": "b7513a492b62c96a88726457d79788c000425e98c86ef20b19a1b7bb8b12d912",
         "ea-change-management/references/offer-and-cleanup.md": "63e1d7f686cb7ce31cb1d61ba31c04b303646e9b6b24f41b9ece719153f451d1",
         "ea-change-management/references/worked-example.md": "28544241e1750caa7556c265347e3ec53ecc811d4996371003a56fe920175877"
       }
@@ -336,7 +336,7 @@
         "ea-model-hygiene/references/pre-delete-safety.md"
       ],
       "sha256": {
-        "ea-model-hygiene/SKILL.md": "7653a983e1b438536e1bd85683cfe24d496d68cbbe785069c0955776691278d2",
+        "ea-model-hygiene/SKILL.md": "b6d0c6a9264ae9a2172c8b855cba2f43d4e8251ed4480e011b3b2f3e8f8f37be",
         "ea-model-hygiene/references/consistency-audits.md": "e32e2e861afa517410bbd33e7ac3b9c4ed1ef7db050e8cebe23267126ae07a5c",
         "ea-model-hygiene/references/pre-delete-safety.md": "5fa73dc0d9879fa53e91992c77e2b929e1c8c4649197df43fdda7c8c29b3c46b"
       }
@@ -447,14 +447,14 @@
       "title": "ea-stakeholder-reporting",
       "description": "Turn a model into answers a non-modeller can act on \u2014 portfolio roll-ups by tagged value, business-language display terms, and checking coverage before presenting a figure",
       "version": "1.1.1",
-      "min_server_version": "2.2.0",
+      "min_server_version": "3.6.0",
       "files": [
         "ea-stakeholder-reporting/SKILL.md",
         "ea-stakeholder-reporting/references/coverage-data.md"
       ],
       "sha256": {
-        "ea-stakeholder-reporting/SKILL.md": "a1508d91a7f5b54bf9847549af485299b3f3e386eb02fd5d412c978cd2d29c0c",
-        "ea-stakeholder-reporting/references/coverage-data.md": "51dd954af09d18a32515715012bb3069689a526284bcacea5b39f4a1d252e101"
+        "ea-stakeholder-reporting/SKILL.md": "45c219a346e4a384c38223c5fd0f7c755349561538ea0d661154b01bde6e9c88",
+        "ea-stakeholder-reporting/references/coverage-data.md": "5b6c3402d1417b98322d020ac07bd22c012963757efc325c7e9730c75f411a7d"
       }
     },
     {
@@ -480,7 +480,7 @@
         "ea-validation/SKILL.md"
       ],
       "sha256": {
-        "ea-validation/SKILL.md": "85c347e8c629f9318116db87b84905c1e29cebd2dc6bda38fd83d2955dfcb4d9"
+        "ea-validation/SKILL.md": "abb42733b323eaea288c3a359ad094d8571dbe36acf9da617e535f361898669d"
       }
     },
     {

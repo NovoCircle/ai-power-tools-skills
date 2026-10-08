@@ -6,7 +6,7 @@ description: Manage baselines and change history in a Sparx EA repository via ea
 # EA Change Management — Baselines and Audit History
 
 *Tools: `ea_repository` (baseline operations) and `ea_analyze` (audit-trail operations),
-AI Power Tools for Sparx EA v2.1.0+*
+AI Power Tools for Sparx EA v2.3.0+*
 
 Run the `ea-start-here` preflight first — confirm the right repository is open before touching
 baselines. A baseline captured against, or applied to, the wrong model is a wasted afternoon at
