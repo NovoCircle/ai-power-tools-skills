@@ -162,12 +162,12 @@ your first rule.
 
 ### Test 1: Zero violations on a clean known-good model
 
-Open `WestbrookBank.qea` (or any clean baseline model) and run:
+Open a clean model you know conforms (a baseline copy of your own) and run:
 
 ```python
-result = validate_model(
-    rules_path_or_content="path/to/ruleset.yaml"
-)
+result = ea_validate(operation="audit", params={
+    "rules_path_or_content": "path/to/ruleset.yaml",
+})
 ```
 
 **Expected:** `violation_count: 0` (assuming the model doesn't use this language's
@@ -181,9 +181,9 @@ Once the ruleset is hosted somewhere reachable by URL (your own repo, a gist, an
 internal file server), test the round-trip:
 
 ```python
-result = validate_model(
-    rules_path_or_content="https://<your-host>/<path>/{lang}_rules.yaml"
-)
+result = ea_validate(operation="audit", params={
+    "rules_path_or_content": "https://<your-host>/<path>/{lang}_rules.yaml",
+})
 ```
 
 **Expected:** `ok: true`, `rules_evaluated: {N}` matching your rule count. If you get
@@ -197,10 +197,10 @@ Assignment connector from a DataObject to a BusinessProcess — a clear endpoint
 Run the ruleset scoped to that package:
 
 ```python
-result = validate_model(
-    rules_path_or_content="path/to/ruleset.yaml",
-    package_id={scratch_package_id}
-)
+result = ea_validate(operation="audit", params={
+    "rules_path_or_content": "path/to/ruleset.yaml",
+    "package_id": {scratch_package_id},
+})
 ```
 
 Verify that exactly the rules you expect are reported.

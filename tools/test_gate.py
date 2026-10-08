@@ -235,6 +235,43 @@ class TestStatedServerVersion:
         assert gate.check_stated_server_version() == []
 
 
+class TestBundleFloor:
+    """The bundle-level floor is the installer's all-or-nothing guard."""
+
+    def _manifest(self, root: Path, bundle: str, *skill_floors: str) -> None:
+        payload = {"manifest_version": 1, "bundle_version": "9.9.9",
+                   "skills": [{"name": f"s{i}", "min_server_version": f}
+                              for i, f in enumerate(skill_floors)]}
+        if bundle:
+            payload["min_server_version"] = bundle
+        _write(root, "manifest.json", json.dumps(payload, indent=2))
+
+    def test_a_bundle_floor_below_a_skill_floor_is_caught(self, library):
+        self._manifest(library, "3.0.0", "2.2.0", "3.6.0")
+        found = gate.check_bundle_floor()
+        assert len(found) == 1
+        assert "is 3.0.0" in found[0] and "s1 requires 3.6.0" in found[0]
+
+    def test_versions_compare_numerically_not_as_text(self, library):
+        self._manifest(library, "3.9.0", "3.10.0")
+        assert len(gate.check_bundle_floor()) == 1
+
+    def test_a_missing_bundle_floor_is_caught(self, library):
+        self._manifest(library, "", "2.2.0")
+        assert "missing" in gate.check_bundle_floor()[0]
+
+    def test_a_bundle_floor_equal_to_the_highest_skill_floor_passes(self, library):
+        self._manifest(library, "3.6.0", "2.2.0", "3.6.0")
+        assert gate.check_bundle_floor() == []
+
+    def test_a_bundle_floor_above_every_skill_floor_passes(self, library):
+        self._manifest(library, "3.6.0", "2.2.0", "3.0.0")
+        assert gate.check_bundle_floor() == []
+
+    def test_no_manifest_is_not_this_checks_business(self, library):
+        assert gate.check_bundle_floor() == []
+
+
 # ---------------------------------------------------------------------------
 # Manifest integrity — the check that caught the v1.4.1 CRLF bug
 # ---------------------------------------------------------------------------

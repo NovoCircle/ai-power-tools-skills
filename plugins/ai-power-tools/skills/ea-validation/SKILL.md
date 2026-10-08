@@ -5,7 +5,7 @@ description: Author and run YAML sidecar conformance rules against a Sparx EA mo
 
 # Validating a Sparx EA Model Against a YAML Sidecar Ruleset
 
-*Tool: `ea_validate(operation="audit", params={...})` (AI Power Tools for EA, v2.2.0+)*
+*Tool: `ea_validate(operation="audit", params={...})` (AI Power Tools for EA, v3.6.0+)*
 
 > **v1.3.0 — meta-tool dispatch.** All individual tools are now dispatched via 6 meta-tools.
 > `validate_model` is exposed as `ea_validate(operation="audit", params={"rules_path_or_content": ...})`.
@@ -158,10 +158,14 @@ result = ea_validate(operation="audit", params={
     ),
 })
 
-# 2. Or install locally first, then run from the installed path.
+# 2. Or install locally first, then run from the installed path (needs v3.6.0+,
+#    which expands the `~`).
 #    Rulesets do NOT install among the skills -- they carry no SKILL.md, so
-#    they go under the product data directory instead.
-ea_repository(operation="install_skills", params={"names": ["ruleset-archimate31"]})
+#    they go under the product data directory instead. install_skills stands
+#    down on a machine that has the plugin (the skills load from the plugin),
+#    and the ruleset is not part of the plugin, so pass force=true; with names
+#    limited to the ruleset it writes that one ruleset and nothing else.
+ea_repository(operation="install_skills", params={"names": ["ruleset-archimate31"], "force": True})
 result = ea_validate(operation="audit", params={
     "rules_path_or_content": "~/.claude/ai-power-tools/rulesets/ruleset-archimate31/archimate31_rules.yaml"
 })

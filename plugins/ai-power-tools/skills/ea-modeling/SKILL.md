@@ -256,7 +256,7 @@ existing note survives.
 
 ## 7. Connectors
 
-| Relationship | `connector_type` | `stereotype` |
+| Relationship | `type` | `stereotype` |
 |-------------|-----------------|--------------|
 | `«Uses»` | `Association` | `Uses` |
 | `«Realizes»` | `Realization` | `Realizes` |
@@ -291,13 +291,17 @@ reserved-word gotcha) is in [`references/sql_schema.md`](references/sql_schema.m
 
 ---
 
-## 10. Working with the WBA MDG
+## 10. Working with an MDG technology
 
-Confirm the MDG is loaded and enabled before tagging (`get_mdg_from_runtime` with
-`tech_id="WBA"` answers `source: "live"`; otherwise use `ea-mdg-deploy` first). Tag rule: base 6 apply to all 15 element stereotypes,
-AI 4 apply only to the 3 AI stereotypes (`pciScopeJustification`, `product` and `vendor` are declared on
-only the stereotypes the canon names). Full verification SQL and a canon correction to a
-tag matrix: [`references/wba_mdg_reference.md`](references/wba_mdg_reference.md).
+Westbrook Bank's `WBA` technology is the illustration throughout; substitute your own
+technology id, stereotypes and tags. Confirm your technology is loaded and enabled before
+tagging (`get_mdg_from_runtime` with your technology id as `tech_id` answers `source: "live"`;
+otherwise use `ea-mdg-deploy` first). Tag applicability comes from your technology's
+definition. In the Westbrook Bank illustration, the base 6 tags apply to all 15 element
+stereotypes and the AI 4 apply only to the 3 AI stereotypes (`pciScopeJustification`,
+`product` and `vendor` are declared on only the stereotypes the canon names). Verification SQL
+and the illustration's tag matrix:
+[`references/wba_mdg_reference.md`](references/wba_mdg_reference.md).
 
 ---
 
@@ -316,16 +320,6 @@ resume from the next uncompleted item — never rebuild what's there. A wrong na
 stereotype fixes with `update_*`; a wrong package parent has no v1 tool and needs a direct SQL
 `UPDATE` (or delete-and-recreate if childless). Full walkthroughs:
 [`references/package_and_defects.md`](references/package_and_defects.md) §5.
-
----
-
-## 13. Pre-Demo vs. Post-Demo State
-
-The Westbrook Bank spec is built to a **pre-demo** state: no AI Gateway/Service elements,
-exactly 1 WBA-LFY-001 violation. The AI gateway demo adds those elements **live**. Never create
-`WBAAIGateway`/`WBAAIService` during the initial build — verify absence (`COUNT(*) = 0`)
-before declaring the build complete. Full state tables:
-[`references/element_creation.md`](references/element_creation.md) §3.
 
 ---
 
@@ -373,7 +367,7 @@ format: [`references/diagnostics_and_ui.md`](references/diagnostics_and_ui.md) �
 ## Reference files
 
 - [`references/sql_schema.md`](references/sql_schema.md) — schema gotchas, tag-store decision tree, verification-query cookbook
-- [`references/element_creation.md`](references/element_creation.md) — element-creation code patterns, full WBA tag table, stereotype persistence, pre/post-demo state
+- [`references/element_creation.md`](references/element_creation.md) — element-creation code patterns, full WBA tag table, stereotype persistence
 - [`references/diagrams_and_connectors.md`](references/diagrams_and_connectors.md) — diagram creation/layout, connector-visibility, connector-type detail, Notes recipe
 - [`references/package_and_defects.md`](references/package_and_defects.md) — root-package and `&`-encoding defect fixes, package counts, idempotency, error recovery
 - [`references/wba_mdg_reference.md`](references/wba_mdg_reference.md) — MDG-active verification, tag-applicability rule

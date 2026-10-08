@@ -484,6 +484,42 @@ def check_stated_server_version() -> list[str]:
     return out
 
 
+def _version_key(v: str) -> tuple[int, ...]:
+    return tuple(int(p) for p in v.split("."))
+
+
+def check_bundle_floor() -> list[str]:
+    """The bundle's `min_server_version` must not sit below any skill's.
+
+    The installer enforces the bundle-level floor all-or-nothing and treats
+    the per-skill floors as finer detail. A bundle floor below a skill's lets a
+    server that is too old for that skill install the rest of the bundle and
+    take delivery of a partial set that documents operations it does not have.
+    """
+    import json
+
+    mf = ROOT / "manifest.json"
+    if not mf.exists():
+        return []
+    data = json.loads(mf.read_text(encoding="utf-8"))
+    bundle = data.get("min_server_version", "")
+    floors = {s.get("name", ""): s["min_server_version"]
+              for s in data.get("skills", []) if s.get("min_server_version")}
+    if not floors:
+        return []
+    try:
+        highest_name = max(floors, key=lambda n: _version_key(floors[n]))
+        highest = floors[highest_name]
+        if bundle and _version_key(bundle) >= _version_key(highest):
+            return []
+    except ValueError:
+        return [f"manifest.json: a min_server_version is not a dotted number "
+                f"(bundle {bundle!r})"]
+    return [f"manifest.json: bundle min_server_version is {bundle or 'missing'} "
+            f"but {highest_name} requires {highest}. Raise the bundle floor to "
+            f"at least {highest}."]
+
+
 _OP_DRIFT_RAN = True
 _OP_DRIFT_SKIP_REASON: Optional[str] = None
 
@@ -705,6 +741,7 @@ def main() -> int:
     if target == ROOT:
         findings.extend(check_manifest())
         findings.extend(check_stated_server_version())
+        findings.extend(check_bundle_floor())
 
     # A check that did not run is not a check that passed. The verdict says so
     # whatever the findings, because the whole point of this item was a gate

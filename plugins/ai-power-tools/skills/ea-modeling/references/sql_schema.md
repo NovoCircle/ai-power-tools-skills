@@ -102,7 +102,6 @@ queries. Reach for these first; only drop to `execute_sql` when none fits.
 | `list_ea_tables()` | n/a — pure introspection | When you don't know which table holds a piece of data. |
 | `get_element_tags(element_id, include_xref=True)` | `t_objectproperties` + `t_taggedvalue` + `t_xref` | Reading element tagged values without guessing which store has them. |
 | `get_connectors_for_element_filtered(element_id, direction, connector_type, stereotype)` | `t_connector` with `Start_Object_ID`/`End_Object_ID` filters | Listing connectors with direction or type filters in one shot. |
-| `find_stereotype_usage(stereotype, applies_to, include_xref=True)` | `t_object.Stereotype` + `t_connector.Stereotype` + `t_xref` + `t_stereotypes` | Auditing where a stereotype is used and whether it's profile-registered. |
 | `list_package_tree(root_package_id, include_diagrams, include_element_counts)` | recursive `t_package.Parent_ID` walk + joins | Mapping out a sub-tree with counts in a batched query. |
 
 ---
@@ -255,7 +254,7 @@ WHERE c.Start_Object_ID = <element_id>
    OR c.End_Object_ID   = <element_id>
 ```
 
-### Check WBA-LFY-001 violations (pre-demo state: expect exactly 1)
+### Check WBA-LFY-001 violations
 
 ```sql
 SELECT src.Name AS source_name, tgt.Name AS target_name,

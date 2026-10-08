@@ -1,14 +1,16 @@
-# Working with the WBA MDG — Full Detail
+# Working with an MDG Technology (WBA as the Illustration) — Full Detail
 
 Detail supporting [`../SKILL.md`](../SKILL.md) §10. Read that section first for the one-line
-rule (confirm the MDG is loaded before tagging); this file carries the verification SQL and the
-tag-applicability rule.
+rule (confirm your technology is loaded before tagging); this file carries the verification SQL
+and the tag-applicability rule, with Westbrook Bank's `WBA` technology as the example. Use your
+own technology id, stereotypes and tags.
 
 ---
 
 ## Confirm MDG is active before tagging
 
-Before setting any WBA tagged values, confirm the MDG is loaded and enabled:
+Before setting tagged values, confirm your technology is loaded and enabled (`WBA` below is
+the Westbrook Bank illustration; pass your own technology id):
 ```
 ea_mdg(operation="get_mdg_from_runtime", params={"tech_id": "WBA"})
 ```
