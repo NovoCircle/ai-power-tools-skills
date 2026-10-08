@@ -1,64 +1,62 @@
 ---
 name: ea-reporting-database
-description: Build a queryable relational database from a Sparx EA repository - every element, relationship, tagged value, attribute and diagram placement, typed by the technology that governs them - and prove it matches the repository by counting back. Use when someone wants to query, roll up, or report across a whole model rather than element by element, wants EA content in a database an agent or a SQL client can read, or asks for a refreshable extract. Also use when a count taken from EA is disputed and you need a reconciled figure. For Power BI specifically - a dataset, a .pbip, TMDL or a semantic model - follow sections 3.1 and 3.2 here, then continue with ea-power-bi, which decides whether a relational database is built at all.
+description: Build the reporting layer for a Sparx EA repository - business tables named and shaped by the technology that governs the model (one table per stereotype, one per allowed connector combination, a Table Directory) over EA's own tables - as SQL views inside the EA database, as a SQL Server reporting database, or as Parquet files, and prove it matches the repository. Use when someone wants to query, roll up, or report across a whole model rather than element by element, wants EA content in a database or files that an agent, a SQL client or Power BI can read, wants to choose what is reportable, or asks to keep the data fresh on a schedule. For Power BI specifically - a dataset, a .pbip, TMDL or a semantic model - build the layer here, then continue with ea-power-bi.
 ---
 
-# A reporting database from an EA repository
+# A reporting layer from an EA repository
 
-*Tools: `ea_mdg(operation="get_mdg_from_runtime", params={...})`,
-`ea_analyze(operation="execute_sql", params={...})` (AI Power Tools for Sparx EA, v3.0.0+),
-plus the transform modules in `../_shared/tools/`*
+*Tools: `ea_repository(operation=..., params={...})` with `build_business_layer`,
+`check_business_layer`, `build_reporting_database`, `replay_reporting_database`,
+`remove_business_layer`, `start_reporting_refresh`, `get_reporting_refresh`;
+`ea_mdg(operation="get_mdg_from_runtime")`; `ea_analyze(operation="execute_sql")` (AI Power Tools
+for Sparx EA, the release that ships the business-layer operations); the census modules in
+`../_shared/tools/`*
 
-**This skill only reads the repository.** Nothing here creates, updates or deletes anything in
-EA. The database it builds is a separate file; the model is untouched.
+**This skill changes the model only through the governance gate's stereotype application (§5.2),
+and only when the user chooses it.** Direct access (path A) creates views in their own schema
+inside the EA database and never alters an EA table.
 
-Run the `ea-start-here` preflight first — which repository is actually open, and which
+Run the `ea-start-here` preflight first - which repository is actually open, and which
 technologies are actually loaded. Both answers change the output, and a build against the wrong
-model is a wasted afternoon.
+model is a wasted afternoon. EA must be running with the repository open for every operation here
+except a replay (§6).
 
 ---
 
-## 1. What this produces, and what it deliberately does not
+## 1. What this produces
 
-Five files per build:
+The same tables on every path - names, columns, types and rows - so a report built on one path
+works on another:
 
-| File | What it is |
+| Tables | What they hold |
 |---|---|
-| `reporting.sqlite` | The database: one table per stereotype, plus eleven `_`-prefixed plumbing tables |
-| `manifest.json` | Machine-readable build record, including the reconciliation verdict and `ok` |
-| `reconciliation.txt` | The count-back, dimension by dimension, readable |
-| `data-dictionary.md` | What every column means, where it came from, and **how populated it is** |
-| `issued-sql.log` | Every statement the load issued, in order, with row counts |
+| **Entity tables** | One per element stereotype, named by the technology's alias (`Business Application`), or the stereotype name where there is no alias. Elements outside the technology that the inclusion choice (§2b) admits get a table per observed stereotype, named `... (not in MDG)` |
+| **`Con_` tables** | One per allowed combination of source stereotype, connector stereotype and target stereotype - matching the technology's metamodel diagram one for one. Named `Con_<source table> <connector stereotype> <target table>`. Combinations outside the technology appear only when the inclusion choice admits them, marked `(not in MDG)` |
+| **Tag-row tables** | Only where a column cannot hold the data: tags the technology does not declare, and declared tags of a multi-valued type. Everything else is a typed column on its entity or `Con_` table |
+| **Table Directory** | One row per business table: its name, kind, stereotype, alias, description from the technology |
+| **EA's physical tables** | The nine EA tables the business tables read (packages, objects, tagged values, connectors, connector tags, diagrams, diagram placements, attributes, operations), scoped to what the profile includes |
 
-**Not produced, on purpose:** no `.sql` DDL file (SQLite carries its own schema and nothing
-would read it), no CSV, no Excel. The database is the deliverable, and a portable target gets its
-own DDL generated *for that target* — never retrofitted from SQLite's dialect. Parquet and Power BI
-belong to `ea-power-bi`, which continues from `prepare` in §3.3.
+Column by column: [`references/the-schema.md`](references/the-schema.md).
 
 ---
 
 ## 2. The shape of the output
 
-**Entity tables** — one per stereotype actually found, named from the technology's alias where it
-declares one (`Business Application` becomes `business_application`), snake-cased otherwise.
-Columns are `ea_guid`, `name`, `metaclass`, then one per tagged value that cleared the sparse
-threshold. `ea_guid` is the primary key: EA's stable natural key, which survives a rebuild where
-a row number does not.
+**Names are exactly the technology's.** No prefix stripping, no snake-casing: `Business
+Application` is a table with a space in it, so quote it in SQL (`[logical].[Business Application]`).
+Westbrook Bank's `WBA` technology is used for illustration throughout; substitute your own
+technology, stereotypes and model.
 
-**Eleven plumbing tables**, fixed and technology-independent, all prefixed `_` so they sort below
-the vocabulary and read as internal: `_keymap`, `_pkg`, `_rel_all`, `_tag_value`, `_tag_coverage`,
-`_overflow_tag`, `_diagram`, `_diagram_object`, `_attribute`, `_operation`, `_load_run`. Columns:
-[`references/the-schema.md`](references/the-schema.md).
+**Every admitted element is in at least one entity table.** One carrying two of the technology's stereotypes
+is genuinely two things and is in both tables, flagged at preflight and listed in the alignment
+result. An element carrying none of the stereotypes the inclusion choice admits has no table - the
+governance gate (§5.2) reports those before the build.
 
-`_keymap` is `ea_guid`, `entity_table`, `package_id` and nothing else — no name, metaclass or
-stereotype, because those belong to the entity tables. Diagram membership and relationship
-endpoints resolve against it: a reference to "any entity table" is polymorphic, and a shared key
-table is how a relational model expresses it.
+**Every entity table has `package_path`**, so a report can slice by package, including entity
+types with no tags.
 
-**Only elements that landed in an entity table are in the database.** One carrying no stereotype
-has no vocabulary term, so it is out of scope — reported before the build by the governance gate
-(§3.2b), never dropped silently. `_keymap`, `_tag_value` and `_tag_coverage` are load-bearing and
-get their own rules in §5.
+**Excluded areas never appear.** The profile (§4) names packages to leave out; a link from kept
+content into one ends at an `(excluded)` stub that shows the element type, never the name.
 
 ---
 
@@ -86,53 +84,89 @@ includes. Never decide it for them. Full detail:
    `record()` beside it. A refresh calls `new_since_saved` and flags what is new instead of
    deciding it.
 
-This changes what is built, not the governance gate of §3.2b, which still applies to elements that
+This changes what is built, not the governance gate of §5.2, which still applies to elements that
 carry no stereotype.
 
 ---
 
-## 3. The build, step by step
+## 3. Three paths, and how to choose
 
-### 3.1 Get the technology definition
+Where the business tables live is a fact about the customer's estate, not a preference. Put all
+three to them, with the consequence of each attached, before building anything.
+
+| | **Direct access (path A)** | **Reporting database (path B)** | **Parquet files (path C)** |
+|---|---|---|---|
+| For whom | Can reach the EA database and may create views in it | Has no direct database access (a cloud connection, for example) and can run SQL Server | Has no direct database access and no database to run |
+| Where the business tables are | SQL views in their own schema inside the EA database. EA's tables reach Power BI through scoped views in the same schema | SQL views in a separate SQL Server reporting database that AI Power Tools fills with a copy of EA's tables, read over COM | One Parquet file per table in a folder. AI Power Tools writes the rows as JSON; the local step in `ea-power-bi` writes the files |
+| Profile `target.kind` | `ea_database` | `reporting_database` | `parquet` |
+| Data | Live: the views read EA's tables as they stand | A snapshot, rebuilt in full on every refresh | A snapshot, rewritten on every refresh |
+| Needs | SQL Server. The Windows account running AI Power Tools needs `CREATE SCHEMA`, `CREATE VIEW` and `SELECT` on EA's tables | SQL Server, and a Windows account allowed to create the reporting database. EA running with the repository open | `pyarrow` for the local step. EA running with the repository open |
+| Preflight | No preflight operation: the rights are checked first, and the §2b census finds unbound connectors | Yes (§5.3) | Yes (§5.3) |
+| Kept extract (§6) | None - there is no extract | Yes | Yes |
+
+**How to choose, in order:**
+
+1. *Can you reach the EA database directly, is it SQL Server, and may you create views in it?*
+   Then direct access is available. State the cost: the views live in the production database, and
+   Power BI in DirectQuery queries that database. Its speed at the scale of a large repository is
+   not measured.
+2. *If not, can you run a SQL Server for the reporting database?* Then the reporting database. EA's
+   tables are copied into it, so queries never touch the production database; it is a snapshot.
+3. *If not, Parquet.* No database anywhere. Power BI Desktop imports the files. It is a snapshot.
+
+Someone with direct access may still choose the reporting database or Parquet - to keep views out
+of the production database, or to leave areas out of what Power BI can see. All three paths
+support leaving packages out (§4).
+
+**SQL Server only for direct access and for the reporting database.** Any other database type is
+refused with a message; nothing is written.
+
+---
+
+## 4. The profile
+
+Everything the build needs is in one saved profile, a JSON file the user keeps. Every refresh
+reuses it. Illustration with Westbrook Bank's `WBA` technology; substitute your own:
+
+```json
+{
+  "technology": "WBA",
+  "scope": {
+    "roots": ["{11111111-2222-3333-4444-555555555555}"],
+    "exclude": ["{66666666-7777-8888-9999-000000000000}"]
+  },
+  "inclusion": {"observed_elements": [], "observed_connectors": []},
+  "target": {"kind": "reporting_database", "server": "<sql-server>\\<instance>",
+             "database": "EAReporting", "schema": "logical"}
+}
+```
+
+The parts, and the scope rules (no masking; a new root package is left out and flagged; a stale
+exclusion is flagged): [`references/the-profile.md`](references/the-profile.md). Package GUIDs come from
+`execute_sql`: `SELECT ea_guid, Name, Parent_ID FROM t_package`. Paste `resolve_answer(...).inclusion`
+into `inclusion`. A reporting-database build refuses a database that holds an EA repository's own tables.
+
+---
+
+## 5. The build, step by step
+
+### 5.1 Get the technology definition
 
 ```
 ea_mdg(operation="get_mdg_from_runtime", params={"tech_id": "<id>"})
 ```
 
-This supplies the aliases, descriptions, declared types and **complete** enumeration domains.
-Save the result to `mdg.json` in your working directory.
+This supplies the aliases, descriptions and declared types the §2b census compares against. Check
+`source` in the response: `"live"` means EA answered from the loaded technology, which is what you
+want. If the operation declines, go back to the `ea-start-here` preflight rather than proceeding.
+A repository with no technology loaded has no metamodel to build a business layer from; say so.
 
-Check `source` in the response. `"live"` means EA answered from the loaded technology, which is
-what you want. If the operation declines, the technology is not loaded — go back to the
-`ea-start-here` preflight rather than proceeding, because without it every column is `TEXT` with
-an observed domain and the drift findings in §6 cannot be computed at all.
+Run the §2b census, settle the inclusion choice, and write the profile (§4) before the next step.
 
-A repository with no technology loaded still builds. Say so explicitly in the report rather than
-letting the thinner output pass as the normal one.
+### 5.2 The governance gate - run this before you build anything
 
-### 3.2 Extract
-
-Run this locally against the open repository. **Mint the `run_id` first and pass it to both the
-extract and the load** — that is what ties a build to the rows it was built from.
-
-```bash
-python <skills-dir>/_shared/tools/extract.py --out ./extracts \
-    --run-id <run-id> --run-at '<YYYY-MM-DD HH:MM:SS>' [--package-id N]
-```
-
-It writes one JSON file per table plus `extract-manifest.json` into `./extracts/<run-id>/`.
-**Read the printed counts.** An unexpectedly small `object` or `objectproperties` count means the
-scope is wrong, and it is much cheaper to notice here than after the reconciliation.
-
-**The snapshot is kept, not overwritten**, so a build can be replayed from it with no EA
-connection, byte-identical. Retention keeps **10 runs** and pruning **prints what it removed** —
-pass that on. Flags, the digest, pruning and replay:
-[`references/the-extract-snapshot.md`](references/the-extract-snapshot.md).
-
-### 3.2b The governance gate — run this before you build anything
-
-An element carrying no stereotype lands in no table, so it will not be in the database. Ask
-before you build, not after — a customer must not discover it by failing to find a system.
+An element carrying no stereotype the inclusion choice admits lands in no entity table. Ask before
+you build, not after - a customer must not discover it by failing to find a system.
 
 ```python
 findings = assess(find_ungoverned(elements, tags), declared_shapes(mdg), elements)
@@ -147,187 +181,220 @@ Show the report and let them decide per element. Three outcomes, **not interchan
 | `unrankable` | Nothing separates the candidates. List them and ask. **Do not pick one** |
 | `no_candidate` | The technology extends no stereotype for that metaclass. Offer to extend it (`ea-mdg-model-build`), or accept the exclusion. Never invent a suggestion |
 
-To apply one, pass the **bare** stereotype name via `update_element` — EA resolves it against
+To apply one, pass the **bare** stereotype name via `update_element` - EA resolves it against
 the loaded technology and writes the fully-qualified form itself. **Take a baseline first**
 (`ea-change-management`): this is the only step in this skill that writes to the model.
 
-If the customer declines, say plainly which elements will not be in the database and carry on —
-declining is a valid answer. The call, row mapping, loaded-technology precondition and
+If the customer declines, say plainly which elements will not be in the reporting layer and carry
+on - declining is a valid answer. The call, row mapping, loaded-technology precondition and
 verification: [`references/the-governance-gate.md`](references/the-governance-gate.md).
 
-### 3.3 Transform, load and reconcile
+### 5.3 Preflight - paths B and C
 
-All of this is local Python, and the order is in `_shared/tools/pipeline.py`. Call it; do not
-reassemble the steps by hand.
-
-```python
-import json, pathlib, sys
-sys.path.insert(0, r"<skills-dir>/_shared/tools")
-from extract import open_snapshot
-from pipeline import prepare, build_reporting_database
-
-run_id, run_at = "<run-id>", "<YYYY-MM-DD HH:MM:SS>"   # the ones passed to the extract (§3.2)
-snap = open_snapshot("./extracts", run_id)
-mdg = json.loads(pathlib.Path("mdg.json").read_text(encoding="utf-8"))
-
-p = prepare(snap.tables, mdg, namespace="<profile namespace>",
-            strip_prefix="<stereotype prefix>")
-build = build_reporting_database(p, "./out", run_id=run_id, run_at=run_at,
-                                 repository="<model file>",
-                                 extract_run_id=snap.run_id, extract_digest=snap.digest)
-print(build.reconciliation.summary())
-sys.exit(build.reconciliation.exit_code)
+```
+ea_repository(operation="build_reporting_database",
+              params={"profile_path": "<profile>.json", "preflight_only": true})
 ```
 
-To rebuild an old build from its own rows, get the snapshot with
-`load.replay_snapshot(db, its_run_id, "./extracts")` instead of `open_snapshot`: it checks the
-digest that build recorded.
+Reads EA's tables over COM, applies the scope, and **writes nothing**. The result reports the
+rows extracted and the rows that would be kept, the crossings (links from kept content into an
+excluded area, by kind: connector, diagram placement, classifier, parent, or a tagged value that
+names an excluded element) and the `(excluded)` stubs they need, then two lists:
 
-**`namespace` and `strip_prefix`.** `namespace` is the profile namespace as it appears in `t_xref`
-FQNames, which is **not** the technology id — the id is often a short code where the namespace is
-the long form. Do not guess: `pipeline.infer_namespace(snap.tables, mdg)` reads it off the census.
-`strip_prefix` is the stereotype
-prefix to drop when naming tables, so `WBABusinessApplication` becomes `business_application`;
-pass `""` to keep it. `prepare` also takes `sparse_threshold=` and `multi_valued=` (§5).
+- **`blocking` - stop.** A connector whose stereotype is stored as qualified text with no binding
+  to the technology (`connector_stereotype_unbound`). The result carries the fix: in EA, re-apply
+  the stereotype from the technology's toolbox, or through Properties > Stereotype, so it is bound;
+  then run the preflight again. Take a baseline first. Do **not** build while this list is
+  non-empty, on either path.
+- **`flags` - show, then ask.**
+  - `element_multiple_declared_stereotypes`: elements carrying two of the technology's
+    stereotypes. If the user continues, each is in both tables. The fix is to remove the extra
+    stereotype in EA if it is a mistake.
+  - `new_root_left_out`: a root package created since the profile was saved. It is not included
+    until the user adds it.
+  - `profile_entry_matches_nothing`: an exclusion (or root) naming a package that no longer exists.
 
-**Only placed elements are in the frame.** The key map holds the elements that landed in an entity
-table, so `prepare` scopes every row that refers to an element to that set. An untyped element's
-diagram placements, connectors and attributes are left out rather than written as rows that
-resolve against nothing, and the reconciliation counts the same population, under the name
-`element (placed in an entity table)`. `prepare` raises `PipelineError` if a row still dangles.
+### 5.4 Build
 
-`run_id` and `run_at` are **yours to supply**: no module stamps its own time, because one that did
-could not be tested for the value it stamps. `overwrite=False` is the default and
-refuses an existing database — a refresh that silently replaces the one somebody is reporting off
-is not a refresh.
+| Path | Call | What it does |
+|---|---|---|
+| A | `build_business_layer` with `profile_path` | Checks the rights first and, if any is missing, names it and **changes nothing**. Otherwise recreates the business views and the scoped views of EA's tables in the profile's schema inside one transaction. Never alters an EA table |
+| B | `build_reporting_database` with `profile_path` | Extracts EA's tables over COM in id ranges, cuts the excluded packages, keeps links across the cut with an `(excluded)` stub at the far end, loads a staging schema with EA's own indexes, **swaps it in inside one transaction** (a reader never sees a partial database), then builds the business views. Keeps the post-cut extract (§6) |
+| C | `build_reporting_database` with `profile_path` | The same extract and cut; computes the business tables' rows and writes them as JSON, next to the profile. Keeps the post-cut extract. **Writing the Parquet files is a separate local step** - `ea-power-bi` |
 
-`build_reporting_database` loads `reporting.sqlite`, reconciles it, records the verdict in
-`_load_run`, and writes the other four files of §1. The repository side of every count is computed
-from the raw extract rows, never by the function that produced the database side, because a figure
-taken from both sides by one function checks nothing. `exit_code` is 0 only when every check **ran**
-and matched: a count that could not be read back records as SKIPPED, which fails.
-`build.recorded` is False if no `_load_run` row matched the `run_id`; then nothing was recorded, so
-do not report the verdict as stored.
+Every build also writes the **definition** - tables, columns, types, row counts, descriptions -
+as `<profile>.definition.json` beside the profile (`definition_path` overrides it). `ea-power-bi`
+generates the Power BI project from it; nothing else re-derives the shape.
+
+**Every build is a full rebuild with no history.** Anything deleted or moved in EA follows. A
+failed or stopped build leaves the previous reporting data live.
+
+The result returns row counts per table, the flags, the alignment summary and timings. Read the
+timings aloud: they are the only sizing evidence the customer has (§11).
+
+### 5.5 Check
+
+```
+ea_repository(operation="check_business_layer", params={"profile_path": "<profile>.json"})
+```
+
+Changes nothing. Paths A and B (a Parquet profile has no views to check; its build returns the
+same alignment summary). It checks two things:
+
+1. **Alignment with the metamodel**, in counts: every allowed combination has a table; every
+   profile-bound connector whose two ends are placed lands in a combination, none outside one;
+   every admitted element is in at least one entity table, and every element in two was flagged
+   at preflight; each connector table's rows equal the definition's own placement.
+   `alignment.aligned` is the verdict.
+2. **Values** (`include_values`, on by default): every name, `package_path`, tag column,
+   connector end, base type and connector tag compared against an **independent read through
+   EA**. It returns `cells` and `differences`; zero differences is the verdict. The open
+   repository must be the one the views were built from.
+
+**A check that read nothing is a failure, never a pass.** `cells: 0` means nothing was compared.
+Say so rather than reporting zero differences.
 
 ---
 
-## 4. Reporting the result
+## 6. The kept extract, and replay
+
+After every build on paths B and C, the **post-cut extract** - the rows that were loaded, stubs
+included, with the scope, row counts, issued queries and run id - is kept as `<profile>.extract.json`
+beside the profile, and **replaces the previous run's**. Only the last run is kept: no history.
+
+- **Excluded content is never written to disk, at any stage.** The raw extract holds the areas the
+  user left out, so it is not kept.
+- The kept extract holds what the user chose to include, so treat it with the same care as the
+  reporting data itself.
+- Direct access has no extract.
+
+```
+ea_repository(operation="replay_reporting_database", params={"profile_path": "<profile>.json"})
+```
+
+Rebuilds the reporting database (path B) or the rows for Parquet (path C) from the kept extract
+**with no EA connection**, identically to the original build. Use it to retest a fix to the
+transform or to settle a disputed figure against the exact rows it was built from. The result
+carries `replayed_from`. [`references/the-extract-snapshot.md`](references/the-extract-snapshot.md).
+
+---
+
+## 7. Removing the business layer
+
+```
+ea_repository(operation="remove_business_layer", params={"profile_path": "<profile>.json"})
+```
+
+Drops every view in the profile's schema, then the schema, and reports the views dropped. On
+direct access that is all of AI Power Tools' footprint in the EA database. EA's own tables, and a
+reporting database's copied tables, are not touched.
+
+---
+
+## 8. Keeping it fresh: the refresh
+
+```
+ea_repository(operation="start_reporting_refresh", params={"profile_path": "<profile>.json"})
+ea_repository(operation="get_reporting_refresh",  params={"run_id": "<run id>"})
+```
+
+`start_reporting_refresh` returns a run id at once; `get_reporting_refresh` returns `running`,
+`succeeded` or `failed` and, at the end, the full result: row counts per table, every flag, the
+alignment summary, timings, or why it stopped. Run ids are kept until the server restarts.
+
+| Path | What a refresh does |
+|---|---|
+| A | Regenerates the views. The data is live, so there is nothing to refresh; regenerate only when the technology or the inclusion choice changes |
+| B | Preflight, extract, cut, load, swap-in, business views |
+| C | Preflight, extract, cut, and rewrites the rows and definition. **The Parquet files and the Power BI project are not rewritten until the local step in `ea-power-bi` runs again** |
+
+**A failed run, or on path B one stopped by its preflight, leaves the previous reporting data
+live** and says why.
+
+**Scheduling is an AI agent's job, never Windows Task Scheduler.** A scheduled AI agent - for
+example a scheduled task in Claude Cowork connected to the EA machine - calls
+`start_reporting_refresh`, polls `get_reporting_refresh`, and reports the result: the row counts,
+every flag (new roots left out, stale exclusions, unbound connectors, doubly-stereotyped
+elements), timings and any failure. **EA must be running with the repository open on that
+machine**, because the extract is COM; with EA closed the task fails.
+
+A refresh uses the saved inclusion choice and does not ask again. When someone is present, re-run
+the §2b census and `new_since_saved` to flag what the saved choice does not cover. How a published
+Power BI model picks the refresh up: `ea-power-bi` §6.
+
+---
+
+## 9. Reporting the result
 
 Say these four things, in this order, and do not bury the third:
 
-1. **Reconciled or not**, with the check count — `rec.summary()` gives the line.
-2. **What was built**: entity tables, rows, and the five files with their location.
-3. **What is outside the database**: untyped elements and excluded EA machinery, from the
-   manifest. Neither is in the database, so a reader comparing a table count against EA's own
-   element count will see the difference and should hear it from you first.
-4. **The drift findings** (§6). They are the capability, not an appendix.
+1. **Which path**, and whether the data is live (A) or a snapshot with its as-of time (B, C).
+2. **Checked or not**: `alignment.aligned` and, on A and B, `cells` and `differences`.
+3. **What is outside the layer**: packages excluded, elements the inclusion choice left out, the
+   `(excluded)` stubs, and every preflight flag the user continued past. A reader comparing a table
+   count against EA's own element count should hear the difference from you first.
+4. **What was built**: the entity, `Con_` and tag-row tables, row counts, the definition file, and
+   the timings as measured on this repository.
 
-Never report a figure from an entity table without saying what the coverage behind it is.
-
----
-
-## 5. Rules that are not obvious and cost real money when broken
-
-**Coverage is populated, not present.** A tagged value can be attached to every element and
-filled in on a quarter of them. `tag_coverage.populated` is the filled-in count and
-`_tag_coverage.present` is the attached count. A roll-up over a partly-populated tag produces a
-confident wrong number, and a BI report is exactly where that gets believed.
-
-**Aggregate through `_tag_value`, never the flattened column.** The bridge holds one row per
-*value*. Measured: "how many applications are in scope for GLBA" answers **31** through the
-bridge and **14** by exact match on the flattened column, which holds `GLBA, FFIEC` as a single
-string. The flattened column is for display. Worked both ways in
-[`references/the-schema.md`](references/the-schema.md) §3.
-
-**Resolve relationship endpoints against `_keymap`, never against an entity table.** Join to a
-typed table instead and every edge whose other end is a different stereotype dangles.
-
-**`_keymap.entity_table` names the first table only.** An element carrying several stereotypes is
-genuinely several things and appears in several entity tables; one column cannot hold a
-one-to-many, and joining names with a separator would reintroduce the comma hazard. Join
-`_keymap` to each entity table on `ea_guid` for the complete mapping.
-
-**A sparse tag is routed, not dropped.** Below the threshold (default 5% populated coverage) a
-tag becomes `_overflow_tag` rows instead of a column, and the data dictionary names which ones.
-`sparse_threshold=` on `prepare` is a default that behaved sensibly on one model, not a measured
-constant. Override it deliberately.
-
-**Multi-valued tags are reported, never guessed.** `model.multi_value_candidates` lists tags whose
-values often contain a comma. A genuinely multi-valued tag and a free-text field containing a
-comma are both declared `String` and are indistinguishable by type — `Risk, Compliance & Audit` is
-one team name. Pass `multi_valued={"tagName"}` to `prepare` only when a human or a convention
-has decided. Guessing wrong splits data silently.
-
-**An unknown column is refused, not dropped.** `build_database` raises `LoadError` on a row
-carrying a key the table has no column for, because the row count would still have matched and the
-reconciliation would have agreed.
+Never report a figure from a table without saying how populated the columns behind it are: count
+the non-empty values yourself. A roll-up over a partly-populated tag is a confident wrong number.
 
 ---
 
-## 6. Declared vs observed — the findings, not the errors
+## 10. Rules that are not obvious
 
-The technology declares what *should* exist. The repository shows what *does*. The gap is the
-most valuable output here, and it is reported, never corrected.
+The five that cost the most; the full list is in [`references/the-schema.md`](references/the-schema.md) §8.
 
-`domain_violations(model, result.rows)` returns values outside a **declared** enumeration, with a
-count per value. An observed domain cannot be violated — it is by construction every value seen —
-so only declared domains are checkable, and the dictionary says which kind each column has.
-
-**A domain violation is not a failed build.** The value is in the repository and it is in the
-database, so the load was faithful, which is the only question the reconciliation answers.
-Violations travel in the dictionary and the manifest; gating on them would fail every model
-carrying any governance drift.
-
-For the full drift picture — stereotypes declared and never used, observed and never declared,
-metaclass mismatches, probable misassignments by tag shape — use `ea-mdg-assess`, which runs the
-same census through `compare_declared_observed`. This skill reports what reaches the database;
-that one reports what the technology and the repository disagree about.
-
-Connectors are censused the same way: `census_connectors` resolves each connector's stereotype by
-the same FQName rule, keyed by stereotype and base type, and `compare_connectors_declared_observed`
-reports the drift against the technology's declared connector stereotypes. A connector whose
-stereotype name is qualified text but carries no `FQName` comes out as
-`connector_stereotype_unbound`, a data defect rather than ordinary ad-hoc use. In the database,
-`rel_all.profile` is empty exactly when the application is ad-hoc rather than profile-bound.
+- **Join a connector to its ends by GUID**: `source_guid` and `target_guid` are entity `ea_guid`s.
+  A combination with the same entity type at both ends is a self-join; name both sides.
+- **An element in two tables is counted twice by design**, and so is a connector ending at it.
+- **A text tag holding several values is one value in its column.** `GLBA, FFIEC` matches `LIKE`, not `=`.
+- **A blank is a blank**: EA writes NULL and empty text identically.
+- **A check that read nothing is a failure.** `cells: 0` compared nothing.
 
 ---
 
-## 7. When it goes wrong
+## 11. Known limits
 
-**A call appears to hang.** EA reports a statement its backend cannot run as a **modal dialog**
-that holds the COM connection until a human dismisses it, so every later call appears to hang too.
-Look at EA's screen before retrying. See
-[`../_shared/references/ea-ui-verification.md`](../_shared/references/ea-ui-verification.md). This
-is why the generated SQL stays inside a narrow portable subset.
+- **SQL Server only** for direct access and for the reporting database. Other database types are
+  refused.
+- **DirectQuery on direct access queries the production database.** Its speed at the scale of a
+  large repository is not measured. Measured, one model each and not what a customer should expect:
+  Westbrook Bank's views build in under 3 seconds; a repository of about 80,000 rows reached through
+  a cloud connection took 10-11 seconds to extract, 38-46 to load, under 1 to swap in, and about 2
+  minutes for a full reporting-database refresh.
+- **Windows authentication.** SQL Server is reached with the Windows account running AI Power Tools.
+- **OneLake upload is not yet available** (APT-2026-0362). Parquet is written to a local folder and
+  Power BI Desktop imports it.
+- **No tag type is treated as multi-valued yet** (APT-2026-0308); tag-row tables hold undeclared
+  tags only.
+- **`.eapx` (Jet) repositories are untested.** Measured on a local `.qea` file and on a repository
+  behind a cloud connection.
+- **No masking.** Exclusion is by whole package.
 
-**The reconciliation fails on one dimension.** Read the delta before changing anything. A
-repository-side figure scoped differently from the load fails for the wrong reason — EA's own
-machinery (report packages, model documents) is deliberately excluded from the load, so counting
-its tagged values on the repository side compares two different populations. **Verify the
-expectation before you correct it.**
+---
 
-**A later spot-check in EA disagrees with the database by a few rows.** The reconciliation proves
-the database matches **the extract**, a point-in-time snapshot, and on a shared repository other
-work lands in between. Compare a disputed number against the build it came from — replay it — and
-say the as-of date (`load_run.run_at`) whenever a figure may be quoted back at you.
+## 12. When it goes wrong
 
-**Jet (`.eapx`) is untested.** Everything here is measured against SQLite-backed `.qea` only
-(APT-2026-0218). Say so rather than implying coverage.
-
-**Volume is unmeasured.** The figures behind this skill come from a ~300-element model. Do not
-quote a refresh window from it.
+A call that appears to hang is usually a modal dialog in EA holding the COM connection: look at EA's
+screen before retrying. Every error code (`missing_rights`, `preflight_blocked`,
+`target_is_an_ea_repository`, `wrong_path`), a build that is not `aligned`, and a later spot-check
+that disagrees by a few rows: [`references/troubleshooting.md`](references/troubleshooting.md).
 
 ---
 
 ## Reference files
 
-- [`references/the-schema.md`](references/the-schema.md) — every frame table, and worked queries
-- [`references/the-extract-snapshot.md`](references/the-extract-snapshot.md) — retention and replay
-- [`references/the-governance-gate.md`](references/the-governance-gate.md) — the pre-build gate
-- [`references/the-inclusion-choice.md`](references/the-inclusion-choice.md) — the three-way choice, its counts, and the refresh
-- [`../_shared/references/ea-ui-verification.md`](../_shared/references/ea-ui-verification.md) —
+- [`references/the-schema.md`](references/the-schema.md) - every table kind and its columns
+- [`references/the-profile.md`](references/the-profile.md) - the profile's parts and scope rules
+- [`references/troubleshooting.md`](references/troubleshooting.md) - symptoms, causes, fixes
+- [`references/the-extract-snapshot.md`](references/the-extract-snapshot.md) - the kept extract, and replay
+- [`references/the-inclusion-choice.md`](references/the-inclusion-choice.md) - the three-way choice, its counts, and the refresh
+- [`references/the-governance-gate.md`](references/the-governance-gate.md) - the pre-build gate
+- [`../ea-power-bi/SKILL.md`](../ea-power-bi/SKILL.md) - the Power BI project and the Parquet step
+- [`../_shared/references/ea-ui-verification.md`](../_shared/references/ea-ui-verification.md) -
   the modal-dialog trap
-- [`../_shared/references/westbrook-example.md`](../_shared/references/westbrook-example.md) — the
+- [`../_shared/references/westbrook-example.md`](../_shared/references/westbrook-example.md) - the
   canonical example model
-- `../_shared/tools/` — the modules, `pipeline.py` first. Their tests run with
-  `python -m pytest ../_shared/tools -q` and need no EA.
+- `../_shared/tools/` - the census modules `ea_census.py`, `inclusion.py` and `governance_gap.py`.
+  Their tests run with `python -m pytest ../_shared/tools -q` and need no EA.

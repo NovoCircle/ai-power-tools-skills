@@ -397,9 +397,9 @@
         "ea-power-bi/references/the-path-choice.md"
       ],
       "sha256": {
-        "ea-power-bi/SKILL.md": "07a91de016ed01823cad2ece908e59e0f8d8d5fea2b5fe5cad9e53bc3c12946e",
-        "ea-power-bi/references/measured-power-bi-behavior.md": "fd12c6f6c7fee1577f6c45c18f89e01fca5333191c5b527cc911e239c2c66c14",
-        "ea-power-bi/references/the-path-choice.md": "3b7d2e642c6c693f772868ccbc93a8ad950a655716a22d272865346eb2bef479"
+        "ea-power-bi/SKILL.md": "0e7283ce0220bcd7849c3a41c208f3cd0d730c892263a5f87a14e12e82788c0e",
+        "ea-power-bi/references/measured-power-bi-behavior.md": "f17495e47283d2b8924513ecd1d76a117d62ccc9ccafa09971d7c92552c940b8",
+        "ea-power-bi/references/the-path-choice.md": "19342a6c6a336df225eee8e92bfff5b4794866a2f2a4eecc2db5f28c6a0fbbaf"
       }
     },
     {
@@ -413,14 +413,18 @@
         "ea-reporting-database/references/the-extract-snapshot.md",
         "ea-reporting-database/references/the-governance-gate.md",
         "ea-reporting-database/references/the-inclusion-choice.md",
-        "ea-reporting-database/references/the-schema.md"
+        "ea-reporting-database/references/the-profile.md",
+        "ea-reporting-database/references/the-schema.md",
+        "ea-reporting-database/references/troubleshooting.md"
       ],
       "sha256": {
-        "ea-reporting-database/SKILL.md": "33cb1a9ec30db7317ded4561977547b5f7e8d9fc2a09e3018cba5299b8fdac8c",
-        "ea-reporting-database/references/the-extract-snapshot.md": "b786f8dbb2c86f4f0b96700c3f0e7f659d0854ff6810a7d9ce5c53f965d5e74e",
-        "ea-reporting-database/references/the-governance-gate.md": "562caba37587129e5bc2b352a8825195abe2db6a078159828f88bfa38a929d66",
+        "ea-reporting-database/SKILL.md": "646a5c7185fd53f96cc0a91a641e18cca680bdc0ef704d6585304202abefdba1",
+        "ea-reporting-database/references/the-extract-snapshot.md": "c4b55aa86f15abced7178ad18204a34426923ed05481bda01b2e2edb2643fdef",
+        "ea-reporting-database/references/the-governance-gate.md": "d35129427436407524cc9cdc2f79e5757605f935f1174801a3536e6c71ae08a5",
         "ea-reporting-database/references/the-inclusion-choice.md": "20162b3b85129bb28e7889852e587eb71d826b3e7d610a50bab10dccd09852e4",
-        "ea-reporting-database/references/the-schema.md": "4d2cf4e89da013b847dae50b9c5b23090057cd9f22b794acab5d82a5cfa58d97"
+        "ea-reporting-database/references/the-profile.md": "6e9c3852066dbd68ba2d52319a455ebd38d86db7d7cac6f593add10d11f68260",
+        "ea-reporting-database/references/the-schema.md": "e10efe628df0bf29cdad2030bf7c4c011cd5fca5e18db1e0b500d4c4e5a76bf2",
+        "ea-reporting-database/references/troubleshooting.md": "0c797d34a925528a94970ecfbe4fdb392fe96578a930d8ee3301b8444f785be6"
       }
     },
     {

@@ -8,9 +8,10 @@ numbers to expect.
 
 ## 1. What problem this solves
 
-An element with no stereotype lands in no entity table, so it is not in the reporting database.
-That is correct behavior — the database's tables are the business vocabulary, and an element
-carrying no vocabulary term has no table to go in.
+An element with no stereotype lands in no entity table unless the inclusion choice admits it (the
+choice to include everything gives it a table keyed by its metaclass), so by default it is not in
+the reporting layer. That is correct behavior — the business tables are the technology's
+vocabulary, and an element carrying no vocabulary term has no table to go in.
 
 It becomes a problem when the element carries governance data anyway. On the reference model
 three Components carry the complete tag set:
@@ -29,9 +30,10 @@ untagged, unstereotyped element is merely undrawn; a tagged one is a governance 
 
 ## 2. Mapping the extract's rows
 
-The modules speak the frame's column names and the extract speaks EA's, so the caller maps
+`governance_gap` speaks plain column names and the rows come from EA's tables, so the caller maps
 between them. This is deliberate: it keeps `governance_gap` pure and free of any knowledge of
-`t_object`.
+`t_object`. Read the rows with `execute_sql` over `t_object`, `t_objectproperties` and
+`t_package`.
 
 ```python
 path_by_id = {int(p["Package_ID"]): p.get("Name", "") for p in packages}
@@ -53,9 +55,9 @@ tags = [{
 } for p in props]
 ```
 
-Prefer the materialized `pkg.path` over the bare package name for `package_path` when you have
-already built the frame — a customer reading "Investment Services" cannot tell which of two
-similarly named packages is meant.
+Prefer the package's path from the root over its bare name for `package_path` — a customer reading
+"Investment Services" cannot tell which of two similarly named packages is meant. The entity
+tables' `package_path` column is built the same way.
 
 `find_ungoverned` skips `Package` elements by default. EA stores every package twice — once in
 the package tree and once as an object so it can sit on a diagram — and nobody stereotypes the
@@ -187,11 +189,11 @@ census.placement.get(guid)   # -> ['WestbrookBankArchitecture::WBAVendorSystem']
 ## 5. If the customer declines
 
 Declining is a valid answer, not an error. Say plainly what the consequence is, then build the
-database without them:
+reporting layer without them:
 
-> Six elements will not appear in the reporting database, three of which carry governance
+> Six elements will not appear in the reporting layer, three of which carry governance
 > tagged values including one marked GLBA.
 
-Record the counts with the build so the database can answer later what was left out and whether
-a human was asked. A database that cannot say what it excluded invites the reader to assume it
-excluded nothing.
+Record the counts with the build report (`SKILL.md` §9) so the layer can answer later what was left
+out and whether a human was asked. A layer that cannot say what it excluded invites the reader to
+assume it excluded nothing.

@@ -1,90 +1,65 @@
 # The path choice, in words
 
-The choice of how EA data reaches Power BI is **answerable from a fact about the customer's
-estate**. It is not a preference, and it is not ours to make for them. This file holds the question
-to ask, what each answer commits them to, and the wording for the two questions that follow it.
+How the business layer reaches Power BI is **answerable from a fact about the customer's estate**.
+It is not a preference, and it is not ours to make for them. This file holds the questions to ask,
+what each answer commits them to, and the wording for the two questions that follow.
 
 Read `SKILL.md` §1 first; this is the long form of it.
 
 ---
 
-## 1. The two questions
+## 1. The questions, in order
 
-**"What is your EA repository running on - a file, or a database server?"**
+1. **"Can you reach the EA database directly - is it SQL Server, and may you create views in it?"**
+   A repository held in a file (`.qea`) has no database server to connect to. A repository reached
+   through a cloud connection (Pro Cloud Server) has no direct database access for the person
+   asking. Either rules direct access out, and asking first means the customer hears a constraint
+   rather than a refusal.
+2. **"If not, can you run a SQL Server for a reporting database?"** AI Power Tools fills it over
+   EA's own interface from the open repository. It needs a Windows account that may create the
+   database.
+3. **"If neither, are Parquet files on this machine enough?"**
 
-A repository held in a file is a `.qea` (or an older `.eapx` / `.eap`) sitting in a folder or on a
-share. A DBMS-backed repository is one EA connects to over a connection string.
-
-This question exists because it can **rule an answer out**. There is nothing to connect to in a
-file-based repository, so no amount of wanting live data produces it. Asking first means the
-customer hears a constraint rather than a refusal.
-
-**"Do you want a queryable database as well as a Power BI dataset, or only the dataset?"**
-
-Some customers want SQL access for reasons that have nothing to do with Power BI - an audit
-extract, a join against another system, an agent that queries it. Others want a dataset and
-nothing else to maintain. Both are legitimate and the answer is theirs.
-
----
-
-## 2. What each answer commits them to
-
-### A - reporting database and a dataset
-
-They get `reporting.sqlite`, the Parquet files, and the `.pbip` project. The database carries its
-own data dictionary, reconciliation report and issued-SQL log; `ea-reporting-database` owns all of
-that.
-
-What to state: **this is a snapshot, refreshed by re-running the build.** They now have two
-artifacts to keep in step, and the Parquet is what Power BI reads - not the database.
-
-### B - the dataset only
-
-They get the Parquet files and the `.pbip` project. No relational stage is created at any point,
-and nothing is left behind to maintain.
-
-What to state: **the same snapshot and the same dataset as A.** What they give up is SQL access to
-the result, not anything about the Power BI experience.
-
-### C - Power BI reading the repository itself, live
-
-**This skill does not emit it.** Say so in those words.
-
-What to state: what you can produce is a snapshot; a snapshot is not a substitute for live data;
-the distinction is real and blurring it is how a customer ends up with the wrong thing. Do not
-build A or B and let a live connection be inferred. Do not offer a date, a workaround, or a
-"for now".
-
-If their repository is file-based, the answer is additionally that there is nothing live to
-connect to - which is a property of their estate and does not change.
+Someone with direct access may still choose a reporting database or Parquet: to keep views out of
+the production database, or because Power BI should not query it. All three paths leave out the
+packages the user excludes.
 
 ---
 
-## 3. What is identical across A and B, and why that matters
+## 2. The decision table
 
-**Power BI has no SQLite connector.** Verified against the Power Query connector index: Access,
-SQL Server, Oracle, MySQL, MariaDB, DB2 and ODBC are all there; SQLite is not. So the reporting
-database cannot be read by Power BI as a database at all, and **on both paths Power BI reads
-Parquet.**
+| If the customer says... | Path | Storage mode | What to state |
+|---|---|---|---|
+| "I can reach the EA database, it is SQL Server, and I may create views" | **A - direct access**: views in their own schema inside the EA database | **DirectQuery** (live), or Import | The views live in the production database and EA's own tables are never altered. DirectQuery queries that database, and its speed at the scale of a large repository is not measured. Regenerate the views when the technology or the inclusion choice changes |
+| "I cannot reach the database, or do not want views in it, but I can run SQL Server" | **B - reporting database**: views in a separate SQL Server database | **Import** | A snapshot, rebuilt in full on every refresh with no history. A failed refresh leaves the previous data live. Queries never touch the production database |
+| "No database access, and no database to run" | **C - Parquet files** | **Import** | A snapshot, rewritten on every refresh, read by Power BI Desktop on this machine. `pyarrow` is needed to write the files. OneLake upload is not yet available (APT-2026-0362) |
+| "I want Power BI to read the repository live" | **A in DirectQuery**, and only if they can reach the database | DirectQuery | Say plainly that every query reads the production database. For any other estate there is no live option: B and C are snapshots, and a snapshot is not a substitute for live data |
 
-Consequently, identical across A and B:
+**Do not quietly build a snapshot when the customer asked for live data.** The report keeps working
+and the numbers go stale silently.
+
+---
+
+## 3. What is identical across the three paths, and why that matters
+
+The generator reads one definition file. Everything a customer sees is the same on every path:
 
 | | |
 |---|---|
-| The tables | the vocabulary tables, plus the measure host and ten `_`-prefixed plumbing tables |
-| The relationships | the hub shape, with exactly one relationship inactive by design |
-| The measures | the traversal measures, both bare and zero-filled |
-| The descriptions | from the technology, on tables, columns and measures |
-| The field list | vocabulary plus the measure host; no `_`-prefixed table visible |
-| The partition mode | `import`. A snapshot, on both |
+| The tables | the business tables - entity, `Con_`, tag-row and the Table Directory - plus EA's nine tables, hidden |
+| The names, columns and types | exactly as `ea-reporting-database` defines them |
+| The relationships | declared by the generator, the business layer filtering EA's tables, with the same active and inactive states |
+| The measures | one per inactive relationship, on its `Con_` table |
+| The descriptions, hidden flags and layout | the same |
 
-Only the **sink** differs, and only in whether a database is written beside the Parquet. The
-partition expression itself is byte-identical between A and B, because it points at Parquet in both
-cases.
+Only two things vary: **where a table's rows come from** (a view in the EA database, a view in the
+reporting database, or a Parquet file) and **the storage mode**. A test emits all three paths for
+Westbrook Bank and compares the TMDL with those two things set aside; everything else must be
+identical.
 
-**So do not sell A and B as two different Power BI capabilities.** They are one capability with a
-different amount of residue. A customer who picks B and later wants SQL access runs the other sink
-over the same extract; their reports are unaffected.
+**So do not sell the paths as three different Power BI capabilities.** They are one model with three
+sources. A customer who moves from one path to another keeps the report: it is built on the same
+tables and column names.
 
 ---
 
@@ -92,26 +67,34 @@ over the same extract; their reports are unaffected.
 
 **"Can it refresh automatically?"**
 
-No. Re-running the build is the refresh mechanism, and **we ship no scheduler, test none and
-support none.** The build is a script, so they are free to schedule it themselves - that is their
-arrangement, and presenting it as a product feature commits us to behavior we have never run.
+The reporting layer can, with an AI agent in charge of the schedule - never Windows Task Scheduler.
+A scheduled task in Claude Cowork, connected to the EA machine, calls `start_reporting_refresh`,
+polls for the result and reports it. EA must be running with the repository open on that machine.
+What Power BI does next depends on the path:
 
-The second half of the same question is whether Power BI Service can reach the files at all, which
-would need a UNC or OneLake path. **Untested.** Do not assert either way.
+- **A, DirectQuery:** nothing; the views are read live.
+- **B:** Power BI's own scheduled refresh against the SQL Server, through an on-premises data
+  gateway, for a published model; Refresh in Desktop otherwise.
+- **C:** rewrite the files (the local step in `SKILL.md` 4.2), then Refresh in Desktop. A published
+  model cannot refresh from files until OneLake upload is available (APT-2026-0362).
+
+Scheduled refresh in the Power BI service and the gateway have **not been tested with this model**.
+Do not assert either way.
 
 **"Can I move the files?"**
 
-Not without regenerating. The Parquet directory is written into the project as an absolute path, so
-the emitted project belongs to the folder it was generated for. Regenerate rather than editing the
+Not without regenerating. A Parquet folder, and a SQL server and database, are written into the
+project, so the project belongs to where it was generated for. Regenerate rather than editing a
 partition by hand - a hand-edited TMDL file is rejected whole, not line by line.
 
 ---
 
 ## 5. How to put the choice
 
-Put all three on the table, in one message, with the consequence attached to each - not one option at a time,
-and not a recommendation dressed as a question. The customer is choosing between things that are
-differently true about their estate, and they can only do that if they can see the three together.
+Put all three on the table, in one message, with the consequence attached to each - not one option
+at a time, and not a recommendation dressed as a question. The customer is choosing between things
+that are differently true about their estate, and they can only do that if they can see the three
+together.
 
-Then stop and wait. An emitted project is cheap to regenerate and expensive to explain, and a
-customer who was never asked will reasonably assume they got the option they would have chosen.
+Then stop and wait. A customer who was never asked will reasonably assume they got the option they
+would have chosen.
