@@ -9,7 +9,9 @@ and a complete `.pbip` project, keyed by relative path.
     definition.json  ->  SemanticModel  ->  TMDL + diagramLayout.json  ->  .pbip
 
 One shape on every path. The only things that vary are the partition source and
-the storage mode, and both are arguments of the writer, not of the model.
+the storage mode. A definition whose `source.kind` is "parquet" (path C,
+`APT-2026-0212`) gets a Parquet partition per table, always in Import mode;
+anything else gets a SQL partition.
 
 THE MODEL
 ---------
@@ -230,17 +232,24 @@ def _measures(model_tables: dict[str, SemanticTable], rels: list[Relationship],
 # -------------------------------------------------------------------- model
 
 
+def is_parquet(defn: dict) -> bool:
+    return defn["source"].get("kind") == "parquet"
+
+
 def model_from_definition(defn: dict) -> SemanticModel:
     src = defn["source"]
+    parquet = is_parquet(defn)
     descriptions = _descriptions(defn)
     tables: list[SemanticTable] = []
     for spec in _business_specs(defn):
         tables.append(SemanticTable(
-            name=spec["name"], source_name=f"{src['schema']}.{spec['name']}",
+            name=spec["name"],
+            source_name=spec["name"] if parquet else f"{src['schema']}.{spec['name']}",
             description=descriptions.get(spec["name"], ""), columns=_columns(spec)))
     for spec in defn["physical"]:
         tables.append(SemanticTable(
-            name=spec["name"], source_name=f"{src['physical_schema']}.{spec['name']}",
+            name=spec["name"],
+            source_name=spec["name"] if parquet else f"{src['physical_schema']}.{spec['name']}",
             is_hidden=True, columns=_columns(spec)))
     names = [t.name for t in tables]
     dup = sorted({n for n in names if names.count(n) > 1})
@@ -301,8 +310,13 @@ def project_files_from_definition(defn: dict, name: str, *, mode: str = "import"
     if mode not in MODES:
         raise ValueError(f"mode must be one of {MODES}, not {mode!r}")
     model = model_from_definition(defn)
-    source = SchemaSqlSource(server=defn["source"]["server"],
-                             database=defn["source"]["database"], mode=mode)
+    if is_parquet(defn):
+        if mode != "import":
+            raise ValueError(f"a Parquet source is read in import mode, not {mode!r}")
+        source = tmdl.ParquetSource(directory=defn["source"]["folder"], mode="import")
+    else:
+        source = SchemaSqlSource(server=defn["source"]["server"],
+                                 database=defn["source"]["database"], mode=mode)
     files = pbip.project_files(model, source, name=name)
     files[f"{name}.SemanticModel/diagramLayout.json"] = (
         json.dumps(layout_from_definition(defn, model), indent=2).replace("\n", tmdl.NEWLINE)
