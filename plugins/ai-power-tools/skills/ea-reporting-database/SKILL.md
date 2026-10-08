@@ -254,10 +254,12 @@ metaclass mismatches, probable misassignments by tag shape — use `ea-mdg-asses
 same census through `compare_declared_observed`. This skill reports what reaches the database;
 that one reports what the technology and the repository disagree about.
 
-**Known gap:** the census covers elements only, so ad-hoc stereotype applications on *connectors*
-are not reported as drift (APT-2026-0223). `rel_all` does carry the facts — `profile` is empty
-exactly when the application is ad-hoc rather than profile-bound — so the split is queryable even
-though nothing surfaces it as a finding.
+Connectors are censused the same way: `census_connectors` resolves each connector's stereotype by
+the same FQName rule, keyed by stereotype and base type, and `compare_connectors_declared_observed`
+reports the drift against the technology's declared connector stereotypes. A connector whose
+stereotype name is qualified text but carries no `FQName` comes out as
+`connector_stereotype_unbound`, a data defect rather than ordinary ad-hoc use. In the database,
+`rel_all.profile` is empty exactly when the application is ad-hoc rather than profile-bound.
 
 ---
 

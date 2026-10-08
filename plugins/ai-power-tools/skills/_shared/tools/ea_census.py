@@ -118,6 +118,16 @@ class Stereotype:
         """
         return bool(self.fqname)
 
+    @property
+    def is_unbound_qualified(self) -> bool:
+        """True when the NAME is qualified text but no FQName binds it.
+
+        `Name=WBA::Uses;GUID=...;` with no `FQName=` is a data defect, not
+        ordinary ad-hoc use: someone typed a qualified name into a free-text
+        stereotype field, and EA never recorded the binding.
+        """
+        return not self.fqname and "::" in self.name
+
 
 def parse_stereotype_blocks(description: str | None) -> list[Stereotype]:
     """Parse every @STEREO block in one `t_xref.Description`.
@@ -325,6 +335,160 @@ def census_elements(
 
 
 # --------------------------------------------------------------------------
+# Connector census
+# --------------------------------------------------------------------------
+#
+# Same provenance rule as elements - FQName present, every @STEREO block parsed
+# from the same `t_xref` index - applied to `t_connector`. Measured on a demo
+# repository: of the stereotyped connectors, 34 carried an FQName and 31 were
+# ad hoc, and nothing reported the 31.
+#
+# Identity differs from elements in one way: a connector has no metaclass, its
+# base type (`Connector_Type`) is the nearest thing, and the same stereotype on
+# two base types is two different modeling choices. So the key is the
+# stereotype identity AND the base type, for profile-bound and ad hoc alike.
+
+#: EA `Connector_Type` values. Used only to tell a connector stereotype from an
+#: element one when an MDG lists both under `stereotypes`.
+CONNECTOR_BASE_TYPES = frozenset({
+    "Abstraction", "Aggregation", "Assembly", "Association", "Collaboration",
+    "Composition", "Connector", "ControlFlow", "Delegate", "Dependency",
+    "Deployment", "Extension", "Generalization", "InformationFlow", "Manifest",
+    "Nesting", "NoteLink", "ObjectFlow", "Realisation", "Realization",
+    "Sequence", "StateFlow", "Substitution", "Usage",
+})
+
+
+def connector_key(stereo: Stereotype, base_type: str) -> str:
+    """The census key a connector lands under: stereotype identity + base type.
+
+    Profile-bound -> "<FQName>|<base type>".  Ad hoc -> "<name>|<base type>".
+    """
+    ident = stereo.fqname if stereo.is_profile_bound else stereo.name
+    return f"{ident}|{base_type}"
+
+
+@dataclass
+class ConnectorCensus:
+    """The connector result. Every list is deterministically ordered."""
+
+    entities: list[Entity] = field(default_factory=list)
+    #: guid -> the keys it landed under. Several when multi-stereotyped.
+    placement: dict[str, list[str]] = field(default_factory=dict)
+    excluded_ea_internal: Counter = field(default_factory=Counter)
+    #: Connectors with NO stereotype, and the same count by base type.
+    untyped_guids: set[str] = field(default_factory=set)
+    untyped_by_type: Counter = field(default_factory=Counter)
+    excluded_guids: set[str] = field(default_factory=set)
+    multi_stereotype_guids: set[str] = field(default_factory=set)
+    #: stereotype name -> guids, for names that are qualified text with no
+    #: FQName. These are also placed as ad hoc, so counts stay whole.
+    unbound_qualified: dict[str, set[str]] = field(default_factory=dict)
+
+    @property
+    def total_typed(self) -> int:
+        return len(self.placement)
+
+    def provenance_split(self) -> dict[str, int]:
+        """Stereotype APPLICATIONS by provenance. A multi-stereotype connector
+        counts once per stereotype, so the two figures can sum past
+        `total_typed`."""
+        bound = sum(e.count for e in self.entities if e.is_profile_bound)
+        adhoc = sum(e.count for e in self.entities if not e.is_profile_bound)
+        return {"profile_bound": bound, "ad_hoc": adhoc}
+
+
+def census_connectors(
+    connectors,
+    stereotype_index: dict[str, list[Stereotype]],
+    *,
+    exclude_ea_internal: bool = True,
+) -> ConnectorCensus:
+    """Census connectors by resolved stereotype and base type.
+
+    `connectors` are `t_connector` rows needing at least `ea_guid`,
+    `Connector_Type` and `Stereotype`. `stereotype_index` comes from
+    `build_stereotype_index` over the same `t_xref` rows as for elements.
+
+    As for elements, a connector with no xref entry falls back to the bare
+    `Stereotype` column as an ad-hoc application. A connector with no
+    stereotype at all is counted by base type in `untyped_by_type`.
+    """
+    entities: dict[str, Entity] = {}
+    census = ConnectorCensus()
+
+    for row in connectors:
+        guid = (row.get("ea_guid") or "").strip()
+        if not guid:
+            continue
+        base_type = (row.get("Connector_Type") or "").strip()
+        bare = (row.get("Stereotype") or "").strip()
+
+        applied = stereotype_index.get(guid) or ([Stereotype(name=bare)] if bare else [])
+        if not applied:
+            census.untyped_guids.add(guid)
+            census.untyped_by_type[base_type] += 1
+            continue
+        if len(applied) > 1:
+            census.multi_stereotype_guids.add(guid)
+
+        excluded_any = False
+        landed: list[str] = []
+        for stereo in applied:
+            if exclude_ea_internal and (stereo.name in EA_INTERNAL_STEREOTYPES
+                                        or stereo.profile in EA_INTERNAL_PROFILES):
+                census.excluded_ea_internal[stereo.fqname or stereo.name] += 1
+                excluded_any = True
+                continue
+
+            key = connector_key(stereo, base_type)
+            ent = entities.get(key)
+            if ent is None:
+                ent = Entity(key=key, stereotype=stereo.name,
+                             fqname=stereo.fqname, profile=stereo.profile)
+                entities[key] = ent
+            ent.guids.add(guid)
+            ent.metaclasses[base_type] += 1
+            if key not in landed:
+                landed.append(key)
+            if stereo.is_unbound_qualified:
+                census.unbound_qualified.setdefault(stereo.name, set()).add(guid)
+
+        if landed:
+            census.placement[guid] = landed
+        elif excluded_any:
+            census.excluded_guids.add(guid)
+        else:
+            census.untyped_guids.add(guid)
+            census.untyped_by_type[base_type] += 1
+
+    census.entities = sorted(entities.values(), key=lambda e: (-e.count, e.key))
+    return census
+
+
+def connector_guid_of(connectors):
+    """A `guid_of` for `tag_coverage` over `t_connectortag` rows.
+
+    `t_connectortag.ElementID` is the CONNECTOR id, not an element id, so the
+    rows need the `t_connector` rows to reach a guid. Unknown ids map to "".
+    """
+    by_id: dict[int, str] = {}
+    for c in connectors:
+        try:
+            by_id[int(c.get("Connector_ID"))] = (c.get("ea_guid") or "").strip()
+        except (TypeError, ValueError):
+            continue
+
+    def guid_of(row) -> str:
+        try:
+            return by_id.get(int(row.get("ElementID")), "")
+        except (TypeError, ValueError):
+            return ""
+
+    return guid_of
+
+
+# --------------------------------------------------------------------------
 # Tag coverage
 # --------------------------------------------------------------------------
 
@@ -355,9 +519,11 @@ class TagStat:
 def tag_coverage(entity: Entity, property_rows, guid_of) -> list[TagStat]:
     """Per-tag coverage for one entity, counting POPULATED values.
 
-    `property_rows` are `t_objectproperties` rows with `Property` and `Value`.
-    `guid_of` maps a row to the owning element guid - a callable, because the
-    rows carry `Object_ID` and only the caller knows the id-to-guid mapping.
+    `property_rows` are `t_objectproperties` rows with `Property` and `Value`,
+    or `t_connectortag` rows with `Property` and `VALUE` (see `connector_guid_of`
+    for the mapping). `guid_of` maps a row to the owning element guid - a
+    callable, because the rows carry `Object_ID` and only the caller knows the
+    id-to-guid mapping.
 
     Returned deterministically: by descending populated count, then tag name.
     """
@@ -370,7 +536,7 @@ def tag_coverage(entity: Entity, property_rows, guid_of) -> list[TagStat]:
             continue
         st = stats.setdefault(tag, TagStat(tag=tag))
         st.present += 1
-        value = (row.get("Value") or "").strip()
+        value = ((row.get("Value") if "Value" in row else row.get("VALUE")) or "").strip()
         if value:
             st.populated += 1
             st.values[value] += 1
@@ -472,6 +638,9 @@ class Drift:
     kind: str
     subject: str
     detail: str
+    #: The elements or connectors a finding is about, for the kinds that name
+    #: them. Empty otherwise.
+    guids: tuple[str, ...] = ()
 
 
 #: The six kinds. #5 is the one that matters most - a live value that the
@@ -486,6 +655,15 @@ DRIFT_TAG_OBSERVED_UNDECLARED = "tag_observed_never_declared"
 DRIFT_TAG_NEVER_POPULATED = "tag_declared_never_populated"
 DRIFT_FOREIGN_LANGUAGE = "stereotype_from_another_language"
 DRIFT_PROBABLE_MISASSIGNMENT = "probable_stereotype_misassignment"
+
+#: Data defects rather than gaps to decide. Both are fixed in the repository,
+#: not resolved by editing the technology.
+DRIFT_ELEMENT_MULTIPLE_DECLARED = "element_multiple_declared_stereotypes"
+DRIFT_CONNECTOR_UNBOUND = "connector_stereotype_unbound"
+#: A connector carries a stereotype NAME the technology declares, but the
+#: application is ad hoc or bound to another language. Name matching alone would
+#: count it as the declared stereotype.
+DRIFT_CONNECTOR_NAME_NOT_BOUND = "connector_declared_name_not_bound"
 
 
 # --------------------------------------------------------------------------
@@ -621,6 +799,76 @@ def infer_technology_namespace(census: ElementCensus, declared: set[str]) -> str
     return votes.most_common(1)[0][0] if votes else ""
 
 
+def _tag_drift(census, declared: dict, tag_stats, noun: str) -> list[Drift]:
+    """Tag and enum drift for the entities of either census.
+
+    `noun` is the unit the counts are of: "element" or "connector".
+    """
+    out: list[Drift] = []
+    if not tag_stats:
+        return out
+    for key, stats in tag_stats.items():
+        ent = next((e for e in census.entities if e.key == key), None)
+        if ent is None or ent.stereotype not in declared:
+            continue
+        spec = declared[ent.stereotype]
+        tag_specs = {t["name"]: t for t in spec.get("tagged_values", []) if t.get("name")}
+        for st in stats:
+            decl = tag_specs.get(st.tag)
+            if decl is None:
+                out.append(Drift(DRIFT_TAG_OBSERVED_UNDECLARED,
+                                 f"{ent.stereotype}.{st.tag}",
+                                 f"populated on {st.populated} {noun}(s), not declared"))
+                continue
+            domain = [v for v in (decl.get("values") or []) if v]
+            if not domain:
+                continue
+            # A tag nobody filled in is ONE finding, not one per declared
+            # value. Emitting per value turned a handful of real findings
+            # into 99 and buried them.
+            if not st.populated:
+                out.append(Drift(DRIFT_TAG_NEVER_POPULATED,
+                                 f"{ent.stereotype}.{st.tag}",
+                                 f"present on {st.present} {noun}(s), populated on none; "
+                                 f"{len(domain)} declared value(s) unused"))
+                continue
+            used = set(st.values)
+            for bad in sorted(used - set(domain)):
+                out.append(Drift(DRIFT_ENUM_OBSERVED_UNDECLARED,
+                                 f"{ent.stereotype}.{st.tag}",
+                                 f"value {bad!r} is used but not in the declared domain"))
+            unused = sorted(set(domain) - used)
+            if unused:
+                out.append(Drift(DRIFT_ENUM_DECLARED_UNUSED,
+                                 f"{ent.stereotype}.{st.tag}",
+                                 "declared value(s) never used: "
+                                 + ", ".join(repr(v) for v in unused)))
+    return out
+
+
+def _multiple_declared(census: ElementCensus, declared: set[str]) -> list[Drift]:
+    """Elements carrying two or more DISTINCT declared stereotypes.
+
+    `multi_stereotype_guids` already counts any element with several
+    stereotypes, which is mostly benign (a declared one plus a shipped
+    language's). Two stereotypes from the declared set is a data error: the
+    element lands in both tables of a reporting build. Grouped by combination.
+    """
+    by_key = {e.key: e for e in census.entities}
+    groups: dict[tuple[str, ...], list[str]] = defaultdict(list)
+    for guid, keys in census.placement.items():
+        names = {by_key[k].stereotype for k in keys
+                 if k in by_key and by_key[k].stereotype in declared}
+        if len(names) > 1:
+            groups[tuple(sorted(names))].append(guid)
+    return [
+        Drift(DRIFT_ELEMENT_MULTIPLE_DECLARED, " + ".join(combo),
+              f"{len(guids)} element(s) carry more than one declared stereotype",
+              guids=tuple(sorted(guids)))
+        for combo, guids in groups.items()
+    ]
+
+
 def compare_declared_observed(census: ElementCensus, mdg: dict,
                               tag_stats: dict[str, list[TagStat]] | None = None,
                               *, namespace: str | None = None) -> list[Drift]:
@@ -709,44 +957,114 @@ def compare_declared_observed(census: ElementCensus, mdg: dict,
                 f"{total} instance(s) labeled {name!r} have the shape of "
                 f"{top.stereotype!r}: {top.detail}"))
 
-    if tag_stats:
-        for key, stats in tag_stats.items():
-            ent = next((e for e in census.entities if e.key == key), None)
-            if ent is None or ent.stereotype not in declared:
-                continue
-            spec = declared[ent.stereotype]
-            tag_specs = {t["name"]: t for t in spec.get("tagged_values", []) if t.get("name")}
-            for st in stats:
-                decl = tag_specs.get(st.tag)
-                if decl is None:
-                    out.append(Drift(DRIFT_TAG_OBSERVED_UNDECLARED,
-                                     f"{ent.stereotype}.{st.tag}",
-                                     f"populated on {st.populated} element(s), not declared"))
-                    continue
-                domain = [v for v in (decl.get("values") or []) if v]
-                if not domain:
-                    continue
-                # A tag nobody filled in is ONE finding, not one per declared
-                # value. Emitting per value turned a handful of real findings
-                # into 99 and buried them.
-                if not st.populated:
-                    out.append(Drift(DRIFT_TAG_NEVER_POPULATED,
-                                     f"{ent.stereotype}.{st.tag}",
-                                     f"present on {st.present} element(s), populated on none; "
-                                     f"{len(domain)} declared value(s) unused"))
-                    continue
-                used = set(st.values)
-                for bad in sorted(used - set(domain)):
-                    out.append(Drift(DRIFT_ENUM_OBSERVED_UNDECLARED,
-                                     f"{ent.stereotype}.{st.tag}",
-                                     f"value {bad!r} is used but not in the declared domain"))
-                unused = sorted(set(domain) - used)
-                if unused:
-                    out.append(Drift(DRIFT_ENUM_DECLARED_UNUSED,
-                                     f"{ent.stereotype}.{st.tag}",
-                                     "declared value(s) never used: "
-                                     + ", ".join(repr(v) for v in unused)))
+    out.extend(_tag_drift(census, declared, tag_stats, "element"))
+    out.extend(_multiple_declared(census, set(declared)))
 
+    return sorted(out, key=lambda d: (d.kind, d.subject, d.detail))
+
+
+def declared_connector_stereotypes(mdg: dict) -> dict[str, dict]:
+    """The connector stereotypes an MDG declares, by name.
+
+    Read from `connector_stereotypes` when the MDG dict has that list; else
+    from `stereotypes`, keeping those whose `base_metaclass` is a connector
+    type, because a technology lists its connector stereotypes alongside its
+    element ones.
+    """
+    if mdg.get("connector_stereotypes") is not None:
+        specs = mdg["connector_stereotypes"]
+    else:
+        specs = [s for s in mdg.get("stereotypes", [])
+                 if (s.get("base_metaclass") or "").strip() in CONNECTOR_BASE_TYPES]
+    return {s["name"]: s for s in specs if s.get("name")}
+
+
+def compare_connectors_declared_observed(
+        census: ConnectorCensus, mdg: dict,
+        tag_stats: dict[str, list[TagStat]] | None = None,
+        *, namespace: str | None = None) -> list[Drift]:
+    """Compare the MDG's declared connector stereotypes with the repository.
+
+    The connector counterpart of `compare_declared_observed`, with the same
+    finding kinds plus the two connector-specific ones. Findings say
+    "connector" in their detail.
+
+    `tag_stats` maps a connector entity key to its `TagStat` list; build it
+    with `tag_coverage(entity, tag_rows, connector_guid_of(connectors))`.
+
+    Name matching alone would let a bare `Uses` or a `BMM::Uses` stand in for
+    the declared `Uses`, so a declared name carried without a binding to
+    `namespace` is reported as `connector_declared_name_not_bound`.
+
+    Returns findings sorted by kind then subject.
+    """
+    declared = declared_connector_stereotypes(mdg)
+    out: list[Drift] = []
+
+    by_name: dict[str, list[Entity]] = defaultdict(list)
+    for ent in census.entities:
+        by_name[ent.stereotype].append(ent)
+
+    if namespace is None:
+        namespace = infer_technology_namespace(census, set(declared))
+
+    for name, spec in sorted(declared.items()):
+        ents = by_name.get(name)
+        if not ents:
+            out.append(Drift(DRIFT_DECLARED_UNUSED, name,
+                             "declared in the technology, no connectors in the repository"))
+            continue
+        loose = [e for e in ents
+                 if not e.is_profile_bound or (namespace and e.profile != namespace)]
+        if loose:
+            adhoc = sum(e.count for e in loose if not e.is_profile_bound)
+            other: Counter = Counter()
+            for e in loose:
+                if e.is_profile_bound:
+                    other[e.profile] += e.count
+            parts = ([f"{adhoc} ad hoc"] if adhoc else []) + [
+                f"{n} bound to {p}" for p, n in sorted(other.items())]
+            out.append(Drift(
+                DRIFT_CONNECTOR_NAME_NOT_BOUND, name,
+                f"{sum(e.count for e in loose)} connector(s) carry the declared name "
+                f"without binding to {namespace or 'the technology'}: " + ", ".join(parts),
+                guids=tuple(sorted({g for e in loose for g in e.guids}))))
+        want = (spec.get("base_metaclass") or "").strip()
+        if not want:
+            continue
+        combined: Counter = Counter()
+        for e in ents:
+            combined.update(e.metaclasses)
+        if want not in combined:
+            got = ", ".join(f"{m} ({n})" for m, n in sorted(combined.items()))
+            out.append(Drift(DRIFT_METACLASS_MISMATCH, name,
+                             f"declares base type {want}; connectors are {got}"))
+
+    for name, ents in sorted(by_name.items()):
+        if name in declared or name in census.unbound_qualified:
+            continue
+        total = sum(e.count for e in ents)
+        foreign = sorted({e.profile for e in ents if e.is_profile_bound and e.profile != namespace})
+        if foreign:
+            out.append(Drift(
+                DRIFT_FOREIGN_LANGUAGE, name,
+                f"{total} connector(s) bound to {', '.join(foreign)}, not to "
+                f"{namespace or 'this technology'}. EA enables every shipped "
+                "language, so verify this was a deliberate choice"))
+        else:
+            out.append(Drift(DRIFT_OBSERVED_UNDECLARED, name,
+                             f"{total} ad-hoc connector(s), bound to no profile"))
+
+    # A data defect, reported apart from ordinary ad hoc use: the qualified
+    # name was typed into the stereotype field and EA never bound it.
+    for name, guids in sorted(census.unbound_qualified.items()):
+        out.append(Drift(
+            DRIFT_CONNECTOR_UNBOUND, name,
+            f"{len(guids)} connector(s) carry the qualified stereotype name {name!r} "
+            "with no FQName, so it is bound to no profile",
+            guids=tuple(sorted(guids))))
+
+    out.extend(_tag_drift(census, declared, tag_stats, "connector"))
     return sorted(out, key=lambda d: (d.kind, d.subject, d.detail))
 
 
