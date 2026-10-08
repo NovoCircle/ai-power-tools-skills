@@ -41,16 +41,60 @@ Both censuses come from the same `t_xref` rows (`ea_census.build_stereotype_inde
 censuses were taken from go to `analyze` as well, because it needs a name to show for each gap and
 the metaclass of unstereotyped elements.
 
+**Where the inputs come from.** Each is a list of row dicts keyed by column name, read with
+`ea_analyze(operation="execute_sql", params={"sql": ...})`:
+
+| Name | Read with |
+|---|---|
+| `packages` | `SELECT Package_ID, Parent_ID, ea_guid, Name FROM t_package` |
+| `all_objects` | `SELECT * FROM t_object` |
+| `all_connectors` | `SELECT * FROM t_connector` |
+| `all_xref` | `SELECT * FROM t_xref WHERE Name = 'Stereotypes'` |
+| `mdg` | the dict `ea_mdg(operation="get_mdg_from_runtime", params={"tech_id": "<id>"})` returns |
+
+**Take the census over the scope, not the whole repository.** The scope is the root packages in
+`scope.roots` and every sub-package under them, minus each package in `scope.exclude` and its
+sub-packages. The two readings give different answers: a defect or a gap outside the scope would
+otherwise stop the preflight or be offered as a decision, and the build would never have read it.
+Filter by `Package_ID` using the scope's package ids; a connector is in scope when either end's
+element is; keep only the `t_xref` rows whose `Client` is an in-scope element or connector GUID.
+
 ```python
 import sys
 sys.path.insert(0, r"<skills-dir>/_shared/tools")
 from ea_census import build_stereotype_index, census_elements, census_connectors
 from inclusion import analyze, resolve_answer, new_since_saved
 
+by_guid = {p["ea_guid"]: p for p in packages}
+children = {}
+for p in packages:
+    children.setdefault(p["Parent_ID"], []).append(p["Package_ID"])
+
+def subtree(guids):
+    ids, todo = set(), [by_guid[g]["Package_ID"] for g in guids if g in by_guid]
+    while todo:
+        pid = todo.pop()
+        if pid not in ids:
+            ids.add(pid)
+            todo.extend(children.get(pid, []))
+    return ids
+
+in_scope = subtree(profile["scope"]["roots"]) - subtree(profile["scope"]["exclude"])
+objects = [o for o in all_objects if o["Package_ID"] in in_scope]
+object_ids = {o["Object_ID"] for o in objects}
+connectors = [c for c in all_connectors
+              if c["Start_Object_ID"] in object_ids or c["End_Object_ID"] in object_ids]
+guids = {r["ea_guid"] for r in objects} | {c["ea_guid"] for c in connectors}
+xref_rows = [x for x in all_xref if x["Client"] in guids]
+
 index = build_stereotype_index(xref_rows)
 a = analyze(census_elements(objects, index), census_connectors(connectors, index), mdg,
             objects, connectors)          # namespace= if it cannot be inferred
 ```
+
+Before the profile exists there are no roots yet: take them from the user, then run this. A
+connector with one end in an excluded package stays in scope through its other end; the build
+keeps it with an `(excluded)` stub at the far end.
 
 `a.options()` gives option 1 and option 2 by count; `a.gaps` is the option 3 list; `a.unbound_connectors`
 and `a.multi_stereotyped` are the defects of §3.

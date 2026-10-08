@@ -32,10 +32,23 @@ untagged, unstereotyped element is merely undrawn; a tagged one is a governance 
 
 `governance_gap` speaks plain column names and the rows come from EA's tables, so the caller maps
 between them. This is deliberate: it keeps `governance_gap` pure and free of any knowledge of
-`t_object`. Read the rows with `execute_sql` over `t_object`, `t_objectproperties` and
-`t_package`.
+`t_object`. Read the rows with `ea_analyze(operation="execute_sql", ...)`:
+
+| Name | Read with |
+|---|---|
+| `objects` | `SELECT * FROM t_object`, filtered to the in-scope `Package_ID`s (the scope computation of [`the-inclusion-choice.md`](the-inclusion-choice.md) §2) |
+| `props` | `SELECT Object_ID, Property, Value FROM t_objectproperties`, filtered to the in-scope `objects` |
+| `packages` | `SELECT Package_ID, Parent_ID, ea_guid, Name FROM t_package` |
+| `mdg` | the dict `ea_mdg(operation="get_mdg_from_runtime", params={"tech_id": "<id>"})` returns |
+
+`declared_shapes` lives in `ea_census`, not in `governance_gap`:
 
 ```python
+import sys
+sys.path.insert(0, r"<skills-dir>/_shared/tools")
+from ea_census import declared_shapes
+from governance_gap import find_ungoverned, assess, format_report
+
 path_by_id = {int(p["Package_ID"]): p.get("Name", "") for p in packages}
 guid_by_id = {int(o["Object_ID"]): o["ea_guid"] for o in objects}
 
@@ -53,6 +66,9 @@ tags = [{
     "tag":     p.get("Property") or "",
     "value":   p.get("Value") or "",
 } for p in props]
+
+findings = assess(find_ungoverned(elements, tags), declared_shapes(mdg), elements)
+print(format_report(findings))
 ```
 
 Prefer the package's path from the root over its bare name for `package_path` — a customer reading

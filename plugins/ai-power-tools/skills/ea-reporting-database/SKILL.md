@@ -67,8 +67,8 @@ includes. Never decide it for them. Full detail:
 [`references/the-inclusion-choice.md`](references/the-inclusion-choice.md); code:
 `../_shared/tools/inclusion.py`.
 
-1. **Census elements and connectors** with `ea_census` (`census_elements`, `census_connectors`),
-   then `inclusion.analyze(...)`.
+1. **Census elements and connectors** over the scope, not the whole repository, with `ea_census`
+   (`census_elements`, `census_connectors`), then `inclusion.analyze(...)`; inputs: reference §2.
 2. **Stop on unbound connectors.** A connector whose stereotype is qualified text with no `FQName` is
    a data defect, not a gap. Show the fix the analysis suggests (bind it to the MDG's own stereotype,
    or clear it; baseline first) and re-run the census. No profile is produced until none remain.
@@ -141,8 +141,8 @@ reuses it. Illustration with Westbrook Bank's `WBA` technology; substitute your 
 }
 ```
 
-The parts, and the scope rules (no masking; a new root package is left out and flagged; a stale
-exclusion is flagged): [`references/the-profile.md`](references/the-profile.md). Package GUIDs come from
+The parts, and the scope rules (no masking; list every root package you do not want in `scope.exclude`,
+or it is flagged on every run; a stale exclusion is flagged): [`references/the-profile.md`](references/the-profile.md). Package GUIDs come from
 `execute_sql`: `SELECT ea_guid, Name, Parent_ID FROM t_package`. Paste `resolve_answer(...).inclusion`
 into `inclusion` and `answer.record()` into `inclusion_choice`: without that record a refresh cannot flag drift. A reporting-database build refuses a database that holds an EA repository's own tables.
 
