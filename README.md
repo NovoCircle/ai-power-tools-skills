@@ -183,10 +183,47 @@ The skills, the MCP server and the VS Code extension ship **together, on one ver
 release is one number across both repositories, not a skills release that happens to coincide
 with a server one.
 
+### Where customers' plugin comes from
+
+This repository is where skills development happens, so the marketplace does **not** serve
+the plugin from here. Its `ai-power-tools` entry pins the **released** copy of
+`plugins/ai-power-tools/` in
+[`ai-power-tools-releases`](https://github.com/NovoCircle/ai-power-tools-releases), by release
+tag and commit:
+
+```json
+"source": {
+  "source": "git-subdir",
+  "url": "https://github.com/NovoCircle/ai-power-tools-releases.git",
+  "path": "plugins/ai-power-tools",
+  "ref": "vX.Y.Z",
+  "sha": "<40-character commit sha the tag names>"
+}
+```
+
+Claude Code checks out `sha` when both are set (Claude Code docs, marketplace reference,
+"Plugin sources"), so a merge to `main` here changes nothing a customer installs. The customer
+commands under [How to install](#how-to-install) are unchanged: the marketplace file is still
+read from this repository's default branch, and only `tools/publish-plugin.py` points its entry
+at a release. **Never edit that entry by hand**, and never point it at a relative path again:
+that is how every development merge reached fresh installs labeled as the last release.
+
+The copy in `ai-power-tools-releases` is generated, one way. `publish-plugin.py` writes it from
+`dist/ai-power-tools.plugin` — the same bytes Cowork gets — and replaces the whole tree each
+release. Nobody edits it there.
+
+### Steps
+
 ```
 python tools/regen-manifest.py     # refresh the sha256 map
 python tools/gate.py               # release blocker if red
 python tools/build-plugin.py       # emits dist/ai-power-tools.plugin
+python tools/publish-plugin.py                    # dry run: stage the release commit, print every step
+python tools/publish-plugin.py --publish          # push the tree to ai-power-tools-releases, tag vX.Y.Z
+#   ... server release cut on that tag, smoke-tested, promoted (see the ordering below) ...
+python tools/publish-plugin.py --pin-marketplace  # point marketplace.json at vX.Y.Z + its sha
+#   ... commit, merge to main ...
+python tools/publish-plugin.py --verify           # from outside: the entry resolves to the release
 python tools/publish-bundle.py                 # stage + verify, publishes nothing
 python tools/publish-bundle.py --publish vX.Y.Z --notes-file docs/release-notes/X.Y.Z.md
 python tools/publish-bundle.py --verify-published
@@ -199,6 +236,16 @@ serving 1.4.1 for weeks against a 2.3.0 server. The script refuses rather than g
 whose bytes do not match its manifest is rejected by every customer's installer and there is
 no other way to find out.
 
+`publish-plugin.py` refuses in the same spirit. It will not publish when the three version
+files disagree, when `plugin.json`'s `mcpServers` pins a server release other than this
+version, when `dist/ai-power-tools.plugin` is stale against `plugins/ai-power-tools/`, when
+the shipped files have uncommitted changes, or when the tag already exists on a commit without
+this tree — a published tag is never moved. It checks the committed tree against the archive
+blob by blob, so a line-ending conversion on the way into git fails here rather than on a
+customer's machine. `--pin-marketplace` refuses unless the tag exists, the sha is the one the
+tag names, `plugin.json` at that sha carries this version, and the server `.mcpb` it pins is
+publicly downloadable — which a draft release's assets are not.
+
 Three files carry the version and must agree — `manifest.json`'s `bundle_version`,
 `plugins/ai-power-tools/.claude-plugin/plugin.json`, and the `ai-power-tools` entry in
 `.claude-plugin/marketplace.json`. `tools/build-plugin.py` refuses to build when they differ,
@@ -207,12 +254,38 @@ so drift fails at build time rather than reaching a customer as two numbers for 
 ### Ordering across the two repositories
 
 The plugin references the server's `.mcpb` by a **pinned** release URL, so the server release
-has to exist first:
+has to be published before customers are pointed at the plugin. The server release tag
+`vX.Y.Z` is cut on `ai-power-tools-releases`, and the plugin tree must be what that tag names,
+so the tree goes in first and the server release is cut on it:
 
-1. Release the server from `NovoCircle/ai-power-tools` (`build.py --publish`), which publishes
-   the `.mcpb`, the `.vsix` and `migrate-to-plugin.ps1` to `ai-power-tools-releases`.
-2. Point `mcpServers` in `plugin.json` at that tag.
-3. Release the bundle from here.
+1. **Release branch here.** Bump the three version files and point `mcpServers` in
+   `plugin.json` at `vX.Y.Z`. Keep this on a release branch: it merges together with the pin in
+   step 6, never before, so `main` never shows a version that the marketplace does not serve.
+   Run `regen-manifest.py`, `gate.py`, `build-plugin.py`, and commit.
+2. **Publish the plugin tree.** `publish-plugin.py` (dry run), then `--publish`. It commits the
+   tree to `ai-power-tools-releases` `main` and pushes tag `vX.Y.Z` on that commit. Customers
+   see nothing: the marketplace still pins the previous release, and a tag without a published
+   release does not move `releases/latest`.
+3. **Cut the server release as a draft on that tag** — the server build skill's Phase 7
+   Step A, `gh release create vX.Y.Z --draft --verify-tag`. `--verify-tag` makes `gh` refuse
+   rather than create a tag of its own on whatever `main` holds. Smoke-test the draft. If it
+   fails, delete the draft **and the tag**, fix, and start again from step 2 — a failed draft's
+   tag must not survive, and `publish-plugin.py` refuses to move it.
+4. **Promote the server release.** The pinned `.mcpb` URL now resolves.
+5. **Pin the marketplace.** `publish-plugin.py --pin-marketplace` on the release branch, and
+   commit. It refuses before step 4.
+6. **Merge the release branch to `main`.** This is the moment customers switch: the
+   marketplace file is read from `main`. Then `publish-plugin.py --verify`, which reads the
+   entry as customers do and checks the tag, the sha, the `plugin.json` version and the `.mcpb`.
+7. **Release the bundle from here** (`publish-bundle.py --publish vX.Y.Z`). After the merge,
+   so this repository's `vX.Y.Z` tag carries the pinned `marketplace.json` — organizations that
+   pin the marketplace to a tag get the matching plugin.
+8. **Install it the customer's way** — `claude plugin marketplace add` and `install` on a
+   machine that has never had the plugin. Nothing above exercises that path.
+
+To roll back, revert the step 5 commit on `main`. Claude Code updates an installed plugin
+whenever its version differs from the cached one, so pointing the entry at the previous release
+takes installs back to it.
 
 Pinned rather than `releases/latest` on purpose: a floating reference would mean a later server
 release silently changes which binary every already-installed plugin pulls, including for
