@@ -23,6 +23,7 @@
         "_shared/tools/extract.py",
         "_shared/tools/frame.py",
         "_shared/tools/governance_gap.py",
+        "_shared/tools/inclusion.py",
         "_shared/tools/load.py",
         "_shared/tools/parquet_out.py",
         "_shared/tools/pbip.py",
@@ -38,6 +39,7 @@
         "_shared/tools/test_extract.py",
         "_shared/tools/test_frame.py",
         "_shared/tools/test_governance_gap.py",
+        "_shared/tools/test_inclusion.py",
         "_shared/tools/test_load.py",
         "_shared/tools/test_parquet_out.py",
         "_shared/tools/test_pbip.py",
@@ -65,6 +67,7 @@
         "_shared/tools/extract.py": "9bb5dce2353bd09e74ae27d21d471e63dff50334329f290f47dc976b05285309",
         "_shared/tools/frame.py": "31cf98c6e860d7ee8c4b24b76c5b646ff3c7e4d44578e4338c6d1d90f84d504e",
         "_shared/tools/governance_gap.py": "5315a2aabfb0dd97b26cfe4cd753bbcfb46158ff44c76b52e78aee36b2f83e45",
+        "_shared/tools/inclusion.py": "a6c1452c5ddf99caa24b78eb7be4cccbbb9df340d52b1dde8b11b7f2e96c89cd",
         "_shared/tools/load.py": "c8e413e7d629b597568aca6f9ed7e09dfc3f84618b89eeed508651752abbb9b3",
         "_shared/tools/parquet_out.py": "7b5ee150a5841695d8117a148cc529494a1ea4017a754be2fb5f5dcf943867f9",
         "_shared/tools/pbip.py": "2f5647383368527217608bbbf7eb7fb858936c2c3fbdd0b42508faab9d024b07",
@@ -80,6 +83,7 @@
         "_shared/tools/test_extract.py": "13b61f5812068afe0f3a535fd6ef204c6e96c808d6708d3df6dd67441ac39e04",
         "_shared/tools/test_frame.py": "e2b52f577977a998cdf82e6944217e990fc10d46e07c3aad7ca8832328bb761e",
         "_shared/tools/test_governance_gap.py": "3a26a96a92687dfce672e37aca582041613e35d1a00c60014f15fc06e8c72fb2",
+        "_shared/tools/test_inclusion.py": "7225d28efe71c23e9b0cf66b1f3439fe7e30e62c81ae4b2b37a0fc6ad0dce61b",
         "_shared/tools/test_load.py": "62bf8818ddff1fa26476c318d219fc3286b0d7ddd5cd1cd85d96477bbe016f32",
         "_shared/tools/test_parquet_out.py": "1190a991a93ff0485f8ca5d890ce4fe859966dd5cee6ed750d30dc9b34735c61",
         "_shared/tools/test_pbip.py": "088457d22fdb81a00b9f184a93b6166ca569071bd818a7c8a769fee1d85017c5",
@@ -446,12 +450,14 @@
         "ea-reporting-database/SKILL.md",
         "ea-reporting-database/references/the-extract-snapshot.md",
         "ea-reporting-database/references/the-governance-gate.md",
+        "ea-reporting-database/references/the-inclusion-choice.md",
         "ea-reporting-database/references/the-schema.md"
       ],
       "sha256": {
-        "ea-reporting-database/SKILL.md": "25a0bf9b48711fee31796986a81c289a41a48eae84e794c693ba63ac30334fa2",
+        "ea-reporting-database/SKILL.md": "33cb1a9ec30db7317ded4561977547b5f7e8d9fc2a09e3018cba5299b8fdac8c",
         "ea-reporting-database/references/the-extract-snapshot.md": "b786f8dbb2c86f4f0b96700c3f0e7f659d0854ff6810a7d9ce5c53f965d5e74e",
         "ea-reporting-database/references/the-governance-gate.md": "562caba37587129e5bc2b352a8825195abe2db6a078159828f88bfa38a929d66",
+        "ea-reporting-database/references/the-inclusion-choice.md": "20162b3b85129bb28e7889852e587eb71d826b3e7d610a50bab10dccd09852e4",
         "ea-reporting-database/references/the-schema.md": "4d2cf4e89da013b847dae50b9c5b23090057cd9f22b794acab5d82a5cfa58d97"
       }
     },
