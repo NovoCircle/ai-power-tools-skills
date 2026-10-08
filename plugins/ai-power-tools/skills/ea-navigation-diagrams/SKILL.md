@@ -271,7 +271,7 @@ EA caches diagrams it has already rendered, so a diagram written by SQL and prev
 Call shape, once per diagram:
 
 ```
-ea_model("add_elements_to_diagram_bulk", {
+ea_diagram("add_elements_to_diagram_bulk", {
     "diagram_id": <child_diagram_id>,
     "layout": "none",
     "auto_connectors": False,

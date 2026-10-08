@@ -60,7 +60,7 @@ Run the companion YAML sidecar immediately after the migration to find any eleme
 attention:
 
 ```python
-validate_model(rules_path_or_content="WBA_rules.yaml")
+ea_validate(operation="audit", params={"rules_path_or_content": "WBA_rules.yaml"})
 ```
 
 Review violations and ask the user to fill in required tagged values before saving.

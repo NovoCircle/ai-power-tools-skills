@@ -193,7 +193,7 @@ in `t_diagramlinks`. Check in this order:
 
 ### Type → EA connector type mapping
 
-| Relationship | `connector_type` | `stereotype` |
+| Relationship | `type` | `stereotype` |
 |-------------|-----------------|--------------|
 | `«Uses»` | `Association` | `Uses` |
 | `«Realizes»` | `Realization` | `Realizes` |

@@ -76,7 +76,7 @@ result = ea_model(operation="create_element_in_language", params={
     "name": "Customer Portal",
     "language_id": "WBA",                     # registered technology id, not the profile display name
     "language_type": "WBABusinessApplication",   # stereotype name within that MDG
-    "properties": {"Note": "Internet banking front-end"},
+    "properties": {"Notes": "Internet banking front-end"},
 })
 element_id = result["element_id"]
 
@@ -112,7 +112,7 @@ ea_model(operation="create_elements_bulk", params={"specs": [
 
 The WBA MDG stereotypes map to these EA `Object_Type` values:
 
-| Stereotype | Object_Type (`ea_model("create_element")` `element_type`) |
+| Stereotype | Object_Type (`ea_model("create_element")` `type`) |
 |------------|---------------------------------------------|
 | `WBABusinessApplication` | `Component` |
 | `WBAVendorSystem` | `Component` |
@@ -256,29 +256,3 @@ if result.get("stereotype_warning"):
 The most common rejection cause: the element's `Object_Type` (`t_object.Object_Type`)
 doesn't match what the MDG profile expects as the base metaclass. You cannot change
 `Object_Type` after creation — recreate via `create_element_in_language`.
-
----
-
-## 3. Pre-demo vs. post-demo state
-
-The Westbrook Bank spec defines two states:
-
-**Pre-demo (what the repository is built to):**
-- No AI Gateway element
-- No AI Services elements
-- Exactly 1 WBA-LFY-001 governance violation (ACH Return Handler → Salesforce Legacy Data Export Feed)
-- IMP-001 through IMP-011 imperfections present
-
-**Post-demo (what the AI gateway demo creates live):**
-- AI Gateway element added to AI Services package
-- 3 AI Service elements added
-- 2 new connectors from Customer Portal to AI Gateway services
-- Some imperfections corrected live
-
-Never create AI Gateway or AI Service elements during the initial build. Use `ea_analyze("execute_sql")` to
-confirm their absence before declaring the build complete:
-
-```sql
-SELECT COUNT(*) FROM t_object WHERE Stereotype IN ('WBAAIGateway', 'WBAAIService')
--- expected: 0
-```

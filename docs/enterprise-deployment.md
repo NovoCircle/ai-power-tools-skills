@@ -80,7 +80,7 @@ macOS and Linux: `/etc/claude-code/managed-settings.json`
       "source": {
         "source": "github",
         "repo": "NovoCircle/ai-power-tools-skills",
-        "ref": "v3.0.1"
+        "ref": "v3.6.0"
       }
     }
   },
@@ -99,7 +99,9 @@ Two things to know about this route:
   default branch, whose marketplace entry always points at a released, tagged
   plugin tree in `NovoCircle/ai-power-tools-releases` (never at the development
   tree), so they follow the latest release. Pin `ref` to a release tag to hold
-  the fleet on one release until you choose to move it.
+  the fleet on one release until you choose to move it. The example pins
+  `v3.6.0`; use the current release tag. A tag older than v3.2.0 has
+  no marketplace and will not load.
 
 ## How updates work
 

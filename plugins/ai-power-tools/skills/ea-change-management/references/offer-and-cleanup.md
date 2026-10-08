@@ -10,14 +10,20 @@ adjust package IDs and names to your own repository.
 ea_model(operation="list_package_tree", params={
     "root_package_id": 41,                 # "Legacy Integrations"
     "include_element_counts": True,
+    "include_diagrams": True,
 })
-# -> {"package_id": 41, "name": "Legacy Integrations",
-#     "element_count": 14, "diagram_count": 3, "children": [...]}
+# -> {"ok": True, "root_package_id": 41, "depth": 1, "package_count": 2, "truncated": False,
+#     "packages": [
+#       {"Package_ID": "41", "Name": "Legacy Integrations", "Parent_ID": "7", "ea_guid": "{...}",
+#        "element_count": 14, "diagrams": [{...}, {...}, {...}]},
+#       {"Package_ID": "58", "Name": "Archive", "Parent_ID": "41", "ea_guid": "{...}",
+#        "element_count": 0, "diagrams": []}]}
 ```
 
 `delete_package` itself reports nothing about what it removed (`{"ok": true,
 "deleted_package_id": 41}` only), so pull the count first — it's also what makes the offer
-concrete instead of vague:
+concrete instead of vague. `element_count` and `diagrams` are per package, so add them up across
+`packages` to describe the whole subtree:
 
 > "About to delete `Legacy Integrations` (14 elements, 3 diagrams). Want me to baseline it
 > first, so there's a rollback point?"
@@ -182,7 +188,7 @@ To review every package rather than one, collect the candidate package IDs first
 ```python
 ea_model(operation="list_root_packages", params={})
 # then, for each root of interest:
-ea_model(operation="list_package_tree", params={"root_package_id": <id>, "max_depth": None})
+ea_model(operation="list_package_tree", params={"root_package_id": <id>})
 ```
 
 Then run the same `list_baselines` → size → confirm → delete → verify sequence per

@@ -2,7 +2,7 @@
   "manifest_version": "1.0",
   "bundle_version": "3.5.0",
   "released_at": "2026-10-02",
-  "min_server_version": "3.0.0",
+  "min_server_version": "3.6.0",
   "skills": [
     {
       "name": "_shared",
@@ -65,7 +65,7 @@
       "name": "ea-change-management",
       "title": "ea-change-management",
       "description": "Baselines and change history \u2014 create, list, compare and apply baselines, offer a baseline before a significant change, review and clean up accumulated baselines, and answer what changed, when and by whom",
-      "version": "1.1.1",
+      "version": "1.1.2",
       "min_server_version": "2.3.0",
       "files": [
         "ea-change-management/SKILL.md",
@@ -74,7 +74,7 @@
       ],
       "sha256": {
         "ea-change-management/SKILL.md": "b7513a492b62c96a88726457d79788c000425e98c86ef20b19a1b7bb8b12d912",
-        "ea-change-management/references/offer-and-cleanup.md": "645ded54050dbe8444192a87a8173a412817d422523762fabdc96cccbcc83d9a",
+        "ea-change-management/references/offer-and-cleanup.md": "dbbe2fe5f96b7471f96781c18d2ea89d8b65ea49a2ebd24aa44c737ef9c81baf",
         "ea-change-management/references/worked-example.md": "28544241e1750caa7556c265347e3ec53ecc811d4996371003a56fe920175877"
       }
     },
@@ -273,7 +273,7 @@
       "name": "ea-mdg-author",
       "title": "ea-mdg-author",
       "description": "Author MDG Technology XML files for Sparx EA \u2014 stereotypes, tagged values, toolbox pages, Quick Linker rules, and validation sidecars",
-      "version": "1.4.1",
+      "version": "1.4.2",
       "min_server_version": "2.2.0",
       "files": [
         "ea-mdg-author/SKILL.md",
@@ -287,7 +287,7 @@
       "sha256": {
         "ea-mdg-author/SKILL.md": "efc325faab2bd8741c75b56b0dd3138fa9d6d4f8e774592b176cc4a8b2f0bfaa",
         "ea-mdg-author/references/diagrams-toolboxes.md": "384918bad2126adc0195a967e8dc0c74e98c57e047a89a2f74f1a2e66db8f73c",
-        "ea-mdg-author/references/post-install-migration.md": "b2e3f1a2f047042a917eea2b201ebb454df7886ef0136d316bc092f997dd3cec",
+        "ea-mdg-author/references/post-install-migration.md": "230f1189519851f8d1e60bb9e8cbed3837aadb6322058d18c141d9ba2cf66ed3",
         "ea-mdg-author/references/quick-linker.md": "c1e77c9410344baa29706fb81d9adbf8b19c0453b076dd3f1b97dca187233dd4",
         "ea-mdg-author/references/stereotypes.md": "9f5c25fa132902dce4f4d7b5979f75019561d17ddc787dba6e7dffc075f36ec4",
         "ea-mdg-author/references/validation-sidecar.md": "1bf0e67a310bcc2bb7165f236cb3bff2d24ca2c2820fbc69c56bbc79ec25e96d",
@@ -345,7 +345,7 @@
       "name": "ea-modeling",
       "title": "ea-modeling",
       "description": "Build EA models via the MCP server \u2014 phases, defects, verification",
-      "version": "1.2.5",
+      "version": "1.2.6",
       "min_server_version": "3.6.0",
       "files": [
         "ea-modeling/SKILL.md",
@@ -360,29 +360,29 @@
         "ea-modeling/references/wba_mdg_reference.md"
       ],
       "sha256": {
-        "ea-modeling/SKILL.md": "b672138a8992b405122a92e9b69a3063aecee04c522115d405587f69a237e8e5",
+        "ea-modeling/SKILL.md": "d3f0ff9b7e244f1af36f8e5449f9d6a7efb4a64bf5e9f845132f4efc3cae3832",
         "ea-modeling/references/class-modeling.md": "25db3027ad038312fec8268b2af7b5918fb4b70134fb708bb55d82c3e281214c",
         "ea-modeling/references/diagnostics_and_ui.md": "cfc1304b820bfe63fdb99602ad99ea0a411092aaf707a7795f99d2600a709645",
-        "ea-modeling/references/diagrams_and_connectors.md": "d708808cf7f59daa0159a57cf71e1210fc1f5511f39f03a5f4dc9a11f2c9dab6",
-        "ea-modeling/references/element_creation.md": "785970cd157d6517e400a3d1997f4e84e4a04e8ded6cc5300e69c76f2e1c20f0",
+        "ea-modeling/references/diagrams_and_connectors.md": "668a10fe0f6722cd1e441599d2406afacacb6a1fa5d09aebe682fc1ce0b9f378",
+        "ea-modeling/references/element_creation.md": "c521ddd57c675c51cc523f8db163d2db0cd4c7af4db4832122ffdbd902378113",
         "ea-modeling/references/package_and_defects.md": "2caaada73b4a77d2b4fea6190ff4b66f4a565e4cd366b4c614d99b3ae34ee8b5",
-        "ea-modeling/references/sql_schema.md": "b59d3c2407d6e47a73df63e6b12aeb81823cf23b4c3936496caa440fbeb5b7b6",
+        "ea-modeling/references/sql_schema.md": "c6bd923a98d4e1065eac732335ff760bb3597339c83a74091cbf049628e9c678",
         "ea-modeling/references/token_and_session_management.md": "a90be8a3a47ce10b8654e764b946ae175b554436898f83521f5f901c5f228d78",
         "ea-modeling/references/tool_quick_reference.md": "3f557ddccd4e17a3650d2e998acd2b97782373f458061b91034f7370272119b8",
-        "ea-modeling/references/wba_mdg_reference.md": "26b1451b7906a45698dccc963c3d82e98c1e208f88c8c4b4bd3d14fd0b29ea74"
+        "ea-modeling/references/wba_mdg_reference.md": "5947f9601ec0e6119744a11ef27b5eeeeab1ba2691ebecc812a55aaf89c2db1a"
       }
     },
     {
       "name": "ea-navigation-diagrams",
       "title": "ea-navigation-diagrams",
       "description": "How to generate click-through \"navigation diagrams\" over hierarchical data in a Sparx EA repository \u2014 the composite-element mechanism, the nested-container layout, the exact write sequence, and verification",
-      "version": "1.2.0",
+      "version": "1.2.1",
       "min_server_version": "2.2.0",
       "files": [
         "ea-navigation-diagrams/SKILL.md"
       ],
       "sha256": {
-        "ea-navigation-diagrams/SKILL.md": "d173b462f1fef4b17ee0c091fc438614ab297a23d667c6cd63ddf2974708d0af"
+        "ea-navigation-diagrams/SKILL.md": "01e0dd48c894df19dc55ff97f870f21c27306033e68afbc859921a3b17536dc6"
       }
     },
     {
@@ -474,13 +474,13 @@
       "name": "ea-validation",
       "title": "ea-validation",
       "description": "Author validate_model YAML rule sidecars; run hosted rulesets via URL (v1.2.0+)",
-      "version": "1.0.6",
-      "min_server_version": "2.2.0",
+      "version": "1.0.7",
+      "min_server_version": "3.6.0",
       "files": [
         "ea-validation/SKILL.md"
       ],
       "sha256": {
-        "ea-validation/SKILL.md": "abb42733b323eaea288c3a359ad094d8571dbe36acf9da617e535f361898669d"
+        "ea-validation/SKILL.md": "01e3766a8e7642c2259802567a929d2c086ff99cd541f67e04e976d8f016874c"
       }
     },
     {
