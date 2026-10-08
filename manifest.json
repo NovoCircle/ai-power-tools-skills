@@ -431,14 +431,14 @@
       "name": "ea-ruleset-author",
       "title": "ea-ruleset-author",
       "description": "Build a YAML validation ruleset for a modeling language (ArchiMate, BPMN, UML, SysML, custom MDG), consumed by validate_model. Covers research, rule-category planning, YAML authoring, and testing.",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "min_server_version": "1.2.0",
       "files": [
         "ea-ruleset-author/SKILL.md",
         "ea-ruleset-author/references/rule-grammar.md"
       ],
       "sha256": {
-        "ea-ruleset-author/SKILL.md": "44ee799ea211de9d4eb7dbfcacd30b29dde20b82b048aae668eff8b03fd88a2b",
+        "ea-ruleset-author/SKILL.md": "9086cad9e1d684a9ed0cc353fe7d5ddd3721aa73b62c7a11ed73baced0e30be0",
         "ea-ruleset-author/references/rule-grammar.md": "3445cebb547a6c648c4e8ef5fb2b478adfdb7212004767d651724e299d92ac27"
       }
     },
