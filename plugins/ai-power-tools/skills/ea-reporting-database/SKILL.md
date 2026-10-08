@@ -361,8 +361,8 @@ The five that cost the most; the full list is in [`references/the-schema.md`](re
 - **SQL Server only** for direct access and for the reporting database. Other database types are
   refused.
 - **DirectQuery on direct access queries the production database.** Its speed at the scale of a
-  large repository is not measured. Measured, one model each and not what a customer should expect:
-  Westbrook Bank's views build in under 3 seconds; a repository of about 80,000 rows reached through
+  large repository is not measured. Measured on one model, and not what a customer should expect: a
+  repository of about 80,000 rows reached through
   a cloud connection took 10-11 seconds to extract, 38-46 to load, under 1 to swap in, and about 2
   minutes for a full reporting-database refresh.
 - **Windows authentication.** SQL Server is reached with the Windows account running AI Power Tools.

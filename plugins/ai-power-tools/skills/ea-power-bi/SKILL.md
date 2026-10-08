@@ -1,6 +1,6 @@
 ---
 name: ea-power-bi
-description: Put a Sparx EA repository into Power BI as a generated semantic model - a complete .pbip project with TMDL, declared relationships, one measure per inactive relationship and EA's own tables hidden - reading the business layer that ea-reporting-database builds, whether as SQL views in the EA database (DirectQuery or Import), as views in a SQL Server reporting database (Import), or as Parquet files (Import). Use when someone wants EA content in Power BI, asks for a dataset, a .pbip, TMDL or a semantic model, asks which of the three paths to take, asks how to refresh, or asks why Power BI's own relationship detection does not give them what they expect.
+description: Put a Sparx EA repository into Power BI as a generated semantic model - a complete .pbip project with TMDL, declared relationships, one measure per inactive `Con_` relationship and EA's own tables hidden - reading the business layer that ea-reporting-database builds, whether as SQL views in the EA database (DirectQuery or Import), as views in a SQL Server reporting database (Import), or as Parquet files (Import). Use when someone wants EA content in Power BI, asks for a dataset, a .pbip, TMDL or a semantic model, asks which of the three paths to take, asks how to refresh, or asks why Power BI's own relationship detection does not give them what they expect.
 ---
 
 # EA data in Power BI, as a generated semantic model
