@@ -7,8 +7,8 @@ description: Put a Sparx EA repository into Power BI as a generated semantic mod
 
 *Tools: the generators in [`../_shared/tools/`](../_shared/tools/) - `powerbi_model.py` (the
 project), `parquet_tables.py` (path C's Parquet files), with `semantic_model.py`, `tmdl.py` and
-`pbip.py` underneath. The repository side of the work is `ea-reporting-database`, which builds the
-business layer this skill turns into a model.*
+`pbip.py` underneath. The repository side of the work is `ea-reporting-database` (AI Power Tools for Sparx EA, v3.6.0+), which
+builds the business layer this skill turns into a model.*
 
 **Nothing here writes to EA.** The project is generated from the definition file the business-layer
 build writes (`ea-reporting-database` §5.4), and the output is a Power BI project on disk.

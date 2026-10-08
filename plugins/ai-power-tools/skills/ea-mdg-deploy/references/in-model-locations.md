@@ -41,7 +41,7 @@ So: install, restart EA, then run the verification checklist. Restarting EA is t
 ## The same id at both Locations
 
 Manage Technology lists two entries, both enabled, and EA answers `GetTechnologyVersion` from the
-**Project** copy. `get_mdg_from_runtime` (server later than 3.5.0) answers from the same copy and
+**Project** copy. `get_mdg_from_runtime` (server 3.6.0 or later) answers from the same copy and
 lists the other under `provenance.also_stored`.
 
 `DeleteTechnology(<id>)` removes the Project rows only; the `t_document` row stays. A Location:

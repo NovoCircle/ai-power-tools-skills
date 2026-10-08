@@ -348,7 +348,7 @@ the vendors' marks, already on the user's machine through their EA license.
 **Importing a library file does NOT make its icons assignable.** Each icon is an Artifact
 element stereotyped `Image` whose picture is an attached document, so an import adds elements and
 `t_document` rows and nothing to `list_images`; `ImageID=` resolves only against `t_image`. Use
-the two operations built for this instead — they read the libraries in place:
+the two operations built for this instead (server 3.6.0 or later) — they read the libraries in place:
 
 ```python
 # 1. Search the user's own install. Each match carries an `icon` id, its provider and

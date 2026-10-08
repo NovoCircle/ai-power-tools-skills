@@ -9,7 +9,7 @@ description: Build the reporting layer for a Sparx EA repository - business tabl
 `check_business_layer`, `build_reporting_database`, `replay_reporting_database`,
 `remove_business_layer`, `start_reporting_refresh`, `get_reporting_refresh`;
 `ea_mdg(operation="get_mdg_from_runtime")`; `ea_analyze(operation="execute_sql")` (AI Power Tools
-for Sparx EA, the release that ships the business-layer operations); the census modules in
+for Sparx EA, v3.6.0+); the census modules in
 `../_shared/tools/`*
 
 **This skill changes the model only through the governance gate's stereotype application (§5.2),
