@@ -33,12 +33,6 @@ on that table with `USERELATIONSHIP`. A combination whose source and target are
 the same entity type has one inactive relationship (the target side); the measure
 is what makes it reachable. Nothing else is a measure, and nothing sits on a
 hidden table (a visible measure keeps a hidden table visible, measured).
-
-ROUTED AROUND
--------------
-`semantic_model.SemanticModel` still carries the old `_keymap` hub fields and the
-module still defines the hub builders. Nothing here uses them; the hub fields are
-left empty. Removing the hub is `APT-2026-0309`.
 """
 from __future__ import annotations
 
@@ -259,7 +253,7 @@ def model_from_definition(defn: dict) -> SemanticModel:
     rels = _relationships(defn)
     keys = {c["name"]: c["key"] for c in defn["connectors"]}
     _measures({t.name: t for t in tables}, rels, keys)
-    return SemanticModel(hub="", measure_host="", tables=tables, relationships=rels)
+    return SemanticModel(tables=tables, relationships=rels)
 
 
 # ------------------------------------------------------------------- layout

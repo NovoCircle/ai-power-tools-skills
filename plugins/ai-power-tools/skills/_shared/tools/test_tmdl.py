@@ -6,8 +6,8 @@
 Nothing here touches a repository, a COM object, Power BI or the filesystem.
 
 THE IDENTITY TEST IS THE POINT OF THIS FILE. Three paths emit a Power BI model -
-`APT-2026-0211` from the reporting database, `APT-2026-0212` direct from EA,
-`APT-2026-0230` live against the repository - and the product's claim is that a
+a direct-access database (`APT-2026-0230`), a reporting database
+(`APT-2026-0302`) and Parquet (`APT-2026-0212`) - and the claim is that a
 customer gets the same model whichever they pick. `test_only_the_partition_*`
 is what makes that claim checkable instead of aspirational.
 """
@@ -18,29 +18,59 @@ import re
 
 import pytest
 
-from ddl import physical
-from report_model import Column, ReportModel, Table
-from semantic_model import (DEFAULT_MEASURE_HOST, HUB, SemanticColumn,
-                            SemanticTable, build_semantic_model)
+from semantic_model import (Measure, Relationship, SemanticColumn,
+                            SemanticModel, SemanticTable)
 from tmdl import (NEWLINE, ParquetSource, SqlSource, ident, lineage_tag,
                   m_literal,
                   render_culture, render_definition, render_model,
                   render_relationships, render_table)
 
-
-def report_model(n_tables=2):
-    tables = [
-        Table(name=f"entity_{i}", entity_key=f"k{i}", stereotype=f"S{i}",
-              description=f"Entity {i} holds things.",
-              columns=[Column(name="criticality", source_tag="criticality",
-                              sql_type="TEXT", description="How critical.")])
-        for i in range(n_tables)
-    ]
-    return ReportModel(technology_id="WBA", tables=tables)
+CON = "Con_entity_0 Uses entity_1"
+PHYSICAL = "t_object"
 
 
 def semantic(n_tables=2):
-    return build_semantic_model(report_model(n_tables))
+    """A business layer in miniature: entity tables, one connector table with its
+    one inactive relationship and the measure that reaches it, and one hidden
+    physical table filtered by the business layer."""
+    assert n_tables >= 2
+    tables = [
+        SemanticTable(
+            name=f"entity_{i}", description=f"Entity {i} holds things.",
+            columns=[SemanticColumn("ea_guid", "string", is_hidden=True),
+                     SemanticColumn("criticality", "string", description="How critical.")])
+        for i in range(n_tables)
+    ]
+    tables.append(SemanticTable(
+        name=CON,
+        columns=[SemanticColumn("source_guid", "string"), SemanticColumn("target_guid", "string")],
+        measures=[Measure(
+            name="Uses by target entity_1",
+            expression="CALCULATE(COUNTROWS('Con_entity_0 Uses entity_1'), "
+                       "USERELATIONSHIP('Con_entity_0 Uses entity_1'[target_guid], entity_1[ea_guid]))",
+            description="Rows whose target is the selected entity_1.")]))
+    tables.append(SemanticTable(
+        name=PHYSICAL, is_hidden=True,
+        columns=[SemanticColumn("Object_ID", "int64", format_string="0"),
+                 SemanticColumn("ea_guid", "string")]))
+    rels = [
+        Relationship("gen_con_source", CON, "source_guid", "entity_0", "ea_guid", why="connector source"),
+        Relationship("gen_con_target", CON, "target_guid", "entity_1", "ea_guid", is_active=False,
+                     why="second relationship between these two tables"),
+    ]
+    rels += [Relationship(f"gen_phys_{i}", PHYSICAL, "ea_guid", f"entity_{i}", "ea_guid",
+                          why="business layer filters the physical layer")
+             for i in range(n_tables)]
+    return SemanticModel(tables=tables, relationships=rels)
+
+
+def one_to_one(n):
+    sm = semantic()
+    sm.relationships += [
+        Relationship(f"gen_one_{i}", f"entity_{i}", "ea_guid", PHYSICAL, "ea_guid",
+                     from_cardinality="one", cross_filtering="bothDirections")
+        for i in range(n)]
+    return sm
 
 
 PARQUET = ParquetSource(directory=r"C:\out\parquet")
@@ -102,7 +132,7 @@ def test_a_description_is_collapsed_to_one_line():
 
 def test_identifiers_are_quoted_only_when_they_have_to_be():
     assert ident("entity_0") == "entity_0"
-    assert ident("_keymap") == "_keymap"
+    assert ident("_hidden") == "_hidden"
     assert ident("Business Application") == "'Business Application'"
     assert ident("it's") == "'it''s'"
 
@@ -114,7 +144,7 @@ def test_a_hidden_table_says_so_and_a_visible_one_does_not():
     """Asserted as a whole LINE: a hidden COLUMN renders `\\t\\tisHidden`, which
     contains the table form as a substring and would pass a loose check."""
     sm = semantic()
-    assert "\tisHidden" in render_table(sm.table(HUB), PARQUET).split(NEWLINE)
+    assert "\tisHidden" in render_table(sm.table(PHYSICAL), PARQUET).split(NEWLINE)
     assert "\tisHidden" not in render_table(sm.table("entity_0"), PARQUET).split(NEWLINE)
 
 
@@ -126,22 +156,22 @@ def test_a_hidden_column_says_so():
 
 def test_an_int_column_carries_a_format_string():
     sm = semantic()
-    pkg = render_table(sm.table(physical("pkg")), PARQUET)
-    block = pkg.split("\tcolumn package_id")[1].split("\tcolumn")[0]
+    obj = render_table(sm.table(PHYSICAL), PARQUET)
+    block = obj.split("\tcolumn Object_ID")[1].split("\tcolumn")[0]
     assert "\t\tformatString: 0" in block
 
 
-def test_measures_render_on_the_host_and_nowhere_else():
+def test_measures_render_on_their_own_table_and_nowhere_else():
     sm = semantic()
-    host = render_table(sm.table(DEFAULT_MEASURE_HOST), PARQUET)
-    assert "\tmeasure 'Inbound edges' =" in host
+    host = render_table(sm.table(CON), PARQUET)
+    assert "\tmeasure 'Uses by target entity_1' =" in host
     assert "USERELATIONSHIP" in host
-    assert "\tmeasure" not in render_table(sm.table(HUB), PARQUET)
+    assert "\tmeasure" not in render_table(sm.table(PHYSICAL), PARQUET)
 
 
 def test_a_measure_name_with_a_space_is_quoted():
-    host = render_table(semantic().table(DEFAULT_MEASURE_HOST), PARQUET)
-    assert "\tmeasure 'Outbound edges (zero-filled)' = COALESCE(" in host
+    host = render_table(semantic().table(CON), PARQUET)
+    assert "\tmeasure 'Uses by target entity_1' = CALCULATE(" in host
 
 
 def test_a_table_ends_with_the_result_type_annotation():
@@ -186,7 +216,7 @@ def test_the_inactive_relationship_is_marked_and_the_active_ones_are_not():
 
 
 def test_a_one_to_one_emits_both_directions_and_the_cardinality():
-    text = render_relationships(semantic(n_tables=3))
+    text = render_relationships(one_to_one(3))
     assert text.count("\tcrossFilteringBehavior: bothDirections") == 3
     assert text.count("\tfromCardinality: one") == 3
 
@@ -195,7 +225,7 @@ def test_a_many_to_one_emits_neither():
     """`automatic` and `many` are the defaults. Stating them adds noise to a
     file the customer is expected to read."""
     sm = semantic()
-    rel = next(r for r in sm.relationships if r.from_table == physical("tag_value"))
+    rel = next(r for r in sm.relationships if r.from_table == PHYSICAL)
     text = render_relationships(sm)
     block = text.split(f"relationship {rel.name}")[1].split("relationship ")[0]
     assert "crossFilteringBehavior" not in block
@@ -223,23 +253,21 @@ def test_a_relationship_carries_no_description():
 def test_the_reason_is_still_carried_on_the_model_even_though_it_is_not_emitted():
     sm = semantic()
     assert all(r.why for r in sm.relationships)
-    assert "INACTIVE BY DESIGN" in sm.inactive[0].why
+    assert "second relationship" in sm.inactive[0].why
 
 
 def test_endpoints_render_as_table_dot_column():
     text = render_relationships(semantic())
-    assert f"\tfromColumn: {DEFAULT_MEASURE_HOST}.target_guid" in text
-    assert f"\ttoColumn: {HUB}.ea_guid" in text
+    assert f"\tfromColumn: {ident(CON)}.target_guid" in text
+    assert "\ttoColumn: entity_1.ea_guid" in text
 
 
 # ------------------------------------------------------- model and culture
 
 
 def test_the_model_suppresses_auto_date_tables():
-    """The auto date-table behavior was observed against a DATETIME column.
-    Since APT-2026-0226 the schema exposes none - `date` and `datetime` both map
-    to TEXT - so this asserts the suppression is EMITTED, not that it was
-    re-observed on the current model."""
+    """The suppression is emitted whether or not the model has a DATETIME
+    column, so a column added later brings no automatic tables."""
     assert "annotation __PBI_TimeIntelligenceEnabled = 0" in render_model(semantic())
 
 
@@ -269,17 +297,18 @@ def test_the_culture_block_contains_valid_json():
 
 
 def test_the_parquet_partition_imports_and_names_the_source_table():
-    """The host table is named `Relationships` in the model but its rows come
-    from `_rel_all`. The partition must follow the SOURCE name."""
+    """A table's model name and its source name can differ. The partition must
+    follow the SOURCE name."""
     sm = semantic()
-    text = render_table(sm.table(DEFAULT_MEASURE_HOST), PARQUET)
+    sm.table(CON).source_name = "con_source"
+    text = render_table(sm.table(CON), PARQUET)
     assert "\t\tmode: import" in text
-    assert r"C:\out\parquet\_rel_all.parquet" in text
+    assert r"C:\out\parquet\con_source.parquet" in text
     assert "Parquet.Document(File.Contents(" in text
 
 
 def test_the_sql_partition_is_direct_query_by_default():
-    """DirectQuery is the primary mode for APT-2026-0230, decided 2026-10-02."""
+    """DirectQuery is the default mode of a SQL source."""
     text = render_table(semantic().table("entity_0"), SQL)
     assert "\t\tmode: directQuery" in text
     assert 'Sql.Database("SERVER\\INSTANCE", "EARepository")' in text
@@ -327,8 +356,8 @@ def test_the_partition_really_does_differ_so_the_test_above_can_fail():
 
 
 def test_an_import_parquet_path_and_a_direct_query_sql_path_are_the_two_shapes():
-    """APT-2026-0211 and 0212 both end at Parquet, because Power BI has no
-    SQLite connector. 0230 is the only path where Power BI talks to a database."""
+    """Parquet is read by import. A SQL source is DirectQuery unless the caller
+    asks for import."""
     assert ParquetSource(directory="x").mode == "import"
     assert SqlSource(server="s", database="d").mode == "directQuery"
 

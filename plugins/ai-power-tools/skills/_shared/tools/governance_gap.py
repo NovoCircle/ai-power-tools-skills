@@ -36,8 +36,8 @@ Three outcomes, kept distinct on purpose:
   UNRANKABLE    candidates exist and nothing distinguishes them. List them,
                 refuse to order them, let the customer choose.
 
-`report_model.detect_multi_value_candidates` sets the precedent in this
-toolchain: "a CANDIDATE list, never an instruction."
+This follows the toolchain's rule for suggestions: "a CANDIDATE list, never an
+instruction."
 
 THE SIGNALS, IN THE ORDER THEY DISCRIMINATE
 -------------------------------------------

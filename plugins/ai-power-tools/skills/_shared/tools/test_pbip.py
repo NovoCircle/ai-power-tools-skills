@@ -12,9 +12,9 @@ from __future__ import annotations
 
 import json
 import re
+from pathlib import Path
 
-from report_model import Column, ReportModel, Table
-from semantic_model import build_semantic_model
+from powerbi_model import model_from_definition
 from pbip import (BaseTheme, DEFAULT_THEME_NAME, NEWLINE,
                   REPORT_VERSION_AT_IMPORT, default_base_theme, logical_id,
                   page_name, project_files, required_static_resources)
@@ -24,14 +24,14 @@ PARQUET = ParquetSource(directory=r"C:\out\parquet")
 SQL = SqlSource(server="SERVER", database="EARepository")
 
 
-def semantic(n_tables=2):
-    tables = [
-        Table(name=f"entity_{i}", entity_key=f"k{i}", stereotype=f"S{i}",
-              columns=[Column(name="criticality", source_tag="criticality",
-                              sql_type="TEXT")])
-        for i in range(n_tables)
-    ]
-    return build_semantic_model(ReportModel(technology_id="WBA", tables=tables))
+DEFINITION = json.loads(
+    (Path(__file__).parent / "fixtures" / "westbrook.definition.json").read_text(encoding="utf-8"))
+
+
+def semantic():
+    """The Westbrook business layer. `n_tables` is unused: the model is the
+    whole definition."""
+    return model_from_definition(DEFINITION)
 
 
 def parsed(files, path):
@@ -49,12 +49,12 @@ def test_the_project_carries_both_halves_and_the_entry_point():
 
 
 def test_the_semantic_model_definition_is_included_whole():
-    files = project_files(semantic(n_tables=3), PARQUET, name="W")
+    files = project_files(semantic(), PARQUET, name="W")
     assert "W.SemanticModel/definition/model.tmdl" in files
     assert "W.SemanticModel/definition/relationships.tmdl" in files
     assert "W.SemanticModel/definition/database.tmdl" in files
     assert "W.SemanticModel/definition/cultures/en-US.tmdl" in files
-    assert "W.SemanticModel/definition/tables/entity_0.tmdl" in files
+    assert "W.SemanticModel/definition/tables/t_object.tmdl" in files
 
 
 def test_the_report_points_at_the_semantic_model_by_relative_path():
@@ -110,8 +110,8 @@ def test_every_json_file_is_valid_json():
 
 
 def test_two_runs_produce_an_identical_project():
-    assert project_files(semantic(n_tables=3), PARQUET, name="W") == \
-        project_files(semantic(n_tables=3), PARQUET, name="W")
+    assert project_files(semantic(), PARQUET, name="W") == \
+        project_files(semantic(), PARQUET, name="W")
 
 
 def test_logical_ids_and_the_page_name_are_derived_not_minted():
@@ -211,8 +211,8 @@ def test_no_theme_at_all_is_possible_but_is_the_known_broken_shape():
 def test_the_project_is_identical_across_paths_apart_from_the_partition():
     """The same assertion `test_tmdl.py` makes about the definition, made again
     at the level a customer actually receives: a whole project."""
-    a = project_files(semantic(n_tables=4), PARQUET, name="W")
-    b = project_files(semantic(n_tables=4), SQL, name="W")
+    a = project_files(semantic(), PARQUET, name="W")
+    b = project_files(semantic(), SQL, name="W")
     assert set(a) == set(b)
     differing = {p for p in a if a[p] != b[p]}
     assert differing == {p for p in a if "/definition/tables/" in p}
