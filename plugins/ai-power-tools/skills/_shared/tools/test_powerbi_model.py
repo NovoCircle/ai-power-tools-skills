@@ -111,9 +111,40 @@ def test_descriptions_come_from_the_directory_and_physical_have_none(defn, model
 
 
 def test_relationship_set_and_order(defn, model):
-    n_conn, n_ent = len(defn["connectors"]), len(defn["entities"])
-    assert len(model.relationships) == 2 * n_conn + len(PHYSICAL_RELS) + n_ent
+    expected = []
+    for c in defn["connectors"]:
+        expected += [(c["name"], "source_guid", c["source"]), (c["name"], "target_guid", c["target"])]
+    expected += [(m, mc, o) for m, mc, o, _ in PHYSICAL_RELS]
+    expected += [("t_object", "ea_guid", e["name"]) for e in defn["entities"]]
+    assert [(r.from_table, r.from_column, r.to_table) for r in model.relationships] == expected
     assert len(model.relationships) == 74
+
+
+def test_tag_row_relationships_precede_in_definition_order(defn):
+    d = copy.deepcopy(defn)
+    ent, con = d["entities"][0]["name"], d["connectors"][1]["name"]
+    d["tag_row_tables"] = [
+        {"name": f"{con} tags", "of": con, "rows": 0,
+         "all_columns": [{"name": "connector_guid", "type": "TEXT"}]},
+        {"name": f"{ent} tags", "of": ent, "rows": 0,
+         "all_columns": [{"name": "ea_guid", "type": "TEXT"}]}]
+    got = [(r.from_table, r.from_column, r.to_table) for r in model_from_definition(d).relationships]
+    assert got[0] == (f"{ent} tags", "ea_guid", ent)
+    c0, c1 = d["connectors"][0]["name"], d["connectors"][1]["name"]
+    assert got[1:6] == [(c0, "source_guid", d["connectors"][0]["source"]),
+                        (c0, "target_guid", d["connectors"][0]["target"]),
+                        (c1, "source_guid", d["connectors"][1]["source"]),
+                        (c1, "target_guid", d["connectors"][1]["target"]),
+                        (f"{c1} tags", "connector_guid", c1)]
+
+
+def test_column_descriptions_are_carried(defn):
+    d = copy.deepcopy(defn)
+    d["entities"][0]["all_columns"][1]["description"] = "Tag note from the MDG."
+    m = model_from_definition(d)
+    cols = m.table(d["entities"][0]["name"]).columns
+    assert cols[1].description == "Tag note from the MDG."
+    assert cols[0].description == ""
 
 
 def test_each_connector_relates_source_and_target_to_its_entities(defn, model):
@@ -339,3 +370,20 @@ def test_write_project_replaces_the_definition_folder(defn, tmp_path):
 def test_no_hub_is_emitted(defn):
     files = project_files_from_definition(defn, "P")
     assert not any("_keymap" in k or "_keymap" in v for k, v in files.items())
+
+
+def test_rewriting_leaves_an_existing_report_untouched(defn, tmp_path):
+    write_project(defn, tmp_path, "P")
+    report = tmp_path / "P.Report"
+    assert (report / "definition" / "report.json").exists()
+    marker = report / "definition" / "pages" / "visual.json"
+    marker.write_text("built by the customer")
+    edited = report / "definition" / "report.json"
+    edited.write_text("{}")
+    before = {p: p.read_bytes() for p in report.rglob("*") if p.is_file()}
+    table = tmp_path / "P.SemanticModel" / "definition" / "tables" / "AI Gateway.tmdl"
+    table.write_text("stale")
+    write_project(defn, tmp_path, "P")
+    assert {p: p.read_bytes() for p in report.rglob("*") if p.is_file()} == before
+    assert table.read_bytes() != b"stale"
+    assert (tmp_path / "P.pbip").exists()

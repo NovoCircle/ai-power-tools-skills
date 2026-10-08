@@ -312,9 +312,13 @@ def project_files_from_definition(defn: dict, name: str, *, mode: str = "import"
 
 def write_project(defn: dict, out_dir, name: str, *, mode: str = "import") -> Path:
     """Write the project under `out_dir`. The semantic model's `definition/`
-    folder is replaced, so a table that left the definition leaves the project."""
+    folder is replaced, so a table that left the definition leaves the project.
+    An existing `<name>.Report` folder is left untouched, so re-applying never
+    resets visuals a customer has built; a fresh project gets the skeleton report."""
     files = project_files_from_definition(defn, name, mode=mode)
     root = Path(out_dir)
+    if (root / f"{name}.Report").exists():
+        files = {k: v for k, v in files.items() if not k.startswith(f"{name}.Report/")}
     stale = root / f"{name}.SemanticModel" / "definition"
     if stale.exists():
         shutil.rmtree(stale)
