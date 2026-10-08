@@ -64,10 +64,14 @@ Operations 1, Mobile Engineering Team 1, Contact Center Technology 1. (Sum: 44 +
 "SOX, FFIEC" 2, "PCI, GLBA" 2, "GLBA, SOX" 1. (Sum: 52.)
 
 **The multi-value undercount, worked:** if a stakeholder asks "how many business
-applications are in GLBA scope," the naive answer -- the exact `"GLBA"` bucket -- is 14.
-The real answer requires summing every bucket that *contains* GLBA: 14 (`GLBA`) + 11
+applications are in GLBA scope," the naive answer -- the exact `"GLBA"` group -- is 14.
+The real answer counts every element whose value includes GLBA: 14 (`GLBA`) + 11
 (`GLBA, FFIEC`) + 2 (`PCI, GLBA`) + 1 (`GLBA, SOX`) = **28**. Half the true count is
-sitting in combined-value buckets a plain equality match on `"GLBA"` never sees.
+sitting in combined-value groups a whole-value roll-up never puts under `"GLBA"`. The
+response flags it: `multi_valued_count` counts the elements holding a comma-joined value,
+16 from the groups above (11 + 2 + 2 + 1). Rolling up again with
+`split_values: true` counts each element under every part of its value, so the `"GLBA"`
+group is the 28 directly, and the groups sum to more than the 52 elements.
 
 ### `WBAVendorSystem` (35 elements)
 
@@ -131,29 +135,26 @@ Both produce a roll-up that is technically well-formed and substantively empty.
 
 ## `resolve_display_term` transcript
 
-For the record, exactly as observed:
+Run on 2026-10-08 against server 3.6.0, with Westbrook's technology standing in for one a
+customer built:
 
 ```
-ea_mdg(operation="resolve_display_term", params={"kind": "stereotype", "technical_name": "WBABusinessApplication", "mdg_id": "WBA"})
--> {"technical_name": "WBABusinessApplication", "alias": "Business Application", "mdg_id": "WBA", "kind": "stereotype", "found": true}
+ea_mdg(operation="resolve_display_term", params={"kind": "tagged_value", "technical_name": "criticality"})
+-> {"technical_name": "criticality", "alias": "criticality", "description": "", "mdg_id": "", "kind": "tagged_value", "found": false}
 
-ea_mdg(operation="resolve_display_term", params={"kind": "stereotype", "technical_name": "WBADataAsset"})
--> {"technical_name": "WBADataAsset", "alias": "Data Asset", "mdg_id": "WBA", "kind": "stereotype", "found": true}
-   (mdg_id omitted on the call, populated correctly in the result)
+ea_mdg(operation="resolve_display_term", params={"kind": "stereotype", "technical_name": "WBABusinessApplication"})
+-> {"technical_name": "WBABusinessApplication", "alias": "WBABusinessApplication", "description": "", "mdg_id": "", "kind": "stereotype", "found": false}
 
-ea_mdg(operation="resolve_display_term", params={"kind": "tag", "technical_name": "criticality", "mdg_id": "WBA"})
--> {"technical_name": "criticality", "alias": "criticality", "mdg_id": "", "kind": "tag", "found": false}
+ea_mdg(operation="resolve_display_term", params={"kind": "stereotype", "technical_name": "ApplicationComponent"})
+-> {"technical_name": "ApplicationComponent", "alias": "Application", "description": "", "mdg_id": "ArchiMate3", "kind": "stereotype", "found": true}
 
 ea_mdg(operation="resolve_display_term", params={"kind": "tag", "technical_name": "criticality"})
--> {"technical_name": "criticality", "alias": "criticality", "mdg_id": "", "kind": "tag", "found": false}
-   (same result with mdg_id omitted -- not a parameter-passing mistake)
+-> {"technical_name": "criticality", "alias": "criticality", "description": "", "mdg_id": "", "kind": "tag", "found": false}
+   ("tag" is not a kind; it is accepted and comes back as a miss)
 ```
 
-Root cause: `resolve_display_term` matches tags against its own alias table, not against
-the tag definitions `get_mdg_from_runtime` reads out of the loaded technology, so a
-tag-kind lookup finds nothing for any tag on this technology even though the technology
-declares them. Meanwhile `get_element_business_view` and
-`aggregate_portfolio` both produce correct human labels for the same tags
-(`"Business Owner"`, `"Technical Owner"`, `"Data Classification"`, `"Regulatory Scope"`,
-`"Criticality"`) through their own formatting, independent of `resolve_display_term`.
-Use those labels; don't expect a separate tag lookup to succeed.
+Why: the lookup reads the server's own alias tables, which cover languages that ship with
+EA. It does not read the technology EA has loaded, so a technology a customer built
+resolves neither its stereotypes nor its tags, whichever kind is passed.
+`get_element_business_view` and `aggregate_portfolio` label their output through the same
+lookup.

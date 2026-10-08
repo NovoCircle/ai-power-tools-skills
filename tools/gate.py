@@ -447,6 +447,43 @@ def check_manifest() -> list[str]:
     return out
 
 
+_STATED_VERSION = re.compile(r"\bv(\d+\.\d+\.\d+)\+")
+
+
+def check_stated_server_version() -> list[str]:
+    """A server version a skill states in its tools line must be its floor.
+
+    The tools line is the italic `*Tools: ...*` block under the title. When it
+    names a server version (`v3.6.0+`), that version must equal the skill's
+    `min_server_version` in manifest.json, which is the floor the installer
+    enforces. A skill whose text says one version while the manifest says
+    another tells the reader the wrong requirement. APT-2026-0337.
+    """
+    import json
+
+    mf = ROOT / "manifest.json"
+    if not mf.exists():
+        return []
+    out: list[str] = []
+    for skill in json.loads(mf.read_text(encoding="utf-8")).get("skills", []):
+        name, floor = skill.get("name", ""), skill.get("min_server_version", "")
+        f = _source_path(f"{name}/SKILL.md", ROOT)
+        if not f.exists():
+            continue
+        block: list[str] = []
+        for line in f.read_text(encoding="utf-8").splitlines():
+            if not block and not line.startswith(("*Tool:", "*Tools:")):
+                continue
+            block.append(line)
+            if line.rstrip().endswith("*"):
+                break
+        for stated in _STATED_VERSION.findall("\n".join(block)):
+            if stated != floor:
+                out.append(f"{name}/SKILL.md: tools line states v{stated}+ but "
+                           f"manifest.json min_server_version is {floor}")
+    return out
+
+
 _OP_DRIFT_RAN = True
 _OP_DRIFT_SKIP_REASON: Optional[str] = None
 
@@ -667,6 +704,7 @@ def main() -> int:
     findings.extend(check_ruleset_paths(target))
     if target == ROOT:
         findings.extend(check_manifest())
+        findings.extend(check_stated_server_version())
 
     # A check that did not run is not a check that passed. The verdict says so
     # whatever the findings, because the whole point of this item was a gate
