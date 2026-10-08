@@ -297,10 +297,23 @@ def layout_from_definition(defn: dict, model: SemanticModel) -> dict:
 # ------------------------------------------------------------------ project
 
 MODES = ("import", "directQuery")
+_UNSAFE_NAME_CHARS = set('/\\:<>"|?*') | {chr(c) for c in range(32)}
+
+
+def check_project_name(name: str) -> str:
+    """`name` becomes a folder and file name under the output folder, so it
+    must be one plain Windows file name: no separators, no reserved
+    characters, not `.` or `..`, no trailing dot or space."""
+    if (not name or name in (".", "..") or name[-1] in ". "
+            or any(ch in _UNSAFE_NAME_CHARS for ch in name)):
+        raise ValueError(f"project name {name!r} must be a plain file name "
+                         f'(no / \\ : < > " | ? * or control characters, no trailing dot or space)')
+    return name
 
 
 def project_files_from_definition(defn: dict, name: str, *, mode: str = "import") -> dict[str, str]:
     """Every text file of the `.pbip` project, keyed by relative path."""
+    check_project_name(name)
     if mode not in MODES:
         raise ValueError(f"mode must be one of {MODES}, not {mode!r}")
     model = model_from_definition(defn)
@@ -327,7 +340,13 @@ def write_project(defn: dict, out_dir, name: str, *, mode: str = "import") -> Pa
     root = Path(out_dir)
     if (root / f"{name}.Report").exists():
         files = {k: v for k, v in files.items() if not k.startswith(f"{name}.Report/")}
+    # Table names from the definition become file names too: nothing is
+    # deleted or written until every target is known to stay under out_dir.
+    base = root.resolve()
     stale = root / f"{name}.SemanticModel" / "definition"
+    for target in [stale, *(root / rel for rel in files)]:
+        if not target.resolve().is_relative_to(base) or target.resolve() == base:
+            raise ValueError(f"{target} is outside the output folder {root}")
     if stale.exists():
         shutil.rmtree(stale)
     for rel, text in files.items():
