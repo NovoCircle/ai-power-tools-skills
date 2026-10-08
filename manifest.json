@@ -285,7 +285,7 @@
         "ea-mdg-author/references/xml-skeleton.md"
       ],
       "sha256": {
-        "ea-mdg-author/SKILL.md": "735cde34c6697d0c8075caf04a4695c2f4598d9d519390cb38856ce87fcc75c0",
+        "ea-mdg-author/SKILL.md": "efc325faab2bd8741c75b56b0dd3138fa9d6d4f8e774592b176cc4a8b2f0bfaa",
         "ea-mdg-author/references/diagrams-toolboxes.md": "384918bad2126adc0195a967e8dc0c74e98c57e047a89a2f74f1a2e66db8f73c",
         "ea-mdg-author/references/post-install-migration.md": "b2e3f1a2f047042a917eea2b201ebb454df7886ef0136d316bc092f997dd3cec",
         "ea-mdg-author/references/quick-linker.md": "c1e77c9410344baa29706fb81d9adbf8b19c0453b076dd3f1b97dca187233dd4",
@@ -305,7 +305,7 @@
         "ea-mdg-deploy/references/in-model-locations.md"
       ],
       "sha256": {
-        "ea-mdg-deploy/SKILL.md": "ef01a49e006c7244bf75e5b81a29643bb6e2dfd48d8330fb24710d8a288b0680",
+        "ea-mdg-deploy/SKILL.md": "7d4cfdb8809580c5da29ecdb02bb2ded9e273cbe70e71de942481fb9e46454ce",
         "ea-mdg-deploy/references/in-model-locations.md": "8182bdc9e080224c8b37fcb7ecf5851d029dc9c5a38b4769fe8f4ba61cb57e7e"
       }
     },
@@ -320,7 +320,7 @@
         "ea-mdg-model-build/references/generating-from-a-census.md"
       ],
       "sha256": {
-        "ea-mdg-model-build/SKILL.md": "493a202039b851385e868143ea893fd677e6f71d91c03e890c062f6b78fa6770",
+        "ea-mdg-model-build/SKILL.md": "45ae86f4168f64b5b043e869189955e73181c8244786ca3540f9690e22ce499f",
         "ea-mdg-model-build/references/generating-from-a-census.md": "70e682c06efc17d9b80081daa6c6344a5d45ee0b6e462beac30143a50487957d"
       }
     },

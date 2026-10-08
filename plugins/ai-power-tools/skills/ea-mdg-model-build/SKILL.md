@@ -336,8 +336,8 @@ An MDG is deployed either **into the repository** (a model technology, picked up
 | Location | Scope | How a model-driven build gets there |
 |---|---|---|
 | `Model` | Every user of that repository, whole technology | `install_mdg(scope="model", package_id=<«mdg technology» package>)` (server later than 3.5.0), or Import Package as MDG Technology in the UI |
-| `Project` | Every user of that repository, **without toolbox pages** | `install_mdg(scope="embedded")` with the saved file. Avoid for a technology that has toolbox pages |
-| A file path | That workstation only | `install_mdg(scope="user")` with the saved file |
+| `Project` | Every user of that repository, **without toolbox pages** | `install_mdg(scope="embedded", xml_path_or_content=<saved file>)`. Avoid for a technology that has toolbox pages |
+| A file path | That workstation only | `install_mdg(scope="user", xml_path_or_content=<saved file>)` |
 
 A model-driven technology belongs at **Location: Model**: it is the only in-model Location that keeps
 the toolbox profiles this skill builds in Phase 4.

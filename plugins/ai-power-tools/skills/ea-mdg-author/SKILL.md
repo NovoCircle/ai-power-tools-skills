@@ -52,9 +52,9 @@ When automating MDG work, pick the right tool tier:
 | **Emit MDG XML from a metamodel dict** | `ea_mdg(operation="write_mdg_xml", params={"intermediate_metamodel": {...}, "output_path": "..."})` — the path-A route; hand-writing the XML is for edits afterwards |
 | Census a repository's existing usage | `_shared/tools/ea_census.py` — profile-aware. **Not** `summarize_stereotype_usage`, which reads the bare stereotype column and cannot see the language |
 | Parse and validate MDG XML | `ea_mdg(operation="parse_mdg_xml", params={"path_or_content": "..."})` |
-| Install MDG at application scope | `ea_mdg(operation="install_mdg", params={"scope": "user"})` |
+| Install MDG at application scope | `ea_mdg(operation="install_mdg", params={"scope": "user", "xml_path_or_content": "<mdg-dir>\\WBA_MDG.xml"})` |
 | Install MDG into the model, whole technology | EA UI: Specialize ▸ Publish Technology ▸ Import MDG Technology ▸ **Import to Model** (Location: Model). EA has no COM call that imports a file there |
-| Install MDG into the model, legacy route | `ea_mdg(operation="install_mdg", params={"scope": "embedded"})` (Location: Project). **Drops toolbox pages**; the response's `not_stored` says so |
+| Install MDG into the model, legacy route | `ea_mdg(operation="install_mdg", params={"scope": "embedded", "xml_path_or_content": "<mdg-dir>\\WBA_MDG.xml"})` (Location: Project). **Drops toolbox pages**; the response's `not_stored` says so |
 | Verify MDG is loaded | COM: `repo.IsTechnologyLoaded(tech_id)` and `repo.IsTechnologyEnabled(tech_id)` with your technology id (a disabled technology still reports loaded) |
 | Fix `Object_Type` in database | `repo.Execute()` DML — **not** `elem.Type` COM setter (silently fails for ArchiMate types) |
 | Dismiss EA dialogs | Computer use screenshot → click → screenshot again |

@@ -50,8 +50,8 @@ path is shadowing the copy you meant to test.
 |-----------|-----|
 | In the model, from an «mdg technology» package (preferred; server later than 3.5.0) | `ea_mdg(operation="install_mdg", params={"scope": "model", "package_id": <id>})` |
 | In the model, from an XML file, whole technology | EA UI: Specialize ▸ Publish Technology ▸ Import MDG Technology ▸ **Import to Model** (no COM route exists) |
-| In the model, legacy route (no toolbox pages) | `ea_mdg(operation="install_mdg", params={"scope": "embedded"})` — read `not_stored` in the response |
-| Application-level install | `ea_mdg(operation="install_mdg", params={"scope": "user"})` |
+| In the model, legacy route (no toolbox pages) | `ea_mdg(operation="install_mdg", params={"scope": "embedded", "xml_path_or_content": "<mdg-dir>\\WBA_MDG.xml"})` — read `not_stored` in the response |
+| Application-level install | `ea_mdg(operation="install_mdg", params={"scope": "user", "xml_path_or_content": "<mdg-dir>\\WBA_MDG.xml"})` |
 | Verify MDG loaded **and enabled** | COM `repo.IsTechnologyLoaded(tech_id)` and `repo.IsTechnologyEnabled(tech_id)` with your technology id — a technology disabled in Manage Technology still reports loaded |
 | Verify what the model stores | `ea_mdg(operation="get_embedded_mdgs", params={})` (server later than 3.5.0: both Locations), then EA UI → Specialize → Technologies → Manage Technology |
 | Dismiss overwrite dialog | Computer use → screenshot → click Yes → screenshot again |
@@ -84,7 +84,7 @@ for a technology that has none, or when nothing else is available.
 
 ```python
 import os
-from ea_com import EA
+import win32com.client
 
 # MDG_FILE: path to your own MDG XML file
 MDG_FILE = r"<mdg-dir>\WBA_MDG.xml"
@@ -102,10 +102,11 @@ if os.path.exists(APPDATA_MDG):
 with open(MDG_FILE, encoding="utf-8") as f:
     xml = f.read()
 
-with EA() as ea:
-    result = ea.repo.ImportTechnology(xml)
-    print(f"ImportTechnology() returned: {result}")
-    # True = success, False = XML error (check for ID > 12 chars, malformed XML, etc.)
+# Attaches to the running EA; see the ea-com skill for a retrying connect().
+repo = win32com.client.GetActiveObject("EA.App").Repository
+result = repo.ImportTechnology(xml)
+print(f"ImportTechnology() returned: {result}")
+# True = success, False = XML error (check for ID > 12 chars, malformed XML, etc.)
 
 print("Done. Restart EA to verify.")
 ```
@@ -248,29 +249,23 @@ path — `ea_repository(operation="get_repository_info", params={})` reports `ea
 After any deploy, restart EA to clear the technology cache:
 
 ```python
-from ea_com import EA
-import subprocess, time
+import subprocess
+import time
 
-ea = EA()
-ea.connect()
-path = ea.project_path  # Save path before shutdown
-
-ea.save()
+# repo and connect() as in the ea-com skill (references/connecting-and-queries.md)
+path = repo.ConnectionString   # save the path before shutdown
+repo.SaveAllDiagrams()
 time.sleep(0.5)
-ea.shutdown()           # Calls repo.ShutdownEA()
-time.sleep(8)           # Wait for process to fully exit
+repo.ShutdownEA()
+time.sleep(8)                  # wait for the process to fully exit
 
 subprocess.Popen([r"C:\Program Files\Sparx Systems\EA\EA.exe", path])
-time.sleep(12)          # Wait for EA to open and load project
+time.sleep(12)                 # wait for EA to open and load the project
 
-new_ea = EA()
-new_ea.connect(retries=10, delay=3.0)
+repo = connect(retries=10, delay=3.0)
 ```
 
-Or use the convenience method:
-```python
-ea2 = ea.close_and_reopen()  # save + shutdown + relaunch + reconnect
-```
+Every COM reference held from before the restart is stale; reconnect and re-query.
 
 ---
 
@@ -291,12 +286,13 @@ After deploying and restarting EA, verify each of these:
 
 ### 1. COM check (scripted)
 ```python
-from ea_com import EA
-with EA() as ea:
-    tech = "WBA"
-    print("Loaded :", ea.is_technology_loaded(tech))   # Should be True
-    print("Enabled:", ea.is_technology_enabled(tech))  # Should be True
-    print("Version:", ea.technology_version(tech))     # Should be "1.0"
+import win32com.client
+
+repo = win32com.client.GetActiveObject("EA.App").Repository
+tech = "WBA"                                         # your technology id
+print("Loaded :", repo.IsTechnologyLoaded(tech))     # Should be True
+print("Enabled:", repo.IsTechnologyEnabled(tech))    # Should be True
+print("Version:", repo.GetTechnologyVersion(tech))   # the version your file declares
 ```
 
 ### 2. Manage Technologies dialog
@@ -377,9 +373,9 @@ outright. Full guidance (legacy `windows-1252` handling, read/write code pattern
 These are not shipped files — build them yourself from the code already in this skill:
 
 - **Application-level install script** — wrap the "Deploy: Application-Level" snippet above in a standalone `.py` file to do an APPDATA install (copy `MDG_FILE` to `APPDATA_MDG`) in one run.
-- **COM API quick-check script** — using the `ea_com.EA` class (see the `ea-com` skill), write a small script with a CLI switch:
+- **COM API quick-check script** — using plain `win32com` as in the `ea-com` skill, write a small script with a CLI switch:
   ```
-  python your_script.py          # check: connect, then print IsTechnologyLoaded/is_technology_enabled/technology_version
+  python your_script.py          # check: connect, then print IsTechnologyLoaded/IsTechnologyEnabled/GetTechnologyVersion
   python your_script.py restart  # save + restart EA + reconnect (see "Restart EA via COM" above), then print tech status
   ```
 
