@@ -49,5 +49,4 @@ result and sounds equally confident in all four cases.
 TC-05 and TC-19 together are the loop: create a prefixed view, use it, delete it, verify the list.
 TC-21 and TC-22 are the guard on both ends of it — do not create unasked, and do not delete what
 you did not create.
-Any view left behind goes in the tenant artifact record with the date and the reason it is still
-there.
+If a view has to be left behind, tell the person which one, and why it is still there.
