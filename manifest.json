@@ -39,7 +39,7 @@
         "_shared/references/ea-ui-verification.md": "4f74960eed2c33a1097b19f8931a82c2f60fce90de70f5bb7c77f4105ecbe2ba",
         "_shared/references/file-encoding.md": "5759bac841234558071a4cde555587e45cabebe5a90420188b07f8323d62f7fe",
         "_shared/references/latency.md": "af565b7e08f3a79a9239f548c63115181ef3ea7bd845b94ef0363a28f035d06f",
-        "_shared/references/operations.md": "ec4331f19cdba7c8f299ac198656d6eea117d4ef2630284dd6d83e49a6b03db9",
+        "_shared/references/operations.md": "48c00e7b37eeb35b4e62a2c3f3f1f4ae36dcc162c9dc43e1bf27c43d382034c4",
         "_shared/references/prolaborate-session.md": "0e714db9ee43690a396333f220d45a268ff115f7e0c9d9397abe66fab36b105e",
         "_shared/references/westbrook-example.md": "48a4a968b8538e9c06b4b4445bfaecb9e9ded8d9dad06ded66daab0ca5cb96b5",
         "_shared/tools/ea_census.py": "7dc1710b6caa3a28f7fcf2872a1a6c986a612b9dbce8e9541b48d0b7d813befe",
@@ -467,7 +467,7 @@
         "ea-start-here/SKILL.md"
       ],
       "sha256": {
-        "ea-start-here/SKILL.md": "7be489c5e52042f01b0f170b2a8b484674d3753d07a039f7cb575b13d52f06bb"
+        "ea-start-here/SKILL.md": "f58a6a59559cd8ae838238ce7f0ad432204011aa7ee286ebc7c3dee58429a83c"
       }
     },
     {

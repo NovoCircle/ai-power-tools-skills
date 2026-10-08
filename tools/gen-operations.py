@@ -11,7 +11,12 @@ import, no running server — and writes the reference. Re-run it whenever the
 server changes.
 
 Usage:
-    python tools/gen-operations.py [path-to-server.py]
+    python tools/gen-operations.py [path-to-server.py] [--version X.Y.Z]
+
+``--version`` stamps the reference with a version other than the one the source
+declares. It exists for the window between a release being decided and the
+version bump landing in the server: the reference must describe the release it
+ships with, not the build before it.
 
 Also used by tools/gate.py, which imports ``collect_operations`` to check that
 every operation a skill mentions actually exists.
@@ -24,6 +29,10 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
+
+# Skills live under the plugin, not at the repository root.
+_REFERENCE_REL = ("plugins", "ai-power-tools", "skills", "_shared", "references",
+                  "operations.md")
 
 # Default location of the server source, relative to this repo.
 #
@@ -143,7 +152,16 @@ def _server_version(server_path: Path) -> str:
 
 
 def main() -> int:
-    server = Path(sys.argv[1]) if len(sys.argv) > 1 else DEFAULT_SERVER
+    args = sys.argv[1:]
+    version = None
+    if "--version" in args:
+        i = args.index("--version")
+        if i + 1 >= len(args):
+            print("--version needs a value, for example --version 3.6.0", file=sys.stderr)
+            return 1
+        version = args[i + 1]
+        del args[i:i + 2]
+    server = Path(args[0]) if args else DEFAULT_SERVER
     if not server.is_file():
         print(f"Server source not found: {server}", file=sys.stderr)
         return 1
@@ -153,11 +171,11 @@ def main() -> int:
         print("No dispatch tables found — has server.py changed shape?", file=sys.stderr)
         return 1
 
-    dst = ROOT / "_shared" / "references" / "operations.md"
+    dst = ROOT.joinpath(*_REFERENCE_REL)
     dst.parent.mkdir(parents=True, exist_ok=True)
     # newline="" keeps LF on Windows; a CRLF asset breaks the manifest hashes.
     with io.open(dst, "w", encoding="utf-8", newline="") as fh:
-        fh.write(render(ops, _server_version(server)))
+        fh.write(render(ops, version or _server_version(server)))
 
     total = sum(len(v) for v in ops.values())
     print(f"Wrote {dst.relative_to(ROOT).as_posix()} — "
