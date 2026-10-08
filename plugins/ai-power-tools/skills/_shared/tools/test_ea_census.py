@@ -436,6 +436,14 @@ def test_declared_but_never_used_is_reported():
     assert (DRIFT_DECLARED_UNUSED, "WBAGovernedElement") in kinds
 
 
+def test_declared_connector_stereotype_is_not_an_unused_element_stereotype():
+    mdg = {"stereotypes": MDG["stereotypes"] + [
+        {"name": "Uses", "base_metaclass": "Dependency", "tagged_values": []}]}
+    c = _census_of([obj("{1}", "Object", "WBADataAsset")],
+                   [stereo_row("{1}", ("WBADataAsset", "%s::WBADataAsset" % NS, ""))])
+    assert "Uses" not in {d.subject for d in compare_declared_observed(c, mdg)}
+
+
 def test_observed_but_never_declared_is_reported():
     c = _census_of([obj("{1}", "Component", "VendorApplication")], [])
     kinds = [(d.kind, d.subject) for d in compare_declared_observed(c, MDG)]

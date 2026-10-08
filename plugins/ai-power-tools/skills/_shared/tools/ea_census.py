@@ -886,7 +886,11 @@ def compare_declared_observed(census: ElementCensus, mdg: dict,
 
     Returns findings sorted by kind then subject.
     """
-    declared = {s["name"]: s for s in mdg.get("stereotypes", []) if s.get("name")}
+    # Connector stereotypes arrive in the same list; they are compared by
+    # `compare_connectors_declared_observed`, and counting them here would
+    # report every one as declared-never-used by elements.
+    declared = {s["name"]: s for s in mdg.get("stereotypes", []) if s.get("name")
+                and (s.get("base_metaclass") or "").strip() not in CONNECTOR_BASE_TYPES}
     out: list[Drift] = []
 
     # A stereotype NAME can own several entities - profile-bound and ad hoc, or
