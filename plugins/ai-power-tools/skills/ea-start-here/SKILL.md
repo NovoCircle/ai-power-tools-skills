@@ -168,7 +168,7 @@ Most "EA is broken" reports are one of:
 
 ## 5. The full operation list
 
-`../_shared/references/operations.md` lists every operation the server exposes — 113 of them
+`../_shared/references/operations.md` lists every operation the server exposes — 144 of them
 across the six meta-tools — generated directly from the server's own dispatch tables.
 
 Consult it rather than guessing a name from a pattern. If an operation is not in that file, it
