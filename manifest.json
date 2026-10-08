@@ -1,7 +1,7 @@
 {
   "manifest_version": "1.0",
-  "bundle_version": "3.5.0",
-  "released_at": "2026-10-02",
+  "bundle_version": "3.6.0",
+  "released_at": "2026-10-09",
   "min_server_version": "3.6.0",
   "skills": [
     {
