@@ -170,10 +170,10 @@ def test_connector_gap_keys_ignore_the_base_type():
 
 
 def test_one_stereotype_on_two_base_types_is_one_connector_key():
-    cons = CONNECTORS + [cn("{c10}", "ad hoc dependency", "Dependency", "extends")]
+    cons = CONNECTORS + [cn("{c10}", "ad hoc association", "Association", "extends")]
     a = run(connectors=cons, cxrefs=CXREF + [xref("{c10}", ("extends", ""))])
     g = gap(a, CONNECTOR, "extends")
-    assert g.count == 3 and g.metaclass == "Dependency"
+    assert g.count == 3 and g.metaclass == "Association/Dependency"
 
 
 def test_each_gap_carries_a_count_and_an_example_name():
