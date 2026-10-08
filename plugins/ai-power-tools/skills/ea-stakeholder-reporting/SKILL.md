@@ -94,8 +94,8 @@ ea_analyze(operation="summarize_tagged_value_usage", params={"stereotype": "WBAB
 ```
 
 gives you, per tag, a `count`, a `populated_count` and the `distinct_value_count` /
-`sample_values`. `count` is how many elements have the tag at all; EA adds the tag when the
-stereotype is applied, filled in or not, so it is not coverage. `populated_count` is how many
+`sample_values`. `count` is how many tag rows exist; EA adds the tag when the stereotype is
+applied, filled in or not, so it is not coverage. `populated_count` is how many
 have a non-blank value, and that is the coverage figure. Read it as: does `populated_count`
 equal the denominator? If not, don't present the roll-up as complete -- say what fraction it
 covers.
@@ -167,9 +167,10 @@ ea_analyze(operation="get_element_business_view", params={"element_id": 91})
 ```
 
 This is the per-element view: every tag with its value, and the element's connections.
-The `type` and each `label` are the business terms only for a technology the server has
-its own table for (see Display terms below). For a technology your organization built they
-are the technical names, so translate them before handing the result to a stakeholder.
+For a technology your organization built, each `label` is the tag's technical name, and
+`type` and `target_type` are the stereotype's technical name unless the technology's XML
+was parsed this session (see Display terms below). Translate them before handing the result
+to a stakeholder.
 Result for a well-populated `WBABusinessApplication`:
 
 ```json
@@ -230,11 +231,13 @@ tag is `tagged_value`; there is no `tag`. A kind the server does not recognize i
 rejected: it comes back `found: false`, exactly like a genuine miss, so check the spelling
 before concluding a term has no business name.
 
-**It resolves terms from the server's own tables, not from your technology.** Those tables
-cover languages that ship with EA, such as ArchiMate. A technology your organization built
-is not in them, so its stereotypes and tags both come back unresolved, with the technical
-name as the alias. Run against server 3.6.0, with Westbrook's technology standing in for
-yours:
+**It resolves terms from the server's own tables, not from the technology EA has loaded.**
+Those tables cover languages that ship with EA, such as ArchiMate, plus the stereotypes of
+any technology parsed with `ea_mdg(operation="parse_mdg_xml", ...)` in this session, which
+adds them with their aliases. Nothing adds a technology's tags. So for a technology your
+organization built, tags never resolve, and stereotypes resolve only after its XML has been
+parsed this session. Run on 2026-10-08 against the 3.6.0 server source, with Westbrook's
+technology standing in for yours and no XML parsed:
 
 ```
 ea_mdg(operation="resolve_display_term", params={"kind": "stereotype", "technical_name": "WBABusinessApplication"})
@@ -244,17 +247,18 @@ ea_mdg(operation="resolve_display_term", params={"kind": "tagged_value", "techni
 ```
 
 `get_element_business_view` (`type`, each `label`, `target_type`) and `aggregate_portfolio`
-(`alias`) take their labels from the same lookup, so for your own technology they carry the
-technical names too. When you need a business term:
+(`alias`) take their labels from the same lookup, so for your own technology the tag labels
+are always technical names, and the stereotype names are too unless its XML was parsed.
+When you need a business term:
 
 - **A stereotype:** use the alias your technology declares. `ea_mdg(operation="get_mdg_from_runtime",
-  params={"tech_id": "<id>"})` returns each stereotype with its `alias`; the reporting layer
-  names its tables by the same alias.
+  params={"tech_id": "<id>"})` returns each stereotype with its `alias` without changing what
+  the lookup knows; the reporting layer names its tables by the same alias.
 - **A tag, or a stereotype with no alias:** derive it. Split the camelCase name
   (`businessOwner` -> "Business Owner") and drop the technology's prefix from a stereotype
   (`WBABusinessApplication` -> "Business Application").
-- Call `resolve_display_term` for terms from a language that ships with EA, where it does
-  find them.
+- Call `resolve_display_term` for terms from a language that ships with EA, or for a
+  stereotype of a technology parsed this session, where it does find them.
 
 ---
 
@@ -283,8 +287,9 @@ technical names too. When you need a business term:
   on whether the field is unset or not tracked for that stereotype. Cross-check against
   `summarize_tagged_value_usage` for that stereotype when it matters.
 - **Your own technology's terms come back as technical names.** `resolve_display_term`,
-  the business view and the roll-up only know the languages that ship with EA. Take a
-  stereotype's alias from `get_mdg_from_runtime` and derive a tag's label, as above.
+  the business view and the roll-up know the languages that ship with EA and the stereotypes
+  of a technology parsed this session, never its tags. Take a stereotype's alias from
+  `get_mdg_from_runtime` and derive a tag's label, as above.
 
 Full worked numbers, including the complete per-stereotype coverage matrix and the
 `regulatoryScope` multi-value breakdown, are in `references/coverage-data.md`.

@@ -135,8 +135,8 @@ Both produce a roll-up that is technically well-formed and substantively empty.
 
 ## `resolve_display_term` transcript
 
-Run on 2026-10-08 against server 3.6.0, with Westbrook's technology standing in for one a
-customer built:
+Run on 2026-10-08 against the 3.6.0 server source, with Westbrook's technology standing in
+for one a customer built, and no technology XML parsed in the session:
 
 ```
 ea_mdg(operation="resolve_display_term", params={"kind": "tagged_value", "technical_name": "criticality"})
@@ -154,7 +154,9 @@ ea_mdg(operation="resolve_display_term", params={"kind": "tag", "technical_name"
 ```
 
 Why: the lookup reads the server's own alias tables, which cover languages that ship with
-EA. It does not read the technology EA has loaded, so a technology a customer built
-resolves neither its stereotypes nor its tags, whichever kind is passed.
+EA. It does not read the technology EA has loaded. `parse_mdg_xml` adds a parsed
+technology's stereotypes and their aliases to those tables for the rest of the session, after
+which its stereotypes resolve; nothing adds its tags, so they never resolve, whichever kind
+is passed.
 `get_element_business_view` and `aggregate_portfolio` label their output through the same
 lookup.
