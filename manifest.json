@@ -418,13 +418,13 @@
         "ea-reporting-database/references/troubleshooting.md"
       ],
       "sha256": {
-        "ea-reporting-database/SKILL.md": "dd1fc6c11bad4c45f197b094a549033ae89d42cacd6be0792e9683bf7639fcc9",
+        "ea-reporting-database/SKILL.md": "73ca70a32a6a463cac6a27921b29f58974d517b8dfa3b9ec712bd0459a7d5e7b",
         "ea-reporting-database/references/the-extract-snapshot.md": "a1255a4e185310a64570a7d6f6d67cbe24bca79eb07a14e97ce04820a8c0f0b9",
-        "ea-reporting-database/references/the-governance-gate.md": "d35129427436407524cc9cdc2f79e5757605f935f1174801a3536e6c71ae08a5",
-        "ea-reporting-database/references/the-inclusion-choice.md": "20162b3b85129bb28e7889852e587eb71d826b3e7d610a50bab10dccd09852e4",
-        "ea-reporting-database/references/the-profile.md": "3da8cabc76eccde819cf3a3117c7df077a6822200593cb10f8c3ed209d318c98",
+        "ea-reporting-database/references/the-governance-gate.md": "ddd3c32b0bd37e311d61b0e346e294b9bbddd9395d266a943fb1770648335437",
+        "ea-reporting-database/references/the-inclusion-choice.md": "094d74606eabfa0bd4001b0a88dad62ef4f53176a21b1f4a04e9686a41ec3e3a",
+        "ea-reporting-database/references/the-profile.md": "ff2fec8a41929652dc4c152ef12fddec6935f00d85530c1c1c145114f5799f95",
         "ea-reporting-database/references/the-schema.md": "d89f3c0a4d7b627a4f1a13904a6946a6b88fe9e83b5bd64b1e634a93ac7c6ad4",
-        "ea-reporting-database/references/troubleshooting.md": "0c797d34a925528a94970ecfbe4fdb392fe96578a930d8ee3301b8444f785be6"
+        "ea-reporting-database/references/troubleshooting.md": "8ad4283f9e696cb92a17a182c94fd2e57e12f24b3e07e2e4ccb3559c3ecccce9"
       }
     },
     {

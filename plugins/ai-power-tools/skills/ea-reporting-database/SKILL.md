@@ -67,8 +67,8 @@ includes. Never decide it for them. Full detail:
 [`references/the-inclusion-choice.md`](references/the-inclusion-choice.md); code:
 `../_shared/tools/inclusion.py`.
 
-1. **Census elements and connectors** with `ea_census` (`census_elements`, `census_connectors`),
-   then `inclusion.analyze(...)`.
+1. **Census elements and connectors** over the scope, not the whole repository, with `ea_census`
+   (`census_elements`, `census_connectors`), then `inclusion.analyze(...)`; inputs: reference §2.
 2. **Stop on unbound connectors.** A connector whose stereotype is qualified text with no `FQName` is
    a data defect, not a gap. Show the fix the analysis suggests (bind it to the MDG's own stereotype,
    or clear it; baseline first) and re-run the census. No profile is produced until none remain.
@@ -141,8 +141,8 @@ reuses it. Illustration with Westbrook Bank's `WBA` technology; substitute your 
 }
 ```
 
-The parts, and the scope rules (no masking; a new root package is left out and flagged; a stale
-exclusion is flagged): [`references/the-profile.md`](references/the-profile.md). Package GUIDs come from
+The parts, and the scope rules (no masking; list every root package you do not want in `scope.exclude`,
+or it is flagged on every run; a stale exclusion is flagged): [`references/the-profile.md`](references/the-profile.md). Package GUIDs come from
 `execute_sql`: `SELECT ea_guid, Name, Parent_ID FROM t_package`. Paste `resolve_answer(...).inclusion`
 into `inclusion` and `answer.record()` into `inclusion_choice`: without that record a refresh cannot flag drift. A reporting-database build refuses a database that holds an EA repository's own tables.
 
@@ -246,7 +246,7 @@ same alignment summary). It checks two things:
    profile-bound connector whose two ends are placed lands in a combination, none outside one;
    every admitted element is in at least one entity table, and every element in two was flagged
    at preflight; each connector table's rows equal the definition's own placement.
-   `alignment.aligned` is the verdict.
+   `alignment.aligned` is the verdict; if it is false, read `references/troubleshooting.md` first.
 2. **Values** (`include_values`, on by default): every name, `package_path`, tag column,
    connector end, base type and connector tag compared against an **independent read through
    EA**. It returns `cells` and `differences`; zero differences is the verdict. The open

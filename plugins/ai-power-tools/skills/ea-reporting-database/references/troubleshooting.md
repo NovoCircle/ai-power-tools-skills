@@ -26,6 +26,15 @@ or `parquet`.
 connector outside every allowed combination is a connector the technology does not allow between
 those two stereotypes; it is reported, not dropped.
 
+- **Only `outside_every_allowed_combination` is non-zero:** the build is correct. Those connectors
+  use a declared connector stereotype between two element stereotypes the technology does not allow
+  together, so they stay in EA's physical tables and no business table shows them. Proceed, and tell
+  the user which combinations they are (source stereotype, connector stereotype, target stereotype,
+  count) so they decide: add the combination to the technology's allowed relationships (the next
+  build then gives it a `Con_` table), or treat the connectors as modeling errors and fix them in EA.
+- **`combinations_without_a_table` or `connector_count_mismatches` is non-zero:** that is a defect in
+  the build, not a modeling question. Stop and report it with the operation's full result.
+
 **A later spot-check in EA disagrees with the layer by a few rows.** A snapshot (B, C) matches
 the repository as of its run; on a shared repository other work lands in between. Compare a
 disputed number against the build it came from - replay it (`SKILL.md` §6) - and say the as-of time whenever
