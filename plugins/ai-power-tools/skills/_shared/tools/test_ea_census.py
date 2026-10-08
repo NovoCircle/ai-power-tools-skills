@@ -33,20 +33,29 @@ from __future__ import annotations
 import pytest
 
 from ea_census import (
+    DRIFT_CONNECTOR_NAME_NOT_BOUND,
+    DRIFT_CONNECTOR_UNBOUND,
     DRIFT_DECLARED_UNUSED,
+    DRIFT_ELEMENT_MULTIPLE_DECLARED,
     DRIFT_ENUM_DECLARED_UNUSED,
     DRIFT_ENUM_OBSERVED_UNDECLARED,
+    DRIFT_FOREIGN_LANGUAGE,
     DRIFT_METACLASS_MISMATCH,
     DRIFT_OBSERVED_UNDECLARED,
     DRIFT_TAG_NEVER_POPULATED,
     DRIFT_TAG_OBSERVED_UNDECLARED,
+    Drift,
     Entity,
     infer_technology_namespace,
     Stereotype,
     TagStat,
     build_stereotype_index,
+    census_connectors,
     census_elements,
+    compare_connectors_declared_observed,
     compare_declared_observed,
+    connector_guid_of,
+    declared_connector_stereotypes,
     entity_key,
     infer_enum_domain,
     parse_stereotype_blocks,
@@ -427,6 +436,14 @@ def test_declared_but_never_used_is_reported():
     assert (DRIFT_DECLARED_UNUSED, "WBAGovernedElement") in kinds
 
 
+def test_declared_connector_stereotype_is_not_an_unused_element_stereotype():
+    mdg = {"stereotypes": MDG["stereotypes"] + [
+        {"name": "Uses", "base_metaclass": "Dependency", "tagged_values": []}]}
+    c = _census_of([obj("{1}", "Object", "WBADataAsset")],
+                   [stereo_row("{1}", ("WBADataAsset", "%s::WBADataAsset" % NS, ""))])
+    assert "Uses" not in {d.subject for d in compare_declared_observed(c, mdg)}
+
+
 def test_observed_but_never_declared_is_reported():
     c = _census_of([obj("{1}", "Component", "VendorApplication")], [])
     kinds = [(d.kind, d.subject) for d in compare_declared_observed(c, MDG)]
@@ -670,3 +687,299 @@ def test_an_element_with_one_excluded_and_one_kept_stereotype_is_still_placed():
     assert c.placement["{M}"] == ["%s::WBAThing" % NS]
     assert c.excluded_guids == set()
     assert c.excluded_ea_internal["EATool"] == 1
+
+
+# --------------------------------------------------------------------------
+# Connector census (APT-2026-0223)
+# --------------------------------------------------------------------------
+
+CONN_MDG = {
+    "stereotypes": [
+        {"name": "WBADataAsset", "base_metaclass": "Class", "tagged_values": []},
+        {"name": "Uses", "base_metaclass": "Association",
+         "tagged_values": [{"name": "slaTier", "values": ["Gold", "Silver"]},
+                           {"name": "integrationPattern",
+                            "values": ["API", "Batch", "Event", "File"]}]},
+        {"name": "Flows", "base_metaclass": "InformationFlow", "tagged_values": []},
+        {"name": "realizes", "base_metaclass": "Realisation", "tagged_values": []},
+    ]
+}
+
+USES = "%s::Uses" % NS
+
+
+def conn(guid, ctype, stereotype="", cid=None):
+    return {"ea_guid": guid, "Connector_Type": ctype, "Stereotype": stereotype,
+            "Connector_ID": cid}
+
+
+def _conn_census(connectors, *xref_rows):
+    return census_connectors(connectors, build_stereotype_index(list(xref_rows)))
+
+
+def _kinds(drifts):
+    return [(d.kind, d.subject) for d in drifts]
+
+
+def test_connector_provenance_is_fqname_present_not_row_present():
+    """A row with only Name and GUID is ad hoc, exactly as for elements."""
+    c = _conn_census(
+        [conn("{c1}", "Association", "Uses"), conn("{c2}", "Association", "Uses")],
+        stereo_row("{c1}", ("Uses", USES, "{s1}")),
+        stereo_row("{c2}", ("Uses", "", "{s2}")),
+    )
+    by_key = {e.key: e for e in c.entities}
+    assert by_key[USES + "|Association"].is_profile_bound
+    assert not by_key["Uses|Association"].is_profile_bound
+    assert c.provenance_split() == {"profile_bound": 1, "ad_hoc": 1}
+
+
+def test_connector_key_is_stereotype_plus_base_type():
+    c = _conn_census(
+        [conn("{c1}", "Association", "Uses"), conn("{c2}", "Dependency", "Uses")],
+        stereo_row("{c1}", ("Uses", USES, "")),
+        stereo_row("{c2}", ("Uses", USES, "")),
+    )
+    assert sorted(e.key for e in c.entities) == [USES + "|Association", USES + "|Dependency"]
+
+
+def test_connectors_without_a_stereotype_are_counted_by_base_type():
+    c = _conn_census([conn("{c1}", "Association"), conn("{c2}", "Association"),
+                      conn("{c3}", "Dependency")])
+    assert c.untyped_guids == {"{c1}", "{c2}", "{c3}"}
+    assert c.untyped_by_type == {"Association": 2, "Dependency": 1}
+    assert not c.entities
+
+
+def test_connector_with_no_xref_row_falls_back_to_the_bare_column_as_ad_hoc():
+    c = _conn_census([conn("{c1}", "Association", "extends")])
+    assert [(e.key, e.is_profile_bound) for e in c.entities] == [("extends|Association", False)]
+
+
+def test_multi_stereotype_connector_counts_once_per_stereotype():
+    c = _conn_census(
+        [conn("{c1}", "Association", "Uses")],
+        stereo_row("{c1}", ("Uses", USES, ""), ("Requires", "BMM::Requires", "")),
+    )
+    assert c.multi_stereotype_guids == {"{c1}"}
+    assert sorted(c.placement["{c1}"]) == sorted([USES + "|Association",
+                                                  "BMM::Requires|Association"])
+    assert [e.count for e in c.entities] == [1, 1]
+    assert c.total_typed == 1
+    assert c.provenance_split() == {"profile_bound": 2, "ad_hoc": 0}
+
+
+def test_ea_internal_connector_profile_is_excluded_and_counted():
+    c = _conn_census([conn("{c1}", "Association", "link")],
+                     stereo_row("{c1}", ("link", "EAUML::link", "")))
+    assert not c.entities
+    assert c.excluded_guids == {"{c1}"}
+    assert c.excluded_ea_internal == {"EAUML::link": 1}
+
+
+def test_declared_connector_stereotype_never_used_is_reported():
+    c = _conn_census([conn("{c1}", "Association", "Uses")],
+                     stereo_row("{c1}", ("Uses", USES, "")))
+    kinds = _kinds(compare_connectors_declared_observed(c, CONN_MDG, namespace=NS))
+    assert (DRIFT_DECLARED_UNUSED, "Flows") in kinds
+    assert (DRIFT_DECLARED_UNUSED, "realizes") in kinds
+    assert (DRIFT_DECLARED_UNUSED, "Uses") not in kinds
+
+
+def test_element_stereotypes_in_the_same_mdg_are_not_connector_declarations():
+    c = _conn_census([conn("{c1}", "Association", "Uses")],
+                     stereo_row("{c1}", ("Uses", USES, "")))
+    assert "WBADataAsset" not in {d.subject for d in
+                                  compare_connectors_declared_observed(c, CONN_MDG, namespace=NS)}
+
+
+def test_connector_stereotypes_can_be_declared_in_their_own_list():
+    mdg = {"stereotypes": [], "connector_stereotypes": [
+        {"name": "Uses", "base_metaclass": "Association", "tagged_values": []}]}
+    assert list(declared_connector_stereotypes(mdg)) == ["Uses"]
+
+
+def test_ad_hoc_connector_stereotype_is_observed_never_declared():
+    c = _conn_census([conn("{c1}", "Generalization", "extends"),
+                      conn("{c2}", "Generalization", "extends")])
+    found = [d for d in compare_connectors_declared_observed(c, CONN_MDG, namespace=NS)
+             if d.kind == DRIFT_OBSERVED_UNDECLARED]
+    assert [(d.subject, d.detail) for d in found] == [
+        ("extends", "2 ad-hoc connector(s), bound to no profile")]
+
+
+def test_another_languages_connector_stereotype_is_not_reported_as_ad_hoc():
+    c = _conn_census([conn("{c1}", "Dependency", "Requires")],
+                     stereo_row("{c1}", ("Requires", "BMM::Requires", "")))
+    kinds = _kinds(compare_connectors_declared_observed(c, CONN_MDG, namespace=NS))
+    assert (DRIFT_FOREIGN_LANGUAGE, "Requires") in kinds
+    assert (DRIFT_OBSERVED_UNDECLARED, "Requires") not in kinds
+
+
+def test_a_declared_name_carried_ad_hoc_or_from_another_language_is_flagged():
+    """A bare Uses and a BMM::Uses must not pass for the declared Uses."""
+    c = _conn_census(
+        [conn("{c1}", "Association", "Uses"), conn("{c2}", "Association", "Uses"),
+         conn("{c3}", "Association", "Uses"), conn("{c4}", "Association", "Uses")],
+        stereo_row("{c1}", ("Uses", USES, "")),
+        stereo_row("{c2}", ("Uses", USES, "")),
+        stereo_row("{c3}", ("Uses", "", "")),
+        stereo_row("{c4}", ("Uses", "BMM::Uses", "")),
+    )
+    found = [d for d in compare_connectors_declared_observed(c, CONN_MDG, namespace=NS)
+             if d.kind == DRIFT_CONNECTOR_NAME_NOT_BOUND]
+    assert len(found) == 1
+    assert found[0].guids == ("{c3}", "{c4}")
+    assert "1 ad hoc, 1 bound to BMM" in found[0].detail
+
+
+def test_a_fully_governed_declared_connector_stereotype_is_not_flagged():
+    c = _conn_census([conn("{c1}", "Association", "Uses")],
+                     stereo_row("{c1}", ("Uses", USES, "")))
+    assert not [d for d in compare_connectors_declared_observed(c, CONN_MDG, namespace=NS)
+                if d.kind == DRIFT_CONNECTOR_NAME_NOT_BOUND]
+
+
+def test_connector_base_type_mismatch_is_reported():
+    c = _conn_census([conn("{c1}", "Dependency", "Uses")],
+                     stereo_row("{c1}", ("Uses", USES, "")))
+    found = [d for d in compare_connectors_declared_observed(c, CONN_MDG, namespace=NS)
+             if d.kind == DRIFT_METACLASS_MISMATCH]
+    assert len(found) == 1
+    assert "declares base type Association" in found[0].detail
+
+
+def test_qualified_name_with_no_fqname_is_its_own_finding_with_guids():
+    """`Name=WBA::Uses` and no `FQName=`: a data defect the build stops on."""
+    c = _conn_census(
+        [conn("{c1}", "Association", "Uses"), conn("{c2}", "Association", "Uses"),
+         conn("{c3}", "Association", "Uses")],
+        stereo_row("{c1}", ("WBA::Uses", "", "{s1}")),
+        stereo_row("{c2}", ("WBA::Uses", "", "{s2}")),
+        stereo_row("{c3}", ("Uses", USES, "{s3}")),
+    )
+    drifts = compare_connectors_declared_observed(c, CONN_MDG, namespace=NS)
+    found = [d for d in drifts if d.kind == DRIFT_CONNECTOR_UNBOUND]
+    assert len(found) == 1
+    assert found[0].subject == "WBA::Uses"
+    assert found[0].guids == ("{c1}", "{c2}")
+    # Distinct from ordinary ad hoc use: not also reported as undeclared.
+    assert (DRIFT_OBSERVED_UNDECLARED, "WBA::Uses") not in _kinds(drifts)
+    # Still counted, as ad hoc, so the totals stay whole.
+    assert c.provenance_split() == {"profile_bound": 1, "ad_hoc": 2}
+
+
+def test_a_bound_connector_stereotype_is_not_unbound():
+    c = _conn_census([conn("{c1}", "Association", "Uses")],
+                     stereo_row("{c1}", ("Uses", USES, "{s1}")))
+    assert not c.unbound_qualified
+    assert not [d for d in compare_connectors_declared_observed(c, CONN_MDG, namespace=NS)
+                if d.kind == DRIFT_CONNECTOR_UNBOUND]
+
+
+def test_plain_ad_hoc_connector_is_not_unbound():
+    c = _conn_census([conn("{c1}", "Generalization", "extends")],
+                     stereo_row("{c1}", ("extends", "", "{s1}")))
+    assert not c.unbound_qualified
+
+
+def test_unbound_qualified_name_in_the_bare_column_is_found_too():
+    c = _conn_census([conn("{c1}", "Association", "WBA::Uses")])
+    assert c.unbound_qualified == {"WBA::Uses": {"{c1}"}}
+
+
+def test_connector_tags_resolve_through_the_connector_id():
+    connectors = [conn("{c1}", "Association", "Uses", cid=11),
+                  conn("{c2}", "Association", "Uses", cid="12")]
+    c = _conn_census(connectors,
+                     stereo_row("{c1}", ("Uses", USES, "")),
+                     stereo_row("{c2}", ("Uses", USES, "")))
+    tags = [{"ElementID": 11, "Property": "slaTier", "VALUE": "Gold"},
+            {"ElementID": "12", "Property": "slaTier", "VALUE": ""},
+            {"ElementID": 99, "Property": "slaTier", "VALUE": "Gold"},
+            {"ElementID": None, "Property": "slaTier", "VALUE": "Gold"}]
+    stats = tag_coverage(c.entities[0], tags, connector_guid_of(connectors))
+    assert [(s.tag, s.present, s.populated) for s in stats] == [("slaTier", 2, 1)]
+
+
+def test_connector_tag_populated_but_never_declared_is_reported():
+    key = USES + "|Association"
+    c = _conn_census([conn("{c1}", "Association", "Uses")],
+                     stereo_row("{c1}", ("Uses", USES, "")))
+    st = TagStat(tag="costCentre", populated=1)
+    st.values.update(["4410"])
+    found = [d for d in compare_connectors_declared_observed(c, CONN_MDG, {key: [st]},
+                                                             namespace=NS)
+             if d.kind == DRIFT_TAG_OBSERVED_UNDECLARED]
+    assert [(d.subject, d.detail) for d in found] == [
+        ("Uses.costCentre", "populated on 1 connector(s), not declared")]
+
+
+def test_connector_tag_declared_but_never_populated_is_reported():
+    key = USES + "|Association"
+    c = _conn_census([conn("{c1}", "Association", "Uses")],
+                     stereo_row("{c1}", ("Uses", USES, "")))
+    st = TagStat(tag="slaTier", present=1)
+    found = [d for d in compare_connectors_declared_observed(c, CONN_MDG, {key: [st]},
+                                                             namespace=NS)
+             if d.kind == DRIFT_TAG_NEVER_POPULATED]
+    assert len(found) == 1
+    assert found[0].subject == "Uses.slaTier"
+    assert "present on 1 connector(s), populated on none" in found[0].detail
+
+
+def test_connector_enum_value_outside_the_declared_domain_is_reported():
+    key = USES + "|Association"
+    c = _conn_census([conn("{c1}", "Association", "Uses")],
+                     stereo_row("{c1}", ("Uses", USES, "")))
+    st = TagStat(tag="slaTier", present=1, populated=1)
+    st.values.update(["Bronze"])
+    kinds = _kinds(compare_connectors_declared_observed(c, CONN_MDG, {key: [st]}, namespace=NS))
+    assert (DRIFT_ENUM_OBSERVED_UNDECLARED, "Uses.slaTier") in kinds
+    assert (DRIFT_ENUM_DECLARED_UNUSED, "Uses.slaTier") in kinds
+
+
+def test_connector_drift_output_is_deterministic():
+    c = _conn_census([conn("{c1}", "Generalization", "extends"),
+                      conn("{c2}", "Association", "WBA::Uses")])
+    assert (compare_connectors_declared_observed(c, CONN_MDG)
+            == compare_connectors_declared_observed(c, CONN_MDG))
+
+
+def test_connector_census_does_not_change_the_element_path():
+    """Element findings are the same whether or not the MDG lists connectors."""
+    c = _census_of([obj("{1}", "Class", "WBADataAsset")],
+                   [stereo_row("{1}", ("WBADataAsset", "%s::WBADataAsset" % NS, ""))])
+    assert [d for d in compare_declared_observed(c, MDG)] == [
+        Drift(DRIFT_DECLARED_UNUSED, "WBAGovernedElement",
+              "declared in the technology, no instances in the repository")]
+
+
+# --------------------------------------------------------------------------
+# Elements carrying two declared stereotypes (APT-2026-0304)
+# --------------------------------------------------------------------------
+
+def test_element_with_two_declared_stereotypes_is_its_own_finding_with_guids():
+    c = _census_of(
+        [obj("{1}", "Class", "WBADataAsset"), obj("{2}", "Class", "WBADataAsset"),
+         obj("{3}", "Class", "WBADataAsset")],
+        [stereo_row("{1}", ("WBADataAsset", "%s::WBADataAsset" % NS, ""),
+                    ("WBAGovernedElement", "%s::WBAGovernedElement" % NS, "")),
+         stereo_row("{2}", ("WBAGovernedElement", "%s::WBAGovernedElement" % NS, ""),
+                    ("WBADataAsset", "%s::WBADataAsset" % NS, "")),
+         stereo_row("{3}", ("WBADataAsset", "%s::WBADataAsset" % NS, ""))])
+    found = [d for d in compare_declared_observed(c, MDG)
+             if d.kind == DRIFT_ELEMENT_MULTIPLE_DECLARED]
+    assert len(found) == 1
+    assert found[0].subject == "WBADataAsset + WBAGovernedElement"
+    assert found[0].guids == ("{1}", "{2}")
+
+
+def test_a_declared_plus_a_foreign_stereotype_is_not_a_doubly_declared_element():
+    c = _census_of(
+        [obj("{1}", "Class", "WBADataAsset")],
+        [stereo_row("{1}", ("WBADataAsset", "%s::WBADataAsset" % NS, ""),
+                    ("Note", "TOGAF::Note", ""))])
+    assert c.multi_stereotype_guids == {"{1}"}
+    assert not [d for d in compare_declared_observed(c, MDG)
+                if d.kind == DRIFT_ELEMENT_MULTIPLE_DECLARED]

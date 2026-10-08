@@ -288,8 +288,8 @@ multi-stereotype placements.
 Values outside a declared enumeration are reported in `manifest.json` under `domain_violations`
 and in the data dictionary. They are findings, not load failures.
 
-Connector stereotype provenance is queryable even though the census does not report it as drift
-(APT-2026-0223):
+Connector stereotype provenance is reported as drift by the census
+(`compare_connectors_declared_observed`) and is also queryable in the database:
 
 ```sql
 SELECT stereotype, COUNT(*) AS n

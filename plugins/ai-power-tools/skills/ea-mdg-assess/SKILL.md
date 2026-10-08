@@ -79,6 +79,9 @@ from ea_census import build_stereotype_index, census_elements, tag_coverage
 census = census_elements(objects, build_stereotype_index(xrefs))
 ```
 
+Connectors have the same census: `census_connectors(connectors, index)` and
+`compare_connectors_declared_observed(census, mdg)`.
+
 **The same census has a second consumer.** `ea-reporting-database` runs it to decide what tables a
 reporting database gets. If the ask is a *queryable extract* of the repository rather than a
 *technology* generated from it, go there instead — the census work is identical and only the output

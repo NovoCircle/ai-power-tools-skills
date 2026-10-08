@@ -61,7 +61,7 @@
         "_shared/references/westbrook-example.md": "48a4a968b8538e9c06b4b4445bfaecb9e9ded8d9dad06ded66daab0ca5cb96b5",
         "_shared/tools/ddl.py": "7dafe7fb35c29100ce70f54f475c4637f3014f789bbb17a9dc653769a777da39",
         "_shared/tools/dictionary.py": "1442d14d9c74ad8e7bc7ead17629f7756962538ad5f919bc7e5fc23ff3ad449d",
-        "_shared/tools/ea_census.py": "2ce1c555e3a75c020dc1c6f35afb33cec8fe67155ed2fe06f173ca40efe563d7",
+        "_shared/tools/ea_census.py": "7dc1710b6caa3a28f7fcf2872a1a6c986a612b9dbce8e9541b48d0b7d813befe",
         "_shared/tools/extract.py": "9bb5dce2353bd09e74ae27d21d471e63dff50334329f290f47dc976b05285309",
         "_shared/tools/frame.py": "31cf98c6e860d7ee8c4b24b76c5b646ff3c7e4d44578e4338c6d1d90f84d504e",
         "_shared/tools/governance_gap.py": "5315a2aabfb0dd97b26cfe4cd753bbcfb46158ff44c76b52e78aee36b2f83e45",
@@ -76,7 +76,7 @@
         "_shared/tools/sql_views.py": "57f4432901dda0be22c7b1491456ea57097c753f03f49678020a4b84c66b455c",
         "_shared/tools/test_ddl.py": "4aacaf1819268ab0da21e2678fea7d6ec0b6beb6a27cea9e5ffb9f59d0e685e5",
         "_shared/tools/test_dictionary.py": "fdc9bf811dd097a1c7499d2740c6cb39789238ec65a08377be8f14edef7e376d",
-        "_shared/tools/test_ea_census.py": "3213f816d8f22c564e98b9d6306cae5a45e3afeb17ba83b3c026fef298063e38",
+        "_shared/tools/test_ea_census.py": "3cf2d721daaad719558885af90a0e86d34091578104adbea976ab42a266043e5",
         "_shared/tools/test_extract.py": "13b61f5812068afe0f3a535fd6ef204c6e96c808d6708d3df6dd67441ac39e04",
         "_shared/tools/test_frame.py": "e2b52f577977a998cdf82e6944217e990fc10d46e07c3aad7ca8832328bb761e",
         "_shared/tools/test_governance_gap.py": "3a26a96a92687dfce672e37aca582041613e35d1a00c60014f15fc06e8c72fb2",
@@ -298,7 +298,7 @@
         "ea-mdg-assess/references/verification-walkthrough.md"
       ],
       "sha256": {
-        "ea-mdg-assess/SKILL.md": "f4196ac684e483fe75bee81b088a8235d055cff2d8633087e41b11a8d014544e",
+        "ea-mdg-assess/SKILL.md": "8a34962a7f169e27d96a0c5ab1bd6fbcd848bc0542988935bc2a5d17f91d9784",
         "ea-mdg-assess/references/three-states.md": "8de928edaab2da95eebf2c945dd03d98edfc365f8eeb34effca0e74d5f722592",
         "ea-mdg-assess/references/verification-walkthrough.md": "a98249cc9934336eb9931ec52391df87fff2fae294354c722dab6ccee513b95f"
       }
@@ -449,10 +449,10 @@
         "ea-reporting-database/references/the-schema.md"
       ],
       "sha256": {
-        "ea-reporting-database/SKILL.md": "6aea54501210e5d5da3345785ed7452e504d3dfb85146d31887f7cc0ef2aa6ea",
+        "ea-reporting-database/SKILL.md": "25a0bf9b48711fee31796986a81c289a41a48eae84e794c693ba63ac30334fa2",
         "ea-reporting-database/references/the-extract-snapshot.md": "b786f8dbb2c86f4f0b96700c3f0e7f659d0854ff6810a7d9ce5c53f965d5e74e",
         "ea-reporting-database/references/the-governance-gate.md": "562caba37587129e5bc2b352a8825195abe2db6a078159828f88bfa38a929d66",
-        "ea-reporting-database/references/the-schema.md": "04dfbb9da6d24b820a1b098a80e67287f690d8d1898f3eb2fca685269546176f"
+        "ea-reporting-database/references/the-schema.md": "4d2cf4e89da013b847dae50b9c5b23090057cd9f22b794acab5d82a5cfa58d97"
       }
     },
     {
