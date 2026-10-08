@@ -298,15 +298,15 @@
       "name": "ea-mdg-deploy",
       "title": "ea-mdg-deploy",
       "description": "Deploy and test an EA MDG Technology",
-      "version": "1.3.0",
-      "min_server_version": "1.0.3",
+      "version": "1.3.1",
+      "min_server_version": "3.6.0",
       "files": [
         "ea-mdg-deploy/SKILL.md",
         "ea-mdg-deploy/references/in-model-locations.md"
       ],
       "sha256": {
-        "ea-mdg-deploy/SKILL.md": "7d4cfdb8809580c5da29ecdb02bb2ded9e273cbe70e71de942481fb9e46454ce",
-        "ea-mdg-deploy/references/in-model-locations.md": "8182bdc9e080224c8b37fcb7ecf5851d029dc9c5a38b4769fe8f4ba61cb57e7e"
+        "ea-mdg-deploy/SKILL.md": "17b2bc9c901d4e5ec7d0796a0368a340b908ff4173d0e1964541be17922ef5b3",
+        "ea-mdg-deploy/references/in-model-locations.md": "6905539672d5831f329dcdc70afdab8c19b29dbcfb6bce029fbee9cc0e4e2bc6"
       }
     },
     {
@@ -345,8 +345,8 @@
       "name": "ea-modeling",
       "title": "ea-modeling",
       "description": "Build EA models via the MCP server \u2014 phases, defects, verification",
-      "version": "1.2.4",
-      "min_server_version": "3.0.0",
+      "version": "1.2.5",
+      "min_server_version": "3.6.0",
       "files": [
         "ea-modeling/SKILL.md",
         "ea-modeling/references/class-modeling.md",
@@ -363,7 +363,7 @@
         "ea-modeling/SKILL.md": "b672138a8992b405122a92e9b69a3063aecee04c522115d405587f69a237e8e5",
         "ea-modeling/references/class-modeling.md": "25db3027ad038312fec8268b2af7b5918fb4b70134fb708bb55d82c3e281214c",
         "ea-modeling/references/diagnostics_and_ui.md": "cfc1304b820bfe63fdb99602ad99ea0a411092aaf707a7795f99d2600a709645",
-        "ea-modeling/references/diagrams_and_connectors.md": "f646220ca3971190f0039719c9df20e68be4154f6467743dd320d6164a8313c1",
+        "ea-modeling/references/diagrams_and_connectors.md": "d708808cf7f59daa0159a57cf71e1210fc1f5511f39f03a5f4dc9a11f2c9dab6",
         "ea-modeling/references/element_creation.md": "785970cd157d6517e400a3d1997f4e84e4a04e8ded6cc5300e69c76f2e1c20f0",
         "ea-modeling/references/package_and_defects.md": "2caaada73b4a77d2b4fea6190ff4b66f4a565e4cd366b4c614d99b3ae34ee8b5",
         "ea-modeling/references/sql_schema.md": "b59d3c2407d6e47a73df63e6b12aeb81823cf23b4c3936496caa440fbeb5b7b6",
@@ -389,15 +389,15 @@
       "name": "ea-power-bi",
       "title": "EA - Power BI",
       "description": "Put an EA repository into Power BI as a generated semantic model - a complete .pbip project with TMDL, deliberately defined relationships, graph-traversal measures and the plumbing hidden - over Parquet from a reporting database or Parquet emitted straight from EA. Asks which path the customer's estate allows, and says plainly that the result is a snapshot.",
-      "version": "1.0.0",
-      "min_server_version": "3.0.0",
+      "version": "1.0.1",
+      "min_server_version": "3.6.0",
       "files": [
         "ea-power-bi/SKILL.md",
         "ea-power-bi/references/measured-power-bi-behavior.md",
         "ea-power-bi/references/the-path-choice.md"
       ],
       "sha256": {
-        "ea-power-bi/SKILL.md": "0d26fa2241a3c67ab475d1f98340a4433b3345ed9f6cc49ce4d89b7f9073bf94",
+        "ea-power-bi/SKILL.md": "579beb19e63f361867964e753ed179a20c0c214355bdaf12a1f141cee811ff4c",
         "ea-power-bi/references/measured-power-bi-behavior.md": "f17495e47283d2b8924513ecd1d76a117d62ccc9ccafa09971d7c92552c940b8",
         "ea-power-bi/references/the-path-choice.md": "19342a6c6a336df225eee8e92bfff5b4794866a2f2a4eecc2db5f28c6a0fbbaf"
       }
@@ -406,8 +406,8 @@
       "name": "ea-reporting-database",
       "title": "EA - reporting database",
       "description": "Build a queryable relational database from an EA repository - elements, relationships, tagged values, attributes and diagram placements, typed by the technology that governs them - and reconcile it back against the repository. SQLite, with a data dictionary and an issued-SQL log.",
-      "version": "1.1.2",
-      "min_server_version": "3.0.0",
+      "version": "1.1.3",
+      "min_server_version": "3.6.0",
       "files": [
         "ea-reporting-database/SKILL.md",
         "ea-reporting-database/references/the-extract-snapshot.md",
@@ -418,7 +418,7 @@
         "ea-reporting-database/references/troubleshooting.md"
       ],
       "sha256": {
-        "ea-reporting-database/SKILL.md": "73ca70a32a6a463cac6a27921b29f58974d517b8dfa3b9ec712bd0459a7d5e7b",
+        "ea-reporting-database/SKILL.md": "f41876ac1416b4212aa45a7dcd04796619c71f0010f98bb6cd80c88d3e633435",
         "ea-reporting-database/references/the-extract-snapshot.md": "a1255a4e185310a64570a7d6f6d67cbe24bca79eb07a14e97ce04820a8c0f0b9",
         "ea-reporting-database/references/the-governance-gate.md": "ddd3c32b0bd37e311d61b0e346e294b9bbddd9395d266a943fb1770648335437",
         "ea-reporting-database/references/the-inclusion-choice.md": "094d74606eabfa0bd4001b0a88dad62ef4f53176a21b1f4a04e9686a41ec3e3a",

@@ -48,12 +48,12 @@ path is shadowing the copy you meant to test.
 
 | Operation | Use |
 |-----------|-----|
-| In the model, from an «mdg technology» package (preferred; server later than 3.5.0) | `ea_mdg(operation="install_mdg", params={"scope": "model", "package_id": <id>})` |
+| In the model, from an «mdg technology» package (preferred; server 3.6.0 or later) | `ea_mdg(operation="install_mdg", params={"scope": "model", "package_id": <id>})` |
 | In the model, from an XML file, whole technology | EA UI: Specialize ▸ Publish Technology ▸ Import MDG Technology ▸ **Import to Model** (no COM route exists) |
 | In the model, legacy route (no toolbox pages) | `ea_mdg(operation="install_mdg", params={"scope": "embedded", "xml_path_or_content": "<mdg-dir>\\WBA_MDG.xml"})` — read `not_stored` in the response |
 | Application-level install | `ea_mdg(operation="install_mdg", params={"scope": "user", "xml_path_or_content": "<mdg-dir>\\WBA_MDG.xml"})` |
 | Verify MDG loaded **and enabled** | COM `repo.IsTechnologyLoaded(tech_id)` and `repo.IsTechnologyEnabled(tech_id)` with your technology id — a technology disabled in Manage Technology still reports loaded |
-| Verify what the model stores | `ea_mdg(operation="get_embedded_mdgs", params={})` (server later than 3.5.0: both Locations), then EA UI → Specialize → Technologies → Manage Technology |
+| Verify what the model stores | `ea_mdg(operation="get_embedded_mdgs", params={})` (server 3.6.0 or later: both Locations), then EA UI → Specialize → Technologies → Manage Technology |
 | Dismiss overwrite dialog | Computer use → screenshot → click Yes → screenshot again |
 | Fix wrong `Object_Type` in database | COM `repo.Execute()` DML (NOT `elem.Type` setter) |
 
@@ -61,7 +61,7 @@ path is shadowing the copy you meant to test.
 
 ## Deploy: In the Model at Location: Model (preferred)
 
-**From an «mdg technology» source package** (server later than 3.5.0):
+**From an «mdg technology» source package** (server 3.6.0 or later):
 
 ```
 ea_mdg(operation="install_mdg", params={"scope": "model", "package_id": <id>})
@@ -273,8 +273,8 @@ Every COM reference held from before the restart is stale; reconnect and re-quer
 
 After deploying and restarting EA, verify each of these:
 
-> **`get_embedded_mdgs` and server versions.** Up to 3.5.0 it read only a document type none of
-> EA 17.1's import routes writes, so it returned empty for every in-model technology. Later servers list each
+> **`get_embedded_mdgs` and server versions.** Before 3.6.0 it read only a document type none of
+> EA 17.1's import routes writes, so it returned empty for every in-model technology. Servers 3.6.0 and later list each
 > copy the model stores, at Location `Model` and `Project`, with the version each declares.
 
 **Verification order (most reliable first):**
@@ -282,7 +282,7 @@ After deploying and restarting EA, verify each of these:
 2. **EA UI:** Specialize → Technologies → Manage Technology → exactly one entry for the id, at the
    Location you installed to (**Model** for `scope="model"` or Import to Model, **Project** for `scope="embedded"`)
 3. **MCP:** `ea_mdg(operation="get_mdg_from_runtime", params={"tech_id": "<id>"})` — `source: "live"`;
-   on a server later than 3.5.0 also `provenance.location` as expected and no `provenance.also_stored`
+   on a server 3.6.0 or later also `provenance.location` as expected and no `provenance.also_stored`
 
 ### 1. COM check (scripted)
 ```python
