@@ -387,3 +387,33 @@ def test_rewriting_leaves_an_existing_report_untouched(defn, tmp_path):
     assert {p: p.read_bytes() for p in report.rglob("*") if p.is_file()} == before
     assert table.read_bytes() != b"stale"
     assert (tmp_path / "P.pbip").exists()
+
+
+@pytest.mark.parametrize("name", ["", ".", "..", "../P", "..\\P", "a/b", "C:P", "P.", "P ", "P?", 'P"', "P\x00"])
+def test_a_name_that_is_not_a_plain_file_name_is_refused(defn, tmp_path, name):
+    out = tmp_path / "out"
+    out.mkdir()
+    keep = tmp_path / "P.SemanticModel" / "definition" / "keep.tmdl"
+    keep.parent.mkdir(parents=True)
+    keep.write_text("x")
+    with pytest.raises(ValueError, match="plain file name"):
+        write_project(defn, out, name)
+    assert keep.exists() and not any(out.iterdir())
+
+
+def test_a_name_with_spaces_is_accepted(defn, tmp_path):
+    write_project(defn, tmp_path, "EA Reporting")
+    assert (tmp_path / "EA Reporting.pbip").exists()
+
+
+def test_a_file_path_leaving_the_output_folder_is_refused_before_anything_is_deleted(defn, tmp_path, monkeypatch):
+    import powerbi_model
+    out = tmp_path / "out"
+    write_project(defn, out, "P")
+    stale = out / "P.SemanticModel" / "definition"
+    files = project_files_from_definition(defn, "P")
+    files["P.SemanticModel/definition/tables/../../../../escaped.tmdl"] = "x"
+    monkeypatch.setattr(powerbi_model, "project_files_from_definition", lambda *a, **k: files)
+    with pytest.raises(ValueError, match="outside the output folder"):
+        write_project(defn, out, "P")
+    assert stale.exists() and not (tmp_path / "escaped.tmdl").exists()
