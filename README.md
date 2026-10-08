@@ -283,9 +283,15 @@ so the tree goes in first and the server release is cut on it:
 8. **Install it the customer's way** — `claude plugin marketplace add` and `install` on a
    machine that has never had the plugin. Nothing above exercises that path.
 
-To roll back, revert the step 5 commit on `main`. Claude Code updates an installed plugin
-whenever its version differs from the cached one, so pointing the entry at the previous release
-takes installs back to it.
+**Rolling back.** Never revert the step 5 commit on its own. The pin changes only the entry's
+source, so reverting it puts the entry back on `./plugins/ai-power-tools` — this repository's
+development tree, the defect this process exists to prevent — still labeled with the new
+version, and no installed plugin moves, because Claude Code compares the version in
+`plugin.json`. 3.6.0 is the first pinned release, so there is no earlier pinned tree to return
+to: fix forward with a new release. From the next release on, roll back on a branch that
+restores the previous release's version in the three version files and re-runs
+`publish-plugin.py --pin-marketplace` against that release's tag, then merge; installs follow
+because the version differs.
 
 Pinned rather than `releases/latest` on purpose: a floating reference would mean a later server
 release silently changes which binary every already-installed plugin pulls, including for
