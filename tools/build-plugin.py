@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 """Package the plugin as `dist/ai-power-tools.plugin` for the Cowork channel.
 
-Claude Code installs this plugin from the marketplace by cloning the repo, so it
-needs nothing built. Cowork does not read that marketplace: the desktop app
+Claude Code installs this plugin from the marketplace, which pins the released
+copy of this tree in the releases repository (see tools/publish-plugin.py,
+which reads its tree out of the archive built here). Cowork does not read that
+marketplace: the desktop app
 enumerates Cowork's plugins itself from its own stores, one of which is fed by
 an in-app upload that accepts a `.zip` or `.plugin` archive. This script builds
 that archive.
@@ -13,7 +15,8 @@ sits at the top level.
 
 The skill content is not copied or transformed: both channels ship the exact
 bytes under `plugins/ai-power-tools/`, so there is one source of truth and no
-way for the two to drift.
+way for the two to drift. `version_problems` and `plugin_files` are imported by
+publish-plugin.py for the same reason.
 """
 from __future__ import annotations
 
@@ -40,32 +43,45 @@ def _is_build_residue(p: Path) -> bool:
             or p.suffix in _RESIDUE_SUFFIXES)
 
 
-def main() -> int:
-    plugin_json = PLUGIN / ".claude-plugin" / "plugin.json"
+def version_problems(plugin: Path = PLUGIN, manifest: Path = MANIFEST,
+                     marketplace: Path = ROOT / ".claude-plugin" / "marketplace.json"
+                     ) -> tuple[str | None, list[str]]:
+    """`(plugin_version, problems)` for the three files that carry the version."""
+    plugin_json = plugin / ".claude-plugin" / "plugin.json"
     if not plugin_json.is_file():
-        print(f"Missing {plugin_json}", file=sys.stderr)
-        return 1
+        return None, [f"Missing {plugin_json}"]
 
     # The two channels are versioned from different files, so they can drift.
     # A customer comparing them would see the same skills under two version
     # numbers, with no way to tell which is newer. Refuse instead.
     plugin_version = json.loads(plugin_json.read_text(encoding="utf-8"))["version"]
-    bundle_version = json.loads(MANIFEST.read_text(encoding="utf-8"))["bundle_version"]
+    bundle_version = json.loads(manifest.read_text(encoding="utf-8"))["bundle_version"]
     if plugin_version != bundle_version:
-        print(f"Version drift: plugin.json {plugin_version} != "
-              f"manifest.json bundle_version {bundle_version}", file=sys.stderr)
-        return 1
+        return plugin_version, [f"Version drift: plugin.json {plugin_version} != "
+                                f"manifest.json bundle_version {bundle_version}"]
 
-    marketplace = ROOT / ".claude-plugin" / "marketplace.json"
     entry = next((p for p in json.loads(marketplace.read_text(encoding="utf-8"))["plugins"]
                   if p["name"] == "ai-power-tools"), None)
     if entry is None or entry.get("version") != plugin_version:
-        print(f"Version drift: marketplace.json entry != plugin.json "
-              f"{plugin_version}", file=sys.stderr)
+        return plugin_version, [f"Version drift: marketplace.json entry != plugin.json "
+                                f"{plugin_version}"]
+    return plugin_version, []
+
+
+def plugin_files(plugin: Path = PLUGIN) -> list[Path]:
+    """Every file that ships in the plugin, in archive order."""
+    return sorted(p for p in plugin.rglob("*")
+                  if p.is_file() and not _is_build_residue(p))
+
+
+def main() -> int:
+    plugin_version, problems = version_problems()
+    if problems:
+        for p in problems:
+            print(p, file=sys.stderr)
         return 1
 
-    files = sorted(p for p in PLUGIN.rglob("*")
-                   if p.is_file() and not _is_build_residue(p))
+    files = plugin_files()
     if not files:
         print(f"No files under {PLUGIN}", file=sys.stderr)
         return 1

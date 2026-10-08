@@ -250,7 +250,8 @@ def main() -> int:
     staged = stage(pairs, args.out)
 
     # The packaged plugin ships in the same release as the flat bundle assets:
-    # the marketplace serves Claude Code from the repo, but Cowork is fed by
+    # the marketplace serves Claude Code the released tree that
+    # tools/publish-plugin.py pins in the releases repository, but Cowork is fed by
     # uploading this file, and a release without it leaves that channel with
     # nothing to install. Built by tools/build-plugin.py.
     plugin = os.path.join(ROOT, "dist", "ai-power-tools.plugin")

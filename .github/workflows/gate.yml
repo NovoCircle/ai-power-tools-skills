@@ -27,6 +27,11 @@ jobs:
         # everything, so its own result means nothing until these pass.
         run: python -m pytest tools/test_gate.py -q
 
+      - name: Test the plugin release tool
+        # publish-plugin.py is what keeps the marketplace on a released tree
+        # rather than this repository's main. Hermetic: local git, no network.
+        run: python -m pytest tools/test_publish_plugin.py -q
+
       - name: Run the gate
         run: python tools/gate.py
 
