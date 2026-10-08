@@ -82,7 +82,7 @@ Installing a technology into a repository that already has content it will recla
 ```python
 ea_mdg(operation="install_mdg", params={
     "xml_path_or_content": "<path to WBA_MDG.xml>",
-    "scope": "model",
+    "scope": "embedded",
 })
 ```
 

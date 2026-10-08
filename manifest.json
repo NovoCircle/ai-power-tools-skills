@@ -65,7 +65,7 @@
       "name": "ea-change-management",
       "title": "ea-change-management",
       "description": "Baselines and change history \u2014 create, list, compare and apply baselines, offer a baseline before a significant change, review and clean up accumulated baselines, and answer what changed, when and by whom",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "min_server_version": "2.3.0",
       "files": [
         "ea-change-management/SKILL.md",
