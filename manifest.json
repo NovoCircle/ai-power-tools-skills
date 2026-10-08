@@ -418,12 +418,12 @@
         "ea-reporting-database/references/troubleshooting.md"
       ],
       "sha256": {
-        "ea-reporting-database/SKILL.md": "646a5c7185fd53f96cc0a91a641e18cca680bdc0ef704d6585304202abefdba1",
-        "ea-reporting-database/references/the-extract-snapshot.md": "c4b55aa86f15abced7178ad18204a34426923ed05481bda01b2e2edb2643fdef",
+        "ea-reporting-database/SKILL.md": "23d846e912d6c3540f37f316571c623f34e933d479844bfc60383bd1e3aa7896",
+        "ea-reporting-database/references/the-extract-snapshot.md": "a1255a4e185310a64570a7d6f6d67cbe24bca79eb07a14e97ce04820a8c0f0b9",
         "ea-reporting-database/references/the-governance-gate.md": "d35129427436407524cc9cdc2f79e5757605f935f1174801a3536e6c71ae08a5",
         "ea-reporting-database/references/the-inclusion-choice.md": "20162b3b85129bb28e7889852e587eb71d826b3e7d610a50bab10dccd09852e4",
-        "ea-reporting-database/references/the-profile.md": "6e9c3852066dbd68ba2d52319a455ebd38d86db7d7cac6f593add10d11f68260",
-        "ea-reporting-database/references/the-schema.md": "e10efe628df0bf29cdad2030bf7c4c011cd5fca5e18db1e0b500d4c4e5a76bf2",
+        "ea-reporting-database/references/the-profile.md": "3da8cabc76eccde819cf3a3117c7df077a6822200593cb10f8c3ed209d318c98",
+        "ea-reporting-database/references/the-schema.md": "d89f3c0a4d7b627a4f1a13904a6946a6b88fe9e83b5bd64b1e634a93ac7c6ad4",
         "ea-reporting-database/references/troubleshooting.md": "0c797d34a925528a94970ecfbe4fdb392fe96578a930d8ee3301b8444f785be6"
       }
     },

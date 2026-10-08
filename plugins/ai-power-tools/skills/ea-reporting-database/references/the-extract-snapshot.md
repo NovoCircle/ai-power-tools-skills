@@ -35,7 +35,8 @@ beside the profile:
 | The **post-cut rows**: every row that was loaded, `(excluded)` stubs included | What the build was made from |
 | The scope and the counts: rows extracted and rows kept, packages kept, objects cut, crossings by kind, stubs | What was cut, without the cut content |
 | The crossings and the preflight flags | What the user continued past |
-| The extract log: rows and milliseconds per table | Timings for the next run to compare against |
+| The run id and the time of the extract | Which extract a build used |
+| The extract log: for each table, the SQL issued, the rows read and the milliseconds | Exactly what was asked of EA, and timings for the next run to compare against |
 | The technology: id, version, where it was read from, and its definition | So a replay needs no EA and no installed technology |
 
 **Only the last run's extract is kept.** Each build replaces it. One run replacing itself is not a
@@ -62,7 +63,7 @@ ea_repository(operation="replay_reporting_database", params={"profile_path": "<p
   business views from the kept rows, and the result matches the original build. On the Parquet
   path it recomputes the business tables' rows and the definition; the local step in `ea-power-bi`
   then writes the files again.
-- **Says what it consumed.** The result carries `replayed_from`, the path of the extract it used.
+- **Says what it consumed.** The result carries `replayed_from`, the path of the extract it used; the file's `run_id` and `extracted_at` identify the run.
 - **Writes the definition** beside the profile again (`definition_path` overrides it).
 - **Is not available on direct access.** There is no extract to replay; regenerate the views with
   `build_business_layer`.

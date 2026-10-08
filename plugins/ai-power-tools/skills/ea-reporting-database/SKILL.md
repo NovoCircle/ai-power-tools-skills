@@ -32,7 +32,7 @@ works on another:
 |---|---|
 | **Entity tables** | One per element stereotype, named by the technology's alias (`Business Application`), or the stereotype name where there is no alias. Elements outside the technology that the inclusion choice (§2b) admits get a table per observed stereotype, named `... (not in MDG)` |
 | **`Con_` tables** | One per allowed combination of source stereotype, connector stereotype and target stereotype - matching the technology's metamodel diagram one for one. Named `Con_<source table> <connector stereotype> <target table>`. Combinations outside the technology appear only when the inclusion choice admits them, marked `(not in MDG)` |
-| **Tag-row tables** | Only where a column cannot hold the data: tags the technology does not declare, and declared tags of a multi-valued type. Everything else is a typed column on its entity or `Con_` table |
+| **Tag-row tables** | Only where a column cannot hold the data: tags the technology does not declare, and declared tags that hold a list of element references. Everything else is a typed column on its entity or `Con_` table |
 | **Table Directory** | One row per business table: its name, kind, stereotype, alias, description from the technology |
 | **EA's physical tables** | The nine EA tables the business tables read (packages, objects, tagged values, connectors, connector tags, diagrams, diagram placements, attributes, operations), scoped to what the profile includes |
 
@@ -144,7 +144,7 @@ reuses it. Illustration with Westbrook Bank's `WBA` technology; substitute your 
 The parts, and the scope rules (no masking; a new root package is left out and flagged; a stale
 exclusion is flagged): [`references/the-profile.md`](references/the-profile.md). Package GUIDs come from
 `execute_sql`: `SELECT ea_guid, Name, Parent_ID FROM t_package`. Paste `resolve_answer(...).inclusion`
-into `inclusion`. A reporting-database build refuses a database that holds an EA repository's own tables.
+into `inclusion` and `answer.record()` into `inclusion_choice`: without that record a refresh cannot flag drift. A reporting-database build refuses a database that holds an EA repository's own tables.
 
 ---
 
@@ -213,6 +213,7 @@ names an excluded element) and the `(excluded)` stubs they need, then two lists:
   - `new_root_left_out`: a root package created since the profile was saved. It is not included
     until the user adds it.
   - `profile_entry_matches_nothing`: an exclusion (or root) naming a package that no longer exists.
+  - `duplicate_tag_names`: elements with two same-named tags; the layer shows the first.
 
 ### 5.4 Build
 
@@ -308,7 +309,7 @@ alignment summary, timings, or why it stopped. Run ids are kept until the server
 | B | Preflight, extract, cut, load, swap-in, business views |
 | C | Preflight, extract, cut, and rewrites the rows and definition. **The Parquet files and the Power BI project are not rewritten until the local step in `ea-power-bi` runs again** |
 
-**A failed run, or on path B one stopped by its preflight, leaves the previous reporting data
+**A failed run, or one stopped by its preflight (paths B and C), leaves the previous reporting data
 live** and says why.
 
 **Scheduling is an AI agent's job, never Windows Task Scheduler.** A scheduled AI agent - for
@@ -318,9 +319,10 @@ every flag (new roots left out, stale exclusions, unbound connectors, doubly-ste
 elements), timings and any failure. **EA must be running with the repository open on that
 machine**, because the extract is COM; with EA closed the task fails.
 
-A refresh uses the saved inclusion choice and does not ask again. When someone is present, re-run
-the §2b census and `new_since_saved` to flag what the saved choice does not cover. How a published
-Power BI model picks the refresh up: `ea-power-bi` §6.
+A refresh uses the saved inclusion choice and does not ask again, but **it flags drift** when the
+profile holds the `inclusion_choice` record (§4): `not_covered_by_inclusion_choice` (stereotypes
+and connector keys neither in the technology, included, nor excluded) and `mdg_version_changed`.
+Builds return the same flags; show them and re-run §2b. Power BI side: `ea-power-bi` §6.
 
 ---
 
@@ -366,10 +368,8 @@ The five that cost the most; the full list is in [`references/the-schema.md`](re
 - **Windows authentication.** SQL Server is reached with the Windows account running AI Power Tools.
 - **OneLake upload is not yet available** (APT-2026-0362). Parquet is written to a local folder and
   Power BI Desktop imports it.
-- **No tag type is treated as multi-valued yet** (APT-2026-0308); tag-row tables hold undeclared
-  tags only.
-- **`.eapx` (Jet) repositories are untested.** Measured on a local `.qea` file and on a repository
-  behind a cloud connection.
+- **Only a RefGUIDList tag is split into a tag-row table.** A CheckList tag stays a column (`1,1,0`).
+- **`.eapx` (Jet) repositories are untested.** Measured on a local `.qea` and a cloud-connected repository.
 - **No masking.** Exclusion is by whole package.
 
 ---

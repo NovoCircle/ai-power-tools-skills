@@ -72,8 +72,11 @@ Present **only where a column cannot hold the data**:
 
 - tags the technology does not declare (on `(not in MDG)` entities and on any element or connector
   carrying an undeclared tag);
-- declared tags of a multi-valued type - none yet, because no EA 17.1 tag type is treated as
-  multi-valued (APT-2026-0308).
+- declared tags of type **RefGUIDList**, which EA stores as `{guid},{guid},...` in one value. The
+  table has one row per referenced element GUID (`value`), so a report joins it to the entity tables
+  on `ea_guid`. Measured on EA 17.1; no other predefined tag type stores several values.
+  **CheckList stays a column**: it holds the stored flags (`1,1,0`), which mean nothing without the
+  type's item labels.
 
 Named `<table> tags`. Columns: for an entity table, `ea_guid`, `tag`, `value`, `property_id`; for a
 `Con_` table, `connector_guid`, `tag`, `value`. The Table Directory says which tags a tag-row table
@@ -110,7 +113,9 @@ A declared tag becomes a typed column:
 | `decimal`, `double` | real |
 | anything else | text |
 
-Values are trimmed. An empty value on an integer or real column is NULL; on a text column it stays empty. If an element carries the same tag more than once, the column holds the value of the one with the highest property id. **EA writes
+Values are trimmed. An empty value on an integer or real column is NULL; on a text column it stays empty. **Two tags with the same name on one element:** the column shows the first (lowest property id),
+as EA's Properties window does, and the preflight flags `duplicate_tag_names`. **A Memo tag's** value
+is read from its Notes, where EA keeps the text. **EA writes
 NULL and empty text identically, so the two cannot be told apart in any result.** A value that does
 not convert to its declared type is NULL on a typed column, and the value check reports it.
 
@@ -213,9 +218,9 @@ bound to the technology's profile appears only when the inclusion choice admits 
 `(not in MDG)` table. One the technology does not allow and the choice does not admit stays in
 EA's physical tables and is reported by the alignment check.
 
-**A text tag that holds several values is one value in its column.** No EA tag type is treated as
-multi-valued yet, so `GLBA, FFIEC` is a single string: matching it exactly counts it once, and
-`LIKE '%GLBA%'` is what finds both. Say so when a roll-up depends on it.
+**A string tag that holds several values is one value in its column.** Only a RefGUIDList tag is
+split into rows, so `GLBA, FFIEC` in a string tag is a single string: matching it exactly counts it
+once, and `LIKE '%GLBA%'` finds both. Say so when a roll-up depends on it.
 
 **A blank is a blank.** EA writes NULL and an empty string identically, so the two cannot be told
 apart in any result.

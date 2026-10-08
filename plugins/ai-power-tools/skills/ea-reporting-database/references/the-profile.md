@@ -8,6 +8,7 @@ shape. Westbrook Bank's `WBA` technology is an illustration; substitute your own
 | `technology` | The MDG technology id the layer follows. Read from EA in whichever place it is stored (a registered file, Location: Project or Location: Model) |
 | `scope.roots`, `scope.exclude` | Package GUIDs. A whole package subtree is the unit; a renamed or moved package keeps its setting. Find GUIDs with `execute_sql`: `SELECT ea_guid, Name, Parent_ID FROM t_package` |
 | `inclusion` | The answer to the §2b question - paste `resolve_answer(...).inclusion` here. Both lists empty is "only what my MDG defines" |
+| `inclusion_choice` | `answer.record()` from §2b: the option chosen, the gaps excluded, the technology version at the time. Optional, but **save it**: builds and refreshes use it to flag a stereotype or connector key it does not cover (`not_covered_by_inclusion_choice`) and a changed technology version (`mdg_version_changed`) |
 | `target.kind` | `ea_database`, `reporting_database` or `parquet` (§3) |
 | `target.server`, `target.database` | Paths A and B. For A, the EA repository's own database. For B, a separate database: letters, digits, `_` and `-` only, created if it does not exist. A reporting build refuses a database that holds an EA repository's own tables, because it replaces the tables in its target |
 | `target.schema` | The schema the business tables go in. Default `logical` |
