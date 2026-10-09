@@ -7,8 +7,14 @@
   "plugins": [
     {
       "name": "ai-power-tools",
-      "source": "./plugins/ai-power-tools",
-      "version": "3.5.0",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/NovoCircle/ai-power-tools-releases.git",
+        "path": "plugins/ai-power-tools",
+        "ref": "v3.6.0",
+        "sha": "352368142627f9aecd5234bec0fc160e62be8c44"
+      },
+      "version": "3.6.0",
       "description": "AI Power Tools for Sparx EA \u2014 the MCP server and its skills in one install. Modeling, MDG authoring and deployment, validation rulesets, diagram composition, import/export and stakeholder reporting against a Sparx Enterprise Architect repository. Requires Enterprise Architect on Windows."
     }
   ]
