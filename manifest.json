@@ -388,7 +388,7 @@
     {
       "name": "ea-power-bi",
       "title": "EA - Power BI",
-      "description": "Put an EA repository into Power BI as a generated semantic model - a complete .pbip project with TMDL, deliberately defined relationships, graph-traversal measures and the plumbing hidden - over Parquet from a reporting database or Parquet emitted straight from EA. Asks which path the customer's estate allows, and says plainly that the result is a snapshot.",
+      "description": "Put a Sparx EA repository into Power BI as a generated semantic model - a complete .pbip project with TMDL, declared relationships and EA's own tables hidden - reading the business layer that ea-reporting-database builds.",
       "version": "1.0.1",
       "min_server_version": "3.6.0",
       "files": [
@@ -405,7 +405,7 @@
     {
       "name": "ea-reporting-database",
       "title": "EA - reporting database",
-      "description": "Build a queryable relational database from an EA repository - elements, relationships, tagged values, attributes and diagram placements, typed by the technology that governs them - and reconcile it back against the repository. SQLite, with a data dictionary and an issued-SQL log.",
+      "description": "Build the reporting layer for a Sparx EA repository - business tables named and shaped by the technology that governs the model - as SQL views inside the EA database, as a SQL Server reporting database, or as Parquet files, and prove it matches the repository.",
       "version": "1.1.3",
       "min_server_version": "3.6.0",
       "files": [
