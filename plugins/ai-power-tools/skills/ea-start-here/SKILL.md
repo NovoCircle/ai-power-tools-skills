@@ -92,6 +92,7 @@ neither.
 |---|---|
 | Creating or modifying elements, packages, connectors, diagrams in a model | **ea-modeling** |
 | Building click-through navigation diagrams over hierarchical data | **ea-navigation-diagrams** |
+| Putting an icon or image on an element in a diagram (cloud-provider icons, a custom picture) | **ea-modeling**, [`references/diagrams_and_connectors.md`](../ea-modeling/references/diagrams_and_connectors.md) §6 — `find_icon`, `set_element_icon`, `add_image` |
 | Writing an MDG Technology XML by hand — stereotypes, tagged values, toolboxes, Quick Linker | **ea-mdg-author** |
 | Building an MDG from a profile model that already exists inside a repository | **ea-mdg-model-build** |
 | Installing an MDG into a model or machine, and proving it works | **ea-mdg-deploy** |
