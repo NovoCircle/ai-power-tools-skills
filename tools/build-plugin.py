@@ -21,6 +21,7 @@ publish-plugin.py for the same reason.
 from __future__ import annotations
 
 import json
+import re
 import sys
 import zipfile
 from pathlib import Path
@@ -43,10 +44,63 @@ def _is_build_residue(p: Path) -> bool:
             or p.suffix in _RESIDUE_SUFFIXES)
 
 
+#: The skill whose preflight tells the server which release of the skills the
+#: session loaded, and the one spot in it that carries that release. It has to
+#: be in the committed text: the manifest hashes every shipped file, so a build
+#: step that injected the number would make the file differ from its hash.
+STAMP_SKILL = "ea-start-here"
+_STAMP = re.compile(r'skills_version\s*=\s*"([^"]*)"')
+
+
+def stamp_problems(plugin: Path, plugin_version: str) -> list[str]:
+    """The skills-version stamp must be present and equal the plugin version.
+
+    A stamp that lags the plugin makes the server tell customers their skills
+    are out of date when they are not, or say nothing when they are.
+    """
+    skill = plugin / "skills" / STAMP_SKILL / "SKILL.md"
+    if not skill.is_file():
+        return [f"Missing {skill} - it carries the skills-version stamp"]
+    stamps = _STAMP.findall(skill.read_text(encoding="utf-8"))
+    if not stamps:
+        return [f"{STAMP_SKILL}/SKILL.md has no skills_version=\"...\" stamp "
+                f"(expected {plugin_version})"]
+    wrong = sorted({s for s in stamps if s != plugin_version})
+    if wrong:
+        return [f"Version drift: {STAMP_SKILL}/SKILL.md stamps skills_version "
+                f"{', '.join(wrong)} != plugin.json {plugin_version}"]
+    return []
+
+
+def package_problems(plugin: Path = PLUGIN) -> list[str]:
+    """The plugin is skills only: no server declaration, no bundled binary.
+
+    A server declared in `plugin.json` is refused by claude.ai when it is an
+    `.mcpb` URL, and never runs in Claude Desktop chat or Cowork whatever its
+    form; a bundled `bin/` is the same server carried by hand. The server is
+    the Claude Desktop extension, installed separately.
+    """
+    plugin_json = plugin / ".claude-plugin" / "plugin.json"
+    problems = []
+    if plugin_json.is_file():
+        data = json.loads(plugin_json.read_text(encoding="utf-8"))
+        if "mcpServers" in data:
+            problems.append("plugin.json declares mcpServers. The plugin is "
+                            "skills only; the server is the Claude Desktop "
+                            "extension.")
+    if (plugin / "bin").exists():
+        problems.append("The plugin has a top-level bin/. The plugin is skills "
+                        "only and must not carry a server binary.")
+    return problems
+
+
 def version_problems(plugin: Path = PLUGIN, manifest: Path = MANIFEST,
                      marketplace: Path = ROOT / ".claude-plugin" / "marketplace.json"
                      ) -> tuple[str | None, list[str]]:
-    """`(plugin_version, problems)` for the three files that carry the version."""
+    """`(plugin_version, problems)` for the files that carry the version.
+
+    Three version files, plus the skills-version stamp in `ea-start-here`.
+    """
     plugin_json = plugin / ".claude-plugin" / "plugin.json"
     if not plugin_json.is_file():
         return None, [f"Missing {plugin_json}"]
@@ -65,7 +119,7 @@ def version_problems(plugin: Path = PLUGIN, manifest: Path = MANIFEST,
     if entry is None or entry.get("version") != plugin_version:
         return plugin_version, [f"Version drift: marketplace.json entry != plugin.json "
                                 f"{plugin_version}"]
-    return plugin_version, []
+    return plugin_version, stamp_problems(plugin, plugin_version)
 
 
 def plugin_files(plugin: Path = PLUGIN) -> list[Path]:
@@ -76,6 +130,7 @@ def plugin_files(plugin: Path = PLUGIN) -> list[Path]:
 
 def main() -> int:
     plugin_version, problems = version_problems()
+    problems += package_problems()
     if problems:
         for p in problems:
             print(p, file=sys.stderr)
