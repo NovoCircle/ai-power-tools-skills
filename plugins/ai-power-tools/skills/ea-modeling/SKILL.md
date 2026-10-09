@@ -217,8 +217,8 @@ freely. `style` takes exactly four values: `Orthogonal`, `Hierarchical`, `Circul
 rather than a silent fallback to `Orthogonal`. `add_elements_to_diagram_bulk` defaults to
 `layout="auto"` — element coordinates you supplied are kept as given, and when no element
 supplied any, a layout inferred from the diagram type runs (`Hierarchical` for Logical, Class,
-Component and Deployment diagrams; `Sequence` for Activity and BPMN; `Circular` for State;
-`Orthogonal` otherwise, reported in `layout_applied`); pass `layout=None` to skip layout or a
+Component, Deployment, Package and Requirements diagrams; `Sequence` for Activity and Analysis
+(BPMN); `Circular` for State and Statechart; `Orthogonal` otherwise, reported in `layout_applied`); pass `layout=None` to skip layout or a
 style name to force one. Coordinates are not top-level parameters of the bulk call: put
 `left`/`top`/`right`/`bottom` inside each `element_ids` entry
 (`{"element_id": 12, "left": 50, "top": 50, "right": 190, "bottom": 110}`), or use

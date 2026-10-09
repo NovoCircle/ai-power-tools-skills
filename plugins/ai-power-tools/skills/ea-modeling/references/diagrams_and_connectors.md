@@ -120,8 +120,8 @@ Do not retry the same style expecting the old fallback.
 - If **any** element in the call supplied explicit `left` / `top` / `right` / `bottom`
   coordinates, no layout runs and the coordinates you gave are kept.
 - If **none** did, a layout inferred from the diagram type runs after placement: `Hierarchical`
-  for Logical, Class, Component and Deployment diagrams, `Sequence` for Activity and BPMN,
-  `Circular` for State, `Orthogonal` otherwise. The response names it in `layout_applied`.
+  for Logical, Class, Component, Deployment, Package and Requirements diagrams, `Sequence` for
+  Activity and Analysis (BPMN), `Circular` for State and Statechart, `Orthogonal` otherwise. The response names it in `layout_applied`.
 
 The coordinates belong inside each `element_ids` entry, as a dict
 (`{"element_id": 12, "left": 50, "top": 50, "right": 190, "bottom": 110}`). Passed as top-level
