@@ -20,7 +20,8 @@ prevented a defect or fixed one.*
 > | Question | Tool |
 > |---|---|
 > | Does X exist? / full state of X | `ea_model("find_elements_by_name")` or `ea_model("get_element")` |
-> | What's in package P? / on diagram D? | `ea_model("list_elements_in_package")` / `ea_diagram("get_diagram")` |
+> | What's in package P? | `ea_model("list_elements_in_package")` |
+> | What's placed on diagram D? | `ea_diagram("get_diagram", {"diagram_id": D, "include_objects": true, "include_preview": false})` (element ids and boxes, no names; plain `get_diagram` returns metadata only), or `ea_diagram("verify_diagram")` after a reload; join `t_diagramobjects` to `t_object` through `ea_analyze("execute_sql")` for names |
 > | Tagged values / connectors / patterns in use? | `ea_model("get_element_tags")` / `("list_connectors_for_element")` / `ea_analyze("summarize_*")` |
 > | Anything else | `ea_analyze("execute_sql")` — always available, always authoritative |
 >
@@ -73,6 +74,7 @@ in EA is faster and costs no agent context.
 | >100 elements, one-shot insert | VBScript |
 | Verification, gap analysis, refinement | **MCP, always** — token-cheap and reasoning-friendly |
 | Diagram authoring | MCP — `ea_diagram("add_elements_to_diagram_bulk")` |
+| Putting an icon or image on an element | MCP — `ea_diagram("find_icon")` then `ea_diagram("set_element_icon")`; see [`references/diagrams_and_connectors.md`](references/diagrams_and_connectors.md) §6 |
 
 For mixed workloads: bulk-seed in VBScript, then verify and refine through MCP.
 
@@ -213,9 +215,15 @@ language_type / StyleEx mapping tables:
 freely. `style` takes exactly four values: `Orthogonal`, `Hierarchical`, `Circular`,
 `Sequence`. As of server 3.0.0 anything else is a structured `invalid_layout_style` error
 rather than a silent fallback to `Orthogonal`. `add_elements_to_diagram_bulk` defaults to
-`layout="auto"` — element coordinates you supplied are kept as given, and `Hierarchical` runs
-only when no element supplied any; pass `layout=None` to skip layout or a style name to force
-one.
+`layout="auto"` — element coordinates you supplied are kept as given, and when no element
+supplied any, a layout inferred from the diagram type runs (`Hierarchical` for Logical, Class,
+Component, Deployment, Package and Requirements diagrams; `Sequence` for Activity and Analysis
+(BPMN); `Circular` for State and Statechart; `Orthogonal` otherwise, reported in `layout_applied`); pass `layout=None` to skip layout or a
+style name to force one. Coordinates are not top-level parameters of the bulk call: put
+`left`/`top`/`right`/`bottom` inside each `element_ids` entry
+(`{"element_id": 12, "left": 50, "top": 50, "right": 190, "bottom": 110}`), or use
+`add_element_to_diagram` (top-level coordinates) for one element, or `set_diagram_object` /
+`set_diagram_objects_bulk` to move elements already placed.
 
 ---
 

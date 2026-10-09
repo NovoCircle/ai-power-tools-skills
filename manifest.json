@@ -131,7 +131,7 @@
       "name": "ea-diagram-composition",
       "title": "EA \u2014 diagram composition",
       "description": "Compose EA diagrams that read as deliberate: choose a layout grammar, compute geometry, place and style, then verify and correct. Language-neutral.",
-      "version": "1.0.1",
+      "version": "1.0.2",
       "min_server_version": "3.0.0",
       "files": [
         "ea-diagram-composition/SKILL.md",
@@ -175,7 +175,7 @@
         "ea-diagram-composition/tools/test_type_hints.py"
       ],
       "sha256": {
-        "ea-diagram-composition/SKILL.md": "0bd451d904fe3f5d678e45b49b7d8f9b4caefd74a93e58fc6f1e55c373a86075",
+        "ea-diagram-composition/SKILL.md": "4d15b2d488df7e8d1f76b69a69187d6e3206aa7b07bdfd57c41b4df868dada20",
         "ea-diagram-composition/bindings/archimate3.yaml": "f086c3aa2da838f1bf48c4ea2ec4816a408bfcd683f21181d85afc336f711e7c",
         "ea-diagram-composition/bindings/bpmn2.0.yaml": "5b044b8f62b66718d1546a19525452654801005caedbe56941f96d9bc0d16c6c",
         "ea-diagram-composition/bindings/dmn1.1.yaml": "42bd997bb570271beed0e6c34c617804bbebc62d21f6372641d0455bdbcddac6",
@@ -187,7 +187,7 @@
         "ea-diagram-composition/bindings/uafp_framework.yaml": "9ed24f58624db793817cb0ab035b3bcba544dddcfd466790545d82b02e1ac61c",
         "ea-diagram-composition/bindings/uml.yaml": "3288edc4b5d1a534f471fbd79b0acaa51b487d70bcbac12ce1ea068771bfa659",
         "ea-diagram-composition/bindings/zf-interface.yaml": "53f0a02b4929a4863915461cd486a02e65ef6d935ae01d4064c99714bad35f8d",
-        "ea-diagram-composition/references/bindings.md": "0c5fcbd0692c198c44c61067de9aa0718879ecb4ea0468f8a1b4cb12c928d599",
+        "ea-diagram-composition/references/bindings.md": "89a7a5281975cc2e82c972bf142d22e5048f4fe518e6308f6515e03557bafaf6",
         "ea-diagram-composition/references/grammars.md": "57b28deb01afc620b15cd296cd4eba4a994116b3a86accb308e53d43e3e4fcc9",
         "ea-diagram-composition/references/verification.md": "5c7e6b813008afa7752d072795c165d46c55b12a3aaa15bac16f71c659b718c2",
         "ea-diagram-composition/tools/bindings.py": "d0a283ea10de8dc2028525f7f602d971c95c2baf0936e9cdfd5f7ce8d21b4e48",
@@ -256,7 +256,7 @@
       "name": "ea-mdg-assess",
       "title": "ea-mdg-assess",
       "description": "Work out what modeling-language situation a repository is actually in before acting \u2014 which technologies are loaded, embedded or merely registered, and how much of the model conforms",
-      "version": "1.3.1",
+      "version": "1.3.2",
       "min_server_version": "2.2.0",
       "files": [
         "ea-mdg-assess/SKILL.md",
@@ -264,9 +264,9 @@
         "ea-mdg-assess/references/verification-walkthrough.md"
       ],
       "sha256": {
-        "ea-mdg-assess/SKILL.md": "8a34962a7f169e27d96a0c5ab1bd6fbcd848bc0542988935bc2a5d17f91d9784",
+        "ea-mdg-assess/SKILL.md": "3b4ed40d0505f941d84e140a02fb12c576751d7c839d6650bc11d256ef294a6f",
         "ea-mdg-assess/references/three-states.md": "8de928edaab2da95eebf2c945dd03d98edfc365f8eeb34effca0e74d5f722592",
-        "ea-mdg-assess/references/verification-walkthrough.md": "a98249cc9934336eb9931ec52391df87fff2fae294354c722dab6ccee513b95f"
+        "ea-mdg-assess/references/verification-walkthrough.md": "d561d0d81dd3d1de9a8d9c805ede92a12510c8727d13fac26e93827dd63ff490"
       }
     },
     {
@@ -345,7 +345,7 @@
       "name": "ea-modeling",
       "title": "ea-modeling",
       "description": "Build EA models via the MCP server \u2014 phases, defects, verification",
-      "version": "1.2.6",
+      "version": "1.2.7",
       "min_server_version": "3.6.0",
       "files": [
         "ea-modeling/SKILL.md",
@@ -360,10 +360,10 @@
         "ea-modeling/references/wba_mdg_reference.md"
       ],
       "sha256": {
-        "ea-modeling/SKILL.md": "d3f0ff9b7e244f1af36f8e5449f9d6a7efb4a64bf5e9f845132f4efc3cae3832",
+        "ea-modeling/SKILL.md": "764695d9d0e26128a449b3f69ae6d91694b1b1457f4a118429eed06485ae34ae",
         "ea-modeling/references/class-modeling.md": "25db3027ad038312fec8268b2af7b5918fb4b70134fb708bb55d82c3e281214c",
         "ea-modeling/references/diagnostics_and_ui.md": "cfc1304b820bfe63fdb99602ad99ea0a411092aaf707a7795f99d2600a709645",
-        "ea-modeling/references/diagrams_and_connectors.md": "668a10fe0f6722cd1e441599d2406afacacb6a1fa5d09aebe682fc1ce0b9f378",
+        "ea-modeling/references/diagrams_and_connectors.md": "e130a30dd18a5518bdf99d5c7a90ef84d79e7a8f0750a2d0818ea6b8bf6c7c9a",
         "ea-modeling/references/element_creation.md": "c521ddd57c675c51cc523f8db163d2db0cd4c7af4db4832122ffdbd902378113",
         "ea-modeling/references/package_and_defects.md": "2caaada73b4a77d2b4fea6190ff4b66f4a565e4cd366b4c614d99b3ae34ee8b5",
         "ea-modeling/references/sql_schema.md": "c6bd923a98d4e1065eac732335ff760bb3597339c83a74091cbf049628e9c678",
@@ -461,13 +461,13 @@
       "name": "ea-start-here",
       "title": "EA \u2014 start here",
       "description": "Entry point for any Sparx EA task: session preflight, then routing to the right skill",
-      "version": "1.2.1",
+      "version": "1.2.2",
       "min_server_version": "2.2.0",
       "files": [
         "ea-start-here/SKILL.md"
       ],
       "sha256": {
-        "ea-start-here/SKILL.md": "f58a6a59559cd8ae838238ce7f0ad432204011aa7ee286ebc7c3dee58429a83c"
+        "ea-start-here/SKILL.md": "15883b10645815356dbba4c4fb27ebb19650f8cbba0c47fc9c6ab334a3abfaee"
       }
     },
     {

@@ -628,7 +628,7 @@ go on at all; `geometry_is_composed` is the one that picks the route. Reading
 perfectly well.
 
 Then place with `ea_diagram("add_elements_to_diagram_bulk")`, passing the returned
-`left`/`top`/`right`/`bottom` per element and `layout="none"`, and route connectors with
+`left`/`top`/`right`/`bottom` inside each `element_ids` entry (a dict with `element_id`) and `layout="none"`, and route connectors with
 `dt.default_route()` or `dt.route_for("Realization")`.
 
 Three things the binding answers that the spec does not carry:
