@@ -119,7 +119,13 @@ Do not retry the same style expecting the old fallback.
 
 - If **any** element in the call supplied explicit `left` / `top` / `right` / `bottom`
   coordinates, no layout runs and the coordinates you gave are kept.
-- If **none** did, `Hierarchical` runs after placement.
+- If **none** did, a layout inferred from the diagram type runs after placement: `Hierarchical`
+  for Logical, Class, Component and Deployment diagrams, `Sequence` for Activity and BPMN,
+  `Circular` for State, `Orthogonal` otherwise. The response names it in `layout_applied`.
+
+The coordinates belong inside each `element_ids` entry, as a dict
+(`{"element_id": 12, "left": 50, "top": 50, "right": 190, "bottom": 110}`). Passed as top-level
+`params`, they are refused with `unknown_parameters`.
 
 Pass `layout=None` to skip layout regardless, or one of the four style names above to force
 that style regardless.
@@ -368,7 +374,7 @@ ea_diagram(operation="set_element_icon", params={
 
 The stored image is named `"<provider> <vintage> - <name>"`, e.g. `"AWS v19 - AWS Lambda"`; where
 one library has same-named icons whose pictures differ, each name carries a short ID in
-brackets. `set_element_icon` inherits `add_image`'s rule that loading needs a `.qea`/`.qeax`
+brackets. `set_element_icon` adds the image to the model's image library (`t_image`), and deleting the element or package does not remove it. It also inherits `add_image`'s rule that loading needs a `.qea`/`.qeax`
 project — on another backend, load the artwork through EA's Image Manager and use
 `set_element_image`. `find_icon` returns `icon_libraries_not_found` when it cannot locate
 `ModelPatterns`; the `EA_MODEL_PATTERNS` environment variable points it at the folder.

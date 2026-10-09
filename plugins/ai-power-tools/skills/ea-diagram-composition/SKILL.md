@@ -218,8 +218,13 @@ spec = dt.spec({"align": "center"}, names=[e["name"] for e in elements],
 
 ## Step 3 — place and style
 
-Place with `ea_diagram("add_elements_to_diagram_bulk")`, passing explicit
-`left`/`top`/`right`/`bottom` per element and **`layout="none"`**.
+Place with `ea_diagram("add_elements_to_diagram_bulk")`, giving each `element_ids` entry as a dict
+carrying its own box - `{"element_id": 12, "left": 50, "top": 50, "right": 190, "bottom": 110}` -
+and **`layout="none"`**. The coordinates go inside the entries: `left`/`top`/`right`/`bottom` as
+top-level `params` are refused with `unknown_parameters` (the operation accepts only `diagram_id`,
+`element_ids`, `layout`, `auto_connectors`, `auto_show_connectors` and `include_preview`). To move
+an element that is already placed, use `set_diagram_object` or `set_diagram_objects_bulk`; the
+single-element `add_element_to_diagram` takes `left`/`top`/`right`/`bottom` as top-level params.
 
 > Passing a named layout style discards every coordinate you just computed. `layout="auto"`
 > keeps them *only* because you supplied coordinates. `"none"` says what you mean.
@@ -356,7 +361,8 @@ Then two that are about honesty rather than tidiness:
 
 **Each notation already claims some visual channels.** ArchiMate's layer colors are spoken for;
 recoloring them by lifecycle destroys the notation while looking like a feature. Before using a
-channel, ask what it already means. If fill is taken, reach for border, opacity, or an icon. A
+channel, ask what it already means. If fill is taken, reach for border, opacity, or an icon (`find_icon` and `set_element_icon`, documented in
+[`../ea-modeling/references/diagrams_and_connectors.md`](../ea-modeling/references/diagrams_and_connectors.md)). A
 binding mechanizes the question: `dt.claimed_channels()` says what the notation has spoken for and
 `dt.free_channels()` what is left, so the answer is recorded rather than recalled.
 

@@ -29,21 +29,30 @@ ea_mdg(operation="assess_mdg_situation", params={})
 No parameters. It reads the repository's stereotype usage and the currently-loaded languages,
 and returns a scenario number, a plain-language description, and a `recommended_next_skill`.
 
-Observed against the Westbrook Bank demo repository (`<model-dir>\WestbrookBank.qea`,
-EA build 1716) on 2026-09-23:
+An illustration of the shape of the answer, from the Westbrook Bank demo repository (substitute your
+own technology and numbers; the figures are not a result you can reproduce):
 
 ```
 {
   "scenario": 3,
   "description": "Client-built MDG exists but ad-hoc stereotypes are accumulating outside it.",
   "loaded_mdgs": ["WBA"],
+  "sparx_loaded": ["..."],
   "ad_hoc_stereotype_count": 11,
   "covered_element_pct": 91,
-  "recommended_next_skill": "ea-mdg-extend"
+  "recommended_next_skill": "ea-mdg-author"
 }
 ```
 
-That last field is wrong. Read section 5 before you act on it.
+**`ad_hoc_stereotype_count` is a count of elements, not of distinct stereotypes.** The assessment
+looks at every element in the whole repository whose primary stereotype (the `t_object.Stereotype`
+column, unqualified) is not defined by any loaded and enabled client technology or any loaded
+Sparx-shipped technology, and counts each such element once. So the number includes elements that
+belong to no modeling language you care about: a technology's own source package (elements
+stereotyped `stereotype`, `metaclass` and so on) and elements created by other tools all count as
+ad hoc. A disabled client technology is left out of `loaded_mdgs`, so its stereotypes count as ad
+hoc too. `covered_element_pct` is the covered share of all stereotyped elements, by the same rule.
+Read section 5 before you act on `recommended_next_skill`.
 
 ## 2. What the scenarios mean
 
@@ -139,14 +148,13 @@ against the Westbrook Bank repository:
 
 | Question | Call | What it actually told us |
 |---|---|---|
-| Is a technology registered anywhere EA would show it in Manage Technology? | `list_registered_technologies` | `WBA` (enabled) **and** `WestbrookBankArchitecture` (disabled) both listed — two registrations of what a person would assume is "the same" technology |
+| Is a technology registered anywhere EA would show it in Manage Technology? | `list_registered_technologies` | One row per registration, not per technology: the same id can be listed more than once (for example a Project copy and a Model copy, or older builds left disabled) with different `version`, `location` and `enabled` values. Read the row you mean |
 | Does the model file itself carry a copy? | `get_embedded_mdgs` | On a server up to 3.5.0: empty, because it read a document type none of EA 17.1's import routes writes — proves nothing. Later servers list each stored copy with its Location: `Model` (`t_document` TECHNOLOGY, whole technology) or `Project` (`t_trxtypes`, no toolbox pages) |
 | Does EA have it loaded right now, for this session? | `get_mdg_from_runtime`, `params={"tech_id": "WBA"}` | 14 stereotypes with their metaclasses, 10 tagged values and 3 diagram types, `"source": "live"`, and a `provenance` block naming where the definitions were read from and what EA reports the version as |
 
-The first and third rows were observed against WBA 1.0. The model now holds WBA 1.1.1 at Location:
-Model: `get_mdg_from_runtime` answers 18 stereotypes (15 element and 3 connector), 3 diagram types
-and 3 toolbox pages, and Manage Technology lists one enabled `WBA` with the two older builds
-disabled.
+The first and third rows were observed against WBA 1.0. Against WBA 1.1.1 at Location: Model,
+`get_mdg_from_runtime` answers 18 stereotypes (15 element and 3 connector), 3 diagram types and 3
+toolbox pages, and Manage Technology lists one enabled `WBA` with the two older builds disabled.
 
 `get_mdg_from_runtime` reads the technology EA loaded — from the copy imported into the model, or
 from the registered `.xml` EA loads at startup — so its stereotype list is the deployed
@@ -166,28 +174,29 @@ before trusting either side.
 
 ## 4. Sanity-check the assessment, don't just trust the number
 
-`assess_mdg_situation`'s `ad_hoc_stereotype_count` and `covered_element_pct` are derived from
-`summarize_stereotype_usage` under the hood. Recompute them from that call's own output rather
-than treating the scenario number as ground truth — it takes one extra call and catches drift the
-single number hides (for example: is the 91% covered by four stereotypes doing real work, or by
-one stereotype used everywhere and three edge cases). The worked example, run against the same
-repository in the same session and matching to the element, is in
-[references/verification-walkthrough.md](references/verification-walkthrough.md).
+`assess_mdg_situation` runs its own stereotype query over `t_object` (the same bare
+`Stereotype` column `summarize_stereotype_usage` groups on). Compare against that call's output
+rather than treating the scenario number as ground truth — it takes one extra call and catches
+drift the single number hides (for example: is the 91% covered by four stereotypes doing real
+work, or by one stereotype used everywhere and three edge cases). The walkthrough in
+[references/verification-walkthrough.md](references/verification-walkthrough.md) shows the
+method on an illustrative table; your numbers will differ.
 
-## 5. When the recommendation is wrong — override it
+From server 3.6.0, `summarize_stereotype_usage` also returns `resolved_items` (each with `stereotype`, `fqname`,
+`binding` of `profile` or `ad_hoc`, `object_type`, `element_count`) resolved through `t_xref`, and
+`split_stereotypes` (names that appear both profile-bound and ad hoc, or bound to more than one
+profile). Use them when the bare name is not enough to tell which language an element belongs to.
 
-**Observed live, 2026-09-23:** scenario 3 returned `"recommended_next_skill": "ea-mdg-extend"`.
-There is no `ea-mdg-extend` directory in this repository. The server's own source (read directly,
-not inferred) computes `"ea-mdg-author"` for scenario 3 — so the running server and its source are
-out of sync, most likely a build that hasn't picked up a recent fix. Whatever the cause, treat the
-field as unreliable until you've confirmed it names a real skill:
+## 5. When the recommendation doesn't fit — override it
 
-1. Read `description`, not just `recommended_next_skill` — it's plain language and doesn't drift
-   the same way.
+`recommended_next_skill` is a fixed default per scenario, not a judgment about your repository:
+scenario 1 returns `ea-mdg-model-build`, and scenarios 2 and 3 return `ea-mdg-author`. (Earlier
+servers could return `ea-mdg-extend` for scenario 3; no such skill exists, so if you see it, treat
+it as `ea-mdg-author`.) Because it is only a default:
+
+1. Read `description`, not just `recommended_next_skill`.
 2. Match that description against `ea-start-here` §2's routing table yourself.
-3. Confirm the target actually exists as a directory in this repository before telling anyone to
-   go there. A recommendation naming a skill that isn't real is worse than no recommendation — it
-   sends the next step into a dead end with apparent authority behind it.
+3. Confirm the target exists as a directory in this repository before telling anyone to go there.
 
 Override it any time the scenario's plain-language `description` doesn't match what you already
 know about the repository — for example, if you know a source model exists for the technology
@@ -203,8 +212,8 @@ profile packages), pick `ea-mdg-model-build` over `ea-mdg-author` regardless of 
 | `get_mdg_from_runtime` says `mdg_loaded_no_definition` for a technology imported to the model | Server up to 3.5.0 cannot read Location: Model (`t_document` TECHNOLOGY) | Upgrade, or export from Manage Technology and run `parse_mdg_xml` |
 | The same technology appears twice in Manage Technology, Location `Project` and `Model` | It was installed by both routes. EA answers `GetTechnologyVersion` from the Project copy | Keep one; see `ea-mdg-deploy` |
 | `get_mdg_from_runtime` returns `"source": "unavailable"` with `mdg_loaded_no_definition` | EA has the technology loaded, but its XML is neither registered in a technology folder nor imported into the model, so there is nothing to read | Export it from Specialize > Technologies > Manage Technology and run `parse_mdg_xml` on the file |
-| Same technology name appears twice in `list_registered_technologies` with different `enabled` values | Two separate registrations (for example a workstation file copy under one id, and a differently-named entry under a display name) legitimately coexist | Not a bug — read `location` and `enabled` per row, don't assume one row speaks for the technology |
-| `recommended_next_skill` names a skill directory that doesn't exist | Server/source drift — see section 5 | Never route on this field alone; confirm against `ea-start-here` and the actual directory listing |
+| Same technology name appears twice in `list_registered_technologies` with different `enabled` values | Separate registrations of one id (for example a Project copy and a Model copy, or older builds left disabled) legitimately coexist; the operation does not deduplicate by id | Not a bug — read `location` and `enabled` per row, don't assume one row speaks for the technology |
+| `recommended_next_skill` names a skill directory that doesn't exist | An older server build (see section 5) | Treat `ea-mdg-extend` as `ea-mdg-author`; never route on this field alone |
 
 ---
 
