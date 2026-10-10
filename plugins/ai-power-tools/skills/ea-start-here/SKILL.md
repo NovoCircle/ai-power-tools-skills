@@ -33,9 +33,10 @@ Read the response before anything else:
 
 - **It carries a `notice`** — show the user the notice, word for word, before doing anything
   else. The server writes it. Do not reword it, shorten it, or add to it.
-- **`ping` rejects the `skills_version` argument** — the server is older than these skills
-  (servers before 3.6.1 take no arguments). Call `ping()` with no arguments to confirm it is
-  alive, then tell the user the server is older than their skills and needs an update:
+- **It has no `update` key** — the server ignored `skills_version`, so it is older than these
+  skills (servers before 3.6.1 do not know the argument). The same applies if `ping` rejects the
+  argument outright; call `ping()` with no arguments to confirm it is alive. Tell the user the
+  server is older than their skills and needs an update:
   1. Download the extension from
      `https://github.com/NovoCircle/ai-power-tools-releases/releases/latest/download/AI-Power-Tools-for-Enterprise-Architect.mcpb`
   2. Drag the file onto Claude Desktop's **Settings > Extensions**.
