@@ -461,13 +461,13 @@
       "name": "ea-start-here",
       "title": "EA \u2014 start here",
       "description": "Entry point for any Sparx EA task: session preflight, then routing to the right skill",
-      "version": "1.2.2",
+      "version": "1.3.0",
       "min_server_version": "2.2.0",
       "files": [
         "ea-start-here/SKILL.md"
       ],
       "sha256": {
-        "ea-start-here/SKILL.md": "15883b10645815356dbba4c4fb27ebb19650f8cbba0c47fc9c6ab334a3abfaee"
+        "ea-start-here/SKILL.md": "28e664c122e4062b9d08f8d33552c50d8d7816d653c543e002843966c425619b"
       }
     },
     {

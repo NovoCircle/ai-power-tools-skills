@@ -696,3 +696,60 @@ class TestRulesetPathsAreTheInstalledOnes:
                '"~/.claude/skills/ruleset-archimate31/rules.yaml"\n')
         _write(library, "ea-validation/SKILL.md", self._GOOD)
         assert gate.check_ruleset_paths(library) == []
+
+
+# ---------------------------------------------------------------------------
+# The plugin is skills only, and its stamp matches its version
+# ---------------------------------------------------------------------------
+
+class TestPluginPackage:
+    """No server in the plugin; the skills-version stamp equals plugin.json."""
+
+    VERSION = "9.9.9"
+
+    def _plugin(self, root: Path, *, stamp: str | None = None, extra: dict | None = None,
+                version: str | None = None) -> None:
+        version = version or self.VERSION
+        pj = {"name": "ai-power-tools", "version": version, **(extra or {})}
+        _write(root, "plugins/ai-power-tools/.claude-plugin/plugin.json", json.dumps(pj))
+        _write(root, "plugins/ai-power-tools/skills/ea-start-here/SKILL.md",
+               f'ping(skills_version="{stamp or version}")\n')
+        (root / "manifest.json").write_text(
+            json.dumps({"bundle_version": version, "skills": []}), encoding="utf-8")
+        _write(root, ".claude-plugin/marketplace.json", json.dumps(
+            {"plugins": [{"name": "ai-power-tools", "version": version}]}))
+
+    def test_a_skills_only_plugin_passes(self, library):
+        self._plugin(library)
+        assert gate.check_plugin_package() == []
+
+    def test_no_plugin_tree_is_not_a_finding(self, library):
+        assert gate.check_plugin_package() == []
+
+    def test_any_mcp_servers_entry_is_caught(self, library):
+        for value in ("https://example.invalid/Server.mcpb", {"x": {}}, ""):
+            self._plugin(library, extra={"mcpServers": value})
+            found = gate.check_plugin_package()
+            assert len(found) == 1 and "mcpServers" in found[0]
+
+    def test_a_top_level_bin_is_caught(self, library):
+        self._plugin(library)
+        _write(library, "plugins/ai-power-tools/bin/server.txt", "x")
+        found = gate.check_plugin_package()
+        assert len(found) == 1 and "bin/" in found[0]
+
+    def test_a_stamp_that_lags_the_plugin_version_is_caught(self, library):
+        self._plugin(library, stamp="9.9.8")
+        found = gate.check_plugin_package()
+        assert len(found) == 1 and "skills_version 9.9.8" in found[0]
+
+    def test_a_missing_stamp_is_caught(self, library):
+        self._plugin(library)
+        _write(library, "plugins/ai-power-tools/skills/ea-start-here/SKILL.md", "no stamp\n")
+        assert "no skills_version" in gate.check_plugin_package()[0]
+
+    def test_version_drift_between_the_files_is_caught(self, library):
+        self._plugin(library)
+        (library / "manifest.json").write_text(
+            json.dumps({"bundle_version": "9.9.8", "skills": []}), encoding="utf-8")
+        assert "Version drift" in gate.check_plugin_package()[0]

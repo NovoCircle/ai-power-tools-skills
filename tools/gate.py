@@ -520,6 +520,34 @@ def check_bundle_floor() -> list[str]:
             f"at least {highest}."]
 
 
+def check_plugin_package() -> list[str]:
+    """The plugin is skills only, and its version files and stamp agree.
+
+    Fails when `plugin.json` declares `mcpServers` at all or the plugin tree has
+    a top-level `bin/`: claude.ai refuses a plugin that points at an `.mcpb`,
+    and a plugin's server never runs in Claude Desktop chat or Cowork, so the
+    server is the separately installed Desktop extension. Also runs the version
+    consistency check that `tools/build-plugin.py` runs, including the
+    skills-version stamp in `ea-start-here`.
+    """
+    import importlib.util
+
+    plugin = ROOT / "plugins" / "ai-power-tools"
+    manifest = ROOT / "manifest.json"
+    marketplace = ROOT / ".claude-plugin" / "marketplace.json"
+    if not (plugin / ".claude-plugin" / "plugin.json").is_file():
+        return []
+    spec = importlib.util.spec_from_file_location(
+        "build_plugin", Path(__file__).resolve().parent / "build-plugin.py")
+    build = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(build)
+    out = [f"plugin: {p}" for p in build.package_problems(plugin)]
+    if manifest.is_file() and marketplace.is_file():
+        out.extend(f"plugin: {p}" for p in
+                   build.version_problems(plugin, manifest, marketplace)[1])
+    return out
+
+
 _OP_DRIFT_RAN = True
 _OP_DRIFT_SKIP_REASON: Optional[str] = None
 
@@ -742,6 +770,7 @@ def main() -> int:
         findings.extend(check_manifest())
         findings.extend(check_stated_server_version())
         findings.extend(check_bundle_floor())
+        findings.extend(check_plugin_package())
 
     # A check that did not run is not a check that passed. The verdict says so
     # whatever the findings, because the whole point of this item was a gate

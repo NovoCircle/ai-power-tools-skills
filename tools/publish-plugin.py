@@ -18,15 +18,16 @@ So at release this script
    the tag the server release is then cut on (`--publish`); and
 2. points the marketplace entry at that tag and commit with a `git-subdir`
    source (`--pin-marketplace`), refusing unless the tag exists, the sha is the
-   one the tag names, the tree there carries the expected `plugin.json`, and the
-   server `.mcpb` that `plugin.json` pins is publicly downloadable.
+   one the tag names, and the tree there carries the expected `plugin.json`.
 
 After that, a merge to `main` here changes nothing a customer installs. Only a
 release tag does, and only this script moves the marketplace to one.
 
-The releases repository is read out of `plugin.json`'s `mcpServers` URL rather
-than restated, so the plugin tree and the server binary it pins live in the
-same repository by construction, and the URL is checked to name this version.
+The plugin is skills only: it declares no server, and the build and this script
+both refuse a `plugin.json` that has `mcpServers` or a plugin tree with a `bin/`.
+The server is the Claude Desktop extension, released separately from the same
+releases repository, so the plugin tree is published to that repository and the
+server release is cut on the same tag.
 
 Usage:
     python tools/publish-plugin.py                    # dry run: stage, verify, print every step
@@ -51,7 +52,6 @@ import shutil
 import stat
 import subprocess
 import sys
-import urllib.error
 import urllib.request
 import zipfile
 from dataclasses import dataclass
@@ -72,11 +72,11 @@ PLUGIN_JSON = f"{PLUGIN_PATH}/.claude-plugin/plugin.json"
 #: The repository customers add as the marketplace. `--verify` reads its
 #: `marketplace.json` from the default branch, exactly as Claude Code does.
 SKILLS_REPO = "NovoCircle/ai-power-tools-skills"
+#: Where the released plugin tree is published and tagged, and where the server
+#: release is cut on the same tag.
+RELEASES_REPO = "NovoCircle/ai-power-tools-releases"
 STAGING_DIR = ".plugin-release-staging"
 
-_MCPB_URL = re.compile(
-    r"^https://github\.com/(?P<repo>[^/]+/[^/]+)/releases/download/"
-    r"(?P<tag>[^/]+)/[^/]+\.mcpb$")
 _SHA = re.compile(r"^[0-9a-f]{40}$")
 
 
@@ -123,21 +123,6 @@ def git_url(repo: str) -> str:
 
 def raw_url(repo: str, ref: str, path: str) -> str:
     return f"https://raw.githubusercontent.com/{repo}/{ref}/{path}"
-
-
-def releases_repo(plugin_json: dict, version: str) -> tuple[str | None, list[str]]:
-    """The repository `mcpServers` pins, and whether it pins this version."""
-    url = plugin_json.get("mcpServers")
-    m = _MCPB_URL.match(url) if isinstance(url, str) else None
-    if not m:
-        return None, [f"plugin.json mcpServers is not a pinned GitHub release "
-                      f".mcpb URL: {url!r}"]
-    if m["tag"] != tag_for(version):
-        return m["repo"], [
-            f"plugin.json mcpServers pins server release {m['tag']}, but the "
-            f"plugin is {version}. The released plugin and the server it runs "
-            f"must name the same release."]
-    return m["repo"], []
 
 
 def git_blob_sha(data: bytes) -> str:
@@ -263,30 +248,6 @@ def fetch_bytes(url: str) -> tuple[bytes | None, str]:
             return r.read(), ""
     except Exception as exc:  # noqa: BLE001 -- reported, never swallowed
         return None, str(exc)
-
-
-class _NoRedirect(urllib.request.HTTPRedirectHandler):
-    def redirect_request(self, *args, **kwargs):  # noqa: D401
-        return None
-
-
-def url_resolves(url: str) -> tuple[bool, str]:
-    """Whether a release asset is publicly downloadable, without downloading it.
-
-    GitHub answers a published asset with a redirect to its storage and a
-    draft's asset with 404, so the first response is the whole answer.
-    """
-    opener = urllib.request.build_opener(_NoRedirect)
-    try:
-        with opener.open(urllib.request.Request(url, method="HEAD"),
-                         timeout=30) as r:
-            return True, f"HTTP {r.status}"
-    except urllib.error.HTTPError as exc:
-        if exc.code in (301, 302, 303, 307, 308):
-            return True, f"HTTP {exc.code}"
-        return False, f"HTTP {exc.code}"
-    except Exception as exc:  # noqa: BLE001
-        return False, str(exc)
 
 
 def skills_source_rev(root: Path) -> tuple[str, bool]:
@@ -415,8 +376,7 @@ def _local_state(paths: Paths) -> tuple[str | None, str | None, dict, list[str]]
     if problems:
         return version, None, {}, problems
     pj = json.loads(paths.plugin_json.read_text(encoding="utf-8"))
-    repo, problems = releases_repo(pj, version)
-    return version, repo, pj, problems
+    return version, RELEASES_REPO, pj, build_plugin.package_problems(paths.plugin)
 
 
 def _fail(problems: list[str], what: str = "Nothing pushed, tagged or edited") -> int:
@@ -433,7 +393,7 @@ def run_stage(paths: Paths, remote: str | None, publish: bool) -> int:
     tag = tag_for(version)
     remote = remote or git_url(repo)
     print(f"plugin version      : {version}")
-    print(f"releases repository : {repo}  (from plugin.json mcpServers)")
+    print(f"releases repository : {repo}")
     print(f"release tag         : {tag}")
 
     if not paths.archive.is_file():
@@ -527,7 +487,7 @@ def run_stage(paths: Paths, remote: str | None, publish: bool) -> int:
 
 
 def run_pin(paths: Paths, remote: str | None) -> int:
-    version, repo, pj, problems = _local_state(paths)
+    version, repo, _pj, problems = _local_state(paths)
     if problems:
         return _fail(problems, "marketplace.json not edited")
     tag = tag_for(version)
@@ -548,17 +508,9 @@ def run_pin(paths: Paths, remote: str | None) -> int:
         if theirs.get("version") != version:
             problems.append(f"{PLUGIN_JSON} at {tag} says version "
                             f"{theirs.get('version')!r}, expected {version!r}")
-        if theirs.get("mcpServers") != pj["mcpServers"]:
-            problems.append(f"{PLUGIN_JSON} at {tag} pins "
-                            f"{theirs.get('mcpServers')!r}, not "
-                            f"{pj['mcpServers']!r}")
-    ok, detail = url_resolves(pj["mcpServers"])
-    if not ok:
-        problems.append(
-            f"the server bundle {pj['mcpServers']} is not downloadable "
-            f"({detail}). A draft release's assets are not public, so the "
-            f"plugin's MCP server would fail for every customer. Promote the "
-            f"server release first (build skill Phase 7, Step B).")
+        if "mcpServers" in theirs:
+            problems.append(f"{PLUGIN_JSON} at {tag} declares mcpServers. The "
+                            f"plugin is skills only.")
     if problems:
         return _fail(problems, "marketplace.json not edited")
 
@@ -576,7 +528,7 @@ def run_pin(paths: Paths, remote: str | None) -> int:
 
 def run_verify(paths: Paths, remote: str | None, local: bool) -> int:
     version, repo, _pj, problems = _local_state(paths)
-    if repo is None:
+    if problems:
         return _fail(problems, "Nothing verified")
     if local:
         where = ".claude-plugin/marketplace.json (local)"
@@ -611,12 +563,9 @@ def run_verify(paths: Paths, remote: str | None, local: bool) -> int:
         if theirs.get("version") != version:
             problems.append(f"{PLUGIN_JSON} at {src['sha']} says version "
                             f"{theirs.get('version')!r}, expected {version!r}")
-        mcpb = theirs.get("mcpServers", "")
-        ok, detail = url_resolves(mcpb)
-        print(f"server bundle       : {mcpb} ({detail})")
-        if not ok:
-            problems.append(f"the server bundle it pins is not downloadable "
-                            f"({detail})")
+        if "mcpServers" in theirs:
+            problems.append(f"{PLUGIN_JSON} at {src['sha']} declares "
+                            f"mcpServers. The plugin is skills only.")
     if problems:
         return _fail(problems, "Marketplace NOT verified")
     print("\nMARKETPLACE VERIFIED. Finish with a clean `claude plugin "
@@ -645,7 +594,7 @@ def main(argv: list[str] | None = None, root: Path = ROOT) -> int:
                          "instead of the published one")
     ap.add_argument("--releases-remote", metavar="URL",
                     help="git remote for the releases repository (default: "
-                         "derived from plugin.json)")
+                         "the releases repository on GitHub)")
     args = ap.parse_args(argv)
     if args.local and not args.verify:
         ap.error("--local applies only to --verify")

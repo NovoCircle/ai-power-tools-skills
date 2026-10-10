@@ -11,8 +11,11 @@ shared between them, and no Visio skill is ever installed from here.
 
 ## How to install
 
-One plugin. It carries these skills **and** the AI Power Tools MCP server, so there is a
-single thing to install and a single thing to update.
+One plugin carries these skills. It is skills only: the MCP server is the **AI Power Tools for
+Sparx EA Claude Desktop extension**, a separate download
+([latest `.mcpb`](https://github.com/NovoCircle/ai-power-tools-releases/releases/latest/download/AI-Power-Tools-for-Enterprise-Architect.mcpb)),
+installed from Claude Desktop's Settings > Extensions. Install both; the skills' preflight
+tells you when the extension is missing or older than the skills.
 
 ```
 claude plugin marketplace add NovoCircle/ai-power-tools-skills
@@ -237,29 +240,35 @@ whose bytes do not match its manifest is rejected by every customer's installer 
 no other way to find out.
 
 `publish-plugin.py` refuses in the same spirit. It will not publish when the three version
-files disagree, when `plugin.json`'s `mcpServers` pins a server release other than this
-version, when `dist/ai-power-tools.plugin` is stale against `plugins/ai-power-tools/`, when
+files disagree, when `plugin.json` declares `mcpServers` or the plugin has a top-level
+`bin/` (the plugin is skills only), when the skills-version stamp in `ea-start-here` is not
+this version, when `dist/ai-power-tools.plugin` is stale against `plugins/ai-power-tools/`, when
 the shipped files have uncommitted changes, or when the tag already exists on a commit without
 this tree — a published tag is never moved. It checks the committed tree against the archive
 blob by blob, so a line-ending conversion on the way into git fails here rather than on a
 customer's machine. `--pin-marketplace` refuses unless the tag exists, the sha is the one the
-tag names, `plugin.json` at that sha carries this version, and the server `.mcpb` it pins is
-publicly downloadable — which a draft release's assets are not.
+tag names, and `plugin.json` at that sha carries this version and no `mcpServers`.
 
 Three files carry the version and must agree — `manifest.json`'s `bundle_version`,
 `plugins/ai-power-tools/.claude-plugin/plugin.json`, and the `ai-power-tools` entry in
-`.claude-plugin/marketplace.json`. `tools/build-plugin.py` refuses to build when they differ,
-so drift fails at build time rather than reaching a customer as two numbers for one product.
+`.claude-plugin/marketplace.json` — and a fourth spot, the skills-version stamp
+(`ping(skills_version="X.Y.Z")` in `plugins/ai-power-tools/skills/ea-start-here/SKILL.md`),
+must equal them. The stamp is committed text rather than injected at build time, because the
+manifest hashes every shipped file. `tools/build-plugin.py` and `tools/gate.py` refuse when
+they differ, so drift fails at build time rather than reaching a customer as two numbers for
+one product, or as a server telling customers their skills are out of date when they are not.
+A release bump moves all four together.
 
 ### Ordering across the two repositories
 
-The plugin references the server's `.mcpb` by a **pinned** release URL, so the server release
-has to be published before customers are pointed at the plugin. The server release tag
-`vX.Y.Z` is cut on `ai-power-tools-releases`, and the plugin tree must be what that tag names,
-so the tree goes in first and the server release is cut on it:
+The plugin carries no server, so it does not depend on the server release being public. The
+release order below is still kept, so customers are not pointed at skills before the extension
+that goes with them. The server release tag `vX.Y.Z` is cut on `ai-power-tools-releases`, and
+the plugin tree must be what that tag names, so the tree goes in first and the server release
+is cut on it:
 
-1. **Release branch here.** Bump the three version files and point `mcpServers` in
-   `plugin.json` at `vX.Y.Z`. Keep this on a release branch: it merges together with the pin in
+1. **Release branch here.** Bump the three version files and the skills-version stamp in
+   `ea-start-here`. Keep this on a release branch: it merges together with the pin in
    step 6, never before, so `main` never shows a version that the marketplace does not serve.
    Run `regen-manifest.py`, `gate.py`, `build-plugin.py`, and commit.
 2. **Publish the plugin tree.** `publish-plugin.py` (dry run), then `--publish`. It commits the
@@ -271,17 +280,17 @@ so the tree goes in first and the server release is cut on it:
    rather than create a tag of its own on whatever `main` holds. Smoke-test the draft. If it
    fails, delete the draft **and the tag**, fix, and start again from step 2 — a failed draft's
    tag must not survive, and `publish-plugin.py` refuses to move it.
-4. **Promote the server release.** The pinned `.mcpb` URL now resolves.
+4. **Promote the server release.**
 5. **Pin the marketplace.** `publish-plugin.py --pin-marketplace` on the release branch, and
-   commit. It refuses before step 4.
+   commit. It refuses until the tag exists.
 6. **Merge the release branch to `main`.** This is the moment customers switch: the
    marketplace file is read from `main`. Then `publish-plugin.py --verify`, which reads the
-   entry as customers do and checks the tag, the sha, the `plugin.json` version and the `.mcpb`.
+   entry as customers do and checks the tag, the sha and the `plugin.json` version.
 7. **Release the bundle from here** (`publish-bundle.py --publish vX.Y.Z`). After the merge,
    so this repository's `vX.Y.Z` tag carries the pinned `marketplace.json` — organizations that
    pin the marketplace to a tag get the matching plugin.
-8. **Install it the customer's way** — `claude plugin marketplace add` and `install` on a
-   machine that has never had the plugin. Nothing above exercises that path.
+8. **Install it the customer's way** — the extension, then the skills plugin, on a machine that
+   has never had either. Nothing above exercises that path.
 
 **Rolling back.** Never revert the step 5 commit on its own. The pin changes only the entry's
 source, so reverting it puts the entry back on `./plugins/ai-power-tools` — this repository's
@@ -293,10 +302,6 @@ restores the previous release's version in the three version files and re-runs
 `publish-plugin.py --pin-marketplace` against that release's tag, then merge; installs follow
 because the version differs.
 
-Pinned rather than `releases/latest` on purpose: a floating reference would mean a later server
-release silently changes which binary every already-installed plugin pulls, including for
-customers who installed months ago and changed nothing.
-
 ## Versioning policy
 
 - **One version across the product.** The bundle, the plugin, the MCP server and the VS Code
@@ -305,10 +310,11 @@ customers who installed months ago and changed nothing.
   number, and it is cheaper than explaining three.
 - **Per-skill `version`** bumps only when that skill's content changes. It is a record of what
   moved, not a compatibility gate.
-- **`min_server_version`** is vestigial for plugin users, since the plugin ships the server it
-  was built against and the two cannot disagree. It still matters for machines that have not
-  migrated off `install_skills`, where an older server can meet a newer bundle, so the field is
-  maintained and the bundle-wide floor is still enforced all-or-nothing.
+- **`min_server_version`** states the server release a skill needs. The plugin no longer ships
+  the server, so a skills plugin can meet an older extension; the `ea-start-here` preflight
+  and the server's version notice are what tell the customer. The field is also what
+  machines that have not migrated off `install_skills` depend on, so it is maintained and the
+  bundle-wide floor is still enforced all-or-nothing.
 
   The per-skill floor is derived from the skill's own text, not chosen: take every operation
   the skill names, take the release each was introduced in, and the highest is the floor. Left

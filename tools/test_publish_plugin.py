@@ -8,8 +8,8 @@ known-good one and asserts it does exactly what it printed.
 
 Hermetic: the "releases repository" is a bare git repository in a temp
 directory, so cloning, pushing and tagging are real git against a local path.
-The two HTTP reads -- a raw file at a sha, and whether a release asset is
-downloadable -- are replaced; nothing here touches the network.
+The one HTTP read -- a raw file at a sha -- is replaced; nothing here touches the
+network.
 
 Run:  python -m pytest tools/test_publish_plugin.py
 """
@@ -31,8 +31,8 @@ sys.modules[_spec.name] = tool  # dataclasses resolve annotations through it
 _spec.loader.exec_module(tool)
 
 VERSION = "9.9.0"
-REPO = "Example/releases"
-MCPB = f"https://github.com/{REPO}/releases/download/v{VERSION}/Server.mcpb"
+STAMP_TEXT = ("---\nname: ea-start-here\n---\n\n"
+              f'ping(skills_version="{VERSION}")\n')
 SKILL_TEXT = "---\nname: demo\n---\n\n# Demo\n\nLF only.\n"
 #: Bytes that a line-ending conversion would alter, in a file git should treat
 #: as binary.
@@ -97,7 +97,9 @@ def skills(tmp_path, monkeypatch, remote) -> Path:
     root = tmp_path / "skills"
     plugin = root / tool.PLUGIN_PATH
     _write_json(plugin / ".claude-plugin" / "plugin.json",
-                {"name": "ai-power-tools", "version": VERSION, "mcpServers": MCPB})
+                {"name": "ai-power-tools", "version": VERSION})
+    (plugin / "skills" / "ea-start-here").mkdir(parents=True)
+    (plugin / "skills" / "ea-start-here" / "SKILL.md").write_bytes(STAMP_TEXT.encode())
     (plugin / "skills" / "demo").mkdir(parents=True)
     (plugin / "skills" / "demo" / "SKILL.md").write_bytes(SKILL_TEXT.encode())
     (plugin / "skills" / "demo" / "icon.png").write_bytes(BINARY)
@@ -109,7 +111,6 @@ def skills(tmp_path, monkeypatch, remote) -> Path:
     build_archive(root)
 
     monkeypatch.setattr(tool, "skills_source_rev", lambda _root: ("a" * 40, False))
-    monkeypatch.setattr(tool, "url_resolves", lambda url: (True, "HTTP 302"))
 
     def fetch(url):
         # raw.githubusercontent.com/<repo>/<ref>/<path>, answered from the
@@ -128,6 +129,12 @@ def skills(tmp_path, monkeypatch, remote) -> Path:
 
 def run(skills: Path, remote: Path, *args: str) -> int:
     return tool.main([*args, "--releases-remote", str(remote)], root=skills)
+
+
+def set_stamp(skills: Path, version: str) -> None:
+    (skills / tool.PLUGIN_PATH / "skills" / "ea-start-here" / "SKILL.md").write_bytes(
+        STAMP_TEXT.replace(VERSION, version).encode())
+    build_archive(skills)
 
 
 def marketplace(skills: Path) -> dict:
@@ -157,22 +164,35 @@ class TestRefusesBeforeStaging:
         assert run(skills, remote) == 1
         assert "marketplace.json entry" in capsys.readouterr().out
 
-    def test_server_pinned_to_another_release_refuses(self, skills, remote, capsys):
+    def test_a_declared_server_refuses(self, skills, remote, capsys):
         pj = skills / tool.PLUGIN_JSON
         data = json.loads(pj.read_text(encoding="utf-8"))
-        data["mcpServers"] = MCPB.replace(f"v{VERSION}", "v9.8.0")
+        data["mcpServers"] = "https://example.invalid/Server.mcpb"
         _write_json(pj, data)
         build_archive(skills)
         assert run(skills, remote) == 1
-        assert "pins server release v9.8.0" in capsys.readouterr().out
+        assert "declares mcpServers" in capsys.readouterr().out
+        assert not (skills / tool.STAGING_DIR).exists()
 
-    def test_floating_server_url_refuses(self, skills, remote, capsys):
-        pj = skills / tool.PLUGIN_JSON
-        data = json.loads(pj.read_text(encoding="utf-8"))
-        data["mcpServers"] = f"https://github.com/{REPO}/releases/latest/download/Server.mcpb"
-        _write_json(pj, data)
+    def test_a_bundled_bin_refuses(self, skills, remote, capsys):
+        (skills / tool.PLUGIN_PATH / "bin").mkdir()
+        (skills / tool.PLUGIN_PATH / "bin" / "server.exe").write_bytes(b"MZ")
+        build_archive(skills)
         assert run(skills, remote) == 1
-        assert "not a pinned GitHub release" in capsys.readouterr().out
+        assert "top-level bin/" in capsys.readouterr().out
+
+    def test_a_lagging_skills_stamp_refuses(self, skills, remote, capsys):
+        set_stamp(skills, "9.8.0")
+        assert run(skills, remote) == 1
+        out = capsys.readouterr().out
+        assert "Version drift" in out and "skills_version 9.8.0" in out
+
+    def test_a_missing_skills_stamp_refuses(self, skills, remote, capsys):
+        (skills / tool.PLUGIN_PATH / "skills" / "ea-start-here" / "SKILL.md"
+         ).write_bytes(b"no stamp here\n")
+        build_archive(skills)
+        assert run(skills, remote) == 1
+        assert "no skills_version" in capsys.readouterr().out
 
     def test_missing_archive_refuses(self, skills, remote, capsys):
         (skills / "dist" / "ai-power-tools.plugin").unlink()
@@ -303,20 +323,20 @@ class TestPinMarketplace:
         assert "does not exist" in capsys.readouterr().out
         assert (skills / ".claude-plugin" / "marketplace.json").read_bytes() == before
 
-    def test_refuses_while_the_server_release_is_a_draft(self, skills, remote,
+    def test_refuses_a_tag_whose_plugin_declares_a_server(self, skills, remote,
                                                           monkeypatch, capsys):
         assert run(skills, remote, "--publish") == 0
-        monkeypatch.setattr(tool, "url_resolves", lambda url: (False, "HTTP 404"))
-        before = (skills / ".claude-plugin" / "marketplace.json").read_bytes()
+        monkeypatch.setattr(tool, "fetch_bytes", lambda url: (
+            json.dumps({"version": VERSION, "mcpServers": "x"}).encode(), ""))
         assert run(skills, remote, "--pin-marketplace") == 1
-        assert "Promote the server release first" in capsys.readouterr().out
-        assert (skills / ".claude-plugin" / "marketplace.json").read_bytes() == before
+        assert "declares mcpServers" in capsys.readouterr().out
+        assert entry(skills)["source"] == "./plugins/ai-power-tools"
 
     def test_refuses_a_tag_carrying_another_version(self, skills, remote,
                                                     monkeypatch, capsys):
         assert run(skills, remote, "--publish") == 0
         monkeypatch.setattr(tool, "fetch_bytes", lambda url: (
-            json.dumps({"version": "9.8.0", "mcpServers": MCPB}).encode(), ""))
+            json.dumps({"version": "9.8.0"}).encode(), ""))
         assert run(skills, remote, "--pin-marketplace") == 1
         assert "says version '9.8.0'" in capsys.readouterr().out
         assert entry(skills)["source"] == "./plugins/ai-power-tools"
@@ -327,7 +347,7 @@ class TestPinMarketplace:
         e = entry(skills)
         assert e["source"] == {
             "source": "git-subdir",
-            "url": f"https://github.com/{REPO}.git",
+            "url": f"https://github.com/{tool.RELEASES_REPO}.git",
             "path": "plugins/ai-power-tools",
             "ref": f"v{VERSION}",
             "sha": remote_ref(remote, f"refs/tags/v{VERSION}"),
@@ -392,12 +412,13 @@ class TestVerify:
         assert run(skills, remote, "--verify", "--local") == 1
         assert "source.ref is 'v9.8.0'" in capsys.readouterr().out
 
-    def test_fails_when_the_server_bundle_is_gone(self, skills, remote,
-                                                  monkeypatch, capsys):
+    def test_fails_when_the_published_plugin_declares_a_server(self, skills, remote,
+                                                              monkeypatch, capsys):
         _pinned(skills, remote)
-        monkeypatch.setattr(tool, "url_resolves", lambda url: (False, "HTTP 404"))
+        monkeypatch.setattr(tool, "fetch_bytes", lambda url: (
+            json.dumps({"version": VERSION, "mcpServers": "x"}).encode(), ""))
         assert run(skills, remote, "--verify", "--local") == 1
-        assert "not downloadable" in capsys.readouterr().out
+        assert "declares mcpServers" in capsys.readouterr().out
 
     def test_local_requires_verify(self, skills, remote):
         with pytest.raises(SystemExit):
@@ -411,13 +432,9 @@ class TestVerify:
 @pytest.mark.parametrize("sha", ["abc123", "A" * 40, "g" * 40, ""])
 def test_a_sha_must_be_full_lowercase_hex(sha):
     e = {"name": "ai-power-tools", "version": VERSION,
-         "source": tool.pinned_source(REPO, VERSION, sha)}
-    assert any("40-character" in p for p in tool.entry_problems(e, VERSION, REPO))
-
-
-def test_releases_repo_is_read_from_mcp_servers():
-    repo, problems = tool.releases_repo({"mcpServers": MCPB}, VERSION)
-    assert (repo, problems) == (REPO, [])
+         "source": tool.pinned_source(tool.RELEASES_REPO, VERSION, sha)}
+    assert any("40-character" in p
+               for p in tool.entry_problems(e, VERSION, tool.RELEASES_REPO))
 
 
 def test_blob_sha_matches_git(tmp_path):
