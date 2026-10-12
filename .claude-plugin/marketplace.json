@@ -14,7 +14,7 @@
         "ref": "v3.6.1",
         "sha": "4143213d2263c688db41d965854cb47b06f83236"
       },
-      "version": "3.6.1",
+      "version": "3.6.2",
       "description": "AI Power Tools for Sparx EA \u2014 the skills: modeling, MDG authoring and deployment, validation rulesets, diagram composition, import/export and stakeholder reporting against a Sparx Enterprise Architect repository. Needs the AI Power Tools for Sparx EA Claude Desktop extension (the MCP server) installed. Requires Enterprise Architect on Windows."
     }
   ]
