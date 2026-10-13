@@ -365,3 +365,5 @@ of the binary product's release cycle.
 ## License
 
 MIT. See [LICENSE](LICENSE).
+
+AI Power Tools and NovoCircle are trademarks of SFI Ventures, LLC; the MIT License grants no rights in those names. Sparx Systems and Enterprise Architect are trademarks of Sparx Systems Pty Ltd. NovoCircle is not affiliated with Sparx Systems.
