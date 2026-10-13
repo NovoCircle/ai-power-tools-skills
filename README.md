@@ -350,6 +350,21 @@ read `_shared/references/westbrook-example.md` before writing a new example
 instead of inventing a parallel one. `tools/gate.py` fails the build on
 real-customer strings — run it before any release.
 
+### Tests
+
+Run every skill's tests from the repository root with one command:
+
+```
+python -m pytest
+```
+
+A test lives beside the module it tests, in the same `tools/` folder, named
+`test_<module>.py`, and records the backlog items it pins in a module-level `PINS` tuple.
+Most test files ship to customers with their skill, so editing one changes its hash:
+regenerate `manifest.json` afterwards. [`TESTING.md`](TESTING.md) has the full rule, the data
+the tests need (PyYAML, pyarrow, the Sparx example model, the server repository's fixture)
+and how to provide it.
+
 ## Contributing
 
 Skill content edits are welcome. PRs against this repo are independent
