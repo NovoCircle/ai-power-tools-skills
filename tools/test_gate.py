@@ -519,6 +519,73 @@ class TestCorpusImages:
         assert gate.check_images(library, catalog=catalog) == []
 
 
+class TestCatalogLocation:
+    """Where the gate finds the catalog: the server checkout first, then research/.
+
+    APT-2026-0489. The catalog is committed in the private server repository;
+    this public repository reads it from the sibling checkout. Enforcement
+    never depends on it (`TestCorpusImages` pins that), so these tests are only
+    about which copy is used to name a corpus image.
+    """
+
+    @staticmethod
+    def _tree(tmp_path):
+        """A workspace holding the skills library and, beside it, other trees."""
+        workspace = tmp_path / "workspace"
+        library = workspace / "ai-power-tools-skills"
+        library.mkdir(parents=True)
+        return workspace, library
+
+    @staticmethod
+    def _catalog(path, *names):
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("file\tnotation\n" + "".join(f"{n}\tUML\n" for n in names),
+                        encoding="utf-8")
+        return path
+
+    def test_a_catalog_in_the_sibling_server_checkout_is_used(self, tmp_path, monkeypatch):
+        workspace, library = self._tree(tmp_path)
+        committed = self._catalog(workspace / gate.CATALOG_REL, "committed-name.png")
+        monkeypatch.setattr(gate, "ROOT", library)
+        assert gate._find_catalog() == committed
+        assert gate.corpus_image_names() == {"committed-name.png"}
+
+    def test_a_finding_names_the_image_from_the_committed_catalog(self, tmp_path, monkeypatch):
+        workspace, library = self._tree(tmp_path)
+        self._catalog(workspace / gate.CATALOG_REL, "committed-name.png")
+        monkeypatch.setattr(gate, "ROOT", library)
+        img = library / "ea-modeling" / "committed-name.png"
+        img.parent.mkdir(parents=True)
+        img.write_bytes(b"\x89PNG\r\n\x1a\n")
+        findings = gate.check_images(library)
+        assert len(findings) == 1 and "corpus image" in findings[0], findings
+
+    def test_the_server_checkout_wins_over_the_research_tree(self, tmp_path, monkeypatch):
+        workspace, library = self._tree(tmp_path)
+        committed = self._catalog(workspace / gate.CATALOG_REL, "committed-name.png")
+        self._catalog(workspace / gate.CATALOG_FALLBACK_REL, "research-name.png")
+        monkeypatch.setattr(gate, "ROOT", library)
+        assert gate._find_catalog() == committed
+        assert gate.corpus_image_names() == {"committed-name.png"}
+
+    def test_the_research_tree_is_still_the_fallback(self, tmp_path, monkeypatch):
+        workspace, library = self._tree(tmp_path)
+        research = self._catalog(workspace / gate.CATALOG_FALLBACK_REL, "research-name.png")
+        monkeypatch.setattr(gate, "ROOT", library)
+        assert gate._find_catalog() == research
+
+    def test_no_catalog_anywhere_is_none_and_blocks_all_the_same(self, tmp_path, monkeypatch):
+        workspace, library = self._tree(tmp_path)
+        monkeypatch.setattr(gate, "ROOT", library)
+        assert gate._find_catalog() is None
+        assert gate.corpus_image_names() == set()
+        img = library / "ea-modeling" / "anything.png"
+        img.parent.mkdir(parents=True)
+        img.write_bytes(b"\x89PNG\r\n\x1a\n")
+        findings = gate.check_images(library)
+        assert len(findings) == 1 and "image file in the bundle" in findings[0], findings
+
+
 class TestGalleryNamesCaught:
     @pytest.mark.parametrize("spelling", [
         "Hardware Retailer", "hardware-retailer", "HardwareRetailer",
