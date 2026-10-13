@@ -65,7 +65,7 @@ Install the first two with `python -m pip install pytest pyyaml pyarrow`, as CI 
 
 ## These tests ship to customers
 
-25 of the 28 test files are listed in `manifest.json` and are installed with the skills. Any edit to
+25 of the 29 test files are listed in `manifest.json` and are installed with the skills. Any edit to
 one of them changes its sha256, so after editing a test:
 
 ```

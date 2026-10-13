@@ -68,7 +68,7 @@ def _pins_of(path: Path):
 
 def test_the_repository_has_test_modules_to_check():
     # A walk that finds nothing would make every check below pass vacuously.
-    assert len(_MODULES) >= 28, [_rel(p) for p in _MODULES]
+    assert len(_MODULES) >= 29, [_rel(p) for p in _MODULES]
 
 
 @pytest.mark.parametrize("path", _MODULES, ids=_rel)

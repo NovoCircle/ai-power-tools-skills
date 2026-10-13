@@ -612,6 +612,7 @@ def test_each_bound_diagram_type_states_the_prefix_that_was_measured_for_it(
         assert dt.stereotype_prefix_provenance == f"{STRATEGY}::{name}", name
 
 
+@needs_model
 def test_the_per_type_prefix_round_trips_every_stored_stereotype(model,
                                                                  strategy):
     """THE ROUND TRIP, ON REAL STORED NAMES, PER DIAGRAM TYPE.

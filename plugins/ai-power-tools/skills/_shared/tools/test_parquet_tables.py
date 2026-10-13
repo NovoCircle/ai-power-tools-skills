@@ -280,5 +280,8 @@ def test_cli_writes_the_files_and_the_project_next_to_them(defn, tmp_path, capsy
     assert len(list(folder.glob("*.parquet"))) == len(rows)
     assert (tmp_path / "out" / "WB.pbip").exists()
     table = (tmp_path / "out" / "WB.SemanticModel" / "definition" / "tables" / "t_object.tmdl").read_text("utf-8")
-    assert str(folder / "t_object.parquet") in table
+    # The product joins with a backslash on every platform, on purpose: Power BI
+    # reads Windows paths (tmdl.py, ParquetSource.expression). str(Path) is "/" on
+    # Linux, so asserting that form failed on the CI runner while passing here.
+    assert str(folder) + "\\t_object.parquet" in table
     assert str(tmp_path / "out" / "WB.pbip") in capsys.readouterr().out
