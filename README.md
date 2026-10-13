@@ -353,6 +353,19 @@ read `_shared/references/westbrook-example.md` before writing a new example
 instead of inventing a parallel one. `tools/gate.py` fails the build on
 real-customer strings — run it before any release.
 
+### Sample diagrams and the gate
+
+`tools/gate.py` also keeps Sparx's diagram gallery out of the bundle: no image files, and no
+gallery example subjects. To name which corpus image it is blocking, the gate reads the
+sample-diagram catalog from the server repository's reference folder
+(`ea-mcp-server/tests/reference/sample-diagrams/catalog-rescored.tsv` in a sibling
+`ai-power-tools` checkout, found by walking up from this repository), and falls back to the
+research folder the catalog lived in before it was committed. Enforcement never depends on the
+catalog: without it every image is still blocked, only described generically. The catalog and
+the measurements behind the diagram bindings belong to the server repository (private) because
+they name gallery subjects this repository must not carry; its `README.md` says what they are and
+how to re-measure after an EA release.
+
 ### Tests
 
 Run every skill's tests from the repository root with one command:
