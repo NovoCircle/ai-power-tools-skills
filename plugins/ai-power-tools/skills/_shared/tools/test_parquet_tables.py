@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
 """Tests for path C: Parquet files and the .pbip that reads them.
 
-    python -m pytest _shared/tools/test_parquet_tables.py -q
+    python -m pytest plugins/ai-power-tools/skills/_shared/tools/test_parquet_tables.py -q
 
 Hermetic: the Westbrook Bank definition fixture, rows built in the test, a temp
 folder. The three-path comparison needs no pyarrow; the writer tests skip without it.
 """
 from __future__ import annotations
+
+# No backlog item is pinned: these tests cover designed behavior, not a filed defect.
+PINS = ()
 
 import copy
 import json

@@ -3,7 +3,7 @@
 
 Run from the repository root:
 
-    python -m pytest ea-diagram-composition/tools/test_bindings_frameworks.py -q
+    python -m pytest plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_frameworks.py -q
 
 Hermetic. The measured tests read a private COPY of the reference model as
 SQLite, which is what `measure_binding.open_model_copy` does; nothing here
@@ -53,6 +53,9 @@ model at all, because a binding keyed on one of those resolves to nothing
 silently, which is the worst failure the schema has.
 """
 from __future__ import annotations
+
+# No backlog item is pinned: these tests cover designed behavior, not a filed defect.
+PINS = ()
 
 import math
 import re

@@ -3,7 +3,7 @@
 
 Run from the repository root:
 
-    python -m pytest ea-diagram-composition/tools/test_bindings_strategy.py -q
+    python -m pytest plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_strategy.py -q
 
 WHY THESE TWO ARE IN ONE FILE. Both were authored from one finding: the corpus
 audit classifies their rows as `Custom` with the reason "Custom has no MDG
@@ -35,6 +35,9 @@ the product. Adding the ids to `FAMILIES` is what makes that test pass; nothing
 here can see it.
 """
 from __future__ import annotations
+
+# Backlog items this module pins (checked by tools/test_suite_conventions.py).
+PINS = ("APT-2026-0183",)
 
 import sys
 from pathlib import Path
