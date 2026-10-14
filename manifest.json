@@ -247,7 +247,7 @@
         "ea-import-export/references/xmi-export-import.md"
       ],
       "sha256": {
-        "ea-import-export/SKILL.md": "d0d6dbae7fdb05463923c9a641de01c5c7a97c0e0b5d048d62e89404b62a8682",
+        "ea-import-export/SKILL.md": "e20970b47b10263bf4eea15dc92f133c95d1af7651a17697347585e900d381de",
         "ea-import-export/references/generate-report.md": "8fc55ca353efc77748b712d9df1791227d452636acd0988255ad402f461b96b1",
         "ea-import-export/references/xmi-export-import.md": "d61ee88f5a6f8847605a46a1fcada53ee0927220a94baa108d3b58a068a2a3ef"
       }
@@ -397,7 +397,7 @@
         "ea-power-bi/references/the-path-choice.md"
       ],
       "sha256": {
-        "ea-power-bi/SKILL.md": "579beb19e63f361867964e753ed179a20c0c214355bdaf12a1f141cee811ff4c",
+        "ea-power-bi/SKILL.md": "2f23a2bfa1949d7de0fadd9cbd03261561f9bfa1b8b26f060427dc239eece40a",
         "ea-power-bi/references/measured-power-bi-behavior.md": "f17495e47283d2b8924513ecd1d76a117d62ccc9ccafa09971d7c92552c940b8",
         "ea-power-bi/references/the-path-choice.md": "19342a6c6a336df225eee8e92bfff5b4794866a2f2a4eecc2db5f28c6a0fbbaf"
       }
@@ -418,7 +418,7 @@
         "ea-reporting-database/references/troubleshooting.md"
       ],
       "sha256": {
-        "ea-reporting-database/SKILL.md": "f41876ac1416b4212aa45a7dcd04796619c71f0010f98bb6cd80c88d3e633435",
+        "ea-reporting-database/SKILL.md": "8578f88f449cbfb05afc91e0f418c9742ad873631bda8f9d8ecc349b96e158e8",
         "ea-reporting-database/references/the-extract-snapshot.md": "a1255a4e185310a64570a7d6f6d67cbe24bca79eb07a14e97ce04820a8c0f0b9",
         "ea-reporting-database/references/the-governance-gate.md": "ddd3c32b0bd37e311d61b0e346e294b9bbddd9395d266a943fb1770648335437",
         "ea-reporting-database/references/the-inclusion-choice.md": "094d74606eabfa0bd4001b0a88dad62ef4f53176a21b1f4a04e9686a41ec3e3a",
@@ -467,7 +467,7 @@
         "ea-start-here/SKILL.md"
       ],
       "sha256": {
-        "ea-start-here/SKILL.md": "0e82fdd23836445e9e96ebc0f5efa2b589b33c9b0fdc95c751be19904bb3f09f"
+        "ea-start-here/SKILL.md": "750e9f950b5254527a46a30578ff4252977276aa308522938ac6df0fbf28d0f3"
       }
     },
     {
