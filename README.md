@@ -365,6 +365,17 @@ regenerate `manifest.json` afterwards. [`TESTING.md`](TESTING.md) has the full r
 the tests need (PyYAML, pyarrow, the Sparx example model, the server repository's fixture)
 and how to provide it.
 
+## Register
+
+`TEST-REGISTER.md` lists every part of this library that needs a test and says whether it has one: each skill, each shipped helper program, each shipped YAML data asset and the plugin surface. It is generated, never edited by hand. After you add or remove a skill, program or asset, or add a test:
+
+```
+python tools/register.py --write      # regenerate TEST-REGISTER.md and commit it
+python tools/register.py --check      # exit 1 when the committed copy is stale
+```
+
+The register records whether a test exists, not whether it passed. The **A** column is skill acceptance: it reads `cases: N · not run` and counts as present only when `references/test-cases.md` has at least one case with a `Covers:` line naming a heading in that skill's SKILL.md. `tools/register.toml` holds the exemptions, the open decisions and the known-gap list; `tools/test_register.py` fails on a new gap, a stale register or a closed gap still on the list. Neither the register nor its tooling ships (see [TESTING.md](TESTING.md)).
+
 ## Contributing
 
 Skill content edits are welcome. PRs against this repo are independent

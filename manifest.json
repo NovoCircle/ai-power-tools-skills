@@ -569,7 +569,7 @@
       ],
       "sha256": {
         "ruleset-archimate31/archimate31_rules.yaml": "8e2bc0d0c46c319d7d54a8af11c21d1a3052f8f1bc92efcf9084eef3e7bc518e",
-        "ruleset-archimate31/tools/test_ruleset_archimate31.py": "82814eb36508080ba4918bb06c9b9514da79f64fc1203b18eb09594051333a14"
+        "ruleset-archimate31/tools/test_ruleset_archimate31.py": "66d791530db5aacc83a6fbd5459350049b9aa50bff460a02d5d36b76d5b12956"
       }
     }
   ]

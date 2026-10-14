@@ -50,6 +50,9 @@ from __future__ import annotations
 # Backlog items this module pins (checked by tools/test_suite_conventions.py).
 PINS = ("APT-2026-0155",)
 
+# The data asset this module covers (read by tools/register.py).
+COVERS = ("asset:ruleset-archimate31/archimate31_rules.yaml",)
+
 import re
 import sqlite3
 from pathlib import Path
