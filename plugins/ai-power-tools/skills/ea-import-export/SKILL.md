@@ -126,6 +126,15 @@ report content for anything identifying before sharing a generated report outsid
 Full discovery method for real templates once a project has them, and the complete test matrix,
 are in [`references/generate-report.md`](references/generate-report.md).
 
+## 5b. Reading the results from a Claude Cowork or cloud session
+
+Exports and generated reports are files. If the user wants a Claude Cowork or other cloud session
+to read them, tell them to export into one `<output-folder>` and connect that folder, not the
+folder that holds the model file. Such a session can read the XMI, images and reports, but it
+cannot change the model or import anything back, because the server is not available in those
+sessions today. Review a generated report for identifying details before connecting the folder
+(§5).
+
 ## 6. EA Computer-Use — Latency
 
 Every operation above is MCP-only and does not require driving the EA desktop UI. If you do open
