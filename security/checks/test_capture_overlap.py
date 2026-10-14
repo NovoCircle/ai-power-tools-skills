@@ -1,6 +1,9 @@
 """Tests for capture_overlap.py. Run: python -m pytest security/checks"""
 from __future__ import annotations
 
+# No backlog item is pinned: these tests cover designed behavior, not a filed defect.
+PINS = ()
+
 import sys
 from pathlib import Path
 

@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
 """Tests for the Power BI model generated from the business-layer definition.
 
-    python -m pytest _shared/tools/test_powerbi_model.py -q
+    python -m pytest plugins/ai-power-tools/skills/_shared/tools/test_powerbi_model.py -q
 
 Hermetic: the fixture is the Westbrook Bank definition the server writes, and
 nothing here touches a database, Power BI or the network.
 """
 from __future__ import annotations
+
+# No backlog item is pinned: these tests cover designed behavior, not a filed defect.
+PINS = ()
 
 import copy
 import json
