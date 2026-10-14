@@ -90,3 +90,44 @@ def test_a_skill_with_no_frontmatter_is_caught(library):
 def test_a_violation_is_blocking(library):
     _skill(library, "ea-example", "ea-other")
     assert all(gate.is_blocking(f) for f in gate.check_skill_frontmatter(library))
+
+
+def _bare(root: Path, directory: str, frontmatter: str) -> None:
+    p = root / "plugins" / "ai-power-tools" / "skills" / directory / "SKILL.md"
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(f"---\n{frontmatter}---\n\n# Skill\n", encoding="utf-8", newline="\n")
+
+
+def test_a_missing_description_is_caught_and_blocking(library):
+    _bare(library, "ea-example", "name: ea-example\n")
+    found = gate.check_skill_frontmatter(library)
+    assert "no description" in " | ".join(found)
+    assert all(gate.is_blocking(f) for f in found)
+
+
+@pytest.mark.parametrize("directory,frontmatter", [
+    ("ea-example", "description: x\n"),                                  # no name
+    ("ea-example", "name: ea-other\ndescription: x\n"),                  # directory mismatch
+    ("a" * 65, f"name: {'a' * 65}\ndescription: x\n"),                   # too long
+    ("Ea-Example", "name: Ea-Example\ndescription: x\n"),                # characters
+    ("ea-example", f"name: ea-example\ndescription: {'x' * 1025}\n"),    # description length
+])
+def test_every_new_finding_type_is_blocking(library, directory, frontmatter):
+    _bare(library, directory, frontmatter)
+    found = gate.check_skill_frontmatter(library)
+    assert found and all(gate.is_blocking(f) for f in found)
+
+
+def test_a_name_containing_over_the_fails_strict(library, monkeypatch):
+    # The finding echoes the name; the old substring classifier read that as the
+    # advisory line-limit message and let the build pass.
+    _bare(library, "takes-over-the-world", "name: Takes over the world\ndescription: x\n")
+    for check in ("check_op_drift", "check_images", "check_ruleset_paths", "check_manifest",
+                  "check_stated_server_version", "check_bundle_floor", "check_plugin_package"):
+        monkeypatch.setattr(gate, check, lambda *a, **k: [])
+    monkeypatch.setattr(gate, "op_drift_ran", lambda: True)
+    monkeypatch.setattr(gate.sys, "argv", ["gate.py", "--strict"])
+    findings = gate.check_skill_frontmatter(library)
+    assert any("over the" in f for f in findings)
+    assert all(gate.is_blocking(f) for f in findings)
+    assert gate.main() == 1

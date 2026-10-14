@@ -264,6 +264,14 @@ def iter_files(target: Path):
             yield p
 
 
+class Advisory(str):
+    """A finding that is reported but does not stop the release.
+
+    Severity is the type, never the wording: finding text can echo a skill's own
+    name or path, so matching on substrings let a skill steer its own severity.
+    """
+
+
 def check_file(path: Path) -> list[str]:
     out: list[str] = []
     rel = path.relative_to(ROOT)
@@ -320,8 +328,8 @@ def check_file(path: Path) -> list[str]:
                        f"if this is a real customer technology, convert it")
 
     if path.name == "SKILL.md" and len(lines) > MAX_SKILL_LINES:
-        out.append(f"{rel}: {len(lines)} lines — over the {MAX_SKILL_LINES}-line limit; "
-                   f"move detail into references/")
+        out.append(Advisory(f"{rel}: {len(lines)} lines — over the {MAX_SKILL_LINES}-line limit; "
+                            f"move detail into references/"))
 
     return out
 
@@ -399,7 +407,9 @@ def check_skill_frontmatter(target: Path) -> list[str]:
                 out.append(f"{rel}: name '{name}' must use lowercase letters, digits "
                            f"and hyphens only - VS Code will not load this skill")
         desc = fields.get("description", "")
-        if len(desc) > SKILL_DESCRIPTION_MAX:
+        if not desc:
+            out.append(f"{rel}: frontmatter has no description - VS Code will not load this skill")
+        elif len(desc) > SKILL_DESCRIPTION_MAX:
             out.append(f"{rel}: description is {len(desc)} characters, more than "
                        f"{SKILL_DESCRIPTION_MAX} - VS Code will not load this skill")
     return out
@@ -806,7 +816,7 @@ def is_blocking(finding: str) -> bool:
     nobody has classified should hold the release, not slide past in a wall of
     warnings.
     """
-    return "over the" not in finding
+    return not isinstance(finding, Advisory)
 
 
 def main() -> int:
