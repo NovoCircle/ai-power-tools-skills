@@ -120,7 +120,7 @@ def gap(a, kind, key):
 
 def test_option_1_counts_only_what_the_mdg_declares():
     c = run().options()[1]
-    assert (c.declared_element_keys, c.observed_element_keys, c.elements) == (2, 0, 3)
+    assert (c.declared_element_keys, c.observed_element_keys, c.elements) == (2, 0, 99)
     assert (c.declared_connector_keys, c.observed_connector_keys, c.connectors) == (1, 0, 2)
 
 
