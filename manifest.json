@@ -1,7 +1,7 @@
 {
   "manifest_version": "1.0",
-  "bundle_version": "3.6.2",
-  "released_at": "2026-10-12",
+  "bundle_version": "3.6.3",
+  "released_at": "2026-10-13",
   "min_server_version": "3.6.0",
   "skills": [
     {
@@ -467,7 +467,7 @@
         "ea-start-here/SKILL.md"
       ],
       "sha256": {
-        "ea-start-here/SKILL.md": "233b01f7e82f881971140065678fc4835d47c09e4b6137f8954da5a2edabe4b8"
+        "ea-start-here/SKILL.md": "0e82fdd23836445e9e96ebc0f5efa2b589b33c9b0fdc95c751be19904bb3f09f"
       }
     },
     {
