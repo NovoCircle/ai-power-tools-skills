@@ -39,6 +39,16 @@ from __future__ import annotations
 # Backlog items this module pins (checked by tools/test_suite_conventions.py).
 PINS = ("APT-2026-0183",)
 
+# The data assets this module covers (read by tools/register.py). Against EAExample.qea it checks
+# that each technology id and bound diagram type is registered with diagrams of its own, that the
+# stereotype vocabulary on those diagrams is the notation's, that the stated prefix round trips
+# every stored stereotype while the unprefixed lookup misses, and that the one named concept
+# (VC_PrimaryActivity) is measured. APT-2026-0521.
+COVERS = (
+    "asset:ea-diagram-composition/bindings/strategymap.yaml",
+    "asset:ea-diagram-composition/bindings/mindmapping.yaml",
+)
+
 import sys
 from pathlib import Path
 

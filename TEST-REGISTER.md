@@ -72,17 +72,17 @@ Required: U, a test module whose module-level `COVERS` names the asset. Tests th
 
 | Unit | Required | U | Verdict |
 |---|---|---|---|
-| asset:ea-diagram-composition/bindings/archimate3.yaml | U | — | missing U |
-| asset:ea-diagram-composition/bindings/bpmn2.0.yaml | U | — | missing U |
-| asset:ea-diagram-composition/bindings/dmn1.1.yaml | U | — | missing U |
-| asset:ea-diagram-composition/bindings/erd_dp.yaml | U | — | missing U |
-| asset:ea-diagram-composition/bindings/mindmapping.yaml | U | — | missing U |
-| asset:ea-diagram-composition/bindings/strategymap.yaml | U | — | missing U |
-| asset:ea-diagram-composition/bindings/sysml1.4.yaml | U | — | missing U |
-| asset:ea-diagram-composition/bindings/togaf-diagrams.yaml | U | — | missing U |
-| asset:ea-diagram-composition/bindings/uafp_framework.yaml | U | — | missing U |
-| asset:ea-diagram-composition/bindings/uml.yaml | U | — | missing U |
-| asset:ea-diagram-composition/bindings/zf-interface.yaml | U | — | missing U |
+| asset:ea-diagram-composition/bindings/archimate3.yaml | U | present (6 tests, test_bindings_real_model.py) | complete |
+| asset:ea-diagram-composition/bindings/bpmn2.0.yaml | U | present (6 tests, test_bindings_real_model.py) | complete |
+| asset:ea-diagram-composition/bindings/dmn1.1.yaml | U | present (6 tests, test_bindings_real_model.py) | complete |
+| asset:ea-diagram-composition/bindings/erd_dp.yaml | U | present (6 tests, test_bindings_real_model.py) | complete |
+| asset:ea-diagram-composition/bindings/mindmapping.yaml | U | present (27 tests, test_bindings_strategy.py) | complete |
+| asset:ea-diagram-composition/bindings/strategymap.yaml | U | present (27 tests, test_bindings_strategy.py) | complete |
+| asset:ea-diagram-composition/bindings/sysml1.4.yaml | U | present (6 tests, test_bindings_real_model.py) | complete |
+| asset:ea-diagram-composition/bindings/togaf-diagrams.yaml | U | present (46 tests, test_bindings_frameworks.py) | complete |
+| asset:ea-diagram-composition/bindings/uafp_framework.yaml | U | present (6 tests, test_bindings_real_model.py) | complete |
+| asset:ea-diagram-composition/bindings/uml.yaml | U | present (6 tests, test_bindings_real_model.py) | complete |
+| asset:ea-diagram-composition/bindings/zf-interface.yaml | U | present (6 tests, test_bindings_real_model.py) | complete |
 | asset:ruleset-archimate31/archimate31_rules.yaml | U | present (12 tests, test_ruleset_archimate31.py) | complete |
 
 ## Deployment surfaces
@@ -97,6 +97,165 @@ Every satisfying test id, grouped by unit and kind. A unit with no entry has no 
 that kind. Function ids are read from the syntax tree, so a parametrized test is one id, and a
 method of a test class is written `Class.test_name`.
 
+- `asset:ea-diagram-composition/bindings/archimate3.yaml` U (6)
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_real_model.py::test_the_technology_id_is_the_one_the_model_registers`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_real_model.py::test_each_bound_diagram_type_selects_diagrams`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_real_model.py::test_the_stated_form_matches_more_than_zero_elements`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_real_model.py::test_a_stated_prefix_is_the_prefix_the_model_stores`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_real_model.py::test_every_stereotype_the_binding_names_exists`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_real_model.py::test_the_wrong_form_matches_nothing`
+- `asset:ea-diagram-composition/bindings/bpmn2.0.yaml` U (6)
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_real_model.py::test_the_technology_id_is_the_one_the_model_registers`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_real_model.py::test_each_bound_diagram_type_selects_diagrams`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_real_model.py::test_the_stated_form_matches_more_than_zero_elements`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_real_model.py::test_a_stated_prefix_is_the_prefix_the_model_stores`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_real_model.py::test_every_stereotype_the_binding_names_exists`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_real_model.py::test_the_wrong_form_matches_nothing`
+- `asset:ea-diagram-composition/bindings/dmn1.1.yaml` U (6)
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_real_model.py::test_the_technology_id_is_the_one_the_model_registers`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_real_model.py::test_each_bound_diagram_type_selects_diagrams`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_real_model.py::test_the_stated_form_matches_more_than_zero_elements`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_real_model.py::test_a_stated_prefix_is_the_prefix_the_model_stores`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_real_model.py::test_every_stereotype_the_binding_names_exists`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_real_model.py::test_the_wrong_form_matches_nothing`
+- `asset:ea-diagram-composition/bindings/erd_dp.yaml` U (6)
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_real_model.py::test_the_technology_id_is_the_one_the_model_registers`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_real_model.py::test_each_bound_diagram_type_selects_diagrams`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_real_model.py::test_the_stated_form_matches_more_than_zero_elements`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_real_model.py::test_a_stated_prefix_is_the_prefix_the_model_stores`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_real_model.py::test_every_stereotype_the_binding_names_exists`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_real_model.py::test_the_wrong_form_matches_nothing`
+- `asset:ea-diagram-composition/bindings/mindmapping.yaml` U (27)
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_strategy.py::test_both_technologies_are_registered_in_the_model`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_strategy.py::test_the_model_declares_the_diagram_types_the_bindings_name`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_strategy.py::test_every_bound_diagram_type_has_diagrams_of_its_own`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_strategy.py::test_the_stereotype_vocabulary_is_the_notation_the_corpus_rows_describe`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_strategy.py::test_every_mind_map_has_exactly_one_central_topic`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_strategy.py::test_the_value_chain_carries_no_connectors`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_strategy.py::test_every_stated_number_is_the_measured_one`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_strategy.py::test_three_of_the_four_defaults_are_the_tools_own_pooled_mode`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_strategy.py::test_the_strategy_map_default_is_measured_over_the_selection_it_claims`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_strategy.py::test_no_slot_the_tool_refuses_is_stated`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_strategy.py::test_an_omitted_gap_inherits_a_measured_value_rather_than_an_engine_default`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_strategy.py::test_the_two_unbound_strategy_types_have_no_statable_default`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_strategy.py::test_the_central_topic_is_the_omission_the_mind_map_notes_name`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_strategy.py::test_every_base_is_read_from_the_model_and_unanimous`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_strategy.py::test_the_bases_are_declared_by_the_parent_so_nothing_falls_through`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_strategy.py::test_one_technology_sits_on_two_bases_which_is_why_base_is_per_type`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_strategy.py::test_extending_a_sibling_technology_would_inherit_nothing`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_strategy.py::test_every_grammar_is_in_the_vocabulary_and_producible`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_strategy.py::test_a_composed_grammar_is_used_only_where_the_notation_imposes_one`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_strategy.py::test_the_composed_grammars_used_here_all_have_a_composer`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_strategy.py::test_strategy_map_has_a_prefix_per_diagram_type_not_per_technology`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_strategy.py::test_each_bound_diagram_type_states_the_prefix_that_was_measured_for_it`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_strategy.py::test_the_per_type_prefix_round_trips_every_stored_stereotype`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_strategy.py::test_an_unknown_diagram_type_raises_rather_than_answering_at_the_wrong_scope`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_strategy.py::test_every_tagged_diagram_of_a_bound_type_resolves_exactly`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_strategy.py::test_neither_binding_makes_another_diagram_type_ambiguous`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_strategy.py::test_the_documents_are_lf_only_and_carry_no_local_paths`
+- `asset:ea-diagram-composition/bindings/strategymap.yaml` U (27)
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_strategy.py::test_both_technologies_are_registered_in_the_model`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_strategy.py::test_the_model_declares_the_diagram_types_the_bindings_name`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_strategy.py::test_every_bound_diagram_type_has_diagrams_of_its_own`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_strategy.py::test_the_stereotype_vocabulary_is_the_notation_the_corpus_rows_describe`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_strategy.py::test_every_mind_map_has_exactly_one_central_topic`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_strategy.py::test_the_value_chain_carries_no_connectors`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_strategy.py::test_every_stated_number_is_the_measured_one`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_strategy.py::test_three_of_the_four_defaults_are_the_tools_own_pooled_mode`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_strategy.py::test_the_strategy_map_default_is_measured_over_the_selection_it_claims`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_strategy.py::test_no_slot_the_tool_refuses_is_stated`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_strategy.py::test_an_omitted_gap_inherits_a_measured_value_rather_than_an_engine_default`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_strategy.py::test_the_two_unbound_strategy_types_have_no_statable_default`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_strategy.py::test_the_central_topic_is_the_omission_the_mind_map_notes_name`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_strategy.py::test_every_base_is_read_from_the_model_and_unanimous`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_strategy.py::test_the_bases_are_declared_by_the_parent_so_nothing_falls_through`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_strategy.py::test_one_technology_sits_on_two_bases_which_is_why_base_is_per_type`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_strategy.py::test_extending_a_sibling_technology_would_inherit_nothing`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_strategy.py::test_every_grammar_is_in_the_vocabulary_and_producible`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_strategy.py::test_a_composed_grammar_is_used_only_where_the_notation_imposes_one`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_strategy.py::test_the_composed_grammars_used_here_all_have_a_composer`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_strategy.py::test_strategy_map_has_a_prefix_per_diagram_type_not_per_technology`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_strategy.py::test_each_bound_diagram_type_states_the_prefix_that_was_measured_for_it`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_strategy.py::test_the_per_type_prefix_round_trips_every_stored_stereotype`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_strategy.py::test_an_unknown_diagram_type_raises_rather_than_answering_at_the_wrong_scope`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_strategy.py::test_every_tagged_diagram_of_a_bound_type_resolves_exactly`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_strategy.py::test_neither_binding_makes_another_diagram_type_ambiguous`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_strategy.py::test_the_documents_are_lf_only_and_carry_no_local_paths`
+- `asset:ea-diagram-composition/bindings/sysml1.4.yaml` U (6)
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_real_model.py::test_the_technology_id_is_the_one_the_model_registers`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_real_model.py::test_each_bound_diagram_type_selects_diagrams`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_real_model.py::test_the_stated_form_matches_more_than_zero_elements`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_real_model.py::test_a_stated_prefix_is_the_prefix_the_model_stores`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_real_model.py::test_every_stereotype_the_binding_names_exists`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_real_model.py::test_the_wrong_form_matches_nothing`
+- `asset:ea-diagram-composition/bindings/togaf-diagrams.yaml` U (46)
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_frameworks.py::test_each_framework_binding_loads_and_is_found_by_its_declared_id`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_frameworks.py::test_each_framework_binding_declares_a_measured_empty_prefix`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_frameworks.py::test_each_framework_binding_is_built_on_uml_and_inherits_its_spacing`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_frameworks.py::test_each_framework_binding_inherits_umls_presentation_profiles`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_frameworks.py::test_the_togaf_adm_wheel_is_radial_and_is_both_composed_and_producible`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_frameworks.py::test_the_zachman_grid_is_matrix_and_is_both_composed_and_producible`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_frameworks.py::test_the_zachman_grid_is_not_parked_under_an_unbuilt_composed_grammar`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_frameworks.py::test_the_zachman_cell_size_is_load_bearing_now_that_it_composes`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_frameworks.py::test_neither_framework_draws_its_own_title`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_frameworks.py::test_the_bound_framework_ids_and_diagram_types_exist_in_the_mdg_data`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_frameworks.py::test_the_guessable_framework_ids_are_not_in_the_model_at_all`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_frameworks.py::test_togaf_registers_two_ids_and_only_the_larger_one_is_bound`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_frameworks.py::test_the_zachman_family_is_seven_ids_and_only_the_grid_is_bound`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_frameworks.py::test_the_zachman_perspective_ids_are_the_frameworks_own_rows`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_frameworks.py::test_the_togaf_default_size_is_the_measured_mode_at_the_threshold`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_frameworks.py::test_the_zachman_default_size_is_the_measured_mode_and_is_weak`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_frameworks.py::test_the_togaf_hub_is_the_one_element_bigger_than_the_stated_default`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_frameworks.py::test_neither_binding_states_a_gap_and_both_populations_are_refused`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_frameworks.py::test_the_zachman_gaps_are_a_table_of_abutting_cells_not_sibling_spacing`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_frameworks.py::test_the_togaf_ring_radius_is_measured_and_deliberately_not_stated`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_frameworks.py::test_every_unbound_togaf_diagram_type_has_no_supportable_default`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_frameworks.py::test_the_togaf_enterprise_continuum_is_one_observation_short`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_frameworks.py::test_no_unbound_zachman_perspective_id_has_a_supportable_default`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_frameworks.py::test_the_togaf_adm_prefix_is_stated_at_the_scope_it_was_measured_at`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_frameworks.py::test_the_one_unbound_zachman_default_that_clears_the_rules_is_a_marker_size`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_frameworks.py::test_the_bound_framework_defaults_are_supportable_by_the_same_criterion`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_frameworks.py::test_the_perspective_types_the_corpus_asks_for_are_blocked_on_sizing_alone`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_frameworks.py::test_the_list_of_things_diagram_carries_no_stereotyped_element_at_all`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_frameworks.py::test_a_zachman_perspective_binding_would_need_its_own_file_per_id`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_frameworks.py::test_the_adm_geometry_is_a_hub_and_eight_spokes_on_one_ring`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_frameworks.py::test_the_zachman_grid_is_six_columns_by_six_rows_with_no_containment`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_frameworks.py::test_eas_own_matrix_is_switched_on_for_the_zachman_grid_and_nowhere_else`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_frameworks.py::test_the_zachman_diagram_type_is_stored_in_lower_case_and_is_unique`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_frameworks.py::test_fill_is_claimed_because_no_element_overrides_it`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_frameworks.py::test_every_zachman_cell_carries_an_embedded_image_so_icon_is_claimed`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_frameworks.py::test_no_adm_phase_carries_an_embedded_image_so_icon_is_the_shape_scripts`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_frameworks.py::test_the_adm_routing_name_is_conventional_and_the_measurement_disagrees`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_frameworks.py::test_the_zachman_grid_has_no_connectors_so_its_route_is_a_placeholder`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_frameworks.py::test_each_bound_diagram_resolves_on_the_exact_path_from_its_own_style_ex`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_frameworks.py::test_a_plain_logical_diagram_still_resolves_to_uml_not_to_a_framework`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_frameworks.py::test_the_weak_base_type_path_was_already_ambiguous_across_logical_bindings`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_frameworks.py::test_an_unbound_framework_diagram_reports_unbound_rather_than_a_sibling`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_frameworks.py::test_a_zachman_perspective_diagram_is_not_installed_as_far_as_bindings_go`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_frameworks.py::test_neither_framework_binding_ships_a_local_path`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_frameworks.py::test_neither_framework_binding_ships_crlf_line_endings`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_frameworks.py::test_neither_framework_binding_uses_british_spelling`
+- `asset:ea-diagram-composition/bindings/uafp_framework.yaml` U (6)
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_real_model.py::test_the_technology_id_is_the_one_the_model_registers`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_real_model.py::test_each_bound_diagram_type_selects_diagrams`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_real_model.py::test_the_stated_form_matches_more_than_zero_elements`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_real_model.py::test_a_stated_prefix_is_the_prefix_the_model_stores`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_real_model.py::test_every_stereotype_the_binding_names_exists`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_real_model.py::test_the_wrong_form_matches_nothing`
+- `asset:ea-diagram-composition/bindings/uml.yaml` U (6)
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_real_model.py::test_the_technology_id_is_the_one_the_model_registers`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_real_model.py::test_each_bound_diagram_type_selects_diagrams`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_real_model.py::test_the_stated_form_matches_more_than_zero_elements`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_real_model.py::test_a_stated_prefix_is_the_prefix_the_model_stores`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_real_model.py::test_every_stereotype_the_binding_names_exists`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_real_model.py::test_the_wrong_form_matches_nothing`
+- `asset:ea-diagram-composition/bindings/zf-interface.yaml` U (6)
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_real_model.py::test_the_technology_id_is_the_one_the_model_registers`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_real_model.py::test_each_bound_diagram_type_selects_diagrams`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_real_model.py::test_the_stated_form_matches_more_than_zero_elements`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_real_model.py::test_a_stated_prefix_is_the_prefix_the_model_stores`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_real_model.py::test_every_stereotype_the_binding_names_exists`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_real_model.py::test_the_wrong_form_matches_nothing`
 - `asset:ruleset-archimate31/archimate31_rules.yaml` U (12)
   - `ruleset-archimate31/tools/test_ruleset_archimate31.py::test_ruleset_matches_more_than_zero_archimate_elements`
   - `ruleset-archimate31/tools/test_ruleset_archimate31.py::test_ruleset_matches_more_than_zero_connectors`
@@ -1445,11 +1604,11 @@ Quoted from `tools/register.toml`. Nothing here is decided until its status says
 |---|---|---|---|---|---|
 | Skill | A | 24 | 0 | 0 | 24 |
 | Helper program | U | 18 | 18 | 0 | 0 |
-| Data asset | U | 12 | 1 | 0 | 11 |
+| Data asset | U | 12 | 12 | 0 | 0 |
 | Deployment surface | U | 1 | 1 | 0 | 0 |
 | Deployment surface | D | 1 | 0 | 0 | 1 |
 
 - Skills without A: 24 of 24.
 - Helper programs with no using skill: 2 (fidelity.py, measure_binding.py).
-- Data assets with U that run locally only: 0 of 1.
-- Gaps in all: 36.
+- Data assets with U that run locally only: 0 of 12.
+- Gaps in all: 25.
