@@ -28,8 +28,11 @@ That works on every surface Claude offers — the CLI, the desktop Code tab, VS 
 Desktop chat and Cowork. Plugins are the only mechanism all of them load.
 
 You still need Enterprise Architect installed on the same Windows machine. The server drives
-EA over COM, so it has to run where EA runs. A Cowork session in the cloud reaches it through
-Claude Desktop on your workstation — that relocates the conversation, not EA.
+EA over COM, so it has to run where EA runs. In current builds, Claude Cowork runs in the cloud by
+default, and local MCP servers do not run in cloud sessions, so the server is not available there.
+Use the Claude Desktop Code tab or another session that runs locally on that machine. A cloud
+session can still read exports, Parquet files and generated Power BI projects from a folder you
+have connected.
 
 In Claude Desktop you can instead download `ai-power-tools.plugin` from the
 [latest release](https://github.com/NovoCircle/ai-power-tools-skills/releases/latest) and
