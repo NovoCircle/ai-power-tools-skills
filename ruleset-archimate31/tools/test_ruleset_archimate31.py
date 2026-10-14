@@ -47,6 +47,9 @@ Provenance of each constant, so a future reader can re-take the measurement:
 """
 from __future__ import annotations
 
+# Backlog items this module pins (checked by tools/test_suite_conventions.py).
+PINS = ("APT-2026-0155",)
+
 import re
 import sqlite3
 from pathlib import Path
@@ -60,7 +63,25 @@ STEREOTYPE_PREFIX = "ArchiMate_"
 # Repo layout: <root>/ruleset-archimate31/tools/<this file>
 ROOT = Path(__file__).resolve().parents[2]
 RULES_PATH = ROOT / "ruleset-archimate31" / "archimate31_rules.yaml"
-BINDING_PATH = ROOT / "ea-diagram-composition" / "bindings" / "archimate3.yaml"
+
+
+def _sibling_skill_file(skill: str, *parts: str) -> Path:
+    """Where another skill's file is, in either layout this file runs in.
+
+    In the source repository the skills live under `plugins/ai-power-tools/skills/`;
+    installed, they sit beside this ruleset directly under the skills directory.
+    Returns the first candidate that exists, else the source-repository path, so a
+    skip reason can name where the file was looked for.
+    """
+    source = ROOT / "plugins" / "ai-power-tools" / "skills" / skill
+    installed = ROOT / skill
+    for base in (source, installed):
+        if base.joinpath(*parts).exists():
+            return base.joinpath(*parts)
+    return source.joinpath(*parts)
+
+
+BINDING_PATH = _sibling_skill_file("ea-diagram-composition", "bindings", "archimate3.yaml")
 
 # Keys in the ruleset whose values are stereotype names compared against a
 # `Stereotype` column. `any_of` and `connector_stereotype` drive the selector;
@@ -415,7 +436,8 @@ def test_the_two_columns_are_documented_as_different(rules):
 # The two shipped files must not state opposite conventions
 # ---------------------------------------------------------------------------
 @pytest.mark.skipif(not BINDING_PATH.exists(),
-                    reason="ea-diagram-composition is not installed alongside this ruleset")
+                    reason=f"ea-diagram-composition binding not found at {BINDING_PATH.as_posix()}; "
+                           "it must sit beside this ruleset")
 def test_prefix_agrees_with_the_diagram_composition_binding(rules):
     """APT-2026-0155's second symptom: one bundle, two opposite conventions."""
     binding = yaml.safe_load(BINDING_PATH.read_text(encoding="utf-8"))
@@ -430,11 +452,12 @@ def test_prefix_agrees_with_the_diagram_composition_binding(rules):
     assert all(n.startswith(declared) for n in used)
 
 
-AUTHOR_SKILL = ROOT / "ea-ruleset-author" / "references" / "rule-grammar.md"
+AUTHOR_SKILL = _sibling_skill_file("ea-ruleset-author", "references", "rule-grammar.md")
 
 
 @pytest.mark.skipif(not AUTHOR_SKILL.exists(),
-                    reason="ea-ruleset-author is not installed alongside this ruleset")
+                    reason=f"ea-ruleset-author guide not found at {AUTHOR_SKILL.as_posix()}; "
+                           "it must sit beside this ruleset")
 def test_the_authoring_guide_does_not_teach_the_bare_form():
     """This ruleset is named as the canonical reference implementation.
 

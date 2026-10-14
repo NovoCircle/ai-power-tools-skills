@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Tests for `.pbip` project authoring.
 
-    python -m pytest _shared/tools/test_pbip.py -q
+    python -m pytest plugins/ai-power-tools/skills/_shared/tools/test_pbip.py -q
 
 Nothing here touches Power BI or the filesystem. Several assert measured
 failure modes of the REPORT half, which is the part that cost real time:
@@ -9,6 +9,9 @@ failure modes of the REPORT half, which is the part that cost real time:
 loads the model then crashes every save path.
 """
 from __future__ import annotations
+
+# No backlog item is pinned: these tests cover designed behavior, not a filed defect.
+PINS = ()
 
 import json
 import re
