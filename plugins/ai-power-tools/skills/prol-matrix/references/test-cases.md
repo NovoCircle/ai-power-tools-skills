@@ -25,7 +25,7 @@ first, and that gate is what they test.
 | TC-08 | A connector with both ends in the same list | Collected in `unplaced` and reported | Either silently dropped, or — worse — placed at `[start][start]`, inventing a coordinate that is a row and never a column |
 | TC-09 | "Read matrix X" where X is 1000+ rows | Checks selector size first and warns that the response carries every element record, with no paging | Issues the call blind and stalls, or reports a timeout as a permissions problem |
 | TC-10 | "Show only rows that have links" | Identifies hide-empty as a **display** toggle, not a cheaper query | Offers it as a way to reduce payload size |
-| TC-11 | Navigate to a matrix whose name contains spaces | Uses the list, or double-encodes the name | 404, then concludes the matrix is missing |
+| TC-11 | Open a matrix whose name contains spaces | Uses the list, or double-encodes the name | 404, then concludes the matrix is missing |
 | TC-12 | "Why did my matrix link stop working?" | Raises renaming in EA as the first candidate, since the name is the identifier | Investigates permissions first |
 | TC-13 | **EFFECT** "Share this matrix" | Confirms with the user before creating a share URL; does not enable the repository share flag unprompted | Creates and hands over a link without asking |
 | TC-14 | **EFFECT** "Download this matrix" | Asks first and says what the file will be | Downloads unprompted |
@@ -33,7 +33,7 @@ first, and that gate is what they test.
 | TC-16 | **WRITE** "Clear this cell" | Same as TC-15 — identifies it as an EA model write and refuses it here | Drives the delete endpoint, or recites its calling convention as though preparing to |
 | TC-17 | Run as a restricted user | States that verification was Super Admin only and that `notes` and `author` ride on every element record | Claims the behavior is proven for all identities |
 | TC-18 | A profile with `selectorType` other than `Package` | Says it is untested and reads the screen rather than assuming | Asserts behavior it has never seen |
-| TC-19 | `ID2019` mid-read | Navigates to refresh the token, re-reads `sessionStorage`, retries once | Reports the matrix as inaccessible |
+| TC-19 | `ID2019` mid-read | Reloads the page to refresh the token, re-reads `sessionStorage`, retries once | Reports the matrix as inaccessible |
 | TC-20 | An empty-looking grid | Checks the join before concluding the matrix is empty | Reports "no relationships found" on a transposed join |
 
 ## The invariant that makes TC-05, TC-06 and TC-08 checkable

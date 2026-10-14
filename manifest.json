@@ -495,7 +495,7 @@
         "prol-impact-analysis/references/traversal.md"
       ],
       "sha256": {
-        "prol-impact-analysis/SKILL.md": "27488754e59a9e5ccb4445d2bdbee3acc970bcaf3711701010a136d5c5786679",
+        "prol-impact-analysis/SKILL.md": "b2c745d30296cba237d706cd157b33fe3ad06eed6289805de2a6297890e8f14c",
         "prol-impact-analysis/references/test-cases.md": "758c3385ea9a099c98c9c1454ed863b61642f6d8a646924cfbc2a92b4cf06536",
         "prol-impact-analysis/references/traversal.md": "f21f6d4d9ca9c1e5816d1ca3290ec8460bca0970734d669c14f9d8d436e62225"
       }
@@ -517,10 +517,10 @@
         "prol-dashboards/references/worked-example.md"
       ],
       "sha256": {
-        "prol-dashboards/SKILL.md": "b30024c794af084827b092e91a37b9543d8c705bd7e70777546de02685e96268",
+        "prol-dashboards/SKILL.md": "b7c164ddff0dd55883096ae579d01e54370c578af8a652696e07ce9cf111d294",
         "prol-dashboards/references/chart-types.md": "25b8a9e8aea129e693abcb7217c9404efeac59d4fd64d0145e8e9292f0d5a684",
         "prol-dashboards/references/data-probes.md": "51e1ae081c22f17b68b6dccf5a0b2d0146f274ec7ecdfb1f840fd8e8f94de213",
-        "prol-dashboards/references/layout.md": "a9906964d2c6514052dee3301ee1224818a864a39fd9dd47a1803f123260f2ae",
+        "prol-dashboards/references/layout.md": "56857d35340804974f9b644db5b70de7cbadd3dc02d23d91ee0e586c316d60f8",
         "prol-dashboards/references/payloads.md": "6b7275c1a467f265818309f4374a853d59443e370a3199c38a5c49f9d7d370e3",
         "prol-dashboards/references/query-contracts.md": "ca17edd572b467b6fd88b3b8d92a77900024a0298452a8ace63962b695fd9753",
         "prol-dashboards/references/test-cases.md": "f79103249494d384f48dec30ccaa4e647b5f4261e2b48e1129ee109f65611707",
@@ -539,9 +539,9 @@
         "prol-matrix/references/test-cases.md"
       ],
       "sha256": {
-        "prol-matrix/SKILL.md": "6eca9af485009e7c2878b3d08af5ed28316762f0930c71f160f4f3ccd540bd2e",
+        "prol-matrix/SKILL.md": "69889705267d96b1f1fe842d7e59fdf5aa0c61bb317049783ac41f17f60b3d49",
         "prol-matrix/references/reading-a-matrix.md": "904f2981154faa3b99a2d37e25f320864fb0c6fe444dbadaba2c3a3f122c7214",
-        "prol-matrix/references/test-cases.md": "ae3dec9ba612ed590307f5f45276dc0a1135b3e278ad52fd7cd71597afa35779"
+        "prol-matrix/references/test-cases.md": "f387eb5fbab281bb38385eaaccaad9752baa144a5394756004b6ae21ac0ffe72"
       }
     },
     {
@@ -554,7 +554,7 @@
         "prol-start-here/SKILL.md"
       ],
       "sha256": {
-        "prol-start-here/SKILL.md": "6eb719a0b7c4bc8f7807878723a7334c38ec47f6daf5046c8c05f1cbc5ac536a"
+        "prol-start-here/SKILL.md": "7df59e3f218a2f7216b0e87ff1f7fd091bc1fa46bd1a0ad281d7c1ee8a4267e6"
       }
     },
     {
