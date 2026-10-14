@@ -47,12 +47,12 @@ Read the response before anything else:
 - **There is no `ping` tool, or no AI Power Tools tools at all** — say in one sentence that this
   session has no AI Power Tools tools, then work out which of three causes applies. Ask the user
   where the session is running if you cannot tell.
-  1. **A Claude Cowork or other cloud session, or a session running in a virtual machine.** Local
-     MCP servers are not available in these sessions today, so the server cannot be reached from
-     them. Remedy: use the Claude Desktop Code tab, or another session that runs locally on the
+  1. **A Claude Cowork or other cloud session.** Local MCP servers are not available in cloud
+     sessions today, so the server cannot be reached from them. Remedy: use the Claude Desktop Code tab, or another session that runs locally on the
      Windows machine where Enterprise Architect runs.
-  2. **Claude Desktop timed out connecting local servers when the session started.** The app waits
-     a short time for its local servers and then starts the session without them. Remedy:
+  2. **Claude Desktop timed out connecting local servers when the session started.** This is the
+     usual cause in a local session that has no tools. The app waits a short time for its local
+     servers and then starts the session without them. Remedy:
      reconnect the AI Power Tools extension in **Settings > Extensions**, or start a new session.
   3. **The extension is not installed, or it is turned off.** The extension is the server. To
      install it:
@@ -66,7 +66,8 @@ Read the response before anything else:
   `ea_repository` or any other EA call. What is still possible, in any of these sessions, is
   reading what the server or its engines already wrote into a folder the user has connected:
   XMI and image exports, generated reports, Parquet files, and generated Power BI projects. Offer
-  that, and ask which folder to look at. A session without the server cannot change the model.
+  that, and ask which folder to look at. Files a cloud session reads from a connected folder are
+  processed on Anthropic's servers. A session without the server cannot change the model.
   These limits describe current builds, not a permanent rule.
 
 Note the version. Skills declare a minimum server version, and a mismatch explains a missing
