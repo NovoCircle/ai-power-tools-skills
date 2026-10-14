@@ -28,8 +28,11 @@ That works on every surface Claude offers — the CLI, the desktop Code tab, VS 
 Desktop chat and Cowork. Plugins are the only mechanism all of them load.
 
 You still need Enterprise Architect installed on the same Windows machine. The server drives
-EA over COM, so it has to run where EA runs. A Cowork session in the cloud reaches it through
-Claude Desktop on your workstation — that relocates the conversation, not EA.
+EA over COM, so it has to run where EA runs. In current builds, Claude Cowork runs in the cloud by
+default, and local MCP servers do not run in cloud sessions, so the server is not available there.
+Use the Claude Desktop Code tab or another session that runs locally on that machine. A cloud
+session can still read exports, Parquet files and generated Power BI projects from a folder you
+have connected.
 
 In Claude Desktop you can instead download `ai-power-tools.plugin` from the
 [latest release](https://github.com/NovoCircle/ai-power-tools-skills/releases/latest) and
@@ -349,6 +352,32 @@ code, or employee name into a skill. Convert every example to Westbrook Bank;
 read `_shared/references/westbrook-example.md` before writing a new example
 instead of inventing a parallel one. `tools/gate.py` fails the build on
 real-customer strings — run it before any release.
+
+### Tests
+
+Run every skill's tests from the repository root with one command:
+
+```
+python -m pytest
+```
+
+A test lives beside the module it tests, in the same `tools/` folder, named
+`test_<module>.py`, and records the backlog items it pins in a module-level `PINS` tuple.
+Most test files ship to customers with their skill, so editing one changes its hash:
+regenerate `manifest.json` afterwards. [`TESTING.md`](TESTING.md) has the full rule, the data
+the tests need (PyYAML, pyarrow, the Sparx example model, the server repository's fixture)
+and how to provide it.
+
+## Register
+
+`TEST-REGISTER.md` lists every part of this library that needs a test and says whether it has one: each skill, each shipped helper program, each shipped YAML data asset and the plugin surface. It is generated, never edited by hand. After you add or remove a skill, program or asset, or add a test:
+
+```
+python tools/register.py --write      # regenerate TEST-REGISTER.md and commit it
+python tools/register.py --check      # exit 1 when the committed copy is stale
+```
+
+The register records whether a test exists, not whether it passed. The **A** column is skill acceptance: it reads `cases: N · not run` and counts as present only when `references/test-cases.md` has at least one case with a `Covers:` line naming a heading in that skill's SKILL.md. `tools/register.toml` holds the exemptions, the open decisions and the known-gap list; `tools/test_register.py` fails on a new gap, a stale register or a closed gap still on the list. Neither the register nor its tooling ships (see [TESTING.md](TESTING.md)).
 
 ## Contributing
 

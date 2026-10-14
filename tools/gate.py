@@ -264,6 +264,14 @@ def iter_files(target: Path):
             yield p
 
 
+class Advisory(str):
+    """A finding that is reported but does not stop the release.
+
+    Severity is the type, never the wording: finding text can echo a skill's own
+    name or path, so matching on substrings let a skill steer its own severity.
+    """
+
+
 def check_file(path: Path) -> list[str]:
     out: list[str] = []
     rel = path.relative_to(ROOT)
@@ -320,9 +328,90 @@ def check_file(path: Path) -> list[str]:
                        f"if this is a real customer technology, convert it")
 
     if path.name == "SKILL.md" and len(lines) > MAX_SKILL_LINES:
-        out.append(f"{rel}: {len(lines)} lines — over the {MAX_SKILL_LINES}-line limit; "
-                   f"move detail into references/")
+        out.append(Advisory(f"{rel}: {len(lines)} lines — over the {MAX_SKILL_LINES}-line limit; "
+                            f"move detail into references/"))
 
+    return out
+
+
+# VS Code's Agent Skills rules (APT-2026-0481). A skill that breaks them
+# "silently fails to load" there, so the build fails instead.
+SKILL_NAME_MAX = 64
+SKILL_DESCRIPTION_MAX = 1024
+SKILL_NAME_CHARS = re.compile(r"^[a-z0-9-]+$")
+_FM_KEY = re.compile(r"^([A-Za-z_][A-Za-z0-9_-]*):[ \t]*(.*)$")
+
+
+def _frontmatter_fields(text: str) -> Optional[dict[str, str]]:
+    """Top-level scalar fields of a SKILL.md's YAML frontmatter, or None if
+    there is no frontmatter block. Handles plain, quoted and block (`>`/`|`)
+    scalars with continuation lines; folded values are joined with spaces."""
+    lines = text.lstrip("﻿").splitlines()
+    if not lines or lines[0].strip() != "---":
+        return None
+    end = next((i for i in range(1, len(lines)) if lines[i].strip() == "---"), None)
+    if end is None:
+        return None
+    fields: dict[str, list[str]] = {}
+    block: dict[str, bool] = {}
+    key = None
+    for line in lines[1:end]:
+        m = _FM_KEY.match(line)
+        if m and not line[:1].isspace():
+            key = m.group(1)
+            val = m.group(2).strip()
+            is_block = bool(re.match(r"^[>|][+-]?\d*$", val))
+            block[key] = is_block
+            fields[key] = [] if is_block or not val else [val]
+        elif key is not None and line.strip():
+            fields[key].append(line.strip())
+    out: dict[str, str] = {}
+    for k, parts in fields.items():
+        val = " ".join(parts)
+        if len(val) >= 2 and val[0] == val[-1] and val[0] in "\"'":
+            val = val[1:-1]
+        out[k] = val
+    return out
+
+
+def check_skill_frontmatter(target: Path) -> list[str]:
+    """Every SKILL.md must satisfy VS Code's Agent Skills rules: `name` equals
+    the parent directory, is 64 characters or fewer, and is lowercase letters,
+    digits and hyphens only; `description` is 1024 characters or fewer."""
+    out: list[str] = []
+    files = [target] if target.is_file() else sorted(target.rglob("SKILL.md"))
+    for path in files:
+        if path.name != "SKILL.md":
+            continue
+        if any(part in SKIP_DIRS for part in path.parts):
+            continue
+        try:
+            rel = path.relative_to(ROOT)
+        except ValueError:
+            rel = path
+        fields = _frontmatter_fields(path.read_bytes().decode("utf-8", errors="replace"))
+        if fields is None:
+            out.append(f"{rel}: no YAML frontmatter - VS Code will not load this skill")
+            continue
+        name = fields.get("name", "")
+        if not name:
+            out.append(f"{rel}: frontmatter has no name - VS Code will not load this skill")
+        else:
+            if name != path.parent.name:
+                out.append(f"{rel}: name '{name}' differs from its directory "
+                           f"'{path.parent.name}' - VS Code will not load this skill")
+            if len(name) > SKILL_NAME_MAX:
+                out.append(f"{rel}: name is {len(name)} characters, more than "
+                           f"{SKILL_NAME_MAX} - VS Code will not load this skill")
+            if not SKILL_NAME_CHARS.match(name):
+                out.append(f"{rel}: name '{name}' must use lowercase letters, digits "
+                           f"and hyphens only - VS Code will not load this skill")
+        desc = fields.get("description", "")
+        if not desc:
+            out.append(f"{rel}: frontmatter has no description - VS Code will not load this skill")
+        elif len(desc) > SKILL_DESCRIPTION_MAX:
+            out.append(f"{rel}: description is {len(desc)} characters, more than "
+                       f"{SKILL_DESCRIPTION_MAX} - VS Code will not load this skill")
     return out
 
 
@@ -727,7 +816,7 @@ def is_blocking(finding: str) -> bool:
     nobody has classified should hold the release, not slide past in a wall of
     warnings.
     """
-    return "over the" not in finding
+    return not isinstance(finding, Advisory)
 
 
 def main() -> int:
@@ -766,6 +855,7 @@ def main() -> int:
     findings.extend(check_images(target))
     findings.extend(check_op_drift(target, Path(args.server) if args.server else None))
     findings.extend(check_ruleset_paths(target))
+    findings.extend(check_skill_frontmatter(target))
     if target == ROOT:
         findings.extend(check_manifest())
         findings.extend(check_stated_server_version())

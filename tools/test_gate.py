@@ -14,6 +14,9 @@ Run:  python -m pytest tools/test_gate.py
 """
 from __future__ import annotations
 
+# Backlog items this module pins (checked by tools/test_suite_conventions.py).
+PINS = ("APT-2026-0337",)
+
 import importlib.util
 import json
 from pathlib import Path

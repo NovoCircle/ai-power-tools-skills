@@ -15,6 +15,9 @@ Run:  python -m pytest tools/test_publish_plugin.py
 """
 from __future__ import annotations
 
+# No backlog item is pinned: these tests cover designed behavior, not a filed defect.
+PINS = ()
+
 import importlib.util
 import json
 import subprocess

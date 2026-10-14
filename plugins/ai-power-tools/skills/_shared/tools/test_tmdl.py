@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Tests for TMDL rendering, including the cross-path identity guarantee.
 
-    python -m pytest _shared/tools/test_tmdl.py -q
+    python -m pytest plugins/ai-power-tools/skills/_shared/tools/test_tmdl.py -q
 
 Nothing here touches a repository, a COM object, Power BI or the filesystem.
 
@@ -12,6 +12,9 @@ customer gets the same model whichever they pick. `test_only_the_partition_*`
 is what makes that claim checkable instead of aspirational.
 """
 from __future__ import annotations
+
+# Backlog items this module pins (checked by tools/test_suite_conventions.py).
+PINS = ("APT-2026-0212", "APT-2026-0230", "APT-2026-0248", "APT-2026-0302")
 
 import json
 import re
