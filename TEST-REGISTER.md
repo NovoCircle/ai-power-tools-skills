@@ -1434,10 +1434,10 @@ Quoted from `tools/register.toml`. Nothing here is decided until its status says
 
 | # | Question | Status | Answer |
 |---|---|---|---|
-| d1_unused_programs | fidelity.py and measure_binding.py are used by no skill: ship them, move them to a development folder, or retire them? | pending |  |
-| d2_tests_in_plugin | Tests in the customer plugin: keep shipping the 25 test files, or ship only the programs? | pending |  |
-| d3_sweeps | The sweeps test_compose_chevron.py and test_compose.py: run on every push, or in a slower tier with the boundary cases kept? | pending |  |
-| d4_acceptance_threshold | What acceptance pass-rate threshold applies per skill? | pending |  |
+| d1_unused_programs | fidelity.py and measure_binding.py are used by no skill: ship them, move them to a development folder, or retire them? | decided 2026-10-14 | Move both out of the customer plugin into a development folder in this repository; keep their tests and run them in CI. |
+| d2_tests_in_plugin | Tests in the customer plugin: keep shipping the 25 test files, or ship only the programs? | decided 2026-10-14 | Ship only the programs: remove the test files from manifest.json; they stay in the repository and in CI. |
+| d3_sweeps | The sweeps test_compose_chevron.py and test_compose.py: run on every push, or in a slower tier with the boundary cases kept? | decided 2026-10-14 | Every push, unchanged: measured at 4.95 s and 3.08 s of a 13-minute suite. |
+| d4_acceptance_threshold | What acceptance pass-rate threshold applies per skill? | decided 2026-10-14 | 80% for every skill to start; a case marked as an invariant must pass on every run; revisit after the first full run. |
 
 ## Totals
 

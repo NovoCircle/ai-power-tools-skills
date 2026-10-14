@@ -47,9 +47,11 @@ known_gaps = [
 ]
 # END known-gaps
 
-# Acceptance pass-rate threshold per skill, in percent, used when a results file exists
-# (decision 4 below is pending, so none is set).
+# Acceptance pass-rate threshold per skill, in percent, used when a results file exists.
+# Decision 4 (Ryan, 2026-10-14): 80 for every skill to start; a case marked as an invariant must
+# pass on every run. A skill-specific line (ea-modeling = 90) overrides the default.
 [thresholds]
+default = 80
 
 # An exemption skips one kind of test for one unit, and needs a reason. It must name a unit and a
 # kind that exist; if the unit disappears, the stale exemption fails the meta-test. None today.
@@ -73,19 +75,24 @@ u_ci_steps = [
 d_case = "tools/surfaces/plugin.md"
 note = "the plugin as installed from the marketplace or the packaged .plugin"
 
-# Ryan's step-2 decisions. All pending; the register quotes them.
+# Ryan's step-2 decisions, answered 2026-10-14 ("Accept all four step-2 recommendations as
+# written", pm/DECISIONS-test-suite-step2-2026-10-14.md). The register quotes them.
 [decisions.d1_unused_programs]
 question = "fidelity.py and measure_binding.py are used by no skill: ship them, move them to a development folder, or retire them?"
-status = "pending"
+status = "decided 2026-10-14"
+answer = "Move both out of the customer plugin into a development folder in this repository; keep their tests and run them in CI."
 
 [decisions.d2_tests_in_plugin]
 question = "Tests in the customer plugin: keep shipping the 25 test files, or ship only the programs?"
-status = "pending"
+status = "decided 2026-10-14"
+answer = "Ship only the programs: remove the test files from manifest.json; they stay in the repository and in CI."
 
 [decisions.d3_sweeps]
 question = "The sweeps test_compose_chevron.py and test_compose.py: run on every push, or in a slower tier with the boundary cases kept?"
-status = "pending"
+status = "decided 2026-10-14"
+answer = "Every push, unchanged: measured at 4.95 s and 3.08 s of a 13-minute suite."
 
 [decisions.d4_acceptance_threshold]
 question = "What acceptance pass-rate threshold applies per skill?"
-status = "pending"
+status = "decided 2026-10-14"
+answer = "80% for every skill to start; a case marked as an invariant must pass on every run; revisit after the first full run."
