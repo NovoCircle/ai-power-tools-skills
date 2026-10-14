@@ -394,11 +394,13 @@
       "files": [
         "ea-power-bi/SKILL.md",
         "ea-power-bi/references/measured-power-bi-behavior.md",
+        "ea-power-bi/references/power-bi-modeling-mcp.md",
         "ea-power-bi/references/the-path-choice.md"
       ],
       "sha256": {
-        "ea-power-bi/SKILL.md": "579beb19e63f361867964e753ed179a20c0c214355bdaf12a1f141cee811ff4c",
+        "ea-power-bi/SKILL.md": "6c73d6106a406f0d422ee3e1171bdcb14d43cc0c1a6c64c8adf47897561dd298",
         "ea-power-bi/references/measured-power-bi-behavior.md": "f17495e47283d2b8924513ecd1d76a117d62ccc9ccafa09971d7c92552c940b8",
+        "ea-power-bi/references/power-bi-modeling-mcp.md": "1e7e3cbf20726b750008a554f0bdbac54a66508d4751045c3e8f9b9856cc6876",
         "ea-power-bi/references/the-path-choice.md": "19342a6c6a336df225eee8e92bfff5b4794866a2f2a4eecc2db5f28c6a0fbbaf"
       }
     },

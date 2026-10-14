@@ -274,6 +274,8 @@ CSV.
   C, the questions to ask, and what each answer commits the customer to
 - [`references/measured-power-bi-behavior.md`](references/measured-power-bi-behavior.md) - every
   measured fact behind this skill, with its date and instrument
+- [`references/power-bi-modeling-mcp.md`](references/power-bi-modeling-mcp.md) - Microsoft's own Power BI
+  Modeling MCP server, which the customer installs: registering it in Claude, and inspecting a project
 - [`../ea-reporting-database/SKILL.md`](../ea-reporting-database/SKILL.md) - the repository side:
   the inclusion choice, the profile, preflight, build, check, replay and refresh
 - [`../_shared/references/westbrook-example.md`](../_shared/references/westbrook-example.md) - the
