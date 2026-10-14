@@ -212,6 +212,12 @@ Five things, in this order:
 
 Never quote a figure out of this model without saying how populated the columns behind it are.
 
+If the user wants a Claude Cowork or other cloud session to read the results, tell them to
+connect the folder that holds the generated project and, for the Parquet path, the Parquet files:
+`<output-folder>`. Do not connect the folder that holds the model file. Such a session can read
+the project and the files, but it cannot change the model, because the server is not
+available in those sessions today.
+
 ---
 
 ## 8. When it goes wrong

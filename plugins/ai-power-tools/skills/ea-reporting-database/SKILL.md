@@ -341,6 +341,10 @@ Say these four things, in this order, and do not bury the third:
 Never report a figure from a table without saying how populated the columns behind it are: count
 the non-empty values yourself. A roll-up over a partly-populated tag is a confident wrong number.
 
+To let a Claude Cowork or other cloud session read the results, tell the user to connect the
+`<output-folder>` with the Parquet files, profile and definition file, not the model's folder. That
+session cannot change the model: the server is not available there today.
+
 ---
 
 ## 10. Rules that are not obvious
@@ -362,12 +366,10 @@ The five that cost the most; the full list is in [`references/the-schema.md`](re
   refused.
 - **DirectQuery on direct access queries the production database.** Its speed at the scale of a
   large repository is not measured. Measured on one model, and not what a customer should expect: a
-  repository of about 80,000 rows reached through
-  a cloud connection took 10-11 seconds to extract, 38-46 to load, under 1 to swap in, and about 2
+  repository of about 80,000 rows reached through a cloud connection took 10-11 seconds to extract, 38-46 to load, under 1 to swap in, and about 2
   minutes for a full reporting-database refresh.
 - **Windows authentication.** SQL Server is reached with the Windows account running AI Power Tools.
-- **OneLake upload is not yet available** (APT-2026-0362). Parquet is written to a local folder and
-  Power BI Desktop imports it.
+- **OneLake upload is not yet available** (APT-2026-0362). Parquet is written to a local folder and Power BI Desktop imports it.
 - **Only a RefGUIDList tag is split into a tag-row table.** A CheckList tag stays a column (`1,1,0`).
 - **`.eapx` (Jet) repositories are untested.** Measured on a local `.qea` and a cloud-connected repository.
 - **No masking.** Exclusion is by whole package.
@@ -392,9 +394,7 @@ that disagrees by a few rows: [`references/troubleshooting.md`](references/troub
 - [`references/the-inclusion-choice.md`](references/the-inclusion-choice.md) - the three-way choice, its counts, and the refresh
 - [`references/the-governance-gate.md`](references/the-governance-gate.md) - the pre-build gate
 - [`../ea-power-bi/SKILL.md`](../ea-power-bi/SKILL.md) - the Power BI project and the Parquet step
-- [`../_shared/references/ea-ui-verification.md`](../_shared/references/ea-ui-verification.md) -
-  the modal-dialog trap
-- [`../_shared/references/westbrook-example.md`](../_shared/references/westbrook-example.md) - the
-  canonical example model
+- [`../_shared/references/ea-ui-verification.md`](../_shared/references/ea-ui-verification.md) - the modal-dialog trap
+- [`../_shared/references/westbrook-example.md`](../_shared/references/westbrook-example.md) - the canonical example model
 - `../_shared/tools/` - the census modules `ea_census.py`, `inclusion.py` and `governance_gap.py`.
   Their tests run with `python -m pytest ../_shared/tools -q` and need no EA.
