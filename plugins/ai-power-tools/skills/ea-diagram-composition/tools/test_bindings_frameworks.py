@@ -57,6 +57,12 @@ from __future__ import annotations
 # No backlog item is pinned: these tests cover designed behavior, not a filed defect.
 PINS = ()
 
+# The data asset this module covers for TOGAF (read by tools/register.py). Against EAExample.qea
+# it checks that the technology id and diagram type are registered, and that the `ADM_` prefix
+# the diagram type states is the measured one (10 of 10 stored stereotypes) and round trips every
+# stored stereotype, while the technology-scope lookup leaves the prefix off. APT-2026-0521.
+COVERS = ("asset:ea-diagram-composition/bindings/togaf-diagrams.yaml",)
+
 import math
 import re
 import statistics

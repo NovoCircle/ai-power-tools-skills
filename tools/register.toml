@@ -8,17 +8,6 @@
 # `python tools/register.py --seed-known-gaps`; the meta-test never seeds it. It only shrinks.
 # BEGIN known-gaps
 known_gaps = [
-  "asset:ea-diagram-composition/bindings/archimate3.yaml U",
-  "asset:ea-diagram-composition/bindings/bpmn2.0.yaml U",
-  "asset:ea-diagram-composition/bindings/dmn1.1.yaml U",
-  "asset:ea-diagram-composition/bindings/erd_dp.yaml U",
-  "asset:ea-diagram-composition/bindings/mindmapping.yaml U",
-  "asset:ea-diagram-composition/bindings/strategymap.yaml U",
-  "asset:ea-diagram-composition/bindings/sysml1.4.yaml U",
-  "asset:ea-diagram-composition/bindings/togaf-diagrams.yaml U",
-  "asset:ea-diagram-composition/bindings/uafp_framework.yaml U",
-  "asset:ea-diagram-composition/bindings/uml.yaml U",
-  "asset:ea-diagram-composition/bindings/zf-interface.yaml U",
   "skill:ea-change-management A",
   "skill:ea-com A",
   "skill:ea-diagnostic A",
