@@ -124,11 +124,25 @@ def test_an_exemption_naming_a_missing_unit_or_kind_is_a_problem():
     assert any("does not require" in p for p in problems)
 
 
-def test_a_valid_exemption_closes_the_gap_it_names():
-    unit = "skill:ea-com"
-    config = copy.deepcopy(CONFIG)
-    config["exemption"] = [{"unit": unit, "kind": "A", "reason": "illustration"}]
-    model = register.build(ROOT, config)
+def _demo_skills(root, cases):
+    """Skills under a throwaway root: {name: number of covered cases, or None for no case file}."""
+    for name, n in cases.items():
+        skill = root / "plugins" / "ai-power-tools" / "skills" / name
+        skill.mkdir(parents=True)
+        (skill / "SKILL.md").write_text("# Demo\n\n## Real heading\n", encoding="utf-8")
+        if n is not None:
+            (skill / "references").mkdir()
+            (skill / "references" / "test-cases.md").write_text(
+                "".join(f"### TC-{i:02d} - case\n\nCovers: Real heading\n\n" for i in range(1, n + 1)),
+                encoding="utf-8")
+    (root / "manifest.json").write_text(json.dumps({"skills": []}), encoding="utf-8")
+
+
+def test_a_valid_exemption_closes_the_gap_it_names(tmp_path):
+    _demo_skills(tmp_path, {"demo": None})
+    unit = "skill:demo"
+    config = {"hand_row": [], "exemption": [{"unit": unit, "kind": "A", "reason": "illustration"}]}
+    model = register.build(tmp_path, config)
     assert model.problems == []
     assert (unit, "A") not in model.gaps()
     assert model.unit(unit).cells["A"].state == "exempt"
@@ -180,11 +194,11 @@ def test_a_covers_entry_naming_no_unit_is_a_problem(tmp_path):
     assert any("asset:nothing.yaml" in p for p in model.problems)
 
 
-def test_the_results_file_is_read_when_it_exists():
-    results = {"version": "9.9.9", "skills": {"prol-matrix": {"passed": 17, "total": 20}}}
-    config = copy.deepcopy(CONFIG)
-    config["thresholds"] = {"default": 80}
-    model = register.build(ROOT, config, results)
-    assert model.unit("skill:prol-matrix").cells["A"].text == (
+def test_the_results_file_is_read_when_it_exists(tmp_path):
+    _demo_skills(tmp_path, {"demo": 20, "other": None})
+    results = {"version": "9.9.9", "skills": {"demo": {"passed": 17, "total": 20}}}
+    config = {"hand_row": [], "thresholds": {"default": 80}}
+    model = register.build(tmp_path, config, results)
+    assert model.unit("skill:demo").cells["A"].text == (
         "cases: 20 · last run 9.9.9: 17/20, threshold 80%")
-    assert model.unit("skill:ea-com").cells["A"].text == "cases: 0 · not run"
+    assert model.unit("skill:other").cells["A"].text == "cases: 0 · not run"

@@ -8,30 +8,6 @@
 # `python tools/register.py --seed-known-gaps`; the meta-test never seeds it. It only shrinks.
 # BEGIN known-gaps
 known_gaps = [
-  "skill:ea-change-management A",
-  "skill:ea-com A",
-  "skill:ea-diagnostic A",
-  "skill:ea-diagram-advisor A",
-  "skill:ea-diagram-composition A",
-  "skill:ea-help A",
-  "skill:ea-import-export A",
-  "skill:ea-mdg-assess A",
-  "skill:ea-mdg-author A",
-  "skill:ea-mdg-deploy A",
-  "skill:ea-mdg-model-build A",
-  "skill:ea-model-hygiene A",
-  "skill:ea-modeling A",
-  "skill:ea-navigation-diagrams A",
-  "skill:ea-power-bi A",
-  "skill:ea-reporting-database A",
-  "skill:ea-ruleset-author A",
-  "skill:ea-stakeholder-reporting A",
-  "skill:ea-start-here A",
-  "skill:ea-validation A",
-  "skill:prol-dashboards A",
-  "skill:prol-impact-analysis A",
-  "skill:prol-matrix A",
-  "skill:prol-start-here A",
   "srf:plugin D",
 ]
 # END known-gaps
