@@ -26,8 +26,9 @@ Covers: Reporting to stakeholders from a Sparx EA model; When to use
 **Ask:** "How many of our applications are mission-critical?"
 
 **Passes when:** The run answers from reads only, names which kind of application it counted
-(Business Applications), and gives 11 of 46. It may add that Vendor Systems are a separate
-population with their own count. It creates no scratch element and no package.
+(Business Applications), and gives 11 of 46. It may instead give 12 of 47 when it counts Core
+Deposit System of Record, which carries two stereotypes, provided it names that element. It may add
+that Vendor Systems are a separate population with their own count. It creates no scratch element and no package.
 
 **Check:**
 
@@ -37,12 +38,19 @@ expect: = 11
 ```
 
 ```check
+# two readings of "business application": the primary stereotype (46) and every element bound to it (47).
+# Core Deposit System of Record is bound to both WBASystemOfRecord (primary) and WBABusinessApplication.
+sql: SELECT (SELECT COUNT(*) FROM t_object WHERE Stereotype = 'WBABusinessApplication'), (SELECT COUNT(*) FROM t_xref WHERE Name = 'Stereotypes' AND Description LIKE '%::WBABusinessApplication;%'), (SELECT COUNT(*) FROM t_object o JOIN t_xref x ON x.Client = o.ea_guid AND x.Name = 'Stereotypes' WHERE o.Name = 'Core Deposit System of Record' AND o.Stereotype = 'WBASystemOfRecord' AND x.Description LIKE '%::WBABusinessApplication;%')
+expect: rows: [[46, 47, 1]]
+```
+
+```check
 sql: SELECT (SELECT COUNT(*) FROM t_object), (SELECT COUNT(*) FROM t_connector), (SELECT COUNT(*) FROM t_diagram), (SELECT COUNT(*) FROM t_package), (SELECT COUNT(*) FROM t_objectproperties)
 expect: unchanged
 ```
 
 ```check
-reply: says: 11 Business Applications are Mission-Critical, out of 46
+reply: says: 11 of 46 Business Applications are Mission-Critical, or 12 of 47 when it counts Core Deposit System of Record, which it names as carrying two stereotypes
 reply: not: reports a single combined figure of 25 without saying it merges Business Applications and Vendor Systems
 tools: not-called: ea_model.create_element
 tools: not-called: ea_model.create_package
@@ -68,13 +76,22 @@ board deck."
 
 **Passes when:** Before quoting the share, the run reads the true denominator for the type and
 the populated count for the tag, finds the tag filled on every application, and then states the
-share (11 of 46, about 24 percent) with that coverage stated or implied as complete.
+share (11 of 46, about 24 percent) with that coverage stated or implied as complete. A share of 12 of
+47 (about 26 percent) also passes when the run names Core Deposit System of Record as the element
+carrying both the System of Record and Business Application stereotypes.
 
 **Check:**
 
 ```check
 sql: SELECT COUNT(DISTINCT o.Object_ID), SUM(CASE WHEN TRIM(COALESCE(tp.Value, '')) <> '' THEN 1 ELSE 0 END) FROM t_object o JOIN t_objectproperties tp ON tp.Object_ID = o.Object_ID WHERE o.Stereotype = 'WBABusinessApplication' AND tp.Property = 'criticality'
 expect: rows: [[46, 46]]
+```
+
+```check
+# two readings of "business application": the primary stereotype (46) and every element bound to it (47).
+# Core Deposit System of Record is bound to both WBASystemOfRecord (primary) and WBABusinessApplication.
+sql: SELECT (SELECT COUNT(*) FROM t_object WHERE Stereotype = 'WBABusinessApplication'), (SELECT COUNT(*) FROM t_xref WHERE Name = 'Stereotypes' AND Description LIKE '%::WBABusinessApplication;%'), (SELECT COUNT(*) FROM t_object o JOIN t_xref x ON x.Client = o.ea_guid AND x.Name = 'Stereotypes' WHERE o.Name = 'Core Deposit System of Record' AND o.Stereotype = 'WBASystemOfRecord' AND x.Description LIKE '%::WBABusinessApplication;%')
+expect: rows: [[46, 47, 1]]
 ```
 
 ```check
@@ -85,8 +102,9 @@ expect: unchanged
 ```check
 tools: called: ea_analyze.summarize_stereotype_usage
 tools: called: ea_analyze.summarize_tagged_value_usage
-reply: says: 11 of 46 business applications are Mission-Critical
-reply: not: gives a share whose denominator is anything other than 46
+reply: says: 11 of 46 business applications are Mission-Critical, or 12 of 47 when it counts Core Deposit System of Record, which it names as carrying two stereotypes
+reply: not: gives a share whose denominator is anything other than 46 or 47
+reply: not: gives a 47 without naming the element that makes the difference
 ```
 
 **Fails when:** The run goes straight to the roll-up and quotes a figure with no coverage check.
@@ -238,7 +256,10 @@ Covers: Portfolio roll-ups: `aggregate_portfolio`
 **Ask:** "Break down our business applications by criticality."
 
 **Passes when:** The run uses the roll-up operation grouped by criticality and reports
-Business-Critical 21, Mission-Critical 11, Standard 8 and Important 6, against a total of 46.
+Business-Critical 21, Mission-Critical 11, Standard 8 and Important 6, against a total of 46. A
+run may instead count Core Deposit System of Record, which carries the System of Record and
+Business Application stereotypes, giving 12 Mission-Critical out of 47, as long as it names the
+element and the groups add up to the total it states.
 
 **Check:**
 
@@ -254,11 +275,14 @@ expect: unchanged
 
 ```check
 tools: called: ea_repository.aggregate_portfolio
-reply: says: 21 Business-Critical, 11 Mission-Critical, 8 Standard and 6 Important, out of 46
+reply: says: 21 Business-Critical, 11 Mission-Critical, 8 Standard and 6 Important, out of 46; or the same with 12 Mission-Critical out of 47, naming Core Deposit System of Record as the element with two stereotypes
+reply: not: gives group counts that do not add up to the total it states
 ```
 
-**Fails when:** The groups are right but the total is missing or wrong, or the run reports counts
-for Business Applications and Vendor Systems blended into one table without saying so.
+**Fails when:** The groups are right but the total is missing or wrong, or the groups add up to a
+different total than the one stated (a first trial run reported 47 applications in rows that summed
+to 48), or the run reports counts for Business Applications and Vendor Systems blended into one
+table without saying so.
 
 ### TC-08: Breakdown for one line of business
 
