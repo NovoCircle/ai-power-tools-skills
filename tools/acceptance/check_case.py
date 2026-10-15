@@ -9,7 +9,8 @@ The run folder D holds:
                               <name-dir> -> <name>/)
     calls.jsonl               the call log written by tools/acceptance/call.py
     reply.md                  the agent's final reply
-    before.json               written by `before`: the result of every `expect: unchanged` query
+    before.json               written by `before`: the result of every `expect: unchanged` query,
+                              keyed by the query text so editing a case does not lose it
 
 `after` writes D/checks.json and prints one line per check: pass, fail, grade (a `reply` statement
 for the grader) or manual (a check this script does not evaluate: `http`, `call`, `xpath`, a skill
@@ -142,7 +143,7 @@ def main():
     db = run / "model" / "WestbrookBank.qea"
     checks = checks_of(case_text(a.case_file, a.tc))
     if a.phase == "before":
-        before = {str(n): query(db, v) for n, k, v, e in checks if k == "sql" and e == "unchanged"}
+        before = {v: query(db, v) for n, k, v, e in checks if k == "sql" and e == "unchanged"}
         (run / "before.json").write_text(json.dumps(before), encoding="utf-8")
         print(f"recorded {len(before)} unchanged queries")
         return 0
@@ -153,7 +154,7 @@ def main():
     for n, key, value, expect in checks:
         if key == "sql":
             try:
-                ok, detail = judge_rows(query(db, value), expect, before.get(str(n)))
+                ok, detail = judge_rows(query(db, value), expect, before.get(value))
             except sqlite3.Error as exc:
                 ok, detail = False, f"sql error: {exc}"
         elif key == "file":
