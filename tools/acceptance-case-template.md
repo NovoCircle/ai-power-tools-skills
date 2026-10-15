@@ -117,9 +117,15 @@ blocks; every one must hold. The runner reads them; the agent under test never s
 | `sql` | One `SELECT`, SQLite dialect, against the run's copy of the model | Only tables and columns in the server's `ea_mcp_server/schema.py` (`EA_SCHEMA`). No `TOP`, no SQL Server functions. Bare stereotype names (`t_object.Stereotype` holds `WBABusinessApplication`). `t_xref` holds the qualified name as an `FQName=` entry whose prefix is the profile name (the Westbrook copy stores `WestbrookBankArchitecture::WBABusinessApplication`), so match it with `LIKE '%::WBABusinessApplication%'`. |
 | `call` | `<tool>.<operation> {json parameters}`, run through the built server after the agent finishes | For state SQL cannot reach (diagram layout, MDG runtime state, validation results). Read-only operations only. |
 | `http` | `GET <path>` relative to the Prolaborate base URL, in the signed-in session | Prolaborate skills only. Read-only. |
+| `file` | A path relative to the run's output folder (the folder the ask names, or the runner's working folder) | For cases whose product is a file: an MDG XML, a report, a Parquet set, a Power BI project. `expect:` `exists`, `contains: <text>`, or `xpath: <expression> = <value>` for XML. Pair it with a `call` to a parse operation (for example `ea_mdg.parse_mdg_xml`) when the file's structure is the promise. |
 | `reply` | `says: <statement>` or `not: <statement>` | A test on the agent's final reply. Write one checkable statement per line ("says the matrix is read by name, so a rename breaks the link"), not a mood ("is helpful"). How a reply is graded is decided in the runner design. |
 | `tools` | `called: <tool>.<operation>` or `not-called: <tool>.<operation>` | A test on the transcript. Use it for refusals and for promises about the method ("validates before reporting"). |
-| `expect` | Follows a `sql`, `call` or `http` line | `= n`, `>= n`, `<= n`, `empty`, `rows: [[...], ...]`, `unchanged` (same result as the same query before the ask), or for `call`/`http` `<field.path> = <value>`. |
+| `expect` | Follows a `sql`, `call`, `http` or `file` line | `= n`, `>= n`, `<= n`, `empty`, `rows: [[...], ...]`, `unchanged` (same result as the same query before the ask), or for `call`/`http` `<field.path> = <value>`. |
+
+Paths in asks and checks use placeholders the runner substitutes per run: `<model-dir>` for the
+folder holding the run's copy of the model, and `<name-dir>` (for example `<output-dir>`,
+`<rules-dir>`, `<mdg-dir>`) for a writable folder the runner creates empty for the case. Never an
+absolute path.
 
 Common checks:
 
