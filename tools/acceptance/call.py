@@ -1,7 +1,7 @@
 """Call one AI Power Tools for EA operation on a built server, and log the call for the acceptance checks.
 
     python tools/acceptance/call.py <tool> <operation> '<params json>'
-    python tools/acceptance/call.py ping
+    python tools/acceptance/call.py ping ['<params json>']
 
 The server is EA_MCP_EXE (the build under test). When ACCEPTANCE_CALL_LOG names a file, every call is
 appended to it as one JSON line ({"tool", "operation", "params", "ok"}); the `tools` checks in a case
@@ -33,7 +33,7 @@ async def main(tool, operation, params):
         async with ClientSession(read, write) as session:
             await session.initialize()
             if tool == "ping":
-                result = await session.call_tool("ping", {})
+                result = await session.call_tool("ping", params)
             else:
                 result = await session.call_tool(tool, {"operation": operation, "params": params})
                 if operation == "start_reporting_refresh" and not result.isError:
@@ -54,6 +54,9 @@ async def main(tool, operation, params):
 
 if __name__ == "__main__":
     tool = sys.argv[1]
-    operation = sys.argv[2] if len(sys.argv) > 2 else ""
-    params = json.loads(sys.argv[3]) if len(sys.argv) > 3 else {}
+    if tool == "ping":  # ping has no operation; its optional argument is its parameters
+        operation, params = "", (json.loads(sys.argv[2]) if len(sys.argv) > 2 else {})
+    else:
+        operation = sys.argv[2] if len(sys.argv) > 2 else ""
+        params = json.loads(sys.argv[3]) if len(sys.argv) > 3 else {}
     asyncio.run(main(tool, operation, params))
