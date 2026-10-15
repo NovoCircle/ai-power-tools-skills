@@ -14,30 +14,30 @@ has a `Covers:` line naming a heading in that skill's SKILL.md.
 
 | Unit | Required | A | Verdict |
 |---|---|---|---|
-| skill:ea-change-management | A | cases: 0 · not run | missing A |
-| skill:ea-com | A | cases: 0 · not run | missing A |
-| skill:ea-diagnostic | A | cases: 0 · not run | missing A |
-| skill:ea-diagram-advisor | A | cases: 0 · not run | missing A |
-| skill:ea-diagram-composition | A | cases: 0 · not run | missing A |
-| skill:ea-help | A | cases: 0 · not run | missing A |
-| skill:ea-import-export | A | cases: 0 · not run | missing A |
-| skill:ea-mdg-assess | A | cases: 0 · not run | missing A |
-| skill:ea-mdg-author | A | cases: 0 · not run | missing A |
-| skill:ea-mdg-deploy | A | cases: 0 · not run | missing A |
-| skill:ea-mdg-model-build | A | cases: 0 · not run | missing A |
-| skill:ea-model-hygiene | A | cases: 0 · not run | missing A |
-| skill:ea-modeling | A | cases: 0 · not run | missing A |
-| skill:ea-navigation-diagrams | A | cases: 0 · not run | missing A |
-| skill:ea-power-bi | A | cases: 0 · not run | missing A |
-| skill:ea-reporting-database | A | cases: 0 · not run | missing A |
-| skill:ea-ruleset-author | A | cases: 0 · not run | missing A |
-| skill:ea-stakeholder-reporting | A | cases: 0 · not run | missing A |
-| skill:ea-start-here | A | cases: 0 · not run | missing A |
-| skill:ea-validation | A | cases: 0 · not run | missing A |
-| skill:prol-dashboards | A | cases: 24 · not run | missing A |
-| skill:prol-impact-analysis | A | cases: 22 · not run | missing A |
-| skill:prol-matrix | A | cases: 20 · not run | missing A |
-| skill:prol-start-here | A | cases: 0 · not run | missing A |
+| skill:ea-change-management | A | cases: 41 · not run | complete |
+| skill:ea-com | A | cases: 27 · not run | complete |
+| skill:ea-diagnostic | A | cases: 25 · not run | complete |
+| skill:ea-diagram-advisor | A | cases: 29 · not run | complete |
+| skill:ea-diagram-composition | A | cases: 23 · not run | complete |
+| skill:ea-help | A | cases: 25 · not run | complete |
+| skill:ea-import-export | A | cases: 20 · not run | complete |
+| skill:ea-mdg-assess | A | cases: 27 · not run | complete |
+| skill:ea-mdg-author | A | cases: 31 · not run | complete |
+| skill:ea-mdg-deploy | A | cases: 34 · not run | complete |
+| skill:ea-mdg-model-build | A | cases: 50 · not run | complete |
+| skill:ea-model-hygiene | A | cases: 30 · not run | complete |
+| skill:ea-modeling | A | cases: 43 · not run | complete |
+| skill:ea-navigation-diagrams | A | cases: 30 · not run | complete |
+| skill:ea-power-bi | A | cases: 56 · not run | complete |
+| skill:ea-reporting-database | A | cases: 53 · not run | complete |
+| skill:ea-ruleset-author | A | cases: 25 · not run | complete |
+| skill:ea-stakeholder-reporting | A | cases: 20 · not run | complete |
+| skill:ea-start-here | A | cases: 35 · not run | complete |
+| skill:ea-validation | A | cases: 21 · not run | complete |
+| skill:prol-dashboards | A | cases: 48 · not run | complete |
+| skill:prol-impact-analysis | A | cases: 36 · not run | complete |
+| skill:prol-matrix | A | cases: 29 · not run | complete |
+| skill:prol-start-here | A | cases: 40 · not run | complete |
 
 ## Helper programs
 
@@ -1479,6 +1479,828 @@ method of a test class is written `Class.test_name`.
   - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_measure_binding.py::test_the_guard_fires_on_the_line_it_qualifies`
   - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_measure_binding.py::test_a_low_n_gap_is_not_also_told_it_is_thin`
   - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_measure_binding.py::test_the_guard_fires_on_shipped_technologies_and_is_not_dead_code`
+- `skill:ea-change-management` A (41)
+  - `plugins/ai-power-tools/skills/ea-change-management/references/test-cases.md#TC-01`
+  - `plugins/ai-power-tools/skills/ea-change-management/references/test-cases.md#TC-02`
+  - `plugins/ai-power-tools/skills/ea-change-management/references/test-cases.md#TC-03`
+  - `plugins/ai-power-tools/skills/ea-change-management/references/test-cases.md#TC-04`
+  - `plugins/ai-power-tools/skills/ea-change-management/references/test-cases.md#TC-05`
+  - `plugins/ai-power-tools/skills/ea-change-management/references/test-cases.md#TC-06`
+  - `plugins/ai-power-tools/skills/ea-change-management/references/test-cases.md#TC-07`
+  - `plugins/ai-power-tools/skills/ea-change-management/references/test-cases.md#TC-08`
+  - `plugins/ai-power-tools/skills/ea-change-management/references/test-cases.md#TC-09`
+  - `plugins/ai-power-tools/skills/ea-change-management/references/test-cases.md#TC-10`
+  - `plugins/ai-power-tools/skills/ea-change-management/references/test-cases.md#TC-11`
+  - `plugins/ai-power-tools/skills/ea-change-management/references/test-cases.md#TC-12`
+  - `plugins/ai-power-tools/skills/ea-change-management/references/test-cases.md#TC-13`
+  - `plugins/ai-power-tools/skills/ea-change-management/references/test-cases.md#TC-14`
+  - `plugins/ai-power-tools/skills/ea-change-management/references/test-cases.md#TC-15`
+  - `plugins/ai-power-tools/skills/ea-change-management/references/test-cases.md#TC-16`
+  - `plugins/ai-power-tools/skills/ea-change-management/references/test-cases.md#TC-17`
+  - `plugins/ai-power-tools/skills/ea-change-management/references/test-cases.md#TC-18`
+  - `plugins/ai-power-tools/skills/ea-change-management/references/test-cases.md#TC-19`
+  - `plugins/ai-power-tools/skills/ea-change-management/references/test-cases.md#TC-20`
+  - `plugins/ai-power-tools/skills/ea-change-management/references/test-cases.md#TC-21`
+  - `plugins/ai-power-tools/skills/ea-change-management/references/test-cases.md#TC-22`
+  - `plugins/ai-power-tools/skills/ea-change-management/references/test-cases.md#TC-23`
+  - `plugins/ai-power-tools/skills/ea-change-management/references/test-cases.md#TC-24`
+  - `plugins/ai-power-tools/skills/ea-change-management/references/test-cases.md#TC-25`
+  - `plugins/ai-power-tools/skills/ea-change-management/references/test-cases.md#TC-26`
+  - `plugins/ai-power-tools/skills/ea-change-management/references/test-cases.md#TC-27`
+  - `plugins/ai-power-tools/skills/ea-change-management/references/test-cases.md#TC-28`
+  - `plugins/ai-power-tools/skills/ea-change-management/references/test-cases.md#TC-29`
+  - `plugins/ai-power-tools/skills/ea-change-management/references/test-cases.md#TC-30`
+  - `plugins/ai-power-tools/skills/ea-change-management/references/test-cases.md#TC-31`
+  - `plugins/ai-power-tools/skills/ea-change-management/references/test-cases.md#TC-32`
+  - `plugins/ai-power-tools/skills/ea-change-management/references/test-cases.md#TC-33`
+  - `plugins/ai-power-tools/skills/ea-change-management/references/test-cases.md#TC-34`
+  - `plugins/ai-power-tools/skills/ea-change-management/references/test-cases.md#TC-35`
+  - `plugins/ai-power-tools/skills/ea-change-management/references/test-cases.md#TC-36`
+  - `plugins/ai-power-tools/skills/ea-change-management/references/test-cases.md#TC-37`
+  - `plugins/ai-power-tools/skills/ea-change-management/references/test-cases.md#TC-38`
+  - `plugins/ai-power-tools/skills/ea-change-management/references/test-cases.md#TC-39`
+  - `plugins/ai-power-tools/skills/ea-change-management/references/test-cases.md#TC-40`
+  - `plugins/ai-power-tools/skills/ea-change-management/references/test-cases.md#TC-41`
+- `skill:ea-com` A (27)
+  - `plugins/ai-power-tools/skills/ea-com/references/test-cases.md#TC-01`
+  - `plugins/ai-power-tools/skills/ea-com/references/test-cases.md#TC-02`
+  - `plugins/ai-power-tools/skills/ea-com/references/test-cases.md#TC-03`
+  - `plugins/ai-power-tools/skills/ea-com/references/test-cases.md#TC-04`
+  - `plugins/ai-power-tools/skills/ea-com/references/test-cases.md#TC-05`
+  - `plugins/ai-power-tools/skills/ea-com/references/test-cases.md#TC-06`
+  - `plugins/ai-power-tools/skills/ea-com/references/test-cases.md#TC-07`
+  - `plugins/ai-power-tools/skills/ea-com/references/test-cases.md#TC-08`
+  - `plugins/ai-power-tools/skills/ea-com/references/test-cases.md#TC-09`
+  - `plugins/ai-power-tools/skills/ea-com/references/test-cases.md#TC-10`
+  - `plugins/ai-power-tools/skills/ea-com/references/test-cases.md#TC-11`
+  - `plugins/ai-power-tools/skills/ea-com/references/test-cases.md#TC-12`
+  - `plugins/ai-power-tools/skills/ea-com/references/test-cases.md#TC-13`
+  - `plugins/ai-power-tools/skills/ea-com/references/test-cases.md#TC-14`
+  - `plugins/ai-power-tools/skills/ea-com/references/test-cases.md#TC-15`
+  - `plugins/ai-power-tools/skills/ea-com/references/test-cases.md#TC-16`
+  - `plugins/ai-power-tools/skills/ea-com/references/test-cases.md#TC-17`
+  - `plugins/ai-power-tools/skills/ea-com/references/test-cases.md#TC-18`
+  - `plugins/ai-power-tools/skills/ea-com/references/test-cases.md#TC-19`
+  - `plugins/ai-power-tools/skills/ea-com/references/test-cases.md#TC-20`
+  - `plugins/ai-power-tools/skills/ea-com/references/test-cases.md#TC-21`
+  - `plugins/ai-power-tools/skills/ea-com/references/test-cases.md#TC-22`
+  - `plugins/ai-power-tools/skills/ea-com/references/test-cases.md#TC-23`
+  - `plugins/ai-power-tools/skills/ea-com/references/test-cases.md#TC-24`
+  - `plugins/ai-power-tools/skills/ea-com/references/test-cases.md#TC-25`
+  - `plugins/ai-power-tools/skills/ea-com/references/test-cases.md#TC-26`
+  - `plugins/ai-power-tools/skills/ea-com/references/test-cases.md#TC-27`
+- `skill:ea-diagnostic` A (25)
+  - `plugins/ai-power-tools/skills/ea-diagnostic/references/test-cases.md#TC-01`
+  - `plugins/ai-power-tools/skills/ea-diagnostic/references/test-cases.md#TC-02`
+  - `plugins/ai-power-tools/skills/ea-diagnostic/references/test-cases.md#TC-03`
+  - `plugins/ai-power-tools/skills/ea-diagnostic/references/test-cases.md#TC-04`
+  - `plugins/ai-power-tools/skills/ea-diagnostic/references/test-cases.md#TC-05`
+  - `plugins/ai-power-tools/skills/ea-diagnostic/references/test-cases.md#TC-06`
+  - `plugins/ai-power-tools/skills/ea-diagnostic/references/test-cases.md#TC-07`
+  - `plugins/ai-power-tools/skills/ea-diagnostic/references/test-cases.md#TC-08`
+  - `plugins/ai-power-tools/skills/ea-diagnostic/references/test-cases.md#TC-09`
+  - `plugins/ai-power-tools/skills/ea-diagnostic/references/test-cases.md#TC-10`
+  - `plugins/ai-power-tools/skills/ea-diagnostic/references/test-cases.md#TC-11`
+  - `plugins/ai-power-tools/skills/ea-diagnostic/references/test-cases.md#TC-12`
+  - `plugins/ai-power-tools/skills/ea-diagnostic/references/test-cases.md#TC-13`
+  - `plugins/ai-power-tools/skills/ea-diagnostic/references/test-cases.md#TC-14`
+  - `plugins/ai-power-tools/skills/ea-diagnostic/references/test-cases.md#TC-15`
+  - `plugins/ai-power-tools/skills/ea-diagnostic/references/test-cases.md#TC-16`
+  - `plugins/ai-power-tools/skills/ea-diagnostic/references/test-cases.md#TC-17`
+  - `plugins/ai-power-tools/skills/ea-diagnostic/references/test-cases.md#TC-18`
+  - `plugins/ai-power-tools/skills/ea-diagnostic/references/test-cases.md#TC-19`
+  - `plugins/ai-power-tools/skills/ea-diagnostic/references/test-cases.md#TC-20`
+  - `plugins/ai-power-tools/skills/ea-diagnostic/references/test-cases.md#TC-21`
+  - `plugins/ai-power-tools/skills/ea-diagnostic/references/test-cases.md#TC-22`
+  - `plugins/ai-power-tools/skills/ea-diagnostic/references/test-cases.md#TC-23`
+  - `plugins/ai-power-tools/skills/ea-diagnostic/references/test-cases.md#TC-24`
+  - `plugins/ai-power-tools/skills/ea-diagnostic/references/test-cases.md#TC-25`
+- `skill:ea-diagram-advisor` A (29)
+  - `plugins/ai-power-tools/skills/ea-diagram-advisor/references/test-cases.md#TC-01`
+  - `plugins/ai-power-tools/skills/ea-diagram-advisor/references/test-cases.md#TC-02`
+  - `plugins/ai-power-tools/skills/ea-diagram-advisor/references/test-cases.md#TC-03`
+  - `plugins/ai-power-tools/skills/ea-diagram-advisor/references/test-cases.md#TC-04`
+  - `plugins/ai-power-tools/skills/ea-diagram-advisor/references/test-cases.md#TC-05`
+  - `plugins/ai-power-tools/skills/ea-diagram-advisor/references/test-cases.md#TC-06`
+  - `plugins/ai-power-tools/skills/ea-diagram-advisor/references/test-cases.md#TC-07`
+  - `plugins/ai-power-tools/skills/ea-diagram-advisor/references/test-cases.md#TC-08`
+  - `plugins/ai-power-tools/skills/ea-diagram-advisor/references/test-cases.md#TC-09`
+  - `plugins/ai-power-tools/skills/ea-diagram-advisor/references/test-cases.md#TC-10`
+  - `plugins/ai-power-tools/skills/ea-diagram-advisor/references/test-cases.md#TC-11`
+  - `plugins/ai-power-tools/skills/ea-diagram-advisor/references/test-cases.md#TC-12`
+  - `plugins/ai-power-tools/skills/ea-diagram-advisor/references/test-cases.md#TC-13`
+  - `plugins/ai-power-tools/skills/ea-diagram-advisor/references/test-cases.md#TC-14`
+  - `plugins/ai-power-tools/skills/ea-diagram-advisor/references/test-cases.md#TC-15`
+  - `plugins/ai-power-tools/skills/ea-diagram-advisor/references/test-cases.md#TC-16`
+  - `plugins/ai-power-tools/skills/ea-diagram-advisor/references/test-cases.md#TC-17`
+  - `plugins/ai-power-tools/skills/ea-diagram-advisor/references/test-cases.md#TC-18`
+  - `plugins/ai-power-tools/skills/ea-diagram-advisor/references/test-cases.md#TC-19`
+  - `plugins/ai-power-tools/skills/ea-diagram-advisor/references/test-cases.md#TC-20`
+  - `plugins/ai-power-tools/skills/ea-diagram-advisor/references/test-cases.md#TC-21`
+  - `plugins/ai-power-tools/skills/ea-diagram-advisor/references/test-cases.md#TC-22`
+  - `plugins/ai-power-tools/skills/ea-diagram-advisor/references/test-cases.md#TC-23`
+  - `plugins/ai-power-tools/skills/ea-diagram-advisor/references/test-cases.md#TC-24`
+  - `plugins/ai-power-tools/skills/ea-diagram-advisor/references/test-cases.md#TC-25`
+  - `plugins/ai-power-tools/skills/ea-diagram-advisor/references/test-cases.md#TC-26`
+  - `plugins/ai-power-tools/skills/ea-diagram-advisor/references/test-cases.md#TC-27`
+  - `plugins/ai-power-tools/skills/ea-diagram-advisor/references/test-cases.md#TC-28`
+  - `plugins/ai-power-tools/skills/ea-diagram-advisor/references/test-cases.md#TC-29`
+- `skill:ea-diagram-composition` A (23)
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/references/test-cases.md#TC-01`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/references/test-cases.md#TC-02`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/references/test-cases.md#TC-03`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/references/test-cases.md#TC-04`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/references/test-cases.md#TC-05`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/references/test-cases.md#TC-06`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/references/test-cases.md#TC-07`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/references/test-cases.md#TC-08`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/references/test-cases.md#TC-09`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/references/test-cases.md#TC-10`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/references/test-cases.md#TC-11`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/references/test-cases.md#TC-12`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/references/test-cases.md#TC-13`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/references/test-cases.md#TC-14`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/references/test-cases.md#TC-15`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/references/test-cases.md#TC-16`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/references/test-cases.md#TC-17`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/references/test-cases.md#TC-18`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/references/test-cases.md#TC-19`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/references/test-cases.md#TC-20`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/references/test-cases.md#TC-21`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/references/test-cases.md#TC-22`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/references/test-cases.md#TC-23`
+- `skill:ea-help` A (25)
+  - `plugins/ai-power-tools/skills/ea-help/references/test-cases.md#TC-01`
+  - `plugins/ai-power-tools/skills/ea-help/references/test-cases.md#TC-02`
+  - `plugins/ai-power-tools/skills/ea-help/references/test-cases.md#TC-03`
+  - `plugins/ai-power-tools/skills/ea-help/references/test-cases.md#TC-04`
+  - `plugins/ai-power-tools/skills/ea-help/references/test-cases.md#TC-05`
+  - `plugins/ai-power-tools/skills/ea-help/references/test-cases.md#TC-06`
+  - `plugins/ai-power-tools/skills/ea-help/references/test-cases.md#TC-07`
+  - `plugins/ai-power-tools/skills/ea-help/references/test-cases.md#TC-08`
+  - `plugins/ai-power-tools/skills/ea-help/references/test-cases.md#TC-09`
+  - `plugins/ai-power-tools/skills/ea-help/references/test-cases.md#TC-10`
+  - `plugins/ai-power-tools/skills/ea-help/references/test-cases.md#TC-11`
+  - `plugins/ai-power-tools/skills/ea-help/references/test-cases.md#TC-12`
+  - `plugins/ai-power-tools/skills/ea-help/references/test-cases.md#TC-13`
+  - `plugins/ai-power-tools/skills/ea-help/references/test-cases.md#TC-14`
+  - `plugins/ai-power-tools/skills/ea-help/references/test-cases.md#TC-15`
+  - `plugins/ai-power-tools/skills/ea-help/references/test-cases.md#TC-16`
+  - `plugins/ai-power-tools/skills/ea-help/references/test-cases.md#TC-17`
+  - `plugins/ai-power-tools/skills/ea-help/references/test-cases.md#TC-18`
+  - `plugins/ai-power-tools/skills/ea-help/references/test-cases.md#TC-19`
+  - `plugins/ai-power-tools/skills/ea-help/references/test-cases.md#TC-20`
+  - `plugins/ai-power-tools/skills/ea-help/references/test-cases.md#TC-21`
+  - `plugins/ai-power-tools/skills/ea-help/references/test-cases.md#TC-22`
+  - `plugins/ai-power-tools/skills/ea-help/references/test-cases.md#TC-23`
+  - `plugins/ai-power-tools/skills/ea-help/references/test-cases.md#TC-24`
+  - `plugins/ai-power-tools/skills/ea-help/references/test-cases.md#TC-25`
+- `skill:ea-import-export` A (20)
+  - `plugins/ai-power-tools/skills/ea-import-export/references/test-cases.md#TC-01`
+  - `plugins/ai-power-tools/skills/ea-import-export/references/test-cases.md#TC-02`
+  - `plugins/ai-power-tools/skills/ea-import-export/references/test-cases.md#TC-03`
+  - `plugins/ai-power-tools/skills/ea-import-export/references/test-cases.md#TC-04`
+  - `plugins/ai-power-tools/skills/ea-import-export/references/test-cases.md#TC-05`
+  - `plugins/ai-power-tools/skills/ea-import-export/references/test-cases.md#TC-06`
+  - `plugins/ai-power-tools/skills/ea-import-export/references/test-cases.md#TC-07`
+  - `plugins/ai-power-tools/skills/ea-import-export/references/test-cases.md#TC-08`
+  - `plugins/ai-power-tools/skills/ea-import-export/references/test-cases.md#TC-09`
+  - `plugins/ai-power-tools/skills/ea-import-export/references/test-cases.md#TC-10`
+  - `plugins/ai-power-tools/skills/ea-import-export/references/test-cases.md#TC-11`
+  - `plugins/ai-power-tools/skills/ea-import-export/references/test-cases.md#TC-12`
+  - `plugins/ai-power-tools/skills/ea-import-export/references/test-cases.md#TC-13`
+  - `plugins/ai-power-tools/skills/ea-import-export/references/test-cases.md#TC-14`
+  - `plugins/ai-power-tools/skills/ea-import-export/references/test-cases.md#TC-15`
+  - `plugins/ai-power-tools/skills/ea-import-export/references/test-cases.md#TC-16`
+  - `plugins/ai-power-tools/skills/ea-import-export/references/test-cases.md#TC-17`
+  - `plugins/ai-power-tools/skills/ea-import-export/references/test-cases.md#TC-18`
+  - `plugins/ai-power-tools/skills/ea-import-export/references/test-cases.md#TC-19`
+  - `plugins/ai-power-tools/skills/ea-import-export/references/test-cases.md#TC-20`
+- `skill:ea-mdg-assess` A (27)
+  - `plugins/ai-power-tools/skills/ea-mdg-assess/references/test-cases.md#TC-01`
+  - `plugins/ai-power-tools/skills/ea-mdg-assess/references/test-cases.md#TC-02`
+  - `plugins/ai-power-tools/skills/ea-mdg-assess/references/test-cases.md#TC-03`
+  - `plugins/ai-power-tools/skills/ea-mdg-assess/references/test-cases.md#TC-04`
+  - `plugins/ai-power-tools/skills/ea-mdg-assess/references/test-cases.md#TC-05`
+  - `plugins/ai-power-tools/skills/ea-mdg-assess/references/test-cases.md#TC-06`
+  - `plugins/ai-power-tools/skills/ea-mdg-assess/references/test-cases.md#TC-07`
+  - `plugins/ai-power-tools/skills/ea-mdg-assess/references/test-cases.md#TC-08`
+  - `plugins/ai-power-tools/skills/ea-mdg-assess/references/test-cases.md#TC-09`
+  - `plugins/ai-power-tools/skills/ea-mdg-assess/references/test-cases.md#TC-10`
+  - `plugins/ai-power-tools/skills/ea-mdg-assess/references/test-cases.md#TC-11`
+  - `plugins/ai-power-tools/skills/ea-mdg-assess/references/test-cases.md#TC-12`
+  - `plugins/ai-power-tools/skills/ea-mdg-assess/references/test-cases.md#TC-13`
+  - `plugins/ai-power-tools/skills/ea-mdg-assess/references/test-cases.md#TC-14`
+  - `plugins/ai-power-tools/skills/ea-mdg-assess/references/test-cases.md#TC-15`
+  - `plugins/ai-power-tools/skills/ea-mdg-assess/references/test-cases.md#TC-16`
+  - `plugins/ai-power-tools/skills/ea-mdg-assess/references/test-cases.md#TC-17`
+  - `plugins/ai-power-tools/skills/ea-mdg-assess/references/test-cases.md#TC-18`
+  - `plugins/ai-power-tools/skills/ea-mdg-assess/references/test-cases.md#TC-19`
+  - `plugins/ai-power-tools/skills/ea-mdg-assess/references/test-cases.md#TC-20`
+  - `plugins/ai-power-tools/skills/ea-mdg-assess/references/test-cases.md#TC-21`
+  - `plugins/ai-power-tools/skills/ea-mdg-assess/references/test-cases.md#TC-22`
+  - `plugins/ai-power-tools/skills/ea-mdg-assess/references/test-cases.md#TC-23`
+  - `plugins/ai-power-tools/skills/ea-mdg-assess/references/test-cases.md#TC-24`
+  - `plugins/ai-power-tools/skills/ea-mdg-assess/references/test-cases.md#TC-25`
+  - `plugins/ai-power-tools/skills/ea-mdg-assess/references/test-cases.md#TC-26`
+  - `plugins/ai-power-tools/skills/ea-mdg-assess/references/test-cases.md#TC-27`
+- `skill:ea-mdg-author` A (31)
+  - `plugins/ai-power-tools/skills/ea-mdg-author/references/test-cases.md#TC-01`
+  - `plugins/ai-power-tools/skills/ea-mdg-author/references/test-cases.md#TC-02`
+  - `plugins/ai-power-tools/skills/ea-mdg-author/references/test-cases.md#TC-03`
+  - `plugins/ai-power-tools/skills/ea-mdg-author/references/test-cases.md#TC-04`
+  - `plugins/ai-power-tools/skills/ea-mdg-author/references/test-cases.md#TC-05`
+  - `plugins/ai-power-tools/skills/ea-mdg-author/references/test-cases.md#TC-06`
+  - `plugins/ai-power-tools/skills/ea-mdg-author/references/test-cases.md#TC-07`
+  - `plugins/ai-power-tools/skills/ea-mdg-author/references/test-cases.md#TC-08`
+  - `plugins/ai-power-tools/skills/ea-mdg-author/references/test-cases.md#TC-09`
+  - `plugins/ai-power-tools/skills/ea-mdg-author/references/test-cases.md#TC-10`
+  - `plugins/ai-power-tools/skills/ea-mdg-author/references/test-cases.md#TC-11`
+  - `plugins/ai-power-tools/skills/ea-mdg-author/references/test-cases.md#TC-12`
+  - `plugins/ai-power-tools/skills/ea-mdg-author/references/test-cases.md#TC-13`
+  - `plugins/ai-power-tools/skills/ea-mdg-author/references/test-cases.md#TC-14`
+  - `plugins/ai-power-tools/skills/ea-mdg-author/references/test-cases.md#TC-15`
+  - `plugins/ai-power-tools/skills/ea-mdg-author/references/test-cases.md#TC-16`
+  - `plugins/ai-power-tools/skills/ea-mdg-author/references/test-cases.md#TC-17`
+  - `plugins/ai-power-tools/skills/ea-mdg-author/references/test-cases.md#TC-18`
+  - `plugins/ai-power-tools/skills/ea-mdg-author/references/test-cases.md#TC-19`
+  - `plugins/ai-power-tools/skills/ea-mdg-author/references/test-cases.md#TC-20`
+  - `plugins/ai-power-tools/skills/ea-mdg-author/references/test-cases.md#TC-21`
+  - `plugins/ai-power-tools/skills/ea-mdg-author/references/test-cases.md#TC-22`
+  - `plugins/ai-power-tools/skills/ea-mdg-author/references/test-cases.md#TC-23`
+  - `plugins/ai-power-tools/skills/ea-mdg-author/references/test-cases.md#TC-24`
+  - `plugins/ai-power-tools/skills/ea-mdg-author/references/test-cases.md#TC-25`
+  - `plugins/ai-power-tools/skills/ea-mdg-author/references/test-cases.md#TC-26`
+  - `plugins/ai-power-tools/skills/ea-mdg-author/references/test-cases.md#TC-27`
+  - `plugins/ai-power-tools/skills/ea-mdg-author/references/test-cases.md#TC-28`
+  - `plugins/ai-power-tools/skills/ea-mdg-author/references/test-cases.md#TC-29`
+  - `plugins/ai-power-tools/skills/ea-mdg-author/references/test-cases.md#TC-30`
+  - `plugins/ai-power-tools/skills/ea-mdg-author/references/test-cases.md#TC-31`
+- `skill:ea-mdg-deploy` A (34)
+  - `plugins/ai-power-tools/skills/ea-mdg-deploy/references/test-cases.md#TC-01`
+  - `plugins/ai-power-tools/skills/ea-mdg-deploy/references/test-cases.md#TC-02`
+  - `plugins/ai-power-tools/skills/ea-mdg-deploy/references/test-cases.md#TC-03`
+  - `plugins/ai-power-tools/skills/ea-mdg-deploy/references/test-cases.md#TC-04`
+  - `plugins/ai-power-tools/skills/ea-mdg-deploy/references/test-cases.md#TC-05`
+  - `plugins/ai-power-tools/skills/ea-mdg-deploy/references/test-cases.md#TC-06`
+  - `plugins/ai-power-tools/skills/ea-mdg-deploy/references/test-cases.md#TC-07`
+  - `plugins/ai-power-tools/skills/ea-mdg-deploy/references/test-cases.md#TC-08`
+  - `plugins/ai-power-tools/skills/ea-mdg-deploy/references/test-cases.md#TC-09`
+  - `plugins/ai-power-tools/skills/ea-mdg-deploy/references/test-cases.md#TC-10`
+  - `plugins/ai-power-tools/skills/ea-mdg-deploy/references/test-cases.md#TC-11`
+  - `plugins/ai-power-tools/skills/ea-mdg-deploy/references/test-cases.md#TC-12`
+  - `plugins/ai-power-tools/skills/ea-mdg-deploy/references/test-cases.md#TC-13`
+  - `plugins/ai-power-tools/skills/ea-mdg-deploy/references/test-cases.md#TC-14`
+  - `plugins/ai-power-tools/skills/ea-mdg-deploy/references/test-cases.md#TC-15`
+  - `plugins/ai-power-tools/skills/ea-mdg-deploy/references/test-cases.md#TC-16`
+  - `plugins/ai-power-tools/skills/ea-mdg-deploy/references/test-cases.md#TC-17`
+  - `plugins/ai-power-tools/skills/ea-mdg-deploy/references/test-cases.md#TC-18`
+  - `plugins/ai-power-tools/skills/ea-mdg-deploy/references/test-cases.md#TC-19`
+  - `plugins/ai-power-tools/skills/ea-mdg-deploy/references/test-cases.md#TC-20`
+  - `plugins/ai-power-tools/skills/ea-mdg-deploy/references/test-cases.md#TC-21`
+  - `plugins/ai-power-tools/skills/ea-mdg-deploy/references/test-cases.md#TC-22`
+  - `plugins/ai-power-tools/skills/ea-mdg-deploy/references/test-cases.md#TC-23`
+  - `plugins/ai-power-tools/skills/ea-mdg-deploy/references/test-cases.md#TC-24`
+  - `plugins/ai-power-tools/skills/ea-mdg-deploy/references/test-cases.md#TC-25`
+  - `plugins/ai-power-tools/skills/ea-mdg-deploy/references/test-cases.md#TC-26`
+  - `plugins/ai-power-tools/skills/ea-mdg-deploy/references/test-cases.md#TC-27`
+  - `plugins/ai-power-tools/skills/ea-mdg-deploy/references/test-cases.md#TC-28`
+  - `plugins/ai-power-tools/skills/ea-mdg-deploy/references/test-cases.md#TC-29`
+  - `plugins/ai-power-tools/skills/ea-mdg-deploy/references/test-cases.md#TC-30`
+  - `plugins/ai-power-tools/skills/ea-mdg-deploy/references/test-cases.md#TC-31`
+  - `plugins/ai-power-tools/skills/ea-mdg-deploy/references/test-cases.md#TC-32`
+  - `plugins/ai-power-tools/skills/ea-mdg-deploy/references/test-cases.md#TC-33`
+  - `plugins/ai-power-tools/skills/ea-mdg-deploy/references/test-cases.md#TC-34`
+- `skill:ea-mdg-model-build` A (50)
+  - `plugins/ai-power-tools/skills/ea-mdg-model-build/references/test-cases.md#TC-01`
+  - `plugins/ai-power-tools/skills/ea-mdg-model-build/references/test-cases.md#TC-02`
+  - `plugins/ai-power-tools/skills/ea-mdg-model-build/references/test-cases.md#TC-03`
+  - `plugins/ai-power-tools/skills/ea-mdg-model-build/references/test-cases.md#TC-04`
+  - `plugins/ai-power-tools/skills/ea-mdg-model-build/references/test-cases.md#TC-05`
+  - `plugins/ai-power-tools/skills/ea-mdg-model-build/references/test-cases.md#TC-06`
+  - `plugins/ai-power-tools/skills/ea-mdg-model-build/references/test-cases.md#TC-07`
+  - `plugins/ai-power-tools/skills/ea-mdg-model-build/references/test-cases.md#TC-08`
+  - `plugins/ai-power-tools/skills/ea-mdg-model-build/references/test-cases.md#TC-09`
+  - `plugins/ai-power-tools/skills/ea-mdg-model-build/references/test-cases.md#TC-10`
+  - `plugins/ai-power-tools/skills/ea-mdg-model-build/references/test-cases.md#TC-11`
+  - `plugins/ai-power-tools/skills/ea-mdg-model-build/references/test-cases.md#TC-12`
+  - `plugins/ai-power-tools/skills/ea-mdg-model-build/references/test-cases.md#TC-13`
+  - `plugins/ai-power-tools/skills/ea-mdg-model-build/references/test-cases.md#TC-14`
+  - `plugins/ai-power-tools/skills/ea-mdg-model-build/references/test-cases.md#TC-15`
+  - `plugins/ai-power-tools/skills/ea-mdg-model-build/references/test-cases.md#TC-16`
+  - `plugins/ai-power-tools/skills/ea-mdg-model-build/references/test-cases.md#TC-17`
+  - `plugins/ai-power-tools/skills/ea-mdg-model-build/references/test-cases.md#TC-18`
+  - `plugins/ai-power-tools/skills/ea-mdg-model-build/references/test-cases.md#TC-19`
+  - `plugins/ai-power-tools/skills/ea-mdg-model-build/references/test-cases.md#TC-20`
+  - `plugins/ai-power-tools/skills/ea-mdg-model-build/references/test-cases.md#TC-21`
+  - `plugins/ai-power-tools/skills/ea-mdg-model-build/references/test-cases.md#TC-22`
+  - `plugins/ai-power-tools/skills/ea-mdg-model-build/references/test-cases.md#TC-23`
+  - `plugins/ai-power-tools/skills/ea-mdg-model-build/references/test-cases.md#TC-24`
+  - `plugins/ai-power-tools/skills/ea-mdg-model-build/references/test-cases.md#TC-25`
+  - `plugins/ai-power-tools/skills/ea-mdg-model-build/references/test-cases.md#TC-26`
+  - `plugins/ai-power-tools/skills/ea-mdg-model-build/references/test-cases.md#TC-27`
+  - `plugins/ai-power-tools/skills/ea-mdg-model-build/references/test-cases.md#TC-28`
+  - `plugins/ai-power-tools/skills/ea-mdg-model-build/references/test-cases.md#TC-29`
+  - `plugins/ai-power-tools/skills/ea-mdg-model-build/references/test-cases.md#TC-30`
+  - `plugins/ai-power-tools/skills/ea-mdg-model-build/references/test-cases.md#TC-31`
+  - `plugins/ai-power-tools/skills/ea-mdg-model-build/references/test-cases.md#TC-32`
+  - `plugins/ai-power-tools/skills/ea-mdg-model-build/references/test-cases.md#TC-33`
+  - `plugins/ai-power-tools/skills/ea-mdg-model-build/references/test-cases.md#TC-34`
+  - `plugins/ai-power-tools/skills/ea-mdg-model-build/references/test-cases.md#TC-35`
+  - `plugins/ai-power-tools/skills/ea-mdg-model-build/references/test-cases.md#TC-36`
+  - `plugins/ai-power-tools/skills/ea-mdg-model-build/references/test-cases.md#TC-37`
+  - `plugins/ai-power-tools/skills/ea-mdg-model-build/references/test-cases.md#TC-38`
+  - `plugins/ai-power-tools/skills/ea-mdg-model-build/references/test-cases.md#TC-39`
+  - `plugins/ai-power-tools/skills/ea-mdg-model-build/references/test-cases.md#TC-40`
+  - `plugins/ai-power-tools/skills/ea-mdg-model-build/references/test-cases.md#TC-41`
+  - `plugins/ai-power-tools/skills/ea-mdg-model-build/references/test-cases.md#TC-42`
+  - `plugins/ai-power-tools/skills/ea-mdg-model-build/references/test-cases.md#TC-43`
+  - `plugins/ai-power-tools/skills/ea-mdg-model-build/references/test-cases.md#TC-44`
+  - `plugins/ai-power-tools/skills/ea-mdg-model-build/references/test-cases.md#TC-45`
+  - `plugins/ai-power-tools/skills/ea-mdg-model-build/references/test-cases.md#TC-46`
+  - `plugins/ai-power-tools/skills/ea-mdg-model-build/references/test-cases.md#TC-47`
+  - `plugins/ai-power-tools/skills/ea-mdg-model-build/references/test-cases.md#TC-48`
+  - `plugins/ai-power-tools/skills/ea-mdg-model-build/references/test-cases.md#TC-49`
+  - `plugins/ai-power-tools/skills/ea-mdg-model-build/references/test-cases.md#TC-50`
+- `skill:ea-model-hygiene` A (30)
+  - `plugins/ai-power-tools/skills/ea-model-hygiene/references/test-cases.md#TC-01`
+  - `plugins/ai-power-tools/skills/ea-model-hygiene/references/test-cases.md#TC-02`
+  - `plugins/ai-power-tools/skills/ea-model-hygiene/references/test-cases.md#TC-03`
+  - `plugins/ai-power-tools/skills/ea-model-hygiene/references/test-cases.md#TC-04`
+  - `plugins/ai-power-tools/skills/ea-model-hygiene/references/test-cases.md#TC-05`
+  - `plugins/ai-power-tools/skills/ea-model-hygiene/references/test-cases.md#TC-06`
+  - `plugins/ai-power-tools/skills/ea-model-hygiene/references/test-cases.md#TC-07`
+  - `plugins/ai-power-tools/skills/ea-model-hygiene/references/test-cases.md#TC-08`
+  - `plugins/ai-power-tools/skills/ea-model-hygiene/references/test-cases.md#TC-09`
+  - `plugins/ai-power-tools/skills/ea-model-hygiene/references/test-cases.md#TC-10`
+  - `plugins/ai-power-tools/skills/ea-model-hygiene/references/test-cases.md#TC-11`
+  - `plugins/ai-power-tools/skills/ea-model-hygiene/references/test-cases.md#TC-12`
+  - `plugins/ai-power-tools/skills/ea-model-hygiene/references/test-cases.md#TC-13`
+  - `plugins/ai-power-tools/skills/ea-model-hygiene/references/test-cases.md#TC-14`
+  - `plugins/ai-power-tools/skills/ea-model-hygiene/references/test-cases.md#TC-15`
+  - `plugins/ai-power-tools/skills/ea-model-hygiene/references/test-cases.md#TC-16`
+  - `plugins/ai-power-tools/skills/ea-model-hygiene/references/test-cases.md#TC-17`
+  - `plugins/ai-power-tools/skills/ea-model-hygiene/references/test-cases.md#TC-18`
+  - `plugins/ai-power-tools/skills/ea-model-hygiene/references/test-cases.md#TC-19`
+  - `plugins/ai-power-tools/skills/ea-model-hygiene/references/test-cases.md#TC-20`
+  - `plugins/ai-power-tools/skills/ea-model-hygiene/references/test-cases.md#TC-21`
+  - `plugins/ai-power-tools/skills/ea-model-hygiene/references/test-cases.md#TC-22`
+  - `plugins/ai-power-tools/skills/ea-model-hygiene/references/test-cases.md#TC-23`
+  - `plugins/ai-power-tools/skills/ea-model-hygiene/references/test-cases.md#TC-24`
+  - `plugins/ai-power-tools/skills/ea-model-hygiene/references/test-cases.md#TC-25`
+  - `plugins/ai-power-tools/skills/ea-model-hygiene/references/test-cases.md#TC-26`
+  - `plugins/ai-power-tools/skills/ea-model-hygiene/references/test-cases.md#TC-27`
+  - `plugins/ai-power-tools/skills/ea-model-hygiene/references/test-cases.md#TC-28`
+  - `plugins/ai-power-tools/skills/ea-model-hygiene/references/test-cases.md#TC-29`
+  - `plugins/ai-power-tools/skills/ea-model-hygiene/references/test-cases.md#TC-30`
+- `skill:ea-modeling` A (43)
+  - `plugins/ai-power-tools/skills/ea-modeling/references/test-cases.md#TC-01`
+  - `plugins/ai-power-tools/skills/ea-modeling/references/test-cases.md#TC-02`
+  - `plugins/ai-power-tools/skills/ea-modeling/references/test-cases.md#TC-03`
+  - `plugins/ai-power-tools/skills/ea-modeling/references/test-cases.md#TC-04`
+  - `plugins/ai-power-tools/skills/ea-modeling/references/test-cases.md#TC-05`
+  - `plugins/ai-power-tools/skills/ea-modeling/references/test-cases.md#TC-06`
+  - `plugins/ai-power-tools/skills/ea-modeling/references/test-cases.md#TC-07`
+  - `plugins/ai-power-tools/skills/ea-modeling/references/test-cases.md#TC-08`
+  - `plugins/ai-power-tools/skills/ea-modeling/references/test-cases.md#TC-09`
+  - `plugins/ai-power-tools/skills/ea-modeling/references/test-cases.md#TC-10`
+  - `plugins/ai-power-tools/skills/ea-modeling/references/test-cases.md#TC-11`
+  - `plugins/ai-power-tools/skills/ea-modeling/references/test-cases.md#TC-12`
+  - `plugins/ai-power-tools/skills/ea-modeling/references/test-cases.md#TC-13`
+  - `plugins/ai-power-tools/skills/ea-modeling/references/test-cases.md#TC-14`
+  - `plugins/ai-power-tools/skills/ea-modeling/references/test-cases.md#TC-15`
+  - `plugins/ai-power-tools/skills/ea-modeling/references/test-cases.md#TC-16`
+  - `plugins/ai-power-tools/skills/ea-modeling/references/test-cases.md#TC-17`
+  - `plugins/ai-power-tools/skills/ea-modeling/references/test-cases.md#TC-18`
+  - `plugins/ai-power-tools/skills/ea-modeling/references/test-cases.md#TC-19`
+  - `plugins/ai-power-tools/skills/ea-modeling/references/test-cases.md#TC-20`
+  - `plugins/ai-power-tools/skills/ea-modeling/references/test-cases.md#TC-21`
+  - `plugins/ai-power-tools/skills/ea-modeling/references/test-cases.md#TC-22`
+  - `plugins/ai-power-tools/skills/ea-modeling/references/test-cases.md#TC-23`
+  - `plugins/ai-power-tools/skills/ea-modeling/references/test-cases.md#TC-24`
+  - `plugins/ai-power-tools/skills/ea-modeling/references/test-cases.md#TC-25`
+  - `plugins/ai-power-tools/skills/ea-modeling/references/test-cases.md#TC-26`
+  - `plugins/ai-power-tools/skills/ea-modeling/references/test-cases.md#TC-27`
+  - `plugins/ai-power-tools/skills/ea-modeling/references/test-cases.md#TC-28`
+  - `plugins/ai-power-tools/skills/ea-modeling/references/test-cases.md#TC-29`
+  - `plugins/ai-power-tools/skills/ea-modeling/references/test-cases.md#TC-30`
+  - `plugins/ai-power-tools/skills/ea-modeling/references/test-cases.md#TC-31`
+  - `plugins/ai-power-tools/skills/ea-modeling/references/test-cases.md#TC-32`
+  - `plugins/ai-power-tools/skills/ea-modeling/references/test-cases.md#TC-33`
+  - `plugins/ai-power-tools/skills/ea-modeling/references/test-cases.md#TC-34`
+  - `plugins/ai-power-tools/skills/ea-modeling/references/test-cases.md#TC-35`
+  - `plugins/ai-power-tools/skills/ea-modeling/references/test-cases.md#TC-36`
+  - `plugins/ai-power-tools/skills/ea-modeling/references/test-cases.md#TC-37`
+  - `plugins/ai-power-tools/skills/ea-modeling/references/test-cases.md#TC-38`
+  - `plugins/ai-power-tools/skills/ea-modeling/references/test-cases.md#TC-39`
+  - `plugins/ai-power-tools/skills/ea-modeling/references/test-cases.md#TC-40`
+  - `plugins/ai-power-tools/skills/ea-modeling/references/test-cases.md#TC-41`
+  - `plugins/ai-power-tools/skills/ea-modeling/references/test-cases.md#TC-42`
+  - `plugins/ai-power-tools/skills/ea-modeling/references/test-cases.md#TC-43`
+- `skill:ea-navigation-diagrams` A (30)
+  - `plugins/ai-power-tools/skills/ea-navigation-diagrams/references/test-cases.md#TC-01`
+  - `plugins/ai-power-tools/skills/ea-navigation-diagrams/references/test-cases.md#TC-02`
+  - `plugins/ai-power-tools/skills/ea-navigation-diagrams/references/test-cases.md#TC-03`
+  - `plugins/ai-power-tools/skills/ea-navigation-diagrams/references/test-cases.md#TC-04`
+  - `plugins/ai-power-tools/skills/ea-navigation-diagrams/references/test-cases.md#TC-05`
+  - `plugins/ai-power-tools/skills/ea-navigation-diagrams/references/test-cases.md#TC-06`
+  - `plugins/ai-power-tools/skills/ea-navigation-diagrams/references/test-cases.md#TC-07`
+  - `plugins/ai-power-tools/skills/ea-navigation-diagrams/references/test-cases.md#TC-08`
+  - `plugins/ai-power-tools/skills/ea-navigation-diagrams/references/test-cases.md#TC-09`
+  - `plugins/ai-power-tools/skills/ea-navigation-diagrams/references/test-cases.md#TC-10`
+  - `plugins/ai-power-tools/skills/ea-navigation-diagrams/references/test-cases.md#TC-11`
+  - `plugins/ai-power-tools/skills/ea-navigation-diagrams/references/test-cases.md#TC-12`
+  - `plugins/ai-power-tools/skills/ea-navigation-diagrams/references/test-cases.md#TC-13`
+  - `plugins/ai-power-tools/skills/ea-navigation-diagrams/references/test-cases.md#TC-14`
+  - `plugins/ai-power-tools/skills/ea-navigation-diagrams/references/test-cases.md#TC-15`
+  - `plugins/ai-power-tools/skills/ea-navigation-diagrams/references/test-cases.md#TC-16`
+  - `plugins/ai-power-tools/skills/ea-navigation-diagrams/references/test-cases.md#TC-17`
+  - `plugins/ai-power-tools/skills/ea-navigation-diagrams/references/test-cases.md#TC-18`
+  - `plugins/ai-power-tools/skills/ea-navigation-diagrams/references/test-cases.md#TC-19`
+  - `plugins/ai-power-tools/skills/ea-navigation-diagrams/references/test-cases.md#TC-20`
+  - `plugins/ai-power-tools/skills/ea-navigation-diagrams/references/test-cases.md#TC-21`
+  - `plugins/ai-power-tools/skills/ea-navigation-diagrams/references/test-cases.md#TC-22`
+  - `plugins/ai-power-tools/skills/ea-navigation-diagrams/references/test-cases.md#TC-23`
+  - `plugins/ai-power-tools/skills/ea-navigation-diagrams/references/test-cases.md#TC-24`
+  - `plugins/ai-power-tools/skills/ea-navigation-diagrams/references/test-cases.md#TC-25`
+  - `plugins/ai-power-tools/skills/ea-navigation-diagrams/references/test-cases.md#TC-26`
+  - `plugins/ai-power-tools/skills/ea-navigation-diagrams/references/test-cases.md#TC-27`
+  - `plugins/ai-power-tools/skills/ea-navigation-diagrams/references/test-cases.md#TC-28`
+  - `plugins/ai-power-tools/skills/ea-navigation-diagrams/references/test-cases.md#TC-29`
+  - `plugins/ai-power-tools/skills/ea-navigation-diagrams/references/test-cases.md#TC-30`
+- `skill:ea-power-bi` A (56)
+  - `plugins/ai-power-tools/skills/ea-power-bi/references/test-cases.md#TC-01`
+  - `plugins/ai-power-tools/skills/ea-power-bi/references/test-cases.md#TC-02`
+  - `plugins/ai-power-tools/skills/ea-power-bi/references/test-cases.md#TC-03`
+  - `plugins/ai-power-tools/skills/ea-power-bi/references/test-cases.md#TC-04`
+  - `plugins/ai-power-tools/skills/ea-power-bi/references/test-cases.md#TC-05`
+  - `plugins/ai-power-tools/skills/ea-power-bi/references/test-cases.md#TC-06`
+  - `plugins/ai-power-tools/skills/ea-power-bi/references/test-cases.md#TC-07`
+  - `plugins/ai-power-tools/skills/ea-power-bi/references/test-cases.md#TC-08`
+  - `plugins/ai-power-tools/skills/ea-power-bi/references/test-cases.md#TC-09`
+  - `plugins/ai-power-tools/skills/ea-power-bi/references/test-cases.md#TC-10`
+  - `plugins/ai-power-tools/skills/ea-power-bi/references/test-cases.md#TC-11`
+  - `plugins/ai-power-tools/skills/ea-power-bi/references/test-cases.md#TC-12`
+  - `plugins/ai-power-tools/skills/ea-power-bi/references/test-cases.md#TC-13`
+  - `plugins/ai-power-tools/skills/ea-power-bi/references/test-cases.md#TC-14`
+  - `plugins/ai-power-tools/skills/ea-power-bi/references/test-cases.md#TC-15`
+  - `plugins/ai-power-tools/skills/ea-power-bi/references/test-cases.md#TC-16`
+  - `plugins/ai-power-tools/skills/ea-power-bi/references/test-cases.md#TC-17`
+  - `plugins/ai-power-tools/skills/ea-power-bi/references/test-cases.md#TC-18`
+  - `plugins/ai-power-tools/skills/ea-power-bi/references/test-cases.md#TC-19`
+  - `plugins/ai-power-tools/skills/ea-power-bi/references/test-cases.md#TC-20`
+  - `plugins/ai-power-tools/skills/ea-power-bi/references/test-cases.md#TC-21`
+  - `plugins/ai-power-tools/skills/ea-power-bi/references/test-cases.md#TC-22`
+  - `plugins/ai-power-tools/skills/ea-power-bi/references/test-cases.md#TC-23`
+  - `plugins/ai-power-tools/skills/ea-power-bi/references/test-cases.md#TC-24`
+  - `plugins/ai-power-tools/skills/ea-power-bi/references/test-cases.md#TC-25`
+  - `plugins/ai-power-tools/skills/ea-power-bi/references/test-cases.md#TC-26`
+  - `plugins/ai-power-tools/skills/ea-power-bi/references/test-cases.md#TC-27`
+  - `plugins/ai-power-tools/skills/ea-power-bi/references/test-cases.md#TC-28`
+  - `plugins/ai-power-tools/skills/ea-power-bi/references/test-cases.md#TC-29`
+  - `plugins/ai-power-tools/skills/ea-power-bi/references/test-cases.md#TC-30`
+  - `plugins/ai-power-tools/skills/ea-power-bi/references/test-cases.md#TC-31`
+  - `plugins/ai-power-tools/skills/ea-power-bi/references/test-cases.md#TC-32`
+  - `plugins/ai-power-tools/skills/ea-power-bi/references/test-cases.md#TC-33`
+  - `plugins/ai-power-tools/skills/ea-power-bi/references/test-cases.md#TC-34`
+  - `plugins/ai-power-tools/skills/ea-power-bi/references/test-cases.md#TC-35`
+  - `plugins/ai-power-tools/skills/ea-power-bi/references/test-cases.md#TC-36`
+  - `plugins/ai-power-tools/skills/ea-power-bi/references/test-cases.md#TC-37`
+  - `plugins/ai-power-tools/skills/ea-power-bi/references/test-cases.md#TC-38`
+  - `plugins/ai-power-tools/skills/ea-power-bi/references/test-cases.md#TC-39`
+  - `plugins/ai-power-tools/skills/ea-power-bi/references/test-cases.md#TC-40`
+  - `plugins/ai-power-tools/skills/ea-power-bi/references/test-cases.md#TC-41`
+  - `plugins/ai-power-tools/skills/ea-power-bi/references/test-cases.md#TC-42`
+  - `plugins/ai-power-tools/skills/ea-power-bi/references/test-cases.md#TC-43`
+  - `plugins/ai-power-tools/skills/ea-power-bi/references/test-cases.md#TC-44`
+  - `plugins/ai-power-tools/skills/ea-power-bi/references/test-cases.md#TC-45`
+  - `plugins/ai-power-tools/skills/ea-power-bi/references/test-cases.md#TC-46`
+  - `plugins/ai-power-tools/skills/ea-power-bi/references/test-cases.md#TC-47`
+  - `plugins/ai-power-tools/skills/ea-power-bi/references/test-cases.md#TC-48`
+  - `plugins/ai-power-tools/skills/ea-power-bi/references/test-cases.md#TC-49`
+  - `plugins/ai-power-tools/skills/ea-power-bi/references/test-cases.md#TC-50`
+  - `plugins/ai-power-tools/skills/ea-power-bi/references/test-cases.md#TC-51`
+  - `plugins/ai-power-tools/skills/ea-power-bi/references/test-cases.md#TC-52`
+  - `plugins/ai-power-tools/skills/ea-power-bi/references/test-cases.md#TC-53`
+  - `plugins/ai-power-tools/skills/ea-power-bi/references/test-cases.md#TC-54`
+  - `plugins/ai-power-tools/skills/ea-power-bi/references/test-cases.md#TC-55`
+  - `plugins/ai-power-tools/skills/ea-power-bi/references/test-cases.md#TC-56`
+- `skill:ea-reporting-database` A (53)
+  - `plugins/ai-power-tools/skills/ea-reporting-database/references/test-cases.md#TC-01`
+  - `plugins/ai-power-tools/skills/ea-reporting-database/references/test-cases.md#TC-02`
+  - `plugins/ai-power-tools/skills/ea-reporting-database/references/test-cases.md#TC-03`
+  - `plugins/ai-power-tools/skills/ea-reporting-database/references/test-cases.md#TC-04`
+  - `plugins/ai-power-tools/skills/ea-reporting-database/references/test-cases.md#TC-05`
+  - `plugins/ai-power-tools/skills/ea-reporting-database/references/test-cases.md#TC-06`
+  - `plugins/ai-power-tools/skills/ea-reporting-database/references/test-cases.md#TC-07`
+  - `plugins/ai-power-tools/skills/ea-reporting-database/references/test-cases.md#TC-08`
+  - `plugins/ai-power-tools/skills/ea-reporting-database/references/test-cases.md#TC-09`
+  - `plugins/ai-power-tools/skills/ea-reporting-database/references/test-cases.md#TC-10`
+  - `plugins/ai-power-tools/skills/ea-reporting-database/references/test-cases.md#TC-11`
+  - `plugins/ai-power-tools/skills/ea-reporting-database/references/test-cases.md#TC-12`
+  - `plugins/ai-power-tools/skills/ea-reporting-database/references/test-cases.md#TC-13`
+  - `plugins/ai-power-tools/skills/ea-reporting-database/references/test-cases.md#TC-14`
+  - `plugins/ai-power-tools/skills/ea-reporting-database/references/test-cases.md#TC-15`
+  - `plugins/ai-power-tools/skills/ea-reporting-database/references/test-cases.md#TC-16`
+  - `plugins/ai-power-tools/skills/ea-reporting-database/references/test-cases.md#TC-17`
+  - `plugins/ai-power-tools/skills/ea-reporting-database/references/test-cases.md#TC-18`
+  - `plugins/ai-power-tools/skills/ea-reporting-database/references/test-cases.md#TC-19`
+  - `plugins/ai-power-tools/skills/ea-reporting-database/references/test-cases.md#TC-20`
+  - `plugins/ai-power-tools/skills/ea-reporting-database/references/test-cases.md#TC-21`
+  - `plugins/ai-power-tools/skills/ea-reporting-database/references/test-cases.md#TC-22`
+  - `plugins/ai-power-tools/skills/ea-reporting-database/references/test-cases.md#TC-23`
+  - `plugins/ai-power-tools/skills/ea-reporting-database/references/test-cases.md#TC-24`
+  - `plugins/ai-power-tools/skills/ea-reporting-database/references/test-cases.md#TC-25`
+  - `plugins/ai-power-tools/skills/ea-reporting-database/references/test-cases.md#TC-26`
+  - `plugins/ai-power-tools/skills/ea-reporting-database/references/test-cases.md#TC-27`
+  - `plugins/ai-power-tools/skills/ea-reporting-database/references/test-cases.md#TC-28`
+  - `plugins/ai-power-tools/skills/ea-reporting-database/references/test-cases.md#TC-29`
+  - `plugins/ai-power-tools/skills/ea-reporting-database/references/test-cases.md#TC-30`
+  - `plugins/ai-power-tools/skills/ea-reporting-database/references/test-cases.md#TC-31`
+  - `plugins/ai-power-tools/skills/ea-reporting-database/references/test-cases.md#TC-32`
+  - `plugins/ai-power-tools/skills/ea-reporting-database/references/test-cases.md#TC-33`
+  - `plugins/ai-power-tools/skills/ea-reporting-database/references/test-cases.md#TC-34`
+  - `plugins/ai-power-tools/skills/ea-reporting-database/references/test-cases.md#TC-35`
+  - `plugins/ai-power-tools/skills/ea-reporting-database/references/test-cases.md#TC-36`
+  - `plugins/ai-power-tools/skills/ea-reporting-database/references/test-cases.md#TC-37`
+  - `plugins/ai-power-tools/skills/ea-reporting-database/references/test-cases.md#TC-38`
+  - `plugins/ai-power-tools/skills/ea-reporting-database/references/test-cases.md#TC-39`
+  - `plugins/ai-power-tools/skills/ea-reporting-database/references/test-cases.md#TC-40`
+  - `plugins/ai-power-tools/skills/ea-reporting-database/references/test-cases.md#TC-41`
+  - `plugins/ai-power-tools/skills/ea-reporting-database/references/test-cases.md#TC-42`
+  - `plugins/ai-power-tools/skills/ea-reporting-database/references/test-cases.md#TC-43`
+  - `plugins/ai-power-tools/skills/ea-reporting-database/references/test-cases.md#TC-44`
+  - `plugins/ai-power-tools/skills/ea-reporting-database/references/test-cases.md#TC-45`
+  - `plugins/ai-power-tools/skills/ea-reporting-database/references/test-cases.md#TC-46`
+  - `plugins/ai-power-tools/skills/ea-reporting-database/references/test-cases.md#TC-47`
+  - `plugins/ai-power-tools/skills/ea-reporting-database/references/test-cases.md#TC-48`
+  - `plugins/ai-power-tools/skills/ea-reporting-database/references/test-cases.md#TC-49`
+  - `plugins/ai-power-tools/skills/ea-reporting-database/references/test-cases.md#TC-50`
+  - `plugins/ai-power-tools/skills/ea-reporting-database/references/test-cases.md#TC-51`
+  - `plugins/ai-power-tools/skills/ea-reporting-database/references/test-cases.md#TC-52`
+  - `plugins/ai-power-tools/skills/ea-reporting-database/references/test-cases.md#TC-53`
+- `skill:ea-ruleset-author` A (25)
+  - `plugins/ai-power-tools/skills/ea-ruleset-author/references/test-cases.md#TC-01`
+  - `plugins/ai-power-tools/skills/ea-ruleset-author/references/test-cases.md#TC-02`
+  - `plugins/ai-power-tools/skills/ea-ruleset-author/references/test-cases.md#TC-03`
+  - `plugins/ai-power-tools/skills/ea-ruleset-author/references/test-cases.md#TC-04`
+  - `plugins/ai-power-tools/skills/ea-ruleset-author/references/test-cases.md#TC-05`
+  - `plugins/ai-power-tools/skills/ea-ruleset-author/references/test-cases.md#TC-06`
+  - `plugins/ai-power-tools/skills/ea-ruleset-author/references/test-cases.md#TC-07`
+  - `plugins/ai-power-tools/skills/ea-ruleset-author/references/test-cases.md#TC-08`
+  - `plugins/ai-power-tools/skills/ea-ruleset-author/references/test-cases.md#TC-09`
+  - `plugins/ai-power-tools/skills/ea-ruleset-author/references/test-cases.md#TC-10`
+  - `plugins/ai-power-tools/skills/ea-ruleset-author/references/test-cases.md#TC-11`
+  - `plugins/ai-power-tools/skills/ea-ruleset-author/references/test-cases.md#TC-12`
+  - `plugins/ai-power-tools/skills/ea-ruleset-author/references/test-cases.md#TC-13`
+  - `plugins/ai-power-tools/skills/ea-ruleset-author/references/test-cases.md#TC-14`
+  - `plugins/ai-power-tools/skills/ea-ruleset-author/references/test-cases.md#TC-15`
+  - `plugins/ai-power-tools/skills/ea-ruleset-author/references/test-cases.md#TC-16`
+  - `plugins/ai-power-tools/skills/ea-ruleset-author/references/test-cases.md#TC-17`
+  - `plugins/ai-power-tools/skills/ea-ruleset-author/references/test-cases.md#TC-18`
+  - `plugins/ai-power-tools/skills/ea-ruleset-author/references/test-cases.md#TC-19`
+  - `plugins/ai-power-tools/skills/ea-ruleset-author/references/test-cases.md#TC-20`
+  - `plugins/ai-power-tools/skills/ea-ruleset-author/references/test-cases.md#TC-21`
+  - `plugins/ai-power-tools/skills/ea-ruleset-author/references/test-cases.md#TC-22`
+  - `plugins/ai-power-tools/skills/ea-ruleset-author/references/test-cases.md#TC-23`
+  - `plugins/ai-power-tools/skills/ea-ruleset-author/references/test-cases.md#TC-24`
+  - `plugins/ai-power-tools/skills/ea-ruleset-author/references/test-cases.md#TC-25`
+- `skill:ea-stakeholder-reporting` A (20)
+  - `plugins/ai-power-tools/skills/ea-stakeholder-reporting/references/test-cases.md#TC-01`
+  - `plugins/ai-power-tools/skills/ea-stakeholder-reporting/references/test-cases.md#TC-02`
+  - `plugins/ai-power-tools/skills/ea-stakeholder-reporting/references/test-cases.md#TC-03`
+  - `plugins/ai-power-tools/skills/ea-stakeholder-reporting/references/test-cases.md#TC-04`
+  - `plugins/ai-power-tools/skills/ea-stakeholder-reporting/references/test-cases.md#TC-05`
+  - `plugins/ai-power-tools/skills/ea-stakeholder-reporting/references/test-cases.md#TC-06`
+  - `plugins/ai-power-tools/skills/ea-stakeholder-reporting/references/test-cases.md#TC-07`
+  - `plugins/ai-power-tools/skills/ea-stakeholder-reporting/references/test-cases.md#TC-08`
+  - `plugins/ai-power-tools/skills/ea-stakeholder-reporting/references/test-cases.md#TC-09`
+  - `plugins/ai-power-tools/skills/ea-stakeholder-reporting/references/test-cases.md#TC-10`
+  - `plugins/ai-power-tools/skills/ea-stakeholder-reporting/references/test-cases.md#TC-11`
+  - `plugins/ai-power-tools/skills/ea-stakeholder-reporting/references/test-cases.md#TC-12`
+  - `plugins/ai-power-tools/skills/ea-stakeholder-reporting/references/test-cases.md#TC-13`
+  - `plugins/ai-power-tools/skills/ea-stakeholder-reporting/references/test-cases.md#TC-14`
+  - `plugins/ai-power-tools/skills/ea-stakeholder-reporting/references/test-cases.md#TC-15`
+  - `plugins/ai-power-tools/skills/ea-stakeholder-reporting/references/test-cases.md#TC-16`
+  - `plugins/ai-power-tools/skills/ea-stakeholder-reporting/references/test-cases.md#TC-17`
+  - `plugins/ai-power-tools/skills/ea-stakeholder-reporting/references/test-cases.md#TC-18`
+  - `plugins/ai-power-tools/skills/ea-stakeholder-reporting/references/test-cases.md#TC-19`
+  - `plugins/ai-power-tools/skills/ea-stakeholder-reporting/references/test-cases.md#TC-20`
+- `skill:ea-start-here` A (35)
+  - `plugins/ai-power-tools/skills/ea-start-here/references/test-cases.md#TC-01`
+  - `plugins/ai-power-tools/skills/ea-start-here/references/test-cases.md#TC-02`
+  - `plugins/ai-power-tools/skills/ea-start-here/references/test-cases.md#TC-03`
+  - `plugins/ai-power-tools/skills/ea-start-here/references/test-cases.md#TC-04`
+  - `plugins/ai-power-tools/skills/ea-start-here/references/test-cases.md#TC-05`
+  - `plugins/ai-power-tools/skills/ea-start-here/references/test-cases.md#TC-06`
+  - `plugins/ai-power-tools/skills/ea-start-here/references/test-cases.md#TC-07`
+  - `plugins/ai-power-tools/skills/ea-start-here/references/test-cases.md#TC-08`
+  - `plugins/ai-power-tools/skills/ea-start-here/references/test-cases.md#TC-09`
+  - `plugins/ai-power-tools/skills/ea-start-here/references/test-cases.md#TC-10`
+  - `plugins/ai-power-tools/skills/ea-start-here/references/test-cases.md#TC-11`
+  - `plugins/ai-power-tools/skills/ea-start-here/references/test-cases.md#TC-12`
+  - `plugins/ai-power-tools/skills/ea-start-here/references/test-cases.md#TC-13`
+  - `plugins/ai-power-tools/skills/ea-start-here/references/test-cases.md#TC-14`
+  - `plugins/ai-power-tools/skills/ea-start-here/references/test-cases.md#TC-15`
+  - `plugins/ai-power-tools/skills/ea-start-here/references/test-cases.md#TC-16`
+  - `plugins/ai-power-tools/skills/ea-start-here/references/test-cases.md#TC-17`
+  - `plugins/ai-power-tools/skills/ea-start-here/references/test-cases.md#TC-18`
+  - `plugins/ai-power-tools/skills/ea-start-here/references/test-cases.md#TC-19`
+  - `plugins/ai-power-tools/skills/ea-start-here/references/test-cases.md#TC-20`
+  - `plugins/ai-power-tools/skills/ea-start-here/references/test-cases.md#TC-21`
+  - `plugins/ai-power-tools/skills/ea-start-here/references/test-cases.md#TC-22`
+  - `plugins/ai-power-tools/skills/ea-start-here/references/test-cases.md#TC-23`
+  - `plugins/ai-power-tools/skills/ea-start-here/references/test-cases.md#TC-24`
+  - `plugins/ai-power-tools/skills/ea-start-here/references/test-cases.md#TC-25`
+  - `plugins/ai-power-tools/skills/ea-start-here/references/test-cases.md#TC-26`
+  - `plugins/ai-power-tools/skills/ea-start-here/references/test-cases.md#TC-27`
+  - `plugins/ai-power-tools/skills/ea-start-here/references/test-cases.md#TC-28`
+  - `plugins/ai-power-tools/skills/ea-start-here/references/test-cases.md#TC-29`
+  - `plugins/ai-power-tools/skills/ea-start-here/references/test-cases.md#TC-30`
+  - `plugins/ai-power-tools/skills/ea-start-here/references/test-cases.md#TC-31`
+  - `plugins/ai-power-tools/skills/ea-start-here/references/test-cases.md#TC-32`
+  - `plugins/ai-power-tools/skills/ea-start-here/references/test-cases.md#TC-33`
+  - `plugins/ai-power-tools/skills/ea-start-here/references/test-cases.md#TC-34`
+  - `plugins/ai-power-tools/skills/ea-start-here/references/test-cases.md#TC-35`
+- `skill:ea-validation` A (21)
+  - `plugins/ai-power-tools/skills/ea-validation/references/test-cases.md#TC-01`
+  - `plugins/ai-power-tools/skills/ea-validation/references/test-cases.md#TC-02`
+  - `plugins/ai-power-tools/skills/ea-validation/references/test-cases.md#TC-03`
+  - `plugins/ai-power-tools/skills/ea-validation/references/test-cases.md#TC-04`
+  - `plugins/ai-power-tools/skills/ea-validation/references/test-cases.md#TC-05`
+  - `plugins/ai-power-tools/skills/ea-validation/references/test-cases.md#TC-06`
+  - `plugins/ai-power-tools/skills/ea-validation/references/test-cases.md#TC-07`
+  - `plugins/ai-power-tools/skills/ea-validation/references/test-cases.md#TC-08`
+  - `plugins/ai-power-tools/skills/ea-validation/references/test-cases.md#TC-09`
+  - `plugins/ai-power-tools/skills/ea-validation/references/test-cases.md#TC-10`
+  - `plugins/ai-power-tools/skills/ea-validation/references/test-cases.md#TC-11`
+  - `plugins/ai-power-tools/skills/ea-validation/references/test-cases.md#TC-12`
+  - `plugins/ai-power-tools/skills/ea-validation/references/test-cases.md#TC-13`
+  - `plugins/ai-power-tools/skills/ea-validation/references/test-cases.md#TC-14`
+  - `plugins/ai-power-tools/skills/ea-validation/references/test-cases.md#TC-15`
+  - `plugins/ai-power-tools/skills/ea-validation/references/test-cases.md#TC-16`
+  - `plugins/ai-power-tools/skills/ea-validation/references/test-cases.md#TC-17`
+  - `plugins/ai-power-tools/skills/ea-validation/references/test-cases.md#TC-18`
+  - `plugins/ai-power-tools/skills/ea-validation/references/test-cases.md#TC-19`
+  - `plugins/ai-power-tools/skills/ea-validation/references/test-cases.md#TC-20`
+  - `plugins/ai-power-tools/skills/ea-validation/references/test-cases.md#TC-21`
+- `skill:prol-dashboards` A (48)
+  - `plugins/ai-power-tools/skills/prol-dashboards/references/test-cases.md#TC-01`
+  - `plugins/ai-power-tools/skills/prol-dashboards/references/test-cases.md#TC-02`
+  - `plugins/ai-power-tools/skills/prol-dashboards/references/test-cases.md#TC-03`
+  - `plugins/ai-power-tools/skills/prol-dashboards/references/test-cases.md#TC-04`
+  - `plugins/ai-power-tools/skills/prol-dashboards/references/test-cases.md#TC-05`
+  - `plugins/ai-power-tools/skills/prol-dashboards/references/test-cases.md#TC-06`
+  - `plugins/ai-power-tools/skills/prol-dashboards/references/test-cases.md#TC-07`
+  - `plugins/ai-power-tools/skills/prol-dashboards/references/test-cases.md#TC-08`
+  - `plugins/ai-power-tools/skills/prol-dashboards/references/test-cases.md#TC-09`
+  - `plugins/ai-power-tools/skills/prol-dashboards/references/test-cases.md#TC-10`
+  - `plugins/ai-power-tools/skills/prol-dashboards/references/test-cases.md#TC-11`
+  - `plugins/ai-power-tools/skills/prol-dashboards/references/test-cases.md#TC-12`
+  - `plugins/ai-power-tools/skills/prol-dashboards/references/test-cases.md#TC-13`
+  - `plugins/ai-power-tools/skills/prol-dashboards/references/test-cases.md#TC-14`
+  - `plugins/ai-power-tools/skills/prol-dashboards/references/test-cases.md#TC-15`
+  - `plugins/ai-power-tools/skills/prol-dashboards/references/test-cases.md#TC-16`
+  - `plugins/ai-power-tools/skills/prol-dashboards/references/test-cases.md#TC-17`
+  - `plugins/ai-power-tools/skills/prol-dashboards/references/test-cases.md#TC-18`
+  - `plugins/ai-power-tools/skills/prol-dashboards/references/test-cases.md#TC-19`
+  - `plugins/ai-power-tools/skills/prol-dashboards/references/test-cases.md#TC-20`
+  - `plugins/ai-power-tools/skills/prol-dashboards/references/test-cases.md#TC-21`
+  - `plugins/ai-power-tools/skills/prol-dashboards/references/test-cases.md#TC-22`
+  - `plugins/ai-power-tools/skills/prol-dashboards/references/test-cases.md#TC-23`
+  - `plugins/ai-power-tools/skills/prol-dashboards/references/test-cases.md#TC-24`
+  - `plugins/ai-power-tools/skills/prol-dashboards/references/test-cases.md#TC-25`
+  - `plugins/ai-power-tools/skills/prol-dashboards/references/test-cases.md#TC-26`
+  - `plugins/ai-power-tools/skills/prol-dashboards/references/test-cases.md#TC-27`
+  - `plugins/ai-power-tools/skills/prol-dashboards/references/test-cases.md#TC-28`
+  - `plugins/ai-power-tools/skills/prol-dashboards/references/test-cases.md#TC-29`
+  - `plugins/ai-power-tools/skills/prol-dashboards/references/test-cases.md#TC-30`
+  - `plugins/ai-power-tools/skills/prol-dashboards/references/test-cases.md#TC-31`
+  - `plugins/ai-power-tools/skills/prol-dashboards/references/test-cases.md#TC-32`
+  - `plugins/ai-power-tools/skills/prol-dashboards/references/test-cases.md#TC-33`
+  - `plugins/ai-power-tools/skills/prol-dashboards/references/test-cases.md#TC-34`
+  - `plugins/ai-power-tools/skills/prol-dashboards/references/test-cases.md#TC-35`
+  - `plugins/ai-power-tools/skills/prol-dashboards/references/test-cases.md#TC-36`
+  - `plugins/ai-power-tools/skills/prol-dashboards/references/test-cases.md#TC-37`
+  - `plugins/ai-power-tools/skills/prol-dashboards/references/test-cases.md#TC-38`
+  - `plugins/ai-power-tools/skills/prol-dashboards/references/test-cases.md#TC-39`
+  - `plugins/ai-power-tools/skills/prol-dashboards/references/test-cases.md#TC-40`
+  - `plugins/ai-power-tools/skills/prol-dashboards/references/test-cases.md#TC-41`
+  - `plugins/ai-power-tools/skills/prol-dashboards/references/test-cases.md#TC-42`
+  - `plugins/ai-power-tools/skills/prol-dashboards/references/test-cases.md#TC-43`
+  - `plugins/ai-power-tools/skills/prol-dashboards/references/test-cases.md#TC-44`
+  - `plugins/ai-power-tools/skills/prol-dashboards/references/test-cases.md#TC-45`
+  - `plugins/ai-power-tools/skills/prol-dashboards/references/test-cases.md#TC-46`
+  - `plugins/ai-power-tools/skills/prol-dashboards/references/test-cases.md#TC-47`
+  - `plugins/ai-power-tools/skills/prol-dashboards/references/test-cases.md#TC-48`
+- `skill:prol-impact-analysis` A (36)
+  - `plugins/ai-power-tools/skills/prol-impact-analysis/references/test-cases.md#TC-01`
+  - `plugins/ai-power-tools/skills/prol-impact-analysis/references/test-cases.md#TC-02`
+  - `plugins/ai-power-tools/skills/prol-impact-analysis/references/test-cases.md#TC-03`
+  - `plugins/ai-power-tools/skills/prol-impact-analysis/references/test-cases.md#TC-04`
+  - `plugins/ai-power-tools/skills/prol-impact-analysis/references/test-cases.md#TC-05`
+  - `plugins/ai-power-tools/skills/prol-impact-analysis/references/test-cases.md#TC-06`
+  - `plugins/ai-power-tools/skills/prol-impact-analysis/references/test-cases.md#TC-07`
+  - `plugins/ai-power-tools/skills/prol-impact-analysis/references/test-cases.md#TC-08`
+  - `plugins/ai-power-tools/skills/prol-impact-analysis/references/test-cases.md#TC-09`
+  - `plugins/ai-power-tools/skills/prol-impact-analysis/references/test-cases.md#TC-10`
+  - `plugins/ai-power-tools/skills/prol-impact-analysis/references/test-cases.md#TC-11`
+  - `plugins/ai-power-tools/skills/prol-impact-analysis/references/test-cases.md#TC-12`
+  - `plugins/ai-power-tools/skills/prol-impact-analysis/references/test-cases.md#TC-13`
+  - `plugins/ai-power-tools/skills/prol-impact-analysis/references/test-cases.md#TC-14`
+  - `plugins/ai-power-tools/skills/prol-impact-analysis/references/test-cases.md#TC-15`
+  - `plugins/ai-power-tools/skills/prol-impact-analysis/references/test-cases.md#TC-16`
+  - `plugins/ai-power-tools/skills/prol-impact-analysis/references/test-cases.md#TC-17`
+  - `plugins/ai-power-tools/skills/prol-impact-analysis/references/test-cases.md#TC-18`
+  - `plugins/ai-power-tools/skills/prol-impact-analysis/references/test-cases.md#TC-19`
+  - `plugins/ai-power-tools/skills/prol-impact-analysis/references/test-cases.md#TC-20`
+  - `plugins/ai-power-tools/skills/prol-impact-analysis/references/test-cases.md#TC-21`
+  - `plugins/ai-power-tools/skills/prol-impact-analysis/references/test-cases.md#TC-22`
+  - `plugins/ai-power-tools/skills/prol-impact-analysis/references/test-cases.md#TC-23`
+  - `plugins/ai-power-tools/skills/prol-impact-analysis/references/test-cases.md#TC-24`
+  - `plugins/ai-power-tools/skills/prol-impact-analysis/references/test-cases.md#TC-25`
+  - `plugins/ai-power-tools/skills/prol-impact-analysis/references/test-cases.md#TC-26`
+  - `plugins/ai-power-tools/skills/prol-impact-analysis/references/test-cases.md#TC-27`
+  - `plugins/ai-power-tools/skills/prol-impact-analysis/references/test-cases.md#TC-28`
+  - `plugins/ai-power-tools/skills/prol-impact-analysis/references/test-cases.md#TC-29`
+  - `plugins/ai-power-tools/skills/prol-impact-analysis/references/test-cases.md#TC-30`
+  - `plugins/ai-power-tools/skills/prol-impact-analysis/references/test-cases.md#TC-31`
+  - `plugins/ai-power-tools/skills/prol-impact-analysis/references/test-cases.md#TC-32`
+  - `plugins/ai-power-tools/skills/prol-impact-analysis/references/test-cases.md#TC-33`
+  - `plugins/ai-power-tools/skills/prol-impact-analysis/references/test-cases.md#TC-34`
+  - `plugins/ai-power-tools/skills/prol-impact-analysis/references/test-cases.md#TC-35`
+  - `plugins/ai-power-tools/skills/prol-impact-analysis/references/test-cases.md#TC-36`
+- `skill:prol-matrix` A (29)
+  - `plugins/ai-power-tools/skills/prol-matrix/references/test-cases.md#TC-01`
+  - `plugins/ai-power-tools/skills/prol-matrix/references/test-cases.md#TC-02`
+  - `plugins/ai-power-tools/skills/prol-matrix/references/test-cases.md#TC-03`
+  - `plugins/ai-power-tools/skills/prol-matrix/references/test-cases.md#TC-04`
+  - `plugins/ai-power-tools/skills/prol-matrix/references/test-cases.md#TC-05`
+  - `plugins/ai-power-tools/skills/prol-matrix/references/test-cases.md#TC-06`
+  - `plugins/ai-power-tools/skills/prol-matrix/references/test-cases.md#TC-07`
+  - `plugins/ai-power-tools/skills/prol-matrix/references/test-cases.md#TC-08`
+  - `plugins/ai-power-tools/skills/prol-matrix/references/test-cases.md#TC-09`
+  - `plugins/ai-power-tools/skills/prol-matrix/references/test-cases.md#TC-10`
+  - `plugins/ai-power-tools/skills/prol-matrix/references/test-cases.md#TC-11`
+  - `plugins/ai-power-tools/skills/prol-matrix/references/test-cases.md#TC-12`
+  - `plugins/ai-power-tools/skills/prol-matrix/references/test-cases.md#TC-13`
+  - `plugins/ai-power-tools/skills/prol-matrix/references/test-cases.md#TC-14`
+  - `plugins/ai-power-tools/skills/prol-matrix/references/test-cases.md#TC-15`
+  - `plugins/ai-power-tools/skills/prol-matrix/references/test-cases.md#TC-16`
+  - `plugins/ai-power-tools/skills/prol-matrix/references/test-cases.md#TC-17`
+  - `plugins/ai-power-tools/skills/prol-matrix/references/test-cases.md#TC-18`
+  - `plugins/ai-power-tools/skills/prol-matrix/references/test-cases.md#TC-19`
+  - `plugins/ai-power-tools/skills/prol-matrix/references/test-cases.md#TC-20`
+  - `plugins/ai-power-tools/skills/prol-matrix/references/test-cases.md#TC-21`
+  - `plugins/ai-power-tools/skills/prol-matrix/references/test-cases.md#TC-22`
+  - `plugins/ai-power-tools/skills/prol-matrix/references/test-cases.md#TC-23`
+  - `plugins/ai-power-tools/skills/prol-matrix/references/test-cases.md#TC-24`
+  - `plugins/ai-power-tools/skills/prol-matrix/references/test-cases.md#TC-25`
+  - `plugins/ai-power-tools/skills/prol-matrix/references/test-cases.md#TC-26`
+  - `plugins/ai-power-tools/skills/prol-matrix/references/test-cases.md#TC-27`
+  - `plugins/ai-power-tools/skills/prol-matrix/references/test-cases.md#TC-28`
+  - `plugins/ai-power-tools/skills/prol-matrix/references/test-cases.md#TC-29`
+- `skill:prol-start-here` A (40)
+  - `plugins/ai-power-tools/skills/prol-start-here/references/test-cases.md#TC-01`
+  - `plugins/ai-power-tools/skills/prol-start-here/references/test-cases.md#TC-02`
+  - `plugins/ai-power-tools/skills/prol-start-here/references/test-cases.md#TC-03`
+  - `plugins/ai-power-tools/skills/prol-start-here/references/test-cases.md#TC-04`
+  - `plugins/ai-power-tools/skills/prol-start-here/references/test-cases.md#TC-05`
+  - `plugins/ai-power-tools/skills/prol-start-here/references/test-cases.md#TC-06`
+  - `plugins/ai-power-tools/skills/prol-start-here/references/test-cases.md#TC-07`
+  - `plugins/ai-power-tools/skills/prol-start-here/references/test-cases.md#TC-08`
+  - `plugins/ai-power-tools/skills/prol-start-here/references/test-cases.md#TC-09`
+  - `plugins/ai-power-tools/skills/prol-start-here/references/test-cases.md#TC-10`
+  - `plugins/ai-power-tools/skills/prol-start-here/references/test-cases.md#TC-11`
+  - `plugins/ai-power-tools/skills/prol-start-here/references/test-cases.md#TC-12`
+  - `plugins/ai-power-tools/skills/prol-start-here/references/test-cases.md#TC-13`
+  - `plugins/ai-power-tools/skills/prol-start-here/references/test-cases.md#TC-14`
+  - `plugins/ai-power-tools/skills/prol-start-here/references/test-cases.md#TC-15`
+  - `plugins/ai-power-tools/skills/prol-start-here/references/test-cases.md#TC-16`
+  - `plugins/ai-power-tools/skills/prol-start-here/references/test-cases.md#TC-17`
+  - `plugins/ai-power-tools/skills/prol-start-here/references/test-cases.md#TC-18`
+  - `plugins/ai-power-tools/skills/prol-start-here/references/test-cases.md#TC-19`
+  - `plugins/ai-power-tools/skills/prol-start-here/references/test-cases.md#TC-20`
+  - `plugins/ai-power-tools/skills/prol-start-here/references/test-cases.md#TC-21`
+  - `plugins/ai-power-tools/skills/prol-start-here/references/test-cases.md#TC-22`
+  - `plugins/ai-power-tools/skills/prol-start-here/references/test-cases.md#TC-23`
+  - `plugins/ai-power-tools/skills/prol-start-here/references/test-cases.md#TC-24`
+  - `plugins/ai-power-tools/skills/prol-start-here/references/test-cases.md#TC-25`
+  - `plugins/ai-power-tools/skills/prol-start-here/references/test-cases.md#TC-26`
+  - `plugins/ai-power-tools/skills/prol-start-here/references/test-cases.md#TC-27`
+  - `plugins/ai-power-tools/skills/prol-start-here/references/test-cases.md#TC-28`
+  - `plugins/ai-power-tools/skills/prol-start-here/references/test-cases.md#TC-29`
+  - `plugins/ai-power-tools/skills/prol-start-here/references/test-cases.md#TC-30`
+  - `plugins/ai-power-tools/skills/prol-start-here/references/test-cases.md#TC-31`
+  - `plugins/ai-power-tools/skills/prol-start-here/references/test-cases.md#TC-32`
+  - `plugins/ai-power-tools/skills/prol-start-here/references/test-cases.md#TC-33`
+  - `plugins/ai-power-tools/skills/prol-start-here/references/test-cases.md#TC-34`
+  - `plugins/ai-power-tools/skills/prol-start-here/references/test-cases.md#TC-35`
+  - `plugins/ai-power-tools/skills/prol-start-here/references/test-cases.md#TC-36`
+  - `plugins/ai-power-tools/skills/prol-start-here/references/test-cases.md#TC-37`
+  - `plugins/ai-power-tools/skills/prol-start-here/references/test-cases.md#TC-38`
+  - `plugins/ai-power-tools/skills/prol-start-here/references/test-cases.md#TC-39`
+  - `plugins/ai-power-tools/skills/prol-start-here/references/test-cases.md#TC-40`
 - `srf:plugin` U (102)
   - `tools/test_gate.py::TestForbiddenIdentifiers.test_a_real_customer_identifier_is_caught`
   - `tools/test_gate.py::TestForbiddenIdentifiers.test_the_sparx_shipped_tea_framework_is_allowed`
@@ -1602,13 +2424,13 @@ Quoted from `tools/register.toml`. Nothing here is decided until its status says
 
 | Unit kind | Required | Units | Present | Exempt | Missing |
 |---|---|---|---|---|---|
-| Skill | A | 24 | 0 | 0 | 24 |
+| Skill | A | 24 | 24 | 0 | 0 |
 | Helper program | U | 18 | 18 | 0 | 0 |
 | Data asset | U | 12 | 12 | 0 | 0 |
 | Deployment surface | U | 1 | 1 | 0 | 0 |
 | Deployment surface | D | 1 | 0 | 0 | 1 |
 
-- Skills without A: 24 of 24.
+- Skills without A: 0 of 24.
 - Helper programs with no using skill: 2 (fidelity.py, measure_binding.py).
 - Data assets with U that run locally only: 0 of 12.
-- Gaps in all: 25.
+- Gaps in all: 1.

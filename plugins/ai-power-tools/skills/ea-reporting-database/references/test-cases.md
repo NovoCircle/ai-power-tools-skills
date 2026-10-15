@@ -16,7 +16,7 @@ Covers: A reporting layer from an EA repository
 
 **Marks:** INVARIANT
 
-**Setup:** EA has a different model open (`<model-dir>\OtherBank.qea`), not the Westbrook Bank copy.
+**Setup:** EA has a different model open (any model other than the Westbrook Bank copy, placed by the runner in `<model-dir>`).
 
 **Ask:** "Build the reporting tables for the Westbrook Bank model."
 
@@ -70,7 +70,7 @@ reply: not: says the Power BI report is ready to open
 
 Covers: 5.1 Get the technology definition
 
-**Setup:** The model open in EA has no modeling technology loaded (a model with plain UML elements only, `<model-dir>\NoTechnology.qea`).
+**Setup:** The model open in EA has no modeling technology loaded (a model with plain UML elements only, placed by the runner in `<model-dir>`).
 
 **Ask:** "Set up database reporting for this model, one table per kind of element."
 
