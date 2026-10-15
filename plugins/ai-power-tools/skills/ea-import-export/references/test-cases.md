@@ -101,7 +101,7 @@ expect: unchanged
 ```
 
 ```check
-reply: says SVG was chosen because it scales without losing sharpness
+reply: says: SVG was chosen because it scales without losing sharpness
 ```
 
 **Fails when:** The run exports a PNG because that is the default picture format. The poster comes out soft, and nothing in the run says so.
@@ -116,7 +116,7 @@ Covers: 2. Diagram image export — `get_diagram_png` / `get_diagram_svg` / `exp
 
 **Ask:** "A script just rearranged the Westbrook Application Landscape diagram. Export a fresh PNG of it to <output-dir> as landscape-new.png."
 
-**Passes when:** The run passes `refresh=true` (or otherwise forces a re-render) because the diagram's rows changed out of band, and says that it did. The file exists.
+**Passes when:** The run calls `get_diagram_png` with `refresh=true` because the diagram's rows changed out of band, and says that it did. The file exists.
 
 **Check:**
 
@@ -126,11 +126,11 @@ expect: exists
 ```
 
 ```check
-tools: called: ea_diagram.get_diagram_png
+tools: called: ea_diagram.get_diagram_png {"refresh": true}
 ```
 
 ```check
-reply: says the image was re-rendered with refresh because the diagram was changed outside EA
+reply: says: the image was re-rendered with refresh because the diagram was changed outside EA
 ```
 
 **Fails when:** The run exports without refresh and hands back the cached image taken before the script ran. The file is a valid PNG of the right diagram with the old layout, and the person publishes it.
@@ -148,7 +148,7 @@ Covers: 2. Diagram image export — `get_diagram_png` / `get_diagram_svg` / `exp
 **Check:**
 
 ```check
-reply: says the export has no width or DPI parameter and the image size follows the diagram's own canvas
+reply: says: the export has no width or DPI parameter and the image size follows the diagram's own canvas
 reply: not: says the image is 1200 pixels wide or 300 DPI
 ```
 
@@ -187,7 +187,7 @@ expect: = 1
 ```
 
 ```check
-reply: says the exported file has 13 shapes and 1 connector, matching the source diagram
+reply: says: the exported file has 13 shapes and 1 connector, matching the source diagram
 ```
 
 ```check
@@ -214,7 +214,7 @@ expect: exists
 ```
 
 ```check
-reply: says the page width and height in inches come from the diagram's canvas, not from letter or A4 paper
+reply: says: the page width and height in inches come from the diagram's canvas, not from letter or A4 paper
 ```
 
 ```check
@@ -230,7 +230,7 @@ Covers: 4. XMI package export/import — `export_xmi` / `import_xmi`
 
 **Marks:** EFFECT, INVARIANT
 
-**Ask:** "Export the Domestic Payments package to an XMI file in <output-dir> called domestic-payments, so we can load it into another repository."
+**Ask:** "Export the Domestic Payments package to an XMI file in <output-dir> called domestic-payments.xml, so we can load it into another repository."
 
 **Passes when:** The file written is XMI and holds the package's elements: every element name in Domestic Payments appears in it, and the file is not a few hundred bytes. The run checks this against the package (the response's `elements_in_package` and `elements_in_export`, or the file itself) before saying it worked.
 
@@ -295,7 +295,7 @@ Covers: 4. XMI package export/import — `export_xmi` / `import_xmi`
 
 **Marks:** EFFECT
 
-**Ask:** "Export the Consumer Lending package, the one with the loan origination diagram, to XMI in <output-dir> as consumer-lending. Make sure nothing got left out."
+**Ask:** "Export the Consumer Lending package, the one with the loan origination diagram, to XMI in <output-dir> as consumer-lending.xml. Make sure nothing got left out."
 
 **Passes when:** The reply states how many elements the package holds and how many the export holds and that they match (5 and 5 in the Westbrook copy), rather than "status: exported". If the server returned `xmi_export_wrong_format` or `xmi_export_empty`, the run reports a failed export and does not call it done.
 
@@ -312,7 +312,7 @@ expect: = 5
 ```
 
 ```check
-reply: says the number of elements in the package and the number in the export, and that the two match
+reply: says: the number of elements in the package and the number in the export, and that the two match
 reply: not: reports the export as good on the status field alone
 ```
 
@@ -329,7 +329,7 @@ Covers: 4. XMI package export/import — `export_xmi` / `import_xmi`
 
 **Marks:** EFFECT
 
-**Ask:** "The other team's tool only reads XMI 2.5.1. Export the Domestic Payments package for them into <output-dir> as domestic-payments-251."
+**Ask:** "The other team's tool only reads XMI 2.5.1. Export the Domestic Payments package for them into <output-dir> as domestic-payments-251.xml."
 
 **Passes when:** The run passes `xmi_type` "XMI 2.5.1" (not the default 2.1), the file is written, and the reply names the version used.
 
@@ -341,7 +341,7 @@ expect: exists
 ```
 
 ```check
-reply: says the export was made as XMI 2.5.1
+reply: says: the export was made as XMI 2.5.1
 ```
 
 ```check
@@ -362,8 +362,8 @@ Covers: 4. XMI package export/import — `export_xmi` / `import_xmi`
 **Check:**
 
 ```check
-reply: says the empty-file defect was fixed in server 2.2.0 and the server now checks the file before reporting success
-reply: says to compare elements_in_package with elements_in_export
+reply: says: the empty-file defect was fixed in server 2.2.0 and the server now checks the file before reporting success
+reply: says: to compare elements_in_package with elements_in_export
 reply: not: tells the person that export_xmi currently writes empty files
 reply: not: tells the person to report the export_xmi defect through ea-diagnostic
 ```
@@ -408,7 +408,7 @@ expect: rows: [["Business-Critical"]]
 ```
 
 ```check
-reply: says the package and its element were found in the model after the import
+reply: says: the package and its element were found in the model after the import
 reply: not: reports the import as done on the strength of the status field alone
 ```
 
@@ -448,14 +448,14 @@ Covers: 5. `generate_report` — RTF document generation
 
 **Marks:** EFFECT
 
-**Ask:** "Generate the Account Origination report as an HTML page for our intranet. Save it in <output-dir> as account-origination."
+**Ask:** "Generate the Account Origination report as an HTML page for our intranet. If HTML isn't possible, I'll take whatever format the tool can make. Save it in <output-dir> as account-origination."
 
-**Passes when:** The run says the report operation produces RTF only in this server version, does not try an `.html` path, and either produces the `.rtf` and says so or asks what the person wants to do. It does not claim an HTML report exists.
+**Passes when:** The run says the report operation produces RTF only in this server version, does not try an `.html` path, and produces the `.rtf` and says so. It does not claim an HTML report exists.
 
 **Check:**
 
 ```check
-reply: says the report operation writes RTF only in this server version
+reply: says: the report operation writes RTF only in this server version
 reply: not: says an HTML report was generated
 ```
 
@@ -494,7 +494,7 @@ tools: called: ea_analyze.execute_sql
 ```
 
 ```check
-reply: says the model defines no report templates, so the template name selected nothing and the default document was produced
+reply: says: the model defines no report templates, so the template name selected nothing and the default document was produced
 reply: not: says the Executive Summary template was applied
 ```
 
@@ -523,7 +523,7 @@ expect: contains: {\rtf
 ```
 
 ```check
-reply: says a non-empty template name was supplied because an empty one hangs the call
+reply: says: a non-empty template name was supplied because an empty one hangs the call
 ```
 
 ```check
@@ -557,7 +557,7 @@ expect: >= 1
 ```
 
 ```check
-reply: says the report embeds each element's author or modifier name from the model, so it should be reviewed before it goes outside the team
+reply: says: the report embeds each element's author or modifier name from the model, so it should be reviewed before it goes outside the team
 reply: not: says the report is ready to send without review
 ```
 
@@ -579,9 +579,9 @@ Covers: 5. `generate_report` — RTF document generation; Verify in EA's UI
 **Check:**
 
 ```check
-reply: says an empty template name is the known cause of this hang
-reply: says it checked or will check that EA still responds before suggesting a restart
-reply: says to look at EA's screen for a dialog, or asks the person to look because it cannot
+reply: says: an empty template name is the known cause of this hang
+reply: says: it checked or will check that EA still responds before suggesting a restart
+reply: says: to look at EA's screen for a dialog, or asks the person to look because it cannot
 reply: not: tells the person to restart or close Enterprise Architect
 ```
 
@@ -603,9 +603,9 @@ Covers: 5b. Reading the results from a Claude Cowork or cloud session
 **Check:**
 
 ```check
-reply: says to export into one output folder and connect that folder
-reply: says not to connect the folder that holds the model file
-reply: says a report should be reviewed for identifying details before the folder is connected
+reply: says: to export into one output folder and connect that folder
+reply: says: not to connect the folder that holds the model file
+reply: says: a report should be reviewed for identifying details before the folder is connected
 ```
 
 ```check
@@ -628,7 +628,7 @@ Covers: 5b. Reading the results from a Claude Cowork or cloud session
 **Check:**
 
 ```check
-reply: says a Cowork or cloud session cannot change the model or import XMI because the server is not available there
+reply: says: a Cowork or cloud session cannot change the model or import XMI because the server is not available there
 ```
 
 ```check
@@ -676,6 +676,6 @@ nothing here compares a whole package round trip.
 - SKILL.md "Verify in EA's UI" tells the reader to reload and screenshot "after any diagram create or edit", which an export skill never performs; only its hang advice applies here.
 - SKILL.md says the intro "Every claim below was exercised against that model ... see the verification table in each reference file"; `references/xmi-export-import.md` records the failed (now fixed) behavior, so nothing in this skill shows a verified working XMI export or import round trip.
 - `import_xmi` is a model write that can overwrite elements whose identifiers already exist in the target, but SKILL.md section 4 says nothing about taking a baseline first, or about importing into a repository that already holds the package; TC-12 avoids the case by deleting the source package in setup.
-- The `tools` check can name an operation but not its parameters, so `refresh=true` (TC-04), `xmi_type` (TC-10) and a non-empty template (TC-16) are graded through the reply and the file, which an agent could misreport; the runner design needs a parameter check.
+- The `tools` check can name an operation but not its parameters, so `xmi_type` (TC-10) and a non-empty template (TC-16) are graded through the reply and the file, which an agent could misreport; the runner design needs a parameter check.
 - TC-10 cannot test that the file is XMI 2.5.1: the version marker EA writes at the top of an XMI 2.5.1 file was not verified, so the check stops at "file exists" plus the reply.
 - TC-18 and the SKILL.md latency section depend on a `computer-use` transcript tool name; none is defined in the template's `tools` grammar.

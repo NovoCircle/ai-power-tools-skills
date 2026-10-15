@@ -17,8 +17,8 @@ has a `Covers:` line naming a heading in that skill's SKILL.md.
 | skill:ea-change-management | A | cases: 41 · not run | complete |
 | skill:ea-com | A | cases: 27 · not run | complete |
 | skill:ea-diagnostic | A | cases: 25 · not run | complete |
-| skill:ea-diagram-advisor | A | cases: 29 · not run | complete |
-| skill:ea-diagram-composition | A | cases: 23 · not run | complete |
+| skill:ea-diagram-advisor | A | cases: 31 · not run | complete |
+| skill:ea-diagram-composition | A | cases: 24 · not run | complete |
 | skill:ea-help | A | cases: 25 · not run | complete |
 | skill:ea-import-export | A | cases: 20 · not run | complete |
 | skill:ea-mdg-assess | A | cases: 27 · not run | complete |
@@ -26,7 +26,7 @@ has a `Covers:` line naming a heading in that skill's SKILL.md.
 | skill:ea-mdg-deploy | A | cases: 34 · not run | complete |
 | skill:ea-mdg-model-build | A | cases: 50 · not run | complete |
 | skill:ea-model-hygiene | A | cases: 30 · not run | complete |
-| skill:ea-modeling | A | cases: 43 · not run | complete |
+| skill:ea-modeling | A | cases: 44 · not run | complete |
 | skill:ea-navigation-diagrams | A | cases: 30 · not run | complete |
 | skill:ea-power-bi | A | cases: 56 · not run | complete |
 | skill:ea-reporting-database | A | cases: 53 · not run | complete |
@@ -34,10 +34,10 @@ has a `Covers:` line naming a heading in that skill's SKILL.md.
 | skill:ea-stakeholder-reporting | A | cases: 20 · not run | complete |
 | skill:ea-start-here | A | cases: 35 · not run | complete |
 | skill:ea-validation | A | cases: 21 · not run | complete |
-| skill:prol-dashboards | A | cases: 48 · not run | complete |
+| skill:prol-dashboards | A | cases: 50 · not run | complete |
 | skill:prol-impact-analysis | A | cases: 36 · not run | complete |
 | skill:prol-matrix | A | cases: 29 · not run | complete |
-| skill:prol-start-here | A | cases: 40 · not run | complete |
+| skill:prol-start-here | A | cases: 42 · not run | complete |
 
 ## Helper programs
 
@@ -1575,7 +1575,7 @@ method of a test class is written `Class.test_name`.
   - `plugins/ai-power-tools/skills/ea-diagnostic/references/test-cases.md#TC-23`
   - `plugins/ai-power-tools/skills/ea-diagnostic/references/test-cases.md#TC-24`
   - `plugins/ai-power-tools/skills/ea-diagnostic/references/test-cases.md#TC-25`
-- `skill:ea-diagram-advisor` A (29)
+- `skill:ea-diagram-advisor` A (31)
   - `plugins/ai-power-tools/skills/ea-diagram-advisor/references/test-cases.md#TC-01`
   - `plugins/ai-power-tools/skills/ea-diagram-advisor/references/test-cases.md#TC-02`
   - `plugins/ai-power-tools/skills/ea-diagram-advisor/references/test-cases.md#TC-03`
@@ -1605,7 +1605,9 @@ method of a test class is written `Class.test_name`.
   - `plugins/ai-power-tools/skills/ea-diagram-advisor/references/test-cases.md#TC-27`
   - `plugins/ai-power-tools/skills/ea-diagram-advisor/references/test-cases.md#TC-28`
   - `plugins/ai-power-tools/skills/ea-diagram-advisor/references/test-cases.md#TC-29`
-- `skill:ea-diagram-composition` A (23)
+  - `plugins/ai-power-tools/skills/ea-diagram-advisor/references/test-cases.md#TC-30`
+  - `plugins/ai-power-tools/skills/ea-diagram-advisor/references/test-cases.md#TC-31`
+- `skill:ea-diagram-composition` A (24)
   - `plugins/ai-power-tools/skills/ea-diagram-composition/references/test-cases.md#TC-01`
   - `plugins/ai-power-tools/skills/ea-diagram-composition/references/test-cases.md#TC-02`
   - `plugins/ai-power-tools/skills/ea-diagram-composition/references/test-cases.md#TC-03`
@@ -1629,6 +1631,7 @@ method of a test class is written `Class.test_name`.
   - `plugins/ai-power-tools/skills/ea-diagram-composition/references/test-cases.md#TC-21`
   - `plugins/ai-power-tools/skills/ea-diagram-composition/references/test-cases.md#TC-22`
   - `plugins/ai-power-tools/skills/ea-diagram-composition/references/test-cases.md#TC-23`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/references/test-cases.md#TC-24`
 - `skill:ea-help` A (25)
   - `plugins/ai-power-tools/skills/ea-help/references/test-cases.md#TC-01`
   - `plugins/ai-power-tools/skills/ea-help/references/test-cases.md#TC-02`
@@ -1853,7 +1856,7 @@ method of a test class is written `Class.test_name`.
   - `plugins/ai-power-tools/skills/ea-model-hygiene/references/test-cases.md#TC-28`
   - `plugins/ai-power-tools/skills/ea-model-hygiene/references/test-cases.md#TC-29`
   - `plugins/ai-power-tools/skills/ea-model-hygiene/references/test-cases.md#TC-30`
-- `skill:ea-modeling` A (43)
+- `skill:ea-modeling` A (44)
   - `plugins/ai-power-tools/skills/ea-modeling/references/test-cases.md#TC-01`
   - `plugins/ai-power-tools/skills/ea-modeling/references/test-cases.md#TC-02`
   - `plugins/ai-power-tools/skills/ea-modeling/references/test-cases.md#TC-03`
@@ -1897,6 +1900,7 @@ method of a test class is written `Class.test_name`.
   - `plugins/ai-power-tools/skills/ea-modeling/references/test-cases.md#TC-41`
   - `plugins/ai-power-tools/skills/ea-modeling/references/test-cases.md#TC-42`
   - `plugins/ai-power-tools/skills/ea-modeling/references/test-cases.md#TC-43`
+  - `plugins/ai-power-tools/skills/ea-modeling/references/test-cases.md#TC-44`
 - `skill:ea-navigation-diagrams` A (30)
   - `plugins/ai-power-tools/skills/ea-navigation-diagrams/references/test-cases.md#TC-01`
   - `plugins/ai-power-tools/skills/ea-navigation-diagrams/references/test-cases.md#TC-02`
@@ -2144,7 +2148,7 @@ method of a test class is written `Class.test_name`.
   - `plugins/ai-power-tools/skills/ea-validation/references/test-cases.md#TC-19`
   - `plugins/ai-power-tools/skills/ea-validation/references/test-cases.md#TC-20`
   - `plugins/ai-power-tools/skills/ea-validation/references/test-cases.md#TC-21`
-- `skill:prol-dashboards` A (48)
+- `skill:prol-dashboards` A (50)
   - `plugins/ai-power-tools/skills/prol-dashboards/references/test-cases.md#TC-01`
   - `plugins/ai-power-tools/skills/prol-dashboards/references/test-cases.md#TC-02`
   - `plugins/ai-power-tools/skills/prol-dashboards/references/test-cases.md#TC-03`
@@ -2193,6 +2197,8 @@ method of a test class is written `Class.test_name`.
   - `plugins/ai-power-tools/skills/prol-dashboards/references/test-cases.md#TC-46`
   - `plugins/ai-power-tools/skills/prol-dashboards/references/test-cases.md#TC-47`
   - `plugins/ai-power-tools/skills/prol-dashboards/references/test-cases.md#TC-48`
+  - `plugins/ai-power-tools/skills/prol-dashboards/references/test-cases.md#TC-49`
+  - `plugins/ai-power-tools/skills/prol-dashboards/references/test-cases.md#TC-50`
 - `skill:prol-impact-analysis` A (36)
   - `plugins/ai-power-tools/skills/prol-impact-analysis/references/test-cases.md#TC-01`
   - `plugins/ai-power-tools/skills/prol-impact-analysis/references/test-cases.md#TC-02`
@@ -2260,7 +2266,7 @@ method of a test class is written `Class.test_name`.
   - `plugins/ai-power-tools/skills/prol-matrix/references/test-cases.md#TC-27`
   - `plugins/ai-power-tools/skills/prol-matrix/references/test-cases.md#TC-28`
   - `plugins/ai-power-tools/skills/prol-matrix/references/test-cases.md#TC-29`
-- `skill:prol-start-here` A (40)
+- `skill:prol-start-here` A (42)
   - `plugins/ai-power-tools/skills/prol-start-here/references/test-cases.md#TC-01`
   - `plugins/ai-power-tools/skills/prol-start-here/references/test-cases.md#TC-02`
   - `plugins/ai-power-tools/skills/prol-start-here/references/test-cases.md#TC-03`
@@ -2301,6 +2307,8 @@ method of a test class is written `Class.test_name`.
   - `plugins/ai-power-tools/skills/prol-start-here/references/test-cases.md#TC-38`
   - `plugins/ai-power-tools/skills/prol-start-here/references/test-cases.md#TC-39`
   - `plugins/ai-power-tools/skills/prol-start-here/references/test-cases.md#TC-40`
+  - `plugins/ai-power-tools/skills/prol-start-here/references/test-cases.md#TC-41`
+  - `plugins/ai-power-tools/skills/prol-start-here/references/test-cases.md#TC-42`
 - `srf:plugin` U (102)
   - `tools/test_gate.py::TestForbiddenIdentifiers.test_a_real_customer_identifier_is_caught`
   - `tools/test_gate.py::TestForbiddenIdentifiers.test_the_sparx_shipped_tea_framework_is_allowed`

@@ -21,12 +21,12 @@ Covers: Building an MDG Technology from a Model
 **Check:**
 
 ```check
-sql: SELECT (SELECT COUNT(*) FROM t_object), (SELECT COUNT(*) FROM t_connector), (SELECT COUNT(*) FROM t_diagram), (SELECT COUNT(*) FROM t_package), (SELECT COUNT(*) FROM t_objectproperties)
+sql: SELECT (SELECT COUNT(*) FROM t_object), (SELECT COUNT(*) FROM t_connector), (SELECT COUNT(*) FROM t_diagram), (SELECT COUNT(*) FROM t_package), (SELECT COUNT(*) FROM t_objectproperties), (SELECT COUNT(*) FROM t_attribute), (SELECT COUNT(*) FROM t_connectortag), (SELECT COUNT(*) FROM t_propertytypes)
 expect: unchanged
 ```
 
 ```check
-reply: says a one-off change to a shipped file belongs on the direct XML path, not the model-driven one
+reply: says: a one-off change to a shipped file belongs on the direct XML path, not the model-driven one
 tools: not-called: ea_model.create_package
 tools: not-called: ea_model.duplicate_package
 ```
@@ -46,13 +46,13 @@ Covers: Building an MDG Technology from a Model
 **Check:**
 
 ```check
-sql: SELECT (SELECT COUNT(*) FROM t_object), (SELECT COUNT(*) FROM t_connector), (SELECT COUNT(*) FROM t_diagram), (SELECT COUNT(*) FROM t_package), (SELECT COUNT(*) FROM t_objectproperties)
+sql: SELECT (SELECT COUNT(*) FROM t_object), (SELECT COUNT(*) FROM t_connector), (SELECT COUNT(*) FROM t_diagram), (SELECT COUNT(*) FROM t_package), (SELECT COUNT(*) FROM t_objectproperties), (SELECT COUNT(*) FROM t_attribute), (SELECT COUNT(*) FROM t_connectortag), (SELECT COUNT(*) FROM t_propertytypes)
 expect: unchanged
 ```
 
 ```check
-reply: says a hand edit to the XML is discarded by the next export from the profile packages
-reply: says to make the change in the profile package instead
+reply: says: a hand edit to the XML is discarded by the next export from the profile packages
+reply: says: to make the change in the profile package instead
 ```
 
 **Fails when:** The run edits the XML and reports success. The color is right until the next build, then it reverts with no error and nobody knows why.
@@ -63,9 +63,9 @@ Covers: Quick Reference; Phase 5 — Build
 
 **Marks:** EFFECT
 
-**Ask:** "Build the WBA MDG file from the packages in the model. We're on EA 17.1."
+**Ask:** "Build the WBA MDG file from the packages in the model and save it as <build-dir>\WBA_MDG.xml. We're on EA 17.1."
 
-**Passes when:** The run says building the MDG has no MCP operation and, on EA 17.1 or later, uses `Specialize > Publish Technology > Save Package as MDG Technology` pointed at the `«mdg technology»` package, in EA's UI. It does not write an `.mts` file by hand, and it does not invent an MCP operation that builds the MDG. The effect is one `.xml` file in a build folder, written by Save; the skill does not require asking first.
+**Passes when:** The run says building the MDG has no MCP operation and, on EA 17.1 or later, uses `Specialize > Publish Technology > Save Package as MDG Technology` pointed at the `«mdg technology»` package, in EA's UI. It does not write an `.mts` file by hand, and it does not invent an MCP operation that builds the MDG. The effect is one `.xml` file, `<build-dir>\WBA_MDG.xml`, written by Save; the skill does not require asking first.
 
 **Check:**
 
@@ -75,9 +75,14 @@ expect: unchanged
 ```
 
 ```check
-reply: says there is no MCP operation that builds the MDG
-reply: says the 17.1 and later route is Save Package as MDG Technology on the technology package
+reply: says: there is no MCP operation that builds the MDG
+reply: says: the 17.1 and later route is Save Package as MDG Technology on the technology package
 reply: not: says it wrote an .mts file for the build
+```
+
+```check
+file: <build-dir>\WBA_MDG.xml
+expect: exists
 ```
 
 **Fails when:** The run calls an operation that does not exist, or hand-writes an `.mts` that EA rejects "for reasons nothing explains", or uses the pre-17.1 wizard on a 17.1 EA.
@@ -93,12 +98,12 @@ Covers: Quick Reference
 **Check:**
 
 ```check
-sql: SELECT (SELECT COUNT(*) FROM t_object), (SELECT COUNT(*) FROM t_connector), (SELECT COUNT(*) FROM t_diagram), (SELECT COUNT(*) FROM t_package), (SELECT COUNT(*) FROM t_objectproperties)
+sql: SELECT (SELECT COUNT(*) FROM t_object), (SELECT COUNT(*) FROM t_connector), (SELECT COUNT(*) FROM t_diagram), (SELECT COUNT(*) FROM t_package), (SELECT COUNT(*) FROM t_objectproperties), (SELECT COUNT(*) FROM t_attribute), (SELECT COUNT(*) FROM t_connectortag), (SELECT COUNT(*) FROM t_propertytypes)
 expect: unchanged
 ```
 
 ```check
-reply: says reference data can be reached through COM or EA's UI even though the MCP server has no operation for it
+reply: says: reference data can be reached through COM or EA's UI even though the MCP server has no operation for it
 reply: not: says tagged value types cannot be done
 ```
 
@@ -123,6 +128,7 @@ expect: >= 1
 
 ```check
 tools: called: ea_repository.create_baseline
+tools: before: ea_repository.create_baseline ea_model.duplicate_package
 ```
 
 **Fails when:** The run duplicates the profile tree and starts editing, and offers a baseline "afterwards". The first irreversible step (Phase 3) is then unprotected, and nothing errors to say so. The final model cannot show order; the transcript can, which is why the runner reads the call sequence for this case.
@@ -164,7 +170,8 @@ expect: >= 1
 ```
 
 ```check
-reply: says tagged value types are repository-wide and that the old version is unrecoverable once a new type is added without an archive
+reply: says: tagged value types are repository-wide and that the old version is unrecoverable once a new type is added without an archive
+reply: says: the archive into the Files package was made before the criticality type was changed
 ```
 
 **Fails when:** The run adds `Low` first. The old profile packages now export the new domain with no error and no visible change in the Browser, and the baseline cannot be rebuilt. The final model shows the archive was made, not that it was made first; the runner reads the call sequence.
@@ -173,7 +180,9 @@ reply: says tagged value types are repository-wide and that the old version is u
 
 Covers: Phase 0 — Protect the baseline before you touch anything
 
-**Setup:** The `WBA` technology is registered but disabled in Manage Technologies.
+**Marks:** BLOCKED (needs a disposable Windows profile)
+
+**Setup:** The `WBA` technology is registered but disabled in Manage Technologies. Enabling and disabling a technology is per-user EA state, so the case runs only where the runner provides a disposable Windows profile; the runner sets the state and restores it afterwards.
 
 **Ask:** "Is the WBA language actually switched on in this model, or is it just sitting there?"
 
@@ -189,7 +198,7 @@ expect: unchanged
 ```check
 tools: called: ea_mdg.get_mdg_from_runtime
 tools: called: computer-use.screenshot
-reply: says the technology is present but disabled
+reply: says: the technology is present but disabled
 ```
 
 **Fails when:** The run reports "not installed" because the runtime lookup returned `unknown_mdg`, or "enabled" because the technology is merely loaded. Both are confident wrong answers.
@@ -217,7 +226,7 @@ expect: unchanged
 ```
 
 ```check
-reply: says the baseline covers the whole package subtree
+reply: says: the baseline covers the whole package subtree
 reply: not: says the size query failed or that a dialog appeared
 ```
 
@@ -273,8 +282,13 @@ Covers: Phase 1 — Package structure
 **Check:**
 
 ```check
-sql: SELECT Stereotype, COUNT(*) FROM t_object WHERE Object_Type = 'Package' AND Stereotype IN ('mdg technology', 'profile', 'diagram profile', 'toolbox profile') GROUP BY Stereotype ORDER BY Stereotype
-expect: rows: [["diagram profile", 1], ["mdg technology", 1], ["profile", 1], ["toolbox profile", 3]]
+sql: SELECT COUNT(DISTINCT Stereotype) FROM t_object WHERE Object_Type = 'Package' AND Stereotype IN ('mdg technology', 'profile', 'diagram profile', 'toolbox profile')
+expect: = 4
+```
+
+```check
+sql: SELECT COUNT(*) FROM t_object WHERE Object_Type = 'Package' AND Stereotype = 'mdg technology'
+expect: = 1
 ```
 
 **Fails when:** All three children are stereotyped `«profile»`. Nothing errors; the built MDG has everything in `<UMLProfiles>` and the toolbox and diagram sections come out empty.
@@ -299,7 +313,7 @@ expect: <= 12
 ```
 
 ```check
-reply: says the technology id comes from the package name and is truncated at 12 characters
+reply: says: the technology id comes from the package name and is truncated at 12 characters
 ```
 
 **Fails when:** The package keeps the long name, the id comes out as a truncated fragment, and a file built on another route keeps it whole. The two builds then disagree about the technology's id.
@@ -351,7 +365,7 @@ expect: = 2
 ```
 
 ```check
-reply: says the element, attribute and connector counts of the copy match the source
+reply: says: the element, attribute and connector counts of the copy match the source
 ```
 
 **Fails when:** The run reports success after a create call returns. An Extension in the copy that still points at the original's metaclass passes every glance and edits the wrong tree later.
@@ -369,8 +383,8 @@ Covers: Phase 1 — Package structure
 **Check:**
 
 ```check
-reply: says it recorded the GUIDs of the new profile packages and of the three toolbox diagrams
-reply: says the profile ids in the built MDG are derived from those GUIDs
+reply: says: it recorded the GUIDs of the new profile packages and of the three toolbox diagrams
+reply: says: the profile ids in the built MDG are derived from those GUIDs
 ```
 
 **Fails when:** No GUID is recorded, so the one check that catches "a correctly-versioned file built from the wrong package source" (TC-36) has nothing to compare against.
@@ -519,12 +533,12 @@ expect: rows: [["criticality", "Type=Enum;Values=Mission-Critical,Business-Criti
 ```
 
 ```check
-sql: SELECT (SELECT COUNT(*) FROM t_object), (SELECT COUNT(*) FROM t_connector), (SELECT COUNT(*) FROM t_diagram), (SELECT COUNT(*) FROM t_package), (SELECT COUNT(*) FROM t_objectproperties)
+sql: SELECT (SELECT COUNT(*) FROM t_object), (SELECT COUNT(*) FROM t_connector), (SELECT COUNT(*) FROM t_diagram), (SELECT COUNT(*) FROM t_package), (SELECT COUNT(*) FROM t_objectproperties), (SELECT COUNT(*) FROM t_attribute), (SELECT COUNT(*) FROM t_connectortag), (SELECT COUNT(*) FROM t_propertytypes)
 expect: unchanged
 ```
 
 ```check
-reply: says the criticality type already exists in the repository and was not selected into the build
+reply: says: the criticality type already exists in the repository and was not selected into the build
 ```
 
 **Fails when:** The run authors a second `criticality` type, or overwrites the first with a value list inferred from usage. The type is repository-wide, so every technology that uses it changes, and the dropdown is still free text because the real cause was the build selection.
@@ -550,8 +564,8 @@ expect: = 0
 ```
 
 ```check
-reply: says Archive is in use on 2 elements but is not in the declared lifecycle values
-reply: says an inferred domain is a candidate and a lower bound, not the answer
+reply: says: Archive is in use on 2 elements but is not in the declared lifecycle values
+reply: says: an inferred domain is a candidate and a lower bound, not the answer
 ```
 
 **Fails when:** `Archive` quietly becomes a legal value. A live value outside the declared set meant something stopped validating; importing the observed set blesses it and erases the evidence.
@@ -574,12 +588,12 @@ expect: rows: [["Type=Enum;Values=Strategic,Current,Sunset,Deprecated,Retired;"]
 ```
 
 ```check
-sql: SELECT (SELECT COUNT(*) FROM t_object), (SELECT COUNT(*) FROM t_connector), (SELECT COUNT(*) FROM t_diagram), (SELECT COUNT(*) FROM t_package), (SELECT COUNT(*) FROM t_objectproperties)
+sql: SELECT (SELECT COUNT(*) FROM t_object), (SELECT COUNT(*) FROM t_connector), (SELECT COUNT(*) FROM t_diagram), (SELECT COUNT(*) FROM t_package), (SELECT COUNT(*) FROM t_objectproperties), (SELECT COUNT(*) FROM t_attribute), (SELECT COUNT(*) FROM t_connectortag), (SELECT COUNT(*) FROM t_propertytypes)
 expect: unchanged
 ```
 
 ```check
-reply: says Retired is declared but unused and should be kept
+reply: says: Retired is declared but unused and should be kept
 ```
 
 **Fails when:** `Retired` is removed. The first element that is retired can no longer be recorded in the dropdown.
@@ -623,12 +637,17 @@ expect: rows: [["Type=Enum;Values=Strategic,Current,Sunset,Deprecated,Retired;"]
 ```
 
 ```check
-sql: SELECT (SELECT COUNT(*) FROM t_object), (SELECT COUNT(*) FROM t_connector), (SELECT COUNT(*) FROM t_diagram), (SELECT COUNT(*) FROM t_package), (SELECT COUNT(*) FROM t_objectproperties)
+sql: SELECT (SELECT COUNT(*) FROM t_object), (SELECT COUNT(*) FROM t_connector), (SELECT COUNT(*) FROM t_diagram), (SELECT COUNT(*) FROM t_package), (SELECT COUNT(*) FROM t_objectproperties), (SELECT COUNT(*) FROM t_attribute), (SELECT COUNT(*) FROM t_connectortag), (SELECT COUNT(*) FROM t_propertytypes)
 expect: unchanged
 ```
 
 ```check
-reply: says Active is not one of the lifecycle values
+sql: SELECT COUNT(*) FROM t_attribute WHERE Name = 'lifecycle' AND [Default] = 'Active'
+expect: = 0
+```
+
+```check
+reply: says: Active is not one of the lifecycle values
 ```
 
 **Fails when:** `Active` is written as the default. New elements get a value the dropdown cannot show, and nothing errors.
@@ -649,8 +668,18 @@ expect: = 132
 ```
 
 ```check
-reply: says renaming a tag orphans its existing values
-reply: says 132 values carry the tag today
+sql: SELECT COUNT(*) FROM t_attribute WHERE Name = 'regulatoryRegime'
+expect: = 0
+```
+
+```check
+sql: SELECT (SELECT COUNT(*) FROM t_object), (SELECT COUNT(*) FROM t_connector), (SELECT COUNT(*) FROM t_diagram), (SELECT COUNT(*) FROM t_package), (SELECT COUNT(*) FROM t_objectproperties), (SELECT COUNT(*) FROM t_attribute), (SELECT COUNT(*) FROM t_connectortag), (SELECT COUNT(*) FROM t_propertytypes)
+expect: unchanged
+```
+
+```check
+reply: says: renaming a tag orphans its existing values
+reply: says: 132 values carry the tag today
 ```
 
 **Fails when:** The run renames the attribute, reports success, and every existing `regulatoryScope` value stops showing against the stereotype. Nothing errors.
@@ -728,12 +757,12 @@ expect: rows: [["WBAGovernedElement"]]
 ```
 
 ```check
-sql: SELECT (SELECT COUNT(*) FROM t_object), (SELECT COUNT(*) FROM t_connector), (SELECT COUNT(*) FROM t_diagram), (SELECT COUNT(*) FROM t_package), (SELECT COUNT(*) FROM t_objectproperties)
+sql: SELECT (SELECT COUNT(*) FROM t_object), (SELECT COUNT(*) FROM t_connector), (SELECT COUNT(*) FROM t_diagram), (SELECT COUNT(*) FROM t_package), (SELECT COUNT(*) FROM t_objectproperties), (SELECT COUNT(*) FROM t_attribute), (SELECT COUNT(*) FROM t_connectortag), (SELECT COUNT(*) FROM t_propertytypes)
 expect: unchanged
 ```
 
 ```check
-reply: says Governed Element is on no toolbox page
+reply: says: Governed Element is on no toolbox page
 reply: not: names another stereotype as missing from the toolbox
 ```
 
@@ -745,9 +774,9 @@ Covers: Phase 5 — Build
 
 **Marks:** EFFECT, INVARIANT
 
-**Ask:** "Export the WBA profile package as version 2.0.0 for the build."
+**Ask:** "Export the WBA profile package as version 2.0.0 for the build and save it as <build-dir>\WBA_profile.xml."
 
-**Passes when:** The run calls `publish_package_as_profile` with `version` set, because EA caches the package's `Version` the first time it publishes in a session. It reports the stamped version and `version_from_ea` side by side so a mismatch is visible. The effect is one profile `.xml` file; no prior ask is required.
+**Passes when:** The run calls `publish_package_as_profile` with `version` set, because EA caches the package's `Version` the first time it publishes in a session. It reports the stamped version and `version_from_ea` side by side so a mismatch is visible. The effect is one profile `.xml` file, `<build-dir>\WBA_profile.xml`; no prior ask is required.
 
 **Check:**
 
@@ -758,8 +787,13 @@ expect: unchanged
 
 ```check
 tools: called: ea_mdg.publish_package_as_profile
-reply: says the exported profile is stamped 2.0.0
-reply: says what version EA itself would have shipped
+reply: says: the exported profile is stamped 2.0.0
+reply: says: what version EA itself would have shipped
+```
+
+```check
+file: <build-dir>\WBA_profile.xml
+expect: exists
 ```
 
 **Fails when:** The run omits `version`. The profile comes out carrying EA's cached value, silently, after a republish.
@@ -770,9 +804,9 @@ Covers: Phase 5 — Build
 
 **Marks:** EFFECT
 
-**Ask:** "Export the WBA BPMN toolbox as a profile."
+**Ask:** "Export the WBA BPMN toolbox as a profile and save it as <build-dir>\WBA_BPMN_toolbox.xml."
 
-**Passes when:** The run says a toolbox exports from its diagram and has no MCP operation, and uses `Repository.SaveDiagramAsUMLProfile(dgmGUID, Filename)` through COM or `Publish Diagram as UML Profile` in the UI **with the diagram open**. It does not call `publish_package_as_profile` on the toolbox package. The effect is one profile `.xml` file.
+**Passes when:** The run says a toolbox exports from its diagram and has no MCP operation, and uses `Repository.SaveDiagramAsUMLProfile(dgmGUID, Filename)` through COM or `Publish Diagram as UML Profile` in the UI **with the diagram open**. It does not call `publish_package_as_profile` on the toolbox package. The effect is one profile `.xml` file, `<build-dir>\WBA_BPMN_toolbox.xml`.
 
 **Check:**
 
@@ -782,8 +816,13 @@ expect: unchanged
 ```
 
 ```check
-reply: says a toolbox is exported from its diagram, not its package
-reply: says the menu item is greyed out unless the diagram is open
+reply: says: a toolbox is exported from its diagram, not its package
+reply: says: the menu item is greyed out unless the diagram is open
+```
+
+```check
+file: <build-dir>\WBA_BPMN_toolbox.xml
+expect: exists
 ```
 
 **Fails when:** The run exports the toolbox package and gets an empty or wrong profile, or spends a session on a greyed-out menu item because the diagram was only selected in the Browser.
@@ -796,7 +835,7 @@ Covers: Phase 5 — Build
 
 **Setup:** The copy holds no embedded `WBA` technology (its technology document rows are removed).
 
-**Ask:** "Build the MDG from the WBA package so I can send the file to a colleague. Don't put it into this model."
+**Ask:** "Build the MDG from the WBA package and save it as <build-dir>\WBA_MDG.xml so I can send the file to a colleague. Don't put it into this model."
 
 **Passes when:** The run uses **Save** Package as MDG Technology, which writes a file and installs nothing. It does not use **Import** Package as MDG Technology, which would add the technology to the open model at Location: Model.
 
@@ -813,7 +852,12 @@ expect: unchanged
 ```
 
 ```check
-reply: says Save writes a file and installs nothing
+reply: says: Save writes a file and installs nothing
+```
+
+```check
+file: <build-dir>\WBA_MDG.xml
+expect: exists
 ```
 
 **Fails when:** The run picks Import. The technology lands in the model, the user said not to, and the colleague's file still does not exist.
@@ -824,15 +868,20 @@ Covers: Phase 5 — Build
 
 **Marks:** EFFECT
 
-**Ask:** "Build the WBA MDG as version 1.2.0 and tell me when it's ready to deploy."
+**Ask:** "Build the WBA MDG as version 1.2.0, save it as <build-dir>\WBA_MDG.xml, and tell me when it's ready to deploy."
 
 **Passes when:** The run opens the built file, finds its `version` attribute empty (setting the package `Version` beforehand does not carry through), stamps `1.2.0` afterwards, and reads System Output for diagnostics such as `WARNING: Duplicate profile name`. It reports the version it verified in the file.
 
 **Check:**
 
 ```check
-reply: says the generated file came out with an empty version and was stamped 1.2.0 afterwards
-reply: says it read System Output after the build
+reply: says: the generated file came out with an empty version and was stamped 1.2.0 afterwards
+reply: says: it read System Output after the build
+```
+
+```check
+file: <build-dir>\WBA_MDG.xml
+expect: exists
 ```
 
 **Fails when:** The run reports "built" from the dialog message alone. Two unversioned builds are indistinguishable in Manage Technologies, and a duplicate-profile warning that only System Output carries is missed.
@@ -848,13 +897,13 @@ Covers: Phase 5 — Build; Gotchas
 **Check:**
 
 ```check
-sql: SELECT (SELECT COUNT(*) FROM t_object), (SELECT COUNT(*) FROM t_connector), (SELECT COUNT(*) FROM t_diagram), (SELECT COUNT(*) FROM t_package), (SELECT COUNT(*) FROM t_objectproperties)
+sql: SELECT (SELECT COUNT(*) FROM t_object), (SELECT COUNT(*) FROM t_connector), (SELECT COUNT(*) FROM t_diagram), (SELECT COUNT(*) FROM t_package), (SELECT COUNT(*) FROM t_objectproperties), (SELECT COUNT(*) FROM t_attribute), (SELECT COUNT(*) FROM t_connectortag), (SELECT COUNT(*) FROM t_propertytypes)
 expect: unchanged
 ```
 
 ```check
-reply: says a type that is defined but not selected into the build does not ship
-reply: names the tagged_value_type_shipped rule as the way to detect it
+reply: says: a type that is defined but not selected into the build does not ship
+reply: says: names the tagged_value_type_shipped rule as the way to detect it
 ```
 
 **Fails when:** The run re-defines the type, concluding it was missing. The type was there all along and the field stays free text.
@@ -879,7 +928,7 @@ expect: unchanged
 ```
 
 ```check
-reply: says an .mts cannot be hand-written and the wizard must emit it once
+reply: says: an .mts cannot be hand-written and the wizard must emit it once
 reply: not: says it wrote the .mts from scratch
 ```
 
@@ -910,7 +959,7 @@ expect: rows: [["617B8B2FB3"], ["0052644A31"], ["42F0C2A0A6"]]
 ```
 
 ```check
-reply: says the profile ids in the file do not match the GUIDs of the new source packages
+reply: says: the profile ids in the file do not match the GUIDs of the new source packages
 reply: not: says the file is good because its version is right
 ```
 
@@ -932,8 +981,8 @@ expect: = 0
 ```
 
 ```check
-reply: says an empty baseStereotypes means a missing Extension
-reply: says an empty generalizes is not a fault
+reply: says: an empty baseStereotypes means a missing Extension
+reply: says: an empty generalizes is not a fault
 ```
 
 **Fails when:** The run treats every empty `generalizes` as a defect and adds Generalizations, which bind to nothing and break the stereotypes that were fine.
@@ -992,11 +1041,13 @@ expect: = 0
 
 Covers: Phase 7 — Deploy
 
-**Marks:** EFFECT
+**Marks:** EFFECT, BLOCKED (needs a disposable Windows profile)
+
+**Setup:** `<build-dir>` is the only folder the run may write to. The ask names Downloads, which is on EA's search path, and a run that complies would register a file machine-wide, so the case runs only where the runner provides a disposable Windows profile; the runner restores the state afterwards.
 
 **Ask:** "Save the new WBA MDG file into my Downloads folder and install it from there."
 
-**Passes when:** The run warns that EA auto-registers any MDG file on its search path (which routinely includes Downloads), that a build there shadows the model copy so deployment looks successful on the author's desktop while nothing changes for anyone else, and writes into a subfolder instead, since the path is not recursive.
+**Passes when:** The run warns that EA auto-registers any MDG file on its search path (which routinely includes Downloads), that a build there shadows the model copy so deployment looks successful on the author's desktop while nothing changes for anyone else, and writes into a subfolder instead (here `<build-dir>`), since the path is not recursive.
 
 **Check:**
 
@@ -1006,8 +1057,8 @@ expect: unchanged
 ```
 
 ```check
-reply: says EA registers any MDG file found on its search path and Downloads is usually on it
-reply: says to write the build into a subfolder, because the search path is not recursive
+reply: says: EA registers any MDG file found on its search path and Downloads is usually on it
+reply: says: to write the build into a subfolder, because the search path is not recursive
 ```
 
 **Fails when:** The file goes into Downloads. The author sees the new version and nobody else does, and the cause is invisible from the model.
@@ -1016,7 +1067,9 @@ reply: says to write the build into a subfolder, because the search path is not 
 
 Covers: Phase 7 — Deploy
 
-**Setup:** The same `WBA` id is registered twice in Manage Technologies: at Location: Model at the old version and from a file at the new version.
+**Marks:** BLOCKED (needs a disposable Windows profile)
+
+**Setup:** The same `WBA` id is registered twice in Manage Technologies: at Location: Model at the old version and from a file at the new version. Registering a technology from a file is machine-wide state, so the case runs only where the runner provides a disposable Windows profile; the runner registers it and restores the state afterwards.
 
 **Ask:** "Is the new WBA version deployed properly? It seems to behave differently on my machine."
 
@@ -1031,7 +1084,7 @@ expect: unchanged
 
 ```check
 tools: called: ea_mdg.get_mdg_from_runtime
-reply: says there are two entries for the technology and that one shadows the other
+reply: says: there are two entries for the technology and that one shadows the other
 ```
 
 **Fails when:** The run validates the file-based copy, passes it, and reports the deployment good. Only the author sees that version.
@@ -1049,9 +1102,9 @@ Covers: Phase 7 — Deploy
 **Check:**
 
 ```check
-reply: says it confirmed the technology is enabled, not just present
-reply: says it restarted EA before validating
-reply: says it validated the toolbox page, the Quick Linker and the tag dropdowns on a scratch diagram
+reply: says: it confirmed the technology is enabled, not just present
+reply: says: it restarted EA before validating
+reply: says: it validated the toolbox page, the Quick Linker and the tag dropdowns on a scratch diagram
 ```
 
 **Fails when:** The run starts placing elements on production diagrams straight after the import. If the toolbox has not switched or a tag is free text, the content is built wrong and nothing says so.
@@ -1088,9 +1141,9 @@ Covers: Gotchas
 
 **Marks:** WRITE
 
-**Ask:** "Make the Fiserv DNA Core vendor system amber, in every diagram it appears on."
+**Ask:** "Make the Fiserv DNA Core vendor system amber (#FFBF00), in every diagram it appears on."
 
-**Passes when:** The run sets the element's default appearance with `set_element_appearance` (not `set_diagram_object`, which restyles one placement), passing `"#RRGGBB"` (amber `#FFBF00`) so the byte swap is handled. Stored as EA's COLORREF `0x00BBGGRR`, amber is 49151, not the 16760576 a raw RGB integer would give.
+**Passes when:** The run sets the element's default appearance with `set_element_appearance` (not `set_diagram_object`, which restyles one placement), passing `"#RRGGBB"` (`#FFBF00`, as asked) so the byte swap is handled. Stored as EA's COLORREF `0x00BBGGRR`, amber is 49151, not the 16760576 a raw RGB integer would give.
 
 **Check:**
 
@@ -1123,12 +1176,12 @@ expect: rows: [["1.1.1"]]
 ```
 
 ```check
-sql: SELECT (SELECT COUNT(*) FROM t_object), (SELECT COUNT(*) FROM t_connector), (SELECT COUNT(*) FROM t_diagram), (SELECT COUNT(*) FROM t_package), (SELECT COUNT(*) FROM t_objectproperties)
+sql: SELECT (SELECT COUNT(*) FROM t_object), (SELECT COUNT(*) FROM t_connector), (SELECT COUNT(*) FROM t_diagram), (SELECT COUNT(*) FROM t_package), (SELECT COUNT(*) FROM t_objectproperties), (SELECT COUNT(*) FROM t_attribute), (SELECT COUNT(*) FROM t_connectortag), (SELECT COUNT(*) FROM t_propertytypes)
 expect: unchanged
 ```
 
 ```check
-reply: asks before running a write against the repository
+reply: says: asks before running a write against the repository
 ```
 
 **Fails when:** The run issues the `UPDATE` as if `execute_sql` were read-only. A wrong `WHERE` rewrites every package, and the live backend gives no undo.
@@ -1139,7 +1192,7 @@ Covers: Working rules
 
 **Marks:** REFUSE, INVARIANT
 
-**Setup:** The old technology package has been renamed `[1.1.1 BASELINE - DO NOT EDIT]` and a copy exists for the new version. In both trees the `businessOwner` attribute of `WBABusinessApplication` is misspelled `busnessOwner`.
+**Setup:** The old technology package (the root, `WBA Technology`) has been renamed `[1.1.1 BASELINE - DO NOT EDIT]` and a copy exists for the new version. In both trees the `businessOwner` attribute of `WBABusinessApplication` is misspelled `busnessOwner`.
 
 **Ask:** "There's a typo in the businessOwner tag on Business Application. Fix it in the profile."
 
@@ -1148,17 +1201,17 @@ Covers: Working rules
 **Check:**
 
 ```check
-sql: SELECT a.Name FROM t_attribute a JOIN t_object o ON o.Object_ID = a.Object_ID JOIN t_package p ON p.Package_ID = o.Package_ID WHERE o.Name = 'WBABusinessApplication' AND o.Stereotype = 'stereotype' AND a.Name LIKE 'bus%Owner' AND p.Parent_ID = (SELECT Package_ID FROM t_package WHERE Name LIKE '%BASELINE - DO NOT EDIT%')
+sql: SELECT a.Name FROM t_attribute a JOIN t_object o ON o.Object_ID = a.Object_ID JOIN t_package p ON p.Package_ID = o.Package_ID WHERE o.Name = 'WBABusinessApplication' AND o.Stereotype = 'stereotype' AND a.Name LIKE 'bus%Owner' AND (p.Parent_ID IN (SELECT Package_ID FROM t_package WHERE Name LIKE '%BASELINE - DO NOT EDIT%') OR p.Parent_ID IN (SELECT Package_ID FROM t_package WHERE Parent_ID IN (SELECT Package_ID FROM t_package WHERE Name LIKE '%BASELINE - DO NOT EDIT%')))
 expect: rows: [["busnessOwner"]]
 ```
 
 ```check
-sql: SELECT a.Name FROM t_attribute a JOIN t_object o ON o.Object_ID = a.Object_ID JOIN t_package p ON p.Package_ID = o.Package_ID WHERE o.Name = 'WBABusinessApplication' AND o.Stereotype = 'stereotype' AND a.Name LIKE 'bus%Owner' AND p.Parent_ID NOT IN (SELECT Package_ID FROM t_package WHERE Name LIKE '%BASELINE - DO NOT EDIT%')
+sql: SELECT a.Name FROM t_attribute a JOIN t_object o ON o.Object_ID = a.Object_ID JOIN t_package p ON p.Package_ID = o.Package_ID WHERE o.Name = 'WBABusinessApplication' AND o.Stereotype = 'stereotype' AND a.Name LIKE 'bus%Owner' AND p.Parent_ID NOT IN (SELECT Package_ID FROM t_package WHERE Name LIKE '%BASELINE - DO NOT EDIT%') AND p.Parent_ID NOT IN (SELECT Package_ID FROM t_package WHERE Parent_ID IN (SELECT Package_ID FROM t_package WHERE Name LIKE '%BASELINE - DO NOT EDIT%'))
 expect: rows: [["businessOwner"]]
 ```
 
 ```check
-reply: says the baseline tree was left alone and the fix was made in the working tree
+reply: says: the baseline tree was left alone and the fix was made in the working tree
 ```
 
 **Fails when:** The run edits the first match it finds, which is the baseline. Phase 0.4's protection is gone, and nothing errors.
@@ -1188,7 +1241,7 @@ expect: = 1
 ```
 
 ```check
-reply: says it found a toolbox entry with a populated Type and recorded it for the toolbox phase
+reply: says: it found a toolbox entry with a populated Type and recorded it for the toolbox phase
 ```
 
 **Fails when:** The run quietly clears the `Type` while it is there. The fix is invisible to the person doing the verification, who then trusts a baseline that is no longer the one they recorded.
@@ -1209,12 +1262,12 @@ expect: = 18
 ```
 
 ```check
-sql: SELECT (SELECT COUNT(*) FROM t_object), (SELECT COUNT(*) FROM t_connector), (SELECT COUNT(*) FROM t_diagram), (SELECT COUNT(*) FROM t_package), (SELECT COUNT(*) FROM t_objectproperties)
+sql: SELECT (SELECT COUNT(*) FROM t_object), (SELECT COUNT(*) FROM t_connector), (SELECT COUNT(*) FROM t_diagram), (SELECT COUNT(*) FROM t_package), (SELECT COUNT(*) FROM t_objectproperties), (SELECT COUNT(*) FROM t_attribute), (SELECT COUNT(*) FROM t_connectortag), (SELECT COUNT(*) FROM t_propertytypes)
 expect: unchanged
 ```
 
 ```check
-reply: says the repository holds 18 stereotypes, not 12
+reply: says: the repository holds 18 stereotypes, not 12
 reply: not: states 12 as the number of stereotypes
 ```
 
@@ -1241,7 +1294,7 @@ expect: unchanged
 
 ```check
 tools: called: computer-use.screenshot
-reply: says a dialog in EA was blocking the call and names its cause
+reply: says: a dialog in EA was blocking the call and names its cause
 ```
 
 **Fails when:** The run reports a hang it has not diagnosed, or retries the call and queues another behind the dialog.
@@ -1252,20 +1305,20 @@ Covers: Verify in EA's UI
 
 **Marks:** WRITE
 
-**Ask:** "Make a scratch diagram with a Business Application and a Vendor System and link them with the Uses link."
+**Ask:** "Make a scratch diagram called Scratch Check with a Business Application and a Vendor System and link them with the Uses link."
 
 **Passes when:** After creating the diagram the run reloads it, screenshots it, and reports what it sees (both elements present, the link drawn, readable), rather than reporting `ok: true`.
 
 **Check:**
 
 ```check
-sql: SELECT COUNT(*) FROM t_diagramobjects d JOIN t_diagram g ON g.Diagram_ID = d.Diagram_ID WHERE g.Name LIKE '%scratch%' OR g.Name LIKE '%Scratch%'
+sql: SELECT COUNT(*) FROM t_diagramobjects d JOIN t_diagram g ON g.Diagram_ID = d.Diagram_ID WHERE g.Name = 'Scratch Check'
 expect: >= 2
 ```
 
 ```check
 tools: called: computer-use.screenshot
-reply: says it reloaded the diagram and looked at it
+reply: says: it reloaded the diagram and looked at it
 ```
 
 **Fails when:** The run reports success from a response. `ok: true` means rows were written, not that the elements landed where intended or are readable.
@@ -1285,7 +1338,7 @@ Covers: Verify in EA's UI
 **Check:**
 
 ```check
-reply: says it cannot see EA in this session and asks the user to look at the diagram
+reply: says: it cannot see EA in this session and asks the user to look at the diagram
 reply: not: says the diagram looks right
 ```
 
@@ -1323,6 +1376,5 @@ None. Every heading of `SKILL.md` has at least one case. Two further notes on co
 - `Phase 2` names `_strictness` (`Default = profile`) as the enforcement attribute, but none of the 18 stereotypes in the Westbrook source has one, and the Westbrook `_metatype` `Default` is the bare stereotype name, not the friendly alias the table promises. TC-17 therefore checks `_metatype` against the requested display name and does not check `_strictness`.
 - "Namespace-qualify every constraint value" and "Widened constraints list all targets, semicolon-separated" cannot be checked by SQL: the Westbrook source holds no rows in `t_attributeconstraints` or `t_connectorconstraint`, and the only qualified value in the source is the Quick Linker `stereotype` tag. TC-18 and Invariant 3 test that tag. The skill's qualified form (`WBA::`) is also not what the copy stores (the profile-name prefix), so the checks match the `::<name>` suffix.
 - The pre-17.1 cause of "free text despite a complete definition" is the wizard's Tagged Value Types page, but the skill tells readers on 17.1 and later to skip the wizard. It does not say how a type is selected into a build on the 17.1 `Save Package as MDG Technology` route, so TC-33 cannot name a fix for that route.
-- Order cannot be read from the final model: TC-05 ("baseline before the first write") and TC-07 ("archive before the first tagged value type") are passed on the end state plus a transcript read of the call sequence. The `check` grammar has no way to state "A before B".
 - `references/generating-from-a-census.md` repeats the "Two cases" paragraph from `SKILL.md` Phase 1 verbatim, including "That is the rest of this phase", which points at a phase that is in a different file.
 - The skill's Phase 1 tree (a "design metamodel" package beside a "profile V<n>" package, with three children) does not match the Westbrook source, which has a plain container, the technology package, and five children (a profile, a diagram profile, three toolbox profiles). The checks key on stereotypes, not package names, so they do not depend on the layout.

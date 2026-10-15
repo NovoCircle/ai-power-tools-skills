@@ -194,7 +194,7 @@ Covers: When COM is the right tool
 **Ask:** "Add a new payments application called Card Disputes to Domestic Payments, Mission-Critical, owned by Payments Engineering."
 
 **Passes when:** The run creates a well-formed element through the model tools (a create-element
-operation, then the tagged values), not through a hand-written COM script, because the request is
+operation such as `create_element_in_language` or `create_elements_bulk`, with the tagged values), not through a hand-written COM script, because the request is
 an ordinary create with no need for raw SQL or lifecycle control.
 
 **Check:**
@@ -210,7 +210,8 @@ expect: rows: [["businessOwner", "Payments Engineering"], ["criticality", "Missi
 ```
 
 ```check
-tools: called: ea_model.create_element
+reply: says: the element was created with the model tools, not with a COM script
+reply: not: says a COM script or Python environment was used to create the element
 ```
 
 **Fails when:** The run reaches for COM because the skill is loaded, builds the element in a
@@ -511,7 +512,8 @@ Covers: Technology / MDG checks
 **Ask:** "List every MDG technology that is loaded in this model."
 
 **Passes when:** The run either checks named technologies one at a time or uses the MCP
-operation that lists registered technologies, and says which it did. It does not present a result
+operation that lists registered technologies, and says which it did. Either way it says the COM
+repository object has no method that lists technologies. It does not present a result
 from a technology-list method as though one existed on the COM object.
 
 **Check:**

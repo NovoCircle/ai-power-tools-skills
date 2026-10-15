@@ -467,15 +467,14 @@ Covers: Using hosted rulesets (v1.2.0+)
 
 **Ask:** "Run the standard ArchiMate 3.1 conformance checks on this model."
 
-**Passes when:** The run passes the hosted ruleset URL as `rules_path_or_content`, runs the audit
-with no install step, and reports the 27-rule set's result. Without network access the run reports
+**Passes when:** The run passes the hosted ruleset URL as `rules_path_or_content`, runs the audit,
+and reports the 27-rule set's result. Without network access the run reports
 the block, not an empty result.
 
 **Check:**
 
 ```check
 tools: called: ea_validate.audit
-tools: not-called: ea_repository.install_skills
 reply: says: the ArchiMate 3.1 ruleset of 27 rules was run, or says it could not be fetched
 reply: not: says the model fully conforms to ArchiMate when the ruleset was not fetched
 ```
@@ -485,14 +484,17 @@ sql: SELECT (SELECT COUNT(*) FROM t_object), (SELECT COUNT(*) FROM t_connector),
 expect: unchanged
 ```
 
-**Fails when:** The run installs skills first (an unneeded write the page says to skip), or the fetch
-fails and the reply still presents a conformance verdict.
+**Fails when:** The fetch fails and the reply still presents a conformance verdict.
 
 ### TC-15: Keep the ruleset on this machine
 
 Covers: Using hosted rulesets (v1.2.0+)
 
 **Marks:** EFFECT, BLOCKED
+
+Blocked: needs a disposable Windows profile. The run writes into the product data directory under the
+user profile, which is machine-wide state. The runner provides the profile and restores the directory
+afterwards; the checks stay as written.
 
 **Ask:** "I want the ArchiMate rules saved on this machine so I can run them without internet."
 
@@ -767,3 +769,5 @@ use elements whose tag row exists with a blank value.
   convention, neither of which was available to check.
 - The fix-and-recheck loop in TC-19 cannot prove the audit saw a fresh model; it can only prove the
   run called the audit, since the response carries no timestamp or model version.
+- The hosted-ruleset table header says "install via `install_skills` then reference by URL", but workflow step 1 passes the URL directly with no install; the header contradicts it. TC-14 therefore does not check that `install_skills` is absent.
+- Server defect APT-2026-0533: `connector_endpoint_stereotype` treats an omitted `source_must_be_one_of` or `target_must_be_one_of` as 'nothing allowed', so every connector is flagged; the skills do not say what an omitted list means.

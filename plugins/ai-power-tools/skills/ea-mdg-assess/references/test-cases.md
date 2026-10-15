@@ -461,7 +461,6 @@ expect: unchanged
 ```
 
 ```check
-tools: called: ea_mdg.list_registered_technologies
 reply: says: unknown_mdg is a verified negative only for the exact id that was passed
 reply: says: the technology is registered under the id WBA
 reply: not: reports that the Westbrook technology is not loaded
@@ -575,12 +574,14 @@ meant to keep.
 
 Covers: 3. Installed, embedded, and loaded are three different questions
 
-**Marks:** BLOCKED
+**Marks:** BLOCKED (needs a disposable Windows profile)
 
 **Setup:** EA must be loading a build of the technology whose version differs from the definitions
 read, so that `provenance.version_mismatch` appears in the `get_mdg_from_runtime` answer (for
-example an older build registered as a file while a newer one is stored in the model). A model
-without such a mismatch cannot run this case; a correct run reports that none is present.
+example an older build registered as a file while a newer one is stored in the model). Registering
+a technology file is machine-wide state, so the runner provides a disposable Windows profile,
+builds the mismatch there and restores the state afterwards. A model without such a mismatch
+cannot run this case; a correct run reports that none is present.
 
 **Ask:** "I want to change the Westbrook technology. Can I take the stereotype list the runtime check gives as what is deployed?"
 
@@ -615,8 +616,10 @@ Covers: 2a. Generating a technology from what the repository already contains
 or an equivalent query), not from the bare `Stereotype` column alone. It reports that in this model
 `ApplicationComponent` resolves to `TOGAF::` (2 elements) and that the Application Service and
 Application Function elements (4) are bound to no profile at all, so "ArchiMate-looking" names come
-from different places. It also reports the other two things the census decides on: whether usage is
-ad hoc or profile-bound, and whether other shipped languages are in light use.
+from different places. It also reports the other things the census decides on: whether usage is
+ad hoc or profile-bound, whether other shipped languages are in light use, and the tag-name shape
+(an element that carries your technology's tags under another stereotype is a misassignment; here
+the `VendorApplication` element carries `criticality` and `businessOwner`).
 
 **Check:**
 
@@ -640,6 +643,12 @@ reply: says: the stereotype names were resolved to their languages through t_xre
 reply: says: ApplicationComponent resolves to TOGAF in this model
 reply: says: some of the ArchiMate-style names are bound to no profile
 reply: not: calls all of the ArchiMate-style stereotypes one language because the names match
+```
+
+```check
+sql: SELECT COUNT(*) FROM t_objectproperties tp JOIN t_object o ON o.Object_ID = tp.Object_ID WHERE o.Stereotype = 'VendorApplication' AND tp.Property IN ('criticality', 'businessOwner')
+expect: = 2
+reply: says: the VendorApplication element carries criticality and businessOwner, tags of the Westbrook technology, so it is a misassignment rather than a separate stereotype
 ```
 
 **Fails when:** The run groups by the bare name, reads "ApplicationComponent, ApplicationService,

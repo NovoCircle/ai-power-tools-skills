@@ -14,8 +14,8 @@ rows before the agent starts). Westbrook Bank is our illustration. A customer ru
 against their own model, substituting their technology id, stereotypes, package names and MDG file.
 
 **Marks.** `WRITE` (the run changes the copy), `EFFECT` (a file is written outside the model; the case
-says which), `INVARIANT` (must pass on every run), `BLOCKED` (needs an EA build or session the run may
-not have; a correct run reports the block). No case here is `REFUSE`.
+says which), `INVARIANT` (must pass on every run), `BLOCKED` (needs an EA build, a session or a disposable
+Windows profile the run may not have; a correct run reports the block). No case here is `REFUSE`.
 
 ## Cases
 
@@ -180,11 +180,11 @@ reply: not: tells the person to reinstall the technology
 
 Covers: Deploy: Application-Level (APPDATA Install); Tool Selection for MDG Deployment
 
-**Marks:** EFFECT
+**Marks:** EFFECT, BLOCKED (needs a disposable Windows profile)
 
 **Ask:** "Put WBA_MDG.xml on my machine only, for my own experiments. Don't touch the shared model."
 
-**Setup:** None. The effect is a copy of the file under `%APPDATA%\Sparx Systems\EA\MDGTechnologies\`. The person asked for it, so the agent need not ask first.
+**Setup:** None. The effect is a copy of the file under `%APPDATA%\Sparx Systems\EA\MDGTechnologies\`, which is machine-wide state, so the case runs only where the runner provides a disposable Windows profile; the runner restores the state afterwards. The person asked for it, so the agent need not ask first.
 
 **Passes when:** The agent installs at application level, writes the copy to the application folder (not to Downloads, which the search path auto-registers), tells the person to restart EA, and leaves the model alone.
 
@@ -233,9 +233,11 @@ reply: says: a technology stored in the model reaches everyone who opens the mod
 
 Covers: Deployment Modes; Troubleshooting
 
+**Marks:** BLOCKED (needs a disposable Windows profile)
+
 **Ask:** "Manage Technologies lists our WBA technology twice and one of them has an asterisk. Why, and how do I get rid of the extra one?"
 
-**Setup:** `WBA` is stored in the model at Location: Model, and an identical-id copy of the file also sits in the application folder.
+**Setup:** `WBA` is stored in the model at Location: Model, and an identical-id copy of the file also sits in the application folder. That folder is machine-wide state, so the case runs only where the runner provides a disposable Windows profile; the runner places the copy and restores the state afterwards.
 
 **Passes when:** The agent explains the asterisk entry is the application-level copy of an id the model also holds, says the UI cannot remove it, and gives the fix: delete the copy in the application folder and restart EA.
 
@@ -257,11 +259,11 @@ reply: says: it cannot be removed through the UI; delete the file in the applica
 
 Covers: Model vs. runtime technologies — and the search-path auto-registration trap
 
-**Marks:** INVARIANT
+**Marks:** INVARIANT, BLOCKED (needs a disposable Windows profile)
 
 **Ask:** "I deployed our Westbrook technology and it works fine on my machine, but a colleague who opens the same model sees nothing. What did I get wrong?"
 
-**Setup:** `WBA` is stored in the model at Location: Model, and a copy of `WBA_MDG.xml` sits in the person's Downloads folder, which is on EA's search path.
+**Setup:** `WBA` is stored in the model at Location: Model, and a copy of `WBA_MDG.xml` sits in the person's Downloads folder, which is on EA's search path. The Downloads folder is machine-wide state, so the case runs only where the runner provides a disposable Windows profile; the runner places the copy and restores the state afterwards.
 
 **Passes when:** The agent raises auto-registration from the search path first: EA registers any MDG file it finds on the path, including Downloads, so the stray copy shadows the model copy on this machine only. It has the person open Manage Technology with "Hide disabled Technologies" unticked, expects exactly one entry for the id at the intended Location, and notes that a subfolder of the path is safe because the search is not recursive.
 
@@ -285,11 +287,11 @@ reply: says: files in a subfolder of the search path are not registered
 
 Covers: Tool Selection for MDG Deployment; Verification Checklist; 1. COM check (scripted)
 
-**Marks:** INVARIANT
+**Marks:** INVARIANT, BLOCKED (needs a disposable Windows profile)
 
 **Ask:** "Is our WBA technology switched on in this model? Its stereotypes aren't offering anything."
 
-**Setup:** `WBA` is installed at Location: Model and disabled in Manage Technology.
+**Setup:** `WBA` is installed at Location: Model and disabled in Manage Technology. Enabling and disabling a technology is per-user EA state, so the case runs only where the runner provides a disposable Windows profile; the runner sets the state and restores it afterwards.
 
 **Passes when:** The agent checks both the loaded and the enabled state, finds the technology loaded but not enabled, and says the loaded answer alone would have misled. It tells the person to enable it in Manage Technology.
 
@@ -530,9 +532,9 @@ Covers: Deploy: from a profile package (EA 17.1+ ONLY); Procedure — Save Packa
 
 **Marks:** EFFECT
 
-**Ask:** "Give me the WBA technology as an XML file I can send to another architecture team. Don't install anything here."
+**Ask:** "Give me the WBA technology as an XML file I can send to another architecture team. Save it as <output-dir>\WBA_MDG.xml. Don't install anything here."
 
-**Setup:** EA 17.1 or later. The effect is one `.xml` file at a path the agent chooses with the person; nothing is stored in the model.
+**Setup:** EA 17.1 or later. The effect is one `.xml` file at `<output-dir>\WBA_MDG.xml`; nothing is stored in the model.
 
 **Passes when:** The agent uses Save Package as MDG Technology (not Import), reads System Output for diagnostics such as a duplicate profile name rather than trusting the success dialog, version-stamps the saved file because generated files have an empty `version`, and tells the person the command installed nothing.
 
@@ -546,6 +548,11 @@ expect: unchanged
 ```check
 sql: SELECT (SELECT COUNT(*) FROM t_object), (SELECT COUNT(*) FROM t_connector), (SELECT COUNT(*) FROM t_diagram), (SELECT COUNT(*) FROM t_package), (SELECT COUNT(*) FROM t_objectproperties)
 expect: unchanged
+```
+
+```check
+file: <output-dir>\WBA_MDG.xml
+expect: exists
 ```
 
 ```check

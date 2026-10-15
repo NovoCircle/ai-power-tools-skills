@@ -127,9 +127,9 @@ tools: called: ea_model.find_composite_diagram_mismatches
 ```
 
 ```check
-reply: says two elements have a child diagram but are not flagged composite, so they look navigable but do not drill down
-reply: says one element is flagged composite but has no child diagram, so its marker opens nothing
-reply: says it changed nothing
+reply: says: two elements have a child diagram but are not flagged composite, so they look navigable but do not drill down
+reply: says: one element is flagged composite but has no child diagram, so its marker opens nothing
+reply: says: it changed nothing
 ```
 
 **Fails when:** The run inspects the Browser tree, sees five diagrams under elements, and tells the person the set is fine. Or it reports only one direction (the missing flag) and never mentions the flag with no diagram. Or it fixes what it finds when the person said not to.
@@ -151,10 +151,10 @@ expect: unchanged
 ```
 
 ```check
-reply: says t_diagram.ParentID holds the Object_ID of the owning element
+reply: says: t_diagram.ParentID holds the Object_ID of the owning element
 reply: not: says ParentID holds a parent diagram or a package
-reply: says the element's NType must also be 8
-reply: says that either half alone does not navigate
+reply: says: the element's NType must also be 8
+reply: says: that either half alone does not navigate
 ```
 
 **Fails when:** The run repeats the schema note and says ParentID is the parent diagram, or says setting ParentID is enough. Both read as confident answers and neither produces an error, so the person builds the half that does not work.
@@ -182,8 +182,8 @@ expect: = 0
 ```
 
 ```check
-reply: says element parentage in the package is flat while the aggregation connectors define a two-level breakdown
-reply: says which of the two sources it used
+reply: says: element parentage in the package is flat while the aggregation connectors define a two-level breakdown
+reply: says: which of the two sources it used
 ```
 
 **Fails when:** The run reads only `t_object.ParentID`, finds no hierarchy, and reports that there is nothing to navigate. Or it reads only the connectors and builds from them without mentioning that the elements themselves are not nested, so the person later sees a Browser tree that disagrees with the diagrams.
@@ -214,9 +214,9 @@ tools: not-called: ea_model.set_composite_diagram
 ```
 
 ```check
-reply: says the package holds 20 elements and 7 of them have children
-reply: says an offer to build would create 8 diagrams in the Instances on AWS package
-reply: offers the four options: build the full set, complete an existing set, fix only the flags, no thanks
+reply: says: the package holds 20 elements and 7 of them have children
+reply: says: an offer to build would create 8 diagrams in the Instances on AWS package
+reply: says: offers the four options: build the full set, complete an existing set, fix only the flags, no thanks
 reply: not: says it has already built the diagrams
 ```
 
@@ -257,9 +257,9 @@ expect: = 0
 ```
 
 ```check
-reply: says the load added 17 elements, 4 of them with children
-reply: says an offer to build would create 5 diagrams in the Retail Capability Map package
-reply: offers the four options
+reply: says: the load added 17 elements, 4 of them with children
+reply: says: an offer to build would create 5 diagrams in the Retail Capability Map package
+reply: says: offers the four options
 ```
 
 **Fails when:** The run loads the data, reports the counts and stops, so the moment the person is looking for confirmation passes without the offer. Or it builds the navigation diagrams as part of the load without asking.
@@ -288,8 +288,8 @@ expect: = 0
 ```
 
 ```check
-reply: names both Retail Capability Map and Corporate Capability Map in its offer
-reply: makes one offer per package, two in all
+reply: says: names both Retail Capability Map and Corporate Capability Map in its offer
+reply: says: makes one offer per package, two in all
 reply: not: makes an offer after each batch or each element of the load
 ```
 
@@ -301,7 +301,7 @@ Covers: Trigger points
 
 **Marks:** WRITE
 
-**Ask:** "In the Instances on AWS package, rename the Region element to AWS Region."
+**Ask:** "Rename element 34219, the Region in the Instances on AWS package, to AWS Region."
 
 **Passes when:** The run renames the element and says so. A rename is neither a load nor an analysis, so the run does not scan the package for hierarchies, does not call the navigation audit, and does not offer navigation diagrams, even though the package would qualify.
 
@@ -435,9 +435,9 @@ tools: called: ea_model.find_composite_diagram_mismatches
 ```
 
 ```check
-reply: says 3 of the 7 elements with children are navigable and 4 are not
-reply: says 2 have a child diagram but are missing the composite flag, so they look navigable but do not drill down
-reply: offers the four options including fix only the flags
+reply: says: 3 of the 7 elements with children are navigable and 4 are not
+reply: says: 2 have a child diagram but are missing the composite flag, so they look navigable but do not drill down
+reply: says: offers the four options including fix only the flags
 reply: not: offers only to build the full set
 ```
 
@@ -533,8 +533,8 @@ tools: called: ea_model.set_composite_diagram
 ```
 
 ```check
-reply: says two elements were flagged
-reply: says one element still has a flag but no child diagram and one element has neither
+reply: says: two elements were flagged
+reply: says: one element still has a flag but no child diagram and one element has neither
 ```
 
 **Fails when:** The run goes on to build diagrams for the elements that lack them, or removes the stray flag, because it is tidying beyond the ask. Or it flags all four non-navigable elements, so two of them are flagged with nothing to open.
@@ -582,8 +582,8 @@ expect: = 2
 ```
 
 ```check
-reply: says 3 elements were already navigable
-reply: says the others were newly built or newly flagged
+reply: says: 3 elements were already navigable
+reply: says: the others were newly built or newly flagged
 ```
 
 **Fails when:** The run rebuilds all seven from scratch in the default style, so the three that worked are replaced by look-alikes with new IDs. Or the new diagrams ignore the existing ones' style and the set looks patched together. Or the reply gives only a total and the person cannot tell what changed.
@@ -689,11 +689,11 @@ tools: called: ea_diagram.add_elements_to_diagram_bulk
 ```
 
 ```check
-reply: says 8 diagrams were created in the Instances on AWS package
-reply: says 7 elements are now navigable and 13 are leaves
-reply: names the entry-point diagram
-reply: tells the person to reload the package in the Browser
-reply: says some diagram names repeat because sibling elements share names
+reply: says: 8 diagrams were created in the Instances on AWS package
+reply: says: 7 elements are now navigable and 13 are leaves
+reply: says: names the entry-point diagram
+reply: says: tells the person to reload the package in the Browser
+reply: says: some diagram names repeat because sibling elements share names
 ```
 
 **Fails when:** The run builds a single big tree diagram. Or it creates the eight diagrams but flags only some parents, or flags them without owning diagrams, and the Browser tree looks complete while double-click fails on half the boxes. Or leaves are flagged and open empty pictures. Or the landing diagram is missing so there is nowhere to start. Or the reply says "done" without saying where to begin or that the Browser needs a reload.
@@ -926,8 +926,8 @@ tools: called: ea_model.set_composite_diagram
 ```
 
 ```check
-reply: says the composite operation reported the link as consistent
-reply: says it used that operation rather than a SQL update because it writes both halves together
+reply: says: the composite operation reported the link as consistent
+reply: says: it used that operation rather than a SQL update because it writes both halves together
 ```
 
 **Fails when:** The run does the one-line UPDATE the person suggested. The final state is the same and nothing checks that the diagram half and the flag half agree, which is the check the operation exists to make.
@@ -960,9 +960,9 @@ tools: called: ea_diagram.get_diagram_png
 ```
 
 ```check
-reply: says it rendered the landing diagram, a mid-level diagram and a leaf-level diagram
-reply: describes what it saw in the rendered pictures, including the drill-down marker and the children inside the container
-reply: tells the person to reload the package in the Browser or reopen the model
+reply: says: it rendered the landing diagram, a mid-level diagram and a leaf-level diagram
+reply: says: describes what it saw in the rendered pictures, including the drill-down marker and the children inside the container
+reply: says: tells the person to reload the package in the Browser or reopen the model
 reply: not: offers the row counts as the verification
 ```
 
@@ -983,28 +983,28 @@ Covers: Rebuilding after the hierarchy changes
 **Check:**
 
 ```check
-sql: SELECT Name FROM t_diagram WHERE ParentID = 34233
+sql: SELECT d.Name FROM t_diagram d WHERE d.ParentID = 34233 AND d.Package_ID NOT IN (SELECT Package_ID FROM t_package WHERE Name = '_to-delete (superseded diagrams)')
 expect: rows: [["Virtual Private Cloud"]]
 ```
 
 ```check
-sql: SELECT COUNT(*) FROM t_diagramobjects x JOIN t_diagram d ON x.Diagram_ID = d.Diagram_ID WHERE d.ParentID = 34221 AND x.Object_ID = 34217
+sql: SELECT COUNT(*) FROM t_diagramobjects x JOIN t_diagram d ON x.Diagram_ID = d.Diagram_ID WHERE d.ParentID = 34221 AND d.Package_ID NOT IN (SELECT Package_ID FROM t_package WHERE Name = '_to-delete (superseded diagrams)') AND x.Object_ID = 34217
 expect: = 0
 ```
 
 ```check
-sql: SELECT COUNT(*) FROM t_diagramobjects x JOIN t_diagram d ON x.Diagram_ID = d.Diagram_ID WHERE d.ParentID = 34225 AND x.Object_ID = 34217
+sql: SELECT COUNT(*) FROM t_diagramobjects x JOIN t_diagram d ON x.Diagram_ID = d.Diagram_ID WHERE d.ParentID = 34225 AND d.Package_ID NOT IN (SELECT Package_ID FROM t_package WHERE Name = '_to-delete (superseded diagrams)') AND x.Object_ID = 34217
 expect: = 1
 ```
 
 ```check
 # each parent diagram holds its parent and exactly its current children
-sql: SELECT COUNT(*) FROM t_diagram d JOIN t_object o ON d.ParentID = o.Object_ID JOIN t_package p ON o.Package_ID = p.Package_ID WHERE p.Name = 'Instances on AWS' AND (SELECT COUNT(*) FROM t_diagramobjects x WHERE x.Diagram_ID = d.Diagram_ID) <> 1 + (SELECT COUNT(*) FROM t_object c WHERE c.ParentID = o.Object_ID)
+sql: SELECT COUNT(*) FROM t_diagram d JOIN t_object o ON d.ParentID = o.Object_ID JOIN t_package p ON o.Package_ID = p.Package_ID WHERE p.Name = 'Instances on AWS' AND d.Package_ID NOT IN (SELECT Package_ID FROM t_package WHERE Name = '_to-delete (superseded diagrams)') AND (SELECT COUNT(*) FROM t_diagramobjects x WHERE x.Diagram_ID = d.Diagram_ID) <> 1 + (SELECT COUNT(*) FROM t_object c WHERE c.ParentID = o.Object_ID)
 expect: = 0
 ```
 
 ```check
-sql: SELECT COUNT(*) FROM t_object o JOIN t_package p ON o.Package_ID = p.Package_ID WHERE p.Name = 'Instances on AWS' AND ((o.NType = 8) <> EXISTS (SELECT 1 FROM t_diagram d WHERE d.ParentID = o.Object_ID))
+sql: SELECT COUNT(*) FROM t_object o JOIN t_package p ON o.Package_ID = p.Package_ID WHERE p.Name = 'Instances on AWS' AND ((o.NType = 8) <> EXISTS (SELECT 1 FROM t_diagram d WHERE d.ParentID = o.Object_ID AND d.Package_ID NOT IN (SELECT Package_ID FROM t_package WHERE Name = '_to-delete (superseded diagrams)')))
 expect: = 0
 ```
 
@@ -1025,7 +1025,7 @@ Covers: Rebuilding after the hierarchy changes
 **Check:**
 
 ```check
-sql: SELECT COUNT(*) FROM t_diagram WHERE ParentID = 34220
+sql: SELECT COUNT(*) FROM t_diagram d WHERE d.ParentID = 34220 AND d.Package_ID NOT IN (SELECT Package_ID FROM t_package WHERE Name = '_to-delete (superseded diagrams)')
 expect: = 1
 ```
 
@@ -1035,17 +1035,17 @@ expect: rows: [[8]]
 ```
 
 ```check
-sql: SELECT COUNT(*) FROM t_diagram d JOIN t_object o ON d.ParentID = o.Object_ID JOIN t_package p ON o.Package_ID = p.Package_ID WHERE p.Name = 'Instances on AWS'
+sql: SELECT COUNT(*) FROM t_diagram d JOIN t_object o ON d.ParentID = o.Object_ID JOIN t_package p ON o.Package_ID = p.Package_ID WHERE p.Name = 'Instances on AWS' AND d.Package_ID NOT IN (SELECT Package_ID FROM t_package WHERE Name = '_to-delete (superseded diagrams)')
 expect: = 8
 ```
 
 ```check
-sql: SELECT COUNT(*) FROM t_diagram d JOIN t_object o ON d.ParentID = o.Object_ID JOIN t_package p ON o.Package_ID = p.Package_ID WHERE p.Name = 'Instances on AWS' AND (SELECT COUNT(*) FROM t_diagramobjects x WHERE x.Diagram_ID = d.Diagram_ID) <> 1 + (SELECT COUNT(*) FROM t_object c WHERE c.ParentID = o.Object_ID)
+sql: SELECT COUNT(*) FROM t_diagram d JOIN t_object o ON d.ParentID = o.Object_ID JOIN t_package p ON o.Package_ID = p.Package_ID WHERE p.Name = 'Instances on AWS' AND d.Package_ID NOT IN (SELECT Package_ID FROM t_package WHERE Name = '_to-delete (superseded diagrams)') AND (SELECT COUNT(*) FROM t_diagramobjects x WHERE x.Diagram_ID = d.Diagram_ID) <> 1 + (SELECT COUNT(*) FROM t_object c WHERE c.ParentID = o.Object_ID)
 expect: = 0
 ```
 
 ```check
-sql: SELECT COUNT(*) FROM t_object o JOIN t_package p ON o.Package_ID = p.Package_ID WHERE p.Name = 'Instances on AWS' AND ((o.NType = 8) <> EXISTS (SELECT 1 FROM t_diagram d WHERE d.ParentID = o.Object_ID))
+sql: SELECT COUNT(*) FROM t_object o JOIN t_package p ON o.Package_ID = p.Package_ID WHERE p.Name = 'Instances on AWS' AND ((o.NType = 8) <> EXISTS (SELECT 1 FROM t_diagram d WHERE d.ParentID = o.Object_ID AND d.Package_ID NOT IN (SELECT Package_ID FROM t_package WHERE Name = '_to-delete (superseded diagrams)')))
 expect: = 0
 ```
 
@@ -1072,18 +1072,18 @@ expect: rows: [[0]]
 
 ```check
 # no leaf keeps a flag or an owned diagram
-sql: SELECT COUNT(*) FROM t_object o JOIN t_package p ON o.Package_ID = p.Package_ID WHERE p.Name = 'Instances on AWS' AND ((o.NType = 8) <> EXISTS (SELECT 1 FROM t_diagram d WHERE d.ParentID = o.Object_ID))
+sql: SELECT COUNT(*) FROM t_object o JOIN t_package p ON o.Package_ID = p.Package_ID WHERE p.Name = 'Instances on AWS' AND ((o.NType = 8) <> EXISTS (SELECT 1 FROM t_diagram d WHERE d.ParentID = o.Object_ID AND d.Package_ID NOT IN (SELECT Package_ID FROM t_package WHERE Name = '_to-delete (superseded diagrams)')))
 expect: = 0
 ```
 
 ```check
 # the container plus its four instances
-sql: SELECT COUNT(*) FROM t_diagramobjects x JOIN t_diagram d ON x.Diagram_ID = d.Diagram_ID WHERE d.ParentID = 34221
+sql: SELECT COUNT(*) FROM t_diagramobjects x JOIN t_diagram d ON x.Diagram_ID = d.Diagram_ID WHERE d.ParentID = 34221 AND d.Package_ID NOT IN (SELECT Package_ID FROM t_package WHERE Name = '_to-delete (superseded diagrams)')
 expect: = 5
 ```
 
 ```check
-reply: says what was done with the diagram of the emptied group
+reply: says: what was done with the diagram of the emptied group
 ```
 
 **Fails when:** The run leaves the emptied group flagged, so it still shows the marker and opens a diagram with nothing in it. Or it deletes the diagram without telling the person.
@@ -1127,8 +1127,8 @@ expect: = 1
 ```
 
 ```check
-reply: says the hand-built VPC diagram was moved to the _to-delete (superseded diagrams) package
-reply: says why it was moved and leaves the deleting to the person
+reply: says: the hand-built VPC diagram was moved to the _to-delete (superseded diagrams) package
+reply: says: why it was moved and leaves the deleting to the person
 reply: not: says it deleted the hand-built diagram
 ```
 
@@ -1154,8 +1154,8 @@ expect: = 0
 ```
 
 ```check
-reply: says it could not look at EA's own window
-reply: asks the person to open or reload the diagram and look at it
+reply: says: it could not look at EA's own window
+reply: says: asks the person to open or reload the diagram and look at it
 reply: not: says the diagrams were verified in EA's UI
 ```
 
@@ -1176,8 +1176,8 @@ Covers: Verify in EA's UI
 **Check:**
 
 ```check
-reply: says it took a screenshot of EA when the call did not return
-reply: names the dialog it found and what it said
+reply: says: it took a screenshot of EA when the call did not return
+reply: says: names the dialog it found and what it said
 reply: not: says EA hung or crashed without having looked at its window
 ```
 
@@ -1201,7 +1201,7 @@ Where the output can look right and be wrong, these four properties can be check
 ## Findings
 
 - Phase 5's verification query counts rows with `Diagram_ID BETWEEN <lo> AND <hi>`, which assumes the new diagram IDs are contiguous, while Phase 2 says never to assume that. Another writer, or an interleaved create, makes the range wrong. The cases select the set by owner and package instead.
-- Dangling references: the skill points at "the 6-of-21 defect described below" and "see the 6-of-21 defect above", and at "the source report's own audit language", but nothing describes the defect or names the report. The offer examples carry specific counts (13 areas, 43 categories, 128 capabilities, 9 of 21) from an unnamed source; a maintainer should confirm they are not a real customer's figures. These cases use Westbrook counts instead.
+- Dangling references: the skill points at "the 6-of-21 defect described below" and "see the 6-of-21 defect above", and at "the source report's own audit language", but nothing describes the defect or names the report. The offer examples carry specific counts of unknown origin; a maintainer should confirm they are not a real customer's figures. These cases use Westbrook counts instead.
 - "Existing diagrams are never deleted or overwritten" conflicts with "an element that lost all its children should have its diagram removed" and with "regenerate the whole set ... replace exactly its own output". The skill does not say how to tell a generated diagram from a hand-built one (the batch marker is a temporary Version value), or whether the diagram of an emptied parent is deleted or moved to the holding package. TC-27 asserts only the end state and that the reply says what happened; TC-28 asserts the hand-built case.
 - Option 3, "Fix only the flags", handles only `diagram_without_flag`. The skill gives no remedy for `flag_without_diagram`, and does not say whether passing a null diagram to the composite operation also resets `NType`. TC-16 asserts the stray flag is left alone and reported.
 - A hierarchy carried only by connectors or a level tag qualifies under "When to offer this", but the threshold table, Phase 0 and Phase 3 all read `t_object.ParentID`. The skill does not say what to build when parentage is flat. TC-05 asserts only that the disagreement is reported and the source named.

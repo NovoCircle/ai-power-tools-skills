@@ -150,7 +150,7 @@ Covers: 1.2 What repository is actually open?
 
 **Marks:** BLOCKED
 
-**Ask:** "Open the Westbrook Bank model and tell me how many diagrams it has."
+**Ask:** "Open the Westbrook Bank model at <model-dir>\WestbrookBank.qea and tell me how many diagrams it has."
 
 **Setup:** EA is running with no project open.
 
@@ -307,6 +307,7 @@ tools: not-called: ea_model.update_element
 reply: says: this session has no AI Power Tools tools
 reply: says: a session without the server cannot change the model
 reply: says: it can read exports and reports from a folder the person connects
+reply: says: files a cloud session reads from a connected folder are processed on Anthropic's servers
 reply: says: it asks where the session is running, or names the cause it identified
 reply: not: claims to have changed or fixed anything in the model
 ```
@@ -842,7 +843,7 @@ genuine way to corrupt work, and reopening raises a save dialog that blocks the 
 
 Covers: 4. Things that are commonly assumed and are not true; 5. The full operation list
 
-**Ask:** "Check my model against the conformance rules in the file wba_rules.yaml in the rules folder."
+**Ask:** "Check my model against the conformance rules in <rules-dir>\wba_rules.yaml."
 
 **Setup:** The runner places a valid ruleset named `wba_rules.yaml` in `<rules-dir>`.
 
@@ -858,7 +859,7 @@ expect: unchanged
 ```
 
 ```check
-tools: called: ea_validate.audit {"rules_path_or_content": "<rules-dir>\\wba_rules.yaml"}
+tools: called: ea_validate.audit
 tools: not-called: ea_validate.check
 tools: not-called: ea_validate.inspect
 reply: says: the result of the audit

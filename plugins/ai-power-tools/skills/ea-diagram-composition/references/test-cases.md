@@ -171,9 +171,9 @@ Covers: Step 0 — resolve the language binding
 
 **Marks:** WRITE
 
-**Ask:** "Put the consumer lending applications on the Consumer Loan Origination Overview diagram."
+**Ask:** "Put everything in the Consumer Lending package on the Consumer Loan Origination Overview diagram."
 
-**Passes when:** That diagram is a business-process diagram to a human, but its stored kind is the technology name (`BPMN2.0`), which is not a diagram type of any binding. The resolver answers unbound. The run reports unbound with the reason, composes with the engine's defaults (choosing the grammar from the content, not from the notation it can see), and does not load the BPMN binding by technology id to get around the answer. The five consumer lending elements end up on the diagram.
+**Passes when:** That diagram is a business-process diagram to a human, but its stored kind is the technology name (`BPMN2.0`), which is not a diagram type of any binding. The resolver answers unbound. The run reports unbound with the reason, composes with the engine's defaults (choosing the grammar from the content, not from the notation it can see), and does not load the BPMN binding by technology id to get around the answer. The five elements in the Consumer Lending package (two applications, one service, two vendor systems) end up on the diagram.
 
 **Check:**
 
@@ -648,15 +648,23 @@ Covers: Judgment that scripts cannot encode
 **Check:**
 
 ```check
-sql: SELECT CASE WHEN (SELECT COUNT(*) FROM t_diagramlinks WHERE DiagramID = 7 AND Hidden = 0) < (SELECT COUNT(*) FROM t_connector c WHERE c.Start_Object_ID IN (SELECT Object_ID FROM t_diagramobjects WHERE Diagram_ID = 7) AND c.End_Object_ID IN (SELECT Object_ID FROM t_diagramobjects WHERE Diagram_ID = 7)) THEN 1 ELSE 0 END
-expect: rows: [[1]]
+# EA draws a connector between two placed elements even when no presentation row exists,
+# so a connector is left off only by a row marked hidden
+sql: SELECT COUNT(*) FROM t_diagramlinks WHERE DiagramID = 7 AND Hidden = 1
+expect: >= 1
+```
+
+```check
+# thinning the picture must not delete content from the model
+sql: SELECT COUNT(*) FROM t_connector
+expect: unchanged
 ```
 
 ```check
 reply: says: which relationships were left off the diagram, and why
 ```
 
-**Fails when:** All the relationships are drawn and the diagram is a hairball that shows none of them, or some are dropped and the reply does not say which.
+**Fails when:** All the relationships are drawn and the diagram is a hairball that shows none of them, or some are dropped and the reply does not say which. A run that deletes connectors from the model to thin the picture has destroyed content; the model's connector count must not fall.
 
 ### TC-23: Too much for one diagram
 
@@ -682,6 +690,46 @@ reply: says: a way to split or summarize it
 ```
 
 **Fails when:** One diagram of 81 boxes and over a hundred lines is built and returned as done. It may lint with only warnings and it is unreadable.
+
+### TC-24: A presentation profile hides detail, never a defect
+
+Covers: Step 5 — lint, then correct
+
+**Marks:** WRITE
+
+**Ask:** "Add an executive view next to Technology Layer, same notation, showing the cloud platforms. Call it Cloud Platforms Executive View. Leave off connector labels and collapse parallel connectors so it reads at a glance, then check it and tell me what the check found."
+
+**Passes when:** The run composes the view under the notation's executive profile and lints it with
+that profile passed, so the report does not complain about connector labels the view hides on
+purpose. The reply names which rules the profile suppressed and says the profile did not hide any
+structural problem (an overlap or an out-of-canvas box would still be reported). Because collapsing
+parallel connectors hides relationships, the diagram carries a note saying so.
+
+**Check:**
+
+```check
+sql: SELECT COUNT(*) FROM t_diagram WHERE Name = 'Cloud Platforms Executive View' AND StyleEx LIKE '%MDGDgm=ArchiMate3::Technology;%'
+expect: = 1
+```
+
+```check
+# no two placed elements overlap, whatever the profile hides
+sql: SELECT COUNT(*) FROM t_diagramobjects a JOIN t_diagramobjects b ON a.Diagram_ID = b.Diagram_ID AND a.Object_ID < b.Object_ID WHERE a.Diagram_ID = (SELECT Diagram_ID FROM t_diagram WHERE Name = 'Cloud Platforms Executive View') AND a.RectLeft < b.RectRight AND b.RectLeft < a.RectRight AND a.RectTop > b.RectBottom AND b.RectTop > a.RectBottom
+expect: = 0
+```
+
+```check
+tools: called: ea_diagram.verify_diagram
+reply: says: the lint ran with the executive profile and names the rules it suppressed
+reply: says: a profile never suppresses a structural defect such as an overlap
+reply: says: the diagram carries a note that parallel connectors were collapsed
+reply: not: reports the diagram clean without saying which rules the profile suppressed
+```
+
+**Fails when:** The run lints without the profile and reports missing connector labels as defects the
+view was built to omit, then "corrects" them and defeats the executive view. Or it passes the profile
+and reports "clean" without saying what was suppressed, so a reader takes a quieter report for a
+better diagram. Or the profile is used as an excuse to ignore an overlap.
 
 ## Invariants
 

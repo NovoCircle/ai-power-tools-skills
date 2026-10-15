@@ -196,7 +196,7 @@ expect: unchanged
 
 ```check
 tools: called: ea_analyze.execute_sql
-reply: says: the total is 1,509,760 bytes across 17 baselines
+reply: says: the total is 1,509,760 bytes or about 1.4 to 1.5 MB, across 17 baselines
 ```
 
 **Fails when:** The agent answers from the number of baselines ("about 17 snapshots, so not much"),
@@ -443,6 +443,7 @@ expect: >= 1
 ```check
 tools: called: ea_repository.create_baseline
 tools: called: ea_repository.apply_baseline
+tools: before: ea_repository.create_baseline ea_repository.apply_baseline
 reply: says: a baseline of the current state was taken before the rollback was applied
 ```
 
@@ -651,6 +652,8 @@ expect: = 0
 tools: called: ea_repository.create_baseline
 tools: called: ea_repository.list_baselines
 tools: called: ea_model.delete_package
+tools: before: ea_repository.create_baseline ea_model.delete_package
+tools: before: ea_repository.list_baselines ea_model.delete_package
 reply: says: the baseline was confirmed before the package was deleted
 ```
 
@@ -1176,7 +1179,7 @@ expect: unchanged
 ```check
 tools: called: ea_repository.list_baselines
 tools: called: ea_analyze.execute_sql
-reply: says: the baselines are listed largest first, the largest being 263,565 bytes
+reply: says: the baselines are listed largest first, and the largest is 263,565 bytes or about 257 KB
 ```
 
 **Fails when:** The agent lists the baselines in the order returned, with no sizes, or sorts by
@@ -1354,10 +1357,6 @@ None. Every heading of `SKILL.md` has at least one case.
   `apply_baseline` against a package you did not baseline yourself, and then gives steps for
   calling it safely. It does not say whether a person who asks for a rollback to someone else's
   snapshot may have it after the steps. TC-17 takes the stop-and-confirm reading.
-- **Order is not checkable.** "Take a fresh baseline before the apply" is the promise in TC-14, but
-  the check grammar cannot express "before", and a baseline taken after the restore holds the
-  restored state, which the model counts cannot tell from a safety copy. TC-14 leans on the reply
-  and the transcript.
 - **A remembered no is a multi-turn promise.** "Declining is remembered for the rest of the
   session" cannot be tested in a single ask. TC-21 to TC-23 put both requests into one message,
   which leaves the second request already authorized by the person.

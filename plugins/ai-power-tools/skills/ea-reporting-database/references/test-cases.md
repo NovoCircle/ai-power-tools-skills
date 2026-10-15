@@ -48,7 +48,7 @@ Covers: A reporting layer from an EA repository
 
 **Marks:** EFFECT
 
-**Ask:** "I want the Consumer Banking part of the Westbrook Bank model in Power BI so my team can build reports. We have no access to the EA database. Write the files to <output-dir>."
+**Ask:** "I want the Consumer Banking part of the Westbrook Bank model in Power BI so my team can build reports. We have no access to the EA database. Write the files to <output-dir>. Use only what the technology defines, and leave out the unclassified components even though they carry governance tags; I know about them."
 
 **Passes when:** The run builds the reporting layer here (path C: profile, definition and rows in `<output-dir>`), then says the Power BI project and the Parquet files come from the next step in the Power BI skill and hands off to it. It does not write a Power BI project itself.
 
@@ -84,7 +84,7 @@ expect: unchanged
 ```
 
 ```check
-tools: called: ea_mdg.get_mdg_from_runtime
+tools: called: ea_repository.get_repository_info
 tools: not-called: ea_repository.build_reporting_database
 ```
 
@@ -149,7 +149,7 @@ Covers: 2. The shape of the output; 4. The profile
 
 **Marks:** EFFECT
 
-**Ask:** "Build the reporting set for the whole Westbrook Bank package into <output-dir>, saving the profile as westbrook.json. Use only what the technology defines. Leave out the Core Platforms package under IT Operations completely; other systems link to it. The unclassified components can stay out too, and the rest of the repository is out of scope."
+**Ask:** "Build the reporting set for the whole Westbrook Bank package into <output-dir>, saving the profile as westbrook.json. Use only what the technology defines. Leave out the Core Platforms package under IT Operations completely; other systems link to it. Keep the doubly-stereotyped system in both tables, leave every unstereotyped element out, and the rest of the repository is out of scope."
 
 **Passes when:** Core Platforms is named by GUID in the profile's exclusions. The run reports the links from kept content into it as crossings and says they end at `(excluded)` stubs that show the element type and never the name. The kept extract carries the stubs.
 
@@ -446,7 +446,7 @@ Covers: 4. The profile
 
 **Marks:** EFFECT
 
-**Ask:** "Set up the Parquet reporting set for the Westbrook Bank package into <output-dir>, profile saved as westbrook.json. Use only what the technology defines. Everything else in the repository is out of scope."
+**Ask:** "Set up the Parquet reporting set for the Westbrook Bank package into <output-dir>, profile saved as westbrook.json. Use only what the technology defines: keep the doubly-stereotyped system in both tables and leave every unstereotyped element out. Everything else in the repository is out of scope."
 
 **Passes when:** Westbrook Bank is the root; every other top-level package (Model, WBA Technology, Generic Diagram Fixtures) is named by GUID in `scope.exclude`, so the new-root flag does not fire on every later run. The saved profile says so.
 
@@ -702,9 +702,9 @@ reply: not: counts packages or notes among the elements that will not appear
 
 Covers: 5.3 Preflight - paths B and C
 
-**Setup:** A saved profile `westbrook.json` in `<output-dir>` for Consumer Banking, path C, only what the technology defines.
+**Setup:** A saved profile `westbrook.json` in `<output-dir>` for Consumer Banking, path C, only what the technology defines. No definition file exists in `<output-dir>` yet.
 
-**Ask:** "Just check my saved profile westbrook.json against the Westbrook Bank model. Don't build anything. What would it keep, and what would it leave out?"
+**Ask:** "Just check my saved profile <output-dir>\westbrook.json against the Westbrook Bank model. Don't build anything. What would it keep, and what would it leave out?"
 
 **Passes when:** The run uses the preflight, which reads EA's tables and writes nothing, and reports rows extracted against rows kept, the crossings, and the `blocking` and `flags` lists. It says it wrote nothing.
 
@@ -716,7 +716,13 @@ expect: unchanged
 ```
 
 ```check
-tools: called: ea_repository.build_reporting_database
+tools: called: ea_repository.build_reporting_database {"preflight_only": true}
+```
+
+```check
+# a full build would have written the definition; the preflight writes nothing
+file: westbrook.definition.json
+expect: absent
 ```
 
 ```check
@@ -1255,11 +1261,11 @@ Covers: 9. Reporting the result
 
 **Marks:** INVARIANT
 
-**Setup:** A completed path C build for scope S in `<output-dir>`, with the three unclassified components left out.
+**Setup:** A completed path C build for scope S in `<output-dir>`, built on the choice "only what the technology defines", so the three unclassified components and the one vendor application stereotyped by another technology are left out, and the one system with two stereotypes is in both tables.
 
 **Ask:** "OK, it's built. Give me the summary I can send to my manager."
 
-**Passes when:** The reply says, in this order: which path and that the data is a snapshot with its as-of time; whether it was checked (the alignment verdict, and that no value check was run on Parquet); what is outside the layer (the three components, excluded packages, `(excluded)` stubs, any flag continued past); and what was built (the entity, `Con_` and tag-row tables, row counts, the definition file, the timings). The outside-the-layer part is not buried.
+**Passes when:** The reply says, in this order: which path and that the data is a snapshot with its as-of time; whether it was checked (the alignment verdict, and that no value check was run on Parquet); what is outside the layer (the four elements, excluded packages, `(excluded)` stubs, any flag continued past); and what was built (the entity, `Con_` and tag-row tables, row counts, the definition file, the timings). The outside-the-layer part is not buried.
 
 **Check:**
 
@@ -1269,11 +1275,18 @@ expect: unchanged
 ```
 
 ```check
-reply: says, in this order: the path and that it is a snapshot with an as-of time, whether it was checked, what is outside the layer, then what was built
-reply: says: three elements are not in the layer and the element table count will differ from EA's element count by that amount
+# fixture oracle: elements in scope S that no table will hold (three unclassified components and one vendor application)
+sql: SELECT COUNT(*) FROM t_object o WHERE o.Package_ID IN (SELECT Package_ID FROM t_package WHERE Package_ID IN (SELECT Package_ID FROM t_package WHERE ea_guid IN ('{F16CB574-1750-4a3b-AD61-1D0F20131865}', '{17D91308-D4D6-4a3d-8C4B-BD10866F749E}')) OR Parent_ID IN (SELECT Package_ID FROM t_package WHERE ea_guid IN ('{F16CB574-1750-4a3b-AD61-1D0F20131865}', '{17D91308-D4D6-4a3d-8C4B-BD10866F749E}')) OR Parent_ID IN (SELECT Package_ID FROM t_package WHERE Parent_ID IN (SELECT Package_ID FROM t_package WHERE ea_guid IN ('{F16CB574-1750-4a3b-AD61-1D0F20131865}', '{17D91308-D4D6-4a3d-8C4B-BD10866F749E}')))) AND o.Object_Type <> 'Package' AND NOT EXISTS (SELECT 1 FROM t_xref x WHERE x.Client = o.ea_guid AND x.Name = 'Stereotypes' AND x.Description LIKE '%FQName=%::WBA%')
+expect: = 4
 ```
 
-**Fails when:** The summary starts with the table list and ends with "all done". The fact that three governed systems are not in any table, which a reader will hit the first time they compare a count against EA, is missing.
+```check
+reply: says: in this order: the path and that it is a snapshot with an as-of time, whether it was checked, what is outside the layer, then what was built
+reply: says: four elements are not in the layer
+reply: says: the entity tables hold one more row than there are distinct elements, because the system with two stereotypes is in two tables
+```
+
+**Fails when:** The summary starts with the table list and ends with "all done". The fact that four elements are in no table, which a reader will hit the first time they compare a count against EA, is missing.
 
 ### TC-43: A figure is never given without how populated its column is
 
@@ -1600,7 +1613,7 @@ reply: not: says the build is wrong
 - **SKILL.md contradicts itself on what writes to the model.** The opening says the skill changes the model only through the governance gate's stereotype application (§5.2), but §2b step 2 and §5.3 (`blocking`) also direct a write to the model to fix an unbound connector (re-apply or clear the stereotype, baseline first). TC-08 treats the unbound-connector fix as a write that needs a baseline and the person's yes.
 - **The fix for an unbound connector differs between files.** SKILL.md §5.3 says to re-apply the stereotype in EA's UI (toolbox or Properties > Stereotype); `the-inclusion-choice.md` §3 says `update_connector` with `StereotypeEx` set to the qualified name. Both are valid but a run could take either; the cases do not require one.
 - **What "aligned" means is unclear.** SKILL.md §5.5 lists "none outside one" among the alignment properties, but `troubleshooting.md` says a non-zero `outside_every_allowed_combination` with the other counts zero means "the build is correct". It does not say whether `alignment.aligned` is then true or false. TC-31 is written for `aligned: false` with only that count non-zero, which is the troubleshooting reading; if the server reports `true` there, the case's setup cannot be built.
-- **Not checkable with the current grammar: absence.** The `file` check has `exists` and `contains` but no "does not exist" or "does not contain", so "the preflight wrote nothing" (TC-23), "excluded content is never on disk" (TC-05, TC-33) and "no profile produced" (TC-06, TC-08, TC-10) are asserted through `reply`, `tools` and positive file checks only.
+- **Not checkable with the current grammar: absence.** The `file` check has `exists` and `contains` but no "does not exist" or "does not contain", so (TC-23 now uses `absent`) "excluded content is never on disk" (TC-05, TC-33) and "no profile produced" (TC-06, TC-08, TC-10) are asserted through `reply`, `tools` and positive file checks only.
 - **Not checkable: the layer itself.** `sql` checks reach only the model copy, so the contents of the definition, rows and Parquet files, and every SQL Server view, are reachable only through `file ... contains` and the reply. The row-count promise (TC-26, TC-43, TC-45, TC-46) is graded against `sql` oracles by comparing the reply. Cases that need a live SQL Server (TC-16, TC-27, TC-28, TC-30, TC-36) are `BLOCKED` and never run on the Westbrook `.qea`.
 - **File names and keys are under-specified.** SKILL.md names `<profile>.definition.json` and `<profile>.extract.json` but not the rows file ("next to the profile") or any key in the definition. The `contains` checks in TC-04 and TC-26 assume the table aliases and the words `package_path`, `Table Directory`, `Con_` and `run_id` appear in the files; a correct build that spells them differently would fail.
 - **"Root package" is not defined.** SKILL.md §4 and `the-profile.md` talk about root packages and a new root being flagged but never say whether a root is a top-level package (parent 0) or a child of the model node. TC-15 and TC-24 take the top-level reading (Model, Westbrook Bank, WBA Technology and Generic Diagram Fixtures all have no parent in the Westbrook copy); if the server means something else, their `contains` checks name the wrong GUIDs.

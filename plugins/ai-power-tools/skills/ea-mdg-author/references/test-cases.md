@@ -63,14 +63,14 @@ Covers: Authoring workflow; Namespace Consistency Checklist
 
 **Marks:** EFFECT
 
-**Ask:** "I want to try a small trial technology called WBAMini on a scratch model: just the Business Application and Vendor System stereotypes, a diagram type for application views, and a toolbox page for them. Write the MDG file as WBAMini.xml."
+**Ask:** "I want to try a small trial technology called WBAMini on a scratch model: just the Business Application and Vendor System stereotypes, a diagram type for application views, and a toolbox page for them. Write the MDG file as <output-dir>\WBAMini.xml."
 
 **Passes when:** The run writes one `<MDG.Technology>` file with a UML profile, a diagram profile and a toolbox section, and the technology id is the same wherever it is referenced: the root, the top-level documentation, the UML profile documentation and the toolbox tag prefix. It builds element stereotypes before diagram types and toolboxes, and it hands installation to `ea-mdg-deploy` rather than declaring the file good. The file parses.
 
 **Check:**
 
 ```check
-call: ea_mdg.parse_mdg_xml {"path_or_content": "WBAMini.xml"}
+call: ea_mdg.parse_mdg_xml {"path_or_content": "<output-dir>\\WBAMini.xml"}
 expect: technology_id = WBAMini
 ```
 
@@ -94,14 +94,14 @@ Covers: Section 1 — Element Stereotype
 
 **Marks:** EFFECT, INVARIANT
 
-**Ask:** "Add a Business Application element type to WBAMini.xml. It's an application the bank runs, with a criticality dropdown, a lifecycle dropdown and a business owner field."
+**Ask:** "Add a Business Application element type to <output-dir>\WBAMini.xml. It's an application the bank runs, with a criticality dropdown, a lifecycle dropdown and a business owner field."
 
 **Passes when:** The stereotype is `WBABusinessApplication`, applied to the `Component` metaclass, carrying the three tags. The run says it chose Component because that is the metaclass the Westbrook technology declares for this concept, not Class. The file parses.
 
 **Check:**
 
 ```check
-call: ea_mdg.parse_mdg_xml {"path_or_content": "WBAMini.xml"}
+call: ea_mdg.parse_mdg_xml {"path_or_content": "<output-dir>\\WBAMini.xml"}
 expect: technology_id = WBAMini
 ```
 
@@ -124,14 +124,14 @@ Covers: Quick Reference
 
 **Marks:** EFFECT
 
-**Ask:** "In WBAMini.xml, give Business Application a criticality dropdown (Mission-Critical, Business-Critical, Important, Standard), a free-text business owner, and a checkbox for 'reviewed'."
+**Ask:** "In <output-dir>\WBAMini.xml, give Business Application a criticality dropdown (Mission-Critical, Business-Critical, Important, Standard), a free-text business owner, and a checkbox for 'reviewed'."
 
 **Passes when:** The dropdown tag has type `enumeration` with its values as a comma-separated `values=` list, the free-text tag has type `String` with a capital S, and the checkbox is `Boolean`. The run does not write `enum` or `string`. The file parses.
 
 **Check:**
 
 ```check
-call: ea_mdg.parse_mdg_xml {"path_or_content": "WBAMini.xml"}
+call: ea_mdg.parse_mdg_xml {"path_or_content": "<output-dir>\\WBAMini.xml"}
 expect: technology_id = WBAMini
 ```
 
@@ -148,16 +148,14 @@ Covers: Quick Reference
 
 **Marks:** EFFECT, INVARIANT
 
-**Ask:** "Write an MDG file for a trial technology called WestbrookBankPortfolio with just the Business Application stereotype and a diagram type. Save it as TrialPortfolio.xml."
+**Ask:** "Write an MDG file for a trial technology called WestbrookBankPortfolio with just the Business Application stereotype and a diagram type. Save it as <output-dir>\TrialPortfolio.xml."
 
 **Passes when:** The run notices the name is too long for an id, since every `id=` attribute is limited to 12 characters and the diagram and toolbox ids are derived from the technology id with a suffix. It uses a short id (7 characters or fewer) and keeps `WestbrookBankPortfolio` as the display name, or asks the person which short id to use. It says which it chose.
 
 **Check:**
 
 ```check
-tools: called: ea_mdg.parse_mdg_xml
-reply: says: ids are limited to 12 characters and the technology id was shortened
-reply: says: WestbrookBankPortfolio is kept as the display name
+reply: says: ids are limited to 12 characters and either the technology id was shortened (WestbrookBankPortfolio kept as the display name) or the person was asked which short id to use
 reply: not: uses WestbrookBankPortfolio as the technology id
 ```
 
@@ -169,14 +167,14 @@ Covers: Quick Reference
 
 **Marks:** EFFECT
 
-**Ask:** "Make Business Application elements light blue in WBAMini.xml, the soft one, RGB 180, 210, 240. Tell me the exact number you put in the file."
+**Ask:** "Make Business Application elements light blue in <output-dir>\WBAMini.xml, the soft one, RGB 180, 210, 240. Tell me the exact number you put in the file."
 
 **Passes when:** The run writes `bgcolor="15782580"` and says so. That is blue times 65536 plus green times 256 plus red, not the RGB order.
 
 **Check:**
 
 ```check
-call: ea_mdg.parse_mdg_xml {"path_or_content": "WBAMini.xml"}
+call: ea_mdg.parse_mdg_xml {"path_or_content": "<output-dir>\\WBAMini.xml"}
 expect: technology_id = WBAMini
 ```
 
@@ -193,14 +191,14 @@ Covers: File Encoding (Critical)
 
 **Marks:** EFFECT
 
-**Ask:** "Write WBAMini.xml with the technology notes 'Westbrook Bank — application portfolio, café-style naming trial' so the Manage Technologies dialog shows them."
+**Ask:** "Write <output-dir>\WBAMini.xml with the technology notes 'Westbrook Bank — application portfolio, café-style naming trial' so the Manage Technologies dialog shows them."
 
 **Passes when:** The declaration reads `encoding="utf-8"` and the bytes are UTF-8, so the em dash and the accented letter survive. The file parses and the notes come back intact.
 
 **Check:**
 
 ```check
-call: ea_mdg.parse_mdg_xml {"path_or_content": "WBAMini.xml"}
+call: ea_mdg.parse_mdg_xml {"path_or_content": "<output-dir>\\WBAMini.xml"}
 expect: technology_id = WBAMini
 ```
 
@@ -308,14 +306,14 @@ Covers: Section 2 — Custom Diagram Type
 
 **Marks:** EFFECT, INVARIANT
 
-**Ask:** "Add an Application View diagram type to WBAMini.xml that opens with the application toolbox page showing."
+**Ask:** "Add an Application View diagram type to <output-dir>\WBAMini.xml that opens with the application toolbox page showing."
 
 **Passes when:** The diagram stereotype applies to `Diagram_Logical` (not `Logical`), carries an alias and a `diagramID`, and its `toolbox` property names the toolbox consistently with the toolbox section. The run says the exact form EA resolves should be tried on a scratch diagram before anyone relies on it, since the two forms the skill documents differ. The file parses.
 
 **Check:**
 
 ```check
-call: ea_mdg.parse_mdg_xml {"path_or_content": "WBAMini.xml"}
+call: ea_mdg.parse_mdg_xml {"path_or_content": "<output-dir>\\WBAMini.xml"}
 expect: technology_id = WBAMini
 ```
 
@@ -333,14 +331,14 @@ Covers: Section 3 — Toolbox Pages
 
 **Marks:** EFFECT
 
-**Ask:** "Give WBAMini.xml a toolbox page called 'WBA ArchiMate Elements' with Business Application, Business Service and Vendor System on it."
+**Ask:** "Give <output-dir>\WBAMini.xml a toolbox page called 'WBA ArchiMate Elements' with Business Application, Business Service and Vendor System on it."
 
 **Passes when:** The page is one stereotype applied to `ToolboxPage`, with one tag per item, each tag named `<technology prefix>::<stereotype>` (for example `WBA::WBABusinessApplication` in the real technology) with the palette label as the default. The prefix is the one the profile documentation declares. The file parses.
 
 **Check:**
 
 ```check
-call: ea_mdg.parse_mdg_xml {"path_or_content": "WBAMini.xml"}
+call: ea_mdg.parse_mdg_xml {"path_or_content": "<output-dir>\\WBAMini.xml"}
 expect: technology_id = WBAMini
 ```
 
@@ -380,7 +378,7 @@ Covers: Quick Linker Rules
 
 **Marks:** EFFECT
 
-**Ask:** "In WBAMini.xml, switch off EA's default link suggestions on Business Application so people only see our options. We haven't defined any connector types of our own."
+**Ask:** "In <output-dir>\WBAMini.xml, switch off EA's default link suggestions on Business Application so people only see our options. We haven't defined any connector types of our own."
 
 **Passes when:** The run warns that hiding the default entries with no Quick Linker rule leaves an empty menu that looks broken, and does not set `_HideUmlLinks`. It explains that plain Dependency, Realization and Association already appear in EA's default menu, and offers to add the hiding together with a rule once a connector stereotype exists (the shipped `Uses`, for example).
 
@@ -420,14 +418,14 @@ Covers: Validation Rules — Do NOT Use <Scripts> with AI Power Tools; Authoring
 
 **Marks:** EFFECT
 
-**Ask:** "Write WBAMini.xml with the Business Application stereotype, and criticality and businessOwner are mandatory."
+**Ask:** "Write <output-dir>\WBAMini.xml with the Business Application stereotype, and criticality and businessOwner are mandatory."
 
 **Passes when:** The run writes the MDG and a companion `<tech id>_rules.yaml` with one `tagged_value_required` rule per mandatory tag (two here), with rule ids in the form `<TechID>-TVR-001`. It mentions the sidecar to the person without being asked.
 
 **Check:**
 
 ```check
-call: ea_mdg.parse_mdg_xml {"path_or_content": "WBAMini.xml"}
+call: ea_mdg.parse_mdg_xml {"path_or_content": "<output-dir>\\WBAMini.xml"}
 expect: technology_id = WBAMini
 ```
 
@@ -519,7 +517,7 @@ reply: not: confirms the technology is installed because the call returned True
 
 Covers: Authoring from a generated candidate metamodel; The sequence
 
-**Ask:** "People have been stereotyping elements in this model all sorts of ways. Look at what's actually in use and draft a technology from it. Write it as CensusDraft.xml."
+**Ask:** "People have been stereotyping elements in this model all sorts of ways. Look at what's actually in use and draft a technology from it. We've chosen the direct-XML route; the file will be the source of truth. Write it as <output-dir>\CensusDraft.xml."
 
 **Passes when:** The run takes its census with the profile-aware census tool and does not rely on a stereotype-frequency summary, which reads the bare stereotype column and cannot tell a governed element from an ad hoc one with the same name. It emits the file with `write_mdg_xml`. The model is unchanged.
 
@@ -544,7 +542,7 @@ Covers: The sequence
 
 **Marks:** EFFECT, INVARIANT
 
-**Ask:** "Draft a technology from the Domestic Payments package and tell me when it's good. Save it as PaymentsDraft.xml. Don't install anything yet."
+**Ask:** "Draft a technology from the Domestic Payments package and tell me when it's good. We've chosen the direct-XML route; the file will be the source of truth. Save it as <output-dir>\PaymentsDraft.xml. Don't install anything yet."
 
 **Passes when:** The run emits the file with `write_mdg_xml`, then parses what it wrote with `parse_mdg_xml` and compares stereotype count, names, metaclasses and tagged values with the dict it passed in, and reports the result. It installs nothing.
 
@@ -574,7 +572,7 @@ Covers: The sequence
 
 **Marks:** EFFECT
 
-**Ask:** "Generate a technology from the Domestic Payments package and save it as PaymentsDraft.xml. I'll hand it to a colleague next month and they'll need to know where it came from."
+**Ask:** "Generate a technology from the Domestic Payments package and save it as <output-dir>\PaymentsDraft.xml. We've chosen the direct-XML route; the file will be the source of truth. I'll hand it to a colleague next month and they'll need to know where it came from."
 
 **Passes when:** The `notes` of the metamodel say the technology was generated, from which repository and on what date, and the run tells the person that is the only place a generated technology can record it.
 
@@ -642,7 +640,7 @@ Covers: Naming, when nothing declares an alias
 
 **Marks:** EFFECT
 
-**Ask:** "Generate the technology from the model and call it WBAPortfolio. Save it as PortfolioDraft.xml."
+**Ask:** "Generate the technology from the model and call it WBAPortfolio. We've chosen the direct-XML route; the file will be the source of truth. Save it as <output-dir>\PortfolioDraft.xml."
 
 **Passes when:** The run knows that the technology id's working limit through `write_mdg_xml` is 7 characters, because the writer adds `-Diag` and `-TB` to build derived ids and EA's limit is 12. `WBAPortfolio` is 12 characters, so the derived id `WBAPortfolio-Diag` is 17 and is rejected. The run reports the `id_too_long` result if it is raised, then picks a shorter id on purpose and says so (keeping the longer name as the display name), rather than truncating silently.
 
@@ -701,7 +699,7 @@ Covers: ⚠ Generated XML ships no reference data, so enum tagged values stay fr
 
 **Marks:** EFFECT
 
-**Ask:** "I generated PaymentsDraft.xml from the model. Before I hand it to the architecture team, is there anything they should know about the criticality dropdown?"
+**Ask:** "I generated <output-dir>\PaymentsDraft.xml from the model. Before I hand it to the architecture team, is there anything they should know about the criticality dropdown?"
 
 **Passes when:** The run says a technology installed from generated XML alone gives free-text fields where a closed list was intended, because the writer emits no reference data (the `values=` list is in the file, and no repository reference data is created). It says reference data is a repository-wide concern covered by `ea-mdg-model-build` Phase 3, and notes that the Westbrook model has its own reference data for criticality.
 
@@ -749,9 +747,8 @@ expect: unchanged
 ```
 
 ```check
-tools: called: ea_analyze.execute_sql
 tools: not-called: ea_model.update_element
-reply: says: the candidate elements are listed for the person to confirm before anything is updated
+reply: says: asks whether to migrate, or lists the candidate elements for the person to confirm before anything is updated
 ```
 
 **Fails when:** The run restamps every Class in the model with a data stereotype. The Azure fixture classes, the infrastructure tiers and the load balancers all become Data Entities, nothing errors, and a bulk undo is the only way back.
@@ -866,7 +863,7 @@ These do not cover whether the toolbox actually resolves in EA, whether the meta
 
 ## Findings
 
-- The skill's main output is a file, and the check grammar has no file key. `parse_mdg_xml` returns only what the parser reads (this file assumes a top-level `technology_id`), so metaclass, tag types, color values, `Apply type`, `toolbox` property, encoding and `_HideUmlLinks` are graded through `reply` statements, which is the agent's own report of its file. TC-03 to TC-07, TC-11, TC-12, TC-14, TC-16 and TC-22 are weaker for it. A `file:` check (a path plus an XPath or substring test) would make the Invariants section executable. The relative file names used in the `call` lines also assume the runner's working folder is the server's.
+- The skill's main output is a file, and the check grammar has no file key. `parse_mdg_xml` returns only what the parser reads (this file assumes a top-level `technology_id`), so metaclass, tag types, color values, `Apply type`, `toolbox` property, encoding and `_HideUmlLinks` are graded through `reply` statements, which is the agent's own report of its file. TC-03 to TC-07, TC-11, TC-12, TC-14, TC-16 and TC-22 are weaker for it. A `file:` check (a path plus an XPath or substring test) would make the Invariants section executable.
 - Contradiction inside the skill: the Quick Reference and the Namespace Consistency Checklist say the UML profile `<Documentation id>` must equal the technology id and that toolbox tags use `WBA::`. The shipped technology names its profile `WestbrookBankArchitecture` and its toolbox items use `WestbrookBankArchitecture::...` (the reference's own sample comment quotes that form). The Section 2 pitfall admits the difference for the diagram `toolbox` property only. A reader cannot satisfy the checklist and match the shipped file at the same time.
 - The rules file name is given three ways: `<tech_id>_rules.yaml` (SKILL.md), `<mdg_name>_rules.yaml` (`validation-sidecar.md`, first mention) and the examples `westbrook_rules.yaml` / `WBA_rules.yaml`. The rule ids in the reference (`WBA-TVR-001`) also differ from the canon's `WBA-TV-001`.
 - `stereotypes.md` labels the `WBARunsOn` example a proposed extension but gives its `integrationPattern` tag the values `Synchronous, Asynchronous, Batch`, where the shipped technology's tag of that name is `API, Batch, Event, File`. A trial technology that follows the example redefines a shipped tag with a different domain.

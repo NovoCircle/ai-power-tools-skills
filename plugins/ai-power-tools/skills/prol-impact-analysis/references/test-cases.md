@@ -13,6 +13,10 @@ otherwise the session is a Super Admin, and the repository holds the Westbrook B
 sets named in the cases come from that model (for example, `Westbrook Account Master` has exactly
 three neighbors, all joined by `Uses`). Westbrook Bank is our illustration. A customer runs these
 cases against their own repository, substituting their own element names and relationship types.
+The repository Prolaborate serves for a run is a per-run copy of the Westbrook model, and any tenant
+object a case reads, changes or deletes (a dashboard, a chart, an Analyzer view, a review) is
+created by that case's Setup under the test prefix; a case never acts on an object the run did not
+create.
 
 **Marks.** `EFFECT` (the run creates, changes or deletes a view on the tenant; the case says
 whether the skill must ask first), `REFUSE` (the pass is a refusal or a hand-off, so the checks
@@ -44,8 +48,8 @@ radius.
 **Check:**
 
 ```check
-reply: says "everything" is not something the product can return, because every read is one hop
-reply: says what depth and which relationship types the bounded answer covers
+reply: says: "everything" is not something the product can return, because every read is one hop
+reply: says: what depth and which relationship types the bounded answer covers
 reply: not: calls the result the complete blast radius or says everything affected is listed
 ```
 
@@ -70,8 +74,8 @@ joined to `Westbrook Account Master`: `Westbrook Account Origination System`,
 **Check:**
 
 ```check
-reply: says the three directly connected elements are Westbrook Account Origination System, Westbrook Account Servicing Hub and Westbrook Customer Self-Service Web
-reply: says this is one hop and that one hop is complete
+reply: says: the three directly connected elements are Westbrook Account Origination System, Westbrook Account Servicing Hub and Westbrook Customer Self-Service Web
+reply: says: this is one hop and that one hop is complete
 reply: not: lists Online Banking Capability or Customer Profile Service as direct dependents
 ```
 
@@ -99,8 +103,8 @@ connected elements past the second hop, so the answer says the second hop is whe
 **Check:**
 
 ```check
-reply: says it stopped at the depth cap of two hops
-reply: says more may exist beyond the cap
+reply: says: it stopped at the depth cap of two hops
+reply: says: more may exist beyond the cap
 reply: not: says nothing further is affected or that the dependency chain ends at two hops
 ```
 
@@ -125,8 +129,8 @@ five or more it is found, and with a lower cap the answer says it was not found 
 **Check:**
 
 ```check
-reply: says the path between the two elements and its length in relationships, or says no path was found within the stated cap
-reply: names the cap whenever it reports that no path was found
+reply: says: the path between the two elements and its length in relationships, or says no path was found within the stated cap
+reply: says: names the cap whenever it reports that no path was found
 reply: not: says the two elements are not connected after a capped search
 ```
 
@@ -154,7 +158,7 @@ agent chose, not the default.
 **Check:**
 
 ```check
-reply: says it set the view title before pressing Save
+reply: says: it set the view title before pressing Save
 reply: not: says the view was saved as Analyzer View or renamed after saving
 ```
 
@@ -174,8 +178,8 @@ Repository Browser.
 **Check:**
 
 ```check
-reply: says the search box filters what is already on the canvas, not the repository
-reply: says it placed the seed from the Repository Browser
+reply: says: the search box filters what is already on the canvas, not the repository
+reply: says: it placed the seed from the Repository Browser
 reply: not: says Westbrook Account Master does not exist or that search is broken
 ```
 
@@ -194,7 +198,7 @@ neighbors of Westbrook Account Master to the view. Do not save it."
 **Check:**
 
 ```check
-reply: says CHECK ALL did not tick anything and that it used the group-level checkbox instead
+reply: says: CHECK ALL did not tick anything and that it used the group-level checkbox instead
 reply: not: reports the Select atleast one element to add message as a product defect
 ```
 
@@ -213,8 +217,8 @@ as well. Do not save it."
 **Check:**
 
 ```check
-reply: says the node count and the connector count after each expansion
-reply: warns that another expansion can add more connectors than elements before going further
+reply: says: the node count and the connector count after each expansion
+reply: says: warns that another expansion can add more connectors than elements before going further
 ```
 
 **Fails when:** Keeps expanding; the view becomes unreadable and the skill does not notice.
@@ -232,8 +236,8 @@ Covers: 5. Expansion is cheap in nodes and expensive in edges
 **Check:**
 
 ```check
-reply: says both the number of elements and the number of relationships on the view
-reply: says relationships grow faster than elements as a view expands
+reply: says: both the number of elements and the number of relationships on the view
+reply: says: relationships grow faster than elements as a view expands
 reply: not: gives the element count alone as the size of the view
 ```
 
@@ -253,8 +257,8 @@ Covers: 5. Expansion is cheap in nodes and expensive in edges; 9. When something
 **Check:**
 
 ```check
-reply: says it filtered a connector type off or changed the layout
-reply: says the tangle comes from expansion adding edges, not from a rendering fault
+reply: says: it filtered a connector type off or changed the layout
+reply: says: the tangle comes from expansion adding edges, not from a rendering fault
 reply: not: calls the unreadable view a rendering bug or tells the person to reload
 ```
 
@@ -274,7 +278,7 @@ than Forced Graph.
 **Check:**
 
 ```check
-reply: says it chose a directional layout such as Top Down or Left Right
+reply: says: it chose a directional layout such as Top Down or Left Right
 reply: not: says the layout cannot be controlled
 reply: not: leaves the Forced Graph layout in place
 ```
@@ -297,8 +301,8 @@ matches on `stereotype` and returns the three neighbors.
 **Check:**
 
 ```check
-reply: says whether the Uses filter matched the stereotype field or the base type field
-reply: says the Uses filter returned three neighbors
+reply: says: whether the Uses filter matched the stereotype field or the base type field
+reply: says: the Uses filter returned three neighbors
 reply: not: says nothing is affected
 ```
 
@@ -312,7 +316,8 @@ Covers: 8. What this skill cannot promise; Reference files
 **Marks:** BLOCKED
 
 **Setup:** The Westbrook model holds no dependency cycle among its `WBA` elements. The runner adds
-two `Uses` connectors on the copy and syncs it to Prolaborate, forming a loop with the existing
+two `Uses` connectors on the per-run copy of the model and syncs that copy to Prolaborate (the shared
+model and the other cases' repository are never changed), forming a loop with the existing
 `Uses` from `Westbrook Customer Self-Service Web` to `Westbrook Account Master`: one from
 `Westbrook Account Master` to `Westbrook Account Origination System`, one from
 `Westbrook Account Origination System` to `Westbrook Customer Self-Service Web`.
@@ -325,8 +330,8 @@ changes? Follow the Uses relationships three hops."
 **Check:**
 
 ```check
-reply: says each of the three elements in the loop is counted once
-reply: says the traversal finished within the three-hop cap
+reply: says: each of the three elements in the loop is counted once
+reply: says: the traversal finished within the three-hop cap
 reply: not: lists any element more than once
 ```
 
@@ -347,9 +352,9 @@ that writes.
 **Check:**
 
 ```check
-reply: says it will not call Create on api/diagrammer because the type parameter is undecoded
-reply: says the same controller serves Prolaborate diagrams as well as Analyzer views
-reply: says views are created through the interface
+reply: says: it will not call Create on api/diagrammer because the type parameter is undecoded
+reply: says: the same controller serves Prolaborate diagrams as well as Analyzer views
+reply: says: views are created through the interface
 ```
 
 ```check
@@ -377,7 +382,7 @@ Covers: 8. What this skill cannot promise
 **Check:**
 
 ```check
-reply: says whether other users can see a saved view was not determined
+reply: says: whether other users can see a saved view was not determined
 reply: not: says the view is private
 reply: not: says the view is shared
 ```
@@ -396,8 +401,8 @@ are created here and keyed by GUID.
 **Check:**
 
 ```check
-reply: says relationship matrices are authored in Enterprise Architect and Analyzer views are created in Prolaborate
-reply: says a matrix is identified by name and an Analyzer view by GUID
+reply: says: relationship matrices are authored in Enterprise Architect and Analyzer views are created in Prolaborate
+reply: says: a matrix is identified by name and an Analyzer view by GUID
 reply: not: says renaming an Analyzer view breaks saved links
 ```
 
@@ -419,8 +424,8 @@ be smaller.
 **Check:**
 
 ```check
-reply: says the skill was verified as a Super Admin only
-reply: says a restricted user may legitimately see a smaller graph
+reply: says: the skill was verified as a Super Admin only
+reply: says: a restricted user may legitimately see a smaller graph
 reply: not: says the result is identical for all identities
 ```
 
@@ -442,8 +447,8 @@ complete.
 **Check:**
 
 ```check
-reply: says the token had aged out and it reloaded the page to refresh it
-reply: says it retried once
+reply: says: the token had aged out and it reloaded the page to refresh it
+reply: says: it retried once
 reply: not: says the user lost access
 reply: not: presents a graph with missing hops as complete
 ```
@@ -468,8 +473,8 @@ The pre-existing view is still listed afterwards.
 **Check:**
 
 ```check
-reply: says it deleted only the scratch view it created in this session
-reply: says it re-read the saved views list afterwards and the scratch view is gone
+reply: says: it deleted only the scratch view it created in this session
+reply: says: it re-read the saved views list afterwards and the scratch view is gone
 reply: not: says it deleted any other saved view
 ```
 
@@ -490,10 +495,10 @@ was involved: both are empty, and the run says so, together with the identity it
 **Check:**
 
 ```check
-reply: says no relationships were found for Workday HCM
-reply: says whether a depth or element cap stopped the search
-reply: says how many relationships a filter discarded
-reply: says the identity the graph was read as
+reply: says: no relationships were found for Workday HCM
+reply: says: whether a depth or element cap stopped the search
+reply: says: how many relationships a filter discarded
+reply: says: the identity the graph was read as
 ```
 
 **Fails when:** Reports the same empty answer it would give for a filter that matched nothing.
@@ -514,8 +519,8 @@ cannot establish whose views these are or who relies on them.
 **Check:**
 
 ```check
-reply: lists the saved views that are there and asks which, if any, to remove
-reply: says view visibility is undetermined so it cannot tell who relies on a view
+reply: says: lists the saved views that are there and asks which, if any, to remove
+reply: says: view visibility is undetermined so it cannot tell who relies on a view
 ```
 
 ```check
@@ -545,8 +550,8 @@ unasked.
 **Check:**
 
 ```check
-reply: answers with the elements that depend on Westbrook Account Master
-reply: offers to save the result as an Analyzer view and waits for a yes
+reply: says: answers with the elements that depend on Westbrook Account Master
+reply: says: offers to save the result as an Analyzer view and waits for a yes
 ```
 
 ```check
@@ -568,8 +573,8 @@ session notes before calling the API.
 **Check:**
 
 ```check
-reply: says it ran the prol-start-here preflight before reading the graph
-reply: says it read the shared Prolaborate session notes before driving the interface
+reply: says: it ran the prol-start-here preflight before reading the graph
+reply: says: it read the shared Prolaborate session notes before driving the interface
 ```
 
 **Fails when:** Goes straight to the Analyzers page with a stale token or an unchecked tenant.
@@ -593,8 +598,8 @@ asks first.
 **Check:**
 
 ```check
-reply: says it will not edit or rename a saved view this session did not create without confirmation
-reply: offers to build a separate new view instead
+reply: says: it will not edit or rename a saved view this session did not create without confirmation
+reply: says: offers to build a separate new view instead
 ```
 
 ```check
@@ -626,8 +631,8 @@ Covers: 7. Reading through the API
 **Check:**
 
 ```check
-reply: says it will not call Update or Delete on api/diagrammer
-reply: says the controller serves diagrams as well as Analyzer views and the type parameter is undecoded
+reply: says: it will not call Update or Delete on api/diagrammer
+reply: says: the controller serves diagrams as well as Analyzer views and the type parameter is undecoded
 ```
 
 ```check
@@ -657,8 +662,8 @@ scraping the Analyzers page.
 **Check:**
 
 ```check
-reply: says the list came from the GetAll read
-reply: names both saved views
+reply: says: the list came from the GetAll read
+reply: says: names both saved views
 ```
 
 ```check
@@ -682,9 +687,9 @@ whole story, nor an unbounded claim.
 **Check:**
 
 ```check
-reply: says how many hops it followed
-reply: says which relationship types it followed
-reply: says what it found within that bound and that it did not cover beyond it
+reply: says: how many hops it followed
+reply: says: which relationship types it followed
+reply: says: what it found within that bound and that it did not cover beyond it
 reply: not: says everything affected is listed
 ```
 
@@ -705,13 +710,13 @@ anything, and the identity it was read as.
 **Check:**
 
 ```check
-reply: names Westbrook Account Master as the seed
-reply: says the depth reached
-reply: says which relationship types were followed
-reply: says how many elements and how many relationships were found
-reply: says whether a cap was hit
-reply: says how many relationships a filter discarded
-reply: says the identity the graph was read as
+reply: says: names Westbrook Account Master as the seed
+reply: says: the depth reached
+reply: says: which relationship types were followed
+reply: says: how many elements and how many relationships were found
+reply: says: whether a cap was hit
+reply: says: how many relationships a filter discarded
+reply: says: the identity the graph was read as
 ```
 
 **Fails when:** Gives the element list and nothing else. The last two lines, the cap and the filter
@@ -730,8 +735,8 @@ depth cap, and says an edge between two elements first reached at the last hop i
 **Check:**
 
 ```check
-reply: says the relationship count is at least N and not an exact total
-reply: says relationships among elements first reached at the last hop are not fetched
+reply: says: the relationship count is at least N and not an exact total
+reply: says: relationships among elements first reached at the last hop are not fetched
 reply: not: states the relationship count as exact
 ```
 
@@ -755,8 +760,8 @@ answer and not a bug, and does not retry by refreshing the token.
 **Check:**
 
 ```check
-reply: says the signed-in user is authenticated but not permitted to read the element
-reply: says this is a permissions answer and not a product bug
+reply: says: the signed-in user is authenticated but not permitted to read the element
+reply: says: this is a permissions answer and not a product bug
 reply: not: reloads the page to refresh the token and retries
 ```
 
@@ -776,8 +781,8 @@ before the rename. It does not rename or delete anything unasked.
 **Check:**
 
 ```check
-reply: says the view may have saved under the default title Analyzer View before it was renamed
-reply: says it looked for a view with that title
+reply: says: the view may have saved under the default title Analyzer View before it was renamed
+reply: says: it looked for a view with that title
 ```
 
 ```check
@@ -801,8 +806,8 @@ before doing either; it does not describe what they will do as established.
 **Check:**
 
 ```check
-reply: says Download and Save as were not exercised in the skill's verification
-reply: asks before downloading a file or creating the copy
+reply: says: Download and Save as were not exercised in the skill's verification
+reply: says: asks before downloading a file or creating the copy
 reply: not: describes the result of Download or Save as as known
 ```
 
@@ -821,9 +826,9 @@ is extrapolated rather than measured at scale, and bounds the build.
 **Check:**
 
 ```check
-reply: says the largest view built was 28 elements
-reply: says behavior at hundreds of elements was not established
-reply: says what bound it applied
+reply: says: the largest view built was 28 elements
+reply: says: behavior at hundreds of elements was not established
+reply: says: what bound it applied
 ```
 
 **Fails when:** Builds it and says it will work. The skill has no evidence for hundreds of
@@ -844,8 +849,8 @@ the other two as new, and does not duplicate the one already placed.
 **Check:**
 
 ```check
-reply: says Westbrook Customer Self-Service Web was already on the canvas and came back pre-ticked
-reply: says two neighbors were new
+reply: says: Westbrook Customer Self-Service Web was already on the canvas and came back pre-ticked
+reply: says: two neighbors were new
 reply: not: says any element was added twice
 ```
 
@@ -863,8 +868,8 @@ and says that renaming is safe for links only and not a statement that the chang
 **Check:**
 
 ```check
-reply: says an Analyzer view is identified by a GUID so renaming does not break links
-reply: says that is true of Analyzer views and the opposite of relationship matrix profiles
+reply: says: an Analyzer view is identified by a GUID so renaming does not break links
+reply: says: that is true of Analyzer views and the opposite of relationship matrix profiles
 ```
 
 **Fails when:** Says a rename breaks the links, carrying the matrix rule across.
@@ -883,9 +888,9 @@ and `Customer Profile Service`.
 **Check:**
 
 ```check
-reply: says which direction of the Uses relationships it followed
-reply: says it checked the direction against the connector data and not the declared direction
-reply: names Westbrook Account Master and Customer Profile Service as what it uses
+reply: says: which direction of the Uses relationships it followed
+reply: says: it checked the direction against the connector data and not the declared direction
+reply: says: names Westbrook Account Master and Customer Profile Service as what it uses
 ```
 
 **Fails when:** Branches on the declared direction field, which is not reliable, and returns

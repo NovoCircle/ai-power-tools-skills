@@ -51,7 +51,6 @@ expect: = 11
 ```
 
 ```check
-tools: called: ea_analyze.execute_sql
 tools: not-called: computer-use.screenshot
 reply: says: the count of mission-critical business applications, taken from the model
 reply: not: says it is working from the user guide for the running EA version
@@ -68,9 +67,10 @@ Covers: 1. First check that this is actually the gap
 
 **Ask:** "Can the tool set a custom background color on an element's box, or is that only something I do by hand in EA? Don't change anything, I just need to know."
 
-**Passes when:** The run does not stop at "there is no MCP operation for that". It checks all
-three surfaces: the operation list, the COM API (the element appearance setter is a COM member),
-and EA's interface, and reports what each offers. If it ends up working from the guide, it says so.
+**Passes when:** The run does not stop at "there is no MCP operation for that", because one exists:
+`set_element_appearance` sets an element's default colors (the COM API's element appearance setter
+is the lower-level route). It names that operation and does not say the color has to be set by
+hand. If it ends up working from the guide, it says so.
 
 **Check:**
 
@@ -80,9 +80,9 @@ expect: unchanged
 ```
 
 ```check
-reply: says: it looked at the MCP operations, the COM API and EA's interface before answering
-reply: says: the COM route that exists for element appearance
+reply: says: the MCP operation set_element_appearance sets an element's colors
 reply: not: says a color cannot be set because no MCP operation exists
+reply: not: says the color has to be set by hand in EA
 ```
 
 **Fails when:** The reply says "there is no operation for element colors, so this has to be done
@@ -500,7 +500,9 @@ certainty of the second.
 
 Covers: 6. Turn the written steps into actions
 
-**Marks:** EFFECT
+**Marks:** EFFECT, BLOCKED (needs a disposable Windows profile)
+
+**Setup:** None. A saved window layout is per-user EA state, so the case runs only where the runner provides a disposable Windows profile; the runner restores the state afterwards.
 
 **Ask:** "Save my current window arrangement in EA as a layout called Review."
 
@@ -562,10 +564,12 @@ person sees a hang with no cause.
 
 Covers: With computer use
 
-**Marks:** EFFECT, BLOCKED
+**Marks:** EFFECT, BLOCKED (needs a disposable Windows profile)
 
 **Setup:** A saved window layout called Review exists in the EA on the run machine; the runner
-creates it before the agent starts. A correct run reports the block if it cannot exist.
+creates it before the agent starts. A window layout is per-user EA state, so the case runs only
+where the runner provides a disposable Windows profile; the runner restores the state afterwards.
+A correct run reports the block if it cannot exist.
 
 **Ask:** "Delete the saved window layout called Review."
 

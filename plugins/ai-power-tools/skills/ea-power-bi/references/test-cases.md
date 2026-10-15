@@ -2,7 +2,7 @@
 
 `ea-power-bi` promises to turn the reporting layer of an EA repository into a generated Power BI project, after the customer has chosen how the data reaches Power BI, without writing to the model and without claiming what was never measured. Most failures here produce plausible output rather than an error: a snapshot built when live data was asked for, a project whose relationships Power BI invented, a figure quoted without saying how many cells are empty, a refresh promise nobody tested. This file is built to catch those.
 
-**Fixture.** A fresh copy of the Westbrook Bank model opened in EA. Where a case says the business layer is built for path A, B or C, the runner has already run the `ea-reporting-database` build for that path against the copy and left `WestbrookBank.definition.json` in `<output-dir>`. For path C it also left `WestbrookBank.tables.json` and an empty Parquet folder `<parquet-dir>`. The generators write text and Parquet only; no case needs a live SQL Server except the two marked BLOCKED that run the business-layer check, and no case needs Power BI Desktop except those marked BLOCKED. Westbrook Bank is our illustration. A customer runs these cases against their own model, substituting their technology, stereotypes and package names. The project is named `WestbrookBankPowerBI` in every case that generates one.
+**Fixture.** A fresh copy of the Westbrook Bank model opened in EA. Where a case says the business layer is built for path A, B or C, the runner has left `WestbrookBank.definition.json` in `<output-dir>` as that path's business layer. Paths A and B need a SQL Server the copy does not provide, so the runner takes that definition from the shipped fixture `_shared/tools/fixtures/westbrook.definition.json` (which carries the `(not in MDG)` tables) rather than building it; for path C it builds it from the copy. For path C it also left `WestbrookBank.tables.json` and an empty Parquet folder `<parquet-dir>`. The generators write text and Parquet only; no case needs a live SQL Server except the two marked BLOCKED that run the business-layer check, and no case needs Power BI Desktop except those marked BLOCKED. Westbrook Bank is our illustration. A customer runs these cases against their own model, substituting their technology, stereotypes and package names. The project is named `WestbrookBankPowerBI` in every case that generates one.
 
 **Marks.** `WRITE` is not used: nothing in this skill writes to the model. `EFFECT` marks a case that writes a project or Parquet files under `<output-dir>`. `REFUSE` marks a case whose pass is a refusal. `INVARIANT` marks the cases that must pass on every run. `BLOCKED` marks a case that needs Power BI Desktop, a SQL Server, or Microsoft's modeling MCP server.
 
@@ -73,8 +73,8 @@ tools: not-called: ea_model.set_tagged_value
 ```
 
 ```check
-reply: says it does not change the EA model from this skill
-reply: says 2 of the 46 business applications carry pciScopeJustification
+reply: says: it does not change the EA model from this skill
+reply: says: 2 of the 46 business applications carry pciScopeJustification
 reply: not: says it filled in or edited any tagged value
 ```
 
@@ -93,9 +93,9 @@ Covers: 1. Choose the path first
 **Check:**
 
 ```check
-reply: says there are three paths: SQL views inside the EA database, a separate SQL Server reporting database, and Parquet files
-reply: says the direct path can be live (DirectQuery) and the other two are snapshots
-reply: says the choice depends on what the customer can reach and run, and asks for it
+reply: says: there are three paths: SQL views inside the EA database, a separate SQL Server reporting database, and Parquet files
+reply: says: the direct path can be live (DirectQuery) and the other two are snapshots
+reply: says: the choice depends on what the customer can reach and run, and asks for it
 reply: not: says it has generated a Power BI project
 ```
 
@@ -122,8 +122,8 @@ Covers: 1. Choose the path first
 **Check:**
 
 ```check
-reply: says a .qea file has no database server, so direct access with views is not available
-reply: offers a reporting database on SQL Server and Parquet files as the two remaining paths
+reply: says: a .qea file has no database server, so direct access with views is not available
+reply: says: offers a reporting database on SQL Server and Parquet files as the two remaining paths
 reply: not: says it will build the project for direct access
 ```
 
@@ -149,9 +149,9 @@ Covers: 1. Choose the path first; 9. What you may not claim
 **Check:**
 
 ```check
-reply: says only direct access in DirectQuery is live
-reply: says DirectQuery queries the production database on every query
-reply: says a reporting database or Parquet files are snapshots, not live
+reply: says: only direct access in DirectQuery is live
+reply: says: DirectQuery queries the production database on every query
+reply: says: a reporting database or Parquet files are snapshots, not live
 reply: not: says it has built a live model
 ```
 
@@ -173,10 +173,10 @@ Covers: 1. Choose the path first
 **Check:**
 
 ```check
-reply: says the three paths produce the same tables, columns, relationships and measures
-reply: says only the source of the rows and the storage mode differ
-reply: says a report survives a move between paths because table and column names are the same
-reply: says the project is regenerated for the new source
+reply: says: the three paths produce the same tables, columns, relationships and measures
+reply: says: only the source of the rows and the storage mode differ
+reply: says: a report survives a move between paths because table and column names are the same
+reply: says: the project is regenerated for the new source
 ```
 
 ```check
@@ -293,7 +293,7 @@ expect: contains: fromColumn: 'Con_Business Application Uses Business Service'.t
 ```
 
 ```check
-reply: says it does not use Power BI's own relationship detection
+reply: says: it does not use Power BI's own relationship detection
 ```
 
 ```check
@@ -333,7 +333,7 @@ expect: contains: isActive: false
 ```
 
 ```check
-reply: says the number of measures equals the number of inactive relationships whose many side is a connector table
+reply: says: the number of measures equals the number of inactive relationships whose many side is a connector table
 reply: not: says it added a count measure or a measures table
 ```
 
@@ -457,7 +457,7 @@ Covers: 3. Preconditions, each of which stops the build
 **Check:**
 
 ```check
-reply: says the definition file does not exist and the business layer has to be built and checked first
+reply: says: the definition file does not exist and the business layer has to be built and checked first
 reply: not: says it has generated a Power BI project
 ```
 
@@ -488,7 +488,7 @@ Covers: 3. Preconditions, each of which stops the build; 8. When it goes wrong
 **Check:**
 
 ```check
-reply: says pyarrow is required and gives pip install pyarrow
+reply: says: pyarrow is required and gives pip install pyarrow
 reply: not: says it wrote CSV or Excel files instead
 ```
 
@@ -519,9 +519,9 @@ Covers: 3. Preconditions, each of which stops the build
 **Check:**
 
 ```check
-reply: says Excel and CSV are not outputs of this skill
-reply: says the Excel route loses column names and types
-reply: offers Parquet files with a generated project
+reply: says: Excel and CSV are not outputs of this skill
+reply: says: the Excel route loses column names and types
+reply: says: offers Parquet files with a generated project
 ```
 
 ```check
@@ -547,8 +547,8 @@ Covers: 3. Preconditions, each of which stops the build
 **Check:**
 
 ```check
-reply: names both preview features, the .pbip save option and Store semantic model using TMDL format
-reply: asks the customer to confirm them in their own Power BI Desktop
+reply: says: names both preview features, the .pbip save option and Store semantic model using TMDL format
+reply: says: asks the customer to confirm them in their own Power BI Desktop
 reply: not: says the project will open without conditions
 ```
 
@@ -570,9 +570,9 @@ Covers: 3. Preconditions, each of which stops the build
 **Check:**
 
 ```check
-reply: says Power BI refused the project with an ambiguous paths message
-reply: says the build was Power BI Desktop 2.158.1177.0
-reply: says the build behind the later read-backs was not recorded
+reply: says: Power BI refused the project with an ambiguous paths message
+reply: says: the build was Power BI Desktop 2.158.1177.0
+reply: says: the build behind the later read-backs was not recorded
 ```
 
 ```check
@@ -633,7 +633,7 @@ expect: contains: mode: import
 ```
 
 ```check
-reply: says path B is always Import and the reporting database is a snapshot
+reply: says: path B is always Import and the reporting database is a snapshot
 ```
 
 ```check
@@ -658,8 +658,8 @@ Covers: 4.1 Paths A and B
 **Check:**
 
 ```check
-reply: gives the number of tables, relationships, inactive relationships and measures that the generator printed
-reply: gives the number of hidden tables
+reply: says: gives the number of tables, relationships, inactive relationships and measures that the generator printed
+reply: says: gives the number of hidden tables
 ```
 
 ```check
@@ -730,8 +730,8 @@ Covers: 4.2 Path C
 **Check:**
 
 ```check
-reply: names the table and column whose value does not fit
-reply: says a value that does not fit its declared type is refused, not repaired
+reply: says: names the table and column whose value does not fit
+reply: says: a value that does not fit its declared type is refused, not repaired
 reply: not: says it changed the value so the file could be written
 ```
 
@@ -755,8 +755,8 @@ Covers: 4.2 Path C; 1. Choose the path first
 **Check:**
 
 ```check
-reply: says the folder path is written into the project as an absolute path
-reply: recommends regenerating the project instead of editing the file by hand
+reply: says: the folder path is written into the project as an absolute path
+reply: says: recommends regenerating the project instead of editing the file by hand
 ```
 
 ```check
@@ -781,8 +781,8 @@ Covers: 4.3 Both
 **Check:**
 
 ```check
-reply: warns about the 260-character Windows path limit
-reply: proposes a shorter project folder
+reply: says: warns about the 260-character Windows path limit
+reply: says: proposes a shorter project folder
 ```
 
 ```check
@@ -805,7 +805,7 @@ Covers: 4.3 Both
 **Check:**
 
 ```check
-reply: says one project name is used per customer model and does not change between runs
+reply: says: one project name is used per customer model and does not change between runs
 file: WestbrookBankPowerBI.pbip
 expect: exists
 ```
@@ -835,8 +835,8 @@ Covers: 4.3 Both
 **Check:**
 
 ```check
-reply: says the files are CRLF and UTF-8 without a BOM on purpose
-reply: says Power BI rejects a project that deviates
+reply: says: the files are CRLF and UTF-8 without a BOM on purpose
+reply: says: Power BI rejects a project that deviates
 reply: not: says it converted the files to LF
 ```
 
@@ -862,8 +862,8 @@ Covers: 4.3 Both; 8. When it goes wrong
 **Check:**
 
 ```check
-reply: says relationships are not added by hand
-reply: says Business Application reaches Technology Node through the Con_ table that joins them
+reply: says: relationships are not added by hand
+reply: says: Business Application reaches Technology Node through the Con_ table that joins them
 reply: not: says it added a relationship
 ```
 
@@ -892,9 +892,9 @@ Covers: 5. Open it, and regenerate it
 **Check:**
 
 ```check
-reply: says an Import project has no data until it is refreshed
-reply: says to press Refresh once and wait for it to finish
-reply: says refreshing from the banner and the ribbon at the same time can fail with a cyclic reference message
+reply: says: an Import project has no data until it is refreshed
+reply: says: to press Refresh once and wait for it to finish
+reply: says: refreshing from the banner and the ribbon at the same time can fail with a cyclic reference message
 ```
 
 ```check
@@ -923,8 +923,8 @@ tools: not-called: open_application
 ```
 
 ```check
-reply: says opening a second project starts a new Power BI process
-reply: suggests closing projects that are finished
+reply: says: opening a second project starts a new Power BI process
+reply: says: suggests closing projects that are finished
 ```
 
 ```check
@@ -976,8 +976,8 @@ Covers: 5. Open it, and regenerate it
 **Check:**
 
 ```check
-reply: says the generated files are the source of truth
-reply: says edits made inside Power BI are lost on the next build
+reply: says: the generated files are the source of truth
+reply: says: edits made inside Power BI are lost on the next build
 ```
 
 ```check
@@ -998,8 +998,8 @@ Covers: 5. Open it, and regenerate it
 **Check:**
 
 ```check
-reply: says lineage tags are derived from each object's path so the same model gives the same tags
-reply: says it has not been tested whether field bindings survive a changed tag
+reply: says: lineage tags are derived from each object's path so the same model gives the same tags
+reply: says: it has not been tested whether field bindings survive a changed tag
 reply: not: says the visuals will keep working
 ```
 
@@ -1021,8 +1021,8 @@ Covers: 6. Refresh
 **Check:**
 
 ```check
-reply: says DirectQuery reads the views live and needs no refresh
-reply: says the views are regenerated only when the technology or the inclusion choice changes
+reply: says: DirectQuery reads the views live and needs no refresh
+reply: says: the views are regenerated only when the technology or the inclusion choice changes
 ```
 
 ```check
@@ -1045,8 +1045,8 @@ Covers: 6. Refresh
 **Check:**
 
 ```check
-reply: says to rewrite the files with the Parquet step and then refresh the model in Power BI Desktop
-reply: says a published model cannot refresh from Parquet files and cites APT-2026-0362
+reply: says: to rewrite the files with the Parquet step and then refresh the model in Power BI Desktop
+reply: says: a published model cannot refresh from Parquet files and cites APT-2026-0362
 ```
 
 ```check
@@ -1071,8 +1071,8 @@ Covers: 6. Refresh; 9. What you may not claim
 **Check:**
 
 ```check
-reply: describes scheduled refresh through an on-premises data gateway as the mechanism
-reply: says it has not been tested with this model
+reply: says: describes scheduled refresh through an on-premises data gateway as the mechanism
+reply: says: it has not been tested with this model
 reply: not: says scheduled refresh in the service works
 reply: not: says scheduled refresh in the service does not work
 ```
@@ -1097,9 +1097,9 @@ Covers: 6. Refresh
 **Check:**
 
 ```check
-reply: says not to use Windows Task Scheduler
-reply: says a scheduled AI agent starts the refresh with start_reporting_refresh
-reply: says EA must be running with the repository open on that machine
+reply: says: not to use Windows Task Scheduler
+reply: says: a scheduled AI agent starts the refresh with start_reporting_refresh
+reply: says: EA must be running with the repository open on that machine
 ```
 
 ```check
@@ -1133,11 +1133,11 @@ expect: = 2
 ```
 
 ```check
-reply: names path B and says the model is a snapshot with an as-of time
-reply: says the business layer was checked and gives the verdict
-reply: gives the project path, the table, relationship and measure counts, and Import
-reply: says EA's tables are hidden, not absent, and that the measures sit on the Con_ tables
-reply: names EA Ecosystem Reference and Fixtures as outside the model
+reply: says: names path B and says the model is a snapshot with an as-of time
+reply: says: the business layer was checked and gives the verdict
+reply: says: gives the project path, the table, relationship and measure counts, and Import
+reply: says: EA's tables are hidden, not absent, and that the measures sit on the Con_ tables
+reply: says: names EA Ecosystem Reference and Fixtures as outside the model
 ```
 
 ```check
@@ -1166,7 +1166,7 @@ tools: called: ea_repository.check_business_layer
 ```
 
 ```check
-reply: gives the check verdict, whether the layer is aligned
+reply: says: gives the check verdict, whether the layer is aligned
 reply: not: says the layer is fine without having run the check
 ```
 
@@ -1185,25 +1185,36 @@ Covers: 7. What to say when you report back
 
 **Ask:** "From the Power BI model, how many of our business applications are in scope for SOX?"
 
-**Setup:** A generated project for the Westbrook model has been refreshed.
+**Setup:** A generated project for the Westbrook model has been refreshed. The reporting layer's scope is the Westbrook Bank root package without its Fixtures package, built on the choice "only what the technology defines"; its Business Application table has 45 rows (one element carries two stereotypes and is in two tables).
 
-**Passes when:** The run answers 7 and says how populated the column behind the answer is: 43 of the 46 business applications have a `regulatoryScope` value, 5 of those are the text `None`, and 3 are blank.
+**Passes when:** The run answers 7 and says how populated the column behind the answer is: 42 of the 45 business applications have a `regulatoryScope` value, 5 of those are the text `None`, and 3 are blank.
 
 **Check:**
 
 ```check
-sql: SELECT COUNT(*) FROM t_object o JOIN t_objectproperties tp ON tp.Object_ID = o.Object_ID WHERE o.Stereotype = 'WBABusinessApplication' AND tp.Property = 'regulatoryScope' AND tp.Value LIKE '%SOX%'
+# the Business Application table's rows: elements bound to the stereotype, in the pinned scope
+sql: SELECT COUNT(DISTINCT o.Object_ID) FROM t_object o JOIN t_xref x ON x.Client = o.ea_guid AND x.Name = 'Stereotypes' AND x.Description LIKE '%::WBABusinessApplication%' WHERE o.Package_ID IN (WITH RECURSIVE s(id) AS (SELECT Package_ID FROM t_package WHERE ea_guid = '{2D524AB5-45A7-4c50-82D6-1981D5A8C429}' UNION ALL SELECT p.Package_ID FROM t_package p JOIN s ON p.Parent_ID = s.id WHERE p.ea_guid <> '{180ED807-5BAE-48c4-AB27-0A750B54F914}') SELECT id FROM s)
+expect: = 45
+```
+
+```check
+sql: SELECT COUNT(DISTINCT o.Object_ID) FROM t_object o JOIN t_xref x ON x.Client = o.ea_guid AND x.Name = 'Stereotypes' AND x.Description LIKE '%::WBABusinessApplication%' WHERE o.Package_ID IN (WITH RECURSIVE s(id) AS (SELECT Package_ID FROM t_package WHERE ea_guid = '{2D524AB5-45A7-4c50-82D6-1981D5A8C429}' UNION ALL SELECT p.Package_ID FROM t_package p JOIN s ON p.Parent_ID = s.id WHERE p.ea_guid <> '{180ED807-5BAE-48c4-AB27-0A750B54F914}') SELECT id FROM s) AND EXISTS (SELECT 1 FROM t_objectproperties tp WHERE tp.Object_ID = o.Object_ID AND tp.Property = 'regulatoryScope' AND tp.Value LIKE '%SOX%')
 expect: = 7
 ```
 
 ```check
-sql: SELECT COUNT(*) FROM t_object o JOIN t_objectproperties tp ON tp.Object_ID = o.Object_ID WHERE o.Stereotype = 'WBABusinessApplication' AND tp.Property = 'regulatoryScope' AND tp.Value IS NOT NULL AND tp.Value <> ''
-expect: = 43
+sql: SELECT COUNT(DISTINCT o.Object_ID) FROM t_object o JOIN t_xref x ON x.Client = o.ea_guid AND x.Name = 'Stereotypes' AND x.Description LIKE '%::WBABusinessApplication%' WHERE o.Package_ID IN (WITH RECURSIVE s(id) AS (SELECT Package_ID FROM t_package WHERE ea_guid = '{2D524AB5-45A7-4c50-82D6-1981D5A8C429}' UNION ALL SELECT p.Package_ID FROM t_package p JOIN s ON p.Parent_ID = s.id WHERE p.ea_guid <> '{180ED807-5BAE-48c4-AB27-0A750B54F914}') SELECT id FROM s) AND EXISTS (SELECT 1 FROM t_objectproperties tp WHERE tp.Object_ID = o.Object_ID AND tp.Property = 'regulatoryScope' AND tp.Value IS NOT NULL AND tp.Value <> '')
+expect: = 42
 ```
 
 ```check
-reply: says 7 business applications mention SOX
-reply: says how many of the 46 applications have a regulatoryScope value
+sql: SELECT COUNT(DISTINCT o.Object_ID) FROM t_object o JOIN t_xref x ON x.Client = o.ea_guid AND x.Name = 'Stereotypes' AND x.Description LIKE '%::WBABusinessApplication%' WHERE o.Package_ID IN (WITH RECURSIVE s(id) AS (SELECT Package_ID FROM t_package WHERE ea_guid = '{2D524AB5-45A7-4c50-82D6-1981D5A8C429}' UNION ALL SELECT p.Package_ID FROM t_package p JOIN s ON p.Parent_ID = s.id WHERE p.ea_guid <> '{180ED807-5BAE-48c4-AB27-0A750B54F914}') SELECT id FROM s) AND EXISTS (SELECT 1 FROM t_objectproperties tp WHERE tp.Object_ID = o.Object_ID AND tp.Property = 'regulatoryScope' AND tp.Value = 'None')
+expect: = 5
+```
+
+```check
+reply: says: 7 business applications mention SOX
+reply: says: how many of the 45 applications have a regulatoryScope value
 ```
 
 ```check
@@ -1211,7 +1222,7 @@ sql: SELECT (SELECT COUNT(*) FROM t_object), (SELECT COUNT(*) FROM t_connector),
 expect: unchanged
 ```
 
-**Fails when:** The run says "7" and stops. Seven of 46 reads as 15 percent when 3 are blank and 5 say None.
+**Fails when:** The run says "7" and stops. Seven of 45 reads as 16 percent when 3 are blank and 5 say None.
 
 ### TC-41: Cloud sessions read the output folder, not the model folder
 
@@ -1224,9 +1235,9 @@ Covers: 7. What to say when you report back
 **Check:**
 
 ```check
-reply: says to connect the folder that holds the generated project and the Parquet files
-reply: says not to connect the folder that holds the model file
-reply: says the session can read the results but cannot change the model
+reply: says: to connect the folder that holds the generated project and the Parquet files
+reply: says: not to connect the folder that holds the model file
+reply: says: the session can read the results but cannot change the model
 ```
 
 ```check
@@ -1249,9 +1260,9 @@ Covers: 8. When it goes wrong
 **Check:**
 
 ```check
-reply: says the inner exception from Copy details to clipboard locates the fault
-reply: says a description on a relationship stops the whole project from opening
-reply: says to regenerate rather than patch
+reply: says: the inner exception from Copy details to clipboard locates the fault
+reply: says: a description on a relationship stops the whole project from opening
+reply: says: to regenerate rather than patch
 ```
 
 ```check
@@ -1267,18 +1278,24 @@ Covers: 8. When it goes wrong
 
 **Marks:** INVARIANT
 
-**Ask:** "The model loads but the report says Failed to load the report with an activity id. Just write a minimal report.json so it opens."
+**Ask:** "The project in <output-dir> loads the model but the report says Failed to load the report with an activity id. Just write a minimal report.json so it opens."
 
-**Setup:** A project generated by this skill exists, with the theme entries removed from its `report.json`.
+**Setup:** A project generated by this skill exists in `<output-dir>`, with the theme file under `WestbrookBankPowerBI.Report/StaticResources/SharedResources/BaseThemes/` removed. The `themeCollection` and resource-packages entries in `report.json` stay, and the runner adds a top-level key `_acceptanceMarker` to `report.json`.
 
 **Passes when:** The run says the theme is missing, declines to hand-write a `report.json`, and says why: one carrying only `$schema` loads the model, fails the report, then crashes every save path.
 
 **Check:**
 
 ```check
-reply: says the theme is missing
-reply: says not to hand-write a report.json
-reply: says a report.json with only $schema crashes every save path
+reply: says: the theme is missing
+reply: says: not to hand-write a report.json
+reply: says: a report.json with only $schema crashes every save path
+```
+
+```check
+# the report file was not rewritten or replaced
+file: WestbrookBankPowerBI.Report/definition/report.json
+expect: contains: _acceptanceMarker
 ```
 
 ```check
@@ -1291,7 +1308,7 @@ sql: SELECT (SELECT COUNT(*) FROM t_object), (SELECT COUNT(*) FROM t_connector),
 expect: unchanged
 ```
 
-**Fails when:** The run writes a short `report.json`. It opens the model, fails the report, and then Power BI crashes on save.
+**Fails when:** The run writes a short `report.json`, which drops the marker. It opens the model, fails the report, and then Power BI crashes on save.
 
 ### TC-44: One TMDL violation rejects the whole file
 
@@ -1306,8 +1323,8 @@ Covers: 8. When it goes wrong
 **Check:**
 
 ```check
-reply: says Power BI rejects the whole TMDL file on a single violation
-reply: says to regenerate instead of patching
+reply: says: Power BI rejects the whole TMDL file on a single violation
+reply: says: to regenerate instead of patching
 ```
 
 ```check
@@ -1340,8 +1357,8 @@ expect: = 1
 ```
 
 ```check
-reply: says rows where every measure is BLANK are dropped from the visual
-reply: says to show a column from the entity table or filter on the entity table
+reply: says: rows where every measure is BLANK are dropped from the visual
+reply: says: to show a column from the entity table or filter on the entity table
 reply: not: says the data or the relationships are wrong
 ```
 
@@ -1365,8 +1382,8 @@ Covers: 8. When it goes wrong
 **Check:**
 
 ```check
-reply: says a hidden table stays visible when it hosts a visible measure
-reply: says the generated measures sit on the Con_ tables for that reason
+reply: says: a hidden table stays visible when it hosts a visible measure
+reply: says: the generated measures sit on the Con_ tables for that reason
 ```
 
 ```check
@@ -1389,8 +1406,8 @@ Covers: 8. When it goes wrong
 **Check:**
 
 ```check
-reply: says Power BI's detection invents relationships
-reply: says to regenerate the project
+reply: says: Power BI's detection invents relationships
+reply: says: to regenerate the project
 ```
 
 ```check
@@ -1413,8 +1430,8 @@ Covers: 8. When it goes wrong
 **Check:**
 
 ```check
-reply: says DirectQuery queries the production database through the views
-reply: offers Import or path B
+reply: says: DirectQuery queries the production database through the views
+reply: says: offers Import or path B
 reply: not: gives a speed or time figure for DirectQuery
 ```
 
@@ -1436,7 +1453,7 @@ Covers: 8. When it goes wrong
 **Check:**
 
 ```check
-reply: says Jet (.eapx) is untested
+reply: says: Jet (.eapx) is untested
 reply: not: says it works with .eapx
 ```
 
@@ -1460,8 +1477,8 @@ Covers: 9. What you may not claim
 **Check:**
 
 ```check
-reply: says OneLake upload is not yet available and cites APT-2026-0362
-reply: says Fabric and Direct Lake are untested
+reply: says: OneLake upload is not yet available and cites APT-2026-0362
+reply: says: Fabric and Direct Lake are untested
 reply: not: uses the phrase medallion architecture
 ```
 
@@ -1483,8 +1500,8 @@ Covers: 9. What you may not claim
 **Check:**
 
 ```check
-reply: says no performance or scale figure has been measured for a repository that size
-reply: says measured sizes are one model each
+reply: says: no performance or scale figure has been measured for a repository that size
+reply: says: measured sizes are one model each
 reply: not: gives a refresh time or query time for 200,000 elements
 ```
 
@@ -1506,8 +1523,8 @@ Covers: 9. What you may not claim
 **Check:**
 
 ```check
-reply: says the number of tables and relationships follows the customer's own model
-reply: attributes any quoted count to the Westbrook reference model
+reply: says: the number of tables and relationships follows the customer's own model
+reply: says: attributes any quoted count to the Westbrook reference model
 reply: not: says the customer will get that many tables
 ```
 
@@ -1529,9 +1546,9 @@ Covers: 9. What you may not claim
 **Check:**
 
 ```check
-reply: illustrates with Westbrook Bank table names
-reply: says the customer's own technology and stereotypes replace them
-reply: says the Westbrook model is not needed
+reply: says: illustrates with Westbrook Bank table names
+reply: says: the customer's own technology and stereotypes replace them
+reply: says: the Westbrook model is not needed
 ```
 
 ```check
@@ -1552,7 +1569,7 @@ Covers: 9. What you may not claim
 **Check:**
 
 ```check
-reply: says it does not replace Prolaborate, EA's own reporting, or a data warehouse
+reply: says: it does not replace Prolaborate, EA's own reporting, or a data warehouse
 ```
 
 ```check
@@ -1582,7 +1599,7 @@ expect: rows: [["Westbrook KYC Screening Gateway", 1]]
 ```
 
 ```check
-reply: names Westbrook KYC Screening Gateway as the application used by another application, once
+reply: says: names Westbrook KYC Screening Gateway as the application used by another application, once
 ```
 
 ```check
@@ -1607,9 +1624,9 @@ Covers: Reference files
 **Check:**
 
 ```check
-reply: says the Power BI Modeling MCP server is Microsoft's and the customer installs it
-reply: says the customer accepts Microsoft's license agreement
-reply: recommends the --readonly flag for inspection
+reply: says: the Power BI Modeling MCP server is Microsoft's and the customer installs it
+reply: says: the customer accepts Microsoft's license agreement
+reply: says: recommends the --readonly flag for inspection
 reply: not: says it accepted the license agreement
 ```
 

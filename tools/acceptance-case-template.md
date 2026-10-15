@@ -97,6 +97,28 @@ Rules for a case:
 - **"I could not determine X" is a pass** where X cannot be determined from the model. A
   confident wrong answer is the failure.
 
+## What a case may touch
+
+A case changes only things the runner gave it for that run, and the runner throws away or
+restores everything afterwards.
+
+- **The model:** only the run's copy. Setup builds on the copy; a case never names the shared
+  model.
+- **Files:** every file a run writes goes to a placeholder folder the ask names
+  (`<output-dir>`, `<build-dir>`, `<rules-dir>`). An ask that produces a file and names no folder
+  lets the run write among the person's files. That is a defect in the case.
+- **Prolaborate:** the repository Prolaborate serves for the run is a per-run copy. Any tenant
+  object a case reads, changes or deletes (a dashboard, a chart, an Analyzer view, a review) is
+  created by the setup under the test prefix. A case never acts on an object the run did not
+  create.
+- **Machine-wide state is out of bounds:** technology files in `%APPDATA%`, Downloads or EA's
+  search paths, Manage Technology enable or disable, window layouts, EA options, the registry.
+  A case that needs one of these is marked `BLOCKED` with the reason "needs a disposable Windows
+  profile", and runs only where the runner provides one.
+- **An ask must settle what the skill would otherwise stop and ask about**, when the case tests
+  the work rather than the question (for example, "We've chosen the direct-XML route"). A pass that
+  accepts "asks first" must not then require the calls that follow the answer.
+
 ## Marks
 
 | Mark | Meaning |

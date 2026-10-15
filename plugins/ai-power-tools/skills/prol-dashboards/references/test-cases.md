@@ -10,6 +10,10 @@ chart that is wrong, transposed, flat or empty, with no error anywhere.
 repository, as a Super Admin). Westbrook Bank is our illustration. A customer runs these cases against
 their own repository, substituting their technology, stereotypes and package names. Run against a
 repository you may write to, with every object the cases create named under an agreed test prefix.
+The repository Prolaborate serves for a run is a per-run copy of the Westbrook model, and any tenant
+object a case reads, changes or deletes (a dashboard, a chart, an Analyzer view, a review) is
+created by that case's Setup under the test prefix; a case never acts on an object the run did not
+create.
 `<dashboardId>` in an `http` check is the id of the dashboard the case names, or the one the run
 created (found by the test prefix); the runner substitutes it. `sql` checks run against the Westbrook
 copy of the model: they state ground truth the run's numbers are compared with, or show that
@@ -116,7 +120,7 @@ Covers: 2. Choosing a widget
 
 **Marks:** EFFECT, INVARIANT
 
-**Ask:** "Show me which business capabilities have the most applications mapped to them."
+**Ask:** "Show me which business owners have the most applications."
 
 **Passes when:** a Bar or Column with a top-N is chosen, and **Nested Pie and Heat Map are
 explicitly rejected** if raised.
@@ -312,6 +316,9 @@ Covers: 5. Presentation controls that change the data, not the styling
 
 **Ask:** "Color the nested pie by lifecycle."
 
+**Setup:** The Setup creates a dashboard under the test prefix that holds a nested pie of
+applications with a hand-written query, so `Color Pie` is off. The ask means that chart.
+
 **Passes when:** the run enables `Color Pie` **and** populates the `Pie List` with one row per
 value — or says that for a high-cardinality column this is impractical.
 
@@ -483,6 +490,9 @@ Covers: 4. Building a widget
 
 **Ask:** "Open the settings of the criticality pie and move its legend to the right."
 
+**Setup:** The Setup creates a dashboard under the test prefix that holds a pie of applications by
+criticality. The ask means that chart.
+
 **Passes when:** the gear used to configure a widget is the small gear **inside the widget body**,
 not the tile header gear.
 
@@ -504,6 +514,9 @@ Covers: 4. Building a widget
 
 **Ask:** "Rename the lifecycle chart's title and make sure it's saved."
 
+**Setup:** The Setup creates a dashboard under the test prefix that holds a chart of applications by
+lifecycle. The ask means that chart.
+
 **Passes when:** chart Save and dashboard Save are **separate**; both are required, and both are done.
 
 **Check:**
@@ -523,6 +536,9 @@ Covers: 4. Building a widget
 
 **Ask:** "I hand-edited the query on the criticality pie. Now change it to a donut."
 
+**Setup:** The Setup creates a dashboard under the test prefix that holds a pie of applications by
+criticality, and hand-edits that chart's query. The ask means that chart.
+
 **Passes when:** the person is warned that name, query and result query are wiped before the type is
 changed.
 
@@ -530,7 +546,7 @@ changed.
 
 ```check
 reply: says: changing the chart type wipes the name, the query and the result query
-reply: says: it warned before changing the type, or kept a copy of the query so it can be re-entered
+reply: says: it warned about the wipe before changing the type
 ```
 
 **Fails when:** the type is changed with no warning, and the widget is silently emptied.
@@ -631,6 +647,9 @@ Covers: 8. Verification; 4. Building a widget
 **Marks:** EFFECT
 
 **Ask:** "Save the criticality pie and confirm it's all set."
+
+**Setup:** The Setup creates a dashboard under the test prefix that holds a pie of applications by
+criticality, with a change waiting to be saved. The ask means that chart.
 
 **Passes when:** after saving any widget, the configuration is re-opened and checked.
 
@@ -1235,6 +1254,64 @@ reply: says: the host tile needs a layout plan sized for the dashboard inside, w
 
 **Fails when:** the embedded dashboard arrives at 1x1 and is described as done; it is unreadable.
 
+### TC-49: Editing a generated query is a one-way door
+
+Covers: 4. Building a widget
+
+**Marks:** EFFECT
+
+**Ask:** "Tweak the designer-generated query on the criticality pie to count only Current applications."
+
+**Setup:** The Setup creates a dashboard under the test prefix that holds a pie of applications by
+criticality, built in the designer so its query is the generated one. The ask means that chart.
+
+**Passes when:** the run warns that editing a designer-generated query cannot be undone, and asks
+before it edits. It does not edit first and mention the warning afterwards.
+
+**Check:**
+
+```check
+# the model is unchanged
+sql: SELECT (SELECT COUNT(*) FROM t_object), (SELECT COUNT(*) FROM t_connector), (SELECT COUNT(*) FROM t_diagram), (SELECT COUNT(*) FROM t_package), (SELECT COUNT(*) FROM t_objectproperties)
+expect: unchanged
+```
+
+```check
+reply: says: editing a generated query is a one-way door
+reply: says: it is asking before it edits the query
+reply: not: says the query was edited
+```
+
+**Fails when:** the run opens the generated query and rewrites it, so the designer's own definition is
+gone with no way back. The chart still renders, now from a query only the run has seen.
+
+### TC-50: Everything was verified on MySQL only
+
+Covers: 9. What this skill cannot promise
+
+**Ask:** "Will these queries work on our SQL Server repository?"
+
+**Passes when:** the run says every query in the skill was verified against MySQL only. It adds that
+`VIEW SAMPLE` prints a SQL Server form that no query in the skill has been run against, so it cannot
+promise they work.
+
+**Check:**
+
+```check
+# the model is unchanged
+sql: SELECT (SELECT COUNT(*) FROM t_object), (SELECT COUNT(*) FROM t_connector), (SELECT COUNT(*) FROM t_diagram), (SELECT COUNT(*) FROM t_package), (SELECT COUNT(*) FROM t_objectproperties)
+expect: unchanged
+```
+
+```check
+reply: says: everything was verified on MySQL only
+reply: says: VIEW SAMPLE prints a SQL Server form that no query here has been run against
+reply: not: says the queries will work on SQL Server
+```
+
+**Fails when:** the run answers "yes, they are standard SQL". Nothing errors, and the person finds out
+on their own repository.
+
 ## Invariants
 
 The mechanical property for any chart or card the skill builds is a set of facts about the run's own
@@ -1285,9 +1362,6 @@ figure with the model.
 - **The Road Map cases cannot run on Westbrook (TC-12, TC-36).** No tagged value holds a date and
   `lifecycle` is an enumeration of five values, not a start and end date. They are marked BLOCKED, and
   a correct run there behaves as in TC-02.
-- **TC-03 asks about business capabilities, which the copy lacks.** There is no capability stereotype
-  (one element has the word in its name), so the run may find the data cannot answer. The chart-choice
-  checks still apply.
 - **TC-23 has no support in the skill.** Nothing in `SKILL.md` or its references says that the
   element-search dialog's footer total ignores the filter; the case is kept as written and covers
   `8. Verification` only because that is the nearest heading.

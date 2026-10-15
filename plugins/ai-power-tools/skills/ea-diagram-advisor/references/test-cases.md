@@ -58,7 +58,7 @@ expect: unchanged
 tools: not-called: ea_diagram.create_diagram
 tools: not-called: ea_diagram.create_diagram_in_language
 tools: not-called: ea_diagram.add_elements_to_diagram_bulk
-reply: says the chosen view is drawn in a separate step with the composition skill
+reply: says: the chosen view is drawn in a separate step with the composition skill
 ```
 
 **Fails when:** The run answers "an application landscape diagram" and then builds one, because the
@@ -90,8 +90,8 @@ expect: = 12
 ```
 
 ```check
-reply: says the diagram it will go with is a Component diagram, as asked
-reply: says the content measured in the Data Architecture area fits a Component diagram badly
+reply: says: the diagram it will go with is a Component diagram, as asked
+reply: says: the content measured in the Data Architecture area fits a Component diagram badly
 reply: not: replaces the requested type with a different one without saying so
 tools: not-called: ea_diagram.create_diagram
 ```
@@ -135,7 +135,7 @@ expect: >= 1
 
 ```check
 tools: called: ea_analyze.execute_sql
-reply: says the folder's languages were worked out from its elements' stereotypes
+reply: says: the folder's languages were worked out from its elements' stereotypes
 reply: not: recommends an ArchiMate viewpoint on the strength of the folder's name
 ```
 
@@ -171,7 +171,7 @@ expect: rows: [["WBABusinessApplication", 10], ["WBAVendorSystem", 5]]
 
 ```check
 tools: called: ea_analyze.execute_sql
-reply: says the Transactions & Payments area holds 10 WBABusinessApplication and 5 WBAVendorSystem elements
+reply: says: the Transactions & Payments area holds 10 WBABusinessApplication and 5 WBAVendorSystem elements
 reply: not: gives the repository-wide counts as the scope's
 ```
 
@@ -204,7 +204,7 @@ expect: rows: [[112, 48]]
 ```
 
 ```check
-reply: says, for each share it gives, whether the base is the 48 stereotyped elements or the 112 elements in the scope
+reply: says: for each share it gives, whether the base is the 48 stereotyped elements or the 112 elements in the scope
 reply: not: describes 48 as the number of elements in the scope
 ```
 
@@ -233,7 +233,7 @@ expect: unchanged
 
 ```check
 tools: called: ea_mdg.get_mdg_from_runtime {"tech_id": "WBA"}
-reply: says which stereotypes the language defines, taken from the vocabulary the runtime returned
+reply: says: which stereotypes the language defines, taken from the vocabulary the runtime returned
 reply: not: says the language is unknown or empty because a lookup by display name failed
 ```
 
@@ -271,7 +271,7 @@ expect: >= 1
 ```
 
 ```check
-reply: says the bank's own modeling language (WBA, display name WestbrookBankArchitecture) is in the model
+reply: says: the bank's own modeling language (WBA, display name WestbrookBankArchitecture) is in the model
 reply: not: says the bank's own language is absent or not loaded
 ```
 
@@ -284,11 +284,11 @@ says otherwise.
 
 Covers: Step 1 — measure the scope
 
-**Ask:** "How are things wired around the Origination Platform? Count the connections between it and everything directly connected to it."
+**Ask:** "How are things wired around the Origination Platform? Count every connection among it and its direct neighbors, including any links between the neighbors themselves."
 
 **Passes when:** The run walks the element's subgraph and deduplicates connectors on source, target,
 type and stereotype before counting. The element and its direct neighbors (six elements) are linked
-by 6 connectors, and the reply says 6.
+by 6 connectors, and the reply says 6, counting the one link between two of the neighbors as well as the connectors that touch the element itself.
 
 **Check:**
 
@@ -305,7 +305,7 @@ expect: = 6
 
 ```check
 tools: called: ea_model.traverse_element_subgraph
-reply: says there are 6 connectors among the element and its direct neighbors
+reply: says: there are 6 connectors among the element and its direct neighbors
 reply: not: gives 12 connectors
 ```
 
@@ -336,7 +336,7 @@ expect: rows: [[19, 0]]
 ```
 
 ```check
-reply: says the area holds 19 elements and none of them carries a stereotype
+reply: says: the area holds 19 elements and none of them carries a stereotype
 reply: not: says the Technology Architecture area is empty or holds nothing
 ```
 
@@ -368,7 +368,7 @@ expect: empty
 ```
 
 ```check
-reply: says the traversal returned nothing for that id and asks the person to check the id
+reply: says: the traversal returned nothing for that id and asks the person to check the id
 reply: not: says the element exists but has no connections
 reply: not: recommends a diagram for the element
 ```
@@ -400,8 +400,8 @@ expect: = 0
 ```
 
 ```check
-reply: says no stereotype named WBAPaymentRail is defined by the language, or that it could not confirm the name
-reply: asks which stereotype the person meant
+reply: says: no stereotype named WBAPaymentRail is defined by the language, or that it could not confirm the name
+reply: says: asks which stereotype the person meant
 reply: not: concludes the bank has no payment rails and stops
 ```
 
@@ -437,8 +437,8 @@ expect: rows: [[66, 67]]
 
 ```check
 tools: called: ea_mdg.get_mdg_from_runtime {"tech_id": "WBA"}
-reply: says the bank's own language holds 66 of the 67 stereotyped elements
-reply: says there is no view catalogue for that language here, so no conformant view can be recommended
+reply: says: the bank's own language holds 66 of the 67 stereotyped elements
+reply: says: there is no view catalogue for that language here, so no conformant view can be recommended
 reply: not: calls the Consumer Banking area a mixture of languages
 reply: not: recommends an ArchiMate or UML viewpoint as the conformant view of the bank's own content
 ```
@@ -479,8 +479,8 @@ expect: rows: [[27, 48]]
 ```check
 tools: not-called: ea_diagram.create_diagram
 tools: not-called: ea_diagram.create_diagram_in_language
-reply: says no conformant view exists for this area because it spans several modeling languages
-reply: names the bank's own language and at least one other as the languages the area spans
+reply: says: no conformant view exists for this area because it spans several modeling languages
+reply: says: names the bank's own language and at least one other as the languages the area spans
 ```
 
 **Fails when:** The run draws the diagram as asked, choosing a bank-language or shipped-language
@@ -511,8 +511,8 @@ expect: rows: [["model document", 3], ["report package", 1]]
 ```
 
 ```check
-reply: says the stereotypes model document (3 elements) and report package (1 element) belong to no modeling language
-reply: says how much of the area could not be placed, with its base named
+reply: says: the stereotypes model document (3 elements) and report package (1 element) belong to no modeling language
+reply: says: how much of the area could not be placed, with its base named
 ```
 
 **Fails when:** The run folds the unclaimed elements into the nearest language, or drops them from the
@@ -544,8 +544,8 @@ expect: unchanged
 ```
 
 ```check
-reply: says more than one loaded language claims these stereotypes, so the language cannot be decided from them
-reply: asks which language the content is meant to be, or asks to narrow the scope
+reply: says: more than one loaded language claims these stereotypes, so the language cannot be decided from them
+reply: says: asks which language the content is meant to be, or asks to narrow the scope
 reply: not: names one language as the owner without saying another also claims it
 ```
 
@@ -583,9 +583,9 @@ expect: = 10
 ```
 
 ```check
-reply: says one language holds all 10 stereotyped elements, so a conformant view exists
-reply: recommends the ApplicationCooperation viewpoint first, with the request's wording named as the reason
-reply: says the chosen view is drawn with the composition skill
+reply: says: one language holds all 10 stereotyped elements, so a conformant view exists
+reply: says: recommends the ApplicationCooperation viewpoint first, with the request's wording named as the reason
+reply: says: the chosen view is drawn with the composition skill
 tools: not-called: ea_diagram.create_diagram
 ```
 
@@ -617,7 +617,7 @@ expect: rows: [[15, 10, 5]]
 ```
 
 ```check
-reply: cites 15 stereotyped elements, 10 WBABusinessApplication and 5 WBAVendorSystem, as the basis of the recommendation
+reply: says: cites 15 stereotyped elements, 10 WBABusinessApplication and 5 WBAVendorSystem, as the basis of the recommendation
 reply: not: gives a justification that would read the same for any scope
 ```
 
@@ -648,8 +648,8 @@ expect: unchanged
 ```
 
 ```check
-reply: says the package holds no business process elements
-reply: says a process viewpoint covers only a small share of the package's elements
+reply: says: the package holds no business process elements
+reply: says: a process viewpoint covers only a small share of the package's elements
 reply: not: ranks the business process cooperation viewpoint first
 ```
 
@@ -680,8 +680,8 @@ expect: unchanged
 ```
 
 ```check
-reply: says two or more viewpoints rank equally and names them
-reply: asks what the diagram is for
+reply: says: two or more viewpoints rank equally and names them
+reply: says: asks what the diagram is for
 reply: not: presents one viewpoint as clearly the best
 ```
 
@@ -711,8 +711,8 @@ expect: unchanged
 ```
 
 ```check
-reply: says the view is laid out by EA's own layout and that this is the intended route
-reply: says the layout is followed by tidying the result and checking that it looks right
+reply: says: the view is laid out by EA's own layout and that this is the intended route
+reply: says: the layout is followed by tidying the result and checking that it looks right
 reply: not: describes EA's own layout as a limitation or a gap
 ```
 
@@ -743,8 +743,8 @@ expect: unchanged
 ```
 
 ```check
-reply: says the view cannot be generated because the diagram type dictates its arrangement
-reply: offers to draw it by hand or to choose another view
+reply: says: the view cannot be generated because the diagram type dictates its arrangement
+reply: says: offers to draw it by hand or to choose another view
 reply: not: suggests composing the geometry another way
 tools: not-called: ea_diagram.create_diagram
 ```
@@ -776,8 +776,8 @@ expect: unchanged
 ```
 
 ```check
-reply: recommends the view the content calls for
-reply: says separately that the toolchain cannot generate that view
+reply: says: recommends the view the content calls for
+reply: says: separately that the toolchain cannot generate that view
 reply: not: recommends a different view in its place without saying the better view exists
 ```
 
@@ -804,9 +804,9 @@ expect: unchanged
 ```
 
 ```check
-reply: presents a neutral view that belongs to no language as an option
-reply: presents splitting into linked conformant diagrams as an option, and says no single picture then shows the whole area
-reply: says whether a dominant-language view is available and why
+reply: says: presents a neutral view that belongs to no language as an option
+reply: says: presents splitting into linked conformant diagrams as an option, and says no single picture then shows the whole area
+reply: says: whether a dominant-language view is available and why
 reply: not: offers the options without saying that none of them is conformant as a single view
 tools: not-called: ea_diagram.create_diagram
 ```
@@ -833,8 +833,8 @@ expect: unchanged
 ```
 
 ```check
-reply: says the view is not conformant to any single modeling language and names the languages it spans
-reply: gives a sentence to record on the diagram itself
+reply: says: the view is not conformant to any single modeling language and names the languages it spans
+reply: says: gives a sentence to record on the diagram itself
 reply: not: leaves the non-conformance statement only in the conversation
 ```
 
@@ -863,8 +863,8 @@ expect: unchanged
 ```
 
 ```check
-reply: names the concepts a conformance check will object to, or says why it expects none
-reply: offers to scope those rules out or to annotate them as accepted, before generating
+reply: says: names the concepts a conformance check will object to, or says why it expects none
+reply: says: offers to scope those rules out or to annotate them as accepted, before generating
 tools: not-called: ea_diagram.create_diagram
 tools: not-called: ea_validate.audit
 ```
@@ -891,8 +891,8 @@ expect: unchanged
 ```
 
 ```check
-reply: says a view that holds all the content can still be the wrong argument to make about it
-reply: asks what decision the diagram supports
+reply: says: a view that holds all the content can still be the wrong argument to make about it
+reply: says: asks what decision the diagram supports
 reply: not: agrees that any view that holds the content is equally good
 ```
 
@@ -908,7 +908,7 @@ Covers: Judgment this skill cannot encode
 
 **Passes when:** The run still measures the Wealth Management area before recommending, treats
 "application landscape" as evidence about the purpose rather than as an instruction, and, because
-the measurement alone does not settle the choice, asks what decision the diagram supports.
+the measurement and the wording together lead to a recommendation, gives one with its reasons.
 
 **Check:**
 
@@ -920,8 +920,7 @@ expect: unchanged
 ```check
 tools: called: ea_analyze.execute_sql
 tools: not-called: ea_diagram.create_diagram
-reply: says the request's wording narrowed the choice without settling it
-reply: asks what decision the diagram supports
+reply: says: the request's wording narrowed the choice without settling it
 ```
 
 **Fails when:** The run takes "application landscape" as the instruction, skips the measurement and
@@ -951,8 +950,8 @@ expect: rows: [[37, 0]]
 ```
 
 ```check
-reply: says the folder's 37 elements carry no stereotype, so it could not be profiled by language
-reply: says the recommendation rests on the request's wording and is weak
+reply: says: the folder's 37 elements carry no stereotype, so it could not be profiled by language
+reply: says: the recommendation rests on the request's wording and is weak
 reply: not: presents the recommendation as measured
 ```
 
@@ -980,14 +979,80 @@ expect: unchanged
 ```
 
 ```check
-reply: says a new notation is added as a binding's viewpoints data, not as a change to the engine
-reply: points to the composition skill's bindings as the place to add it
+reply: says: a new notation is added as a binding's viewpoints data, not as a change to the engine
+reply: says: points to the composition skill's bindings as the place to add it
 reply: not: offers to add the notation's name or rules to the engine code
 ```
 
 **Fails when:** The run adds branches for the customer's notation to the engine. The advice works for
 that one notation, the engine now names a notation, and a test written to forbid exactly that starts
 failing.
+
+### TC-30: A package id is not an element id
+
+Covers: Silent failures this step must not trust
+
+**Ask:** "Show me what's connected to element 13 and tell me which diagram suits it."
+
+**Passes when:** The run notices that the node the traversal returns for id 13 is a `Package`, not an
+element, and says so. It does not describe a package as an element with connections, and it asks
+whether the person meant the package's contents or an element in it.
+
+**Check:**
+
+```check
+sql: SELECT (SELECT COUNT(*) FROM t_object), (SELECT COUNT(*) FROM t_connector), (SELECT COUNT(*) FROM t_diagram), (SELECT COUNT(*) FROM t_package), (SELECT COUNT(*) FROM t_objectproperties)
+expect: unchanged
+```
+
+```check
+# id 13 is the Lending package, not an element
+sql: SELECT Object_Type, Name FROM t_object WHERE Object_ID = 13
+expect: rows: [["Package", "Lending"]]
+```
+
+```check
+reply: says: the node for id 13 is a Package, not an element
+reply: not: recommends a diagram for id 13 as though it were an element
+```
+
+**Fails when:** The run takes the returned node as the element, counts its connectors as the
+element's, and recommends a diagram for it. The call did not fail; it returned a node of the wrong
+kind, which only its type reveals.
+
+### TC-31: A loaded technology can expose nothing
+
+Covers: Step 1 — measure the scope
+
+**Marks:** BLOCKED
+
+**Setup:** Needs a technology that is loaded in the repository and for which the vocabulary
+operation returns an empty stereotype list (a technology that is loaded but unreadable). The
+Westbrook copy cannot be assumed to have one; the runner builds it where it can, and a correct run on
+a copy without one reports the block.
+
+**Ask:** "Which of our loaded languages are these elements in? The vocabulary call for that technology comes back empty, so I guess it's an empty technology."
+
+**Passes when:** The run does not accept an empty vocabulary as proof the technology is empty. It
+checks the repository for the technology's stereotypes on the scope's elements and reports what it
+finds, or says it cannot tell.
+
+**Check:**
+
+```check
+sql: SELECT (SELECT COUNT(*) FROM t_object), (SELECT COUNT(*) FROM t_connector), (SELECT COUNT(*) FROM t_diagram), (SELECT COUNT(*) FROM t_package), (SELECT COUNT(*) FROM t_objectproperties)
+expect: unchanged
+```
+
+```check
+tools: called: ea_analyze.execute_sql
+reply: says: an empty vocabulary does not show the technology is empty
+reply: not: concludes the technology has no stereotypes because the vocabulary call returned none
+```
+
+**Fails when:** The run agrees the technology is empty and attributes none of the scope's elements to
+it. The scope's stereotyped elements then fall into "unattributed" and the profile understates the
+language that actually dominates.
 
 ## Invariants
 

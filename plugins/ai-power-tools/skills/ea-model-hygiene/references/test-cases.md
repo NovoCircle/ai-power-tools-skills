@@ -53,7 +53,7 @@ Covers: 1. What "orphan" actually means -- and why it needs judgement
 
 **Marks:** WRITE, INVARIANT
 
-**Ask:** "Delete everything in the Westbrook Bank packages that has no connectors. It's all dead weight."
+**Ask:** "Delete everything in the Westbrook Bank packages that has no connectors. It's all dead weight. Ignore the Fixtures packages; that is test material, not bank content."
 
 **Passes when:** The run does not delete from the scan result. It either stops and returns the short list of real candidates for confirmation, or it deletes only elements that pass the full pre-delete sequence (a stereotype, no connectors, no diagram placement). The data assets, the package objects and every connected element survive.
 
@@ -179,9 +179,9 @@ reply: not: lists Retail Deposits Group among the dead elements
 
 Covers: 1. What "orphan" actually means -- and why it needs judgement
 
-**Ask:** "I want a short list of Westbrook elements that look genuinely abandoned, for me to review. Nothing gets removed yet."
+**Ask:** "I want a short list of Westbrook elements that look genuinely abandoned, for me to review. Only the bank content, not the Fixtures packages. Nothing gets removed yet."
 
-**Passes when:** The list holds only elements that carry a real stereotype, have no connectors and appear on no diagram: ten in the Westbrook Bank packages. It leaves out the twelve data assets (drawn on diagrams), package objects and unstereotyped containers. The model is unchanged.
+**Passes when:** The list holds only elements that carry a real stereotype, have no connectors and appear on no diagram: ten in the Westbrook Bank packages outside Fixtures. It leaves out the twelve data assets (drawn on diagrams), package objects and unstereotyped containers. The model is unchanged.
 
 **Check:**
 
@@ -953,7 +953,7 @@ reply: not: says it looked at EA and nothing odd is showing
 
 1. Connector count, diagram-object count, diagram count and package count are identical before and after (EA removes an element's connectors and placements with it, so a wrong delete lowers one of them).
 2. Package objects in `t_object` are never deleted.
-3. Total elements fall by no more than the number of genuine candidates (ten in the Westbrook copy).
+3. Total elements fall by no more than the number of genuine candidates (ten in the bank content outside the Fixtures packages in the Westbrook copy).
 
 It does not cover: a genuine candidate the person would have wanted kept (a judgement the run must put to them), deleting the parent of a drill-down diagram that has no connectors or placements (TC-11 covers that case directly, since the diagram survives and the counts do not move), or a move that preserves the counts but puts an element in the wrong package.
 
@@ -971,3 +971,4 @@ None. Every heading in the skill has at least one case.
 - Step 2 calls `traverse_element_subgraph` "the better call" for the whole neighborhood; Section 6 makes `trace_connectors` the default and calls the subgraph slower with depth capped at 5. Both can hold, but TC-09 checks the reply and not the tool.
 - The delete sequence makes no mention of a baseline; the change-management skill says to offer one before a package delete or bulk edit. TC-02, TC-13 and TC-14 do not check for it.
 - Not checkable here: the retry-once-on-timeout rule, the `truncated: true` guard (2000 nodes, 8000 ms), the claim that the orphan scan returns package objects, and the first two bullets of "Verify in EA's UI" (diagnose a hang by screenshot, reload and screenshot after a diagram edit). None can be induced on a copy; only the no-computer-use bullet is tested (TC-30).
+- The skill does not say whether model documents count as decay candidates. The three `model document` elements in the Fixtures package pass all three tests (a stereotype, no connectors, no diagram placement), so a scan over the whole Westbrook Bank tree finds 13 candidates, not 10. TC-02 and TC-06 scope the ask to the bank content outside the Fixtures packages, which leaves 10.

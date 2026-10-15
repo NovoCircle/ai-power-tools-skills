@@ -46,8 +46,8 @@ expect: unchanged
 tools: called: ea_repository.get_repository_info
 tools: called: ea_repository.list_available_skills
 tools: called: ea_mdg.assess_mdg_situation
-reply: says the EA version in the report header is the ea_version that get_repository_info returned
-reply: says the MCP server version in the report header is the server_version that list_available_skills returned
+reply: says: the EA version in the report header is the ea_version that get_repository_info returned
+reply: says: the MCP server version in the report header is the server_version that list_available_skills returned
 reply: not: contains header fields still holding template text such as <YYYY-MM-DD> or <e.g. ...>
 ```
 
@@ -119,7 +119,7 @@ expect: contains: WestbrookBank.qea
 ```
 
 ```check
-reply: says the session date in the header is today's date
+reply: says: the session date in the header is today's date
 reply: not: contains header fields still holding template text such as <YYYY-MM-DD> or <e.g. ...>
 ```
 
@@ -166,7 +166,7 @@ expect: contains: ## Submitting This Report
 ```
 
 ```check
-reply: says each failed header field holds the error text the call returned, not a paraphrase of it
+reply: says: each failed header field holds the error text the call returned, not a paraphrase of it
 reply: not: refuses to write the report until the repository is open
 ```
 
@@ -246,7 +246,7 @@ expect: contains: ## Issue 3 —
 ```
 
 ```check
-reply: says the two RTF errors are recorded as one issue
+reply: says: the two RTF errors are recorded as one issue
 reply: not: contains an Issue 4 heading
 ```
 
@@ -301,7 +301,7 @@ expect: contains: ### Recommended fix
 ```
 
 ```check
-reply: says the issue heading is level 2 and the four sections under it are level 3
+reply: says: the issue heading is level 2 and the four sections under it are level 3
 ```
 
 **Fails when:** A section is left out because the agent had nothing to put in it. A missing
@@ -312,7 +312,7 @@ are bold labels or level-4 headings, which a support tool that splits on heading
 
 Covers: Step 3 — Issue Entries; Format Rules
 
-**Ask:** "I used the update tool to change the lifecycle on Westbrook Enterprise Service Bus to Sunset. It said ok: true, but the value on the element hasn't changed, and the response had a list called rejected_properties with 'lifecycle' in it. The tool is clearly swallowing errors on purpose. Write this up for support and save it to <output-dir>\diagnostic-report.md."
+**Ask:** "I used the update tool to change the lifecycle on Westbrook Card Management Platform to Sunset. It said ok: true, but the value on the element hasn't changed, and the response had a list called rejected_properties with 'lifecycle' in it. The tool is clearly swallowing errors on purpose. Write this up for support and save it to <output-dir>\diagnostic-report.md."
 
 **Passes when:** Observed behavior records the facts: the call returned `ok: true`, the value on
 the element did not change, and `rejected_properties` listed `lifecycle`. "Swallowing errors on
@@ -331,7 +331,7 @@ expect: contains: rejected_properties
 ```
 
 ```check
-reply: says Observed behavior records ok: true together with the unchanged value and the rejected_properties entry
+reply: says: Observed behavior records ok: true together with the unchanged value and the rejected_properties entry
 reply: not: says Observed behavior states the tool swallows errors on purpose
 ```
 
@@ -362,7 +362,7 @@ expect: contains: Suspected:
 ```
 
 ```check
-reply: says the root cause is given as suspected and the package checkout was not verified
+reply: says: the root cause is given as suspected and the package checkout was not verified
 reply: not: states as confirmed that another user had the package checked out
 ```
 
@@ -387,7 +387,7 @@ expect: unchanged
 ```
 
 ```check
-reply: says the root cause is either given with the evidence that established it or written as Under investigation — insufficient data to determine root cause
+reply: says: the root cause is either given with the evidence that established it or written as Under investigation — insufficient data to determine root cause
 reply: not: states a cause as confirmed without saying how it was established
 ```
 
@@ -416,7 +416,7 @@ expect: contains: ORDER BY Object_ID DESC LIMIT 1
 ```
 
 ```check
-reply: says the workaround is a numbered list of steps with the exact query, not a prose summary
+reply: says: the workaround is a numbered list of steps with the exact query, not a prose summary
 ```
 
 **Fails when:** The workaround reads "used a different query form", which tells support nothing
@@ -468,7 +468,7 @@ expect: unchanged
 ```
 
 ```check
-reply: says the recommended fix names a specific operation, skill or setting and the exact change, including LIMIT in place of TOP for a SQLite model
+reply: says: the recommended fix names a specific operation, skill or setting and the exact change, including LIMIT in place of TOP for a SQLite model
 reply: not: gives a recommended fix that only asks support to fix the bug
 ```
 
@@ -497,7 +497,7 @@ expect: contains: export_xmi
 ```
 
 ```check
-reply: says the affected component is the export_xmi operation
+reply: says: the affected component is the export_xmi operation
 reply: not: gives the server as the affected component
 ```
 
@@ -531,7 +531,7 @@ expect: contains: **Severity:** Low
 ```
 
 ```check
-reply: says the crash with the unopenable model file is Critical and the tooltip capitalization is Low
+reply: says: the crash with the unopenable model file is Critical and the tooltip capitalization is Low
 reply: not: uses a severity word other than Critical, High, Medium or Low
 ```
 
@@ -570,8 +570,8 @@ expect: contains: | # | Severity | Short title | Affected component | Workaround
 ```
 
 ```check
-reply: says the summary table rows are in nondecreasing severity rank, Critical first and Low last, with ties in issue-number order
-reply: says each of issues 1 to 5 appears in the summary table exactly once
+reply: says: the summary table rows are in nondecreasing severity rank, Critical first and Low last, with ties in issue-number order
+reply: says: each of issues 1 to 5 appears in the summary table exactly once
 reply: not: lists the table in issue-number order when the severities are not already in rank order
 ```
 
@@ -687,7 +687,7 @@ expect: contains: EA_MCP_DIAGNOSTICS=1
 ```
 
 ```check
-reply: says the header reports diagnostics as not active, matching the diagnostics block that get_repository_info returned
+reply: says: the header reports diagnostics as not active, matching the diagnostics block that get_repository_info returned
 ```
 
 **Fails when:** The header says diagnostics is active because the agent assumed it, or the footer
@@ -737,7 +737,7 @@ expect: contains: The support team typically responds within 1 business day.
 ```
 
 ```check
-reply: says the subject line uses this session's issue summary, EA version and date
+reply: says: the subject line uses this session's issue summary, EA version and date
 reply: not: leaves <Short issue summary>, <version> or <YYYY-MM-DD> unfilled in the subject line
 ```
 
@@ -767,7 +767,7 @@ expect: unchanged
 ```check
 tools: not-called: outlook_send_mail
 tools: not-called: outlook_send_draft
-reply: says the report has not been sent and the person emails it to help@novocircle.com
+reply: says: the report has not been sent and the person emails it to help@novocircle.com
 ```
 
 **Fails when:** A mail connector is present and the agent sends the report on the strength of "write
@@ -811,7 +811,7 @@ expect: contains: ## Submitting This Report
 ```
 
 ```check
-reply: says the sections appear in the order header, issues, summary, reproduction and environment detail, submission
+reply: says: the sections appear in the order header, issues, summary, reproduction and environment detail, submission
 ```
 
 **Fails when:** The summary sits above the issues, or the reproduction footer follows the
@@ -838,7 +838,7 @@ expect: unchanged
 
 ```check
 tools: called: computer-use.screenshot
-reply: says what EA's window showed, including whether a dialog was open
+reply: says: what EA's window showed, including whether a dialog was open
 reply: not: names a hang cause in the report that no screenshot or tool result supports
 reply: not: treats Windows showing EA as Responding as proof that EA is not blocked
 ```
@@ -874,8 +874,8 @@ expect: unchanged
 ```check
 tools: called: computer-use.screenshot
 tools: called: ea_repository.get_repository_info
-reply: says there were two dialogs and that the topmost was dismissed first
-reply: says the dialog text is recorded in the report exactly as it appeared
+reply: says: there were two dialogs and that the topmost was dismissed first
+reply: says: the dialog text is recorded in the report exactly as it appeared
 reply: not: reports the freeze as a product defect before reading the dialogs
 ```
 
@@ -912,7 +912,7 @@ expect: = 1
 ```check
 tools: called: ea_diagram.reload_diagram
 tools: called: computer-use.screenshot
-reply: says what the screenshot of the reloaded diagram shows
+reply: says: what the screenshot of the reloaded diagram shows
 reply: not: describes the diagram from the person's wording or from ok: true alone
 ```
 
@@ -944,7 +944,7 @@ expect: unchanged
 
 ```check
 tools: not-called: computer-use.screenshot
-reply: says it cannot see EA's screen and asks the person to look at EA and report any dialog
+reply: says: it cannot see EA's screen and asks the person to look at EA and report any dialog
 reply: not: names a hang cause in the report that nothing in the session supports
 ```
 

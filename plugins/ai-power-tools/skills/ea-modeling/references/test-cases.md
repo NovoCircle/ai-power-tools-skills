@@ -260,7 +260,7 @@ Covers: 1. Build Order
 
 **Marks:** WRITE
 
-**Ask:** "Set up a small Rewards area for me under Consumer Banking: a package called Rewards, two business applications in it, Rewards Engine and Rewards Portal, where the Portal uses the Engine, and a diagram showing both. Both applications are strategic and business-critical, owned by the Rewards Product team on the business side and Digital Engineering on the technical side, internal data."
+**Ask:** "Set up a small Rewards area for me under Consumer Banking: a package called Rewards, two business applications in it, Rewards Engine and Rewards Portal, where the Portal uses the Engine, and a diagram showing both. Both applications are strategic and business-critical, owned by Rewards Product on the business side and Digital Engineering on the technical side, internal data."
 
 **Passes when:** The package, both elements with all five tags, the connector with the Portal as
 source and the Engine as target, and a diagram holding both elements all exist, with nothing
@@ -279,7 +279,7 @@ expect: = 2
 ```
 
 ```check
-sql: SELECT COUNT(*) FROM t_objectproperties tp JOIN t_object o ON o.Object_ID = tp.Object_ID WHERE o.Name IN ('Rewards Engine', 'Rewards Portal') AND ((tp.Property = 'criticality' AND tp.Value = 'Mission-Critical') OR (tp.Property = 'lifecycle' AND tp.Value = 'Strategic') OR (tp.Property = 'businessOwner' AND tp.Value = 'Rewards Product') OR (tp.Property = 'technicalOwner' AND tp.Value = 'Digital Engineering') OR (tp.Property = 'dataClassification' AND tp.Value = 'Internal'))
+sql: SELECT COUNT(*) FROM t_objectproperties tp JOIN t_object o ON o.Object_ID = tp.Object_ID WHERE o.Name IN ('Rewards Engine', 'Rewards Portal') AND ((tp.Property = 'criticality' AND tp.Value = 'Business-Critical') OR (tp.Property = 'lifecycle' AND tp.Value = 'Strategic') OR (tp.Property = 'businessOwner' AND tp.Value = 'Rewards Product') OR (tp.Property = 'technicalOwner' AND tp.Value = 'Digital Engineering') OR (tp.Property = 'dataClassification' AND tp.Value = 'Internal'))
 expect: = 10
 ```
 
@@ -476,7 +476,7 @@ Covers: 4. Element Creation and Tagged Values
 
 **Marks:** WRITE, INVARIANT
 
-**Ask:** "Add an AI model called Dispute Triage Model to the AI Platform package. It's experimental, a human has to review its output, audit logging is on, and its data stays in the US."
+**Ask:** "Add an AI model called Dispute Triage Model to the AI Platform package. It's experimental, a human has to review its output, audit logging is on, and its data residency is US-only."
 
 **Passes when:** The element is a Class, not a Component, carries the AI-model stereotype bound to
 the technology, and the four AI tags hold the stated values.
@@ -1055,6 +1055,9 @@ Covers: 10. Working with an MDG technology
 
 **Marks:** BLOCKED, REFUSE
 
+Blocked: needs a disposable Windows profile. Disabling a technology in Manage Technologies is a
+per-user EA setting. The runner provides the profile and restores the setting afterwards.
+
 **Setup:** The `WBA` technology is registered but not enabled in EA.
 
 **Ask:** "Add a business application called Wire Transfer Status API to Domestic Payments. It's business-critical and the business owner is Payments Operations."
@@ -1409,6 +1412,38 @@ reply: not: says the diagram was verified visually
 **Fails when:** The run reports `ok: true` from the write calls as proof the diagram is readable.
 The rows exist, and the elements may overlap, sit off the visible area, or lack styling.
 
+### TC-44: Click-through diagrams go to the navigation skill
+
+Covers: 1. Build Order
+
+**Marks:** REFUSE
+
+**Ask:** "Make the capability map under Consumer Banking click-through. Someone opens the top diagram, double-clicks Lending, gets a diagram of its parts, and so on down."
+
+**Passes when:** The reply says drill-down diagrams over a hierarchy are not plain diagram building
+and are the job of the `ea-navigation-diagrams` skill, and hands off to it. The run does not build
+ordinary diagrams here and call them click-through. Nothing in the model changes.
+
+**Check:**
+
+```check
+reply: says: click-through drill-down diagrams are the job of the ea-navigation-diagrams skill
+reply: not: says the click-through diagrams were built
+```
+
+```check
+tools: not-called: ea_diagram.create_diagram
+```
+
+```check
+sql: SELECT (SELECT COUNT(*) FROM t_object), (SELECT COUNT(*) FROM t_connector), (SELECT COUNT(*) FROM t_diagram), (SELECT COUNT(*) FROM t_package), (SELECT COUNT(*) FROM t_objectproperties)
+expect: unchanged
+```
+
+**Fails when:** The run creates one flat diagram per package with `create_diagram` and reports the map
+as click-through. The diagrams exist and look right, but no element is composite and
+`t_diagram.ParentID` is empty, so double-clicking opens nothing.
+
 ## Invariants
 
 Cases marked INVARIANT must pass on every run. Each guards a failure that is plausible, silent
@@ -1453,3 +1488,4 @@ that touch those carry their own checks.
 - `references/package_and_defects.md` section 3 says a recursive CTE is not available in EA's SQLite. SQLite supports `WITH RECURSIVE`; whether the server's validator blocks it was not verified, so the cases use fixed package id lists.
 - The section numbering in `SKILL.md` skips 13 (12 is followed by 14). Cosmetic.
 - Not checkable here: that write calls were issued one at a time (TC-09 tests the outcome only); that a hang was diagnosed from a dialog; the model-tier, `verbose=False` and `/clear` guidance; the "say it was not re-verified" promise when a read is too expensive; and the 4.5 claim that a row with no `FQName` means the technology was not loaded.
+- The proactive offer after a load that created elements with parentage (section 1, Build Order) has no case. It needs a load that surfaces a hierarchy past the thresholds that `ea-navigation-diagrams` sets, and a reply check for the offer; TC-44 covers only the hand-off when the person asks.

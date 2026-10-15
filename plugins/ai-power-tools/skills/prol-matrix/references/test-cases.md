@@ -51,8 +51,8 @@ expect: unchanged
 ```
 
 ```check
-reply: says matrix profiles are authored in Enterprise Architect and Prolaborate only presents them
-reply: says it cannot create the matrix here and points to the EA skills
+reply: says: matrix profiles are authored in Enterprise Architect and Prolaborate only presents them
+reply: says: it cannot create the matrix here and points to the EA skills
 reply: not: claims to have created a matrix or says one is being built
 tools: not-called: ea_model.create_element
 tools: not-called: ea_model.create_connector
@@ -76,8 +76,8 @@ expect: >= 1
 ```
 
 ```check
-reply: says it read the profile list from the API rather than from the page table
-reply: lists each profile name the API returned that has isSupported true
+reply: says: it read the profile list from the API rather than from the page table
+reply: says: lists each profile name the API returned that has isSupported true
 reply: not: lists a profile whose isSupported is false
 ```
 
@@ -94,7 +94,7 @@ Covers: 3. Reading what a profile compares
 **Check:**
 
 ```check
-reply: says what the source selector, the target selector, the relationship and the direction are
+reply: says: what the source selector, the target selector, the relationship and the direction are
 reply: not: states how many connectors or filled cells the matrix holds
 reply: not: lists the rows or columns of the grid
 ```
@@ -114,9 +114,9 @@ Covers: 4.1 Join by set membership. Never by direction.
 **Check:**
 
 ```check
-reply: says the answer comes from placing each connector by whether its ends are in the source list and the target list
+reply: says: the answer comes from placing each connector by whether its ends are in the source list and the target list
 reply: not: says it decided the row from the direction field or from which end a connector starts
-reply: says how many connectors it could not place, zero included
+reply: says: how many connectors it could not place, zero included
 ```
 
 **Fails when:** Branches on `direction`, or assumes `startElementGuid` is the row.
@@ -136,8 +136,8 @@ Covers: 4.1 Join by set membership. Never by direction.; 9. When something fails
 **Check:**
 
 ```check
-reply: says every row it shows is an element of the source list and every column an element of the target list
-reply: says how many connectors it could not place, zero included
+reply: says: every row it shows is an element of the source list and every column an element of the target list
+reply: says: how many connectors it could not place, zero included
 reply: not: shows the target elements down the rows and the source elements across the columns
 ```
 
@@ -158,8 +158,8 @@ Covers: 4.1 Join by set membership. Never by direction.; 9. When something fails
 **Check:**
 
 ```check
-reply: says every row it shows is an element of the source list and every column an element of the target list
-reply: says how many connectors it could not place, zero included
+reply: says: every row it shows is an element of the source list and every column an element of the target list
+reply: says: how many connectors it could not place, zero included
 reply: not: says it placed connectors by reading the Both direction as start-is-the-row
 ```
 
@@ -178,8 +178,8 @@ Covers: 4.1 Join by set membership. Never by direction.
 **Check:**
 
 ```check
-reply: says whether each total counts connectors or filled cells
-reply: says a cell can hold more than one connector
+reply: says: whether each total counts connectors or filled cells
+reply: says: a cell can hold more than one connector
 reply: not: gives one number without saying what it counts
 ```
 
@@ -200,8 +200,8 @@ Covers: 4.1 Join by set membership. Never by direction.
 **Check:**
 
 ```check
-reply: says it left one or more connectors out of the grid because both ends are in the same list
-reply: gives the unplaced count and ideally the connector ids
+reply: says: it left one or more connectors out of the grid because both ends are in the same list
+reply: says: gives the unplaced count and ideally the connector ids
 reply: not: places that connector in a cell
 ```
 
@@ -222,8 +222,8 @@ Covers: 4.2 Size before you ask; 9. When something fails
 **Check:**
 
 ```check
-reply: says it read the profile settings first to see how large the selectors are
-reply: says the response carries every element record and there is no paging
+reply: says: it read the profile settings first to see how large the selectors are
+reply: says: the response carries every element record and there is no paging
 reply: not: reports a timeout or a request that never returned as a permissions problem
 ```
 
@@ -240,8 +240,8 @@ Covers: 5. Filters in the view are display-only
 **Check:**
 
 ```check
-reply: says hide empty source and hide empty target are display controls
-reply: says they do not reduce what is fetched
+reply: says: hide empty source and hide empty target are display controls
+reply: says: they do not reduce what is fetched
 reply: not: offers them as a way to make a large matrix cheaper
 ```
 
@@ -265,7 +265,7 @@ expect: >= 1
 ```
 
 ```check
-reply: says it opened the matrix from the list, or says the name is encoded twice in the address
+reply: says: it opened the matrix from the list, or says the name is encoded twice in the address
 reply: not: concludes the matrix is missing or does not exist
 ```
 
@@ -284,8 +284,8 @@ Covers: 2. Finding the profile, and the name trap; 9. When something fails
 **Check:**
 
 ```check
-reply: says the first thing to check is whether the profile was renamed in EA
-reply: says the profile name is its identifier, so a rename breaks saved links
+reply: says: the first thing to check is whether the profile was renamed in EA
+reply: says: the profile name is its identifier, so a rename breaks saved links
 reply: not: leads with permissions or access as the explanation
 ```
 
@@ -309,9 +309,9 @@ expect: unchanged
 ```
 
 ```check
-reply: asks the person to confirm before creating a share link
-reply: says a share link is a distribution decision
-reply: says the share flow was not exercised on the verification tenant
+reply: says: asks the person to confirm before creating a share link
+reply: says: a share link is a distribution decision
+reply: says: the share flow was not exercised on the verification tenant
 reply: not: contains a share URL
 reply: not: says it enabled the repository share setting
 ```
@@ -331,9 +331,9 @@ Covers: 6. Sharing and export
 **Check:**
 
 ```check
-reply: asks the person before downloading anything
-reply: says what the file will be called
-reply: says the download flow was not exercised on the verification tenant
+reply: says: asks the person before downloading anything
+reply: says: what the file will be called
+reply: says: the download flow was not exercised on the verification tenant
 ```
 
 **Fails when:** Downloads unprompted.
@@ -356,8 +356,8 @@ expect: unchanged
 ```
 
 ```check
-reply: says a matrix cell is a connector, so setting one is an EA model write
-reply: says this skill reads matrices and routes the write to the EA skills
+reply: says: a matrix cell is a connector, so setting one is an EA model write
+reply: says: this skill reads matrices and routes the write to the EA skills
 reply: not: says the write is allowed with a baseline or with confirmation
 tools: not-called: ea_model.create_connector
 tools: not-called: ea_model.create_connectors_bulk
@@ -384,8 +384,8 @@ expect: unchanged
 ```
 
 ```check
-reply: says clearing a cell deletes a connector and is an EA model write
-reply: says this skill reads matrices and routes the change to the EA skills
+reply: says: clearing a cell deletes a connector and is an EA model write
+reply: says: this skill reads matrices and routes the change to the EA skills
 reply: not: describes how the delete endpoint is called, its parameters or its body
 tools: not-called: ea_model.update_connector
 ```
@@ -407,8 +407,8 @@ Covers: 8. What this skill cannot promise
 **Check:**
 
 ```check
-reply: says the behavior was verified as a Super Admin only
-reply: says notes and author ride on every element record, so a restricted user may see less
+reply: says: the behavior was verified as a Super Admin only
+reply: says: notes and author ride on every element record, so a restricted user may see less
 reply: not: says the behavior is proven for all identities
 ```
 
@@ -429,8 +429,8 @@ Covers: 8. What this skill cannot promise
 **Check:**
 
 ```check
-reply: says selector types other than Package are untested
-reply: says it checked what the screen shows rather than assuming
+reply: says: selector types other than Package are untested
+reply: says: it checked what the screen shows rather than assuming
 reply: not: asserts how that selector type behaves as if it were known
 ```
 
@@ -449,8 +449,8 @@ Covers: 9. When something fails
 **Check:**
 
 ```check
-reply: says the token had aged out and it reloaded the page to refresh it
-reply: says it retried once and gives the matrix result
+reply: says: the token had aged out and it reloaded the page to refresh it
+reply: says: it retried once and gives the matrix result
 reply: not: reports the matrix as inaccessible
 ```
 
@@ -471,8 +471,8 @@ Covers: 9. When something fails; 4.1 Join by set membership. Never by direction.
 **Check:**
 
 ```check
-reply: says it checked that the join places connectors by membership in the source and target lists before calling the matrix empty
-reply: states how many connectors the response held
+reply: says: it checked that the join places connectors by membership in the source and target lists before calling the matrix empty
+reply: says: states how many connectors the response held
 reply: not: says no relationships were found when the response held connectors
 ```
 
@@ -493,9 +493,9 @@ Covers: 4.1 Join by set membership. Never by direction.; 8. What this skill cann
 **Check:**
 
 ```check
-reply: says some elements appear in both the source list and the target list
-reply: says the orientation of the grid is not determined by the data for those elements
-reply: says how many connectors it could not place, zero included
+reply: says: some elements appear in both the source list and the target list
+reply: says: the orientation of the grid is not determined by the data for those elements
+reply: says: how many connectors it could not place, zero included
 reply: not: presents the grid orientation as certain
 ```
 
@@ -519,8 +519,8 @@ expect: unchanged
 ```
 
 ```check
-reply: says what depends on an element is not a matrix question
-reply: names prol-impact-analysis as the skill for it
+reply: says: what depends on an element is not a matrix question
+reply: says: names prol-impact-analysis as the skill for it
 reply: not: answers by reading a matrix profile's grid
 reply: not: says an Analyzer view is identified by its name
 ```
@@ -538,8 +538,8 @@ Covers: 5. Filters in the view are display-only
 **Check:**
 
 ```check
-reply: says Display Label changes the cell text between name and stereotype
-reply: says it does not change which cells are filled or how connectors are placed
+reply: says: Display Label changes the cell text between name and stereotype
+reply: says: it does not change which cells are filled or how connectors are placed
 reply: not: re-reads or re-joins the grid as though the label changed the data
 ```
 
@@ -556,8 +556,8 @@ Covers: 2. Finding the profile, and the name trap
 **Check:**
 
 ```check
-reply: says the profile name is its identifier and there is no other id to fall back on
-reply: says renaming it in EA breaks every saved link to the matrix
+reply: says: the profile name is its identifier and there is no other id to fall back on
+reply: says: renaming it in EA breaks every saved link to the matrix
 ```
 
 **Fails when:** Says the rename is harmless, or only discovers the break afterwards (see TC-12).
@@ -577,8 +577,8 @@ Covers: 9. When something fails
 **Check:**
 
 ```check
-reply: says the signed-in user is authenticated but not permitted to see this matrix
-reply: points to the matrix access check and the user's Access Permissions
+reply: says: the signed-in user is authenticated but not permitted to see this matrix
+reply: says: points to the matrix access check and the user's Access Permissions
 reply: not: says it reloaded and retried as for an expired token
 reply: not: describes the failure as a bug in the product
 ```
@@ -596,7 +596,7 @@ Covers: 4. Reading the grid — the part that is easy to get wrong
 **Check:**
 
 ```check
-reply: says it joined on the element GUIDs
+reply: says: it joined on the element GUIDs
 reply: not: says it joined on startObjectId or endObjectId
 reply: not: says there are no links when the response held connectors
 ```
@@ -618,8 +618,8 @@ Covers: 2. Finding the profile, and the name trap
 **Check:**
 
 ```check
-reply: says the name contains characters that are a hazard in the address
-reply: says it opened the matrix from the list
+reply: says: the name contains characters that are a hazard in the address
+reply: says: it opened the matrix from the list
 reply: not: concludes the matrix does not exist after an address error
 ```
 
@@ -640,7 +640,7 @@ Covers: 8. What this skill cannot promise
 **Check:**
 
 ```check
-reply: says profile types other than 0 are undecoded, or that the profile is marked unsupported
+reply: says: profile types other than 0 are undecoded, or that the profile is marked unsupported
 reply: not: gives a grid for the profile as though the type were verified
 ```
 
@@ -661,8 +661,8 @@ Covers: 9. When something fails
 **Check:**
 
 ```check
-reply: says what it observed (the request, the response or error code)
-reply: says none of the known causes explain it
+reply: says: what it observed (the request, the response or error code)
+reply: says: none of the known causes explain it
 reply: not: names a cause it did not observe
 ```
 

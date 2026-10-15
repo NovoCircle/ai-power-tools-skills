@@ -728,9 +728,9 @@ compute X and N independently from the model.
   stereotypes resolve through `resolve_display_term` for the rest of the session. The server
   state lives in the agent's session, and the checks run after it ends, so no `call` check sees
   it. TC-15 tests only the path where the XML was not parsed.
-- The introduction tells the reader to use a package named exactly `_sl44_scratch` if a scratch
+- The introduction tells the reader to use a scratch package with a fixed, ticket-style internal name if a scratch
   element is ever needed, while the skill calls itself read-only and says its workflows do not
-  need one. The package name carries an internal ticket-style identifier into a shipped skill.
+  need one. That name carries an internal identifier into a shipped skill.
   TC-01 requires no scratch package.
 - `get_element_business_view` is shown returning one connection for the Westbrook Fraud Decision
   Engine. The model holds three connectors starting at that element (a `Uses`, a realization to a

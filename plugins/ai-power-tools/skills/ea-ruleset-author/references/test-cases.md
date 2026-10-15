@@ -33,8 +33,7 @@ Covers: Key decision points; Phase 3 — Write the YAML
 
 **Passes when:** The run reads the stereotype as the model stores it (`WBABusinessApplication`, bare,
 with the `WBA` that is part of its name), writes one rule that selects it and requires `businessOwner`
-to be non-empty, runs it, and reports the three applications with no owner. The reply also says how
-many business applications the rule looked at (46), so the person can see it selected something.
+to be non-empty, runs it, and reports the three applications with no owner.
 
 **Check:**
 
@@ -61,7 +60,6 @@ expect: rules_evaluated = 1
 ```check
 tools: called: ea_validate.audit
 reply: says: three business applications have no business owner
-reply: says: the rule looked at forty-six business applications
 reply: not: says the model is clean
 ```
 
@@ -255,7 +253,7 @@ turns on one word.
 
 Covers: Common Pitfalls
 
-**Marks:** EFFECT
+**Marks:** EFFECT, BLOCKED (server defect APT-2026-0533)
 
 **Ask:** "A Uses relationship should only ever start at a business application or a vendor system. I don't care what it ends at. Check that, saving the file at <rules-dir>\wba_rules.yaml."
 
@@ -407,7 +405,7 @@ expect: = 13
 ```
 
 ```check
-tools: called: ea_mdg.get_mdg_from_runtime
+reply: says: the element categories were read from the technology's own definition, not from the stereotypes the model happens to use
 reply: says: the language defines fifteen element stereotypes
 reply: says: the model uses thirteen of them
 ```
@@ -435,7 +433,7 @@ definition, not memory.
 **Check:**
 
 ```check
-tools: called: ea_mdg.get_mdg_from_runtime
+reply: says: the element categories and constraints were read from the technology's own definition
 reply: says: the notes list element categories, relationship endpoint constraints and structural well-formedness rules
 reply: says: each item cites the source it came from
 ```
@@ -943,7 +941,7 @@ TC-09 and TC-17 with the sub-headings that carry their promises.
 - The response carries `rules_evaluated` and `violation_count` but no count of elements matched. The
   grammar reference says to confirm a ruleset matched more than zero before calling a model clean, and
   names `summarize_stereotype_usage` and `SELECT DISTINCT Stereotype`, but `SKILL.md` Phase 4 gives no
-  step for it. TC-01 and TC-04 depend on the run doing it unprompted.
+  step for it. TC-04 depends on the run doing it unprompted; TC-01 keeps the population (46) as a SQL oracle only.
 - The Westbrook copy has no `ArchiMate_` stereotype anywhere. Its ArchiMate-looking elements and
   connectors carry TOGAF, UPDM2 and BPMN1.1 stereotypes, bare, so the skill's prefix claim cannot be
   measured on this model (TC-03 passes on saying so). A run against a model built with EA's ArchiMate
@@ -967,3 +965,6 @@ TC-09 and TC-17 with the sub-headings that carry their promises.
   runner must supply a writable directory and substitute it.
 - Phase 1 for a standard language needs network access to the specification (TC-12 is BLOCKED); the
   skill gives no fallback for a closed network.
+- Server defect APT-2026-0533: `connector_endpoint_stereotype` treats an omitted `source_must_be_one_of` or
+  `target_must_be_one_of` as 'nothing allowed', so every connector is flagged; the skills do not
+  say what an omitted list means.
