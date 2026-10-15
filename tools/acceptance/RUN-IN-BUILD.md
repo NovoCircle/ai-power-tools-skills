@@ -64,8 +64,9 @@ register. A sample run does not update it.
 > To act on Enterprise Architect, use only this command, through Bash:
 > `<PY> <W>/tools/acceptance/call.py <tool> <operation> '<params json>'`
 > (`EA_MCP_EXE` and `ACCEPTANCE_CALL_LOG` are already set). The operations are the ones the skill
-> names. Do not use any `mcp__` tool, computer use, a browser, or the web. Write files only under
-> `<D>/output/`. EA already has the model open.
+> names. Do not use any `mcp__` tool. Use computer use, a browser or the web only where the skill
+> tells you to, and say in your reply what you looked at. Never open, close or restart Enterprise
+> Architect. Write files only under `<D>/output/`. EA already has the model open.
 >
 > The person asks: "<the case's Ask, verbatim>"
 >
@@ -88,4 +89,7 @@ grading.
   skill need a conversation that finds the skill on its own (see
   `PROMPT-new-conversation.md`).
 - **Isolation.** Nothing technically stops the helper from using other tools. The call log shows
-  only the calls it made through `call.py`.
+  only the calls it made through `call.py`; computer use and web reads are not logged, so the
+  `tools` checks that name them are judged from the reply.
+- **`ping`.** Call it as `call.py ping '<params json>'`; its parameters are logged like any other
+  call's.
