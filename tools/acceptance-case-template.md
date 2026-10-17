@@ -66,7 +66,13 @@ Covers: <SKILL.md heading>; <another heading, if the case covers two>
 **Ask:** "<what the person types, in their own words, not in the skill's vocabulary>"
 
 **Setup:** <only when the copy must hold something before the ask. The runner builds it on the
-copy before the agent starts; the agent never builds its own setup.>
+copy before the agent starts; the agent never builds its own setup. Say what it builds in a
+sentence, then give the executable form in a `setup` block (see "Setup blocks").>
+
+```setup
+call: ea_diagram.create_diagram_description {"diagram_id": {diagram:Customer Engagement Landscape}, "dry_run": false}
+notes-insert: Customer Engagement Landscape | The digital channels team reviews this landscape each quarter.
+```
 
 **Passes when:** <what a correct run does and ends with, in a sentence or two.>
 
@@ -128,6 +134,31 @@ restores everything afterwards.
 | `REFUSE` | The pass is a refusal or a hand-off to another skill. The checks include that the write did not happen. |
 | `INVARIANT` | This case must pass on every run (Ryan's decision of 2026-10-14). The rest count toward the 80% per-skill threshold. Use it for the cases where a failure is plausible and costly. |
 | `BLOCKED` | The case needs setup that a model or tenant may not have (a second repository, a licensed add-in). A correct run reports the block. |
+
+## Setup blocks
+
+A case whose starting state is not the plain model builds it with a fenced `setup` block, run by
+`tools/acceptance/setup_case.py` after the copy is open and before the agent starts. A case whose
+Setup is prose only cannot run; a case that truly cannot be built on the copy is marked `BLOCKED`
+with the reason. Each line is one of:
+
+| Line | What it does |
+|---|---|
+| `call: <tool>.<operation> <json> [=> var=path]` | Runs one server operation. `=> var=path` keeps a field of the result (`=> card=element_id`) for later lines. A failed call stops the setup |
+| `notes-set: <diagram name> \| <text>` | Replaces a diagram's Notes with the text, as a person typing in EA's Notes window would (`\n` is a line break; line ends are written CRLF) |
+| `notes-insert: <diagram name> \| <sentence>` | Adds one sentence line inside the generated description of the diagram, above its closing marker line, as a person editing the description would |
+
+Names are read from the copy: `{diagram:Name}`, `{package:Name}` and `{element:Name}` in the JSON or
+the text become the id of the one object with that name (zero or several matches stop the setup);
+`{$var}` is a value kept by `=>`. A `call` check may use the same placeholders; `check_case.py`
+prints the line with the ids filled in for the person who runs it by hand. Scratch objects a setup
+creates (a package, a diagram, an element) go in a new package under the model root, never under
+the bank content, and the checks name them.
+
+The `before` snapshot of `expect: unchanged` queries is taken after the setup, so close the copy
+once the setup is done and run `before` on the closed file (EA holds the file open and a read of it
+can lag). `tools/test_acceptance_setup.py` runs every setup block in the shipped case files against
+a fake, so a line that does not parse fails in CI.
 
 ## Checks
 

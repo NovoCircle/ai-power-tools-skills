@@ -133,7 +133,9 @@ too: `diagram_guid`, `package_guid`.)
 - **A diagram you did not have open is not left open.** The server closes only what it opened.
 - **The package form describes each element once.** `elements` is keyed by GUID; each shape in a
   diagram then carries `element_guid` and its placement only. A package holds every diagram that
-  belongs to it, including a diagram that an element in it owns.
+  belongs to it, including a diagram that an element in it owns. When you report a package read,
+  say that an element placed on several diagrams is described once, in the shared `elements`
+  section, and counts once.
 - **Do not promise identical lines.** Lines EA routes itself come back without a route. Name them
   (`route_drawn_only`) and say the other tool routes them.
 - **A shape the picture does not give a box for is not an error.** An actor's figure and a text item

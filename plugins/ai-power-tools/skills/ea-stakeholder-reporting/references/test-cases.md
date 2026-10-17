@@ -14,8 +14,8 @@ Westbrook copy; where `SKILL.md` or `references/coverage-data.md` quote differen
 Findings.
 
 TC-21 to TC-24 cover diagram descriptions. Their Setup (writing a description, adding an application
-to a diagram, writing a person's Notes) is done by the runner before the agent starts, so the run
-itself stays read-only. The ids in their checks are the Westbrook copy's (diagram 4 is the Customer
+to a diagram, writing a person's Notes) is a `setup` block that `tools/acceptance/setup_case.py` runs
+on the copy before the agent starts, so the run itself stays read-only. The ids in their checks are the Westbrook copy's (diagram 4 is the Customer
 Engagement Landscape and diagram 9 the Lending Landscape; package 10 is Customer Engagement and
 package 11 Account Management); a customer reads theirs from `t_diagram` and `t_package`. The wording
 of a generated description depends on the technology that governs the diagram, so the checks look at
@@ -714,6 +714,10 @@ Covers: Diagram descriptions: a diagram in words
 
 **Setup:** The runner writes the description of the Customer Engagement Landscape (`create_diagram_description`, `dry_run` false) and changes nothing after it.
 
+```setup
+call: ea_diagram.create_diagram_description {"diagram_id": {diagram:Customer Engagement Landscape}, "dry_run": false}
+```
+
 **Ask:** "My director doesn't have EA. In a few sentences, what does the Customer Engagement Landscape show?"
 
 **Passes when:** The run checks that the description is current (`audit_diagram_descriptions`), reads it (the manifest's `description`, stored source), and answers in plain language from the description: what the diagram is about and what is on it, in business names. It does not quote the marker lines or any stereotype identifier, and it writes nothing.
@@ -793,6 +797,12 @@ Covers: Diagram descriptions: a diagram in words
 
 **Setup:** The runner writes the description of the Customer Engagement Landscape, then adds a new application named Card Disputes to that diagram. Nobody edits the description.
 
+```setup
+call: ea_diagram.create_diagram_description {"diagram_id": {diagram:Customer Engagement Landscape}, "dry_run": false}
+call: ea_model.create_element_in_language {"language_id": "WBA", "language_type": "WBABusinessApplication", "package_id": {package:Customer Engagement}, "name": "Card Disputes"} => card=element_id
+call: ea_diagram.add_element_to_diagram {"diagram_id": {diagram:Customer Engagement Landscape}, "element_id": {$card}, "left": 40, "top": -900, "right": 200, "bottom": -960, "include_preview": false}
+```
+
 **Ask:** "What's on the Customer Engagement Landscape? I'm quoting it in a board paper."
 
 **Passes when:** The run checks the description's status before quoting it and finds it out of date (`stale`). It tells the person the stored description predates a change to the diagram, does not present it as what the diagram shows now, and says how to get a current one: a refresh, which it can preview and which `ea-import-export` writes. It writes nothing.
@@ -826,6 +836,10 @@ expect: unchanged
 Covers: Diagram descriptions: a diagram in words
 
 **Setup:** The runner writes the Notes of the Account Management Landscape as "Shows the accounts the retail bank manages." (no marker lines). The diagram holds twelve elements, none of them named in that sentence.
+
+```setup
+notes-set: Account Management Landscape | Shows the accounts the retail bank manages.
+```
 
 **Ask:** "Can I quote the notes on the Account Management Landscape as a description of what the diagram holds?"
 

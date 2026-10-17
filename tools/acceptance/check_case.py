@@ -14,7 +14,8 @@ The run folder D holds:
 
 `after` writes D/checks.json and prints one line per check: pass, fail, grade (a `reply` statement
 for the grader) or manual (a check this script does not evaluate: `http`, `call`, `xpath`, a skill
-load). The case passes when every check is pass, and every grade and manual item is judged pass.
+load). A `call` check may name scratch objects the case's setup built (`{diagram:Name}`); the line
+printed for it has those names replaced by the ids found in the copy. The case passes when every check is pass, and every grade and manual item is judged pass.
 
 The model copy is opened read-only (sqlite mode=ro). Nothing here starts or touches EA.
 """
@@ -24,6 +25,8 @@ import re
 import sqlite3
 import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 
 def case_text(case_file, tc):
@@ -65,6 +68,18 @@ def query(db, sql):
         return [list(r) for r in con.execute(sql).fetchall()]
     finally:
         con.close()
+
+
+def resolve_names(db, text):
+    """Read {diagram:Name}, {package:Name} and {element:Name} in a `call` check from the closed copy."""
+    from setup_case import PLACEHOLDER, _LOOKUP_SQL, _sql_names
+
+    def one(m):
+        rows = query(db, _LOOKUP_SQL[m.group(1)].format(names=_sql_names(m.group(2).strip())))
+        if len(rows) != 1:
+            return m.group(0)
+        return str(rows[0][0])
+    return PLACEHOLDER.sub(one, text)
 
 
 def judge_rows(rows, expect, before):
@@ -163,6 +178,8 @@ def main():
             ok, detail = judge_tools(calls, value)
         elif key == "reply":
             ok, detail = "grade", value
+        elif key == "call":
+            ok, detail = None, f"call check: run by hand: {resolve_names(db, value)}"
         else:
             ok, detail = None, f"{key} check: run by hand"
         verdict = {True: "pass", False: "fail", None: "manual", "grade": "grade"}[ok]

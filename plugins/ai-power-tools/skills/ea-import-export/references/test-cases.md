@@ -21,10 +21,11 @@ stereotypes, package and diagram names. The Westbrook copy defines no custom rep
 what a correct run says there. Counts quoted below describe the Westbrook copy at the time of
 writing; where a case depends on a count, the check reads it from the model.
 
-**Fixture for the manifest and description cases (TC-21 to TC-44).** Where a case has a Setup, the
-runner builds it on the copy through the server's own operations before the agent starts: it writes a
-description, edits its text through the API as EA's Notes window would, or adds an application to a
-diagram. The ids in the checks are the Westbrook copy's (diagram 4 is the Customer Engagement
+**Fixture for the manifest and description cases (TC-21 to TC-44).** Where a case has a Setup, its
+`setup` block (`tools/acceptance/setup_case.py`) builds the starting state on the copy through the
+server's own operations before the agent starts: it writes a description, edits its text as EA's Notes
+window would, adds an application to a diagram, or builds a small scratch diagram in a new package
+under the model root. The ids in the checks are the Westbrook copy's (diagram 4 is the Customer Engagement
 Landscape, package 10 is Customer Engagement, package 20 its child AI Services); a customer reads
 theirs from `t_diagram` and `t_package`. The wording of a generated description depends on the
 technology that governs the diagram, so the checks look for names, markers and structure, never for
@@ -722,16 +723,32 @@ expect: unchanged
 
 Covers: 3b. Redrawing a diagram in another tool — `get_diagram_manifest` / `get_package_manifest`
 
-**Setup:** The runner adds a boundary named Retail Channels to the Customer Engagement Landscape and places it so that its rectangle holds the centers of three of the diagram's applications. None of the three has the boundary as its parent in the model (EA stores nothing about what a boundary encloses).
+**Setup:** The runner builds a scratch diagram named Channel Grouping in a new package under the model root. It holds a boundary named Retail Channels whose rectangle contains the centers of three existing applications (Westbrook Mobile Banking App, Westbrook Online Account Opening, Westbrook Notification Service) and a fourth application (Westbrook Branch Teller Platform) outside it. None of the three has the boundary as its parent in the model (EA stores nothing about what a boundary encloses).
 
-**Ask:** "On the Customer Engagement Landscape, which applications sit inside Retail Channels? I'm rebuilding the grouping in another tool and I need to be sure of it."
+```setup
+call: ea_model.create_package {"parent_package_id": 1, "name": "Nesting Scratch"} => pkg=package_id
+call: ea_diagram.create_diagram {"package_id": {$pkg}, "name": "Channel Grouping", "type": "Logical", "include_preview": false}
+call: ea_model.create_element {"package_id": {$pkg}, "name": "Retail Channels", "type": "Boundary"} => boundary=element_id
+call: ea_diagram.add_element_to_diagram {"diagram_id": {diagram:Channel Grouping}, "element_id": {$boundary}, "left": 50, "top": -50, "right": 520, "bottom": -330, "include_preview": false}
+call: ea_diagram.add_element_to_diagram {"diagram_id": {diagram:Channel Grouping}, "element_id": {element:Westbrook Mobile Banking App}, "left": 80, "top": -100, "right": 200, "bottom": -160, "include_preview": false}
+call: ea_diagram.add_element_to_diagram {"diagram_id": {diagram:Channel Grouping}, "element_id": {element:Westbrook Online Account Opening}, "left": 240, "top": -100, "right": 360, "bottom": -160, "include_preview": false}
+call: ea_diagram.add_element_to_diagram {"diagram_id": {diagram:Channel Grouping}, "element_id": {element:Westbrook Notification Service}, "left": 380, "top": -100, "right": 500, "bottom": -160, "include_preview": false}
+call: ea_diagram.add_element_to_diagram {"diagram_id": {diagram:Channel Grouping}, "element_id": {element:Westbrook Branch Teller Platform}, "left": 600, "top": -100, "right": 720, "bottom": -160, "include_preview": false}
+```
 
-**Passes when:** The run reads the manifest and names the three applications. It says the grouping was read from the drawing, not from the model: EA records nothing about what a boundary encloses, so the parent is the smallest container whose drawn rectangle holds the shape's center (basis `enclosed`), and a shape whose model parent is also on the diagram has the basis `model`. It does not present the grouping as a model relationship.
+**Ask:** "On the Channel Grouping diagram, which applications sit inside Retail Channels? I'm rebuilding the grouping in another tool and I need to be sure of it."
+
+**Passes when:** The run reads the manifest and names the three applications, and not the Branch Teller Platform. It says the grouping was read from the drawing, not from the model: EA records nothing about what a boundary encloses, so the parent is the smallest container whose drawn rectangle holds the shape's center (basis `enclosed`), and a shape whose model parent is also on the diagram has the basis `model`. It does not present the grouping as a model relationship.
 
 **Check:**
 
 ```check
 tools: called: ea_diagram.get_diagram_manifest
+```
+
+```check
+call: ea_diagram.get_diagram_manifest {"diagram_id": {diagram:Channel Grouping}, "include_svg": false}
+expect: counts.objects = 5
 ```
 
 ```check
@@ -750,11 +767,20 @@ expect: = 0
 
 Covers: 3b. Redrawing a diagram in another tool — `get_diagram_manifest` / `get_package_manifest`
 
-**Ask:** "When our other tool redraws the Customer Engagement Landscape from the manifest, will every line come out exactly as it does in EA?"
+**Ask:** "When our other tool redraws the Account Management Landscape from the manifest, will every line come out exactly as it does in EA?"
 
-**Passes when:** The run says no. About one line in six is routed by EA when it draws and has no stored route; the manifest marks such a line `route_drawn_only` and gives no points, and the other tool routes it itself. Lines with a stored route come with their points in the same frame. It does not claim to trace routes out of the picture.
+**Passes when:** The run reads the manifest and says no. On this diagram all five lines are routed by EA when it draws and have no stored route (`counts.links_unstored` is 5): the manifest marks each `route_drawn_only` and gives no points, and the other tool routes them itself. In general about one line in six has no stored route; lines that do come with their points in the same frame. It does not claim to trace routes out of the picture.
 
 **Check:**
+
+```check
+tools: called: ea_diagram.get_diagram_manifest
+```
+
+```check
+call: ea_diagram.get_diagram_manifest {"diagram_id": {diagram:Account Management Landscape}, "include_svg": false}
+expect: counts.links_unstored = 5
+```
 
 ```check
 reply: says: lines that EA routes itself come back without a route and the other tool has to route them
@@ -772,9 +798,20 @@ expect: unchanged
 
 Covers: 3b. Redrawing a diagram in another tool — `get_diagram_manifest` / `get_package_manifest`
 
-**Ask:** "Give me the sizes of the boxes on the Transactions & Payments Landscape as EA actually draws them, not as they are stored, so a redraw in another tool matches."
+**Setup:** The runner builds a scratch diagram named Cross-Border Sizing in a new package under the model root. It holds one application with a 69-character name (Westbrook Cross-Border Payments Settlement and Reconciliation Service) stored 120 wide by 50 high, which EA draws taller than its stored box by wrapping the name, and one actor (Branch Customer), a figure EA draws inside a larger rectangle so the picture gives no box for it.
 
-**Passes when:** The run reads the manifest of that one diagram with the picture on, which is the default for a single diagram. It reports drawn sizes only for the shapes where the drawn box differs from the stored one by more than two units, and says which shapes the picture did not give a box for (`drawn_match` not `matched`) rather than guessing. It writes nothing.
+```setup
+call: ea_model.create_package {"parent_package_id": 1, "name": "Sizing Scratch"} => pkg=package_id
+call: ea_diagram.create_diagram {"package_id": {$pkg}, "name": "Cross-Border Sizing", "type": "Logical", "include_preview": false}
+call: ea_model.create_element_in_language {"language_id": "WBA", "language_type": "WBABusinessApplication", "package_id": {$pkg}, "name": "Westbrook Cross-Border Payments Settlement and Reconciliation Service"} => long=element_id
+call: ea_model.create_element {"package_id": {$pkg}, "name": "Branch Customer", "type": "Actor"} => actor=element_id
+call: ea_diagram.add_element_to_diagram {"diagram_id": {diagram:Cross-Border Sizing}, "element_id": {$long}, "left": 60, "top": -60, "right": 180, "bottom": -110, "include_preview": false}
+call: ea_diagram.add_element_to_diagram {"diagram_id": {diagram:Cross-Border Sizing}, "element_id": {$actor}, "left": 320, "top": -60, "right": 370, "bottom": -150, "include_preview": false}
+```
+
+**Ask:** "Give me the sizes of the boxes on the Cross-Border Sizing diagram as EA actually draws them, not as they are stored, so a redraw in another tool matches."
+
+**Passes when:** The run reads the manifest of that one diagram with the picture on, which is the default for a single diagram. It reports a drawn size for the long-named application, drawn taller than its stored height of 50, and none for the actor, which it reports as not found in the picture (`drawn_match` not `matched`) rather than guessing a box. It writes nothing else.
 
 **Check:**
 
@@ -783,6 +820,18 @@ tools: called: ea_diagram.get_diagram_manifest
 ```
 
 ```check
+call: ea_diagram.get_diagram_manifest {"diagram_id": {diagram:Cross-Border Sizing}}
+expect: counts.objects = 2
+```
+
+```check
+sql: SELECT COUNT(*) FROM t_diagramobjects x JOIN t_diagram d ON d.Diagram_ID = x.Diagram_ID WHERE d.Name = 'Cross-Border Sizing'
+expect: = 2
+```
+
+```check
+reply: says: the long-named application is drawn taller than its stored height
+reply: says: the actor was not found in the picture and no size is given for it
 reply: says: a drawn size is given only where EA's picture shows a box that differs from the stored one
 reply: says: shapes that could not be found in the picture are reported as not found and are not guessed
 ```
@@ -827,7 +876,7 @@ expect: = 16
 ```
 
 ```check
-reply: says: an element on both diagrams is described once, in a shared section
+reply: says: an element placed on both diagrams is described once, in the shared elements section, and counted once
 ```
 
 **Fails when:** The run reads each diagram separately and reports 17 elements, counting the one on both diagrams twice, or asks for the picture of each diagram and drives EA's window to get it. The count is plausible and wrong, and the second changes tab state the person did not ask to touch.
@@ -861,7 +910,12 @@ reply: says: the person should save in EA and read the manifest again to include
 
 Covers: 3b. Redrawing a diagram in another tool — `get_diagram_manifest` / `get_package_manifest`
 
-**Setup:** The runner writes the description of the Customer Engagement Landscape (`create_diagram_description`, `dry_run` false), then adds the sentence "The digital channels team reviews this landscape each quarter." to the generated block through the API, as an edit in EA's Notes window would.
+**Setup:** The runner writes the description of the Customer Engagement Landscape, then adds the sentence "The digital channels team reviews this landscape each quarter." to the generated block through the API, as an edit in EA's Notes window would.
+
+```setup
+call: ea_diagram.create_diagram_description {"diagram_id": {diagram:Customer Engagement Landscape}, "dry_run": false}
+notes-insert: Customer Engagement Landscape | The digital channels team reviews this landscape each quarter.
+```
 
 **Ask:** "Read the Customer Engagement Landscape for the redraw and give me the description that should travel with the copy."
 
@@ -932,7 +986,7 @@ Covers: 3c. Accessible diagram publishing — diagram descriptions
 
 **Ask:** "Describe the Customer Engagement Landscape in its notes. I want it readable by someone who cannot see the diagram, in our business terms."
 
-**Passes when:** The run writes the description. The first line is a single short sentence of at most 150 characters, usable as alt text. The text uses the technology's business names for kinds and relationships and contains no stereotype identifiers, technology ids, or drawing words (boundary, connector, collapsed, swimlane, placement). It says nothing about positions, colors or line styles.
+**Passes when:** The run writes the description. The first line is a single short sentence of at most 150 characters, usable as alt text. The text uses the technology's business names for kinds and relationships and contains no stereotype identifiers, technology ids or profile names ("WBA" as a word, "WestbrookBankArchitecture"), or drawing words (boundary, connector, collapsed, swimlane, placement). It says nothing about positions, colors or line styles.
 
 **Check:**
 
@@ -952,7 +1006,13 @@ sql: SELECT COUNT(*) FROM t_diagram WHERE Name = 'Customer Engagement Landscape'
 expect: = 0
 ```
 
-**Fails when:** The text reads "WBABusinessApplication Westbrook Mobile Banking App is connected by a connector to ...". It is accurate and useless to the person it is for, and a screen reader reads the identifiers aloud.
+```check
+# no technology id or profile name: "WBA" as a word (not inside another word), or the profile name
+sql: SELECT COUNT(*) FROM t_diagram WHERE Name = 'Customer Engagement Landscape' AND (Notes LIKE '%WestbrookBankArchitecture%' OR (' ' || REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(Notes, CHAR(13), ' '), CHAR(10), ' '), ',', ' '), '.', ' '), '(', ' ') || ' ') LIKE '% WBA %')
+expect: = 0
+```
+
+**Fails when:** The text reads "WBABusinessApplication Westbrook Mobile Banking App is connected by a connector to ...", or "eight WBA business applications". It is accurate and useless to the person it is for, and a screen reader reads the identifiers aloud.
 
 ### TC-31: The first call previews and writes nothing
 
@@ -988,6 +1048,10 @@ Covers: 3c. Accessible diagram publishing — diagram descriptions
 
 **Setup:** The runner writes the Notes of the Lending Landscape as exactly "Owned by the lending architecture team. Reviewed quarterly." (no marker lines).
 
+```setup
+notes-set: Lending Landscape | Owned by the lending architecture team. Reviewed quarterly.
+```
+
 **Ask:** "Add a description to the Lending Landscape. Keep what is already in its notes."
 
 **Passes when:** The run does not overwrite the Notes. It finds that `create_diagram_description` refuses a diagram whose Notes are not empty (`notes_not_empty`), and uses `update_diagram_description` in mode `extend`. Afterwards the Notes begin with the person's two sentences, byte for byte, followed by one description block.
@@ -1012,6 +1076,10 @@ Covers: 3c. Accessible diagram publishing — diagram descriptions
 **Marks:** WRITE
 
 **Setup:** The runner writes the Notes of the AI Services Solution Architecture as "Draft, do not circulate." (no marker lines). The Customer Engagement Landscape has empty Notes.
+
+```setup
+notes-set: AI Services Solution Architecture | Draft, do not circulate.
+```
 
 **Ask:** "Give every diagram in the Customer Engagement package, and the packages below it, a description. Don't touch any notes that already have text."
 
@@ -1044,6 +1112,12 @@ reply: says: the AI Services Solution Architecture was not written because its n
 Covers: 3c. Accessible diagram publishing — diagram descriptions
 
 **Setup:** The runner writes the description of the Customer Engagement Landscape, then adds a new application named Card Disputes to that diagram. The AI Services Solution Architecture has empty Notes.
+
+```setup
+call: ea_diagram.create_diagram_description {"diagram_id": {diagram:Customer Engagement Landscape}, "dry_run": false}
+call: ea_model.create_element_in_language {"language_id": "WBA", "language_type": "WBABusinessApplication", "package_id": {package:Customer Engagement}, "name": "Card Disputes"} => card=element_id
+call: ea_diagram.add_element_to_diagram {"diagram_id": {diagram:Customer Engagement Landscape}, "element_id": {$card}, "left": 40, "top": -900, "right": 200, "bottom": -960, "include_preview": false}
+```
 
 **Ask:** "Which diagrams under Customer Engagement have a description that is missing or out of date?"
 
@@ -1082,6 +1156,12 @@ Covers: 3c. Accessible diagram publishing — diagram descriptions
 
 **Setup:** The runner writes the description of the Customer Engagement Landscape (generator output, no edits), then adds a new application named Card Disputes (`WBA::WBABusinessApplication`) to that diagram.
 
+```setup
+call: ea_diagram.create_diagram_description {"diagram_id": {diagram:Customer Engagement Landscape}, "dry_run": false}
+call: ea_model.create_element_in_language {"language_id": "WBA", "language_type": "WBABusinessApplication", "package_id": {package:Customer Engagement}, "name": "Card Disputes"} => card=element_id
+call: ea_diagram.add_element_to_diagram {"diagram_id": {diagram:Customer Engagement Landscape}, "element_id": {$card}, "left": 40, "top": -900, "right": 200, "bottom": -960, "include_preview": false}
+```
+
 **Ask:** "We added Card Disputes to the Customer Engagement Landscape. Bring that diagram's description up to date."
 
 **Passes when:** The run refreshes the description (mode `refresh`). The diagram changed and nobody edited the words, so the new text is written without a question. Afterwards the Notes name Card Disputes, hold one block, and the audit reads the diagram as `current`.
@@ -1112,6 +1192,11 @@ Covers: 3c. Accessible diagram publishing — diagram descriptions
 
 **Setup:** The runner writes the description of the Customer Engagement Landscape, then adds the sentence "The digital channels team reviews this landscape each quarter." to the generated block through the API, as an edit in EA's Notes window would. The diagram does not change.
 
+```setup
+call: ea_diagram.create_diagram_description {"diagram_id": {diagram:Customer Engagement Landscape}, "dry_run": false}
+notes-insert: Customer Engagement Landscape | The digital channels team reviews this landscape each quarter.
+```
+
 **Ask:** "Bring the description of the Customer Engagement Landscape up to date."
 
 **Passes when:** The run refreshes. The diagram has not changed, so there is nothing to regenerate: the person's sentence is kept and recorded as the description (`edits_adopted`). The Notes still hold the sentence once, in one block, and the run says the edit was kept.
@@ -1136,6 +1221,13 @@ Covers: 3c. Accessible diagram publishing — diagram descriptions
 **Marks:** INVARIANT
 
 **Setup:** The runner writes the description of the Customer Engagement Landscape, adds the sentence "The digital channels team reviews this landscape each quarter." to the generated block through the API, then adds a new application named Card Disputes to the diagram. The diagram changed and the words carry a person's edit.
+
+```setup
+call: ea_diagram.create_diagram_description {"diagram_id": {diagram:Customer Engagement Landscape}, "dry_run": false}
+notes-insert: Customer Engagement Landscape | The digital channels team reviews this landscape each quarter.
+call: ea_model.create_element_in_language {"language_id": "WBA", "language_type": "WBABusinessApplication", "package_id": {package:Customer Engagement}, "name": "Card Disputes"} => card=element_id
+call: ea_diagram.add_element_to_diagram {"diagram_id": {diagram:Customer Engagement Landscape}, "element_id": {$card}, "left": 40, "top": -900, "right": 200, "bottom": -960, "include_preview": false}
+```
 
 **Ask:** "Refresh the description of the Customer Engagement Landscape. Don't write anything until I've seen it."
 
@@ -1169,6 +1261,13 @@ Covers: 3c. Accessible diagram publishing — diagram descriptions
 **Marks:** WRITE
 
 **Setup:** As TC-37: a description with the person's quarterly-review sentence, and Card Disputes added to the diagram afterward.
+
+```setup
+call: ea_diagram.create_diagram_description {"diagram_id": {diagram:Customer Engagement Landscape}, "dry_run": false}
+notes-insert: Customer Engagement Landscape | The digital channels team reviews this landscape each quarter.
+call: ea_model.create_element_in_language {"language_id": "WBA", "language_type": "WBABusinessApplication", "package_id": {package:Customer Engagement}, "name": "Card Disputes"} => card=element_id
+call: ea_diagram.add_element_to_diagram {"diagram_id": {diagram:Customer Engagement Landscape}, "element_id": {$card}, "left": 40, "top": -900, "right": 200, "bottom": -960, "include_preview": false}
+```
 
 **Ask:** "Refresh the description of the Customer Engagement Landscape. Keep my sentence about the quarterly review and add the new application. I approve whatever merged text you propose, so save it."
 
@@ -1296,6 +1395,10 @@ Covers: 3c. Accessible diagram publishing — diagram descriptions
 
 **Setup:** The runner writes the Notes of the Customer Engagement Landscape as one person-written line followed by the closing marker line of a description (a line beginning "[AI Power Tools description v1 lang=") with no opening marker.
 
+```setup
+notes-set: Customer Engagement Landscape | Reviewed with the channels team.\n[AI Power Tools description v1 lang=ArchiMate3@1.0 gen=0000000000000000 text=0000000000000000]
+```
+
 **Ask:** "Bring the descriptions in the Customer Engagement package up to date."
 
 **Passes when:** The run reports the Customer Engagement Landscape as having broken markers (`broken_markers`). It writes nothing to that diagram and adds no second description, and it tells the person to remove or repair the stray marker line in EA's Notes window and run the refresh again.
@@ -1387,4 +1490,5 @@ nothing; a person's text that is complete by name can still read badly.
 - TC-10 cannot test that the file is XMI 2.5.1: the version marker EA writes at the top of an XMI 2.5.1 file was not verified, so the check stops at "file exists" plus the reply.
 - TC-18 and the SKILL.md latency section depend on a `computer-use` transcript tool name; none is defined in the template's `tools` grammar.
 - TC-26 grades "picture off" through `not-called` render operations, and TC-38 cannot grade that the decided text went with the two fingerprints: a `tools` check can say a parameter must be present with a value, but not that one is absent or that a field holds the hash from an earlier result. The runner design needs both.
-- TC-23, TC-28, TC-34 to TC-38 and TC-43 rely on Setup that edits a description's text through the API and adds an element to a diagram; the template's Setup paragraph allows it, but the runner has to implement those two steps.
+- The `setup` blocks of TC-23, TC-25, TC-28, TC-32 to TC-38 and TC-43 are checked by `tools/test_acceptance_setup.py` against a fake caller. They have not been run against a live server: the scratch diagrams of TC-23 and TC-25 place elements at negative tops (the form EA stores; a positive top reads as not found in the picture), and TC-25 assumes EA draws the 69-character name 120 wide by about 91 high, as in the E0 long-name fixture.
+- TC-30 fails against server 3.6.x until the description generator stops writing the technology id ("WBA business applications") for the Westbrook model, whose stereotypes are stored under the profile name.
