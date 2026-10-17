@@ -207,11 +207,13 @@ person's words, so a machine must not choose. The result carries `current_text`,
 `current_text_hash`, `generated_text` and `generated_hash`.
 
 1. **Show the picture.** Read `get_diagram_manifest` for the diagram (the picture is on by default
-   for one diagram) and show the person the SVG in `svg_text`. The manifest reloads the diagram
-   only when that is safe. If it reports `open_with_unsaved_changes`, there is no picture: tell the
+   for one diagram). Save the `svg_text` it returns to an `.svg` file in the person's working or
+   output folder and give the person the path to open; no browser tool is needed. The manifest
+   reloads the diagram only when that is safe. If it reports `open_with_unsaved_changes`, there is no picture: tell the
    person to save the diagram in EA and run the refresh again. Do not render the picture with
    `get_diagram_svg`, which always reloads and closes the diagram.
-2. **Show both texts** side by side: the current description and the newly generated one.
+2. **Show both texts** side by side in your reply: the current description and the newly generated
+   one.
 3. **Propose a text that carries the person's edits into the new one.** Start from the new
    generated text and keep the sentences the person wrote or changed. A sentence in the current
    text that the new text lacks is either the person's edit or a statement the diagram no longer

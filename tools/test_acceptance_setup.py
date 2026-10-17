@@ -181,3 +181,31 @@ def test_a_result_without_the_kept_field_is_a_setup_error():
 def test_parameters_that_are_not_json_are_a_setup_error():
     with pytest.raises(sc.SetupError, match="not valid JSON"):
         sc.run_setup(["call: ea_model.create_element {not json}"], FakeCaller())
+
+
+def test_a_setup_error_prints_one_failed_line_and_returns_non_zero(capsys):
+    def refuse():
+        raise sc.SetupError("the open model is 'x', not the run's copy 'y'; nothing was written")
+    assert sc.run_guarded(refuse) == 1
+    out = capsys.readouterr().out
+    assert out == "SETUP FAILED: the open model is 'x', not the run's copy 'y'; nothing was written\n"
+
+
+def test_a_setup_error_inside_an_exception_group_is_still_one_line(capsys):
+    def grouped():
+        raise ExceptionGroup("unhandled errors in a TaskGroup", [sc.SetupError("name 'Nope': expected one match, found 0")])
+    assert sc.run_guarded(grouped) == 1
+    assert capsys.readouterr().out == "SETUP FAILED: name 'Nope': expected one match, found 0\n"
+
+
+def test_an_unexpected_error_is_also_one_failed_line(capsys):
+    def boom():
+        raise RuntimeError("pipe closed\nwith detail")
+    assert sc.run_guarded(boom) == 1
+    out = capsys.readouterr().out
+    assert out == "SETUP FAILED: unexpected RuntimeError: pipe closed with detail\n"
+
+
+def test_a_clean_setup_prints_done_and_returns_zero(capsys):
+    assert sc.run_guarded(lambda: None) == 0
+    assert capsys.readouterr().out == "setup done\n"

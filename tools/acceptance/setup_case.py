@@ -198,6 +198,34 @@ def run_setup(lines, caller, dry=False, run_dir=None):
     return variables
 
 
+def _fail(reason):
+    raise SetupError(reason)
+
+
+def setup_error_in(exc):
+    """The SetupError inside an exception, looking through the exception groups that anyio raises."""
+    if isinstance(exc, SetupError):
+        return exc
+    for sub in getattr(exc, "exceptions", ()):
+        found = setup_error_in(sub)
+        if found is not None:
+            return found
+    return None
+
+
+def run_guarded(fn):
+    """Run the setup; print one `SETUP FAILED: <reason>` line and return 1 when it cannot finish."""
+    try:
+        fn()
+    except Exception as exc:
+        found = setup_error_in(exc)
+        reason = str(found) if found is not None else f"unexpected {type(exc).__name__}: {exc}"
+        print("SETUP FAILED: " + " ".join(reason.split()))
+        return 1
+    print("setup done")
+    return 0
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("case_file")
@@ -210,10 +238,10 @@ def main():
         print("no setup lines")
         return 0
     if os.environ.get("ACCEPTANCE_CALL_LOG"):
-        sys.exit("ACCEPTANCE_CALL_LOG is set: unset it so the setup is not logged as the helper's calls")
+        return run_guarded(lambda: _fail("ACCEPTANCE_CALL_LOG is set: unset it so the setup is not logged as the helper's calls"))
     exe = os.environ.get("EA_MCP_EXE")
     if not exe:
-        sys.exit("EA_MCP_EXE is not set: point it at the built ea-mcp-server.exe under test")
+        return run_guarded(lambda: _fail("EA_MCP_EXE is not set: point it at the built ea-mcp-server.exe under test"))
     from mcp import ClientSession, StdioServerParameters
     from mcp.client.stdio import stdio_client
 
@@ -247,13 +275,7 @@ def main():
                 caller.call = sync_call
                 await loop.run_in_executor(None, run_setup, lines, caller, a.dry, a.run_dir)
 
-    try:
-        asyncio.run(go())
-    except SetupError as exc:
-        print(f"SETUP FAILED: {exc}")
-        return 1
-    print("setup done")
-    return 0
+    return run_guarded(lambda: asyncio.run(go()))
 
 
 if __name__ == "__main__":
