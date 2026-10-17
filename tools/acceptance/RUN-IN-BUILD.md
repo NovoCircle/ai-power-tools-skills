@@ -13,7 +13,8 @@ is handed to a background helper agent, one at a time. Nothing here needs an ext
 - **Never in parallel, and never while a live pytest run is going.** Enterprise Architect allows one
   live session per machine.
 - **Skip, and record as skipped:** cases marked `BLOCKED`, Prolaborate cases, and cases whose
-  `**Setup:**` is prose only (until it becomes an executable setup).
+  `**Setup:**` is prose only (a case with a `setup` block runs; see "Setup blocks" in
+  `tools/acceptance-case-template.md`).
 
 ## Before the first case
 
@@ -28,8 +29,10 @@ is handed to a background helper agent, one at a time. Nothing here needs an ext
 ## For each case
 
 1. **Prepare.** Make `$RUN/<skill>/<TC>/` (call it `D`). Copy `ORIGINAL` to `D/model/WestbrookBank.qea`,
-   and make `D/output/` plus a folder for each other `<name-dir>` the case names. Then run:
+   and make `D/output/` plus a folder for each other `<name-dir>` the case names. When the case has
+   no `setup` block, run:
    `$PY tools/acceptance/check_case.py before <case-file> <TC> --run-dir D`.
+   (With a `setup` block, the snapshot is taken after the setup: see step 2.)
 2. **Open the copy.** First check that the copy exists: a path EA cannot find raises a "File not
    found" dialog that blocks every later call. Build the parameters with a JSON library rather than
    by hand, because Windows backslashes break hand-quoted JSON. Then, with `ACCEPTANCE_CALL_LOG`
@@ -37,6 +40,12 @@ is handed to a background helper agent, one at a time. Nothing here needs an ext
    `$PY tools/acceptance/call.py ea_repository open_project '{"project_path": "<D>\\model\\WestbrookBank.qea"}'`.
    Confirm that `get_repository_info` names the copy. If a call does not return, take a
    screenshot of EA and clear any dialog with computer use. Never kill EA.
+
+   **If the case has a `setup` block,** build the starting state now, with `ACCEPTANCE_CALL_LOG`
+   unset: `$PY tools/acceptance/setup_case.py <case-file> <TC> --run-dir D`. If it reports `SETUP FAILED`, the
+   copy is half built: throw it away and start the case again. Then reopen `ORIGINAL` (this closes
+   the copy), run `check_case.py before ... --run-dir D` on the closed copy, and open the copy again
+   and confirm the title.
 3. **Hand the case to a helper.** Use the Agent tool (general-purpose, Sonnet, run in the
    foreground, one case at a time) with the helper brief below, filled in for the case. Set
    `ACCEPTANCE_CALL_LOG=<D>/calls.jsonl` for the helper's calls.

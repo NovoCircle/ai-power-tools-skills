@@ -20,7 +20,7 @@ has a `Covers:` line naming a heading in that skill's SKILL.md.
 | skill:ea-diagram-advisor | A | cases: 31 · not run | complete |
 | skill:ea-diagram-composition | A | cases: 24 · not run | complete |
 | skill:ea-help | A | cases: 25 · not run | complete |
-| skill:ea-import-export | A | cases: 20 · not run | complete |
+| skill:ea-import-export | A | cases: 44 · not run | complete |
 | skill:ea-mdg-assess | A | cases: 27 · not run | complete |
 | skill:ea-mdg-author | A | cases: 31 · not run | complete |
 | skill:ea-mdg-deploy | A | cases: 34 · not run | complete |
@@ -31,7 +31,7 @@ has a `Covers:` line naming a heading in that skill's SKILL.md.
 | skill:ea-power-bi | A | cases: 56 · not run | complete |
 | skill:ea-reporting-database | A | cases: 53 · not run | complete |
 | skill:ea-ruleset-author | A | cases: 25 · not run | complete |
-| skill:ea-stakeholder-reporting | A | cases: 20 · not run | complete |
+| skill:ea-stakeholder-reporting | A | cases: 24 · not run | complete |
 | skill:ea-start-here | A | cases: 35 · not run | complete |
 | skill:ea-validation | A | cases: 21 · not run | complete |
 | skill:prol-dashboards | A | cases: 50 · not run | complete |
@@ -1658,7 +1658,7 @@ method of a test class is written `Class.test_name`.
   - `plugins/ai-power-tools/skills/ea-help/references/test-cases.md#TC-23`
   - `plugins/ai-power-tools/skills/ea-help/references/test-cases.md#TC-24`
   - `plugins/ai-power-tools/skills/ea-help/references/test-cases.md#TC-25`
-- `skill:ea-import-export` A (20)
+- `skill:ea-import-export` A (44)
   - `plugins/ai-power-tools/skills/ea-import-export/references/test-cases.md#TC-01`
   - `plugins/ai-power-tools/skills/ea-import-export/references/test-cases.md#TC-02`
   - `plugins/ai-power-tools/skills/ea-import-export/references/test-cases.md#TC-03`
@@ -1679,6 +1679,30 @@ method of a test class is written `Class.test_name`.
   - `plugins/ai-power-tools/skills/ea-import-export/references/test-cases.md#TC-18`
   - `plugins/ai-power-tools/skills/ea-import-export/references/test-cases.md#TC-19`
   - `plugins/ai-power-tools/skills/ea-import-export/references/test-cases.md#TC-20`
+  - `plugins/ai-power-tools/skills/ea-import-export/references/test-cases.md#TC-21`
+  - `plugins/ai-power-tools/skills/ea-import-export/references/test-cases.md#TC-22`
+  - `plugins/ai-power-tools/skills/ea-import-export/references/test-cases.md#TC-23`
+  - `plugins/ai-power-tools/skills/ea-import-export/references/test-cases.md#TC-24`
+  - `plugins/ai-power-tools/skills/ea-import-export/references/test-cases.md#TC-25`
+  - `plugins/ai-power-tools/skills/ea-import-export/references/test-cases.md#TC-26`
+  - `plugins/ai-power-tools/skills/ea-import-export/references/test-cases.md#TC-27`
+  - `plugins/ai-power-tools/skills/ea-import-export/references/test-cases.md#TC-28`
+  - `plugins/ai-power-tools/skills/ea-import-export/references/test-cases.md#TC-29`
+  - `plugins/ai-power-tools/skills/ea-import-export/references/test-cases.md#TC-30`
+  - `plugins/ai-power-tools/skills/ea-import-export/references/test-cases.md#TC-31`
+  - `plugins/ai-power-tools/skills/ea-import-export/references/test-cases.md#TC-32`
+  - `plugins/ai-power-tools/skills/ea-import-export/references/test-cases.md#TC-33`
+  - `plugins/ai-power-tools/skills/ea-import-export/references/test-cases.md#TC-34`
+  - `plugins/ai-power-tools/skills/ea-import-export/references/test-cases.md#TC-35`
+  - `plugins/ai-power-tools/skills/ea-import-export/references/test-cases.md#TC-36`
+  - `plugins/ai-power-tools/skills/ea-import-export/references/test-cases.md#TC-37`
+  - `plugins/ai-power-tools/skills/ea-import-export/references/test-cases.md#TC-38`
+  - `plugins/ai-power-tools/skills/ea-import-export/references/test-cases.md#TC-39`
+  - `plugins/ai-power-tools/skills/ea-import-export/references/test-cases.md#TC-40`
+  - `plugins/ai-power-tools/skills/ea-import-export/references/test-cases.md#TC-41`
+  - `plugins/ai-power-tools/skills/ea-import-export/references/test-cases.md#TC-42`
+  - `plugins/ai-power-tools/skills/ea-import-export/references/test-cases.md#TC-43`
+  - `plugins/ai-power-tools/skills/ea-import-export/references/test-cases.md#TC-44`
 - `skill:ea-mdg-assess` A (27)
   - `plugins/ai-power-tools/skills/ea-mdg-assess/references/test-cases.md#TC-01`
   - `plugins/ai-power-tools/skills/ea-mdg-assess/references/test-cases.md#TC-02`
@@ -2069,7 +2093,7 @@ method of a test class is written `Class.test_name`.
   - `plugins/ai-power-tools/skills/ea-ruleset-author/references/test-cases.md#TC-23`
   - `plugins/ai-power-tools/skills/ea-ruleset-author/references/test-cases.md#TC-24`
   - `plugins/ai-power-tools/skills/ea-ruleset-author/references/test-cases.md#TC-25`
-- `skill:ea-stakeholder-reporting` A (20)
+- `skill:ea-stakeholder-reporting` A (24)
   - `plugins/ai-power-tools/skills/ea-stakeholder-reporting/references/test-cases.md#TC-01`
   - `plugins/ai-power-tools/skills/ea-stakeholder-reporting/references/test-cases.md#TC-02`
   - `plugins/ai-power-tools/skills/ea-stakeholder-reporting/references/test-cases.md#TC-03`
@@ -2090,6 +2114,10 @@ method of a test class is written `Class.test_name`.
   - `plugins/ai-power-tools/skills/ea-stakeholder-reporting/references/test-cases.md#TC-18`
   - `plugins/ai-power-tools/skills/ea-stakeholder-reporting/references/test-cases.md#TC-19`
   - `plugins/ai-power-tools/skills/ea-stakeholder-reporting/references/test-cases.md#TC-20`
+  - `plugins/ai-power-tools/skills/ea-stakeholder-reporting/references/test-cases.md#TC-21`
+  - `plugins/ai-power-tools/skills/ea-stakeholder-reporting/references/test-cases.md#TC-22`
+  - `plugins/ai-power-tools/skills/ea-stakeholder-reporting/references/test-cases.md#TC-23`
+  - `plugins/ai-power-tools/skills/ea-stakeholder-reporting/references/test-cases.md#TC-24`
 - `skill:ea-start-here` A (35)
   - `plugins/ai-power-tools/skills/ea-start-here/references/test-cases.md#TC-01`
   - `plugins/ai-power-tools/skills/ea-start-here/references/test-cases.md#TC-02`

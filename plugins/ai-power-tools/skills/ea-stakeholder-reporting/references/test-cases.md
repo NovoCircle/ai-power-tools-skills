@@ -13,6 +13,14 @@ technology, stereotypes, tags, package names and counts. The numbers below are c
 Westbrook copy; where `SKILL.md` or `references/coverage-data.md` quote different numbers, see
 Findings.
 
+TC-21 to TC-24 cover diagram descriptions. Their Setup (writing a description, adding an application
+to a diagram, writing a person's Notes) is a `setup` block that `tools/acceptance/setup_case.py` runs
+on the copy before the agent starts, so the run itself stays read-only. The ids in their checks are the Westbrook copy's (diagram 4 is the Customer
+Engagement Landscape and diagram 9 the Lending Landscape; package 10 is Customer Engagement and
+package 11 Account Management); a customer reads theirs from `t_diagram` and `t_package`. The wording
+of a generated description depends on the technology that governs the diagram, so the checks look at
+status and structure, never at exact sentences.
+
 **Marks.** `INVARIANT` (must pass on every run), `REFUSE` (the pass is a hand-off), `BLOCKED`
 (needs setup a tenant may not have). Every case carries the model-unchanged check, because the
 skill is read-only.
@@ -700,6 +708,172 @@ reply: not: says EA is frozen or has crashed on the basis that the process repor
 **Fails when:** The run reports a hang it has not diagnosed, relaunches EA, or reports success
 because the process is "Responding".
 
+### TC-21: A current description is the plain-language answer for a reader with no EA
+
+Covers: Diagram descriptions: a diagram in words
+
+**Setup:** The runner writes the description of the Customer Engagement Landscape (`create_diagram_description`, `dry_run` false) and changes nothing after it.
+
+```setup
+call: ea_diagram.create_diagram_description {"diagram_id": {diagram:Customer Engagement Landscape}, "dry_run": false}
+```
+
+**Ask:** "My director doesn't have EA. In a few sentences, what does the Customer Engagement Landscape show?"
+
+**Passes when:** The run checks that the description is current (`audit_diagram_descriptions`), reads it (the manifest's `description`, stored source), and answers in plain language from the description: what the diagram is about and what is on it, in business names. It does not quote the marker lines or any stereotype identifier, and it writes nothing.
+
+**Check:**
+
+```check
+tools: called: ea_diagram.audit_diagram_descriptions
+tools: called: ea_diagram.get_diagram_manifest
+tools: not-called: ea_diagram.create_diagram_description {"dry_run": false}
+tools: not-called: ea_diagram.update_diagram_description {"dry_run": false}
+```
+
+```check
+call: ea_diagram.audit_diagram_descriptions {"package_id": 10, "recursive": false}
+expect: summary.by_status.current = 1
+```
+
+```check
+reply: says: the description matches the diagram as it stands
+reply: not: contains the text AI Power Tools description v1
+reply: not: contains the identifier WBABusinessApplication
+```
+
+```check
+sql: SELECT (SELECT COUNT(*) FROM t_object), (SELECT COUNT(*) FROM t_connector), (SELECT COUNT(*) FROM t_diagram), (SELECT COUNT(*) FROM t_package), (SELECT COUNT(*) FROM t_objectproperties)
+expect: unchanged
+```
+
+```check
+sql: SELECT Diagram_ID, COALESCE(Notes, '') FROM t_diagram ORDER BY Diagram_ID
+expect: unchanged
+```
+
+**Fails when:** The run answers by listing shapes, stereotype names and tagged values from the diagram, so the director gets "13 Component objects, 8 stereotyped WBABusinessApplication". Or it reads the Notes, quotes the marker lines and hashes along with the text, and never checks whether the words are still true.
+
+### TC-22: A diagram with no description gets generated words, and nothing is stored
+
+Covers: Diagram descriptions: a diagram in words
+
+**Ask:** "What does the Lending Landscape show? The CFO wants one paragraph."
+
+**Passes when:** The run reads the manifest, which generates the words from the diagram when none are stored, and answers from them. It says the text was generated for this answer and is not stored in the diagram. It may offer, in one line, to store it so screen readers and document generators can use it; it does not store it.
+
+**Check:**
+
+```check
+tools: called: ea_diagram.get_diagram_manifest
+tools: not-called: ea_diagram.create_diagram_description {"dry_run": false}
+tools: not-called: ea_diagram.update_diagram_description {"dry_run": false}
+```
+
+```check
+call: ea_diagram.get_diagram_manifest {"diagram_id": 9, "include_svg": false}
+expect: description_source = generated
+```
+
+```check
+reply: says: the paragraph was generated from the diagram for this answer and is not stored in the diagram
+```
+
+```check
+sql: SELECT (SELECT COUNT(*) FROM t_object), (SELECT COUNT(*) FROM t_connector), (SELECT COUNT(*) FROM t_diagram), (SELECT COUNT(*) FROM t_package), (SELECT COUNT(*) FROM t_objectproperties)
+expect: unchanged
+```
+
+```check
+sql: SELECT Diagram_ID, COALESCE(Notes, '') FROM t_diagram ORDER BY Diagram_ID
+expect: unchanged
+```
+
+**Fails when:** The run writes the description into the diagram's Notes "to be helpful", changing the model during a question, or composes its own paragraph from the element names without the generated description, so the CFO's paragraph and the words a screen reader would later get differ.
+
+### TC-23: An out-of-date description is not quoted as current
+
+Covers: Diagram descriptions: a diagram in words
+
+**Setup:** The runner writes the description of the Customer Engagement Landscape, then adds a new application named Card Disputes to that diagram. Nobody edits the description.
+
+```setup
+call: ea_diagram.create_diagram_description {"diagram_id": {diagram:Customer Engagement Landscape}, "dry_run": false}
+call: ea_model.create_element_in_language {"language_id": "WBA", "language_type": "WBABusinessApplication", "package_id": {package:Customer Engagement}, "name": "Card Disputes"} => card=element_id
+call: ea_diagram.add_element_to_diagram {"diagram_id": {diagram:Customer Engagement Landscape}, "element_id": {$card}, "left": 40, "top": -900, "right": 200, "bottom": -960, "include_preview": false}
+```
+
+**Ask:** "What's on the Customer Engagement Landscape? I'm quoting it in a board paper."
+
+**Passes when:** The run checks the description's status before quoting it and finds it out of date (`stale`). It tells the person the stored description predates a change to the diagram, does not present it as what the diagram shows now, and says how to get a current one: a refresh, which it can preview and which `ea-import-export` writes. It writes nothing.
+
+**Check:**
+
+```check
+tools: called: ea_diagram.audit_diagram_descriptions
+tools: not-called: ea_diagram.create_diagram_description {"dry_run": false}
+```
+
+```check
+call: ea_diagram.audit_diagram_descriptions {"package_id": 10, "recursive": false}
+expect: summary.by_status.stale = 1
+```
+
+```check
+reply: says: the stored description is out of date because the diagram changed after it was written
+reply: not: presents the stored description as what the diagram shows now
+```
+
+```check
+sql: SELECT Diagram_ID, COALESCE(Notes, '') FROM t_diagram ORDER BY Diagram_ID
+expect: unchanged
+```
+
+**Fails when:** The run reads the stored description, finds well-formed text, and quotes it. Card Disputes is on the diagram and missing from the board paper, and nothing in the reply says the words are old.
+
+### TC-24: Notes a person wrote are their text, and are checked for what they leave out
+
+Covers: Diagram descriptions: a diagram in words
+
+**Setup:** The runner writes the Notes of the Account Management Landscape as "Shows the accounts the retail bank manages." (no marker lines). The diagram holds twelve elements, none of them named in that sentence.
+
+```setup
+notes-set: Account Management Landscape | Shows the accounts the retail bank manages.
+```
+
+**Ask:** "Can I quote the notes on the Account Management Landscape as a description of what the diagram holds?"
+
+**Passes when:** The run audits the diagram and finds the notes are a person's text, not a generated description (`human_only`). It tells the person they can quote the sentence as the author's words, but that it leaves out the elements on the diagram, so it is not a description of what the diagram holds. It writes nothing.
+
+**Check:**
+
+```check
+tools: called: ea_diagram.audit_diagram_descriptions
+tools: not-called: ea_diagram.update_diagram_description {"dry_run": false}
+```
+
+```check
+call: ea_diagram.audit_diagram_descriptions {"package_id": 11, "recursive": false}
+expect: summary.by_status.human_only = 1
+```
+
+```check
+call: ea_diagram.audit_diagram_descriptions {"package_id": 11, "recursive": false}
+expect: summary.incomplete = 1
+```
+
+```check
+reply: says: the notes are a person's text and name none of the elements on the diagram
+reply: not: says the notes describe everything the diagram holds
+```
+
+```check
+sql: SELECT Diagram_ID, COALESCE(Notes, '') FROM t_diagram ORDER BY Diagram_ID
+expect: unchanged
+```
+
+**Fails when:** The run reports the notes as the diagram's description because there is text in the Notes. The one-line sentence goes into a document as an account of a twelve-element diagram.
+
 ## Invariants
 
 **The denominator invariant.** Every figure the run quotes as "X of N" can be checked without a
@@ -763,3 +937,5 @@ compute X and N independently from the model.
 - `Verify in EA's UI` is written for diagram work ("after any diagram create or edit, reload the
   diagram") although this skill creates no diagram. TC-20 covers only the hang procedure and needs
   a modal dialog the runner opens by driving the desktop, which is why it is marked `BLOCKED`.
+- The new section (`Diagram descriptions: a diagram in words`) is read-only, but its text points to `ea-import-export` for storing or refreshing a description. TC-23 grades that the run says the description is out of date and does not write; whether it names the right next step is graded from the reply.
+- TC-22 grades "generated, not stored" through the manifest's `description_source`, which the run must have read; a reply that paraphrases a stored description would also say "generated". The `tools` check cannot see which source the run reported.

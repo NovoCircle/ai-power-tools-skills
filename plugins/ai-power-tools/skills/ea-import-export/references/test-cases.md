@@ -7,6 +7,12 @@ success, not an error: a status of "exported" over a file that holds nothing, a 
 that never used the template the person named, a picture that is a stale cached render. This file
 is built to catch those.
 
+It also promises two things for diagrams: to hand another tool a complete reading of a diagram, with
+every shape still tied to its element (the manifest), and to give every diagram a description that
+stays current without losing a person's words. Those fail quietly as well: a Visio file with no way
+back to the model, a description that omits half the diagram, a refresh that overwrites an edit. TC-21
+to TC-44 are built to catch those.
+
 **Fixture.** A fresh copy of the Westbrook Bank model opened in EA (technology `WBA`, qualified
 stereotype form `WBA::`, for example `WBA::WBABusinessApplication`). Westbrook Bank is our
 illustration. A customer runs these cases against their own model, substituting their technology,
@@ -15,9 +21,21 @@ stereotypes, package and diagram names. The Westbrook copy defines no custom rep
 what a correct run says there. Counts quoted below describe the Westbrook copy at the time of
 writing; where a case depends on a count, the check reads it from the model.
 
+**Fixture for the manifest and description cases (TC-21 to TC-44).** Where a case has a Setup, its
+`setup` block (`tools/acceptance/setup_case.py`) builds the starting state on the copy through the
+server's own operations before the agent starts: it writes a description, edits its text as EA's Notes
+window would, adds an application to a diagram, or builds a small scratch diagram in a new package
+under the model root. The ids in the checks are the Westbrook copy's (diagram 4 is the Customer Engagement
+Landscape, package 10 is Customer Engagement, package 20 its child AI Services); a customer reads
+theirs from `t_diagram` and `t_package`. The wording of a generated description depends on the
+technology that governs the diagram, so the checks look for names, markers and structure, never for
+exact sentences. A case marked BLOCKED needs a state COM cannot produce, or machine-wide EA state, and
+runs only where the runner provides it.
+
 **Marks.** `WRITE` (the run changes the copy), `EFFECT` (the run writes a file outside the model;
 in every EFFECT case here the ask names the folder, so the skill does not need to ask first),
-`REFUSE` (the pass is a refusal or a plain "no"), `INVARIANT` (must pass on every run).
+`REFUSE` (the pass is a refusal or a plain "no"), `INVARIANT` (must pass on every run), `BLOCKED`
+(needs setup the copy cannot hold on its own; a correct run reports the block).
 
 ## Cases
 
@@ -642,9 +660,799 @@ expect: unchanged
 
 **Fails when:** The run says yes and describes an import from the Cowork session. The person plans a review round-trip that cannot happen.
 
+### TC-21: A copy that must stay linked is drawn from the manifest
+
+Covers: 3b. Redrawing a diagram in another tool — `get_diagram_manifest` / `get_package_manifest`; 1. Which operation for which purpose
+
+**Ask:** "We want to redraw the Customer Engagement Landscape in our diagramming tool, and later refresh that copy when the model changes. Get me what I need for that."
+
+**Passes when:** The run reads the diagram's manifest, not a picture and not a Visio file. It reports that every shape comes back with the element it stands for (its GUID), so a refresh can find it again, and that the positions are in one declared frame. It writes nothing.
+
+**Check:**
+
+```check
+tools: called: ea_diagram.get_diagram_manifest
+tools: not-called: ea_diagram.export_diagram_to_visio
+tools: not-called: ea_diagram.get_diagram_png
+```
+
+```check
+call: ea_diagram.get_diagram_manifest {"diagram_id": 4, "include_svg": false}
+expect: counts.objects = 13
+```
+
+```check
+sql: SELECT (SELECT COUNT(*) FROM t_object), (SELECT COUNT(*) FROM t_connector), (SELECT COUNT(*) FROM t_diagram), (SELECT COUNT(*) FROM t_package), (SELECT COUNT(*) FROM t_objectproperties)
+expect: unchanged
+```
+
+```check
+reply: says: each shape comes with the GUID of the element it stands for, so a copy can be refreshed later
+reply: says: the positions are given in one declared frame
+```
+
+**Fails when:** The run exports a PNG, an SVG or a Visio file. Each is a plausible answer to "redraw it", and none keeps the link between a shape and its element, so the copy cannot be refreshed and drifts the first time the model changes. Nothing errors.
+
+### TC-22: The Visio export is not offered for new work that must be refreshed
+
+Covers: 3. Exporting to Visio — `export_diagram_to_visio`; 3b. Redrawing a diagram in another tool — `get_diagram_manifest` / `get_package_manifest`
+
+**Ask:** "Our Visio team is going to rebuild the Account Management Landscape properly, and they want to be able to update it from the model afterwards. Export it to Visio for them, please."
+
+**Passes when:** The run does not simply produce the Visio file. It says the Visio export is superseded for new work: it keeps no link between a rectangle and its element, no nesting and no line routes, and it draws a connector that is hidden in EA. It reads the manifest for the hand-off instead, or offers it and says what it gives the Visio team that the file does not. It may still offer the quick Visio file as a one-off if nothing needs refreshing later.
+
+**Check:**
+
+```check
+tools: called: ea_diagram.get_diagram_manifest
+```
+
+```check
+reply: says: the Visio export keeps no link between a shape and its element, so it cannot be refreshed from the model
+reply: not: promises that the exported Visio file can be refreshed from the model
+```
+
+```check
+sql: SELECT (SELECT COUNT(*) FROM t_object), (SELECT COUNT(*) FROM t_connector), (SELECT COUNT(*) FROM t_diagram), (SELECT COUNT(*) FROM t_package), (SELECT COUNT(*) FROM t_objectproperties)
+expect: unchanged
+```
+
+**Fails when:** The run calls `export_diagram_to_visio`, reports the shape and connector counts matching, and hands the file over as the basis for a refreshable copy. The counts are right and the file opens, but it is a set of rectangles with no way back to the model.
+
+### TC-23: Nesting says how it is known
+
+Covers: 3b. Redrawing a diagram in another tool — `get_diagram_manifest` / `get_package_manifest`
+
+**Setup:** The runner builds a scratch diagram named Channel Grouping in a new package under the model root. It holds a boundary named Retail Channels whose rectangle contains the centers of three existing applications (Westbrook Mobile Banking App, Westbrook Online Account Opening, Westbrook Notification Service) and a fourth application (Westbrook Branch Teller Platform) outside it. None of the three has the boundary as its parent in the model (EA stores nothing about what a boundary encloses).
+
+```setup
+call: ea_model.create_package {"parent_package_id": 1, "name": "Nesting Scratch"} => pkg=package_id
+call: ea_diagram.create_diagram {"package_id": {$pkg}, "name": "Channel Grouping", "type": "Logical", "include_preview": false}
+call: ea_model.create_element {"package_id": {$pkg}, "name": "Retail Channels", "type": "Boundary"} => boundary=element_id
+call: ea_diagram.add_element_to_diagram {"diagram_id": {diagram:Channel Grouping}, "element_id": {$boundary}, "left": 50, "top": -50, "right": 520, "bottom": -330, "include_preview": false}
+call: ea_diagram.add_element_to_diagram {"diagram_id": {diagram:Channel Grouping}, "element_id": {element:Westbrook Mobile Banking App}, "left": 80, "top": -100, "right": 200, "bottom": -160, "include_preview": false}
+call: ea_diagram.add_element_to_diagram {"diagram_id": {diagram:Channel Grouping}, "element_id": {element:Westbrook Online Account Opening}, "left": 240, "top": -100, "right": 360, "bottom": -160, "include_preview": false}
+call: ea_diagram.add_element_to_diagram {"diagram_id": {diagram:Channel Grouping}, "element_id": {element:Westbrook Notification Service}, "left": 380, "top": -100, "right": 500, "bottom": -160, "include_preview": false}
+call: ea_diagram.add_element_to_diagram {"diagram_id": {diagram:Channel Grouping}, "element_id": {element:Westbrook Branch Teller Platform}, "left": 600, "top": -100, "right": 720, "bottom": -160, "include_preview": false}
+```
+
+**Ask:** "On the Channel Grouping diagram, which applications sit inside Retail Channels? I'm rebuilding the grouping in another tool and I need to be sure of it."
+
+**Passes when:** The run reads the manifest and names the three applications, and not the Branch Teller Platform. It says the grouping was read from the drawing, not from the model: EA records nothing about what a boundary encloses, so the parent is the smallest container whose drawn rectangle holds the shape's center (basis `enclosed`), and a shape whose model parent is also on the diagram has the basis `model`. It does not present the grouping as a model relationship.
+
+**Check:**
+
+```check
+tools: called: ea_diagram.get_diagram_manifest
+```
+
+```check
+call: ea_diagram.get_diagram_manifest {"diagram_id": {diagram:Channel Grouping}, "include_svg": false}
+expect: counts.objects = 5
+```
+
+```check
+reply: says: the applications were placed inside Retail Channels by reading the drawing, because EA stores nothing about what a boundary encloses
+reply: not: says the applications are children of Retail Channels in the model
+```
+
+```check
+sql: SELECT COUNT(*) FROM t_object WHERE ParentID IN (SELECT Object_ID FROM t_object WHERE Name = 'Retail Channels')
+expect: = 0
+```
+
+**Fails when:** The run answers from the model's parent links alone and says the boundary holds nothing, or reports the three applications as owned by the boundary as if EA recorded it. Either looks like a clean answer; the first loses the grouping, the second invents a relationship.
+
+### TC-24: Lines EA routes itself are named, not promised
+
+Covers: 3b. Redrawing a diagram in another tool — `get_diagram_manifest` / `get_package_manifest`
+
+**Ask:** "When our other tool redraws the Account Management Landscape from the manifest, will every line come out exactly as it does in EA?"
+
+**Passes when:** The run reads the manifest and says no. On this diagram all five lines are routed by EA when it draws and have no stored route (`counts.links_unstored` is 5): the manifest marks each `route_drawn_only` and gives no points, and the other tool routes them itself. In general about one line in six has no stored route; lines that do come with their points in the same frame. It does not claim to trace routes out of the picture.
+
+**Check:**
+
+```check
+tools: called: ea_diagram.get_diagram_manifest
+```
+
+```check
+call: ea_diagram.get_diagram_manifest {"diagram_id": {diagram:Account Management Landscape}, "include_svg": false}
+expect: counts.links_unstored = 5
+```
+
+```check
+reply: says: lines that EA routes itself come back without a route and the other tool has to route them
+reply: not: promises that every line will be redrawn exactly as in EA
+```
+
+```check
+sql: SELECT (SELECT COUNT(*) FROM t_object), (SELECT COUNT(*) FROM t_connector), (SELECT COUNT(*) FROM t_diagram), (SELECT COUNT(*) FROM t_package), (SELECT COUNT(*) FROM t_objectproperties)
+expect: unchanged
+```
+
+**Fails when:** The run says yes, the manifest carries every line's route. The first diagram redrawn then has straight lines where EA drew bends, and nothing marked which lines were affected.
+
+### TC-25: Drawn size comes with the picture, and a shape not found is not guessed
+
+Covers: 3b. Redrawing a diagram in another tool — `get_diagram_manifest` / `get_package_manifest`
+
+**Setup:** The runner builds a scratch diagram named Cross-Border Sizing in a new package under the model root. It holds one application with a 69-character name (Westbrook Cross-Border Payments Settlement and Reconciliation Service) stored 120 wide by 50 high, which EA draws taller than its stored box by wrapping the name, and one actor (Branch Customer), a figure EA draws inside a larger rectangle so the picture gives no box for it.
+
+```setup
+call: ea_model.create_package {"parent_package_id": 1, "name": "Sizing Scratch"} => pkg=package_id
+call: ea_diagram.create_diagram {"package_id": {$pkg}, "name": "Cross-Border Sizing", "type": "Logical", "include_preview": false}
+call: ea_model.create_element_in_language {"language_id": "WBA", "language_type": "WBABusinessApplication", "package_id": {$pkg}, "name": "Westbrook Cross-Border Payments Settlement and Reconciliation Service"} => long=element_id
+call: ea_model.create_element {"package_id": {$pkg}, "name": "Branch Customer", "type": "Actor"} => actor=element_id
+call: ea_diagram.add_element_to_diagram {"diagram_id": {diagram:Cross-Border Sizing}, "element_id": {$long}, "left": 60, "top": -60, "right": 180, "bottom": -110, "include_preview": false}
+call: ea_diagram.add_element_to_diagram {"diagram_id": {diagram:Cross-Border Sizing}, "element_id": {$actor}, "left": 320, "top": -60, "right": 370, "bottom": -150, "include_preview": false}
+```
+
+**Ask:** "Give me the sizes of the boxes on the Cross-Border Sizing diagram as EA actually draws them, not as they are stored, so a redraw in another tool matches."
+
+**Passes when:** The run reads the manifest of that one diagram with the picture on, which is the default for a single diagram. It reports a drawn size for the long-named application, drawn taller than its stored height of 50, and none for the actor, which it reports as not found in the picture (`drawn_match` not `matched`) rather than guessing a box. It writes nothing else.
+
+**Check:**
+
+```check
+tools: called: ea_diagram.get_diagram_manifest
+```
+
+```check
+call: ea_diagram.get_diagram_manifest {"diagram_id": {diagram:Cross-Border Sizing}}
+expect: counts.objects = 2
+```
+
+```check
+sql: SELECT COUNT(*) FROM t_diagramobjects x JOIN t_diagram d ON d.Diagram_ID = x.Diagram_ID WHERE d.Name = 'Cross-Border Sizing'
+expect: = 2
+```
+
+```check
+reply: says: the long-named application is drawn taller than its stored height
+reply: says: the actor was not found in the picture and no size is given for it
+reply: says: a drawn size is given only where EA's picture shows a box that differs from the stored one
+reply: says: shapes that could not be found in the picture are reported as not found and are not guessed
+```
+
+```check
+sql: SELECT (SELECT COUNT(*) FROM t_object), (SELECT COUNT(*) FROM t_connector), (SELECT COUNT(*) FROM t_diagram), (SELECT COUNT(*) FROM t_package), (SELECT COUNT(*) FROM t_objectproperties)
+expect: unchanged
+```
+
+**Fails when:** The run reads the manifest with the picture switched off, or reads only stored rectangles, and reports them as the sizes EA draws. Every long-named box is then too small in the redraw, and the manifest said nothing was wrong.
+
+### TC-26: A package read describes each element once and opens nothing
+
+Covers: 3b. Redrawing a diagram in another tool — `get_diagram_manifest` / `get_package_manifest`
+
+**Ask:** "I want every diagram in the Customer Engagement package and the packages below it in one reading, so we can see which elements they use. Don't open anything in EA's window."
+
+**Passes when:** The run reads the package manifest with the packages below included and with the picture off, which is the default for a package. It reports two diagrams and sixteen distinct elements, and says that an element placed on both diagrams appears once in the shared `elements` section. It does not render the diagrams.
+
+**Check:**
+
+```check
+tools: called: ea_diagram.get_package_manifest {"recursive": true}
+tools: not-called: ea_diagram.get_diagram_svg
+tools: not-called: ea_diagram.get_diagram_png
+```
+
+```check
+call: ea_diagram.get_package_manifest {"package_id": 10, "recursive": true}
+expect: counts.diagrams = 2
+```
+
+```check
+call: ea_diagram.get_package_manifest {"package_id": 10, "recursive": true}
+expect: counts.elements = 16
+```
+
+```check
+# the invariant: one entry per distinct element placed on the package's diagrams
+sql: SELECT COUNT(DISTINCT x.Object_ID) FROM t_diagramobjects x JOIN t_diagram d ON d.Diagram_ID = x.Diagram_ID JOIN t_package p ON p.Package_ID = d.Package_ID WHERE p.Name IN ('Customer Engagement', 'AI Services')
+expect: = 16
+```
+
+```check
+reply: says: an element placed on both diagrams is described once, in the shared elements section, and counted once
+```
+
+**Fails when:** The run reads each diagram separately and reports 17 elements, counting the one on both diagrams twice, or asks for the picture of each diagram and drives EA's window to get it. The count is plausible and wrong, and the second changes tab state the person did not ask to touch.
+
+### TC-27: A diagram with unsaved changes is read from storage, with no picture
+
+Covers: 3b. Redrawing a diagram in another tool — `get_diagram_manifest` / `get_package_manifest`
+
+**Marks:** BLOCKED
+
+**Setup:** BLOCKED: the case needs a diagram open in EA's window with unsaved changes, and COM cannot produce that state. It runs where a person (or computer use) has opened the Lending Landscape and moved a shape without saving.
+
+**Ask:** "I'm halfway through editing the Lending Landscape in EA and haven't saved. Get me its manifest for the redraw."
+
+**Passes when:** The run reads the manifest and reports that the diagram is open in EA with unsaved changes. It says the manifest comes from the stored diagram, so the unsaved move is not in it, that no picture was taken and no drawn sizes are given, and that the person should save in EA and read again if they want the change included. It does not close or reload the diagram, and the person's unsaved move is still there afterwards.
+
+**Check:**
+
+```check
+tools: called: ea_diagram.get_diagram_manifest
+```
+
+```check
+reply: says: the diagram is open with unsaved changes, so the manifest shows the stored diagram without them and no picture was taken
+reply: says: the person should save in EA and read the manifest again to include their changes
+```
+
+**Fails when:** The run reloads or closes the diagram to get a picture. EA discards the person's unsaved work without a warning, and the manifest it returns looks complete.
+
+### TC-28: The manifest carries the stored description, edits included
+
+Covers: 3b. Redrawing a diagram in another tool — `get_diagram_manifest` / `get_package_manifest`
+
+**Setup:** The runner writes the description of the Customer Engagement Landscape, then adds the sentence "The digital channels team reviews this landscape each quarter." to the generated block through the API, as an edit in EA's Notes window would.
+
+```setup
+call: ea_diagram.create_diagram_description {"diagram_id": {diagram:Customer Engagement Landscape}, "dry_run": false}
+notes-insert: Customer Engagement Landscape | The digital channels team reviews this landscape each quarter.
+```
+
+**Ask:** "Read the Customer Engagement Landscape for the redraw and give me the description that should travel with the copy."
+
+**Passes when:** The run uses the description from the manifest and says it is the stored one (source `notes`), which includes the quarterly-review sentence the person added. It does not generate a fresh description and discard the edit.
+
+**Check:**
+
+```check
+call: ea_diagram.get_diagram_manifest {"diagram_id": 4, "include_svg": false}
+expect: description_source = notes
+```
+
+```check
+reply: says: the description is the one stored in the diagram's notes, with the quarterly review sentence
+```
+
+```check
+sql: SELECT COUNT(*) FROM t_diagram WHERE Name = 'Customer Engagement Landscape' AND Notes LIKE '%reviews this landscape each quarter%'
+expect: = 1
+```
+
+**Fails when:** The run writes its own description for the copy from the shapes it just read. The copy then carries words that differ from the ones the architects see, and the person's sentence is gone from it.
+
+### TC-29: A diagram gets a description in its Notes
+
+Covers: 3c. Accessible diagram publishing — diagram descriptions
+
+**Marks:** WRITE, INVARIANT
+
+**Ask:** "The Customer Engagement Landscape has no alt text. Write a description for it, in its notes, that a screen reader or an AI assistant can use."
+
+**Passes when:** The run generates the description and writes it into the diagram's Notes (a preview first is fine). Afterwards the Notes hold exactly one description block between its two marker lines, the text names every element placed on the diagram, and no other diagram's Notes changed. The run says the words are generated from the diagram, so the same diagram always gets the same words.
+
+**Check:**
+
+```check
+tools: called: ea_diagram.create_diagram_description {"dry_run": false}
+```
+
+```check
+# exactly one block, begin and end marker present
+sql: SELECT (LENGTH(Notes) - LENGTH(REPLACE(Notes, '[AI Power Tools description v1 begin]', ''))) / LENGTH('[AI Power Tools description v1 begin]'), INSTR(Notes, '[AI Power Tools description v1 lang=') > 0 FROM t_diagram WHERE Name = 'Customer Engagement Landscape'
+expect: rows: [[1, 1]]
+```
+
+```check
+# the invariant: every named element on the diagram appears in the text
+sql: SELECT COUNT(*) FROM t_diagramobjects x JOIN t_object o ON o.Object_ID = x.Object_ID JOIN t_diagram d ON d.Diagram_ID = x.Diagram_ID WHERE d.Name = 'Customer Engagement Landscape' AND o.Object_Type NOT IN ('Note', 'Text') AND o.Name <> '' AND INSTR(COALESCE(d.Notes, ''), o.Name) = 0 AND INSTR(COALESCE(d.Notes, ''), REPLACE(o.Name, '&', '&amp;')) = 0
+expect: = 0
+```
+
+```check
+sql: SELECT COUNT(*) FROM t_diagram WHERE Name <> 'Customer Engagement Landscape' AND Notes LIKE '%AI Power Tools description%'
+expect: = 0
+```
+
+```check
+reply: says: the description is generated from the diagram, so the same diagram always gets the same words
+```
+
+**Fails when:** The run writes a summary of a few sentences it composed itself, naming some of the applications. It reads well, passes a glance, and leaves out elements the diagram holds, so a screen reader user never learns they are there. Or it writes the text into a place other than the diagram's Notes.
+
+### TC-30: The description says what the diagram means, not how it is drawn
+
+Covers: 3c. Accessible diagram publishing — diagram descriptions
+
+**Marks:** INVARIANT
+
+**Ask:** "Describe the Customer Engagement Landscape in its notes. I want it readable by someone who cannot see the diagram, in our business terms."
+
+**Passes when:** The run writes the description. The first line is a single short sentence of at most 150 characters, usable as alt text. The text uses the technology's business names for kinds and relationships and contains no stereotype identifiers, technology ids or profile names ("WBA" as a word, "WestbrookBankArchitecture"), or drawing words (boundary, connector, collapsed, swimlane, placement). It says nothing about positions, colors or line styles.
+
+**Check:**
+
+```check
+tools: called: ea_diagram.create_diagram_description {"dry_run": false}
+```
+
+```check
+# first line of the block is between 1 and 150 characters
+sql: SELECT LENGTH(RTRIM(SUBSTR(SUBSTR(Notes, INSTR(Notes, CHAR(10)) + 1), 1, INSTR(SUBSTR(Notes, INSTR(Notes, CHAR(10)) + 1), CHAR(10)) - 1), CHAR(13))) BETWEEN 1 AND 150 FROM t_diagram WHERE Name = 'Customer Engagement Landscape'
+expect: rows: [[1]]
+```
+
+```check
+# no stereotype identifiers or drawing words
+sql: SELECT COUNT(*) FROM t_diagram WHERE Name = 'Customer Engagement Landscape' AND (Notes LIKE '%WBABusiness%' OR Notes LIKE '%WBAVendor%' OR Notes LIKE '%::%' OR Notes LIKE '%boundary%' OR Notes LIKE '%connector%' OR Notes LIKE '%collapsed%' OR Notes LIKE '%swimlane%' OR Notes LIKE '%placement%')
+expect: = 0
+```
+
+```check
+# no technology id or profile name: "WBA" as a word (not inside another word), or the profile name
+sql: SELECT COUNT(*) FROM t_diagram WHERE Name = 'Customer Engagement Landscape' AND (Notes LIKE '%WestbrookBankArchitecture%' OR (' ' || REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(Notes, CHAR(13), ' '), CHAR(10), ' '), ',', ' '), '.', ' '), '(', ' ') || ' ') LIKE '% WBA %')
+expect: = 0
+```
+
+**Fails when:** The text reads "WBABusinessApplication Westbrook Mobile Banking App is connected by a connector to ...", or "eight WBA business applications". It is accurate and useless to the person it is for, and a screen reader reads the identifiers aloud.
+
+### TC-31: The first call previews and writes nothing
+
+Covers: 3c. Accessible diagram publishing — diagram descriptions
+
+**Ask:** "Show me what you would write as the description of the Account Management Landscape. Don't change anything yet."
+
+**Passes when:** The run previews the description (`dry_run` is true unless the call says otherwise) and shows the text. The Notes of every diagram are exactly as they were.
+
+**Check:**
+
+```check
+sql: SELECT Diagram_ID, COALESCE(Notes, '') FROM t_diagram ORDER BY Diagram_ID
+expect: unchanged
+```
+
+```check
+sql: SELECT (SELECT COUNT(*) FROM t_object), (SELECT COUNT(*) FROM t_connector), (SELECT COUNT(*) FROM t_diagram), (SELECT COUNT(*) FROM t_package), (SELECT COUNT(*) FROM t_objectproperties)
+expect: unchanged
+```
+
+```check
+reply: says: this is a preview and nothing has been written to the diagram
+```
+
+**Fails when:** The run passes `dry_run` as false "to show the result" and the description is stored while the person believes it is a draft. The text shown is the same either way.
+
+### TC-32: A person's notes are kept and the description is added after them
+
+Covers: 3c. Accessible diagram publishing — diagram descriptions
+
+**Marks:** WRITE, INVARIANT
+
+**Setup:** The runner writes the Notes of the Lending Landscape as exactly "Owned by the lending architecture team. Reviewed quarterly." (no marker lines).
+
+```setup
+notes-set: Lending Landscape | Owned by the lending architecture team. Reviewed quarterly.
+```
+
+**Ask:** "Add a description to the Lending Landscape. Keep what is already in its notes."
+
+**Passes when:** The run does not overwrite the Notes. It finds that `create_diagram_description` refuses a diagram whose Notes are not empty (`notes_not_empty`), and uses `update_diagram_description` in mode `extend`. Afterwards the Notes begin with the person's two sentences, byte for byte, followed by one description block.
+
+**Check:**
+
+```check
+tools: called: ea_diagram.update_diagram_description {"mode": "extend", "dry_run": false}
+```
+
+```check
+sql: SELECT SUBSTR(Notes, 1, LENGTH('Owned by the lending architecture team. Reviewed quarterly.')) = 'Owned by the lending architecture team. Reviewed quarterly.', (LENGTH(Notes) - LENGTH(REPLACE(Notes, '[AI Power Tools description v1 begin]', ''))) / LENGTH('[AI Power Tools description v1 begin]') FROM t_diagram WHERE Name = 'Lending Landscape'
+expect: rows: [[1, 1]]
+```
+
+**Fails when:** The run clears the Notes and writes the description, or writes the description above the person's sentences with a changed spacing. The review note is the owner's only record, and nothing in the reply says it was lost.
+
+### TC-33: A package run writes what it can and reports the rest
+
+Covers: 3c. Accessible diagram publishing — diagram descriptions
+
+**Marks:** WRITE
+
+**Setup:** The runner writes the Notes of the AI Services Solution Architecture as "Draft, do not circulate." (no marker lines). The Customer Engagement Landscape has empty Notes.
+
+```setup
+notes-set: AI Services Solution Architecture | Draft, do not circulate.
+```
+
+**Ask:** "Give every diagram in the Customer Engagement package, and the packages below it, a description. Don't touch any notes that already have text."
+
+**Passes when:** The run writes the description for the Customer Engagement Landscape and leaves the AI Services Solution Architecture's Notes exactly as they were, reporting that diagram as not written because its Notes already hold text (`notes_not_empty`). One diagram's refusal does not stop the other.
+
+**Check:**
+
+```check
+tools: called: ea_diagram.create_diagram_description {"recursive": true, "dry_run": false}
+```
+
+```check
+sql: SELECT COALESCE(Notes, '') FROM t_diagram WHERE Name = 'AI Services Solution Architecture'
+expect: rows: [["Draft, do not circulate."]]
+```
+
+```check
+sql: SELECT INSTR(Notes, '[AI Power Tools description v1 begin]') > 0 FROM t_diagram WHERE Name = 'Customer Engagement Landscape'
+expect: rows: [[1]]
+```
+
+```check
+reply: says: the AI Services Solution Architecture was not written because its notes already hold text
+```
+
+**Fails when:** The run stops at the first refusal and writes nothing, or overwrites the AI Services Solution Architecture's notes to finish the job. Both end with a reply that sounds complete.
+
+### TC-34: The audit says which descriptions need attention
+
+Covers: 3c. Accessible diagram publishing — diagram descriptions
+
+**Setup:** The runner writes the description of the Customer Engagement Landscape, then adds a new application named Card Disputes to that diagram. The AI Services Solution Architecture has empty Notes.
+
+```setup
+call: ea_diagram.create_diagram_description {"diagram_id": {diagram:Customer Engagement Landscape}, "dry_run": false}
+call: ea_model.create_element_in_language {"language_id": "WBA", "language_type": "WBABusinessApplication", "package_id": {package:Customer Engagement}, "name": "Card Disputes"} => card=element_id
+call: ea_diagram.add_element_to_diagram {"diagram_id": {diagram:Customer Engagement Landscape}, "element_id": {$card}, "left": 40, "top": -900, "right": 200, "bottom": -960, "include_preview": false}
+```
+
+**Ask:** "Which diagrams under Customer Engagement have a description that is missing or out of date?"
+
+**Passes when:** The run audits the package and reports counts by status and the diagrams that need work: the Customer Engagement Landscape is out of date (`stale`) and the AI Services Solution Architecture has no description (`empty`). It reads, and writes nothing.
+
+**Check:**
+
+```check
+tools: called: ea_diagram.audit_diagram_descriptions
+tools: not-called: ea_diagram.create_diagram_description {"dry_run": false}
+tools: not-called: ea_diagram.update_diagram_description {"dry_run": false}
+```
+
+```check
+call: ea_diagram.audit_diagram_descriptions {"package_id": 10}
+expect: summary.by_status.stale = 1
+```
+
+```check
+call: ea_diagram.audit_diagram_descriptions {"package_id": 10}
+expect: summary.by_status.empty = 1
+```
+
+```check
+sql: SELECT Diagram_ID, COALESCE(Notes, '') FROM t_diagram ORDER BY Diagram_ID
+expect: unchanged
+```
+
+**Fails when:** The run judges "up to date" by reading the Notes and finding text, so the stale description passes as current. Or it refreshes both diagrams to be helpful, writing a description the person only asked to hear about.
+
+### TC-35: A refresh brings a changed description up to date
+
+Covers: 3c. Accessible diagram publishing — diagram descriptions
+
+**Marks:** WRITE
+
+**Setup:** The runner writes the description of the Customer Engagement Landscape (generator output, no edits), then adds a new application named Card Disputes (`WBA::WBABusinessApplication`) to that diagram.
+
+```setup
+call: ea_diagram.create_diagram_description {"diagram_id": {diagram:Customer Engagement Landscape}, "dry_run": false}
+call: ea_model.create_element_in_language {"language_id": "WBA", "language_type": "WBABusinessApplication", "package_id": {package:Customer Engagement}, "name": "Card Disputes"} => card=element_id
+call: ea_diagram.add_element_to_diagram {"diagram_id": {diagram:Customer Engagement Landscape}, "element_id": {$card}, "left": 40, "top": -900, "right": 200, "bottom": -960, "include_preview": false}
+```
+
+**Ask:** "We added Card Disputes to the Customer Engagement Landscape. Bring that diagram's description up to date."
+
+**Passes when:** The run refreshes the description (mode `refresh`). The diagram changed and nobody edited the words, so the new text is written without a question. Afterwards the Notes name Card Disputes, hold one block, and the audit reads the diagram as `current`.
+
+**Check:**
+
+```check
+tools: called: ea_diagram.update_diagram_description {"mode": "refresh", "dry_run": false}
+```
+
+```check
+sql: SELECT INSTR(Notes, 'Card Disputes') > 0, (LENGTH(Notes) - LENGTH(REPLACE(Notes, '[AI Power Tools description v1 begin]', ''))) / LENGTH('[AI Power Tools description v1 begin]') FROM t_diagram WHERE Name = 'Customer Engagement Landscape'
+expect: rows: [[1, 1]]
+```
+
+```check
+call: ea_diagram.audit_diagram_descriptions {"package_id": 10}
+expect: summary.by_status.current = 1
+```
+
+**Fails when:** The run writes a second description block next to the first, or hand-edits the old text to add one sentence. The audit then reports a broken or edited description, and the same diagram no longer always gets the same words.
+
+### TC-36: A person's edit survives a refresh when the diagram has not changed
+
+Covers: 3c. Accessible diagram publishing — diagram descriptions
+
+**Marks:** WRITE, INVARIANT
+
+**Setup:** The runner writes the description of the Customer Engagement Landscape, then adds the sentence "The digital channels team reviews this landscape each quarter." to the generated block through the API, as an edit in EA's Notes window would. The diagram does not change.
+
+```setup
+call: ea_diagram.create_diagram_description {"diagram_id": {diagram:Customer Engagement Landscape}, "dry_run": false}
+notes-insert: Customer Engagement Landscape | The digital channels team reviews this landscape each quarter.
+```
+
+**Ask:** "Bring the description of the Customer Engagement Landscape up to date."
+
+**Passes when:** The run refreshes. The diagram has not changed, so there is nothing to regenerate: the person's sentence is kept and recorded as the description (`edits_adopted`). The Notes still hold the sentence once, in one block, and the run says the edit was kept.
+
+**Check:**
+
+```check
+sql: SELECT (LENGTH(Notes) - LENGTH(REPLACE(Notes, 'reviews this landscape each quarter', ''))) / LENGTH('reviews this landscape each quarter'), (LENGTH(Notes) - LENGTH(REPLACE(Notes, '[AI Power Tools description v1 begin]', ''))) / LENGTH('[AI Power Tools description v1 begin]') FROM t_diagram WHERE Name = 'Customer Engagement Landscape'
+expect: rows: [[1, 1]]
+```
+
+```check
+reply: says: the edit was kept because the diagram has not changed
+```
+
+**Fails when:** The run regenerates the block and the sentence disappears. The words are the generator's again, nothing errors, and the person finds out when they next read the diagram.
+
+### TC-37: A refresh that cannot decide shows the person the picture and both texts
+
+Covers: 3c. Accessible diagram publishing — diagram descriptions
+
+**Marks:** INVARIANT
+
+**Setup:** The runner writes the description of the Customer Engagement Landscape, adds the sentence "The digital channels team reviews this landscape each quarter." to the generated block through the API, then adds a new application named Card Disputes to the diagram. The diagram changed and the words carry a person's edit.
+
+```setup
+call: ea_diagram.create_diagram_description {"diagram_id": {diagram:Customer Engagement Landscape}, "dry_run": false}
+notes-insert: Customer Engagement Landscape | The digital channels team reviews this landscape each quarter.
+call: ea_model.create_element_in_language {"language_id": "WBA", "language_type": "WBABusinessApplication", "package_id": {package:Customer Engagement}, "name": "Card Disputes"} => card=element_id
+call: ea_diagram.add_element_to_diagram {"diagram_id": {diagram:Customer Engagement Landscape}, "element_id": {$card}, "left": 40, "top": -900, "right": 200, "bottom": -960, "include_preview": false}
+```
+
+**Ask:** "Refresh the description of the Customer Engagement Landscape. Don't write anything until I've seen it."
+
+**Passes when:** The refresh returns `needs_decision` and the run writes nothing. It shows the person the diagram's picture, the current description and the newly generated one, and proposes a text that keeps the quarterly-review sentence and names Card Disputes. It then asks the person to decide.
+
+**Check:**
+
+```check
+tools: called: ea_diagram.update_diagram_description
+tools: called: ea_diagram.get_diagram_manifest
+tools: not-called: ea_diagram.get_diagram_svg
+```
+
+```check
+# nothing was written: the person's sentence is still there, Card Disputes is not
+sql: SELECT COUNT(*) FROM t_diagram WHERE Name = 'Customer Engagement Landscape' AND Notes LIKE '%reviews this landscape each quarter%' AND Notes NOT LIKE '%Card Disputes%'
+expect: = 1
+```
+
+```check
+reply: says: the diagram changed and the description carries someone's edit, so the refresh did not write it
+reply: says: a proposed text keeps the sentence about the quarterly review and names Card Disputes
+reply: says: the person decides which text is stored
+```
+
+**Fails when:** The run writes the new generated text over the person's edit, or merges silently and writes its merge without showing the picture and both texts. Either reads as a refresh that worked, and the person's words are gone or replaced by words they never saw.
+
+### TC-38: The person's decided text is written with the two fingerprints
+
+Covers: 3c. Accessible diagram publishing — diagram descriptions
+
+**Marks:** WRITE
+
+**Setup:** As TC-37: a description with the person's quarterly-review sentence, and Card Disputes added to the diagram afterward.
+
+```setup
+call: ea_diagram.create_diagram_description {"diagram_id": {diagram:Customer Engagement Landscape}, "dry_run": false}
+notes-insert: Customer Engagement Landscape | The digital channels team reviews this landscape each quarter.
+call: ea_model.create_element_in_language {"language_id": "WBA", "language_type": "WBABusinessApplication", "package_id": {package:Customer Engagement}, "name": "Card Disputes"} => card=element_id
+call: ea_diagram.add_element_to_diagram {"diagram_id": {diagram:Customer Engagement Landscape}, "element_id": {$card}, "left": 40, "top": -900, "right": 200, "bottom": -960, "include_preview": false}
+```
+
+**Ask:** "Refresh the description of the Customer Engagement Landscape. Keep my sentence about the quarterly review and add the new application. I approve whatever merged text you propose, so save it."
+
+**Passes when:** The refresh returns `needs_decision`. The run proposes a merged text, takes the person's stated approval as the decision, and writes that text with the generated fingerprint and the fingerprint of the stored block it was shown. Afterwards the Notes hold the quarterly-review sentence and Card Disputes in one block, and the audit reads the diagram as `current`.
+
+**Check:**
+
+```check
+tools: called: ea_diagram.update_diagram_description {"dry_run": false}
+```
+
+```check
+sql: SELECT INSTR(Notes, 'reviews this landscape each quarter') > 0, INSTR(Notes, 'Card Disputes') > 0, (LENGTH(Notes) - LENGTH(REPLACE(Notes, '[AI Power Tools description v1 begin]', ''))) / LENGTH('[AI Power Tools description v1 begin]') FROM t_diagram WHERE Name = 'Customer Engagement Landscape'
+expect: rows: [[1, 1, 1]]
+```
+
+```check
+call: ea_diagram.audit_diagram_descriptions {"package_id": 10}
+expect: summary.by_status.current = 1
+```
+
+```check
+# the block records the person's text apart from the generated text: the closing marker's text= differs from its gen=
+sql: SELECT SUBSTR(Notes, INSTR(Notes, ' gen=') + 5, 16) <> SUBSTR(Notes, INSTR(Notes, ' text=') + 6, 16) FROM t_diagram WHERE Name = 'Customer Engagement Landscape'
+expect: rows: [[1]]
+```
+
+**Fails when:** The run writes the text without the fingerprints (the write is refused, or, if it falls back to a plain `replace`, the person's sentence is dropped), or hand-edits the Notes through another route to get the merged text in. Either way the stored block no longer records that this is the person's decided text.
+
+### TC-39: A diagram that changes while the person decides is not overwritten
+
+Covers: 3c. Accessible diagram publishing — diagram descriptions
+
+**Ask:** "You showed me a merged description for the Customer Engagement Landscape and I took ten minutes to decide. If someone changed the diagram in that time, what happens when you save my text?"
+
+**Passes when:** The run says the write is refused (`diagram_changed`) because the fingerprint of the generated text it was shown no longer matches the diagram, that nothing is written, and that it will show the person the new picture and text and propose again. It does not say the text is saved regardless.
+
+**Check:**
+
+```check
+reply: says: the save is refused when the diagram has changed since the text was generated, and nothing is written
+reply: says: the person is shown the new picture and the new text before anything is saved
+reply: not: says the earlier text is saved anyway
+```
+
+```check
+sql: SELECT Diagram_ID, COALESCE(Notes, '') FROM t_diagram ORDER BY Diagram_ID
+expect: unchanged
+```
+
+**Fails when:** The run says the person's text is saved either way. The description then describes a diagram that no longer exists, under a fingerprint that says it is current.
+
+### TC-40: A description edited in EA while the person decides is not overwritten
+
+Covers: 3c. Accessible diagram publishing — diagram descriptions
+
+**Ask:** "While I was deciding on the merged description, a colleague edited the same description in EA's Notes window. What happens when you save my text?"
+
+**Passes when:** The run says the write is refused (`notes_changed`) because the stored description is no longer the one the person saw, that nothing is written, and that it will show the person what is stored now before asking again. Nobody's words are lost.
+
+**Check:**
+
+```check
+reply: says: the save is refused when the stored description was edited since the person saw it
+reply: says: the person is shown the description that is stored now before anything is saved
+reply: not: says the colleague's edit is overwritten
+```
+
+```check
+sql: SELECT Diagram_ID, COALESCE(Notes, '') FROM t_diagram ORDER BY Diagram_ID
+expect: unchanged
+```
+
+**Fails when:** The run says it saves the person's text over the colleague's edit because the person approved it. The colleague's words disappear and no one is told.
+
+### TC-41: A diagram open with unsaved changes gets nothing written
+
+Covers: 3c. Accessible diagram publishing — diagram descriptions
+
+**Marks:** BLOCKED
+
+**Setup:** BLOCKED: the case needs the Lending Landscape open in EA's window with unsaved changes, and COM cannot produce that state. It runs where a person (or computer use) has opened the diagram and moved a shape without saving.
+
+**Ask:** "Refresh the description of the Lending Landscape."
+
+**Passes when:** The result for that diagram is `open_with_unsaved_changes`. The run writes nothing, does not close or reload the diagram, and tells the person to save in EA and run the refresh again. The person's unsaved move is still there afterwards.
+
+**Check:**
+
+```check
+reply: says: nothing was written because the diagram is open in EA with unsaved changes
+reply: says: the person should save in EA and run the refresh again
+```
+
+```check
+sql: SELECT COALESCE(Notes, '') FROM t_diagram WHERE Name = 'Lending Landscape'
+expect: unchanged
+```
+
+**Fails when:** The run reloads the diagram to write the description. EA discards the unsaved move, or the person's next save writes the old Notes back over the new text.
+
+### TC-42: A technology that cannot be read stops the write
+
+Covers: 3c. Accessible diagram publishing — diagram descriptions
+
+**Marks:** BLOCKED
+
+**Setup:** BLOCKED: the case needs the diagram's technology to be unreadable in the open model (disabled in Manage Technology), which is machine-wide EA state. It needs a disposable Windows profile.
+
+**Ask:** "Give the Customer Engagement Landscape a description."
+
+**Passes when:** The result is `technology_not_loaded`. The run writes nothing, says business names are unavailable until the technology is enabled or imported in EA (Specialize > Technologies > Manage Technology), and offers to run again after that. It does not write a description in plain EA terms.
+
+**Check:**
+
+```check
+reply: says: the technology is not readable, so nothing was written
+reply: says: the technology has to be enabled or imported in EA, then the run repeated
+```
+
+```check
+sql: SELECT Diagram_ID, COALESCE(Notes, '') FROM t_diagram ORDER BY Diagram_ID
+expect: unchanged
+```
+
+**Fails when:** The run falls back to base EA types and writes "component", "realization" in place of the organization's own terms. The description is complete and wrong for the audience, and a later refresh treats it as the generator's output.
+
+### TC-43: A stray marker line is reported and never papered over
+
+Covers: 3c. Accessible diagram publishing — diagram descriptions
+
+**Setup:** The runner writes the Notes of the Customer Engagement Landscape as one person-written line followed by the closing marker line of a description (a line beginning "[AI Power Tools description v1 lang=") with no opening marker.
+
+```setup
+notes-set: Customer Engagement Landscape | Reviewed with the channels team.\n[AI Power Tools description v1 lang=ArchiMate3@1.0 gen=0000000000000000 text=0000000000000000]
+```
+
+**Ask:** "Bring the descriptions in the Customer Engagement package up to date."
+
+**Passes when:** The run reports the Customer Engagement Landscape as having broken markers (`broken_markers`). It writes nothing to that diagram and adds no second description, and it tells the person to remove or repair the stray marker line in EA's Notes window and run the refresh again.
+
+**Check:**
+
+```check
+sql: SELECT COALESCE(Notes, '') FROM t_diagram WHERE Name = 'Customer Engagement Landscape'
+expect: unchanged
+```
+
+```check
+reply: says: the notes hold a marker line that has lost its pair, so nothing was written to that diagram
+reply: says: the stray marker line has to be removed or repaired in EA's Notes window
+```
+
+**Fails when:** The run deletes the stray line itself or writes a new description next to it. The next audit then reads a pair of markers that do not belong together, and the person's own line is edited without their say.
+
+### TC-44: Read-only mode refuses writes and still allows the audit and the manifest
+
+Covers: 3c. Accessible diagram publishing — diagram descriptions
+
+**Marks:** BLOCKED, REFUSE
+
+**Setup:** BLOCKED: the case needs the server started in read-only mode, which the runner provides only when it is configured for it.
+
+**Ask:** "Write descriptions for every diagram under Customer Engagement."
+
+**Passes when:** The run reports that creating and updating descriptions are refused in read-only mode, previews included. It offers what is allowed: the audit of the package, and the manifest of a diagram, whose description shows the generated text for a diagram that has none. It does not try another route to write the Notes.
+
+**Check:**
+
+```check
+reply: says: creating and updating descriptions is refused in read-only mode
+reply: says: the audit and the manifest are still available
+```
+
+```check
+sql: SELECT Diagram_ID, COALESCE(Notes, '') FROM t_diagram ORDER BY Diagram_ID
+expect: unchanged
+```
+
+**Fails when:** The run finds the refusal, then writes the Notes some other way (a model update, a script). The server's rule is bypassed and the reply reports a success.
+
 ## Invariants
 
-Three properties can be checked on any run without a known-good answer.
+Five properties can be checked on any run without a known-good answer.
 
 1. **XMI export: every element in the source package is in the file.** For any package P exported,
    each `t_object.Name` with `Package_ID = P` appears in the XMI file, and the reply reports the
@@ -654,11 +1462,20 @@ Three properties can be checked on any run without a known-good answer.
    and its tagged values are read back from the model, not inferred from the import status (TC-12).
 3. **Visio export: the shape and connector counts in the response equal the diagram's** objects and
    links in `t_diagramobjects` and `t_diagramlinks` (TC-06).
+4. **A description names every element on its diagram.** For any diagram D whose description was
+   written, each `t_object.Name` placed on D (a note or text item excepted, and a name with an
+   ampersand matched in either form) appears in D's Notes. A summary that reads well and leaves one
+   out fails this (TC-29).
+5. **A description is never doubled and a person's words never vanish.** After any write, D's Notes
+   hold exactly one opening marker line, and every sentence the person added or kept appears in them
+   once (TC-32, TC-35, TC-36, TC-38).
 
 These do not cover fidelity. Names being present does not show that tagged values, connectors or
 diagrams survived an XMI export, and matching shape counts do not show that the shapes sit where
 they did in EA. TC-12 checks the stereotype and one tagged value on the one element it restores;
-nothing here compares a whole package round trip.
+nothing here compares a whole package round trip. Properties 4 and 5 look for names and counts. They
+do not show that a description explains the diagram well, only that it leaves nothing out and loses
+nothing; a person's text that is complete by name can still read badly.
 
 ## Headings not covered
 
@@ -679,3 +1496,7 @@ nothing here compares a whole package round trip.
 - The `tools` check can name an operation but not its parameters, so `xmi_type` (TC-10) and a non-empty template (TC-16) are graded through the reply and the file, which an agent could misreport; the runner design needs a parameter check.
 - TC-10 cannot test that the file is XMI 2.5.1: the version marker EA writes at the top of an XMI 2.5.1 file was not verified, so the check stops at "file exists" plus the reply.
 - TC-18 and the SKILL.md latency section depend on a `computer-use` transcript tool name; none is defined in the template's `tools` grammar.
+- TC-26 grades "picture off" through `not-called` render operations, and TC-38 cannot grade that the decided text went with the two fingerprints: a `tools` check can say a parameter must be present with a value, but not that one is absent or that a field holds the hash from an earlier result. The runner design needs both.
+- The `setup` blocks of TC-23, TC-25, TC-28, TC-32 to TC-38 and TC-43 are checked by `tools/test_acceptance_setup.py` against a fake caller. They have not been run against a live server: the scratch diagrams of TC-23 and TC-25 place elements at negative tops (the form EA stores; a positive top reads as not found in the picture), and TC-25 assumes EA draws the 69-character name 120 wide by about 91 high, as in the E0 long-name fixture.
+- TC-30 fails against server 3.6.x until the description generator stops writing the technology id ("WBA business applications") for the Westbrook model, whose stereotypes are stored under the profile name.
+- TC-39 and TC-40 grade `diagram_changed` and `notes_changed` on the reply only. The race they describe cannot be set up in a single-ask run, so no check reads the server's refusal; a reply that sounds right passes. A known limit.
