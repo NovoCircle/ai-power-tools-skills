@@ -1,6 +1,6 @@
 ---
 name: ea-stakeholder-reporting
-description: Turn a Sparx EA model into an answer a non-modeller can act on -- portfolio roll-ups by tagged value, plain-language element summaries, and business-facing display terms. Use when someone asks "how many X are Y", "what's mission-critical", "what's in scope for [a regulation]", or wants a model fact stated in business language instead of stereotype/tag names, and especially before quoting any count drawn from a tagged value.
+description: Turn a Sparx EA model into an answer a non-modeller can act on -- portfolio roll-ups by tagged value, plain-language element and diagram summaries, and business-facing display terms. Use when someone asks "how many X are Y", "what's mission-critical", "what's in scope for [a regulation]", or wants a model fact stated in business language instead of stereotype/tag names, and especially before quoting any count drawn from a tagged value.
 ---
 
 # Reporting to stakeholders from a Sparx EA model

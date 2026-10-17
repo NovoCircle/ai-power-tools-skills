@@ -1,6 +1,6 @@
 ---
 name: ea-import-export
-description: Get content into and out of a Sparx EA repository — XMI package export/import, diagram export to PNG/SVG/Visio, and RTF report generation via ea_repository and ea_diagram. Use when a package or diagram needs to leave EA (another repository, a document, a stakeholder without an EA license) or an XMI file needs to come back in.
+description: Get content into and out of a Sparx EA repository — XMI package export/import, diagram export to PNG/SVG/Visio, redrawing a diagram in another tool from its manifest, diagram descriptions (alt text, accessible diagram publishing), and RTF report generation via ea_repository and ea_diagram. Use when a package or diagram needs to leave EA (another repository, a document, a stakeholder without an EA license), a diagram needs a manifest or a description, or an XMI file needs to come back in.
 ---
 
 # Import / Export — Sparx EA
