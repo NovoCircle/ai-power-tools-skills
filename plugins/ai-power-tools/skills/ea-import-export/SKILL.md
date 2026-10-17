@@ -158,7 +158,8 @@ groupings, every element, every relationship as a sentence, what its own notes s
 is drawn (no positions, colors, stereotype identifiers or drawing words). The first sentence is at
 most 150 characters, so it can serve as alt text. It sits between two marker lines; text a person
 wrote above or below them is never altered. Wording depends on the technology your diagram uses, so
-read the output rather than expecting Westbrook's words.
+read the output rather than expecting Westbrook's words. When you write or preview a description,
+tell the person it is generated from the diagram, so the same diagram always gets the same words.
 
 **Generate.** `dry_run` defaults to true: the first call previews and writes nothing.
 

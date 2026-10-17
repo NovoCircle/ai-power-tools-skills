@@ -727,8 +727,8 @@ call: ea_diagram.create_diagram_description {"diagram_id": {diagram:Customer Eng
 ```check
 tools: called: ea_diagram.audit_diagram_descriptions
 tools: called: ea_diagram.get_diagram_manifest
-tools: not-called: ea_diagram.create_diagram_description
-tools: not-called: ea_diagram.update_diagram_description
+tools: not-called: ea_diagram.create_diagram_description {"dry_run": false}
+tools: not-called: ea_diagram.update_diagram_description {"dry_run": false}
 ```
 
 ```check
@@ -766,8 +766,8 @@ Covers: Diagram descriptions: a diagram in words
 
 ```check
 tools: called: ea_diagram.get_diagram_manifest
-tools: not-called: ea_diagram.create_diagram_description
-tools: not-called: ea_diagram.update_diagram_description
+tools: not-called: ea_diagram.create_diagram_description {"dry_run": false}
+tools: not-called: ea_diagram.update_diagram_description {"dry_run": false}
 ```
 
 ```check
@@ -811,7 +811,7 @@ call: ea_diagram.add_element_to_diagram {"diagram_id": {diagram:Customer Engagem
 
 ```check
 tools: called: ea_diagram.audit_diagram_descriptions
-tools: not-called: ea_diagram.create_diagram_description
+tools: not-called: ea_diagram.create_diagram_description {"dry_run": false}
 ```
 
 ```check
@@ -849,7 +849,7 @@ notes-set: Account Management Landscape | Shows the accounts the retail bank man
 
 ```check
 tools: called: ea_diagram.audit_diagram_descriptions
-tools: not-called: ea_diagram.update_diagram_description
+tools: not-called: ea_diagram.update_diagram_description {"dry_run": false}
 ```
 
 ```check
