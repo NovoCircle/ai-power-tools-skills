@@ -113,9 +113,10 @@ too: `diagram_guid`, `package_guid`.)
   color, hidden or not, labels, and the points of its route in the same frame. About one line in six
   is routed by EA when it draws and has no stored route; the manifest marks it `route_drawn_only`
   and leaves the routing to the tool that redraws. A note link is a line of its own kind.
-- **A description.** The description stored in the diagram's Notes when there is one, so a person's
-  edits travel with it; otherwise the text §3c would write. `description_source` says which
-  (`notes` or `generated`). When the diagram's technology cannot be read, the description is null
+- **A description.** The generated description stored in the diagram's Notes (the block between the
+  two marker lines) when there is one, so a person's edits to it travel with it; otherwise the text
+  §3c would write. A person's own notes with no marker lines do not count as a stored description.
+  `description_source` says which (`notes` or `generated`). When the diagram's technology cannot be read, the description is null
   and `description_unavailable` says why; the rest of the read is unaffected.
 - **`verify_diagram`'s keys, unchanged.** A checker that reads a verification reads a manifest. One
   value differs: `stereotype` on a shape is the qualified form (`WBA::WBABusinessApplication`),
@@ -205,9 +206,11 @@ through those one at a time.
 person's words, so a machine must not choose. The result carries `current_text`,
 `current_text_hash`, `generated_text` and `generated_hash`.
 
-1. **Show the picture.** Render the diagram with `get_diagram_svg` (pass `refresh: true`, because
-   the diagram has changed; if the diagram is open in EA with unsaved changes, do not reload it:
-   ask the person to save first).
+1. **Show the picture.** Read `get_diagram_manifest` for the diagram (the picture is on by default
+   for one diagram) and show the person the SVG in `svg_text`. The manifest reloads the diagram
+   only when that is safe. If it reports `open_with_unsaved_changes`, there is no picture: tell the
+   person to save the diagram in EA and run the refresh again. Do not render the picture with
+   `get_diagram_svg`, which always reloads and closes the diagram.
 2. **Show both texts** side by side: the current description and the newly generated one.
 3. **Propose a text that carries the person's edits into the new one.** Start from the new
    generated text and keep the sentences the person wrote or changed. A sentence in the current

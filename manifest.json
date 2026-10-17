@@ -262,9 +262,9 @@
         "ea-import-export/references/xmi-export-import.md"
       ],
       "sha256": {
-        "ea-import-export/SKILL.md": "93720690f494940139cdb685c700f5697a502d79f83614c81e7b8291cda597cd",
+        "ea-import-export/SKILL.md": "dc2b638118d92b969a558ce95d9b308465de25231e436a803df1a05f41f252a5",
         "ea-import-export/references/generate-report.md": "8fc55ca353efc77748b712d9df1791227d452636acd0988255ad402f461b96b1",
-        "ea-import-export/references/test-cases.md": "13d7e9bc369a6bb05966579b1a61daf0cefcc1b44ed7599b333e873674ec55f9",
+        "ea-import-export/references/test-cases.md": "8141fb6471230a7989837599a43fb4b4c0ef26729d67c2ab0679d8783a615205",
         "ea-import-export/references/xmi-export-import.md": "d61ee88f5a6f8847605a46a1fcada53ee0927220a94baa108d3b58a068a2a3ef"
       }
     },
@@ -492,7 +492,7 @@
         "ea-stakeholder-reporting/references/test-cases.md"
       ],
       "sha256": {
-        "ea-stakeholder-reporting/SKILL.md": "e6acaf49d7c8b4c314b3be8d6dad50682e7316b662fd70dce8e390d792e062e4",
+        "ea-stakeholder-reporting/SKILL.md": "4f8fb74c848fd8be70d0a1d3ae1cdb370eb13393c21d207b6ad2fa95d2a5fcf7",
         "ea-stakeholder-reporting/references/coverage-data.md": "5b6c3402d1417b98322d020ac07bd22c012963757efc325c7e9730c75f411a7d",
         "ea-stakeholder-reporting/references/test-cases.md": "96757217ad50a23057917621ed573c53215d86224fecfb9338a1eda6e780796b"
       }

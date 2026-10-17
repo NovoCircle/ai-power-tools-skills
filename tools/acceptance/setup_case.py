@@ -1,6 +1,6 @@
 """Build one acceptance case's starting state on the run's copy of the model.
 
-    python tools/acceptance/setup_case.py <case-file> <TC-nn> [--dry]
+    python tools/acceptance/setup_case.py <case-file> <TC-nn> --run-dir D [--dry]
 
 Run it after the copy is open in EA (RUN-IN-BUILD.md, step 2) and before the helper starts, with
 ACCEPTANCE_CALL_LOG unset so the setup calls are not counted as the helper's. It reads the case's
@@ -23,6 +23,10 @@ description would. In text, `\\n` is a line break; line ends are written as CRLF
 Names are read from the copy by placeholders in the JSON and the text: `{diagram:Name}`,
 `{package:Name}` and `{element:Name}` become the id of the one object with that name (a name with
 zero or several matches stops the setup), and `{$var}` becomes a value kept earlier.
+
+`--run-dir D` is required. Before the first line runs, the setup asks `get_repository_info` which model is
+open and refuses unless it is `D/model/WestbrookBank.qea`, so it can never write to ORIGINAL or to
+another case's copy.
 
 A setup that stops part-way leaves the copy half built. Throw the copy away and start the case again.
 """
@@ -100,9 +104,25 @@ class SetupError(Exception):
 
 
 def _dotted(obj, path):
-    for part in path.split("."):
-        obj = obj[part]
+    try:
+        for part in path.split("."):
+            obj = obj[part]
+    except (KeyError, IndexError, TypeError):
+        raise SetupError(f"the result has no field '{path}': {json.dumps(obj)[:200]}")
     return obj
+
+
+def _norm(path):
+    return str(path).replace("\\", "/").rstrip("/").lower()
+
+
+def check_open_model(caller, run_dir):
+    """Refuse unless the model open in EA is the run's copy."""
+    want = (Path(run_dir) / "model" / "WestbrookBank.qea").resolve()
+    info = caller.call("ea_repository", "get_repository_info", {})
+    got = info.get("project_path") or info.get("connection_string") or ""
+    if _norm(got) != _norm(want):
+        raise SetupError(f"the open model is '{got}', not the run's copy '{want}'; nothing was written")
 
 
 def _crlf(text):
@@ -137,7 +157,10 @@ def run_line(line, caller, variables, dry=False):
             rest, keep = rest.rsplit(" => ", 1)
         op, _, raw = rest.partition(" ")
         tool, _, operation = op.partition(".")
-        params = json.loads(substitute(raw or "{}", caller, variables))
+        try:
+            params = json.loads(substitute(raw or "{}", caller, variables))
+        except ValueError as exc:
+            raise SetupError(f"the parameters of '{line[:80]}' are not valid JSON: {exc}")
         print(f"call {tool}.{operation} {json.dumps(params)}")
         if dry:
             return
@@ -166,7 +189,9 @@ def run_line(line, caller, variables, dry=False):
         raise SetupError(f"unknown setup line '{line[:60]}'")
 
 
-def run_setup(lines, caller, dry=False):
+def run_setup(lines, caller, dry=False, run_dir=None):
+    if run_dir is not None:
+        check_open_model(caller, run_dir)
     variables = {}
     for line in lines:
         run_line(line, caller, variables, dry)
@@ -177,6 +202,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("case_file")
     ap.add_argument("tc")
+    ap.add_argument("--run-dir", required=True)
     ap.add_argument("--dry", action="store_true")
     a = ap.parse_args()
     lines = setup_lines(case_text(a.case_file, a.tc))
@@ -219,7 +245,7 @@ def main():
 
                 caller = AsyncCaller()
                 caller.call = sync_call
-                await loop.run_in_executor(None, run_setup, lines, caller, a.dry)
+                await loop.run_in_executor(None, run_setup, lines, caller, a.dry, a.run_dir)
 
     try:
         asyncio.run(go())

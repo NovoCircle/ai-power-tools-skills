@@ -42,7 +42,7 @@ is handed to a background helper agent, one at a time. Nothing here needs an ext
    screenshot of EA and clear any dialog with computer use. Never kill EA.
 
    **If the case has a `setup` block,** build the starting state now, with `ACCEPTANCE_CALL_LOG`
-   unset: `$PY tools/acceptance/setup_case.py <case-file> <TC>`. If it reports `SETUP FAILED`, the
+   unset: `$PY tools/acceptance/setup_case.py <case-file> <TC> --run-dir D`. If it reports `SETUP FAILED`, the
    copy is half built: throw it away and start the case again. Then reopen `ORIGINAL` (this closes
    the copy), run `check_case.py before ... --run-dir D` on the closed copy, and open the copy again
    and confirm the title.

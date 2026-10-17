@@ -1237,7 +1237,8 @@ call: ea_diagram.add_element_to_diagram {"diagram_id": {diagram:Customer Engagem
 
 ```check
 tools: called: ea_diagram.update_diagram_description
-tools: called: ea_diagram.get_diagram_svg
+tools: called: ea_diagram.get_diagram_manifest
+tools: not-called: ea_diagram.get_diagram_svg
 ```
 
 ```check
@@ -1287,6 +1288,12 @@ expect: rows: [[1, 1, 1]]
 ```check
 call: ea_diagram.audit_diagram_descriptions {"package_id": 10}
 expect: summary.by_status.current = 1
+```
+
+```check
+# the block records the person's text apart from the generated text: the closing marker's text= differs from its gen=
+sql: SELECT SUBSTR(Notes, INSTR(Notes, ' gen=') + 5, 16) <> SUBSTR(Notes, INSTR(Notes, ' text=') + 6, 16) FROM t_diagram WHERE Name = 'Customer Engagement Landscape'
+expect: rows: [[1]]
 ```
 
 **Fails when:** The run writes the text without the fingerprints (the write is refused, or, if it falls back to a plain `replace`, the person's sentence is dropped), or hand-edits the Notes through another route to get the merged text in. Either way the stored block no longer records that this is the person's decided text.
@@ -1492,3 +1499,4 @@ nothing; a person's text that is complete by name can still read badly.
 - TC-26 grades "picture off" through `not-called` render operations, and TC-38 cannot grade that the decided text went with the two fingerprints: a `tools` check can say a parameter must be present with a value, but not that one is absent or that a field holds the hash from an earlier result. The runner design needs both.
 - The `setup` blocks of TC-23, TC-25, TC-28, TC-32 to TC-38 and TC-43 are checked by `tools/test_acceptance_setup.py` against a fake caller. They have not been run against a live server: the scratch diagrams of TC-23 and TC-25 place elements at negative tops (the form EA stores; a positive top reads as not found in the picture), and TC-25 assumes EA draws the 69-character name 120 wide by about 91 high, as in the E0 long-name fixture.
 - TC-30 fails against server 3.6.x until the description generator stops writing the technology id ("WBA business applications") for the Westbrook model, whose stereotypes are stored under the profile name.
+- TC-39 and TC-40 grade `diagram_changed` and `notes_changed` on the reply only. The race they describe cannot be set up in a single-ask run, so no check reads the server's refusal; a reply that sounds right passes. A known limit.

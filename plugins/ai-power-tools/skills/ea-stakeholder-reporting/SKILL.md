@@ -1,6 +1,6 @@
 ---
 name: ea-stakeholder-reporting
-description: Turn a Sparx EA model into an answer a non-modeller can act on -- portfolio roll-ups by tagged value, plain-language element and diagram summaries, and business-facing display terms. Use when someone asks "how many X are Y", "what's mission-critical", "what's in scope for [a regulation]", or wants a model fact stated in business language instead of stereotype/tag names, and especially before quoting any count drawn from a tagged value.
+description: Turn a Sparx EA model into an answer a non-modeler can act on -- portfolio roll-ups by tagged value, plain-language element and diagram summaries, and business-facing display terms. Use when someone asks "how many X are Y", "what's mission-critical", "what's in scope for [a regulation]", or wants a model fact stated in business language instead of stereotype/tag names, and especially before quoting any count drawn from a tagged value.
 ---
 
 # Reporting to stakeholders from a Sparx EA model
@@ -294,7 +294,8 @@ the stored words (`notes`) or were generated just now (`generated`).
 | Status | What you can say |
 |---|---|
 | `current`, or `edited` | The description matches the diagram (`edited`: a person adjusted the words). Quote it. |
-| `stale`, `needs_decision`, `older_generator`, `language_changed` | The diagram has changed since the words were written. Say the description is out of date; do not present it as what the diagram shows now. |
+| `stale`, `needs_decision` | The diagram has changed since the words were written. Say the description is out of date; do not present it as what the diagram shows now. |
+| `older_generator`, `language_changed` | The generator or the technology version has changed since the words were written. Say the description is out of date and may not match what the diagram shows now. |
 | `human_only` | A person wrote the Notes; no description was generated. Quote it as their text. |
 | `empty` | There is no description; see below. |
 | `broken_markers`, `technology_not_loaded` | The words cannot be checked. Say so; do not quote them as current. |

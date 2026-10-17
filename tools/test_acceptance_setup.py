@@ -24,12 +24,14 @@ BLOCK = ("[AI Power Tools description v1 begin]\r\nSummary.\r\nBody.\r\n"
 
 
 class FakeCaller:
-    def __init__(self, notes=BLOCK):
-        self.calls, self.notes = [], notes
+    def __init__(self, notes=BLOCK, open_model=None):
+        self.calls, self.notes, self.open_model = [], notes, open_model
         self.next_id = 100
 
     def call(self, tool, operation, params):
         self.calls.append((tool, operation, params))
+        if operation == "get_repository_info":
+            return {"project_path": self.open_model, "connection_string": self.open_model}
         if operation == "execute_sql":
             sql = params["sql"]
             if "SELECT Notes" in sql:
@@ -139,3 +141,43 @@ def test_every_setup_block_in_the_shipped_cases_runs_against_a_fake(path):
         seen += 1
         sc.run_setup(lines, FakeCaller())
     assert seen > 0
+
+
+def _copy_path(tmp_path):
+    return tmp_path / "model" / "WestbrookBank.qea"
+
+
+def test_the_setup_runs_when_the_open_model_is_the_runs_copy(tmp_path):
+    fake = FakeCaller(open_model=str(_copy_path(tmp_path)).replace("/", "\\"))
+    sc.run_setup(["notes-set: D | t"], fake, run_dir=tmp_path)
+    assert fake.calls[0][1] == "get_repository_info"
+    assert fake.calls[-1][1] == "update_diagram"
+
+
+def test_the_setup_refuses_when_another_model_is_open_and_writes_nothing(tmp_path):
+    fake = FakeCaller(open_model=r"C:\somewhere\else\WestbrookBank.qea")
+    with pytest.raises(sc.SetupError, match="not the run's copy"):
+        sc.run_setup(["notes-set: D | t", 'call: ea_model.create_element {"name": "x"}'], fake, run_dir=tmp_path)
+    assert [op for _, op, _ in fake.calls] == ["get_repository_info"]
+
+
+def test_the_setup_refuses_when_no_model_is_open(tmp_path):
+    with pytest.raises(sc.SetupError, match="not the run's copy"):
+        sc.run_setup(["notes-set: D | t"], FakeCaller(open_model=None), run_dir=tmp_path)
+
+
+def test_main_requires_a_run_dir(monkeypatch, capsys):
+    monkeypatch.setattr(sys, "argv", ["setup_case.py", "case.md", "TC-01"])
+    with pytest.raises(SystemExit) as exc:
+        sc.main()
+    assert exc.value.code == 2
+
+
+def test_a_result_without_the_kept_field_is_a_setup_error():
+    with pytest.raises(sc.SetupError, match="no field 'nope'"):
+        sc.run_setup(['call: ea_model.create_element {"name": "x"} => v=nope'], FakeCaller())
+
+
+def test_parameters_that_are_not_json_are_a_setup_error():
+    with pytest.raises(sc.SetupError, match="not valid JSON"):
+        sc.run_setup(["call: ea_model.create_element {not json}"], FakeCaller())
