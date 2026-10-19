@@ -67,11 +67,16 @@ and a `Measure` field. Cards carry no `filterConfig` (the captured project has n
 card to copy it from, so none is guessed). Every `name` is derived from the content,
 as `page_name` is.
 
-Versions pinned together, from the captured project: visual container 2.14.0 (the
-captured visuals; was 2.13.0 in `REPORT_VERSION_AT_IMPORT`, which is raised to
-match), page 2.1.0, report 3.3.0, pages metadata 1.1.0, version metadata 1.0.0.
-Of these only the visual container changed: the captured page, report and
-`reportVersionAtImport` page/report values equal what was already pinned.
+Versions pinned, from the captured project: visual container 2.14.0 (the captured
+visuals; `VISUAL_SCHEMA`), page 2.1.0, report 3.3.0, pages metadata 1.1.0, version
+metadata 1.0.0. Only the visual container changed from what was pinned before.
+`REPORT_VERSION_AT_IMPORT` stays {visual 2.13.0, report 3.4.0, page 2.3.1}: Desktop
+2.159.883.0 saved 2.14.0 visuals and left that object as it was, so it is an import
+record, not a pin that tracks the container schema, and Desktop has never written
+2.14.0 there.
+
+The page is 1280 wide and 720 high, and grows taller only when the cards need it
+(more than about 136 entity tables), so every card sits on the page.
 """
 from __future__ import annotations
 
@@ -102,7 +107,7 @@ REPORT_SCHEMA = ("https://developer.microsoft.com/json-schemas/fabric/item/repor
 
 #: Written into report.json when a base theme is supplied. Version-pinned, read
 #: off a real project alongside the rest.
-REPORT_VERSION_AT_IMPORT = {"visual": "2.14.0", "report": "3.4.0", "page": "2.3.1"}
+REPORT_VERSION_AT_IMPORT = {"visual": "2.13.0", "report": "3.4.0", "page": "2.3.1"}
 
 #: The visual container schema of the visuals this module writes.
 VISUAL_SCHEMA = ("https://developer.microsoft.com/json-schemas/fabric/item/report/"
@@ -229,10 +234,11 @@ def _visual(project: str, key: str, visual_type: str, position: dict,
     return visual
 
 
-def _card_grid(n: int) -> tuple[int, int, int]:
-    """(columns, card width, card height) for `n` cards in the right-hand area.
+def _card_grid(n: int) -> tuple[int, int, int, int]:
+    """(columns, card width, card height, rows) for `n` cards in the right-hand area.
     Columns grow from 3 until the rows fit at a readable height (60 or more);
-    past 8 columns the height shrinks to a floor of 30 instead."""
+    past 8 columns the height shrinks to a floor of 30 and the page grows instead
+    (see `page_height`)."""
     usable = _PAGE_H - 2 * _MARGIN
     cols = 3
     while cols < 8 and -(-n // cols) * (_CARD_H_READABLE + _GAP) - _GAP > usable:
@@ -240,7 +246,13 @@ def _card_grid(n: int) -> tuple[int, int, int]:
     rows = max(1, -(-n // cols))
     width = (_GRID_W - _GAP * (cols - 1)) // cols
     height = (usable - _GAP * (rows - 1)) // rows
-    return cols, width, max(_CARD_H_MIN, min(_CARD_H_MAX, height))
+    return cols, width, max(_CARD_H_MIN, min(_CARD_H_MAX, height)), rows
+
+
+def page_height(model: SemanticModel) -> int:
+    """The Overview page height: 720, or taller when the cards need more room."""
+    _, _, height, rows = _card_grid(len(count_measures(model)))
+    return max(_PAGE_H, 2 * _MARGIN + rows * height + (rows - 1) * _GAP)
 
 
 def overview_visuals(model: SemanticModel, project: str) -> dict[str, dict]:
@@ -250,7 +262,7 @@ def overview_visuals(model: SemanticModel, project: str) -> dict[str, dict]:
     z = 0
     directory = model.table(DIRECTORY_TABLE)
     if directory is not None and set(DIRECTORY_COLUMNS) <= {c.name for c in directory.columns}:
-        pos = {"x": _MARGIN, "y": _MARGIN, "z": z, "height": _PAGE_H - 2 * _MARGIN,
+        pos = {"x": _MARGIN, "y": _MARGIN, "z": z, "height": page_height(model) - 2 * _MARGIN,
                "width": _TABLE_W, "tabOrder": z}
         filters = [{"name": visual_name(project, f"filter:{DIRECTORY_TABLE}.{c}"),
                     "field": _field("Column", DIRECTORY_TABLE, c), "type": "Categorical"}
@@ -261,7 +273,7 @@ def overview_visuals(model: SemanticModel, project: str) -> dict[str, dict]:
         out[v["name"]] = v
         z += 1
     cards = count_measures(model)
-    cols, width, height = _card_grid(len(cards))
+    cols, width, height, _ = _card_grid(len(cards))
     for i, (table, measure) in enumerate(cards):
         pos = {"x": _GRID_X + (i % cols) * (width + _GAP),
                "y": _MARGIN + (i // cols) * (height + _GAP),
@@ -358,7 +370,7 @@ def project_files(model: SemanticModel, source, *,
             "name": page,
             "displayName": page_display_name,
             "displayOption": "FitToPage",
-            "height": 720,
+            "height": page_height(model),
             "width": 1280,
         }),
         f"{rp}/definition/report.json": _report_json(base_theme),

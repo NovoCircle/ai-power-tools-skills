@@ -263,10 +263,12 @@ def test_the_page_is_called_overview_and_pins_the_captured_versions():
     files, _ = overview()
     page = parsed(files, f"W.Report/definition/pages/{page_name('W')}/page.json")
     assert page["displayName"] == "Overview"
+    assert page["height"] == 720 and page["width"] == 1280
     assert page["$schema"].endswith("/page/2.1.0/schema.json")
     report = parsed(files, "W.Report/definition/report.json")
     assert report["$schema"].endswith("/report/3.3.0/schema.json")
-    assert REPORT_VERSION_AT_IMPORT["visual"] == "2.14.0"
+    # Desktop keeps the import record at 2.13.0 beside 2.14.0 visuals.
+    assert REPORT_VERSION_AT_IMPORT["visual"] == "2.13.0"
 
 
 def test_there_is_one_table_visual_and_one_card_per_entity_table():
@@ -346,3 +348,28 @@ def test_a_model_without_the_directory_or_counts_still_gets_an_empty_page():
     files = project_files(SemanticModel(tables=[SemanticTable("t")]), PARQUET, name="W")
     assert not any("/visuals/" in p for p in files)
     assert f"W.Report/definition/pages/{page_name('W')}/page.json" in files
+
+
+def test_many_entity_tables_grow_the_page_so_every_card_sits_on_it():
+    from semantic_model import Measure, SemanticColumn, SemanticModel, SemanticTable
+    directory = SemanticTable("Table Directory", columns=[
+        SemanticColumn(c) for c in ("table_name", "kind", "description")])
+    tables = [SemanticTable(f"Entity {i:03d}", columns=[SemanticColumn("name")],
+                            measures=[Measure(f"Entity {i:03d} count",
+                                              f"COUNTROWS('Entity {i:03d}')")])
+              for i in range(200)]
+    model = SemanticModel(tables=[directory, *tables])
+    files = project_files(model, PARQUET, name="W")
+    base = f"W.Report/definition/pages/{page_name('W')}/"
+    page = parsed(files, base + "page.json")
+    assert page["height"] > 720
+    visuals = [json.loads(t) for p, t in files.items() if p.startswith(base + "visuals/")]
+    assert sum(v["visual"]["visualType"] == "card" for v in visuals) == 200
+    boxes = [(v["position"]["x"], v["position"]["y"],
+              v["position"]["x"] + v["position"]["width"],
+              v["position"]["y"] + v["position"]["height"]) for v in visuals]
+    for x0, y0, x1, y1 in boxes:
+        assert x0 >= 0 and y0 >= 0 and x1 <= page["width"] and y1 <= page["height"]
+    for i, a in enumerate(boxes):
+        for b in boxes[i + 1:]:
+            assert a[2] <= b[0] or b[2] <= a[0] or a[3] <= b[1] or b[3] <= a[1]
