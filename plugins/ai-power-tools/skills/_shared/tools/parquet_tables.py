@@ -3,7 +3,7 @@
 
     definition.json + tables.json  ->  <table name>.parquet per table  (+ the .pbip)
 
-The server's `build_reporting_database` writes the definition (`APT-2026-0301`) and
+The server's `build_reporting_database` writes the definition and
 the typed rows for a profile whose `target.kind` is "parquet". This module is the
 local step: it writes one file per table into `source.folder`, and
 `powerbi_model.write_project` writes the `.pbip` that reads them. No SQL Server is
@@ -14,7 +14,7 @@ TYPES ARE DECLARED, NEVER INFERRED
 TEXT -> string, INTEGER -> int64, REAL -> float64, BOOLEAN -> bool, DATETIME ->
 timestamp (microseconds, no zone). A refresh must not change a column's type
 because of which rows happen to be populated, and pyarrow refuses a value that
-does not fit its column rather than repairing it (`APT-2026-0225`). Every field is
+does not fit its column rather than repairing it. Every field is
 nullable. An empty table is still written, with its schema.
 
 pyarrow is REQUIRED for this step. It is imported here, not in the core, so the

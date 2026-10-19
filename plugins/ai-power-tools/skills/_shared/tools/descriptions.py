@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Descriptions on every business table, column and measure (APT-2026-0567).
+"""Descriptions on every business table, column and measure.
 
 PURE except `load_file`. Three layers; the highest that has text wins:
 

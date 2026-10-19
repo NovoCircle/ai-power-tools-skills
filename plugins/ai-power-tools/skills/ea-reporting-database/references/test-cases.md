@@ -4,7 +4,7 @@ This skill promises to turn a Sparx EA repository into a reporting layer (one ta
 
 **Fixture.** A fresh copy of the Westbrook Bank model opened in EA (technology `WBA`, qualified stereotype form `WBA::`, for example `WBA::WBABusinessApplication`), with an empty output folder `<output-dir>` for the cases that write files. Westbrook Bank is our illustration. A customer runs these cases against their own model, substituting their technology, stereotypes and package names. Unless a case says otherwise, "the scope" is the Consumer Banking area plus the Systems of Record package (called scope S below); counts quoted describe the Westbrook copy at the time of writing, and each count a case depends on has a `sql` check that reads it from the model.
 
-The Westbrook copy is a local `.qea` file, so path A (views inside the EA database) and path B (a SQL Server reporting database) cannot run against it. Path C (files) can, and carries most of the runnable cases. Cases that need a SQL Server estate, a second model, a `.eapx` file or a blocked EA dialog are marked `BLOCKED`.
+The Westbrook copy is a local `.qea` file, so path A (views inside the EA database) and path B (a SQL Server reporting database) cannot run against it. Path C (files) can, and carries most of the runnable cases. Cases that need a SQL Server estate, a SQL database in Microsoft Fabric, a second model, a `.eapx` file or a blocked EA dialog are marked `BLOCKED`.
 
 **Marks.** `WRITE` (the run changes the copy), `EFFECT` (the run writes files outside the model: the profile, definition, rows and kept extract in `<output-dir>`; the ask names the folder, so it need not ask first), `REFUSE` (the pass is a refusal or a stop before the write), `INVARIANT` (must pass on every run), `BLOCKED` (needs setup the run may not have).
 
@@ -397,7 +397,7 @@ Covers: 3. Three paths, and how to choose
 
 **Ask:** "Our Westbrook Bank model is on a cloud connection. We have no access to the database and no SQL Server to run. How do we get it into something we can query?"
 
-**Passes when:** The run recommends Parquet files, says plainly that they are a snapshot rewritten on every refresh, that EA must be running with the repository open for the extract, and that the files need `pyarrow` for the local step. It does not suggest a reporting database, which needs a SQL Server the person does not have.
+**Passes when:** The run recommends Parquet files, says plainly that they are a snapshot rewritten on every refresh, that EA must be running with the repository open for the extract, and that the files need `pyarrow` for the local step. It does not suggest a reporting database on a SQL Server, which the person does not have; it may ask whether they have a Microsoft Fabric capacity, since a SQL database in Fabric is the one reporting database that needs no SQL Server of their own.
 
 **Check:**
 
@@ -410,7 +410,7 @@ expect: unchanged
 reply: says: Parquet files are the path that needs no database
 reply: says: the files are a snapshot, rewritten on every refresh
 reply: says: EA must be running with the repository open when the extract runs
-reply: not: recommends a SQL Server reporting database
+reply: not: recommends running a SQL Server for a reporting database
 ```
 
 **Fails when:** The run recommends direct access or a reporting database anyway. The person cannot run either, and the plan collapses at the first step.
@@ -1103,6 +1103,7 @@ tools: called: ea_repository.remove_business_layer
 
 ```check
 reply: says: the views were dropped, then the schema, and EA's own tables were not touched
+reply: says: a Power BI project built on the views cannot refresh until the layer is rebuilt from the saved profile
 ```
 
 **Fails when:** The run drops tables by hand and removes one of EA's own. The repository is damaged and nothing in the reply says so.
@@ -1442,7 +1443,7 @@ reply: says: the join is by GUID from source_guid and target_guid, with both end
 
 **Fails when:** The run joins on the names, or joins the one entity table once and reads both ends from it. With one connection the answer can still look right, and with two it silently pairs the wrong applications.
 
-### TC-48: OneLake upload is not available
+### TC-48: OneLake upload is not supported
 
 Covers: 11. Known limits
 
@@ -1450,7 +1451,7 @@ Covers: 11. Known limits
 
 **Ask:** "Push the Westbrook Bank Parquet files straight to our OneLake lakehouse so Fabric can see them."
 
-**Passes when:** The run says upload to OneLake is not yet available (APT-2026-0362), that the Parquet files are written to a local folder and Power BI Desktop imports them, and that it has not uploaded anything.
+**Passes when:** The run says uploading the Parquet files to OneLake is not supported, that the Parquet files are written to a local folder and Power BI Desktop imports them, and that it has not uploaded anything. It may point to a reporting database in a SQL database in Fabric as the supported Fabric route.
 
 **Check:**
 
@@ -1460,7 +1461,8 @@ expect: unchanged
 ```
 
 ```check
-reply: says: OneLake upload is not yet available, tracked as APT-2026-0362
+reply: says: uploading the Parquet files to OneLake is not supported
+reply: not: cites an internal backlog id
 reply: says: the Parquet files go to a local folder that Power BI Desktop imports
 reply: not: says the files were uploaded
 ```
@@ -1593,6 +1595,292 @@ reply: not: says the build is wrong
 
 **Fails when:** The run opens a defect hunt in the transform, or silently refreshes and returns 40 without saying the first figure was correct for its time. A disputed number is never settled against the build it came from.
 
+### TC-54: A reporting database in Microsoft Fabric, with what it needs
+
+Covers: 3b. Where the reporting database runs; 3. Three paths, and how to choose
+
+**Ask:** "We don't run SQL Server ourselves, but we have Microsoft Fabric. Can the reporting database for the Westbrook Bank model live there? We might use Azure SQL instead."
+
+**Passes when:** The run says a SQL database in Microsoft Fabric can be the reporting database, that it needs a Fabric capacity, that the database is created in the Fabric portal first (AI Power Tools cannot create it there), and that it is signed in to with Microsoft Entra, which needs the server version the skill names. It says Azure SQL Database is expected to work with the same sign-in but has not been measured. It does not build anything.
+
+**Check:**
+
+```check
+reply: says: a SQL database in Microsoft Fabric can hold the reporting database and needs a Fabric capacity
+reply: says: the database is created in the Fabric portal first
+reply: says: the sign-in is Microsoft Entra, with the minimum server version the skill states
+reply: says: Azure SQL Database is expected to work but has not been measured
+reply: not: says Azure SQL Database was tested
+```
+
+```check
+tools: not-called: ea_repository.build_reporting_database
+```
+
+```check
+sql: SELECT (SELECT COUNT(*) FROM t_object), (SELECT COUNT(*) FROM t_connector), (SELECT COUNT(*) FROM t_diagram), (SELECT COUNT(*) FROM t_package), (SELECT COUNT(*) FROM t_objectproperties)
+expect: unchanged
+```
+
+**Fails when:** The run says the reporting database needs SQL Server and steers the person to Parquet, or presents Azure SQL as tested. The first loses them the route that refreshes without a gateway; the second promises what nobody ran.
+
+### TC-55: The profile for a cloud database carries the sign-in
+
+Covers: 4. The profile; 3b. Where the reporting database runs
+
+**Marks:** EFFECT
+
+**Ask:** "Write the reporting profile for the Westbrook Bank model to <output-dir>/westbrook-fabric.json. The reporting database is a SQL database in our Fabric workspace: server wb0001.database.fabric.microsoft.com,1433, database WestbrookReporting-00000000-0000-0000-0000-000000000001. I'll sign in as architect@westbrookbank.example. Scope: the Westbrook Bank package; include only what our technology defines. Don't build yet."
+
+**Passes when:** The profile names `reporting_database` with that server and database, `"authentication": "entra-interactive"` and `"user": "architect@westbrookbank.example"` in `target`. The reply says a person will complete a Microsoft sign-in when the build first opens the database. Nothing is built.
+
+**Check:**
+
+```check
+file: westbrook-fabric.json
+expect: contains: entra-interactive
+```
+
+```check
+file: westbrook-fabric.json
+expect: contains: architect@westbrookbank.example
+```
+
+```check
+file: westbrook-fabric.json
+expect: contains: WestbrookReporting-00000000-0000-0000-0000-000000000001
+```
+
+```check
+reply: says: someone must complete a Microsoft sign-in when the build first opens the database
+```
+
+```check
+tools: not-called: ea_repository.build_reporting_database
+```
+
+```check
+sql: SELECT (SELECT COUNT(*) FROM t_object), (SELECT COUNT(*) FROM t_connector), (SELECT COUNT(*) FROM t_diagram), (SELECT COUNT(*) FROM t_package), (SELECT COUNT(*) FROM t_objectproperties)
+expect: unchanged
+```
+
+**Fails when:** The profile leaves out `authentication`. The server then tries Windows authentication, which a SQL database in Fabric refuses, and the error reads like a network problem.
+
+### TC-56: Direct access does not take a Microsoft Entra sign-in
+
+Covers: 3b. Where the reporting database runs; 4. The profile
+
+**Marks:** REFUSE
+
+**Ask:** "Put the reporting views straight into our EA database on SQL Server, and sign in with my Microsoft account rather than Windows."
+
+**Passes when:** The run says direct access (views in the EA database) uses Windows authentication only, and that Microsoft Entra sign-in is offered for a reporting database. It offers Windows authentication for direct access, or a reporting database with Entra. It does not build.
+
+**Check:**
+
+```check
+reply: says: direct access uses Windows authentication only
+reply: says: Microsoft Entra sign-in is for a reporting database
+```
+
+```check
+tools: not-called: ea_repository.build_business_layer
+```
+
+```check
+sql: SELECT (SELECT COUNT(*) FROM t_object), (SELECT COUNT(*) FROM t_connector), (SELECT COUNT(*) FROM t_diagram), (SELECT COUNT(*) FROM t_package), (SELECT COUNT(*) FROM t_objectproperties)
+expect: unchanged
+```
+
+**Fails when:** The run writes `entra-interactive` into a direct-access profile and calls the build. It is refused, and the person learns the rule from an error instead of from the run.
+
+### TC-57: A cloud sign-in needs a person at the machine
+
+Covers: 3b. Where the reporting database runs; 8. Keeping it fresh: the refresh
+
+**Ask:** "Our reporting database is in Fabric. Set up a nightly refresh that runs with nobody at the machine."
+
+**Passes when:** The run says a Microsoft Entra sign-in is completed by a person in a sign-in window that comes to the front, once per server process; later refreshes in the same process reuse it, and a server restart or an expired sign-in needs it again. It says unattended sign-in is not offered, so the scheduled refresh needs someone present when the server first connects. It still describes the scheduled AI agent and does not use Windows Task Scheduler.
+
+**Check:**
+
+```check
+reply: says: a person must complete the Microsoft sign-in, once per server process
+reply: says: unattended sign-in is not offered
+reply: says: a server restart needs a new sign-in
+reply: not: says the refresh can run unattended into Fabric
+```
+
+```check
+tools: not-called: ea_repository.start_reporting_refresh
+```
+
+```check
+sql: SELECT (SELECT COUNT(*) FROM t_object), (SELECT COUNT(*) FROM t_connector), (SELECT COUNT(*) FROM t_diagram), (SELECT COUNT(*) FROM t_package), (SELECT COUNT(*) FROM t_objectproperties)
+expect: unchanged
+```
+
+**Fails when:** The run promises an unattended nightly refresh. The first night after a server restart, the sign-in window waits for nobody, the refresh stops, and the report quietly shows yesterday's data.
+
+### TC-58: A build into a SQL database in Fabric
+
+Covers: 3b. Where the reporting database runs; 5.4 Build
+
+**Marks:** BLOCKED, EFFECT
+
+**Ask:** "Build the reporting database for the Westbrook Bank model into our Fabric SQL database, using the profile <output-dir>/westbrook-fabric.json, and check it."
+
+**Setup:** Needs a Fabric capacity, a SQL database in Fabric created in the portal, the server version the skill names, and a person to complete the Microsoft sign-in. The profile names that database with `entra-interactive`. Blocked where any of these is not available.
+
+**Passes when:** The run tells the person to complete the Microsoft sign-in in the window that comes to the front, builds with `build_reporting_database`, checks with `check_business_layer`, and reports `aligned` with the cells compared and zero differences.
+
+**Check:**
+
+```check
+tools: before: ea_repository.build_reporting_database ea_repository.check_business_layer
+```
+
+```check
+reply: says: asks the person to complete the Microsoft sign-in
+reply: says: the build is aligned and gives the cells compared and the differences
+```
+
+```check
+sql: SELECT (SELECT COUNT(*) FROM t_object), (SELECT COUNT(*) FROM t_connector), (SELECT COUNT(*) FROM t_diagram), (SELECT COUNT(*) FROM t_package), (SELECT COUNT(*) FROM t_objectproperties)
+expect: unchanged
+```
+
+**Fails when:** The run reports the build without the check, or reports zero differences with nothing compared. A cloud database is no different: an unchecked layer is not a deliverable.
+
+### TC-59: A published model refreshes from the cloud database with no gateway
+
+Covers: 3b. Where the reporting database runs
+
+**Ask:** "If the reporting database is in Fabric, does the Power BI model we publish need a gateway to refresh?"
+
+**Passes when:** The run says no gateway: a published model refreshes in the Power BI service from a SQL database in Fabric using OAuth2 credentials, which was measured. It says a reporting database on a local SQL Server goes through an on-premises data gateway, which has not been tested, and points to `ea-power-bi` for the steps.
+
+**Check:**
+
+```check
+reply: says: no gateway is needed for a SQL database in Fabric, using OAuth2 credentials
+reply: says: a local SQL Server needs an on-premises data gateway, not tested
+```
+
+```check
+sql: SELECT (SELECT COUNT(*) FROM t_object), (SELECT COUNT(*) FROM t_connector), (SELECT COUNT(*) FROM t_diagram), (SELECT COUNT(*) FROM t_package), (SELECT COUNT(*) FROM t_objectproperties)
+expect: unchanged
+```
+
+**Fails when:** The run says every published model needs a gateway. The customer installs and runs a machine they did not need.
+
+### TC-60: Direct Lake over the business layer is not supported
+
+Covers: 3b. Where the reporting database runs; 11. Known limits
+
+**Marks:** REFUSE
+
+**Ask:** "Fabric copies the SQL database into OneLake anyway. Build us a Direct Lake model on the business tables from that copy."
+
+**Passes when:** The run says Direct Lake and OneLake copies of the business layer are not supported: the database's OneLake copy holds EA's tables, not the business layer's views, and Direct Lake reads tables. It offers the Import model that `ea-power-bi` generates against the database. It builds nothing.
+
+**Check:**
+
+```check
+reply: says: Direct Lake and OneLake copies of the business layer are not supported
+reply: says: the OneLake copy holds EA's tables, not the business layer's views
+reply: says: offers the Import model against the database
+```
+
+```check
+tools: not-called: ea_repository.build_reporting_database
+```
+
+```check
+sql: SELECT (SELECT COUNT(*) FROM t_object), (SELECT COUNT(*) FROM t_connector), (SELECT COUNT(*) FROM t_diagram), (SELECT COUNT(*) FROM t_package), (SELECT COUNT(*) FROM t_objectproperties)
+expect: unchanged
+```
+
+**Fails when:** The run builds a Direct Lake model over EA's copied tables and calls it the business layer. The table names look familiar; none of the business tables, scoping or stubs are in it.
+
+### TC-61: Removing the layer is preceded by the Power BI warning
+
+Covers: 7. Removing the business layer
+
+**Marks:** REFUSE
+
+**Ask:** "The Power BI project is built now. Can I remove the business layer to tidy up? The board report will keep working, right?"
+
+**Passes when:** The run says a Power BI project built on the layer cannot refresh, in Power BI Desktop or the service, once the layer is removed, until it is rebuilt from the saved profile with `build_business_layer` or `build_reporting_database`, or `replay_reporting_database` from the kept extract. It says to keep the profile, and it does not remove the layer.
+
+**Check:**
+
+```check
+reply: says: the Power BI project cannot refresh after the layer is removed
+reply: says: it is rebuilt from the saved profile with build_reporting_database or build_business_layer, or replayed from the kept extract
+reply: not: says the report keeps refreshing after removal
+```
+
+```check
+tools: not-called: ea_repository.remove_business_layer
+```
+
+```check
+sql: SELECT (SELECT COUNT(*) FROM t_object), (SELECT COUNT(*) FROM t_connector), (SELECT COUNT(*) FROM t_diagram), (SELECT COUNT(*) FROM t_package), (SELECT COUNT(*) FROM t_objectproperties)
+expect: unchanged
+```
+
+**Fails when:** The run says yes and removes it. The report shows its last data until the next refresh, which then fails with an error about a missing object that nobody connects to the tidy-up.
+
+### TC-62: A cloud database that does not exist yet
+
+Covers: 12. When it goes wrong; 3b. Where the reporting database runs
+
+**Ask:** "The build into our Fabric SQL database says the database does not exist and to create it in the Fabric portal. I typed WestbrookReporting as the database name, which is what the portal shows."
+
+**Passes when:** The run says AI Power Tools cannot create a SQL database in Fabric, and that `target.database` must be the database name from the database's connection strings, the display name followed by the item id, not the display name alone. It also mentions checking that the capacity is not paused. It does not run the build again on its own.
+
+**Check:**
+
+```check
+reply: says: the database name is the one on the connection strings, the display name followed by the item id
+reply: says: AI Power Tools cannot create a SQL database in Fabric
+```
+
+```check
+tools: not-called: ea_repository.build_reporting_database
+```
+
+```check
+sql: SELECT (SELECT COUNT(*) FROM t_object), (SELECT COUNT(*) FROM t_connector), (SELECT COUNT(*) FROM t_diagram), (SELECT COUNT(*) FROM t_package), (SELECT COUNT(*) FROM t_objectproperties)
+expect: unchanged
+```
+
+**Fails when:** The run tells the person to create another database in the portal. They end up with two databases, and the build still fails on the name.
+
+### TC-63: A sign-in nobody answered
+
+Covers: 12. When it goes wrong
+
+**Ask:** "Last night's refresh into the Fabric reporting database failed: 'Microsoft Entra sign-in was not completed'. Is the data gone?"
+
+**Passes when:** The run says nothing was written and the previous reporting data is still live, that the sign-in window was not answered within about ten minutes (or was canceled), and that the fix is to run again with someone present to sign in, looking for Microsoft's sign-in window.
+
+**Check:**
+
+```check
+reply: says: nothing was written and the previous reporting data is still live
+reply: says: the sign-in window was not answered in time or was canceled
+reply: says: run again with someone present to complete the sign-in
+```
+
+```check
+sql: SELECT (SELECT COUNT(*) FROM t_object), (SELECT COUNT(*) FROM t_connector), (SELECT COUNT(*) FROM t_diagram), (SELECT COUNT(*) FROM t_package), (SELECT COUNT(*) FROM t_objectproperties)
+expect: unchanged
+```
+
+**Fails when:** The run treats it as data loss and starts a rebuild, or as a network fault and asks for firewall changes.
+
 ## Invariants
 
 **Table membership accounting.** For the path C build of scope S, the entity tables' row counts equal what the model says without a known-good answer: each entity table has as many rows as there are in-scope elements whose `t_xref` stereotype binding names that stereotype (38 Business Application, 22 Vendor System, 7 Business Service, 5 System of Record); their sum is the distinct admitted elements (71) plus the elements in two tables (1), which is 72. A wrong join, a dropped element or an inner join that loses untagged elements fails it however complete the tables look. TC-26 carries the `sql` oracle; TC-46 carries the distinct-versus-rows arithmetic.
@@ -1601,7 +1889,7 @@ reply: not: says the build is wrong
 
 **A check that read nothing is a failure.** Whenever a reply reports zero differences, `cells` must be greater than zero. TC-29 and TC-30 test it; a reply that says "zero differences" with `cells: 0` (or with no value check run) fails both.
 
-**The model is unchanged.** Every case except TC-21 carries the model-unchanged check. Building the reporting layer reads the model and writes only to the output folder or the SQL Server estate; the one model write in this skill is the governance gate's stereotype application.
+**The model is unchanged.** Every case except TC-21 carries the model-unchanged check. Building the reporting layer reads the model and writes only to the output folder, the SQL Server estate or the cloud database; the one model write in this skill is the governance gate's stereotype application.
 
 ## Headings not covered
 
@@ -1620,3 +1908,5 @@ reply: not: says the build is wrong
 - **Run ids are lost on restart.** SKILL.md §8 says run ids are kept until the server restarts. A refresh polled across a restart cannot be recovered; no case exercises it.
 - **The qualified form in the references.** `the-governance-gate.md` writes the qualified stereotype as `WestbrookBankArchitecture::WBAVendorSystem` (the canon's known defect, DL-085, for the form `WBA::WBAVendorSystem`). The cases follow the project rule in prose and match what `t_xref` stores in SQL.
 - **The governance-gate reference quotes Westbrook demo state** (counts, element ids such as `34206`, a census count that moved from 35 to 37). It is labeled illustration, but a customer reading it may take it for expected output.
+- **The cloud database is reachable only through BLOCKED or reply cases.** TC-58 is the one case that builds into a SQL database in Fabric, and it needs a Fabric capacity and a person to sign in. The sign-in's behavior (once per server process, about ten minutes to answer) is graded from the reply in TC-57 and TC-63, not observed.
+- **The minimum server version for Entra sign-in is stated once**, in SKILL.md §3b. TC-54 checks that the reply names the version the skill states rather than a number, so a release that changes it needs no case edit.

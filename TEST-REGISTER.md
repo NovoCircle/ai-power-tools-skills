@@ -28,8 +28,8 @@ has a `Covers:` line naming a heading in that skill's SKILL.md.
 | skill:ea-model-hygiene | A | cases: 30 · not run | complete |
 | skill:ea-modeling | A | cases: 44 · not run | complete |
 | skill:ea-navigation-diagrams | A | cases: 30 · not run | complete |
-| skill:ea-power-bi | A | cases: 56 · not run | complete |
-| skill:ea-reporting-database | A | cases: 53 · not run | complete |
+| skill:ea-power-bi | A | cases: 76 · not run | complete |
+| skill:ea-reporting-database | A | cases: 63 · not run | complete |
 | skill:ea-ruleset-author | A | cases: 25 · not run | complete |
 | skill:ea-stakeholder-reporting | A | cases: 24 · not run | complete |
 | skill:ea-start-here | A | cases: 35 · not run | complete |
@@ -46,7 +46,7 @@ skill's markdown for the program's file name, plus the programs that import it.
 
 | Unit | Required | U | Used by | Verdict |
 |---|---|---|---|---|
-| prog:_shared/tools/descriptions.py | U | 30 tests (test_descriptions.py) | ea-power-bi (via parquet_tables.py, powerbi_model.py) | complete |
+| prog:_shared/tools/descriptions.py | U | 30 tests (test_descriptions.py) | ea-power-bi | complete |
 | prog:_shared/tools/ea_census.py | U | 81 tests (test_ea_census.py) | ea-mdg-assess, ea-mdg-author, ea-mdg-model-build, ea-reporting-database | complete |
 | prog:_shared/tools/governance_gap.py | U | 19 tests (test_governance_gap.py) | ea-reporting-database | complete |
 | prog:_shared/tools/inclusion.py | U | 31 tests (test_inclusion.py) | ea-reporting-database | complete |
@@ -2018,7 +2018,7 @@ method of a test class is written `Class.test_name`.
   - `plugins/ai-power-tools/skills/ea-navigation-diagrams/references/test-cases.md#TC-28`
   - `plugins/ai-power-tools/skills/ea-navigation-diagrams/references/test-cases.md#TC-29`
   - `plugins/ai-power-tools/skills/ea-navigation-diagrams/references/test-cases.md#TC-30`
-- `skill:ea-power-bi` A (56)
+- `skill:ea-power-bi` A (76)
   - `plugins/ai-power-tools/skills/ea-power-bi/references/test-cases.md#TC-01`
   - `plugins/ai-power-tools/skills/ea-power-bi/references/test-cases.md#TC-02`
   - `plugins/ai-power-tools/skills/ea-power-bi/references/test-cases.md#TC-03`
@@ -2075,7 +2075,27 @@ method of a test class is written `Class.test_name`.
   - `plugins/ai-power-tools/skills/ea-power-bi/references/test-cases.md#TC-54`
   - `plugins/ai-power-tools/skills/ea-power-bi/references/test-cases.md#TC-55`
   - `plugins/ai-power-tools/skills/ea-power-bi/references/test-cases.md#TC-56`
-- `skill:ea-reporting-database` A (53)
+  - `plugins/ai-power-tools/skills/ea-power-bi/references/test-cases.md#TC-57`
+  - `plugins/ai-power-tools/skills/ea-power-bi/references/test-cases.md#TC-58`
+  - `plugins/ai-power-tools/skills/ea-power-bi/references/test-cases.md#TC-59`
+  - `plugins/ai-power-tools/skills/ea-power-bi/references/test-cases.md#TC-60`
+  - `plugins/ai-power-tools/skills/ea-power-bi/references/test-cases.md#TC-61`
+  - `plugins/ai-power-tools/skills/ea-power-bi/references/test-cases.md#TC-62`
+  - `plugins/ai-power-tools/skills/ea-power-bi/references/test-cases.md#TC-63`
+  - `plugins/ai-power-tools/skills/ea-power-bi/references/test-cases.md#TC-64`
+  - `plugins/ai-power-tools/skills/ea-power-bi/references/test-cases.md#TC-65`
+  - `plugins/ai-power-tools/skills/ea-power-bi/references/test-cases.md#TC-66`
+  - `plugins/ai-power-tools/skills/ea-power-bi/references/test-cases.md#TC-67`
+  - `plugins/ai-power-tools/skills/ea-power-bi/references/test-cases.md#TC-68`
+  - `plugins/ai-power-tools/skills/ea-power-bi/references/test-cases.md#TC-69`
+  - `plugins/ai-power-tools/skills/ea-power-bi/references/test-cases.md#TC-70`
+  - `plugins/ai-power-tools/skills/ea-power-bi/references/test-cases.md#TC-71`
+  - `plugins/ai-power-tools/skills/ea-power-bi/references/test-cases.md#TC-72`
+  - `plugins/ai-power-tools/skills/ea-power-bi/references/test-cases.md#TC-73`
+  - `plugins/ai-power-tools/skills/ea-power-bi/references/test-cases.md#TC-74`
+  - `plugins/ai-power-tools/skills/ea-power-bi/references/test-cases.md#TC-75`
+  - `plugins/ai-power-tools/skills/ea-power-bi/references/test-cases.md#TC-76`
+- `skill:ea-reporting-database` A (63)
   - `plugins/ai-power-tools/skills/ea-reporting-database/references/test-cases.md#TC-01`
   - `plugins/ai-power-tools/skills/ea-reporting-database/references/test-cases.md#TC-02`
   - `plugins/ai-power-tools/skills/ea-reporting-database/references/test-cases.md#TC-03`
@@ -2129,6 +2149,16 @@ method of a test class is written `Class.test_name`.
   - `plugins/ai-power-tools/skills/ea-reporting-database/references/test-cases.md#TC-51`
   - `plugins/ai-power-tools/skills/ea-reporting-database/references/test-cases.md#TC-52`
   - `plugins/ai-power-tools/skills/ea-reporting-database/references/test-cases.md#TC-53`
+  - `plugins/ai-power-tools/skills/ea-reporting-database/references/test-cases.md#TC-54`
+  - `plugins/ai-power-tools/skills/ea-reporting-database/references/test-cases.md#TC-55`
+  - `plugins/ai-power-tools/skills/ea-reporting-database/references/test-cases.md#TC-56`
+  - `plugins/ai-power-tools/skills/ea-reporting-database/references/test-cases.md#TC-57`
+  - `plugins/ai-power-tools/skills/ea-reporting-database/references/test-cases.md#TC-58`
+  - `plugins/ai-power-tools/skills/ea-reporting-database/references/test-cases.md#TC-59`
+  - `plugins/ai-power-tools/skills/ea-reporting-database/references/test-cases.md#TC-60`
+  - `plugins/ai-power-tools/skills/ea-reporting-database/references/test-cases.md#TC-61`
+  - `plugins/ai-power-tools/skills/ea-reporting-database/references/test-cases.md#TC-62`
+  - `plugins/ai-power-tools/skills/ea-reporting-database/references/test-cases.md#TC-63`
 - `skill:ea-ruleset-author` A (25)
   - `plugins/ai-power-tools/skills/ea-ruleset-author/references/test-cases.md#TC-01`
   - `plugins/ai-power-tools/skills/ea-ruleset-author/references/test-cases.md#TC-02`
