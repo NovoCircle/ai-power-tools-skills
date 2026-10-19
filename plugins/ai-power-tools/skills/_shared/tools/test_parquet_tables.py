@@ -8,8 +8,8 @@ folder. The three-path comparison needs no pyarrow; the writer tests skip withou
 """
 from __future__ import annotations
 
-# No backlog item is pinned: these tests cover designed behavior, not a filed defect.
-PINS = ()
+# 0405: the superscript device names. The rest covers designed behavior, not a filed defect.
+PINS = ("APT-2026-0405",)
 
 import copy
 import json
@@ -133,7 +133,8 @@ def test_file_names_keep_spaces_and_parentheses():
 
 
 @pytest.mark.parametrize("name", ['a/b', 'a\\b', 'a:b', 'a*b', 'a?b', 'a"b', 'a<b', 'a>b', 'a|b',
-                                  'a\tb', 'x.', 'x ', '', 'CON', 'nul', 'COM1', 'Lpt9.txt'])
+                                  'a\tb', 'x.', 'x ', '', 'CON', 'nul', 'COM1', 'Lpt9.txt',
+                                  'COM\u00b9', 'LPT\u00b3', 'COM\u00b9.txt', 'lpt\u00b2.parquet'])
 def test_names_windows_cannot_hold_are_refused(name):
     with pytest.raises(ParquetTablesError, match="Windows file name"):
         file_name(name)
