@@ -552,7 +552,7 @@
         "ea-power-bi/references/measured-power-bi-behavior.md": "95d4ade60548b902d3b0e341d9407c3627bcfa4cff27a1fb2771d686d8733ec1",
         "ea-power-bi/references/power-bi-modeling-mcp.md": "1e7e3cbf20726b750008a554f0bdbac54a66508d4751045c3e8f9b9856cc6876",
         "ea-power-bi/references/publishing-and-copilot.md": "1c7546773b40bb68298a5f8fbe97b1ae37af15dfe64f2e91e1cf70666603e185",
-        "ea-power-bi/references/test-cases.md": "f08f43c01763a5d28eb7cdeaeaf2c0b3156a2779e1a474475fccd9fdc94fc267",
+        "ea-power-bi/references/test-cases.md": "5ae5f8013f2516e2747095bdf0218318f6dc14a17da9575bc65875c026f15c9f",
         "ea-power-bi/references/the-path-choice.md": "c6a112b0f18de37ab5fa43be7f006e57703410196abfc21194b8bf6ec926f423"
       }
     },
@@ -576,7 +576,7 @@
       "sha256": {
         "ea-reporting-database/SKILL.md": "e75ce45734996253b63c96e968f27879201666339929d00168e0706763a1f7a7",
         "ea-reporting-database/references/test-cases.md": "882dab6abd94a2bf7c0935bbe549d8513ab1d52f2f987400afd9f13641e66d93",
-        "ea-reporting-database/references/the-cloud-database.md": "273dafc7579f29bb7ca8cb39bd146f6af7344ad5e51d4ea9488ba9d17751eadb",
+        "ea-reporting-database/references/the-cloud-database.md": "e82fe89a7bbf7dad70907af7daa2eefde7aeb506fbeaabd04ed6f633aca569ea",
         "ea-reporting-database/references/the-extract-snapshot.md": "a1255a4e185310a64570a7d6f6d67cbe24bca79eb07a14e97ce04820a8c0f0b9",
         "ea-reporting-database/references/the-governance-gate.md": "ddd3c32b0bd37e311d61b0e346e294b9bbddd9395d266a943fb1770648335437",
         "ea-reporting-database/references/the-inclusion-choice.md": "094d74606eabfa0bd4001b0a88dad62ef4f53176a21b1f4a04e9686a41ec3e3a",
