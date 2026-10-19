@@ -156,7 +156,8 @@ def test_column_descriptions_are_carried(defn):
     m = model_from_definition(d)
     cols = m.table(d["entities"][0]["name"]).columns
     assert cols[1].description == "Tag note from the MDG."
-    assert cols[0].description == ""
+    # No note on ea_guid: the template fills it (APT-2026-0567, test_descriptions.py).
+    assert cols[0].description == "Unique key of the element. Hidden; relates the tables."
 
 
 def test_each_connector_relates_source_and_target_to_its_entities(defn, model):
