@@ -275,7 +275,8 @@ def test_tag_row_tables_relate_to_their_table(defn):
 
 
 def test_one_measure_per_inactive_connector_relationship_and_no_other(model):
-    measures = [(t.name, m) for t in model.tables for m in t.measures]
+    measures = [(t.name, m) for t in model.tables if t.name.startswith("Con_")
+                for m in t.measures]
     inactive_con = [r for r in model.inactive if r.from_table.startswith("Con_")]
     assert len(measures) == len(inactive_con) == 4
     assert {t for t, _ in measures} == {r.from_table for r in inactive_con}
@@ -298,7 +299,8 @@ def test_measure_names_are_unique_when_stereotypes_collide(defn):
     twin["name"] = "Con_Business Application BMM Uses Business Application"
     twin["key"] = "BMM::Uses"
     d["connectors"].append(twin)
-    names = [m.name for t in model_from_definition(d).tables for m in t.measures]
+    names = [m.name for t in model_from_definition(d).tables if t.name.startswith("Con_")
+             for m in t.measures]
     assert len(names) == len(set(names)) == 5
 
 
@@ -308,10 +310,105 @@ def test_no_measure_on_a_hidden_table(model):
             assert t.measures == [], t.name
 
 
-def test_no_measure_on_a_business_table_that_is_not_a_connector(model):
+def test_no_measure_on_a_business_table_that_is_not_a_connector_or_an_entity(defn, model):
+    entities = {e["name"] for e in defn["entities"]}
     for t in model.tables:
         if t.measures:
-            assert t.name.startswith("Con_")
+            assert t.name.startswith("Con_") or t.name in entities
+
+
+# ------------------------------------------- hidden keys and count measures (B)
+
+KEYS = {"ea_guid", "source_guid", "target_guid", "connector_guid", "connector_id",
+        "property_id"}
+
+
+def test_the_six_keys_are_hidden_on_every_business_table_and_nothing_else(defn, model):
+    business = set(business_names(defn))
+    seen = set()
+    for t in model.tables:
+        if t.name in business:
+            for c in t.columns:
+                assert c.is_hidden == (c.name in KEYS), (t.name, c.name)
+                if c.is_hidden:
+                    seen.add(c.name)
+        else:  # physical: columns stay as they were, the table is hidden
+            assert t.is_hidden and not any(c.is_hidden for c in t.columns), t.name
+    assert {"ea_guid", "source_guid", "target_guid"} <= seen <= KEYS
+
+
+def test_hidden_keys_are_emitted_as_ishidden_in_the_tmdl(defn):
+    files = project_files_from_definition(defn, "P")
+    text = files["P.SemanticModel/definition/tables/Business Application.tmdl"]
+    assert re.search(r"\tcolumn ea_guid\r?\n(\t\t[^\r\n]*\r?\n)*?\t\tisHidden", text)
+    name_col = re.search(r"\tcolumn name\r?\n((?:\t\t[^\r\n]*\r?\n)*)", text).group(1)
+    assert "isHidden" not in name_col
+
+
+def test_one_count_measure_per_entity_table_with_exact_fields(defn, model):
+    for e in defn["entities"]:
+        t = model.table(e["name"])
+        counts = [m for m in t.measures]
+        assert len(counts) == 1, e["name"]
+        (m,) = counts
+        assert m.name == f"{e['name']} count"
+        assert m.expression == f"COUNTROWS('{e['name']}')"
+        assert m.format_string == "0"
+        assert m.description == f"Number of {e.get('alias') or e['name']} elements."
+
+
+def test_no_count_measure_on_connector_tag_row_or_directory_tables(defn, model):
+    others = ([c["name"] for c in defn["connectors"]]
+              + [t["name"] for t in defn["tag_row_tables"]] + [defn["directory"]["name"]])
+    for n in others:
+        assert not any(m.name.endswith(" count") for m in model.table(n).measures), n
+
+
+def test_count_measure_description_falls_back_to_the_table_name(defn):
+    d = copy.deepcopy(defn)
+    e = d["entities"][0]
+    e["alias"] = ""
+    m = model_from_definition(d).table(e["name"]).measures[0]
+    assert m.description == f"Number of {e['name']} elements."
+
+
+def test_count_measure_dax_quotes_the_table_name(defn):
+    d = copy.deepcopy(defn)
+    old = d["entities"][0]["name"]
+    d["entities"][0]["name"] = "Owner's App"
+    d["entities"][0]["alias"] = "Owner's App"
+    for c in d["connectors"]:
+        for end in ("source", "target"):
+            if c[end] == old:
+                c[end] = "Owner's App"
+    d["directory"]["entries"] = [x for x in d["directory"].get("entries", [])
+                                 if x.get("table_name") != old]
+    t = model_from_definition(d).table("Owner's App")
+    assert t.measures[0].name == "Owner's App count"
+    assert t.measures[0].expression == "COUNTROWS('Owner''s App')"
+
+
+def test_count_measure_name_colliding_with_a_column_is_refused_naming_both(defn):
+    d = copy.deepcopy(defn)
+    e = d["entities"][0]
+    e["all_columns"] = list(e["all_columns"]) + [{"name": f"{e['name']} count", "type": "TEXT"}]
+    with pytest.raises(ValueError) as err:
+        model_from_definition(d)
+    assert f"{e['name']} count" in str(err.value) and "column" in str(err.value)
+    assert e["name"] in str(err.value)
+
+
+def test_count_measure_name_colliding_with_another_measure_is_refused_naming_both(defn):
+    import powerbi_model
+    other = SemanticTable(name="Other")
+    from semantic_model import Measure
+    other.measures.append(Measure(name="Business Application count", expression="1"))
+    host = SemanticTable(name="Business Application")
+    tables = {"Other": other, "Business Application": host}
+    with pytest.raises(ValueError) as err:
+        powerbi_model._count_measures({"entities": [{"name": "Business Application"}]}, tables)
+    msg = str(err.value)
+    assert "'Business Application count'" in msg and "measure" in msg and "'Other'" in msg
 
 
 # ------------------------------------------------------------------- layout

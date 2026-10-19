@@ -28,11 +28,25 @@ two tables or would give a table a second filter path from the same source.
 
 MEASURES
 --------
-Exactly one per inactive relationship whose many side is a `Con_` table, hosted
-on that table with `USERELATIONSHIP`. A combination whose source and target are
-the same entity type has one inactive relationship (the target side); the measure
-is what makes it reachable. Nothing else is a measure, and nothing sits on a
-hidden table (a visible measure keeps a hidden table visible, measured).
+Two kinds, and nothing else is a measure. Nothing sits on a hidden table (a
+visible measure keeps a hidden table visible, measured).
+
+- One `USERELATIONSHIP` measure per inactive relationship whose many side is a
+  `Con_` table, hosted on that table. A combination whose source and target are
+  the same entity type has one inactive relationship (the target side); the
+  measure is what makes it reachable.
+- One count measure per entity table, `'{table} count'` =
+  `COUNTROWS('{table}')`, format `0`, described "Number of {alias} elements."
+  (`APT-2026-0544`). Not on `Con_`, tag-row or Table Directory tables. A name that
+  equals any other measure's name in the model, or a column of its host table, is
+  refused with a ValueError naming both; it is never renamed.
+
+KEY COLUMNS
+-----------
+`ea_guid`, `source_guid`, `target_guid`, `connector_guid`, `connector_id` and
+`property_id` are `isHidden` on every business table (`APT-2026-0540`). They exist
+for relationships and mean nothing to a reader. Nothing else changes visibility;
+EA's physical tables are hidden already.
 """
 from __future__ import annotations
 
@@ -150,7 +164,12 @@ class Resolver:
 # ------------------------------------------------------------------- tables
 
 
-def _columns(spec: dict) -> list[SemanticColumn]:
+#: Key columns hidden on every business table (APT-2026-0540).
+HIDDEN_KEY_COLUMNS = frozenset(
+    {"ea_guid", "source_guid", "target_guid", "connector_guid", "connector_id", "property_id"})
+
+
+def _columns(spec: dict, hide_keys: bool = False) -> list[SemanticColumn]:
     cols = spec.get("all_columns", spec.get("columns"))
     out = []
     for c in cols:
@@ -158,7 +177,8 @@ def _columns(spec: dict) -> list[SemanticColumn]:
             raise ValueError(f"column {c['name']!r} of {spec['name']!r} has the "
                              f"unknown type {c['type']!r}; expected one of {sorted(TYPES)}")
         out.append(SemanticColumn(name=c["name"], data_type=TYPES[c["type"]],
-                                  description=c.get("description") or ""))
+                                  description=c.get("description") or "",
+                                  is_hidden=hide_keys and c["name"] in HIDDEN_KEY_COLUMNS))
     return out
 
 
@@ -238,6 +258,26 @@ def _measures(model_tables: dict[str, SemanticTable], rels: list[Relationship],
                         f"Uses the inactive relationship."))
 
 
+def _count_measures(defn: dict, model_tables: dict[str, SemanticTable]) -> None:
+    """One `'{table} count'` measure per entity table; a name clash is an error."""
+    taken: dict[str, str] = {m.name: f"measure {m.name!r} on {t.name!r}"
+                             for t in model_tables.values() for m in t.measures}
+    for e in defn["entities"]:
+        table = model_tables[e["name"]]
+        name = f"{table.name} count"
+        clash = taken.get(name)
+        if clash is None and any(c.name == name for c in table.columns):
+            clash = f"column {name!r} of {table.name!r}"
+        if clash is not None:
+            raise ValueError(f"the count measure {name!r} for table {table.name!r} "
+                             f"collides with {clash}; rename one of them in the "
+                             f"definition (the generator never renames)")
+        taken[name] = f"measure {name!r} on {table.name!r}"
+        table.measures.append(Measure(
+            name=name, expression=f"COUNTROWS({_dax(table.name)})", format_string="0",
+            description=f"Number of {e.get('alias') or table.name} elements."))
+
+
 # -------------------------------------------------------------------- model
 
 
@@ -276,7 +316,8 @@ def model_from_definition(defn: dict) -> SemanticModel:
         tables.append(SemanticTable(
             name=spec["name"],
             source_name=spec["name"] if parquet else f"{src['schema']}.{spec['name']}",
-            description=descriptions.get(spec["name"], ""), columns=_columns(spec)))
+            description=descriptions.get(spec["name"], ""),
+            columns=_columns(spec, hide_keys=True)))
     for spec in defn["physical"]:
         tables.append(SemanticTable(
             name=spec["name"],
@@ -289,7 +330,9 @@ def model_from_definition(defn: dict) -> SemanticModel:
 
     rels = _relationships(defn)
     keys = {c["name"]: c["key"] for c in defn["connectors"]}
-    _measures({t.name: t for t in tables}, rels, keys)
+    by_name = {t.name: t for t in tables}
+    _measures(by_name, rels, keys)
+    _count_measures(defn, by_name)
     return SemanticModel(tables=tables, relationships=rels)
 
 
