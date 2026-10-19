@@ -3,14 +3,14 @@
 
 PURE except `write_project` and the CLI. `model_from_definition` and
 `project_files_from_definition` do no I/O: they turn the definition JSON that the
-server's `build_business_layer` writes (`APT-2026-0301`) into a `SemanticModel`
+server's `build_business_layer` writes into a `SemanticModel`
 and a complete `.pbip` project, keyed by relative path.
 
     definition.json  ->  SemanticModel  ->  TMDL + diagramLayout.json  ->  .pbip
 
 One shape on every path. The only things that vary are the partition source and
-the storage mode. A definition whose `source.kind` is "parquet" (path C,
-`APT-2026-0212`) gets a Parquet partition per table, always in Import mode;
+the storage mode. A definition whose `source.kind` is "parquet" (path C)
+gets a Parquet partition per table, always in Import mode;
 anything else gets a SQL partition.
 
 THE MODEL
@@ -37,7 +37,7 @@ visible measure keeps a hidden table visible, measured).
   measure is what makes it reachable.
 - One count measure per entity table, `'{table} count'` =
   `COUNTROWS('{table}')`, format `0`, described "Number of {alias} elements."
-  (`APT-2026-0544`). Not on `Con_`, tag-row or Table Directory tables. A name that
+  Not on `Con_`, tag-row or Table Directory tables. A name that
   equals any other measure's name in the model, or a column of its host table, is
   refused with a ValueError naming both; it is never renamed.
 
@@ -45,18 +45,18 @@ DESCRIPTIONS
 ------------
 Every business table, column and measure carries one, from three layers: the
 user's descriptions file, the technology's notes, then templates
-(`descriptions.py`, `APT-2026-0567`). EA's physical tables carry none.
+(`descriptions.py`). EA's physical tables carry none.
 
 SIZE
 ----
 `model_size` counts tables plus columns, the unit of Copilot's 1,000-entity
 index limit, for the full model and for the visible business layer; the CLI
-prints both and warns past the limit (`APT-2026-0541`).
+prints both and warns past the limit.
 
 KEY COLUMNS
 -----------
 `ea_guid`, `source_guid`, `target_guid`, `connector_guid`, `connector_id` and
-`property_id` are `isHidden` on every business table (`APT-2026-0540`). They exist
+`property_id` are `isHidden` on every business table. They exist
 for relationships and mean nothing to a reader. Nothing else changes visibility;
 EA's physical tables are hidden already.
 """
@@ -177,7 +177,7 @@ class Resolver:
 # ------------------------------------------------------------------- tables
 
 
-#: Key columns hidden on every business table (APT-2026-0540).
+#: Key columns hidden on every business table.
 HIDDEN_KEY_COLUMNS = frozenset(
     {"ea_guid", "source_guid", "target_guid", "connector_guid", "connector_id", "property_id"})
 
@@ -444,7 +444,7 @@ def write_project(defn: dict, out_dir, name: str, *, mode: str = "import",
     """Write the project under `out_dir`. The semantic model's `definition/`
     folder is replaced, so a table that left the definition leaves the project.
     An existing `<name>.Report` folder is left untouched, so re-applying never
-    resets visuals a customer has built; a fresh project gets the skeleton report."""
+    resets visuals a customer has built; a fresh project gets the Overview report."""
     files = project_files_from_definition(defn, name, mode=mode, descriptions=descriptions)
     root = Path(out_dir)
     if (root / f"{name}.Report").exists():
@@ -465,7 +465,7 @@ def write_project(defn: dict, out_dir, name: str, *, mode: str = "import",
     return root
 
 
-#: Copilot's index stops at this many tables plus columns (APT-2026-0541).
+#: Copilot's index stops at this many tables plus columns.
 SIZE_LIMIT = 1000
 
 

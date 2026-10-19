@@ -29,8 +29,7 @@ LINEAGE TAGS ARE DERIVED, NEVER MINTED
 Every tag is `uuid5` of the object's path under a fixed namespace, so two runs
 over the same model produce byte-identical files and a report's field bindings
 survive regeneration. Minting fresh GUIDs per run is what would break them.
-Whether a report survives a tag that genuinely CHANGES is still untested - see
-`APT-2026-0211`.
+Whether a report survives a tag that genuinely CHANGES is still untested.
 """
 from __future__ import annotations
 
@@ -75,7 +74,7 @@ def ident(name: str) -> str:
 
 
 #: Partition modes this module emits. `mode:` is written bare, so anything else
-#: is refused rather than written. APT-2026-0248.
+#: is refused rather than written.
 PARTITION_MODES = frozenset({"import", "directQuery", "dual"})
 
 #: Characters Windows refuses in a file name, plus `%`, which `table_file_name`
@@ -94,7 +93,7 @@ def property_value(field: str, value: str) -> str:
     A property value ends at the line break, so CR, LF or TAB would start
     another property; leading or trailing whitespace would be trimmed and no
     longer name the source. Both raise `ValueError` naming the field rather
-    than being written. APT-2026-0248.
+    than being written.
     """
     if any(c in value for c in "\r\n\t"):
         raise ValueError(
@@ -119,7 +118,6 @@ def table_file_name(name: str) -> str:
     table's name in the model comes from the `table` declaration inside the
     file, not from the file name. Whether Power BI opens a project whose file
     name differs from its table name is untested; no tested name needs it.
-    APT-2026-0248.
     """
     def enc(c: str) -> str:
         return "".join(f"%{b:02X}" for b in c.encode("utf-8"))
@@ -164,7 +162,7 @@ def description_lines(text: str, indent: str) -> list[str]:
 
 @dataclass
 class ParquetSource:
-    """Power BI reads files our toolchain produced. `APT-2026-0211` / `0212`.
+    """Power BI reads files our toolchain produced (path C).
 
     Deliberately bare M: no `Table.PromoteHeaders`, no `TransformColumnTypes`.
     A self-describing format needs neither, and that is measured - the same
@@ -189,7 +187,7 @@ class ParquetSource:
 class SqlSource:
     """Power BI reads the repository itself, through generated views.
 
-    `APT-2026-0230`, where DirectQuery is the primary mode. Under DirectQuery
+    Path A, where DirectQuery is the primary mode. Under DirectQuery
     the traversal measures were read back against the engine on a
     Westbrook-sized model on its first read-back (51 tables, 83 relationships):
     73 of 73 matched the SQL joins, and the read-back took 3 min 10 s

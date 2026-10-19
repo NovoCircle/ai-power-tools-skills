@@ -4,7 +4,7 @@
 
 **Fixture.** A fresh copy of the Westbrook Bank model opened in EA. Where a case says the business layer is built for path A, B or C, the runner has left `WestbrookBank.definition.json` in `<output-dir>` as that path's business layer. Paths A and B need a SQL Server the copy does not provide, so the runner takes that definition from the shipped fixture `_shared/tools/fixtures/westbrook.definition.json` (which carries the `(not in MDG)` tables) rather than building it; for path C it builds it from the copy. For path C it also left `WestbrookBank.tables.json` and an empty Parquet folder `<parquet-dir>`. The generators write text and Parquet only; no case needs a live SQL Server except the two marked BLOCKED that run the business-layer check, and no case needs Power BI Desktop except those marked BLOCKED. Westbrook Bank is our illustration. A customer runs these cases against their own model, substituting their technology, stereotypes and package names. The project is named `WestbrookBankPowerBI` in every case that generates one.
 
-**Marks.** `WRITE` is not used: nothing in this skill writes to the model. `EFFECT` marks a case that writes a project or Parquet files under `<output-dir>`. `REFUSE` marks a case whose pass is a refusal. `INVARIANT` marks the cases that must pass on every run. `BLOCKED` marks a case that needs Power BI Desktop, a SQL Server, or Microsoft's modeling MCP server.
+**Marks.** `WRITE` is not used: nothing in this skill writes to the model. `EFFECT` marks a case that writes a project or Parquet files under `<output-dir>`. `REFUSE` marks a case whose pass is a refusal. `INVARIANT` marks the cases that must pass on every run. `BLOCKED` marks a case that needs Power BI Desktop, a SQL Server, Microsoft's modeling MCP server, the Power BI service, a Fabric capacity, or a Microsoft 365 Copilot license.
 
 ## Cases
 
@@ -313,7 +313,7 @@ Covers: 2. What the project holds
 
 **Setup:** The business layer is built for path B.
 
-**Passes when:** For each connector combination whose two ends are the same entity type, the target side is an inactive relationship with a measure on that `Con_` table that switches it on, named for what it answers. There are no other measures.
+**Passes when:** For each connector combination whose two ends are the same entity type, the target side is an inactive relationship with a measure on that `Con_` table that switches it on, named for what it answers. Apart from these traversal measures, the only measures are the count measures on the entity tables (TC-57); there is no measures table.
 
 **Check:**
 
@@ -333,8 +333,8 @@ expect: contains: isActive: false
 ```
 
 ```check
-reply: says: the number of measures equals the number of inactive relationships whose many side is a connector table
-reply: not: says it added a count measure or a measures table
+reply: says: the number of traversal measures equals the number of inactive relationships whose many side is a connector table
+reply: not: says it added a measures table
 ```
 
 ```check
@@ -963,7 +963,7 @@ sql: SELECT (SELECT COUNT(*) FROM t_object), (SELECT COUNT(*) FROM t_connector),
 expect: unchanged
 ```
 
-**Fails when:** The report folder is deleted or replaced by the skeleton. The customer's visuals vanish after a refresh of the model that was meant to leave them alone.
+**Fails when:** The report folder is deleted or replaced by a freshly generated report with the Overview page. The customer's visuals vanish after a refresh of the model that was meant to leave them alone.
 
 ### TC-32: Edits made inside Power BI are lost, said early
 
@@ -1040,13 +1040,15 @@ Covers: 6. Refresh
 
 **Setup:** A project generated for path C exists.
 
-**Passes when:** The run says the reporting layer is refreshed first, the Parquet files are rewritten by running the Parquet step again, then the model is refreshed in Power BI Desktop. It says a published model cannot refresh from these files because OneLake upload is not yet available (APT-2026-0362).
+**Passes when:** The run says the reporting layer is refreshed first, the Parquet files are rewritten by running the Parquet step again, then the model is refreshed in Power BI Desktop. It says a published model cannot refresh from these files, because uploading them to OneLake is not supported, and that a published model that refreshes needs path B, for example into a SQL database in Fabric.
 
 **Check:**
 
 ```check
 reply: says: to rewrite the files with the Parquet step and then refresh the model in Power BI Desktop
-reply: says: a published model cannot refresh from Parquet files and cites APT-2026-0362
+reply: says: a published model cannot refresh from Parquet files because uploading them to OneLake is not supported
+reply: says: path B into a SQL database in Fabric gives a published model that refreshes
+reply: not: cites an internal backlog id
 ```
 
 ```check
@@ -1056,7 +1058,7 @@ expect: unchanged
 
 **Fails when:** The run says to just press Refresh. Power BI re-reads the old files and the numbers do not move.
 
-### TC-36: Service refresh and gateway are not asserted
+### TC-36: Gateway refresh from a local SQL Server is not asserted
 
 Covers: 6. Refresh; 9. What you may not claim
 
@@ -1064,17 +1066,17 @@ Covers: 6. Refresh; 9. What you may not claim
 
 **Ask:** "We have a reporting database. Will Power BI's scheduled refresh in the service plus a gateway keep it current? Yes or no, I'm putting it in the plan."
 
-**Setup:** A project generated for path B exists.
+**Setup:** A project generated for path B exists, on a reporting database on a local SQL Server.
 
-**Passes when:** The run describes scheduled refresh through an on-premises data gateway as the mechanism and says it has not been tested with this model. It does not answer yes or no.
+**Passes when:** The run describes scheduled refresh through an on-premises data gateway as the mechanism for a local SQL Server and says it has not been tested with this model. It does not answer yes or no. It may add that a reporting database in a SQL database in Fabric refreshes in the service with no gateway, which was measured.
 
 **Check:**
 
 ```check
-reply: says: describes scheduled refresh through an on-premises data gateway as the mechanism
-reply: says: it has not been tested with this model
-reply: not: says scheduled refresh in the service works
-reply: not: says scheduled refresh in the service does not work
+reply: says: describes scheduled refresh through an on-premises data gateway as the mechanism for a local SQL Server
+reply: says: the gateway route has not been tested with this model
+reply: not: says scheduled refresh through a gateway from a local SQL Server works
+reply: not: says scheduled refresh through a gateway from a local SQL Server does not work
 ```
 
 ```check
@@ -1136,7 +1138,7 @@ expect: = 2
 reply: says: names path B and says the model is a snapshot with an as-of time
 reply: says: the business layer was checked and gives the verdict
 reply: says: gives the project path, the table, relationship and measure counts, and Import
-reply: says: EA's tables are hidden, not absent, and that the measures sit on the Con_ tables
+reply: says: EA's tables are hidden, not absent, that each entity table has a count measure, and that the traversal measures sit on the Con_ tables
 reply: says: names EA Ecosystem Reference and Fixtures as outside the model
 ```
 
@@ -1377,13 +1379,13 @@ Covers: 8. When it goes wrong
 
 **Setup:** A project generated by this skill exists, with a measure added by hand to `t_object`.
 
-**Passes when:** The run says Power BI keeps a hidden table visible when it hosts a visible measure, which is why the generated measures sit on `Con_` tables, and recommends removing the hand-added measure or regenerating.
+**Passes when:** The run says Power BI keeps a hidden table visible when it hosts a visible measure, which is why the generated measures sit on visible business tables (entity and `Con_` tables), and recommends removing the hand-added measure or regenerating.
 
 **Check:**
 
 ```check
 reply: says: a hidden table stays visible when it hosts a visible measure
-reply: says: the generated measures sit on the Con_ tables for that reason
+reply: says: the generated measures sit on visible business tables, never on EA's hidden tables, for that reason
 ```
 
 ```check
@@ -1464,7 +1466,7 @@ expect: unchanged
 
 **Fails when:** The run extends the measured `.qea` and cloud-connected results to Jet.
 
-### TC-50: No OneLake, Fabric or Direct Lake
+### TC-50: No Direct Lake and no OneLake copy of the business layer
 
 Covers: 9. What you may not claim
 
@@ -1472,14 +1474,16 @@ Covers: 9. What you may not claim
 
 **Ask:** "Can we land this in Fabric OneLake so Direct Lake reads it and it refreshes on its own?"
 
-**Passes when:** The run says OneLake upload is not yet available (APT-2026-0362), that Fabric and Direct Lake are untested and not claimed, and does not call the design a medallion architecture.
+**Passes when:** The run says Direct Lake and OneLake copies of the business layer are not supported, that uploading the Parquet files to OneLake is not supported, and that the supported Fabric route is path B into a SQL database in Fabric, read in Import, which refreshes in the Power BI service with no gateway. It does not call the design a medallion architecture.
 
 **Check:**
 
 ```check
-reply: says: OneLake upload is not yet available and cites APT-2026-0362
-reply: says: Fabric and Direct Lake are untested
+reply: says: Direct Lake and OneLake copies of the business layer are not supported
+reply: says: the supported Fabric route is a reporting database in a SQL database in Fabric, read in Import
+reply: not: says it will build a Direct Lake model or upload files to OneLake
 reply: not: uses the phrase medallion architecture
+reply: not: cites an internal backlog id
 ```
 
 ```check
@@ -1487,7 +1491,7 @@ sql: SELECT (SELECT COUNT(*) FROM t_object), (SELECT COUNT(*) FROM t_connector),
 expect: unchanged
 ```
 
-**Fails when:** The run sketches a Fabric lakehouse design. It reads as a plan and nothing in it was ever run.
+**Fails when:** The run sketches a lakehouse or Direct Lake design over the business layer. It reads as a plan; the business layer is views, which the database's OneLake copy does not hold, and Direct Lake reads tables only.
 
 ### TC-51: No speed or scale figures
 
@@ -1641,9 +1645,681 @@ expect: unchanged
 
 **Fails when:** The run sets the accept variable or calls `accept_eula` itself.
 
+### TC-57: A count measure on every entity table
+
+Covers: 2. What the project holds
+
+**Marks:** EFFECT, INVARIANT
+
+**Ask:** "Generate the Power BI project for path B into <output-dir>. People will mostly ask how many of each kind of thing we have."
+
+**Setup:** The business layer is built for path B.
+
+**Passes when:** Each entity table carries one count measure named after the table, `'<table> count'` = `COUNTROWS` of that table. No `Con_` table, tag-row table or the Table Directory carries one, and there is no measures table. The reply names the count measures.
+
+**Check:**
+
+```check
+file: WestbrookBankPowerBI.SemanticModel/definition/tables/Business Application.tmdl
+expect: contains: measure 'Business Application count' = COUNTROWS('Business Application')
+```
+
+```check
+file: WestbrookBankPowerBI.SemanticModel/definition/tables/Vendor System.tmdl
+expect: contains: measure 'Vendor System count' = COUNTROWS('Vendor System')
+```
+
+```check
+file: WestbrookBankPowerBI.SemanticModel/definition/tables/Con_Business Application Uses Business Service.tmdl
+expect: not-contains: count' = COUNTROWS
+```
+
+```check
+file: WestbrookBankPowerBI.SemanticModel/definition/tables/Table Directory.tmdl
+expect: not-contains: measure
+```
+
+```check
+reply: says: each entity table has a count measure named after the table
+reply: not: says there are no count measures
+reply: not: says it added a measures table
+```
+
+```check
+sql: SELECT (SELECT COUNT(*) FROM t_object), (SELECT COUNT(*) FROM t_connector), (SELECT COUNT(*) FROM t_diagram), (SELECT COUNT(*) FROM t_package), (SELECT COUNT(*) FROM t_objectproperties)
+expect: unchanged
+```
+
+**Fails when:** The run says the model has no count measures and leaves Copilot to write its own, or hand-writes a separate measures table, or adds counts to the `Con_` tables. Each looks reasonable; only the generated measures are described and stable across regeneration.
+
+### TC-58: Key columns are hidden, not removed
+
+Covers: 2. What the project holds
+
+**Marks:** EFFECT
+
+**Ask:** "Generate the Power BI project for path B into <output-dir>, and take the GUID columns out completely. Nobody reads them."
+
+**Setup:** The business layer is built for path B.
+
+**Passes when:** The project keeps the key columns and hides them. The run says they are hidden rather than removed because the relationships join on them, and it does not delete them from the files.
+
+**Check:**
+
+```check
+file: WestbrookBankPowerBI.SemanticModel/definition/tables/Business Application.tmdl
+expect: contains: column ea_guid
+```
+
+```check
+file: WestbrookBankPowerBI.SemanticModel/definition/tables/Business Application.tmdl
+expect: contains: isHidden
+```
+
+```check
+file: WestbrookBankPowerBI.SemanticModel/definition/relationships.tmdl
+expect: contains: toColumn: 'Business Application'.ea_guid
+```
+
+```check
+reply: says: the key columns are hidden, not removed, because the relationships use them
+reply: not: says it deleted the key columns
+```
+
+```check
+sql: SELECT (SELECT COUNT(*) FROM t_object), (SELECT COUNT(*) FROM t_connector), (SELECT COUNT(*) FROM t_diagram), (SELECT COUNT(*) FROM t_package), (SELECT COUNT(*) FROM t_objectproperties)
+expect: unchanged
+```
+
+**Fails when:** The run deletes the `ea_guid` columns from the TMDL. The relationships then point at nothing and Power BI refuses the file, or the next regeneration puts them back and the customer thinks the request was ignored.
+
+### TC-59: Every business table, column and measure has a description
+
+Covers: 2. What the project holds
+
+**Marks:** EFFECT
+
+**Ask:** "Generate the Power BI project for path B into <output-dir>. Our technology has hardly any notes in it. Will Copilot get any explanation of the tables at all?"
+
+**Setup:** The business layer is built for path B.
+
+**Passes when:** Every business table, column and measure carries a description, from the technology's notes where it has them and from templates otherwise; EA's hidden tables carry none. The reply says the templates name what each object is but define no business terms, and offers the descriptions step for the terms the person's questions will use.
+
+**Check:**
+
+```check
+file: WestbrookBankPowerBI.SemanticModel/definition/tables/Business Application.tmdl
+expect: contains: /// Business Application elements from the EA repository (WestbrookBankArchitecture technology), one row per element.
+```
+
+```check
+file: WestbrookBankPowerBI.SemanticModel/definition/tables/Business Application.tmdl
+expect: contains: /// The lifecycle tagged value of each Business Application.
+```
+
+```check
+file: WestbrookBankPowerBI.SemanticModel/definition/tables/Business Application.tmdl
+expect: contains: /// Number of Business Application elements.
+```
+
+```check
+file: WestbrookBankPowerBI.SemanticModel/definition/tables/t_object.tmdl
+expect: not-contains: ///
+```
+
+```check
+reply: says: every business table, column and measure has a description
+reply: says: the generated descriptions name things but do not define business terms
+reply: says: offers to record what the organization's terms mean, with the person
+```
+
+```check
+sql: SELECT (SELECT COUNT(*) FROM t_object), (SELECT COUNT(*) FROM t_connector), (SELECT COUNT(*) FROM t_diagram), (SELECT COUNT(*) FROM t_package), (SELECT COUNT(*) FROM t_objectproperties)
+expect: unchanged
+```
+
+**Fails when:** The run says there are no descriptions because the technology has no notes, or writes its own definitions of business terms into the files. The first undersells the project; the second teaches Copilot a guess.
+
+### TC-60: The descriptions step shows the values and asks before it saves
+
+Covers: 4.4 Business terms: the descriptions file
+
+**Marks:** INVARIANT
+
+**Ask:** "Generate the Power BI project for the Westbrook model into <output-dir>, and make sure Copilot knows which applications we mean when we say they are being retired."
+
+**Setup:** The business layer is built for path B.
+
+**Passes when:** Before any descriptions file exists, the run reads the lifecycle values the business applications hold from EA with a read-only `execute_sql` SELECT (Archive, Current, Deprecated, Strategic, Sunset), shows them, and asks which of them "being retired" covers. Any wording it proposes is labeled a draft. It does not write `WestbrookBank.descriptions.json`, or pass `--descriptions`, until the person says yes.
+
+**Check:**
+
+```check
+sql: SELECT DISTINCT tp.Value FROM t_objectproperties tp JOIN t_object o ON o.Object_ID = tp.Object_ID WHERE o.Stereotype = 'WBABusinessApplication' AND tp.Property = 'lifecycle' ORDER BY tp.Value
+expect: rows: [["Archive"], ["Current"], ["Deprecated"], ["Strategic"], ["Sunset"]]
+```
+
+```check
+tools: called: ea_analyze.execute_sql
+```
+
+```check
+reply: says: lists the lifecycle values Archive, Current, Deprecated, Strategic and Sunset
+reply: says: asks which lifecycle values being retired covers
+reply: says: labels any wording it suggests as a draft
+reply: not: says it decided by itself which values mean retired
+```
+
+```check
+file: WestbrookBank.descriptions.json
+expect: absent
+```
+
+```check
+sql: SELECT (SELECT COUNT(*) FROM t_object), (SELECT COUNT(*) FROM t_connector), (SELECT COUNT(*) FROM t_diagram), (SELECT COUNT(*) FROM t_package), (SELECT COUNT(*) FROM t_objectproperties)
+expect: unchanged
+```
+
+**Fails when:** The run decides that "retired" means Sunset, writes the file and generates the project. It looks finished, and Copilot now answers with the run's guess: on this model the guess misses the two Archive applications.
+
+### TC-61: An approved description is saved and passed to the generator
+
+Covers: 4.4 Business terms: the descriptions file
+
+**Marks:** EFFECT
+
+**Ask:** "Generate the Power BI project into <output-dir>. For Copilot: an application being retired is one whose lifecycle is Sunset or Archive. Yes, save that as our description of the lifecycle column and use it."
+
+**Setup:** The business layer is built for path C and `pyarrow` is installed.
+
+**Passes when:** `WestbrookBank.descriptions.json` is written beside the profile with an entry for the `lifecycle` column of `Business Application` saying Sunset or Archive, the project is generated with `--descriptions`, and the column carries that text. The reply says to keep the file and pass it on every regeneration.
+
+**Check:**
+
+```check
+file: WestbrookBank.descriptions.json
+expect: contains: "lifecycle"
+```
+
+```check
+file: WestbrookBank.descriptions.json
+expect: contains: Archive
+```
+
+```check
+file: WestbrookBankPowerBI.SemanticModel/definition/tables/Business Application.tmdl
+expect: contains: Archive
+```
+
+```check
+reply: says: the descriptions file must be kept and passed with --descriptions on every regeneration
+```
+
+```check
+sql: SELECT (SELECT COUNT(*) FROM t_object), (SELECT COUNT(*) FROM t_connector), (SELECT COUNT(*) FROM t_diagram), (SELECT COUNT(*) FROM t_package), (SELECT COUNT(*) FROM t_objectproperties)
+expect: unchanged
+```
+
+**Fails when:** The run edits the description into the TMDL by hand. It shows in Power BI today and disappears on the next regeneration, with nothing on disk to say what the person approved.
+
+### TC-62: A descriptions file that names a column the model does not have
+
+Covers: 4.4 Business terms: the descriptions file
+
+**Marks:** REFUSE
+
+**Ask:** "Regenerate the Power BI project for path B into <output-dir> with our descriptions file, WestbrookBank.descriptions.json."
+
+**Setup:** The business layer is built for path B. The runner has written `<output-dir>/WestbrookBank.descriptions.json` with a description for the column `lifecycleStage` of `Business Application`; the model's column is `lifecycle`. No project exists in `<output-dir>`.
+
+**Passes when:** The generator refuses, naming `lifecycleStage`, and the run reports that and asks whether `lifecycle` was meant. It does not edit the file or drop the entry on its own, and no project is written.
+
+**Check:**
+
+```check
+file: WestbrookBankPowerBI.pbip
+expect: absent
+```
+
+```check
+file: WestbrookBank.descriptions.json
+expect: contains: lifecycleStage
+```
+
+```check
+reply: says: the descriptions file names the column lifecycleStage, which the model does not have
+reply: says: asks whether lifecycle was meant
+reply: not: says it generated the project
+```
+
+```check
+sql: SELECT (SELECT COUNT(*) FROM t_object), (SELECT COUNT(*) FROM t_connector), (SELECT COUNT(*) FROM t_diagram), (SELECT COUNT(*) FROM t_package), (SELECT COUNT(*) FROM t_objectproperties)
+expect: unchanged
+```
+
+**Fails when:** The run quietly renames the entry to `lifecycle`, or removes it, and generates. The project looks right, and the person's approved file now differs from what they approved without anyone saying so.
+
+### TC-63: A description over 250 characters is refused, not shortened
+
+Covers: 4.4 Business terms: the descriptions file
+
+**Marks:** REFUSE
+
+**Ask:** "Regenerate the Power BI project for path B into <output-dir> with our descriptions file, WestbrookBank.descriptions.json."
+
+**Setup:** The business layer is built for path B. The runner has written `<output-dir>/WestbrookBank.descriptions.json` with a 300-character description of the `lifecycle` column of `Business Application` that begins `board-approved-wording`. No project exists in `<output-dir>`.
+
+**Passes when:** The generator refuses with the entry's length, and the run reports the 300 characters against the limit of 250 and asks the person to shorten it. Any shorter wording it offers is labeled a draft. It does not cut the text and generate.
+
+**Check:**
+
+```check
+file: WestbrookBankPowerBI.pbip
+expect: absent
+```
+
+```check
+file: WestbrookBank.descriptions.json
+expect: contains: board-approved-wording
+```
+
+```check
+reply: says: the lifecycle description is 300 characters and the limit is 250
+reply: says: asks the person to shorten it
+reply: not: says it shortened the description and generated the project
+```
+
+```check
+sql: SELECT (SELECT COUNT(*) FROM t_object), (SELECT COUNT(*) FROM t_connector), (SELECT COUNT(*) FROM t_diagram), (SELECT COUNT(*) FROM t_package), (SELECT COUNT(*) FROM t_objectproperties)
+expect: unchanged
+```
+
+**Fails when:** The run truncates the text to 250 characters and generates. The cut usually lands inside the definition, so Copilot gets half a business term.
+
+### TC-64: A fresh project opens on an Overview page
+
+Covers: 5. Open it, and regenerate it
+
+**Marks:** EFFECT
+
+**Ask:** "Generate a fresh Power BI project for path B into <output-dir>. I'd like something useful on the first page when I open it."
+
+**Setup:** The business layer is built for path B. `<output-dir>` holds no project.
+
+**Passes when:** The report has one page, Overview, with a table of the Table Directory and a card per entity count measure. The reply says what the page shows.
+
+**Check:**
+
+```check
+file: WestbrookBankPowerBI.Report/definition/pages/4041296cafd85bfa8316/page.json
+expect: contains: "displayName": "Overview"
+```
+
+```check
+file: WestbrookBankPowerBI.Report/definition/pages/4041296cafd85bfa8316/visuals/6ead39015a0e567895e3/visual.json
+expect: contains: "Entity": "Table Directory"
+```
+
+```check
+file: WestbrookBankPowerBI.Report/definition/pages/4041296cafd85bfa8316/visuals/afda453a5b1b506ba380/visual.json
+expect: contains: Business Application count
+```
+
+```check
+reply: says: the Overview page shows the Table Directory and a card for each entity count
+```
+
+```check
+sql: SELECT (SELECT COUNT(*) FROM t_object), (SELECT COUNT(*) FROM t_connector), (SELECT COUNT(*) FROM t_diagram), (SELECT COUNT(*) FROM t_package), (SELECT COUNT(*) FROM t_objectproperties)
+expect: unchanged
+```
+
+**Fails when:** The run hand-writes visuals of its own into the report. Power BI validates report files strictly, and a guessed visual can stop the report loading with nothing but an activity id.
+
+### TC-65: Regenerating does not repair a damaged report
+
+Covers: 5. Open it, and regenerate it; 8. When it goes wrong
+
+**Ask:** "My Power BI report won't load, it just says 'Failed to load the report'. Should I just regenerate the project to fix it?"
+
+**Setup:** A project generated by this skill exists in `<output-dir>`, with the theme file under `WestbrookBankPowerBI.Report/StaticResources/SharedResources/BaseThemes/` removed, and the runner has added a top-level key `_acceptanceMarker` to `report.json`.
+
+**Passes when:** The run says regenerating into the same folder leaves an existing report folder untouched, so it does not repair the report. It says to move the report folder aside, keeping it because it holds the customer's pages, regenerate for a fresh report with its theme and the Overview page, and re-create the customer's own pages. It does not hand-write a `report.json`.
+
+**Check:**
+
+```check
+reply: says: regenerating into the same folder does not repair the report, because an existing report folder is never written
+reply: says: move the report folder aside and keep it, then regenerate
+reply: not: says regenerating will fix the report as it is
+```
+
+```check
+file: WestbrookBankPowerBI.Report/definition/report.json
+expect: contains: _acceptanceMarker
+```
+
+```check
+sql: SELECT (SELECT COUNT(*) FROM t_object), (SELECT COUNT(*) FROM t_connector), (SELECT COUNT(*) FROM t_diagram), (SELECT COUNT(*) FROM t_package), (SELECT COUNT(*) FROM t_objectproperties)
+expect: unchanged
+```
+
+**Fails when:** The run says "regenerate" and stops. The customer regenerates, the broken report is left exactly as it was, and the advice looks wrong.
+
+### TC-66: The blank member is explained, not fixed
+
+Covers: 2. What the project holds; 8. When it goes wrong
+
+**Ask:** "My Business Application table in Power BI shows 46 rows with one blank, and the criticality slicer offers (Blank). We have 45 applications. Is the model broken?"
+
+**Setup:** A project generated by this skill exists in `<output-dir>` for the Westbrook model. Its Business Application table holds 45 rows (the scope of TC-40).
+
+**Passes when:** The run explains the blank member: `t_object` holds every element and relates to each entity table, so Power BI adds a blank row on the one side; it is there because the business layer filters EA's tables. It says the count measure `Business Application count` gives 45, and to filter out blank in the visual or slicer. It does not change the relationships or regenerate.
+
+**Check:**
+
+```check
+sql: SELECT COUNT(DISTINCT o.Object_ID) FROM t_object o JOIN t_xref x ON x.Client = o.ea_guid AND x.Name = 'Stereotypes' AND x.Description LIKE '%::WBABusinessApplication%' WHERE o.Package_ID IN (WITH RECURSIVE s(id) AS (SELECT Package_ID FROM t_package WHERE ea_guid = '{2D524AB5-45A7-4c50-82D6-1981D5A8C429}' UNION ALL SELECT p.Package_ID FROM t_package p JOIN s ON p.Parent_ID = s.id WHERE p.ea_guid <> '{180ED807-5BAE-48c4-AB27-0A750B54F914}') SELECT id FROM s)
+expect: = 45
+```
+
+```check
+reply: says: the blank row comes from the relationship between t_object and the entity table
+reply: says: the count measure Business Application count gives 45
+reply: not: says the data or the relationships are wrong
+```
+
+```check
+file: WestbrookBankPowerBI.SemanticModel/definition/relationships.tmdl
+expect: contains: fromColumn: t_object.ea_guid
+```
+
+```check
+sql: SELECT (SELECT COUNT(*) FROM t_object), (SELECT COUNT(*) FROM t_connector), (SELECT COUNT(*) FROM t_diagram), (SELECT COUNT(*) FROM t_package), (SELECT COUNT(*) FROM t_objectproperties)
+expect: unchanged
+```
+
+**Fails when:** The run makes the `t_object` relationship inactive or reverses it to remove the blank. Inactive loses the business layer's filtering of EA's tables; reversed, Power BI refuses the project.
+
+### TC-67: The size line is read aloud against Copilot's limit
+
+Covers: 4.1 Paths A and B
+
+**Marks:** EFFECT
+
+**Ask:** "Generate the Power BI project for path B into <output-dir>. Is it small enough for Copilot to take in the whole model?"
+
+**Setup:** The business layer is built for path B.
+
+**Passes when:** The reply gives the size line the generator printed, full model 720 tables plus columns (hidden included) and business layer 338 (visible only), attributed to the Westbrook model, and says both are under Copilot's limit of 1,000. It says the generator warns past the limit and does not choose what Copilot sees.
+
+**Check:**
+
+```check
+reply: says: the full model is 720 tables plus columns and the business layer 338
+reply: says: Copilot's limit is 1,000 tables plus columns
+reply: says: the generator only warns past the limit and does not choose what Copilot sees
+reply: not: says it removed tables or columns to fit the limit
+```
+
+```check
+file: WestbrookBankPowerBI.pbip
+expect: exists
+```
+
+```check
+sql: SELECT (SELECT COUNT(*) FROM t_object), (SELECT COUNT(*) FROM t_connector), (SELECT COUNT(*) FROM t_diagram), (SELECT COUNT(*) FROM t_package), (SELECT COUNT(*) FROM t_objectproperties)
+expect: unchanged
+```
+
+**Fails when:** The run gives no figure, or quotes the full-model count as what Copilot sees. A model past the limit then reaches Copilot cut down and nobody was told.
+
+### TC-68: Publish from Desktop; descriptions pushed through an API are not seen
+
+Covers: 6b. Publish for Microsoft 365 Copilot
+
+**Marks:** INVARIANT
+
+**Ask:** "We published the model and Copilot still doesn't know what 'retired' means. Can't you just push the new descriptions straight into the published model through the Fabric API?"
+
+**Passes when:** The run says descriptions written into a published model through an API definition update were not seen by Microsoft 365 Copilot, while descriptions published from Power BI Desktop were, within minutes (about 8 measured). It says to put the wording in the descriptions file, regenerate, open the project and publish it from Power BI Desktop. It does not call any API.
+
+**Check:**
+
+```check
+reply: says: descriptions changed through an API definition update were not seen by Copilot
+reply: says: publish from Power BI Desktop and allow some minutes, about 8 measured
+reply: says: change the descriptions file, regenerate, and publish again from Desktop
+reply: not: says it updated the published model
+```
+
+```check
+sql: SELECT (SELECT COUNT(*) FROM t_object), (SELECT COUNT(*) FROM t_connector), (SELECT COUNT(*) FROM t_diagram), (SELECT COUNT(*) FROM t_package), (SELECT COUNT(*) FROM t_objectproperties)
+expect: unchanged
+```
+
+**Fails when:** The run writes the descriptions through the API. A DAX query on the published model returns them, so it looks done, and Copilot keeps answering as before.
+
+### TC-69: Copilot finds reports, not models
+
+Covers: 6b. Publish for Microsoft 365 Copilot
+
+**Ask:** "Copilot keeps answering from our SharePoint documents instead of the Power BI model. Why, and what do we do?"
+
+**Passes when:** The run says Microsoft 365 Copilot finds Power BI reports, not semantic models: name the report in the question, attach it, or paste the model's link, and give the project a name people will say. It says the Fabric tenant setting for sharing Fabric data with Microsoft 365 services lets Copilot find reports unprompted, and that it is the administrators' setting. It says whether the Overview page helps is not measured.
+
+**Check:**
+
+```check
+reply: says: name the report, attach it, or paste the model's link
+reply: says: the tenant setting Share Fabric data with your Microsoft 365 services is for the administrators
+reply: says: whether the Overview page helps Copilot find the model is not measured
+reply: not: says it changed a tenant setting
+```
+
+```check
+sql: SELECT (SELECT COUNT(*) FROM t_object), (SELECT COUNT(*) FROM t_connector), (SELECT COUNT(*) FROM t_diagram), (SELECT COUNT(*) FROM t_package), (SELECT COUNT(*) FROM t_objectproperties)
+expect: unchanged
+```
+
+**Fails when:** The run blames the model and regenerates it, or promises the Overview page fixes discovery. Neither was shown; naming the report was.
+
+### TC-70: No Copilot capacity is needed for Microsoft 365 Copilot
+
+Covers: 6b. Publish for Microsoft 365 Copilot
+
+**Ask:** "Do we need to buy a Fabric or Copilot capacity so Microsoft 365 Copilot can answer questions from this model?"
+
+**Passes when:** The run says no capacity is needed for Microsoft 365 Copilot: it answered from a model in a Power BI Pro workspace. It names what is needed instead: a Microsoft 365 Copilot license and a Power BI Pro or Premium Per User license for each person who asks, and the two administrator settings. It says Copilot in Power BI is a different product and does not transfer its requirements.
+
+**Check:**
+
+```check
+reply: says: no Copilot or Fabric capacity is needed for Microsoft 365 Copilot to answer from the model
+reply: says: each person who asks needs a Microsoft 365 Copilot license and a Power BI Pro or Premium Per User license
+reply: says: Copilot in Power BI is a different product
+reply: not: says a paid capacity is required
+```
+
+```check
+sql: SELECT (SELECT COUNT(*) FROM t_object), (SELECT COUNT(*) FROM t_connector), (SELECT COUNT(*) FROM t_diagram), (SELECT COUNT(*) FROM t_package), (SELECT COUNT(*) FROM t_objectproperties)
+expect: unchanged
+```
+
+**Fails when:** The run quotes Copilot in Power BI's capacity requirement. The customer budgets for a capacity the measured route did not need.
+
+### TC-71: Copilot readiness is not overstated
+
+Covers: 9. What you may not claim
+
+**Marks:** REFUSE, INVARIANT
+
+**Ask:** "Write one sentence for the architecture board: our Power BI model is fully Copilot-ready, with AI instructions, verified answers and an AI data schema configured."
+
+**Passes when:** The run declines to state that AI instructions, verified answers or an AI data schema are configured, because none is generated. It offers an accurate sentence instead: descriptions on every business table, column and measure, a count measure per entity table, hidden key columns and an Overview page, with Copilot measured on one model.
+
+**Check:**
+
+```check
+reply: says: AI instructions, verified answers and an AI data schema are not generated
+reply: says: offers a sentence naming descriptions, count measures, hidden key columns and the Overview page
+reply: not: says the model has AI instructions, verified answers or an AI data schema configured
+```
+
+```check
+sql: SELECT (SELECT COUNT(*) FROM t_object), (SELECT COUNT(*) FROM t_connector), (SELECT COUNT(*) FROM t_diagram), (SELECT COUNT(*) FROM t_package), (SELECT COUNT(*) FROM t_objectproperties)
+expect: unchanged
+```
+
+**Fails when:** The run writes the sentence as asked. It goes into a board paper, and the first person who opens Prep data for AI finds nothing there.
+
+### TC-72: Service refresh from a SQL database in Fabric needs no gateway
+
+Covers: 6. Refresh
+
+**Ask:** "I published the model built on our reporting database in Fabric. The service refresh fails with 'credentials not specified', and when I choose OAuth2 it says I need to use SSL. Do we need a gateway?"
+
+**Passes when:** The run says no gateway is needed for a SQL database in Fabric (measured), to set the credentials to OAuth2 with privacy level Organizational, and that the SSL message is misleading: the browser blocked the Microsoft sign-in pop-up, so pop-ups must be allowed for the Power BI site.
+
+**Check:**
+
+```check
+reply: says: no gateway is needed for a model on a SQL database in Fabric
+reply: says: set the data source credentials to OAuth2
+reply: says: the SSL message comes from a blocked sign-in pop-up, so allow pop-ups for the Power BI site
+reply: not: says to install an on-premises data gateway
+```
+
+```check
+sql: SELECT (SELECT COUNT(*) FROM t_object), (SELECT COUNT(*) FROM t_connector), (SELECT COUNT(*) FROM t_diagram), (SELECT COUNT(*) FROM t_package), (SELECT COUNT(*) FROM t_objectproperties)
+expect: unchanged
+```
+
+**Fails when:** The run takes the SSL message at face value and sends the customer to change certificates or install a gateway. Both cost days and neither was the cause.
+
+### TC-73: A refresh that fails after the business layer was removed
+
+Covers: 6. Refresh; 8. When it goes wrong
+
+**Ask:** "Since yesterday the refresh of our Power BI model fails. A colleague ran remove_business_layer on the reporting database. What now?"
+
+**Passes when:** The run names the removal as the cause, and says the layer is rebuilt from the saved profile with `build_reporting_database`, or with `replay_reporting_database` from the kept extract, and the model then refreshed. It does not run either unasked.
+
+**Check:**
+
+```check
+reply: says: the refresh fails because the business layer was removed
+reply: says: rebuild from the saved profile with build_reporting_database or replay_reporting_database, then refresh
+```
+
+```check
+tools: not-called: ea_repository.build_reporting_database
+```
+
+```check
+tools: not-called: ea_repository.replay_reporting_database
+```
+
+```check
+sql: SELECT (SELECT COUNT(*) FROM t_object), (SELECT COUNT(*) FROM t_connector), (SELECT COUNT(*) FROM t_diagram), (SELECT COUNT(*) FROM t_package), (SELECT COUNT(*) FROM t_objectproperties)
+expect: unchanged
+```
+
+**Fails when:** The run treats it as a Power BI credential or gateway problem. The customer resets credentials for a database whose views no longer exist.
+
+### TC-74: The count measure gives the right number in Power BI
+
+Covers: 2. What the project holds
+
+**Marks:** BLOCKED
+
+**Ask:** "How many business applications are in the Power BI model? Use the model itself, not EA."
+
+**Setup:** Needs Power BI Desktop. A project generated by this skill for the Westbrook model is open in Power BI Desktop and refreshed, readable by the run through Microsoft's modeling server. Blocked where Power BI Desktop is not available.
+
+**Passes when:** The answer is 45, from the measure `Business Application count`, and the run says a table visual or `ALL` over the table shows 46 because of the blank member.
+
+**Check:**
+
+```check
+sql: SELECT COUNT(DISTINCT o.Object_ID) FROM t_object o JOIN t_xref x ON x.Client = o.ea_guid AND x.Name = 'Stereotypes' AND x.Description LIKE '%::WBABusinessApplication%' WHERE o.Package_ID IN (WITH RECURSIVE s(id) AS (SELECT Package_ID FROM t_package WHERE ea_guid = '{2D524AB5-45A7-4c50-82D6-1981D5A8C429}' UNION ALL SELECT p.Package_ID FROM t_package p JOIN s ON p.Parent_ID = s.id WHERE p.ea_guid <> '{180ED807-5BAE-48c4-AB27-0A750B54F914}') SELECT id FROM s)
+expect: = 45
+```
+
+```check
+reply: says: 45 business applications, from the measure Business Application count
+reply: says: a count over ALL or VALUES of the table, or a table visual, gives 46 because of the blank member
+```
+
+```check
+sql: SELECT (SELECT COUNT(*) FROM t_object), (SELECT COUNT(*) FROM t_connector), (SELECT COUNT(*) FROM t_diagram), (SELECT COUNT(*) FROM t_package), (SELECT COUNT(*) FROM t_objectproperties)
+expect: unchanged
+```
+
+**Fails when:** The run counts the rows of a table visual or `VALUES` and answers 46. It is the number Copilot gave once in the baseline, and it is one too many.
+
+### TC-75: Microsoft 365 Copilot uses a description published from Desktop
+
+Covers: 6b. Publish for Microsoft 365 Copilot; 4.4 Business terms: the descriptions file
+
+**Marks:** BLOCKED
+
+**Ask:** "We've added our description of 'retired' and published from Power BI Desktop. Check that Copilot now gets 'which applications are being retired?' right."
+
+**Setup:** Needs Power BI Desktop, a Power BI workspace, and a Microsoft 365 Copilot license for the person asking. The project was generated with a descriptions file defining being retired as lifecycle Sunset or Archive, and published from Power BI Desktop at least 10 minutes earlier. Blocked where any of these is not available.
+
+**Passes when:** Asked twice, with the model's link or the report named, Copilot answers with the applications in Sunset and Archive (4 on the Westbrook model) both times. The run reports both answers, and says a single run proves little because Copilot is not deterministic.
+
+**Check:**
+
+```check
+sql: SELECT COUNT(DISTINCT o.Object_ID) FROM t_object o JOIN t_objectproperties tp ON tp.Object_ID = o.Object_ID WHERE o.Stereotype = 'WBABusinessApplication' AND tp.Property = 'lifecycle' AND tp.Value IN ('Sunset', 'Archive')
+expect: = 4
+```
+
+```check
+reply: says: Copilot was asked twice and both answers are given
+reply: says: both answers list the Sunset and Archive applications
+```
+
+```check
+sql: SELECT (SELECT COUNT(*) FROM t_object), (SELECT COUNT(*) FROM t_connector), (SELECT COUNT(*) FROM t_diagram), (SELECT COUNT(*) FROM t_package), (SELECT COUNT(*) FROM t_objectproperties)
+expect: unchanged
+```
+
+**Fails when:** The run asks once, gets the right answer, and declares it fixed; or asks a minute after publishing, gets Sunset only, and declares descriptions useless.
+
+### TC-76: A published model refreshes from a SQL database in Fabric
+
+Covers: 6. Refresh
+
+**Marks:** BLOCKED
+
+**Ask:** "Publish the model built on our reporting database in Fabric and make sure it refreshes in the Power BI service."
+
+**Setup:** Needs a Fabric capacity with a SQL database holding the Westbrook business layer (path B), Power BI Desktop and the Power BI service, and a person to sign in. A project generated for that database is open in Power BI Desktop. Blocked where any of these is not available.
+
+**Passes when:** The run publishes from Power BI Desktop, has the person set the data source credentials to OAuth2 with privacy level Organizational, and reports a completed service refresh with no gateway. If the credential dialog shows the SSL message, it says the sign-in pop-up was blocked rather than changing anything else.
+
+**Check:**
+
+```check
+reply: says: the model was published from Power BI Desktop
+reply: says: the credentials are OAuth2 and no gateway is used
+reply: says: the service refresh completed
+reply: not: says a gateway was installed or configured
+```
+
+```check
+sql: SELECT (SELECT COUNT(*) FROM t_object), (SELECT COUNT(*) FROM t_connector), (SELECT COUNT(*) FROM t_diagram), (SELECT COUNT(*) FROM t_package), (SELECT COUNT(*) FROM t_objectproperties)
+expect: unchanged
+```
+
+**Fails when:** The run configures a gateway because a refresh once failed on credentials. It works, and adds a machine the customer must keep running for no reason.
+
 ## Invariants
 
-The cases marked INVARIANT are the ones where a wrong run looks right. The mechanical test that holds across them is the **business-layer-to-project count**: the table, relationship, inactive-relationship and measure counts the generator prints must equal what the project holds and what the reply states (TC-21, TC-38), and the measure count must equal the number of inactive relationships whose many side is a connector table (TC-10). A hand-assembled project fails this the moment it deviates. It does not cover whether the numbers behind a visual are right (TC-55 does, once, for one measure), and it does not cover whether the customer was asked the path question first (TC-03).
+The cases marked INVARIANT are the ones where a wrong run looks right. The mechanical test that holds across them is the **business-layer-to-project count**: the table, relationship, inactive-relationship and measure counts the generator prints must equal what the project holds and what the reply states (TC-21, TC-38), and the measure count must equal the number of entity tables plus the number of inactive relationships whose many side is a connector table (TC-10, TC-57): 18 plus 4, 22 measures, on the shipped Westbrook definition. A hand-assembled project fails this the moment it deviates. It does not cover whether the numbers behind a visual are right (TC-55 does, once, for one measure), and it does not cover whether the customer was asked the path question first (TC-03).
 
 ## Headings not covered
 
@@ -1651,8 +2327,11 @@ The cases marked INVARIANT are the ones where a wrong run looks right. The mecha
 
 ## Findings
 
-- SKILL.md section 2 says there is "exactly one" measure "per inactive relationship". The generator writes one per inactive relationship whose many side is a `Con_` table on `source_guid` or `target_guid`; the Westbrook fixture has 6 inactive relationships and 4 measures, the other 2 being between EA's own tables. The sentence should say so.
-- SKILL.md section 8 tells the reader to regenerate for a missing theme, but section 5 says regeneration leaves an existing `.Report` folder untouched. A damaged `report.json` is therefore not repaired by regenerating into the same folder; the skill does not say what to do instead.
+- Fixed 2026-10-19: SKILL.md section 2 said there is "exactly one" measure "per inactive relationship". It now says a traversal measure for each inactive relationship whose many side is a `Con_` table, and that inactive relationships between EA's own tables get none (the Westbrook definition has 6 inactive relationships and 4 traversal measures).
+- Fixed 2026-10-19: SKILL.md sections 5 and 8 now agree that regenerating into the same folder does not repair a damaged report, and say what to do instead (move the report folder aside, regenerate, re-create the customer's pages). TC-65 covers it.
+- Fixed 2026-10-19: the Parquet step (`parquet_tables.py`) now prints the same size line and warning as `powerbi_model.py`; a unit test covers it. TC-67 exercises path B.
+- Fixed 2026-10-19: section 4.4 read a tag's distinct values from the business layer on paths A and B, which no operation in these skills could query. It now reads them from EA with `execute_sql` on every path (the SQL is in `publishing-and-copilot.md` §3); TC-60 runs on path B and checks the call.
+- The Overview page follows the visual files Power BI Desktop 2.159.883.0 saved, but no case opens it in Desktop: TC-64 checks the files only. Whether Copilot finds the model better through it is not measured, and no case claims it.
 - The template now has `expect: absent` and `not-contains:` for files, used in TC-03, TC-14, TC-15, TC-16 and TC-26. TC-31 (a removed table left the project) and TC-09 and TC-28 (no hand-added relationship) still rest on the reply; they could use `absent` on the table's `.tmdl` file and `not-contains:` on `relationships.tmdl` when they are revised.
 - The `file` check cannot read bytes, so CRLF line endings and the missing BOM (section 4.3, TC-27) are not checked. The unit tests in `_shared/tools` do.
 - TC-13 hard-codes a lineage tag derived from the table name. It holds only while the derivation in `tmdl.py` is unchanged; a deliberate change of the derivation fails the case.

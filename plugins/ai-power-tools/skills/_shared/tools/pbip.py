@@ -6,9 +6,8 @@ the project keyed by its relative path; writing them is the caller's job.
 
     SemanticModel + partition source  ->  project_files()  ->  {path: text}
 
-All three Power BI paths use this. `APT-2026-0211` passes a `ParquetSource`
-pointing at the files the reporting database emitted, `APT-2026-0212` one
-pointing at files emitted straight from EA, and `APT-2026-0230` a `SqlSource`.
+All three Power BI paths use this: path C passes a `ParquetSource` pointing at
+the Parquet files, and paths A and B a SQL source.
 The project is otherwise identical, which `test_pbip.py` asserts.
 
 THE CALLER MUST WRITE WITH `newline=""`
@@ -53,8 +52,8 @@ does not load; it exists so the failure can be reproduced, not for ordinary use.
 Which PART is strictly required - the `themeCollection`, the `resourcePackages`
 entry, or the file - has not been isolated. All three were added together.
 
-THE OVERVIEW PAGE AND ITS VISUALS (APT-2026-0545)
--------------------------------------------------
+THE OVERVIEW PAGE AND ITS VISUALS
+---------------------------------
 The one page carries a table visual over `Table Directory` (`table_name`, `kind`,
 `description`) and one card per entity count measure (`'{table} count'`). No visual
 uses an entity table's columns, so the blank member that Power BI adds to a table
