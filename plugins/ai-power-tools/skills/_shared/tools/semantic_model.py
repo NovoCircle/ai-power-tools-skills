@@ -108,13 +108,14 @@ class SemanticModel:
         return [r for r in self.relationships if not r.is_active]
 
 
-def _rel_name(from_table: str, from_column: str, to_table: str) -> str:
+def _rel_name(from_table: str, from_column: str, to_table: str, to_column: str = "") -> str:
     """A deterministic relationship identifier.
 
     Includes the source COLUMN because a table can relate to the same table
     twice (a connector's source and target), and the two differ only by which
-    column they join on.
+    column they join on. `to_column` is added only to tell apart relationships
+    that would otherwise share a name (APT-2026-0364).
     """
-    parts = f"{from_table}_{from_column}_to_{to_table}"
+    parts = f"{from_table}_{from_column}_to_{to_table}" + (f"_{to_column}" if to_column else "")
     safe = "".join(c if c.isalnum() else "_" for c in parts)
     return "gen_" + safe.strip("_").lower()

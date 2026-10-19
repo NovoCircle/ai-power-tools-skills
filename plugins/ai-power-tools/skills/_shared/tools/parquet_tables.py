@@ -52,7 +52,9 @@ FORMAT_VERSION = "2.6"
 
 #: Characters Windows does not allow in a file name, plus control characters.
 _BAD_CHARS = re.compile(r'[<>:"/\\|?*\x00-\x1f]')
-_RESERVED = {"CON", "PRN", "AUX", "NUL"} | {f"{p}{i}" for p in ("COM", "LPT") for i in range(1, 10)}
+#: Windows also reserves COM and LPT followed by a superscript 1, 2 or 3 (U+00B9, U+00B2, U+00B3).
+_RESERVED = ({"CON", "PRN", "AUX", "NUL"}
+             | {f"{p}{i}" for p in ("COM", "LPT") for i in "123456789\u00b9\u00b2\u00b3"})
 
 
 class ParquetTablesError(Exception):

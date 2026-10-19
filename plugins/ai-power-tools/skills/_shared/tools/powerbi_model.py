@@ -105,8 +105,7 @@ class Resolver:
     def __init__(self) -> None:
         self.reach: dict[str, set[str]] = defaultdict(set)
         self.pairs: set[frozenset] = set()
-        self.out: list[Relationship] = []
-        self._names: set[str] = set()
+        self._rels: list[Relationship] = []
 
     def add(self, many: str, mcol: str, one: str, ocol: str, why: str) -> None:
         u, v = one, many
@@ -122,14 +121,30 @@ class Resolver:
             self.pairs.add(pair)
             for a in sources:
                 self.reach[a] |= sinks
-        name = base = _rel_name(many, mcol, one)
-        n = 2
-        while name in self._names:
-            name, n = f"{base}_{n}", n + 1
-        self._names.add(name)
-        self.out.append(Relationship(name=name, from_table=many, from_column=mcol,
-                                     to_table=one, to_column=ocol,
-                                     is_active=active, why=reason))
+        self._rels.append(Relationship(name=_rel_name(many, mcol, one), from_table=many,
+                                       from_column=mcol, to_table=one, to_column=ocol,
+                                       is_active=active, why=reason))
+
+    @property
+    def out(self) -> list[Relationship]:
+        """The relationships, in the order they were added, with unique names.
+
+        A name that no other relationship has is the plain `_rel_name`. When two or
+        more relationships share one (the same many column to the same table, on
+        different columns of that table), EVERY one of them gets the target column
+        appended, so which one is "first" does not decide any name. If that still
+        leaves two with the same name, they are the same declaration twice, and only
+        then does a counter (`_2`, `_3`) keep them apart, in the order added.
+        """
+        base = [_rel_name(r.from_table, r.from_column, r.to_table) for r in self._rels]
+        names = [_rel_name(r.from_table, r.from_column, r.to_table, r.to_column)
+                 if base.count(b) > 1 else b
+                 for r, b in zip(self._rels, base)]
+        seen: dict[str, int] = {}
+        for rel, name in zip(self._rels, names):
+            seen[name] = seen.get(name, 0) + 1
+            rel.name = name if seen[name] == 1 else f"{name}_{seen[name]}"
+        return self._rels
 
 
 # ------------------------------------------------------------------- tables
@@ -226,13 +241,35 @@ def _measures(model_tables: dict[str, SemanticTable], rels: list[Relationship],
 # -------------------------------------------------------------------- model
 
 
+def _check_connector_ends(defn: dict) -> None:
+    """Every connector table's `source` and `target` must name an entity table.
+
+    The relationships join a connector's `source_guid` and `target_guid` to that
+    entity's `ea_guid`, so an end that is not an entity would fail later, in the
+    ambiguity check or in Power BI, without naming the connector.
+    """
+    entities = {e["name"] for e in defn["entities"]}
+    for c in defn["connectors"]:
+        for end in ("source", "target"):
+            if c.get(end) not in entities:
+                raise ValueError(
+                    f"connector table {c['name']!r} has {end} {c.get(end)!r}, which is not "
+                    f"an entity table in the definition; every connector's source and "
+                    f"target must be an entity")
+
+
 def is_parquet(defn: dict) -> bool:
     return defn["source"].get("kind") == "parquet"
+
+
+def is_reporting_database(defn: dict) -> bool:
+    return defn["source"].get("kind") == "reporting_database"
 
 
 def model_from_definition(defn: dict) -> SemanticModel:
     src = defn["source"]
     parquet = is_parquet(defn)
+    _check_connector_ends(defn)
     descriptions = _descriptions(defn)
     tables: list[SemanticTable] = []
     for spec in _business_specs(defn):
@@ -316,6 +353,11 @@ def project_files_from_definition(defn: dict, name: str, *, mode: str = "import"
     check_project_name(name)
     if mode not in MODES:
         raise ValueError(f"mode must be one of {MODES}, not {mode!r}")
+    if is_reporting_database(defn) and mode != "import":
+        raise ValueError(
+            f"a reporting-database source (path B) is read in import mode, not {mode!r}: "
+            f"the reporting database is rebuilt in full and swapped in on every refresh. "
+            f"DirectQuery is for path A, SQL views inside the EA database.")
     model = model_from_definition(defn)
     if is_parquet(defn):
         if mode != "import":
