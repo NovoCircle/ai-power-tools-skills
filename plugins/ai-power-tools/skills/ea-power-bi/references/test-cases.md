@@ -1788,15 +1788,19 @@ Covers: 4.4 Business terms: the descriptions file
 
 **Ask:** "Generate the Power BI project for the Westbrook model into <output-dir>, and make sure Copilot knows which applications we mean when we say they are being retired."
 
-**Setup:** The business layer is built for path C and `pyarrow` is installed.
+**Setup:** The business layer is built for path B.
 
-**Passes when:** Before any descriptions file exists, the run shows the lifecycle values the business applications hold, read from the tables file (Archive, Current, Deprecated, Strategic, Sunset), and asks which of them "being retired" covers. Any wording it proposes is labeled a draft. It does not write `WestbrookBank.descriptions.json`, or pass `--descriptions`, until the person says yes.
+**Passes when:** Before any descriptions file exists, the run reads the lifecycle values the business applications hold from EA with a read-only `execute_sql` SELECT (Archive, Current, Deprecated, Strategic, Sunset), shows them, and asks which of them "being retired" covers. Any wording it proposes is labeled a draft. It does not write `WestbrookBank.descriptions.json`, or pass `--descriptions`, until the person says yes.
 
 **Check:**
 
 ```check
 sql: SELECT DISTINCT tp.Value FROM t_objectproperties tp JOIN t_object o ON o.Object_ID = tp.Object_ID WHERE o.Stereotype = 'WBABusinessApplication' AND tp.Property = 'lifecycle' ORDER BY tp.Value
 expect: rows: [["Archive"], ["Current"], ["Deprecated"], ["Strategic"], ["Sunset"]]
+```
+
+```check
+tools: called: ea_analyze.execute_sql
 ```
 
 ```check
@@ -2325,8 +2329,8 @@ The cases marked INVARIANT are the ones where a wrong run looks right. The mecha
 
 - Fixed 2026-10-19: SKILL.md section 2 said there is "exactly one" measure "per inactive relationship". It now says a traversal measure for each inactive relationship whose many side is a `Con_` table, and that inactive relationships between EA's own tables get none (the Westbrook definition has 6 inactive relationships and 4 traversal measures).
 - Fixed 2026-10-19: SKILL.md sections 5 and 8 now agree that regenerating into the same folder does not repair a damaged report, and say what to do instead (move the report folder aside, regenerate, re-create the customer's pages). TC-65 covers it.
-- The Parquet step (`parquet_tables.py`) does not print the size line, so a path C customer gets no warning past Copilot's 1,000 limit. Section 4.2 says so; TC-67 covers paths A and B only.
-- Section 4.4 tells the run to query the business layer for a tag's distinct values on paths A and B, but no operation in these skills runs SQL against a reporting database; the run needs the person's SQL client or reads the values another way. TC-60 uses path C, where the tables file holds them.
+- Fixed 2026-10-19: the Parquet step (`parquet_tables.py`) now prints the same size line and warning as `powerbi_model.py`; a unit test covers it. TC-67 exercises path B.
+- Fixed 2026-10-19: section 4.4 read a tag's distinct values from the business layer on paths A and B, which no operation in these skills could query. It now reads them from EA with `execute_sql` on every path (the SQL is in `publishing-and-copilot.md` §3); TC-60 runs on path B and checks the call.
 - The Overview page follows the visual files Power BI Desktop 2.159.883.0 saved, but no case opens it in Desktop: TC-64 checks the files only. Whether Copilot finds the model better through it is not measured, and no case claims it.
 - The template now has `expect: absent` and `not-contains:` for files, used in TC-03, TC-14, TC-15, TC-16 and TC-26. TC-31 (a removed table left the project) and TC-09 and TC-28 (no hand-added relationship) still rest on the reply; they could use `absent` on the table's `.tmdl` file and `not-contains:` on `relationships.tmdl` when they are revised.
 - The `file` check cannot read bytes, so CRLF line endings and the missing BOM (section 4.3, TC-27) are not checked. The unit tests in `_shared/tools` do.

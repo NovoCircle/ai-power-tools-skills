@@ -160,7 +160,7 @@
         "_shared/tools/fixtures/westbrook.definition.json": "c0744779c8e6f77dc655f1ac86830edb0d7ef21497568bbcbdd71398914aefcc",
         "_shared/tools/governance_gap.py": "dfcaf1bffb9c59677edfa80333ff1c29d132dd3a7a3172e60e66645dee6ee7fb",
         "_shared/tools/inclusion.py": "a6c1452c5ddf99caa24b78eb7be4cccbbb9df340d52b1dde8b11b7f2e96c89cd",
-        "_shared/tools/parquet_tables.py": "3162ecae831e165c29e90c3086549bee63b8918f02280d4671b2fc21d4af443e",
+        "_shared/tools/parquet_tables.py": "52739bc6862fe1c14211c1033ac46510963327c3dedc08af0f053ddc5a3ca15d",
         "_shared/tools/pbip.py": "e151f9d60aaccde8a1f21eb2dfcffe112a610b0ebf5cc001577c9186823ec5ce",
         "_shared/tools/powerbi_model.py": "d5ea6b74e1c2887ab355a09b5d124d291f3c30a61120e4f4cfb294681f2158cb",
         "_shared/tools/semantic_model.py": "da319f14d28d4e3a4369512adb34e486bdc925e9c51bf5ec5109a44ba3e95808",
@@ -169,7 +169,7 @@
         "_shared/tools/test_governance_gap.py": "54f1ac116c086b37e325ee6edf9019f828e386772c211046916e0bf25cff4210",
         "_shared/tools/test_inclusion.py": "3f737d15f7fabb3b2ea40f9bbf87840eaf8ebbf427fa9c4da4080cd115c66df0",
         "_shared/tools/test_nobreak.py": "2ceaf346d21207d23d04fc5fa88b2de45dcf1a18934a8f4d2a1923238d85373d",
-        "_shared/tools/test_parquet_tables.py": "06a618a8a3492518947236a98b8846e2e8213e60ab22535e7e0a81196913f272",
+        "_shared/tools/test_parquet_tables.py": "8a2adde3d280d43ed08c34e98efb66030b64344231536aad49c893c4b51e2860",
         "_shared/tools/test_pbip.py": "dc052aa72d9c2e72c779db2aef49dbaa04f730cfe6aa20bd4ed25fd636aaa071",
         "_shared/tools/test_powerbi_model.py": "8cc3a9293d8b2ef302f71df546a84db7937fc059d1b1c4b7ac20fc9e18f8c169",
         "_shared/tools/test_semantic_model.py": "ae9a57d013760bbf3a99e882b01469f73d6c012c64fae626326b3a0ae227c33a",
@@ -546,11 +546,11 @@
         "ea-power-bi/references/the-path-choice.md"
       ],
       "sha256": {
-        "ea-power-bi/SKILL.md": "08265012164f93ef3f7ceeef148bedba01e3f25b03f3e07ebcefbf963b2a1e29",
+        "ea-power-bi/SKILL.md": "e4e66853cb4007ecf9c06e18a64a86df722afd0eeef3c88071e287dce38a1f9d",
         "ea-power-bi/references/measured-power-bi-behavior.md": "95d4ade60548b902d3b0e341d9407c3627bcfa4cff27a1fb2771d686d8733ec1",
         "ea-power-bi/references/power-bi-modeling-mcp.md": "1e7e3cbf20726b750008a554f0bdbac54a66508d4751045c3e8f9b9856cc6876",
-        "ea-power-bi/references/publishing-and-copilot.md": "17d0d215d24467255b4c80a6b8dbdc7a0807bf12ebb9de7da81a71885995863d",
-        "ea-power-bi/references/test-cases.md": "e5ef6db43ccee5d71f363d6a45d24532dba0b690190e5d34f4bb4226ab0b03a8",
+        "ea-power-bi/references/publishing-and-copilot.md": "1c7546773b40bb68298a5f8fbe97b1ae37af15dfe64f2e91e1cf70666603e185",
+        "ea-power-bi/references/test-cases.md": "f08f43c01763a5d28eb7cdeaeaf2c0b3156a2779e1a474475fccd9fdc94fc267",
         "ea-power-bi/references/the-path-choice.md": "c6a112b0f18de37ab5fa43be7f006e57703410196abfc21194b8bf6ec926f423"
       }
     },

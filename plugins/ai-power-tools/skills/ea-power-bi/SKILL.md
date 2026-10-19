@@ -153,8 +153,7 @@ Writes one `.parquet` file per table into the definition's `source.folder`, then
 text, 64-bit integer, 64-bit float, boolean, timestamp - so a refresh cannot change a column's type
 by which rows happen to be filled. Every field is nullable and an empty table is still written with
 its schema. A value that does not fit its column is refused, not repaired. The files are
-byte-identical for the same input and the same pyarrow version. This step does not print the size
-line.
+byte-identical for the same input and the same pyarrow version. It prints the size line too (4.1).
 
 The folder is written into the project as an **absolute path**. Move the folder or the project
 and the partitions point nowhere; regenerate rather than editing a path by hand.
@@ -175,9 +174,10 @@ Copilot cannot know what the organization's words mean. On Westbrook, asked whic
 are being retired, Microsoft 365 Copilot missed Archive in 4 of 4 runs; with a column description
 saying it means Sunset or Archive, it was right in 4 of 4. Only the user knows their terms:
 
-1. **Show the distinct values of each tag column** they will ask about: on paths A and B a query on
-   the business layer (`SELECT lifecycle, COUNT(*) FROM [logical].[Business Application] GROUP BY
-   lifecycle`, in the profile's schema); on path C, from `<profile>.tables.json`.
+1. **Show the distinct values of each tag column** they will ask about, read from EA, the source of
+   every path: `ea_analyze` `execute_sql` with a read-only SELECT of each tag's distinct values on
+   one stereotype's elements (the SQL: [`references/publishing-and-copilot.md`](references/publishing-and-copilot.md)
+   §3). Path C may read them from `<profile>.tables.json` instead.
 2. **Ask what their terms mean** ("retired", "critical", "in scope") and which values each covers.
    Never infer a definition yourself.
 3. **Label any wording you suggest a draft**, and show the exact text that would go in the file.

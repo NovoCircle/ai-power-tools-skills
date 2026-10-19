@@ -205,6 +205,9 @@ def main(argv=None) -> int:
     powerbi_model.write_project(defn, out, name, descriptions=entries)
     print(f"{len(counts)} tables, {sum(counts.values())} rows -> {folder}")
     print(f"{out / (name + '.pbip')}")
+    model = powerbi_model.model_from_definition(defn, descriptions=entries)
+    for line in powerbi_model.size_lines(*powerbi_model.model_size(model)):
+        print(line)
     return 0
 
 

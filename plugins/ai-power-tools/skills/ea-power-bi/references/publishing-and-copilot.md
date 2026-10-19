@@ -1,6 +1,7 @@
 # Publishing, service refresh, and Microsoft 365 Copilot
 
-The long form of `SKILL.md` §6 (a published model's refresh) and §6b (Microsoft 365 Copilot). Every
+The long form of `SKILL.md` §6 (a published model's refresh), §6b (Microsoft 365 Copilot) and the
+values step of §4.4. Every
 fact here was measured on the Westbrook Bank reference model on 2026-10-19 with Power BI Desktop
 2.159.883.0, unless it says it is Microsoft's documentation. Westbrook figures illustrate the shape of
 a result, never what a customer will get. The records are in
@@ -118,3 +119,32 @@ whether Copilot uses the count measures instead of writing its own DAX; the Over
 finding the model; descriptions over 210 characters; a model past the 1,000 tables-plus-columns
 limit. **Copilot is not deterministic**: the same question once gave 45 and once 46, so ask twice
 before quoting an answer.
+
+---
+
+## 3. The values behind a business term (`SKILL.md` §4.4, step 1)
+
+Read the distinct values of every tag on one stereotype's elements from EA itself, on any path,
+with one read-only query:
+
+```
+ea_analyze(operation="execute_sql", params={"sql":
+  "SELECT p.Property, p.Value, COUNT(*) AS elements FROM t_objectproperties p JOIN t_object o ON o.Object_ID = p.Object_ID WHERE o.Stereotype = '<stereotype>' GROUP BY p.Property, p.Value ORDER BY p.Property, p.Value"})
+```
+
+- `<stereotype>` is the bare stereotype name as EA stores it in `t_object.Stereotype`, not the
+  alias the table is named by. Read it from the technology, or from the Table Directory's
+  `stereotype` column.
+- Add `AND p.Property = '<tag>'` to read one tag only.
+- It reads the whole repository, so it can show values from packages the profile excludes; say so
+  if a value appears that the business layer does not hold.
+- `t_object.Stereotype` holds an element's first stereotype. An element carrying two of the
+  technology's stereotypes is counted under its first only.
+- EA stores a value longer than 255 characters as `<memo>`; the text itself is in the row's
+  `Notes`.
+- Plain SQL only, no dialect functions: the same query runs on a SQL Server repository and a `.qea`
+  file, and a statement EA cannot run opens a dialog that blocks every later call.
+
+Illustration, on Westbrook Bank's `WBABusinessApplication` (substitute your own stereotype and
+tags): `lifecycle` returns Archive 2, Current 33, Deprecated 1, Strategic 8 and Sunset 2. Show the
+person those values, then ask which of them each of their terms covers.

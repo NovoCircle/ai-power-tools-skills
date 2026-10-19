@@ -50,7 +50,7 @@ skill's markdown for the program's file name, plus the programs that import it.
 | prog:_shared/tools/ea_census.py | U | 81 tests (test_ea_census.py) | ea-mdg-assess, ea-mdg-author, ea-mdg-model-build, ea-reporting-database | complete |
 | prog:_shared/tools/governance_gap.py | U | 19 tests (test_governance_gap.py) | ea-reporting-database | complete |
 | prog:_shared/tools/inclusion.py | U | 31 tests (test_inclusion.py) | ea-reporting-database | complete |
-| prog:_shared/tools/parquet_tables.py | U | 21 tests (test_parquet_tables.py) | ea-power-bi | complete |
+| prog:_shared/tools/parquet_tables.py | U | 22 tests (test_parquet_tables.py) | ea-power-bi | complete |
 | prog:_shared/tools/pbip.py | U | 30 tests (test_pbip.py) | ea-power-bi | complete |
 | prog:_shared/tools/powerbi_model.py | U | 56 tests (test_powerbi_model.py) | ea-power-bi | complete |
 | prog:_shared/tools/semantic_model.py | U | 10 tests (test_semantic_model.py) | ea-power-bi | complete |
@@ -435,7 +435,7 @@ method of a test class is written `Class.test_name`.
   - `plugins/ai-power-tools/skills/_shared/tools/test_inclusion.py::test_option_1_and_option_2_choices_are_blanket_so_new_keys_are_not_flagged`
   - `plugins/ai-power-tools/skills/_shared/tools/test_inclusion.py::test_without_a_record_a_profile_that_is_not_all_flags_every_unlisted_gap`
   - `plugins/ai-power-tools/skills/_shared/tools/test_inclusion.py::test_a_change_in_the_mdg_is_flagged_rather_than_decided`
-- `prog:_shared/tools/parquet_tables.py` U (21)
+- `prog:_shared/tools/parquet_tables.py` U (22)
   - `plugins/ai-power-tools/skills/_shared/tools/test_parquet_tables.py::test_sql_path_b_sql_path_a_and_parquet_differ_only_in_partition_source_and_mode`
   - `plugins/ai-power-tools/skills/_shared/tools/test_parquet_tables.py::test_the_three_paths_still_agree_on_what_the_comparison_strips`
   - `plugins/ai-power-tools/skills/_shared/tools/test_parquet_tables.py::test_parquet_partition_reads_one_file_per_table_in_import_mode`
@@ -457,6 +457,7 @@ method of a test class is written `Class.test_name`.
   - `plugins/ai-power-tools/skills/_shared/tools/test_parquet_tables.py::test_argument_errors_come_before_the_pyarrow_error`
   - `plugins/ai-power-tools/skills/_shared/tools/test_parquet_tables.py::test_two_writes_are_byte_identical`
   - `plugins/ai-power-tools/skills/_shared/tools/test_parquet_tables.py::test_cli_writes_the_files_and_the_project_next_to_them`
+  - `plugins/ai-power-tools/skills/_shared/tools/test_parquet_tables.py::test_cli_prints_the_size_line_and_warns_past_the_limit`
 - `prog:_shared/tools/pbip.py` U (30)
   - `plugins/ai-power-tools/skills/_shared/tools/test_pbip.py::test_the_project_carries_both_halves_and_the_entry_point`
   - `plugins/ai-power-tools/skills/_shared/tools/test_pbip.py::test_the_semantic_model_definition_is_included_whole`
