@@ -89,6 +89,7 @@
         "_shared/tools/test_parquet_tables.py",
         "_shared/tools/test_pbip.py",
         "_shared/tools/test_powerbi_model.py",
+        "_shared/tools/test_powerbi_model_sources.py",
         "_shared/tools/test_semantic_model.py",
         "_shared/tools/test_tmdl.py",
         "_shared/tools/tmdl.py"
@@ -172,6 +173,7 @@
         "_shared/tools/test_parquet_tables.py": "06a618a8a3492518947236a98b8846e2e8213e60ab22535e7e0a81196913f272",
         "_shared/tools/test_pbip.py": "dc052aa72d9c2e72c779db2aef49dbaa04f730cfe6aa20bd4ed25fd636aaa071",
         "_shared/tools/test_powerbi_model.py": "8cc3a9293d8b2ef302f71df546a84db7937fc059d1b1c4b7ac20fc9e18f8c169",
+        "_shared/tools/test_powerbi_model_sources.py": "e61ec4a0fbb8f80c91ff1b71764b3746df1a025dc867388f47fbbff6ffa9db51",
         "_shared/tools/test_semantic_model.py": "ae9a57d013760bbf3a99e882b01469f73d6c012c64fae626326b3a0ae227c33a",
         "_shared/tools/test_tmdl.py": "ebada992942691d2f80c40da93786e89ffcb89e39eefa9f0cf08d5bde20e9801",
         "_shared/tools/tmdl.py": "d1aab981a523733f8a2daa838be7b154848c58b1542998f50bd4214092e8be5f"
