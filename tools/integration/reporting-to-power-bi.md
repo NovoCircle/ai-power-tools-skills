@@ -98,7 +98,11 @@ tools: called: ea_repository.check_business_layer
 
 Evidence: the build's reported table, view and row counts; the check's verdict; the SQL Server
 version. The built layer must equal the repository: for each entity table, the row count in
-`logical.<table>` equals the count of that stereotype in EA's `t_object`.
+`logical.<table>` equals the count of that stereotype in EA's `t_object` **within the profile's
+scope**: the profile's root package and its subtree, less the excluded package. A count over the whole
+of `t_object` is not the comparison, because the repository holds elements the profile leaves out
+(the Westbrook model holds one more application, in the excluded `Fixtures` subtree). Scope the EA
+side the way `ea-power-bi` TC-66 does; stage 8 shows the query.
 
 #### Stage 3: the reporting database, cloud leg (path B, `entra-interactive`)
 
@@ -112,7 +116,8 @@ The same profile with `target` `{"kind": "reporting_database", "server": "<fabri
 - A refresh as the **first call of a fresh process**, then a second refresh in the same process,
   both finish without a new prompt.
 - A build against a database name that does not exist on a Fabric SQL server stops and says to
-  create the database in the Fabric portal. It does not try to create one.
+  create the database in the Fabric portal. It does not create one; the message says to create it in the
+  Fabric portal.
 
 ```check
 tools: called: ea_repository.replay_reporting_database
@@ -245,12 +250,16 @@ column and value its question names):
 
 | Q | EA (`t_object` and `t_objectproperties`) | Reporting database (`logical`) | Published model (DAX) |
 |---|---|---|---|
-| Q1 | `SELECT COUNT(*) FROM t_object WHERE Stereotype = 'WBABusinessApplication'` | `SELECT COUNT(*) FROM logical.[Business Application]` | `EVALUATE ROW("n", [Business Application count])` |
-| Q2 | the same, joined to `t_objectproperties` on `Property = 'criticality' AND Value = 'Mission-Critical'` | `... WHERE criticality = 'Mission-Critical'` | `EVALUATE ROW("n", CALCULATE([Business Application count], 'Business Application'[criticality] = "Mission-Critical"))` |
+| Q1 | `SELECT COUNT(*) FROM t_object o WHERE o.Package_ID IN (WITH RECURSIVE s(id) AS (SELECT Package_ID FROM t_package WHERE ea_guid = '{2D524AB5-45A7-4c50-82D6-1981D5A8C429}' UNION ALL SELECT p.Package_ID FROM t_package p JOIN s ON p.Parent_ID = s.id WHERE p.ea_guid <> '{180ED807-5BAE-48c4-AB27-0A750B54F914}') SELECT id FROM s) AND o.Stereotype = 'WBABusinessApplication'` (the scope clause, repeated in each EA query below) | `SELECT COUNT(*) FROM logical.[Business Application]` | `EVALUATE ROW("n", [Business Application count])` |
+| Q2 | the same scope and stereotype, joined to `t_objectproperties` on `Property = 'criticality' AND Value = 'Mission-Critical'` | `... WHERE criticality = 'Mission-Critical'` | `EVALUATE ROW("n", CALCULATE([Business Application count], 'Business Application'[criticality] = "Mission-Critical"))` |
 | Q4 | tag `regulatoryScope`, `Value LIKE '%GLBA%'` | `... WHERE regulatoryScope LIKE '%GLBA%'` | `EVALUATE ROW("n", CALCULATE([Business Application count], CONTAINSSTRING('Business Application'[regulatoryScope], "GLBA")))` |
 | Q8 | tag `lifecycle`, `Value IN ('Sunset', 'Archive')` | `SELECT name FROM logical.[Business Application] WHERE lifecycle IN ('Sunset', 'Archive')` | `EVALUATE CALCULATETABLE(VALUES('Business Application'[name]), 'Business Application'[lifecycle] IN {"Sunset", "Archive"})` |
-| Q11 | `Stereotype = 'WBAVendorSystem'` | `SELECT COUNT(*) FROM logical.[Vendor System]` | `EVALUATE ROW("n", [Vendor System count])` |
+| Q11 | the same scope, `Stereotype = 'WBAVendorSystem'` | `SELECT COUNT(*) FROM logical.[Vendor System]` | `EVALUATE ROW("n", [Vendor System count])` |
 | Q7 | connectors of the stereotype between the two element ids | the `Con_Business Application Uses Business Service` view joined to both entity views on `source_guid` and `target_guid` | `EVALUATE FILTER(VALUES('Business Application'[name]), CALCULATE(COUNTROWS('Con_Business Application Uses Business Service'), 'Business Service'[name] = "Westbrook Account Master") > 0)` |
+
+The EA column is scoped to the profile in every row (the `WHERE o.Package_ID IN (...)` clause of Q1); an
+unscoped query over `t_object` counts the excluded subtree as well and disagrees with the layer and the
+model by design.
 
 (EA's own tables store `&` in names as `&amp;`: compare after decoding. The DAX is the pattern a
 run starts from and is confirmed or corrected on the first run. The agreement of the three answers
@@ -298,8 +307,7 @@ sql: SELECT (SELECT COUNT(*) FROM t_object), (SELECT COUNT(*) FROM t_connector),
 expect: unchanged
 ```
 
-**What a run records.** One record per run, kept outside any repository (the workspace's
-`research/integration-runs/<date>-reporting-to-power-bi/`, the convention the acceptance runs use):
+**What a run records.** One record per run, kept outside any repository, as a run record:
 
 | Stage | Evidence |
 |---|---|
@@ -334,10 +342,10 @@ Promises that belong to a skill's own case file rather than to the whole path:
 
 ## Findings
 
-- A read-only copy of the shipped Westbrook model, opened while preparing this case, holds 46
-  business applications, where the 2026-10-19 measurement behind Q1 says 45 (it also holds one more
-  Business-Critical and one more GLBA application than that measurement). The model changed after
-  the measurement, so the Westbrook figures above are not asserted. Stage 8 computes them again.
+- EA-side counts must be scoped to the profile. The whole repository holds one more business
+  application than the layer and the model do (46 against 45, with one more Business-Critical and one
+  more GLBA application); the extra one is in the excluded `Fixtures` subtree. The Westbrook figures
+  above are the scoped counts, and stage 8 computes them again.
 - The DAX in stage 8 was written for this case and has not been run against a published model.
 - `Covers:` here names section headings by number (`5. The build, step by step`). A change that
   renumbers a `SKILL.md` makes `python tools/register.py --check` report the line; update the line

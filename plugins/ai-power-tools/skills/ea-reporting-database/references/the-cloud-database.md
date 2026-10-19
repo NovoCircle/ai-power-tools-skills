@@ -8,9 +8,8 @@ values are an illustration; substitute your own server, database and account.
 
 ## 1. Before the first build
 
-**A SQL database in Fabric needs a Fabric capacity.** The workspace that holds it must be on one. A
-paused capacity cannot be reached: a build, a refresh and a Power BI refresh all fail until it is
-resumed. A customer without a Fabric capacity keeps a local SQL Server (path B) or Parquet (path C).
+**A SQL database in Fabric needs a Fabric capacity.** The workspace that holds it must be on one. Check
+that the capacity is not paused before a build or a refresh. A customer without a Fabric capacity keeps a local SQL Server (path B) or Parquet (path C).
 
 **Create the database in the Fabric portal first.** AI Power Tools cannot create it there: a SQL
 database in Fabric refuses the `master` database that a local SQL Server build uses to create a

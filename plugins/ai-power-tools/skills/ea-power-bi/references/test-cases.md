@@ -1848,7 +1848,12 @@ expect: contains: Archive
 
 ```check
 file: WestbrookBankPowerBI.SemanticModel/definition/tables/Business Application.tmdl
-expect: contains: Archive
+expect: contains: Sunset or Archive
+```
+
+```check
+file: WestbrookBankPowerBI.SemanticModel/definition/tables/Business Application.tmdl
+expect: not-contains: /// The lifecycle tagged value of each Business Application.
 ```
 
 ```check
