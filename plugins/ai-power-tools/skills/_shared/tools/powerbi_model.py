@@ -41,6 +41,18 @@ visible measure keeps a hidden table visible, measured).
   equals any other measure's name in the model, or a column of its host table, is
   refused with a ValueError naming both; it is never renamed.
 
+DESCRIPTIONS
+------------
+Every business table, column and measure carries one, from three layers: the
+user's descriptions file, the technology's notes, then templates
+(`descriptions.py`, `APT-2026-0567`). EA's physical tables carry none.
+
+SIZE
+----
+`model_size` counts tables plus columns, the unit of Copilot's 1,000-entity
+index limit, for the full model and for the visible business layer; the CLI
+prints both and warns past the limit (`APT-2026-0541`).
+
 KEY COLUMNS
 -----------
 `ea_guid`, `source_guid`, `target_guid`, `connector_guid`, `connector_id` and
@@ -58,6 +70,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 from pathlib import Path
 
+import descriptions as descriptions_mod
 import pbip
 import tmdl
 from semantic_model import (Measure, Relationship, SemanticColumn, SemanticModel,
@@ -177,7 +190,7 @@ def _columns(spec: dict, hide_keys: bool = False) -> list[SemanticColumn]:
             raise ValueError(f"column {c['name']!r} of {spec['name']!r} has the "
                              f"unknown type {c['type']!r}; expected one of {sorted(TYPES)}")
         out.append(SemanticColumn(name=c["name"], data_type=TYPES[c["type"]],
-                                  description=c.get("description") or "",
+                                  description=_note(c.get("description")),
                                   is_hidden=hide_keys and c["name"] in HIDDEN_KEY_COLUMNS))
     return out
 
@@ -193,9 +206,15 @@ def _business_specs(defn: dict) -> list[dict]:
             + [defn["directory"]])
 
 
+def _note(text) -> str:
+    """A technology note as written, or "" when it is absent, empty or only
+    whitespace, so the template applies instead."""
+    return text if isinstance(text, str) and text.strip() else ""
+
+
 def _descriptions(defn: dict) -> dict[str, str]:
     return {e["table_name"]: e["description"]
-            for e in defn["directory"].get("entries", []) if e.get("description")}
+            for e in defn["directory"].get("entries", []) if _note(e.get("description"))}
 
 
 def _relationships(defn: dict) -> list[Relationship]:
@@ -275,7 +294,7 @@ def _count_measures(defn: dict, model_tables: dict[str, SemanticTable]) -> None:
         taken[name] = f"measure {name!r} on {table.name!r}"
         table.measures.append(Measure(
             name=name, expression=f"COUNTROWS({_dax(table.name)})", format_string="0",
-            description=f"Number of {e.get('alias') or table.name} elements."))
+            description=descriptions_mod.count_measure(e)))
 
 
 # -------------------------------------------------------------------- model
@@ -306,17 +325,19 @@ def is_reporting_database(defn: dict) -> bool:
     return defn["source"].get("kind") == "reporting_database"
 
 
-def model_from_definition(defn: dict) -> SemanticModel:
+def model_from_definition(defn: dict, *, descriptions: dict | None = None) -> SemanticModel:
+    """The model. `descriptions` is the parsed descriptions file (layer 1), or
+    None for the technology's notes and the templates only."""
     src = defn["source"]
     parquet = is_parquet(defn)
     _check_connector_ends(defn)
-    descriptions = _descriptions(defn)
+    notes = _descriptions(defn)
     tables: list[SemanticTable] = []
     for spec in _business_specs(defn):
         tables.append(SemanticTable(
             name=spec["name"],
             source_name=spec["name"] if parquet else f"{src['schema']}.{spec['name']}",
-            description=descriptions.get(spec["name"], ""),
+            description=notes.get(spec["name"], ""),
             columns=_columns(spec, hide_keys=True)))
     for spec in defn["physical"]:
         tables.append(SemanticTable(
@@ -333,6 +354,7 @@ def model_from_definition(defn: dict) -> SemanticModel:
     by_name = {t.name: t for t in tables}
     _measures(by_name, rels, keys)
     _count_measures(defn, by_name)
+    descriptions_mod.apply(tables, defn, descriptions)
     return SemanticModel(tables=tables, relationships=rels)
 
 
@@ -391,7 +413,8 @@ def check_project_name(name: str) -> str:
     return name
 
 
-def project_files_from_definition(defn: dict, name: str, *, mode: str = "import") -> dict[str, str]:
+def project_files_from_definition(defn: dict, name: str, *, mode: str = "import",
+                                  descriptions: dict | None = None) -> dict[str, str]:
     """Every text file of the `.pbip` project, keyed by relative path."""
     check_project_name(name)
     if mode not in MODES:
@@ -401,7 +424,7 @@ def project_files_from_definition(defn: dict, name: str, *, mode: str = "import"
             f"a reporting-database source (path B) is read in import mode, not {mode!r}: "
             f"the reporting database is rebuilt in full and swapped in on every refresh. "
             f"DirectQuery is for path A, SQL views inside the EA database.")
-    model = model_from_definition(defn)
+    model = model_from_definition(defn, descriptions=descriptions)
     if is_parquet(defn):
         if mode != "import":
             raise ValueError(f"a Parquet source is read in import mode, not {mode!r}")
@@ -416,12 +439,13 @@ def project_files_from_definition(defn: dict, name: str, *, mode: str = "import"
     return files
 
 
-def write_project(defn: dict, out_dir, name: str, *, mode: str = "import") -> Path:
+def write_project(defn: dict, out_dir, name: str, *, mode: str = "import",
+                  descriptions: dict | None = None) -> Path:
     """Write the project under `out_dir`. The semantic model's `definition/`
     folder is replaced, so a table that left the definition leaves the project.
     An existing `<name>.Report` folder is left untouched, so re-applying never
     resets visuals a customer has built; a fresh project gets the skeleton report."""
-    files = project_files_from_definition(defn, name, mode=mode)
+    files = project_files_from_definition(defn, name, mode=mode, descriptions=descriptions)
     root = Path(out_dir)
     if (root / f"{name}.Report").exists():
         files = {k: v for k, v in files.items() if not k.startswith(f"{name}.Report/")}
@@ -441,19 +465,57 @@ def write_project(defn: dict, out_dir, name: str, *, mode: str = "import") -> Pa
     return root
 
 
+#: Copilot's index stops at this many tables plus columns (APT-2026-0541).
+SIZE_LIMIT = 1000
+
+
+def model_size(model: SemanticModel) -> tuple[int, int]:
+    """(full model, business layer), each counted as tables plus columns.
+
+    The full model counts every table and column, hidden or not, EA's physical
+    tables included. The business layer counts the visible tables and their
+    visible columns. Measures are not counted.
+    """
+    full = sum(1 + len(t.columns) for t in model.tables)
+    business = sum(1 + sum(not c.is_hidden for c in t.columns)
+                   for t in model.tables if not t.is_hidden)
+    return full, business
+
+
+def size_lines(full: int, business: int, limit: int = SIZE_LIMIT) -> list[str]:
+    """The size line, then a warning line for each count past `limit`.
+
+    The full model's count includes hidden tables and columns; the business
+    layer's counts only visible ones (see `model_size`).
+    """
+    out = [f"tables + columns: full model {full} (hidden included), "
+           f"business layer {business} (visible only)"]
+    for label, n in (("full model", full), ("business layer", business)):
+        if n > limit:
+            out.append(f"warning: the {label} has {n:,} tables + columns, more than the "
+                       f"{limit:,} that Copilot indexes; Copilot may leave some of it out")
+    return out
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="Generate a Power BI project from a business-layer definition.")
     ap.add_argument("definition")
     ap.add_argument("out_dir")
     ap.add_argument("--name", required=True)
     ap.add_argument("--mode", default="import", choices=MODES)
+    ap.add_argument("--descriptions", default=None,
+                    help="a user-approved descriptions file (JSON); it wins over the "
+                         "technology's notes and the templates")
     a = ap.parse_args(argv)
     defn = json.loads(Path(a.definition).read_text(encoding="utf-8"))
-    write_project(defn, a.out_dir, a.name, mode=a.mode)
-    model = model_from_definition(defn)
+    entries = descriptions_mod.load_file(a.descriptions) if a.descriptions else None
+    write_project(defn, a.out_dir, a.name, mode=a.mode, descriptions=entries)
+    model = model_from_definition(defn, descriptions=entries)
     print(f"{a.name}: {len(model.tables)} tables ({sum(t.is_hidden for t in model.tables)} hidden), "
           f"{len(model.relationships)} relationships ({len(model.inactive)} inactive), "
           f"{sum(len(t.measures) for t in model.tables)} measures -> {a.out_dir}")
+    for line in size_lines(*model_size(model)):
+        print(line)
     return 0
 
 

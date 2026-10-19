@@ -45,6 +45,7 @@ except ImportError:  # pragma: no cover - environment-dependent
     pa = pq = None
     PYARROW_AVAILABLE = False
 
+import descriptions
 import powerbi_model
 
 COMPRESSION = "snappy"
@@ -189,16 +190,19 @@ def main(argv=None) -> int:
                     help="default: the name of source.folder")
     ap.add_argument("--out", default=None,
                     help="where the .pbip goes (default: the parent of source.folder)")
+    ap.add_argument("--descriptions", default=None,
+                    help="a user-approved descriptions file (JSON), as for powerbi_model.py")
     a = ap.parse_args(argv)
     defn = json.loads(Path(a.definition).read_text(encoding="utf-8"))
     tables = json.loads(Path(a.tables).read_text(encoding="utf-8"))
     if not powerbi_model.is_parquet(defn):
         ap.error("the definition's source.kind is not 'parquet'")
+    entries = descriptions.load_file(a.descriptions) if a.descriptions else None
     folder = Path(defn["source"]["folder"])
     counts = write_parquet(defn, tables, folder)
     name = a.project_name or folder.name
     out = Path(a.out) if a.out else folder.parent
-    powerbi_model.write_project(defn, out, name)
+    powerbi_model.write_project(defn, out, name, descriptions=entries)
     print(f"{len(counts)} tables, {sum(counts.values())} rows -> {folder}")
     print(f"{out / (name + '.pbip')}")
     return 0
