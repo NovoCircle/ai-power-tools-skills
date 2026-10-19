@@ -46,14 +46,15 @@ skill's markdown for the program's file name, plus the programs that import it.
 
 | Unit | Required | U | Used by | Verdict |
 |---|---|---|---|---|
+| prog:_shared/tools/descriptions.py | U | 30 tests (test_descriptions.py) | ea-power-bi (via parquet_tables.py, powerbi_model.py) | complete |
 | prog:_shared/tools/ea_census.py | U | 81 tests (test_ea_census.py) | ea-mdg-assess, ea-mdg-author, ea-mdg-model-build, ea-reporting-database | complete |
 | prog:_shared/tools/governance_gap.py | U | 19 tests (test_governance_gap.py) | ea-reporting-database | complete |
 | prog:_shared/tools/inclusion.py | U | 31 tests (test_inclusion.py) | ea-reporting-database | complete |
 | prog:_shared/tools/parquet_tables.py | U | 21 tests (test_parquet_tables.py) | ea-power-bi | complete |
-| prog:_shared/tools/pbip.py | U | 20 tests (test_pbip.py) | ea-power-bi | complete |
-| prog:_shared/tools/powerbi_model.py | U | 38 tests (test_powerbi_model.py) | ea-power-bi | complete |
+| prog:_shared/tools/pbip.py | U | 30 tests (test_pbip.py) | ea-power-bi | complete |
+| prog:_shared/tools/powerbi_model.py | U | 56 tests (test_powerbi_model.py) | ea-power-bi | complete |
 | prog:_shared/tools/semantic_model.py | U | 10 tests (test_semantic_model.py) | ea-power-bi | complete |
-| prog:_shared/tools/tmdl.py | U | 54 tests (test_tmdl.py) | ea-power-bi | complete |
+| prog:_shared/tools/tmdl.py | U | 56 tests (test_tmdl.py) | ea-power-bi | complete |
 | prog:ea-diagram-advisor/tools/advise.py | U | 45 tests (test_advise.py) | ea-diagram-advisor | complete |
 | prog:ea-diagram-composition/tools/bindings.py | U | 221 tests (test_bindings.py) | ea-diagram-composition | complete |
 | prog:ea-diagram-composition/tools/compose.py | U | 195 tests (test_compose.py) | ea-diagram-composition | complete |
@@ -269,6 +270,37 @@ method of a test class is written `Class.test_name`.
   - `ruleset-archimate31/tools/test_ruleset_archimate31.py::test_prefix_agrees_with_the_diagram_composition_binding`
   - `ruleset-archimate31/tools/test_ruleset_archimate31.py::test_the_authoring_guide_does_not_teach_the_bare_form`
   - `ruleset-archimate31/tools/test_ruleset_archimate31.py::test_mdg_family_still_names_the_measured_technology`
+- `prog:_shared/tools/descriptions.py` U (30)
+  - `plugins/ai-power-tools/skills/_shared/tools/test_descriptions.py::test_every_business_table_column_and_measure_has_a_description`
+  - `plugins/ai-power-tools/skills/_shared/tools/test_descriptions.py::test_physical_tables_and_their_columns_have_none`
+  - `plugins/ai-power-tools/skills/_shared/tools/test_descriptions.py::test_physical_tables_carry_no_description_line_in_the_tmdl`
+  - `plugins/ai-power-tools/skills/_shared/tools/test_descriptions.py::test_entity_texts_are_the_approved_ones`
+  - `plugins/ai-power-tools/skills/_shared/tools/test_descriptions.py::test_connector_texts_are_the_approved_ones`
+  - `plugins/ai-power-tools/skills/_shared/tools/test_descriptions.py::test_table_directory_texts_are_the_approved_ones`
+  - `plugins/ai-power-tools/skills/_shared/tools/test_descriptions.py::test_a_not_in_mdg_entity_without_a_note_gets_its_template`
+  - `plugins/ai-power-tools/skills/_shared/tools/test_descriptions.py::test_a_connector_key_without_a_profile_uses_its_whole_key`
+  - `plugins/ai-power-tools/skills/_shared/tools/test_descriptions.py::test_a_tag_row_table_without_a_note_gets_its_template`
+  - `plugins/ai-power-tools/skills/_shared/tools/test_descriptions.py::test_userelationship_measures_keep_their_text`
+  - `plugins/ai-power-tools/skills/_shared/tools/test_descriptions.py::test_templates_fit_the_file_limit_on_the_fixture`
+  - `plugins/ai-power-tools/skills/_shared/tools/test_descriptions.py::test_a_technology_note_beats_a_template_and_is_not_edited`
+  - `plugins/ai-power-tools/skills/_shared/tools/test_descriptions.py::test_an_empty_or_whitespace_note_counts_as_absent`
+  - `plugins/ai-power-tools/skills/_shared/tools/test_descriptions.py::test_the_directory_note_beats_the_not_in_mdg_template`
+  - `plugins/ai-power-tools/skills/_shared/tools/test_descriptions.py::test_the_file_beats_a_note_and_a_template`
+  - `plugins/ai-power-tools/skills/_shared/tools/test_descriptions.py::test_without_a_file_the_model_is_the_same_as_an_empty_one`
+  - `plugins/ai-power-tools/skills/_shared/tools/test_descriptions.py::test_a_name_the_model_does_not_have_is_refused_naming_it`
+  - `plugins/ai-power-tools/skills/_shared/tools/test_descriptions.py::test_an_entry_over_250_characters_is_refused_with_its_length`
+  - `plugins/ai-power-tools/skills/_shared/tools/test_descriptions.py::test_an_entry_of_exactly_250_characters_is_accepted`
+  - `plugins/ai-power-tools/skills/_shared/tools/test_descriptions.py::test_a_malformed_file_is_refused`
+  - `plugins/ai-power-tools/skills/_shared/tools/test_descriptions.py::test_quotes_and_line_breaks_in_a_file_entry_render_as_one_description_line`
+  - `plugins/ai-power-tools/skills/_shared/tools/test_descriptions.py::test_every_business_object_is_preceded_by_a_description_line`
+  - `plugins/ai-power-tools/skills/_shared/tools/test_descriptions.py::test_the_cli_option_round_trips_into_the_tmdl`
+  - `plugins/ai-power-tools/skills/_shared/tools/test_descriptions.py::test_the_cli_refuses_an_unknown_name_in_the_file`
+  - `plugins/ai-power-tools/skills/_shared/tools/test_descriptions.py::test_path_c_passes_the_option_through`
+  - `plugins/ai-power-tools/skills/_shared/tools/test_descriptions.py::test_size_counts_tables_plus_columns_for_the_full_model_and_the_visible_layer`
+  - `plugins/ai-power-tools/skills/_shared/tools/test_descriptions.py::test_size_of_the_westbrook_fixture`
+  - `plugins/ai-power-tools/skills/_shared/tools/test_descriptions.py::test_the_size_line_and_no_warning_at_the_limit`
+  - `plugins/ai-power-tools/skills/_shared/tools/test_descriptions.py::test_a_warning_for_each_count_past_the_limit`
+  - `plugins/ai-power-tools/skills/_shared/tools/test_descriptions.py::test_the_cli_prints_the_size_line`
 - `prog:_shared/tools/ea_census.py` U (81)
   - `plugins/ai-power-tools/skills/_shared/tools/test_ea_census.py::test_profile_bound_block_is_parsed`
   - `plugins/ai-power-tools/skills/_shared/tools/test_ea_census.py::test_row_without_fqname_is_ad_hoc_not_profile_bound`
@@ -425,7 +457,7 @@ method of a test class is written `Class.test_name`.
   - `plugins/ai-power-tools/skills/_shared/tools/test_parquet_tables.py::test_argument_errors_come_before_the_pyarrow_error`
   - `plugins/ai-power-tools/skills/_shared/tools/test_parquet_tables.py::test_two_writes_are_byte_identical`
   - `plugins/ai-power-tools/skills/_shared/tools/test_parquet_tables.py::test_cli_writes_the_files_and_the_project_next_to_them`
-- `prog:_shared/tools/pbip.py` U (20)
+- `prog:_shared/tools/pbip.py` U (30)
   - `plugins/ai-power-tools/skills/_shared/tools/test_pbip.py::test_the_project_carries_both_halves_and_the_entry_point`
   - `plugins/ai-power-tools/skills/_shared/tools/test_pbip.py::test_the_semantic_model_definition_is_included_whole`
   - `plugins/ai-power-tools/skills/_shared/tools/test_pbip.py::test_the_report_points_at_the_semantic_model_by_relative_path`
@@ -446,7 +478,17 @@ method of a test class is written `Class.test_name`.
   - `plugins/ai-power-tools/skills/_shared/tools/test_pbip.py::test_no_theme_at_all_is_possible_but_is_the_known_broken_shape`
   - `plugins/ai-power-tools/skills/_shared/tools/test_pbip.py::test_the_project_is_identical_across_paths_apart_from_the_partition`
   - `plugins/ai-power-tools/skills/_shared/tools/test_pbip.py::test_nothing_outside_the_table_files_mentions_the_source`
-- `prog:_shared/tools/powerbi_model.py` U (38)
+  - `plugins/ai-power-tools/skills/_shared/tools/test_pbip.py::test_the_page_is_called_overview_and_pins_the_captured_versions`
+  - `plugins/ai-power-tools/skills/_shared/tools/test_pbip.py::test_there_is_one_table_visual_and_one_card_per_entity_table`
+  - `plugins/ai-power-tools/skills/_shared/tools/test_pbip.py::test_every_visual_has_the_required_keys_and_the_pinned_schema`
+  - `plugins/ai-power-tools/skills/_shared/tools/test_pbip.py::test_every_field_reference_resolves_to_the_model`
+  - `plugins/ai-power-tools/skills/_shared/tools/test_pbip.py::test_the_table_visual_reads_the_directory_and_cards_read_only_measures`
+  - `plugins/ai-power-tools/skills/_shared/tools/test_pbip.py::test_visuals_are_laid_out_inside_the_page_without_overlap`
+  - `plugins/ai-power-tools/skills/_shared/tools/test_pbip.py::test_visual_names_are_derived_from_content_and_stable`
+  - `plugins/ai-power-tools/skills/_shared/tools/test_pbip.py::test_visual_files_are_crlf_without_a_bom`
+  - `plugins/ai-power-tools/skills/_shared/tools/test_pbip.py::test_a_model_without_the_directory_or_counts_still_gets_an_empty_page`
+  - `plugins/ai-power-tools/skills/_shared/tools/test_pbip.py::test_many_entity_tables_grow_the_page_so_every_card_sits_on_it`
+- `prog:_shared/tools/powerbi_model.py` U (56)
   - `plugins/ai-power-tools/skills/_shared/tools/test_powerbi_model.py::test_tables_are_every_business_table_plus_the_nine_physical`
   - `plugins/ai-power-tools/skills/_shared/tools/test_powerbi_model.py::test_table_names_are_exactly_the_definitions`
   - `plugins/ai-power-tools/skills/_shared/tools/test_powerbi_model.py::test_source_names_carry_the_schema_per_table`
@@ -464,17 +506,33 @@ method of a test class is written `Class.test_name`.
   - `plugins/ai-power-tools/skills/_shared/tools/test_powerbi_model.py::test_never_two_relationships_between_the_same_pair_active`
   - `plugins/ai-power-tools/skills/_shared/tools/test_powerbi_model.py::test_no_table_has_two_active_filter_paths_from_one_source`
   - `plugins/ai-power-tools/skills/_shared/tools/test_powerbi_model.py::test_relationship_names_are_unique_and_stable`
+  - `plugins/ai-power-tools/skills/_shared/tools/test_powerbi_model.py::test_a_duplicate_name_is_told_apart_by_the_target_column_in_any_order`
+  - `plugins/ai-power-tools/skills/_shared/tools/test_powerbi_model.py::test_a_name_without_a_duplicate_keeps_the_plain_name`
+  - `plugins/ai-power-tools/skills/_shared/tools/test_powerbi_model.py::test_the_same_declaration_twice_still_gets_unique_names`
   - `plugins/ai-power-tools/skills/_shared/tools/test_powerbi_model.py::test_resolver_marks_a_second_path_inactive`
   - `plugins/ai-power-tools/skills/_shared/tools/test_powerbi_model.py::test_tag_row_tables_relate_to_their_table`
   - `plugins/ai-power-tools/skills/_shared/tools/test_powerbi_model.py::test_one_measure_per_inactive_connector_relationship_and_no_other`
   - `plugins/ai-power-tools/skills/_shared/tools/test_powerbi_model.py::test_measure_uses_the_inactive_relationship_on_its_own_table`
   - `plugins/ai-power-tools/skills/_shared/tools/test_powerbi_model.py::test_measure_names_are_unique_when_stereotypes_collide`
   - `plugins/ai-power-tools/skills/_shared/tools/test_powerbi_model.py::test_no_measure_on_a_hidden_table`
-  - `plugins/ai-power-tools/skills/_shared/tools/test_powerbi_model.py::test_no_measure_on_a_business_table_that_is_not_a_connector`
+  - `plugins/ai-power-tools/skills/_shared/tools/test_powerbi_model.py::test_no_measure_on_a_business_table_that_is_not_a_connector_or_an_entity`
+  - `plugins/ai-power-tools/skills/_shared/tools/test_powerbi_model.py::test_the_six_keys_are_hidden_on_every_business_table_and_nothing_else`
+  - `plugins/ai-power-tools/skills/_shared/tools/test_powerbi_model.py::test_hidden_keys_are_emitted_as_ishidden_in_the_tmdl`
+  - `plugins/ai-power-tools/skills/_shared/tools/test_powerbi_model.py::test_one_count_measure_per_entity_table_with_exact_fields`
+  - `plugins/ai-power-tools/skills/_shared/tools/test_powerbi_model.py::test_no_count_measure_on_connector_tag_row_or_directory_tables`
+  - `plugins/ai-power-tools/skills/_shared/tools/test_powerbi_model.py::test_count_measure_description_falls_back_to_the_table_name`
+  - `plugins/ai-power-tools/skills/_shared/tools/test_powerbi_model.py::test_count_measure_dax_quotes_the_table_name`
+  - `plugins/ai-power-tools/skills/_shared/tools/test_powerbi_model.py::test_count_measure_name_colliding_with_a_column_is_refused_naming_both`
+  - `plugins/ai-power-tools/skills/_shared/tools/test_powerbi_model.py::test_count_measure_name_colliding_with_another_measure_is_refused_naming_both`
   - `plugins/ai-power-tools/skills/_shared/tools/test_powerbi_model.py::test_layout_bands_in_order_with_physical_last_and_a_gap`
   - `plugins/ai-power-tools/skills/_shared/tools/test_powerbi_model.py::test_layout_rows_hold_nine_and_tags_match_the_tmdl`
   - `plugins/ai-power-tools/skills/_shared/tools/test_powerbi_model.py::test_partition_takes_the_schema_per_table`
   - `plugins/ai-power-tools/skills/_shared/tools/test_powerbi_model.py::test_schema_source_escapes_values`
+  - `plugins/ai-power-tools/skills/_shared/tools/test_powerbi_model.py::test_a_connector_end_that_is_not_an_entity_names_the_connector_table`
+  - `plugins/ai-power-tools/skills/_shared/tools/test_powerbi_model.py::test_a_connector_end_that_is_another_connector_is_refused`
+  - `plugins/ai-power-tools/skills/_shared/tools/test_powerbi_model.py::test_every_connector_end_in_the_fixture_is_an_entity`
+  - `plugins/ai-power-tools/skills/_shared/tools/test_powerbi_model.py::test_direct_query_is_refused_for_a_reporting_database_and_names_path_a`
+  - `plugins/ai-power-tools/skills/_shared/tools/test_powerbi_model.py::test_direct_query_is_still_allowed_for_direct_access`
   - `plugins/ai-power-tools/skills/_shared/tools/test_powerbi_model.py::test_modes_differ_only_in_the_partition_mode`
   - `plugins/ai-power-tools/skills/_shared/tools/test_powerbi_model.py::test_unknown_mode_is_refused`
   - `plugins/ai-power-tools/skills/_shared/tools/test_powerbi_model.py::test_tmdl_is_tab_indented_crlf_and_hides_physical`
@@ -485,6 +543,8 @@ method of a test class is written `Class.test_name`.
   - `plugins/ai-power-tools/skills/_shared/tools/test_powerbi_model.py::test_a_name_that_is_not_a_plain_file_name_is_refused`
   - `plugins/ai-power-tools/skills/_shared/tools/test_powerbi_model.py::test_a_name_with_spaces_is_accepted`
   - `plugins/ai-power-tools/skills/_shared/tools/test_powerbi_model.py::test_a_file_path_leaving_the_output_folder_is_refused_before_anything_is_deleted`
+  - `plugins/ai-power-tools/skills/_shared/tools/test_powerbi_model.py::test_a_report_folder_the_customer_already_has_gets_no_overview_files`
+  - `plugins/ai-power-tools/skills/_shared/tools/test_powerbi_model.py::test_a_fresh_project_gets_the_overview_visuals_on_disk`
 - `prog:_shared/tools/semantic_model.py` U (10)
   - `plugins/ai-power-tools/skills/_shared/tools/test_semantic_model.py::test_a_column_reads_from_the_source_column_of_the_same_name_by_default`
   - `plugins/ai-power-tools/skills/_shared/tools/test_semantic_model.py::test_a_table_is_sourced_by_its_own_name_unless_told_otherwise`
@@ -496,7 +556,7 @@ method of a test class is written `Class.test_name`.
   - `plugins/ai-power-tools/skills/_shared/tools/test_semantic_model.py::test_a_relationship_name_includes_the_source_column`
   - `plugins/ai-power-tools/skills/_shared/tools/test_semantic_model.py::test_a_relationship_name_is_deterministic_and_plain`
   - `plugins/ai-power-tools/skills/_shared/tools/test_semantic_model.py::test_the_model_is_plain_serializable_data`
-- `prog:_shared/tools/tmdl.py` U (54)
+- `prog:_shared/tools/tmdl.py` U (56)
   - `plugins/ai-power-tools/skills/_shared/tools/test_tmdl.py::test_every_rendered_file_uses_crlf`
   - `plugins/ai-power-tools/skills/_shared/tools/test_tmdl.py::test_indentation_is_tabs_and_never_spaces`
   - `plugins/ai-power-tools/skills/_shared/tools/test_tmdl.py::test_a_description_precedes_the_object_it_describes`
@@ -547,6 +607,8 @@ method of a test class is written `Class.test_name`.
   - `plugins/ai-power-tools/skills/_shared/tools/test_tmdl.py::test_a_relationship_name_with_a_line_break_is_refused`
   - `plugins/ai-power-tools/skills/_shared/tools/test_tmdl.py::test_a_relationship_name_goes_through_ident`
   - `plugins/ai-power-tools/skills/_shared/tools/test_tmdl.py::test_a_table_file_cannot_resolve_outside_tables`
+  - `plugins/ai-power-tools/skills/_shared/tools/test_tmdl.py::test_the_superscript_device_names_are_encoded_like_the_ascii_ones`
+  - `plugins/ai-power-tools/skills/_shared/tools/test_tmdl.py::test_a_name_that_only_contains_a_device_name_is_not_encoded`
   - `plugins/ai-power-tools/skills/_shared/tools/test_tmdl.py::test_a_safe_table_name_keeps_its_file_name_and_encodings_do_not_collide`
   - `plugins/ai-power-tools/skills/_shared/tools/test_tmdl.py::test_the_definition_writes_a_hostile_table_name_inside_tables`
   - `plugins/ai-power-tools/skills/_shared/tools/test_tmdl.py::test_a_partition_mode_outside_the_known_set_is_refused`
@@ -2461,7 +2523,7 @@ Quoted from `tools/register.toml`. Nothing here is decided until its status says
 | Unit kind | Required | Units | Present | Exempt | Missing |
 |---|---|---|---|---|---|
 | Skill | A | 24 | 24 | 0 | 0 |
-| Helper program | U | 18 | 18 | 0 | 0 |
+| Helper program | U | 19 | 19 | 0 | 0 |
 | Data asset | U | 12 | 12 | 0 | 0 |
 | Deployment surface | U | 1 | 1 | 0 | 0 |
 | Deployment surface | D | 1 | 0 | 0 | 1 |

@@ -4,5 +4,3 @@
 * text=auto eol=lf
 *.png binary
 *.qea binary
-# The no-break snapshot is generator output, CRLF on purpose; git must not convert it.
-plugins/ai-power-tools/skills/_shared/tools/fixtures/nobreak-before/** -text

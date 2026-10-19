@@ -7,8 +7,8 @@
 wrote them, for `fixtures/westbrook.definition.json`, import mode and the project name
 `Westbrook`, BEFORE the Power BI Copilot-readiness changes. They are committed once and
 never regenerated: regenerating them would erase the very difference this test exists to
-see. (The files keep CRLF; `.gitattributes` marks the folder `-text` so git leaves them
-alone.)
+see. They are committed with LF line endings, like every shipped skill file; the
+test restores the generator's CRLF when it reads them.
 
 The test parses the committed files and a fresh generation into objects (tables, columns,
 measures, partitions, relationships) and asserts that every old object is still there with
@@ -264,8 +264,9 @@ def compare(before: ReadModel, after: ReadModel, *,
 def _before_files() -> dict[str, str]:
     files = {}
     for path in sorted(BEFORE.rglob("*.tmdl")):
-        data = path.read_bytes()
-        files[path.relative_to(BEFORE).as_posix()] = data.decode("utf-8")
+        # Committed as LF (skills ship LF only); the generator writes CRLF, as Power BI does.
+        text = path.read_bytes().decode("utf-8").replace("\r\n", "\n").replace("\n", "\r\n")
+        files[path.relative_to(BEFORE).as_posix()] = text
     return files
 
 
@@ -294,14 +295,14 @@ def after():
 # ---------------------------------------------------------------------- tests
 
 
-def test_the_committed_before_files_keep_their_crlf_line_endings(before_files):
-    # `.gitattributes` must stop git converting them; a converted file is no longer
-    # what the generator wrote.
+def test_the_committed_before_files_are_lf_and_read_back_as_crlf(before_files):
+    # Skills ship LF only (the gate refuses CRLF assets); the reader restores the
+    # generator's CRLF, so the comparison sees what the generator wrote.
     assert before_files
-    for rel in before_files:
+    for rel, text in before_files.items():
         raw = (BEFORE / rel).read_bytes()
-        assert b"\r\n" in raw, f"{rel} has no CRLF"
-        assert b"\n" not in raw.replace(b"\r\n", b""), f"{rel} has a bare LF"
+        assert b"\r" not in raw, f"{rel} is committed with CR characters"
+        assert "\n" not in text.replace("\r\n", ""), f"{rel} reads back with a bare LF"
         assert not raw.startswith(b"\xef\xbb\xbf"), f"{rel} starts with a BOM"
 
 
