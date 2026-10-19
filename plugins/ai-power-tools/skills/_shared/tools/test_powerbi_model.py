@@ -606,3 +606,19 @@ def test_a_file_path_leaving_the_output_folder_is_refused_before_anything_is_del
     with pytest.raises(ValueError, match="outside the output folder"):
         write_project(defn, out, "P")
     assert stale.exists() and not (tmp_path / "escaped.tmdl").exists()
+
+
+def test_a_report_folder_the_customer_already_has_gets_no_overview_files(defn, tmp_path):
+    report = tmp_path / "P.Report"
+    (report / "definition").mkdir(parents=True)
+    (report / "definition" / "report.json").write_text("{}")
+    write_project(defn, tmp_path, "P")
+    assert sorted(p.relative_to(report).as_posix() for p in report.rglob("*") if p.is_file()) \
+        == ["definition/report.json"]
+    assert (tmp_path / "P.SemanticModel" / "definition" / "model.tmdl").exists()
+
+
+def test_a_fresh_project_gets_the_overview_visuals_on_disk(defn, tmp_path):
+    write_project(defn, tmp_path, "P")
+    visuals = list((tmp_path / "P.Report").rglob("visual.json"))
+    assert len(visuals) == len(defn["entities"]) + 1
