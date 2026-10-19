@@ -190,7 +190,7 @@ def _columns(spec: dict, hide_keys: bool = False) -> list[SemanticColumn]:
             raise ValueError(f"column {c['name']!r} of {spec['name']!r} has the "
                              f"unknown type {c['type']!r}; expected one of {sorted(TYPES)}")
         out.append(SemanticColumn(name=c["name"], data_type=TYPES[c["type"]],
-                                  description=c.get("description") or "",
+                                  description=_note(c.get("description")),
                                   is_hidden=hide_keys and c["name"] in HIDDEN_KEY_COLUMNS))
     return out
 
@@ -206,9 +206,15 @@ def _business_specs(defn: dict) -> list[dict]:
             + [defn["directory"]])
 
 
+def _note(text) -> str:
+    """A technology note as written, or "" when it is absent, empty or only
+    whitespace, so the template applies instead."""
+    return text if isinstance(text, str) and text.strip() else ""
+
+
 def _descriptions(defn: dict) -> dict[str, str]:
     return {e["table_name"]: e["description"]
-            for e in defn["directory"].get("entries", []) if e.get("description")}
+            for e in defn["directory"].get("entries", []) if _note(e.get("description"))}
 
 
 def _relationships(defn: dict) -> list[Relationship]:
@@ -477,8 +483,13 @@ def model_size(model: SemanticModel) -> tuple[int, int]:
 
 
 def size_lines(full: int, business: int, limit: int = SIZE_LIMIT) -> list[str]:
-    """The size line, then a warning line for each count past `limit`."""
-    out = [f"tables + columns (visible): full model {full}, business layer {business}"]
+    """The size line, then a warning line for each count past `limit`.
+
+    The full model's count includes hidden tables and columns; the business
+    layer's counts only visible ones (see `model_size`).
+    """
+    out = [f"tables + columns: full model {full} (hidden included), "
+           f"business layer {business} (visible only)"]
     for label, n in (("full model", full), ("business layer", business)):
         if n > limit:
             out.append(f"warning: the {label} has {n:,} tables + columns, more than the "

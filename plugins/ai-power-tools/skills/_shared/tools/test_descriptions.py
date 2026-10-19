@@ -207,6 +207,22 @@ def test_a_technology_note_beats_a_template_and_is_not_edited(defn):
         "The criticality tagged value of each Business Application.")
 
 
+@pytest.mark.parametrize("blank", ["", "   ", "\t\r\n"])
+def test_an_empty_or_whitespace_note_counts_as_absent(defn, blank):
+    d = copy.deepcopy(defn)
+    for e in d["directory"]["entries"]:
+        if e["table_name"] == BA:
+            e["description"] = blank
+    col = next(c for c in next(e for e in d["entities"] if e["name"] == BA)["all_columns"]
+               if c["name"] == "lifecycle")
+    col["description"] = blank
+    t = model_from_definition(d).table(BA)
+    assert t.description == ("Business Application elements from the EA repository "
+                             "(WestbrookBankArchitecture technology), one row per element.")
+    assert {c.name: c.description for c in t.columns}["lifecycle"] == (
+        "The lifecycle tagged value of each Business Application.")
+
+
 def test_the_directory_note_beats_the_not_in_mdg_template(defn, model):
     assert model.table("VendorApplication (not in MDG)").description == (
         "Included as observed: outside the MDG.")
@@ -327,7 +343,7 @@ def test_the_cli_option_round_trips_into_the_tmdl(defn, tmp_path, capsys):
     text = (tmp_path / "out" / "WB.SemanticModel" / "definition" / "tables"
             / f"{BA}.tmdl").read_bytes().decode("utf-8")
     assert "\t/// Sunset or Archive means being retired.\r\n\tcolumn lifecycle\r\n" in text
-    assert "tables + columns (visible): full model" in capsys.readouterr().out
+    assert "tables + columns: full model" in capsys.readouterr().out
 
 
 def test_the_cli_refuses_an_unknown_name_in_the_file(defn, tmp_path):
@@ -376,12 +392,13 @@ def test_size_of_the_westbrook_fixture(model):
 
 def test_the_size_line_and_no_warning_at_the_limit():
     assert size_lines(1000, 281) == [
-        "tables + columns (visible): full model 1000, business layer 281"]
+        "tables + columns: full model 1000 (hidden included), business layer 281 (visible only)"]
 
 
 def test_a_warning_for_each_count_past_the_limit():
     lines = size_lines(1001, 1200)
-    assert lines[0] == "tables + columns (visible): full model 1001, business layer 1200"
+    assert lines[0] == ("tables + columns: full model 1001 (hidden included), "
+                        "business layer 1200 (visible only)")
     assert lines[1].startswith("warning: the full model has 1,001 tables + columns, more than the 1,000")
     assert lines[2].startswith("warning: the business layer has 1,200 tables + columns")
     assert len(size_lines(1001, 10)) == 2
@@ -391,5 +408,6 @@ def test_the_cli_prints_the_size_line(defn, tmp_path, capsys):
     (tmp_path / "d.json").write_text(json.dumps(defn), encoding="utf-8")
     assert powerbi_model.main([str(tmp_path / "d.json"), str(tmp_path / "o"), "--name", "WB"]) == 0
     out = capsys.readouterr().out.splitlines()
-    assert "tables + columns (visible): full model 720, business layer 338" in out
+    assert ("tables + columns: full model 720 (hidden included), "
+            "business layer 338 (visible only)") in out
     assert not any(line.startswith("warning:") for line in out)
