@@ -202,3 +202,35 @@ def test_the_results_file_is_read_when_it_exists(tmp_path):
     assert model.unit("skill:demo").cells["A"].text == (
         "cases: 20 · last run 9.9.9: 17/20, threshold 80%")
     assert model.unit("skill:other").cells["A"].text == "cases: 0 · not run"
+
+
+# --- integration cases (kind I) ----------------------------------------------------------------
+
+def test_the_shipped_integration_case_is_registered_and_complete():
+    unit = MODEL.unit("int:reporting-to-power-bi")
+    assert unit is not None and unit.required == ("I",)
+    assert unit.cells["I"].state == "present"
+    assert "blocked for the runner" in unit.cells["I"].text
+
+
+def _demo_integration(root, covers):
+    _demo_skills(root, {"demo": None})
+    case_dir = root / "tools" / "integration"
+    case_dir.mkdir(parents=True)
+    (case_dir / "feature.md").write_text(
+        f"### TC-01 - one\n\nCovers: {covers}\n\n**Marks:** BLOCKED\n", encoding="utf-8")
+    return register.build(root, {"hand_row": []})
+
+
+def test_an_integration_case_naming_real_headings_is_present(tmp_path):
+    model = _demo_integration(tmp_path, "demo: Real heading; demo: Real heading")
+    cell = model.unit("int:feature").cells["I"]
+    assert cell.state == "present" and model.problems == []
+    assert cell.text == "cases: 1 · blocked for the runner, run by hand"
+
+
+@pytest.mark.parametrize("covers", ["demo: Invented heading", "nosuch: Real heading", "Real heading"])
+def test_an_integration_case_naming_a_missing_skill_or_heading_is_a_problem(tmp_path, covers):
+    model = _demo_integration(tmp_path, covers)
+    assert model.unit("int:feature").cells["I"].state == "missing"
+    assert len(model.problems) == 1 and "'<skill>: <heading>'" in model.problems[0]

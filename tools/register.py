@@ -12,6 +12,7 @@ Nobody types the list of parts. It is read from the product itself:
                    folder that is not test_*.py                      requires U
   data asset       manifest.json: every shipped .yaml                requires U
   plugin surface   tools/register.toml, [[hand_row]]                 requires U and D
+  integration case tools/integration/*.md                            requires I
 
 and each part is matched to its tests:
 
@@ -23,6 +24,11 @@ and each part is matched to its tests:
      (COVERS = ("asset:ruleset-archimate31/archimate31_rules.yaml",)).
      plugin surface: the test files and CI steps its hand row names.
   D  install-and-first-call: a case file at the path the hand row names.
+  I  integration: a case file in tools/integration/ with at least one TC-nn case, every
+     "Covers:" line of which names "<skill>: <heading>" pairs whose heading exists in that
+     skill's SKILL.md. A case marked BLOCKED is still present: the mark says the step 5 runner
+     skips it and a person runs it by hand before a release. The register lists only the
+     integration cases that exist; it does not yet require a list of features.
 
 The register records whether a test EXISTS, never whether it passed. It is read from files and
 the syntax tree only: no skill module is imported (pyarrow and PyYAML are optional there) and
@@ -83,7 +89,7 @@ class Cell:
 @dataclass
 class Unit:
     id: str
-    group: str                 # skill | prog | asset | srf
+    group: str                 # skill | prog | asset | srf | int
     required: tuple
     cells: dict
     extra: dict = field(default_factory=dict)
@@ -397,6 +403,38 @@ def build(root: Path = ROOT, config: dict | None = None, results: dict | None = 
             cells["D"] = _cell(uid, "D", exemptions, exists, f"case file {case}", [case])
         units.append(Unit(uid, "srf", required, cells, {"note": row.get("note", "")}))
 
+    # -- integration cases (one file per cross-product feature)
+    heading_cache: dict = {}
+    int_dir = root / "tools" / "integration"
+    for case_file in sorted(int_dir.glob("*.md")) if int_dir.is_dir() else []:
+        uid = f"int:{case_file.stem}"
+        rel_case = _rel(case_file, root)
+        parsed = parse_cases(case_file)
+        ok_ids = []
+        for case, line, names in parsed["covers"]:
+            bad = []
+            for n in names:
+                skill, _, heading = (part.strip() for part in n.partition(":"))
+                if skill not in heading_cache:
+                    skill_md = skills_dir / skill / "SKILL.md"
+                    heading_cache[skill] = headings_of(skill_md) if skill and skill_md.exists() else None
+                if heading_cache[skill] is None or _norm(heading) not in heading_cache[skill]:
+                    bad.append(n)
+            if case is None:
+                problems.append(f"{rel_case}:{line}: a Covers line must follow a TC-nn case")
+            elif bad:
+                problems.append(f"{rel_case}:{line}: Covers must name '<skill>: <heading>' pairs "
+                                f"that exist in a SKILL.md: {bad}")
+            else:
+                ok_ids.append(f"{rel_case}#{case}")
+        blocked = bool(re.search(r"^\*\*Marks:\*\*.*\bBLOCKED\b",
+                                 case_file.read_text(encoding="utf-8"), re.M))
+        text = f"cases: {len(parsed['ids'])}" + (" · blocked for the runner, run by hand" if blocked else "")
+        cell = _cell(uid, "I", exemptions, bool(ok_ids), text, sorted(set(ok_ids)))
+        if cell.state == "missing":
+            cell.text = text
+        units.append(Unit(uid, "int", ("I",), {"I": cell}, {"file": rel_case}))
+
     model = Model(units, problems, config, results)
     problems.extend(validate(model, modules, covered_by))
     return model
@@ -456,7 +494,7 @@ def render(model: Model) -> str:
         "Hand-kept inputs (exemptions, decisions, the known-gap list) are in `tools/register.toml`.",
         "",
         "This file records whether a test **exists**. Whether it passed belongs to the release record.",
-        "Kinds: U = hermetic unit, A = skill acceptance, D = install-and-first-call.",
+        "Kinds: U = hermetic unit, A = skill acceptance, I = integration case, D = install-and-first-call.",
         "",
         "## Skills",
         "",
@@ -491,6 +529,13 @@ def render(model: Model) -> str:
                     u.cells["D"].text if "D" in u.cells else "n/a",
                     _verdict(u)] for u in by("srf")])
 
+    out += ["", "## Integration cases", "",
+            "Required: I, a case file in `tools/integration/` with a `Covers:` line naming",
+            "`<skill>: <heading>` pairs that exist. A case marked BLOCKED is skipped by the runner and run by",
+            "hand before a release. Only the cases that exist are listed.", ""]
+    out += _table(["Unit", "Required", "I", "Verdict"],
+                  [[u.id, "I", u.cells["I"].text, _verdict(u)] for u in by("int")])
+
     out += ["", "## Test index", "",
             "Every satisfying test id, grouped by unit and kind. A unit with no entry has no test of",
             "that kind. Function ids are read from the syntax tree, so a parametrized test is one id, and a",
@@ -522,7 +567,8 @@ def render(model: Model) -> str:
     out += ["", "## Totals", ""]
     counts = []
     for group, label in (("skill", "Skill"), ("prog", "Helper program"),
-                         ("asset", "Data asset"), ("srf", "Deployment surface")):
+                         ("asset", "Data asset"), ("srf", "Deployment surface"),
+                         ("int", "Integration case")):
         for kind in KIND_ORDER:
             members = [u for u in units if u.group == group and kind in u.required]
             if members:
