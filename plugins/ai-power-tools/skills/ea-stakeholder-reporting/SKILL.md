@@ -7,7 +7,7 @@ description: Turn a Sparx EA model into an answer a non-modeler can act on -- po
 
 *Tools: `ea_analyze(operation="get_element_business_view"|"summarize_tagged_value_usage"|"summarize_stereotype_usage", params={...})`,
 `ea_repository(operation="aggregate_portfolio", params={...})`,
-`ea_mdg(operation="resolve_display_term", params={...})` (AI Power Tools for EA, v3.6.0+)*
+`ea_mdg(operation="resolve_display_term", params={...})` (AI Power Tools for EA, v3.6.4+)*
 
 This skill is read-only. None of the calls below create, update, or delete anything, and
 none require a write confirmation. If a task built on this skill ever needs a scratch
@@ -265,7 +265,7 @@ When you need a business term:
 ## Diagram descriptions: a diagram in words
 
 *Uses `ea_diagram(operation="get_diagram_manifest"|"audit_diagram_descriptions", params={...})`, which arrive
-with server 3.6.5. On an older server these operations are unknown: say so and do not improvise a
+with server 3.6.4. On an older server these operations are unknown: say so and do not improvise a
 description from shapes.*
 
 A diagram can carry a **description**: plain text in the diagram's Notes that says what the diagram

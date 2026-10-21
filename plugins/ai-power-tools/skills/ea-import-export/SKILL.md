@@ -76,7 +76,7 @@ not a standard paper size.
 
 ## 3b. Redrawing a diagram in another tool — `get_diagram_manifest` / `get_package_manifest`
 
-*Sections 3b and 3c use operations that arrive with server 3.6.5. On an older server they are
+*Sections 3b and 3c use operations that arrive with server 3.6.4. On an older server they are
 unknown: say so and do not improvise. The image export (§2) is a fallback for a picture only.*
 
 A manifest is one complete, read-only reading of a diagram, so another tool can redraw it and a copy

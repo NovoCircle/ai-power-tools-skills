@@ -8,7 +8,7 @@ description: Build the reporting layer for a Sparx EA repository - business tabl
 *Tools: `ea_repository(operation=..., params={...})` with `build_business_layer`, `check_business_layer`,
 `build_reporting_database`, `replay_reporting_database`, `remove_business_layer`, `start_reporting_refresh`,
 `get_reporting_refresh`; `ea_mdg(operation="get_mdg_from_runtime")`; `ea_analyze(operation="execute_sql")`
-(AI Power Tools for Sparx EA, v3.6.0+); the census modules in `../_shared/tools/`*
+(AI Power Tools for Sparx EA, v3.6.4+); the census modules in `../_shared/tools/`*
 
 **This skill changes the model only through the governance gate's stereotype application (§5.2),
 and only when the user chooses it.** Direct access (path A) creates views in their own schema
@@ -122,7 +122,7 @@ Any other database type is refused with a message; nothing is written.
 | **A SQL database in Microsoft Fabric** | A Fabric capacity. Create the database in the Fabric portal first; take the server and database names from its connection strings (the database name is not the display name) | `entra-interactive` |
 | **Azure SQL Database** | Expected to work with the same sign-in; **not measured** | `entra-interactive` |
 
-Microsoft Entra sign-in needs AI Power Tools for Sparx EA 3.6.5 or later.
+Microsoft Entra sign-in needs AI Power Tools for Sparx EA 3.6.4 or later.
 
 **A person completes the sign-in**, once per server process, in Microsoft's sign-in window, which
 comes to the front at the first operation that opens the database; later calls reuse it (measured: a
