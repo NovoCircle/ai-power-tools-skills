@@ -141,6 +141,11 @@ your first rule.
   source stereotypes, then ALL valid target stereotypes, erring toward inclusion — EA's
   MDG may have inherited subtypes you don't know about. Always `severity: error` —
   endpoint violations are structural.
+- **Relationship-table rules** (`condition.type: relationship_table`): when the standard
+  publishes an allowed-relationship table, carry it in the ruleset's `tables:` section and check
+  every connector's source and target pair against it with one rule. An endpoint rule cannot
+  tell an allowed pair from two ends that are each allowed elsewhere. Generate the table from
+  the language's data and cite its source; see `references/rule-grammar.md`.
 - **Count rules** (`condition.type: connector_count`): `direction: incoming` means the
   edge ends AT this element (element is the target); `direction: outgoing` means the
   edge starts here (element is the source).

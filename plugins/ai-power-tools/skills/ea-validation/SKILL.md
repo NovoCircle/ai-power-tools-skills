@@ -67,6 +67,7 @@ A YAML file with a top-level `rules` list. Each rule has:
 | `tagged_value_constraint` | One or more tags must take a value from `value_must_be_one_of`. |
 | `connector_count` | Element must have between `min` and `max` connectors of a given stereotype (`direction: incoming \| outgoing`). |
 | `connector_endpoint_stereotype` | Connector source/target must be in `source_must_be_one_of` / `target_must_be_one_of`. |
+| `relationship_table` | The connector's source and target, as a pair, must allow its stereotype in a table from the ruleset's top-level `tables:`. A violation names the pair, the table and what the table allows there. Needs a server that supports it (released after 3.6.4); an older server ignores the rule and reports nothing for it. |
 | `tagged_value_type_shipped` | A profile's tagged-value types (blank-`Type` attributes on stereotype-defining classes, per `ea-mdg-model-build`'s Phase 2 convention) must also appear in a **built MDG file's RefData** — i.e. must actually have been ticked on the MDG Technology Wizard's Tagged Value Types page, not just defined in `t_propertytypes`. Requires `built_mdg_path` (file path or raw XML). |
 
 ### `tagged_value_type_shipped` — catching "defined but never selected"
