@@ -56,8 +56,10 @@ A YAML file with a top-level `rules` list. Each rule has:
 
 | `selector.type` | Required keys | Meaning |
 |---|---|---|
-| `element` | `stereotypes.any_of` | Iterate every element whose stereotype is in the list. Add `tagged_value_filter` to narrow further. |
-| `connector` | `connector_stereotype` | Iterate every connector with that stereotype. |
+| `element` | `stereotypes.any_of` and/or `types.any_of` | Iterate every element whose stereotype is in the list, or whose EA type (`Object_Type`, such as `UseCase`) is; given both, it must match both. Add `tagged_value_filter` to narrow further. |
+| `connector` | `connector_stereotype`, `connector_stereotypes` and/or `connector_types` | Iterate every connector with that stereotype, one of those stereotypes, or one of those EA types (`Connector_Type`, such as `Generalization`); given a stereotype and a type, it must match both. Selection by EA type needs a server released after 3.6.4. |
+
+Connector ends, relationship-table rows and columns, and `contained_in` steps can name an element by EA type as `type:<Object_Type>`.
 
 ### Supported condition types
 
@@ -65,9 +67,11 @@ A YAML file with a top-level `rules` list. Each rule has:
 |---|---|
 | `tagged_value_required` | One or more tags on the selected element must be non-empty. |
 | `tagged_value_constraint` | One or more tags must take a value from `value_must_be_one_of`. |
-| `connector_count` | Element must have between `min` and `max` connectors of a given stereotype (`direction: incoming \| outgoing`). |
+| `connector_count` | Element must have between `min` and `max` connectors of a given stereotype, or of a given EA type with `connector_type` (`direction: incoming \| outgoing`). |
 | `connector_endpoint_stereotype` | Connector source/target must be in `source_must_be_one_of` / `target_must_be_one_of`. |
 | `relationship_table` | The connector's source and target, as a pair, must allow its stereotype in a table from the ruleset's top-level `tables:`. A violation names the pair, the table and what the table allows there. Needs a server that supports it (released after 3.6.4); an older server ignores the rule and reports nothing for it. |
+| `contained_in` | The element's containers, outward (the element it is attached to, else its package, then the packages above), must match `path`, one step per level by stereotype, `type:<Object_Type>` or name. Needs a server released after 3.6.4; an older server reports nothing for it. |
+| `contains_count` | The element must hold between `min` and `max` direct children of the `child` kind; a package element's children are what its package holds. Needs a server released after 3.6.4. |
 | `tagged_value_type_shipped` | A profile's tagged-value types (blank-`Type` attributes on stereotype-defining classes, per `ea-mdg-model-build`'s Phase 2 convention) must also appear in a **built MDG file's RefData** — i.e. must actually have been ticked on the MDG Technology Wizard's Tagged Value Types page, not just defined in `t_propertytypes`. Requires `built_mdg_path` (file path or raw XML). |
 
 ### `tagged_value_type_shipped` — catching "defined but never selected"
