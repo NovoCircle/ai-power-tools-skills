@@ -146,6 +146,12 @@ your first rule.
   every connector's source and target pair against it with one rule. An endpoint rule cannot
   tell an allowed pair from two ends that are each allowed elsewhere. Generate the table from
   the language's data and cite its source; see `references/rule-grammar.md`.
+- **Rules by EA type** (`selector.types`, `selector.connector_types`, `type:<Object_Type>` in
+  ends and tables): for elements and connectors that carry no stereotype, as UML's do. Measure
+  EA's type names on a real model; see `references/rule-grammar.md`.
+- **Where-it-sits rules** (`condition.type: contained_in`, `contains_count`): when the standard
+  says what an element must sit in (a cell, a stage, a host element) or what it must hold. The
+  container is the element it is attached to, else its package.
 - **Count rules** (`condition.type: connector_count`): `direction: incoming` means the
   edge ends AT this element (element is the target); `direction: outgoing` means the
   edge starts here (element is the source).

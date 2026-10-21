@@ -75,7 +75,9 @@ meta:
 |-----------------|---------|-----------|
 | `connector_endpoint_stereotype` | Connector source/target stereotype constraints | `source_must_be_one_of`, `target_must_be_one_of` |
 | `relationship_table` | Connector source **and** target, as a pair, against a standard's allowed-relationship table carried in the ruleset | `table`, `skip_endpoints`, `unknown_endpoint` (ignore\|warn\|error); the table lives in the top-level `tables:` |
-| `connector_count` | Element must have N connectors of a given stereotype | `connector_stereotype`, `direction` (incoming\|outgoing), `min`, `max` |
+| `connector_count` | Element must have N connectors of a given stereotype or EA connector type | `connector_stereotype` and/or `connector_type`, `direction` (incoming\|outgoing), `min`, `max` |
+| `contained_in` | Element must sit in the containers the rule lists, outward | `path`: one step per level, each `stereotype_one_of` and/or `name_one_of` |
+| `contains_count` | Element must hold N direct children of a kind | `child` (`stereotype_one_of` and/or `name_one_of`), `min`, `max` |
 | `tagged_value_required` | Element must have non-empty tags | `tags: [{name, must_be_non_empty}]` |
 | `tagged_value_constraint` | Tag must be one of an enum | `tags: [{name, value_must_be_one_of}]` |
 
@@ -179,6 +181,83 @@ rules:
 The connector selector also accepts `connector_stereotypes: [A, B]` (a list) for any connector
 condition.
 
+## Selecting by EA type
+
+A stereotype selector cannot see an element that carries no stereotype, and EA models UML
+that way: a class, a use case or a port is told apart by EA's own type
+(`t_object.Object_Type`), not by a stereotype. A rule can select by EA type, beside or
+instead of stereotypes; given both, an item must match both.
+
+```yaml
+    selector:
+      type: element
+      types: {any_of: [UseCase]}            # t_object.Object_Type
+    selector:
+      type: connector
+      connector_types: [Generalization]     # t_connector.Connector_Type
+```
+
+Anywhere a rule names an element at a connector's end, a table row or column, or a
+container, write an EA type as `type:<Object_Type>`. The prefix keeps a type apart from a
+stereotype of the same name.
+
+```yaml
+    condition:
+      type: connector_endpoint_stereotype
+      source_must_be_one_of: ["type:Actor", "type:UseCase"]
+      target_must_be_one_of: ["type:UseCase"]
+```
+
+In a relationship table, an end uses its stereotype's row when the table has one, otherwise
+its `type:` row. `connector_count` takes `connector_type` beside `connector_stereotype`.
+
+- **Measure the type names.** Read `SELECT DISTINCT Object_Type FROM t_object` (or
+  `Connector_Type FROM t_connector`) on a model built in EA. EA's names are its own
+  (`StateNode`, `ActionPin`, `Sequence`), not always the standard's metaclass names.
+- **Prefer stereotypes where they exist.** Many technologies put one stereotype on several
+  EA types; select by type only for what has no stereotype, or to narrow a stereotype to one
+  of its EA types.
+
+## Writing where-it-sits rules
+
+EA records where every element sits. An element's **container** is the element it is
+attached to, if any (a port's owner, or an element nested under another in the Browser),
+otherwise its package. A package's container is the package above it. So each element has
+one chain of containers, read outward.
+
+`contained_in` checks that chain. `path` has one step per level, innermost first; a step
+names the container by stereotype or `type:` (`stereotype_one_of`), by name (`name_one_of`),
+or both, and must match all it names.
+
+```yaml
+  - id: ZF-CELL-002
+    selector:
+      type: element
+      stereotypes: {any_of: [BusinessEntity]}
+    condition:
+      type: contained_in
+      path:
+        - {stereotype_one_of: [ZFCell], name_one_of: [Semantic Data Model]}   # the cell
+        - {name_one_of: [Owner]}                                              # the row it is in
+```
+
+`contains_count` bounds an element's **direct** children of a kind. A package element's
+children are what its package holds; any other element's children are the elements attached
+to it.
+
+```yaml
+    condition:
+      type: contains_count
+      child: {stereotype_one_of: [TopEvent]}
+      min: 1
+      max: 1
+```
+
+- **Use names only where the standard has nothing else.** Some frameworks identify a
+  container only by its name (a framework row or column); where a stereotype exists, use it.
+- **A missing container fails.** If the chain ends before the path does, the element is
+  reported, with where it actually sits.
+
 ## Writing connector count rules
 
 ```yaml
@@ -192,6 +271,8 @@ condition.
 
 `direction: incoming` = connectors pointing INTO this element (element is the target).
 `direction: outgoing` = connectors pointing OUT of this element (element is the source).
+Use `connector_type: Generalization` instead of, or beside, `connector_stereotype` to count by
+EA connector type.
 
 ## Section comments
 

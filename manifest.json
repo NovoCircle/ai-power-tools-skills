@@ -597,8 +597,8 @@
         "ea-ruleset-author/references/test-cases.md"
       ],
       "sha256": {
-        "ea-ruleset-author/SKILL.md": "c9548f4f9679420868c7f855bfed9926df9b03d55a53c039a5fc5630a678e829",
-        "ea-ruleset-author/references/rule-grammar.md": "e696fc7cc62b82e4657a29a657120c59b1d838595a0a8bad748b9351aed5e4f9",
+        "ea-ruleset-author/SKILL.md": "d943c50f91fb24a4df4ed33749123dda5a6e1e8922c722065c62ac8f2b071756",
+        "ea-ruleset-author/references/rule-grammar.md": "ea6d7c257a3bcb86c790763a2c546c696027cd2a461fb19a70e0c23d4f92acdc",
         "ea-ruleset-author/references/test-cases.md": "2d3fb7b5a61e7b6a749bfd8c92a4263b72b17a3255a600f1cfb3ae9c0580ec05"
       }
     },
@@ -645,7 +645,7 @@
         "ea-validation/references/test-cases.md"
       ],
       "sha256": {
-        "ea-validation/SKILL.md": "98febc93ee59ea9b1128fb9f02c5b389cc608f8dba33932f991f4b3cf8846971",
+        "ea-validation/SKILL.md": "f11e7254561939da689244522cf540cd0ef54927f56731c7a938642cf5b8be23",
         "ea-validation/references/test-cases.md": "f2c219d934921f3d69647d5388d2c4c74f12f38410d626723e3c73d35668aa0d"
       }
     },
