@@ -180,9 +180,9 @@ CURLY = re.compile(r"[\u2018\u2019\u201c\u201d]")
 # 1. An image file. The bundle ships no images at all — skills are text and
 #    the manifest lists only .md/.yaml — so "any image here" is the truer
 #    rule, and the only one that survives a corpus image being renamed on the
-#    way in. The catalog is read when it is reachable, purely to name *which*
-#    corpus image it is; when research/ is absent (a customer or CI checkout
-#    of the bundle alone) the image is still blocked, just described
+#    way in. The catalog is read when it is reachable (see CATALOG_REL), purely
+#    to name *which* corpus image it is; when it is absent (a customer or CI
+#    checkout of the bundle alone) the image is still blocked, just described
 #    generically. Enforcement never depends on the catalog, so a catalog that
 #    rots cannot quietly disarm the rule.
 #
@@ -215,9 +215,18 @@ IMAGE_SUFFIXES = {".png", ".jpg", ".jpeg", ".gif", ".svg"}
 # which loosening the rule is not.
 ALLOWED_IMAGES: set[str] = set()
 
-# Where the corpus index lives, relative to the workspace root. Not required
-# to exist.
-CATALOG_REL = Path("research/sparx-diagram-gallery/catalog-rescored.tsv")
+# Where the corpus index lives. Not required to exist. It is searched in this
+# order, each walked up from the library root (APT-2026-0489):
+#
+# 1. CATALOG_REL: the sibling server checkout, where the catalog is committed
+#    beside the tests that read it. That repository is private; this one is
+#    public, so the catalog is read from there and never copied here (it names
+#    gallery subjects this gate keeps out of the bundle).
+# 2. CATALOG_FALLBACK_REL: the research tree it lived in before it was
+#    committed, which is not under version control.
+CATALOG_REL = Path("ai-power-tools/ea-mcp-server/tests/reference/"
+                   "sample-diagrams/catalog-rescored.tsv")
+CATALOG_FALLBACK_REL = Path("research/sparx-diagram-gallery/catalog-rescored.tsv")
 
 
 def _subject(*words: str) -> re.Pattern:
@@ -418,14 +427,17 @@ def check_skill_frontmatter(target: Path) -> list[str]:
 def _find_catalog() -> Optional[Path]:
     """Locate the corpus catalog by walking up from the library root.
 
-    The skills library sits inside the workspace that also holds research/; a
+    The server checkout's committed copy is looked for first, then the research
+    tree. The skills library sits inside the workspace that holds both; a
     bundle-only checkout has no such parent to find, which is the expected
-    case for a customer and for CI.
+    case for a customer and for CI. Nothing depends on the answer: it only
+    lets a finding name the corpus image it is blocking.
     """
-    for base in (ROOT, *ROOT.parents):
-        candidate = base / CATALOG_REL
-        if candidate.is_file():
-            return candidate
+    for rel in (CATALOG_REL, CATALOG_FALLBACK_REL):
+        for base in (ROOT, *ROOT.parents):
+            candidate = base / rel
+            if candidate.is_file():
+                return candidate
     return None
 
 
