@@ -90,7 +90,7 @@ Required: U, a test module whose module-level `COVERS` names the asset. Tests th
 
 | Unit | Required | U | D | Verdict |
 |---|---|---|---|---|
-| srf:plugin | U D | 2 test modules (100 tests) + 2 CI steps | — | missing D |
+| srf:plugin | U D | 2 test modules (105 tests) + 2 CI steps | — | missing D |
 
 ## Integration cases
 
@@ -2448,7 +2448,7 @@ method of a test class is written `Class.test_name`.
   - `plugins/ai-power-tools/skills/prol-start-here/references/test-cases.md#TC-40`
   - `plugins/ai-power-tools/skills/prol-start-here/references/test-cases.md#TC-41`
   - `plugins/ai-power-tools/skills/prol-start-here/references/test-cases.md#TC-42`
-- `srf:plugin` U (102)
+- `srf:plugin` U (107)
   - `tools/test_gate.py::TestForbiddenIdentifiers.test_a_real_customer_identifier_is_caught`
   - `tools/test_gate.py::TestForbiddenIdentifiers.test_the_sparx_shipped_tea_framework_is_allowed`
   - `tools/test_gate.py::TestForbiddenIdentifiers.test_a_customer_extension_of_tea_framework_is_caught`
@@ -2496,6 +2496,11 @@ method of a test class is written `Class.test_name`.
   - `tools/test_gate.py::TestCorpusImages.test_a_missing_catalog_still_blocks_the_image`
   - `tools/test_gate.py::TestCorpusImages.test_a_text_only_bundle_is_clean`
   - `tools/test_gate.py::TestCorpusImages.test_an_allowlisted_image_passes`
+  - `tools/test_gate.py::TestCatalogLocation.test_a_catalog_in_the_sibling_server_checkout_is_used`
+  - `tools/test_gate.py::TestCatalogLocation.test_a_finding_names_the_image_from_the_committed_catalog`
+  - `tools/test_gate.py::TestCatalogLocation.test_the_server_checkout_wins_over_the_research_tree`
+  - `tools/test_gate.py::TestCatalogLocation.test_the_research_tree_is_still_the_fallback`
+  - `tools/test_gate.py::TestCatalogLocation.test_no_catalog_anywhere_is_none_and_blocks_all_the_same`
   - `tools/test_gate.py::TestGalleryNamesCaught.test_hardware_retailer_in_every_spelling`
   - `tools/test_gate.py::TestGalleryNamesCaught.test_a_gallery_subject_is_caught`
   - `tools/test_gate.py::TestGalleryNamesCaught.test_a_gallery_subject_in_a_fenced_block_is_caught`
