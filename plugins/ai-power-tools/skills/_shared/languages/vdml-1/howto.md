@@ -113,6 +113,7 @@ An example, as an illustration (substitute your own enterprise). Westbrook Bank'
 8. **Creating by script needs the qualified type** (`VDML::Role`, with a host for a port). A name EA does not know is refused with `Invalid type` (measured for 53 concept names of the language file). What an unqualified name does was not measured.
 9. **Do not read the toolbox or the list as complete.** Only the Activity Network toolbox was read; the 24 stereotypes come from the Resources tab.
 10. **Containment is the element's parent.** The validator reads it (since the 2026-10-21 engine): a port must sit in an Activity, Store or Pool, a Store or Pool in an OrgUnit or a Role swim-lane, an offer and a method in an OrgUnit. It cannot compare two containers, so which Collaboration holds an Activity, and whether the Role in whose swim-lane an Activity sits is in that Collaboration, are not checked (section 8).
+11. **EA has no place for `isIntermediate`.** The language skill says to set a port's `isIntermediate` flag explicitly. EA has no tag for it: a new `BoundaryPort` has only `InputOutput` and `withCondition`, and a new Store has no tags (measured on EA 17.1 build 1716, 2026-11-05). So whether a port is intermediate cannot be recorded in EA, and the ruleset has no rule for VDML-FLOW-004 or VDML-FLOW-009, which depend on it.
 
 ## 8. Checking a model
 

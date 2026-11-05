@@ -3267,7 +3267,7 @@ layout:
       channels:
         claimed:
           border: Heat. A thick boundary on a Capability, and on its parents, means at least one CapabilityOffer
-            for it has a heat index at or above the threshold (8.6).
+            for it has a heat index at or above the threshold (8.7).
           border_width: 'Heat, as the border: the thickness is the mark.'
         free:
         - fill
