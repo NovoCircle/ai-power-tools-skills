@@ -8,9 +8,12 @@ display_name: UPDM 2.0
 extends: UML
 stereotype_prefix: UPDM2
 notes: |
-  The other diagram types ea.yaml lists are each bound to the Annex B product it realizes, by its full token. NOT BOUND: UPDM2_AV::AV-3 and UPDM2_Framework::UPDM Framework are EA's own and have no product in the guide. The four Sequence tokens (OV-6c, SOV-4c, SV-10c, SvcV-10c) are stored on a base the UML binding does not hold, so they would inherit nothing, and time fixes their layout. Each token's group is an id of its own and this file names one technology, so a diagram's stored token does not find its entry through the lookup by stored token.
+  The other diagram types ea.yaml lists are each bound to the Annex B product it realizes, by its full token. NOT BOUND: UPDM2_AV::AV-3 and UPDM2_Framework::UPDM Framework are EA's own and have no product in the guide. The four Sequence tokens (OV-6c, SOV-4c, SV-10c, SvcV-10c) are stored on a base the UML binding does not hold, so they would inherit nothing, and time fixes their layout.
+
+  `UPDM2` is the id EA reports, measured on EA 17.1 build 1716.
 diagram_types:
   UPDM2_AcV/PV::AcV-1:
+    token: UPDM2_AcV/PV::AcV-1
     base: Logical
     grammar: graph
     title: frame-header
@@ -18,6 +21,84 @@ diagram_types:
       default:
         w: 100
         h: 70
+      ActualPropertySet:
+        w: 120
+        h: 60
+      Alias:
+        w: 120
+        h: 60
+      ArchitecturalDescription:
+        w: 150
+        h: 90
+      ArchitectureMetadata:
+        w: 120
+        h: 60
+      Definition:
+        w: 120
+        h: 60
+      Information:
+        w: 120
+        h: 60
+      LogicalDataModel:
+        w: 150
+        h: 90
+      Metadata:
+        w: 120
+        h: 60
+      NodePort:
+        w: 15
+        h: 15
+      OperationalConstraint:
+        w: 120
+        h: 60
+      OperationalEventTrace:
+        w: 150
+        h: 90
+      OperationalParameter:
+        w: 15
+        h: 15
+      PhysicalDataModel:
+        w: 150
+        h: 90
+      Request:
+        w: 15
+        h: 15
+      ResourceConstraint:
+        w: 120
+        h: 60
+      ResourceEventTrace:
+        w: 150
+        h: 90
+      ResourcePort:
+        w: 15
+        h: 15
+      Service:
+        w: 15
+        h: 15
+      ServiceDescription:
+        w: 150
+        h: 90
+      ServiceInteraction:
+        w: 150
+        h: 90
+      ServicePolicy:
+        w: 120
+        h: 60
+      StandardConfiguration:
+        w: 120
+        h: 60
+      StereotypeExtension:
+        w: 120
+        h: 60
+      View:
+        w: 150
+        h: 90
+      Viewpoint:
+        w: 150
+        h: 90
+      VisionStatement:
+        w: 120
+        h: 60
     spacing:
       item_gap_x: 80
       item_gap_y: 50
@@ -48,6 +129,7 @@ diagram_types:
       - opacity
       - icon
   UPDM2_AcV/PV::AcV-2:
+    token: UPDM2_AcV/PV::AcV-2
     base: Logical
     grammar: graph
     title: frame-header
@@ -55,6 +137,84 @@ diagram_types:
       default:
         w: 100
         h: 70
+      ActualPropertySet:
+        w: 120
+        h: 60
+      Alias:
+        w: 120
+        h: 60
+      ArchitecturalDescription:
+        w: 150
+        h: 90
+      ArchitectureMetadata:
+        w: 120
+        h: 60
+      Definition:
+        w: 120
+        h: 60
+      Information:
+        w: 120
+        h: 60
+      LogicalDataModel:
+        w: 150
+        h: 90
+      Metadata:
+        w: 120
+        h: 60
+      NodePort:
+        w: 15
+        h: 15
+      OperationalConstraint:
+        w: 120
+        h: 60
+      OperationalEventTrace:
+        w: 150
+        h: 90
+      OperationalParameter:
+        w: 15
+        h: 15
+      PhysicalDataModel:
+        w: 150
+        h: 90
+      Request:
+        w: 15
+        h: 15
+      ResourceConstraint:
+        w: 120
+        h: 60
+      ResourceEventTrace:
+        w: 150
+        h: 90
+      ResourcePort:
+        w: 15
+        h: 15
+      Service:
+        w: 15
+        h: 15
+      ServiceDescription:
+        w: 150
+        h: 90
+      ServiceInteraction:
+        w: 150
+        h: 90
+      ServicePolicy:
+        w: 120
+        h: 60
+      StandardConfiguration:
+        w: 120
+        h: 60
+      StereotypeExtension:
+        w: 120
+        h: 60
+      View:
+        w: 150
+        h: 90
+      Viewpoint:
+        w: 150
+        h: 90
+      VisionStatement:
+        w: 120
+        h: 60
     spacing:
       item_gap_x: 80
       item_gap_y: 50
@@ -85,6 +245,7 @@ diagram_types:
       - opacity
       - icon
   UPDM2_AV::AV-1:
+    token: UPDM2_AV::AV-1
     base: Logical
     grammar: graph
     title: frame-header
@@ -92,6 +253,84 @@ diagram_types:
       default:
         w: 100
         h: 70
+      ActualPropertySet:
+        w: 120
+        h: 60
+      Alias:
+        w: 120
+        h: 60
+      ArchitecturalDescription:
+        w: 150
+        h: 90
+      ArchitectureMetadata:
+        w: 120
+        h: 60
+      Definition:
+        w: 120
+        h: 60
+      Information:
+        w: 120
+        h: 60
+      LogicalDataModel:
+        w: 150
+        h: 90
+      Metadata:
+        w: 120
+        h: 60
+      NodePort:
+        w: 15
+        h: 15
+      OperationalConstraint:
+        w: 120
+        h: 60
+      OperationalEventTrace:
+        w: 150
+        h: 90
+      OperationalParameter:
+        w: 15
+        h: 15
+      PhysicalDataModel:
+        w: 150
+        h: 90
+      Request:
+        w: 15
+        h: 15
+      ResourceConstraint:
+        w: 120
+        h: 60
+      ResourceEventTrace:
+        w: 150
+        h: 90
+      ResourcePort:
+        w: 15
+        h: 15
+      Service:
+        w: 15
+        h: 15
+      ServiceDescription:
+        w: 150
+        h: 90
+      ServiceInteraction:
+        w: 150
+        h: 90
+      ServicePolicy:
+        w: 120
+        h: 60
+      StandardConfiguration:
+        w: 120
+        h: 60
+      StereotypeExtension:
+        w: 120
+        h: 60
+      View:
+        w: 150
+        h: 90
+      Viewpoint:
+        w: 150
+        h: 90
+      VisionStatement:
+        w: 120
+        h: 60
     spacing:
       item_gap_x: 80
       item_gap_y: 50
@@ -122,6 +361,7 @@ diagram_types:
       - opacity
       - icon
   UPDM2_AV::AV-2:
+    token: UPDM2_AV::AV-2
     base: Logical
     grammar: graph
     title: frame-header
@@ -129,6 +369,84 @@ diagram_types:
       default:
         w: 100
         h: 70
+      ActualPropertySet:
+        w: 120
+        h: 60
+      Alias:
+        w: 120
+        h: 60
+      ArchitecturalDescription:
+        w: 150
+        h: 90
+      ArchitectureMetadata:
+        w: 120
+        h: 60
+      Definition:
+        w: 120
+        h: 60
+      Information:
+        w: 120
+        h: 60
+      LogicalDataModel:
+        w: 150
+        h: 90
+      Metadata:
+        w: 120
+        h: 60
+      NodePort:
+        w: 15
+        h: 15
+      OperationalConstraint:
+        w: 120
+        h: 60
+      OperationalEventTrace:
+        w: 150
+        h: 90
+      OperationalParameter:
+        w: 15
+        h: 15
+      PhysicalDataModel:
+        w: 150
+        h: 90
+      Request:
+        w: 15
+        h: 15
+      ResourceConstraint:
+        w: 120
+        h: 60
+      ResourceEventTrace:
+        w: 150
+        h: 90
+      ResourcePort:
+        w: 15
+        h: 15
+      Service:
+        w: 15
+        h: 15
+      ServiceDescription:
+        w: 150
+        h: 90
+      ServiceInteraction:
+        w: 150
+        h: 90
+      ServicePolicy:
+        w: 120
+        h: 60
+      StandardConfiguration:
+        w: 120
+        h: 60
+      StereotypeExtension:
+        w: 120
+        h: 60
+      View:
+        w: 150
+        h: 90
+      Viewpoint:
+        w: 150
+        h: 90
+      VisionStatement:
+        w: 120
+        h: 60
     spacing:
       item_gap_x: 80
       item_gap_y: 50
@@ -159,6 +477,7 @@ diagram_types:
       - opacity
       - icon
   UPDM2_StV/CV::CV-1:
+    token: UPDM2_StV/CV::CV-1
     base: Logical
     grammar: graph
     title: frame-header
@@ -166,6 +485,84 @@ diagram_types:
       default:
         w: 100
         h: 70
+      ActualPropertySet:
+        w: 120
+        h: 60
+      Alias:
+        w: 120
+        h: 60
+      ArchitecturalDescription:
+        w: 150
+        h: 90
+      ArchitectureMetadata:
+        w: 120
+        h: 60
+      Definition:
+        w: 120
+        h: 60
+      Information:
+        w: 120
+        h: 60
+      LogicalDataModel:
+        w: 150
+        h: 90
+      Metadata:
+        w: 120
+        h: 60
+      NodePort:
+        w: 15
+        h: 15
+      OperationalConstraint:
+        w: 120
+        h: 60
+      OperationalEventTrace:
+        w: 150
+        h: 90
+      OperationalParameter:
+        w: 15
+        h: 15
+      PhysicalDataModel:
+        w: 150
+        h: 90
+      Request:
+        w: 15
+        h: 15
+      ResourceConstraint:
+        w: 120
+        h: 60
+      ResourceEventTrace:
+        w: 150
+        h: 90
+      ResourcePort:
+        w: 15
+        h: 15
+      Service:
+        w: 15
+        h: 15
+      ServiceDescription:
+        w: 150
+        h: 90
+      ServiceInteraction:
+        w: 150
+        h: 90
+      ServicePolicy:
+        w: 120
+        h: 60
+      StandardConfiguration:
+        w: 120
+        h: 60
+      StereotypeExtension:
+        w: 120
+        h: 60
+      View:
+        w: 150
+        h: 90
+      Viewpoint:
+        w: 150
+        h: 90
+      VisionStatement:
+        w: 120
+        h: 60
     spacing:
       item_gap_x: 80
       item_gap_y: 50
@@ -196,6 +593,7 @@ diagram_types:
       - opacity
       - icon
   UPDM2_StV/CV::CV-2:
+    token: UPDM2_StV/CV::CV-2
     base: Logical
     grammar: graph
     title: frame-header
@@ -203,6 +601,84 @@ diagram_types:
       default:
         w: 100
         h: 70
+      ActualPropertySet:
+        w: 120
+        h: 60
+      Alias:
+        w: 120
+        h: 60
+      ArchitecturalDescription:
+        w: 150
+        h: 90
+      ArchitectureMetadata:
+        w: 120
+        h: 60
+      Definition:
+        w: 120
+        h: 60
+      Information:
+        w: 120
+        h: 60
+      LogicalDataModel:
+        w: 150
+        h: 90
+      Metadata:
+        w: 120
+        h: 60
+      NodePort:
+        w: 15
+        h: 15
+      OperationalConstraint:
+        w: 120
+        h: 60
+      OperationalEventTrace:
+        w: 150
+        h: 90
+      OperationalParameter:
+        w: 15
+        h: 15
+      PhysicalDataModel:
+        w: 150
+        h: 90
+      Request:
+        w: 15
+        h: 15
+      ResourceConstraint:
+        w: 120
+        h: 60
+      ResourceEventTrace:
+        w: 150
+        h: 90
+      ResourcePort:
+        w: 15
+        h: 15
+      Service:
+        w: 15
+        h: 15
+      ServiceDescription:
+        w: 150
+        h: 90
+      ServiceInteraction:
+        w: 150
+        h: 90
+      ServicePolicy:
+        w: 120
+        h: 60
+      StandardConfiguration:
+        w: 120
+        h: 60
+      StereotypeExtension:
+        w: 120
+        h: 60
+      View:
+        w: 150
+        h: 90
+      Viewpoint:
+        w: 150
+        h: 90
+      VisionStatement:
+        w: 120
+        h: 60
     spacing:
       item_gap_x: 80
       item_gap_y: 50
@@ -233,6 +709,7 @@ diagram_types:
       - opacity
       - icon
   UPDM2_StV/CV::CV-3:
+    token: UPDM2_StV/CV::CV-3
     base: Logical
     grammar: graph
     title: frame-header
@@ -240,6 +717,84 @@ diagram_types:
       default:
         w: 100
         h: 70
+      ActualPropertySet:
+        w: 120
+        h: 60
+      Alias:
+        w: 120
+        h: 60
+      ArchitecturalDescription:
+        w: 150
+        h: 90
+      ArchitectureMetadata:
+        w: 120
+        h: 60
+      Definition:
+        w: 120
+        h: 60
+      Information:
+        w: 120
+        h: 60
+      LogicalDataModel:
+        w: 150
+        h: 90
+      Metadata:
+        w: 120
+        h: 60
+      NodePort:
+        w: 15
+        h: 15
+      OperationalConstraint:
+        w: 120
+        h: 60
+      OperationalEventTrace:
+        w: 150
+        h: 90
+      OperationalParameter:
+        w: 15
+        h: 15
+      PhysicalDataModel:
+        w: 150
+        h: 90
+      Request:
+        w: 15
+        h: 15
+      ResourceConstraint:
+        w: 120
+        h: 60
+      ResourceEventTrace:
+        w: 150
+        h: 90
+      ResourcePort:
+        w: 15
+        h: 15
+      Service:
+        w: 15
+        h: 15
+      ServiceDescription:
+        w: 150
+        h: 90
+      ServiceInteraction:
+        w: 150
+        h: 90
+      ServicePolicy:
+        w: 120
+        h: 60
+      StandardConfiguration:
+        w: 120
+        h: 60
+      StereotypeExtension:
+        w: 120
+        h: 60
+      View:
+        w: 150
+        h: 90
+      Viewpoint:
+        w: 150
+        h: 90
+      VisionStatement:
+        w: 120
+        h: 60
     spacing:
       item_gap_x: 80
       item_gap_y: 50
@@ -270,6 +825,7 @@ diagram_types:
       - opacity
       - icon
   UPDM2_StV/CV::CV-4:
+    token: UPDM2_StV/CV::CV-4
     base: Logical
     grammar: graph
     title: frame-header
@@ -277,6 +833,84 @@ diagram_types:
       default:
         w: 100
         h: 70
+      ActualPropertySet:
+        w: 120
+        h: 60
+      Alias:
+        w: 120
+        h: 60
+      ArchitecturalDescription:
+        w: 150
+        h: 90
+      ArchitectureMetadata:
+        w: 120
+        h: 60
+      Definition:
+        w: 120
+        h: 60
+      Information:
+        w: 120
+        h: 60
+      LogicalDataModel:
+        w: 150
+        h: 90
+      Metadata:
+        w: 120
+        h: 60
+      NodePort:
+        w: 15
+        h: 15
+      OperationalConstraint:
+        w: 120
+        h: 60
+      OperationalEventTrace:
+        w: 150
+        h: 90
+      OperationalParameter:
+        w: 15
+        h: 15
+      PhysicalDataModel:
+        w: 150
+        h: 90
+      Request:
+        w: 15
+        h: 15
+      ResourceConstraint:
+        w: 120
+        h: 60
+      ResourceEventTrace:
+        w: 150
+        h: 90
+      ResourcePort:
+        w: 15
+        h: 15
+      Service:
+        w: 15
+        h: 15
+      ServiceDescription:
+        w: 150
+        h: 90
+      ServiceInteraction:
+        w: 150
+        h: 90
+      ServicePolicy:
+        w: 120
+        h: 60
+      StandardConfiguration:
+        w: 120
+        h: 60
+      StereotypeExtension:
+        w: 120
+        h: 60
+      View:
+        w: 150
+        h: 90
+      Viewpoint:
+        w: 150
+        h: 90
+      VisionStatement:
+        w: 120
+        h: 60
     spacing:
       item_gap_x: 80
       item_gap_y: 50
@@ -307,6 +941,7 @@ diagram_types:
       - opacity
       - icon
   UPDM2_StV/CV::CV-5:
+    token: UPDM2_StV/CV::CV-5
     base: Logical
     grammar: graph
     title: frame-header
@@ -314,6 +949,84 @@ diagram_types:
       default:
         w: 100
         h: 70
+      ActualPropertySet:
+        w: 120
+        h: 60
+      Alias:
+        w: 120
+        h: 60
+      ArchitecturalDescription:
+        w: 150
+        h: 90
+      ArchitectureMetadata:
+        w: 120
+        h: 60
+      Definition:
+        w: 120
+        h: 60
+      Information:
+        w: 120
+        h: 60
+      LogicalDataModel:
+        w: 150
+        h: 90
+      Metadata:
+        w: 120
+        h: 60
+      NodePort:
+        w: 15
+        h: 15
+      OperationalConstraint:
+        w: 120
+        h: 60
+      OperationalEventTrace:
+        w: 150
+        h: 90
+      OperationalParameter:
+        w: 15
+        h: 15
+      PhysicalDataModel:
+        w: 150
+        h: 90
+      Request:
+        w: 15
+        h: 15
+      ResourceConstraint:
+        w: 120
+        h: 60
+      ResourceEventTrace:
+        w: 150
+        h: 90
+      ResourcePort:
+        w: 15
+        h: 15
+      Service:
+        w: 15
+        h: 15
+      ServiceDescription:
+        w: 150
+        h: 90
+      ServiceInteraction:
+        w: 150
+        h: 90
+      ServicePolicy:
+        w: 120
+        h: 60
+      StandardConfiguration:
+        w: 120
+        h: 60
+      StereotypeExtension:
+        w: 120
+        h: 60
+      View:
+        w: 150
+        h: 90
+      Viewpoint:
+        w: 150
+        h: 90
+      VisionStatement:
+        w: 120
+        h: 60
     spacing:
       item_gap_x: 80
       item_gap_y: 50
@@ -344,6 +1057,7 @@ diagram_types:
       - opacity
       - icon
   UPDM2_StV/CV::CV-6:
+    token: UPDM2_StV/CV::CV-6
     base: Logical
     grammar: graph
     title: frame-header
@@ -351,6 +1065,84 @@ diagram_types:
       default:
         w: 100
         h: 70
+      ActualPropertySet:
+        w: 120
+        h: 60
+      Alias:
+        w: 120
+        h: 60
+      ArchitecturalDescription:
+        w: 150
+        h: 90
+      ArchitectureMetadata:
+        w: 120
+        h: 60
+      Definition:
+        w: 120
+        h: 60
+      Information:
+        w: 120
+        h: 60
+      LogicalDataModel:
+        w: 150
+        h: 90
+      Metadata:
+        w: 120
+        h: 60
+      NodePort:
+        w: 15
+        h: 15
+      OperationalConstraint:
+        w: 120
+        h: 60
+      OperationalEventTrace:
+        w: 150
+        h: 90
+      OperationalParameter:
+        w: 15
+        h: 15
+      PhysicalDataModel:
+        w: 150
+        h: 90
+      Request:
+        w: 15
+        h: 15
+      ResourceConstraint:
+        w: 120
+        h: 60
+      ResourceEventTrace:
+        w: 150
+        h: 90
+      ResourcePort:
+        w: 15
+        h: 15
+      Service:
+        w: 15
+        h: 15
+      ServiceDescription:
+        w: 150
+        h: 90
+      ServiceInteraction:
+        w: 150
+        h: 90
+      ServicePolicy:
+        w: 120
+        h: 60
+      StandardConfiguration:
+        w: 120
+        h: 60
+      StereotypeExtension:
+        w: 120
+        h: 60
+      View:
+        w: 150
+        h: 90
+      Viewpoint:
+        w: 150
+        h: 90
+      VisionStatement:
+        w: 120
+        h: 60
     spacing:
       item_gap_x: 80
       item_gap_y: 50
@@ -381,6 +1173,7 @@ diagram_types:
       - opacity
       - icon
   UPDM2_StV/CV::CV-7:
+    token: UPDM2_StV/CV::CV-7
     base: Logical
     grammar: graph
     title: frame-header
@@ -388,6 +1181,84 @@ diagram_types:
       default:
         w: 100
         h: 70
+      ActualPropertySet:
+        w: 120
+        h: 60
+      Alias:
+        w: 120
+        h: 60
+      ArchitecturalDescription:
+        w: 150
+        h: 90
+      ArchitectureMetadata:
+        w: 120
+        h: 60
+      Definition:
+        w: 120
+        h: 60
+      Information:
+        w: 120
+        h: 60
+      LogicalDataModel:
+        w: 150
+        h: 90
+      Metadata:
+        w: 120
+        h: 60
+      NodePort:
+        w: 15
+        h: 15
+      OperationalConstraint:
+        w: 120
+        h: 60
+      OperationalEventTrace:
+        w: 150
+        h: 90
+      OperationalParameter:
+        w: 15
+        h: 15
+      PhysicalDataModel:
+        w: 150
+        h: 90
+      Request:
+        w: 15
+        h: 15
+      ResourceConstraint:
+        w: 120
+        h: 60
+      ResourceEventTrace:
+        w: 150
+        h: 90
+      ResourcePort:
+        w: 15
+        h: 15
+      Service:
+        w: 15
+        h: 15
+      ServiceDescription:
+        w: 150
+        h: 90
+      ServiceInteraction:
+        w: 150
+        h: 90
+      ServicePolicy:
+        w: 120
+        h: 60
+      StandardConfiguration:
+        w: 120
+        h: 60
+      StereotypeExtension:
+        w: 120
+        h: 60
+      View:
+        w: 150
+        h: 90
+      Viewpoint:
+        w: 150
+        h: 90
+      VisionStatement:
+        w: 120
+        h: 60
     spacing:
       item_gap_x: 80
       item_gap_y: 50
@@ -418,6 +1289,7 @@ diagram_types:
       - opacity
       - icon
   UPDM2_OV::DIV-1:
+    token: UPDM2_OV::DIV-1
     base: Logical
     grammar: graph
     title: frame-header
@@ -425,6 +1297,84 @@ diagram_types:
       default:
         w: 100
         h: 70
+      ActualPropertySet:
+        w: 120
+        h: 60
+      Alias:
+        w: 120
+        h: 60
+      ArchitecturalDescription:
+        w: 150
+        h: 90
+      ArchitectureMetadata:
+        w: 120
+        h: 60
+      Definition:
+        w: 120
+        h: 60
+      Information:
+        w: 120
+        h: 60
+      LogicalDataModel:
+        w: 150
+        h: 90
+      Metadata:
+        w: 120
+        h: 60
+      NodePort:
+        w: 15
+        h: 15
+      OperationalConstraint:
+        w: 120
+        h: 60
+      OperationalEventTrace:
+        w: 150
+        h: 90
+      OperationalParameter:
+        w: 15
+        h: 15
+      PhysicalDataModel:
+        w: 150
+        h: 90
+      Request:
+        w: 15
+        h: 15
+      ResourceConstraint:
+        w: 120
+        h: 60
+      ResourceEventTrace:
+        w: 150
+        h: 90
+      ResourcePort:
+        w: 15
+        h: 15
+      Service:
+        w: 15
+        h: 15
+      ServiceDescription:
+        w: 150
+        h: 90
+      ServiceInteraction:
+        w: 150
+        h: 90
+      ServicePolicy:
+        w: 120
+        h: 60
+      StandardConfiguration:
+        w: 120
+        h: 60
+      StereotypeExtension:
+        w: 120
+        h: 60
+      View:
+        w: 150
+        h: 90
+      Viewpoint:
+        w: 150
+        h: 90
+      VisionStatement:
+        w: 120
+        h: 60
     spacing:
       item_gap_x: 80
       item_gap_y: 50
@@ -455,6 +1405,7 @@ diagram_types:
       - opacity
       - icon
   UPDM2_OV::DIV-2:
+    token: UPDM2_OV::DIV-2
     base: Logical
     grammar: graph
     title: frame-header
@@ -462,6 +1413,84 @@ diagram_types:
       default:
         w: 100
         h: 70
+      ActualPropertySet:
+        w: 120
+        h: 60
+      Alias:
+        w: 120
+        h: 60
+      ArchitecturalDescription:
+        w: 150
+        h: 90
+      ArchitectureMetadata:
+        w: 120
+        h: 60
+      Definition:
+        w: 120
+        h: 60
+      Information:
+        w: 120
+        h: 60
+      LogicalDataModel:
+        w: 150
+        h: 90
+      Metadata:
+        w: 120
+        h: 60
+      NodePort:
+        w: 15
+        h: 15
+      OperationalConstraint:
+        w: 120
+        h: 60
+      OperationalEventTrace:
+        w: 150
+        h: 90
+      OperationalParameter:
+        w: 15
+        h: 15
+      PhysicalDataModel:
+        w: 150
+        h: 90
+      Request:
+        w: 15
+        h: 15
+      ResourceConstraint:
+        w: 120
+        h: 60
+      ResourceEventTrace:
+        w: 150
+        h: 90
+      ResourcePort:
+        w: 15
+        h: 15
+      Service:
+        w: 15
+        h: 15
+      ServiceDescription:
+        w: 150
+        h: 90
+      ServiceInteraction:
+        w: 150
+        h: 90
+      ServicePolicy:
+        w: 120
+        h: 60
+      StandardConfiguration:
+        w: 120
+        h: 60
+      StereotypeExtension:
+        w: 120
+        h: 60
+      View:
+        w: 150
+        h: 90
+      Viewpoint:
+        w: 150
+        h: 90
+      VisionStatement:
+        w: 120
+        h: 60
     spacing:
       item_gap_x: 80
       item_gap_y: 50
@@ -492,6 +1521,7 @@ diagram_types:
       - opacity
       - icon
   UPDM2_SV/SvcV::DIV-3:
+    token: UPDM2_SV/SvcV::DIV-3
     base: Logical
     grammar: graph
     title: frame-header
@@ -499,6 +1529,84 @@ diagram_types:
       default:
         w: 100
         h: 70
+      ActualPropertySet:
+        w: 120
+        h: 60
+      Alias:
+        w: 120
+        h: 60
+      ArchitecturalDescription:
+        w: 150
+        h: 90
+      ArchitectureMetadata:
+        w: 120
+        h: 60
+      Definition:
+        w: 120
+        h: 60
+      Information:
+        w: 120
+        h: 60
+      LogicalDataModel:
+        w: 150
+        h: 90
+      Metadata:
+        w: 120
+        h: 60
+      NodePort:
+        w: 15
+        h: 15
+      OperationalConstraint:
+        w: 120
+        h: 60
+      OperationalEventTrace:
+        w: 150
+        h: 90
+      OperationalParameter:
+        w: 15
+        h: 15
+      PhysicalDataModel:
+        w: 150
+        h: 90
+      Request:
+        w: 15
+        h: 15
+      ResourceConstraint:
+        w: 120
+        h: 60
+      ResourceEventTrace:
+        w: 150
+        h: 90
+      ResourcePort:
+        w: 15
+        h: 15
+      Service:
+        w: 15
+        h: 15
+      ServiceDescription:
+        w: 150
+        h: 90
+      ServiceInteraction:
+        w: 150
+        h: 90
+      ServicePolicy:
+        w: 120
+        h: 60
+      StandardConfiguration:
+        w: 120
+        h: 60
+      StereotypeExtension:
+        w: 120
+        h: 60
+      View:
+        w: 150
+        h: 90
+      Viewpoint:
+        w: 150
+        h: 90
+      VisionStatement:
+        w: 120
+        h: 60
     spacing:
       item_gap_x: 80
       item_gap_y: 50
@@ -529,6 +1637,7 @@ diagram_types:
       - opacity
       - icon
   UPDM2_OV::OV-1:
+    token: UPDM2_OV::OV-1
     base: Logical
     grammar: graph
     title: frame-header
@@ -536,6 +1645,84 @@ diagram_types:
       default:
         w: 100
         h: 70
+      ActualPropertySet:
+        w: 120
+        h: 60
+      Alias:
+        w: 120
+        h: 60
+      ArchitecturalDescription:
+        w: 150
+        h: 90
+      ArchitectureMetadata:
+        w: 120
+        h: 60
+      Definition:
+        w: 120
+        h: 60
+      Information:
+        w: 120
+        h: 60
+      LogicalDataModel:
+        w: 150
+        h: 90
+      Metadata:
+        w: 120
+        h: 60
+      NodePort:
+        w: 15
+        h: 15
+      OperationalConstraint:
+        w: 120
+        h: 60
+      OperationalEventTrace:
+        w: 150
+        h: 90
+      OperationalParameter:
+        w: 15
+        h: 15
+      PhysicalDataModel:
+        w: 150
+        h: 90
+      Request:
+        w: 15
+        h: 15
+      ResourceConstraint:
+        w: 120
+        h: 60
+      ResourceEventTrace:
+        w: 150
+        h: 90
+      ResourcePort:
+        w: 15
+        h: 15
+      Service:
+        w: 15
+        h: 15
+      ServiceDescription:
+        w: 150
+        h: 90
+      ServiceInteraction:
+        w: 150
+        h: 90
+      ServicePolicy:
+        w: 120
+        h: 60
+      StandardConfiguration:
+        w: 120
+        h: 60
+      StereotypeExtension:
+        w: 120
+        h: 60
+      View:
+        w: 150
+        h: 90
+      Viewpoint:
+        w: 150
+        h: 90
+      VisionStatement:
+        w: 120
+        h: 60
     spacing:
       item_gap_x: 80
       item_gap_y: 50
@@ -566,6 +1753,7 @@ diagram_types:
       - opacity
       - icon
   UPDM2_OV::OV-2:
+    token: UPDM2_OV::OV-2
     base: Logical
     grammar: graph
     title: frame-header
@@ -573,6 +1761,84 @@ diagram_types:
       default:
         w: 100
         h: 70
+      ActualPropertySet:
+        w: 120
+        h: 60
+      Alias:
+        w: 120
+        h: 60
+      ArchitecturalDescription:
+        w: 150
+        h: 90
+      ArchitectureMetadata:
+        w: 120
+        h: 60
+      Definition:
+        w: 120
+        h: 60
+      Information:
+        w: 120
+        h: 60
+      LogicalDataModel:
+        w: 150
+        h: 90
+      Metadata:
+        w: 120
+        h: 60
+      NodePort:
+        w: 15
+        h: 15
+      OperationalConstraint:
+        w: 120
+        h: 60
+      OperationalEventTrace:
+        w: 150
+        h: 90
+      OperationalParameter:
+        w: 15
+        h: 15
+      PhysicalDataModel:
+        w: 150
+        h: 90
+      Request:
+        w: 15
+        h: 15
+      ResourceConstraint:
+        w: 120
+        h: 60
+      ResourceEventTrace:
+        w: 150
+        h: 90
+      ResourcePort:
+        w: 15
+        h: 15
+      Service:
+        w: 15
+        h: 15
+      ServiceDescription:
+        w: 150
+        h: 90
+      ServiceInteraction:
+        w: 150
+        h: 90
+      ServicePolicy:
+        w: 120
+        h: 60
+      StandardConfiguration:
+        w: 120
+        h: 60
+      StereotypeExtension:
+        w: 120
+        h: 60
+      View:
+        w: 150
+        h: 90
+      Viewpoint:
+        w: 150
+        h: 90
+      VisionStatement:
+        w: 120
+        h: 60
     spacing:
       item_gap_x: 80
       item_gap_y: 50
@@ -603,6 +1869,7 @@ diagram_types:
       - opacity
       - icon
   UPDM2_OV::OV-3:
+    token: UPDM2_OV::OV-3
     base: Logical
     grammar: matrix
     title: frame-header
@@ -610,6 +1877,84 @@ diagram_types:
       default:
         w: 100
         h: 70
+      ActualPropertySet:
+        w: 120
+        h: 60
+      Alias:
+        w: 120
+        h: 60
+      ArchitecturalDescription:
+        w: 150
+        h: 90
+      ArchitectureMetadata:
+        w: 120
+        h: 60
+      Definition:
+        w: 120
+        h: 60
+      Information:
+        w: 120
+        h: 60
+      LogicalDataModel:
+        w: 150
+        h: 90
+      Metadata:
+        w: 120
+        h: 60
+      NodePort:
+        w: 15
+        h: 15
+      OperationalConstraint:
+        w: 120
+        h: 60
+      OperationalEventTrace:
+        w: 150
+        h: 90
+      OperationalParameter:
+        w: 15
+        h: 15
+      PhysicalDataModel:
+        w: 150
+        h: 90
+      Request:
+        w: 15
+        h: 15
+      ResourceConstraint:
+        w: 120
+        h: 60
+      ResourceEventTrace:
+        w: 150
+        h: 90
+      ResourcePort:
+        w: 15
+        h: 15
+      Service:
+        w: 15
+        h: 15
+      ServiceDescription:
+        w: 150
+        h: 90
+      ServiceInteraction:
+        w: 150
+        h: 90
+      ServicePolicy:
+        w: 120
+        h: 60
+      StandardConfiguration:
+        w: 120
+        h: 60
+      StereotypeExtension:
+        w: 120
+        h: 60
+      View:
+        w: 150
+        h: 90
+      Viewpoint:
+        w: 150
+        h: 90
+      VisionStatement:
+        w: 120
+        h: 60
     spacing:
       item_gap_x: 80
       item_gap_y: 50
@@ -639,6 +1984,7 @@ diagram_types:
       - opacity
       - icon
   UPDM2_OV::OV-4 Actual:
+    token: UPDM2_OV::OV-4 Actual
     base: Object
     grammar: graph
     title: frame-header
@@ -646,6 +1992,84 @@ diagram_types:
       default:
         w: 100
         h: 70
+      ActualPropertySet:
+        w: 120
+        h: 60
+      Alias:
+        w: 120
+        h: 60
+      ArchitecturalDescription:
+        w: 150
+        h: 90
+      ArchitectureMetadata:
+        w: 120
+        h: 60
+      Definition:
+        w: 120
+        h: 60
+      Information:
+        w: 120
+        h: 60
+      LogicalDataModel:
+        w: 150
+        h: 90
+      Metadata:
+        w: 120
+        h: 60
+      NodePort:
+        w: 15
+        h: 15
+      OperationalConstraint:
+        w: 120
+        h: 60
+      OperationalEventTrace:
+        w: 150
+        h: 90
+      OperationalParameter:
+        w: 15
+        h: 15
+      PhysicalDataModel:
+        w: 150
+        h: 90
+      Request:
+        w: 15
+        h: 15
+      ResourceConstraint:
+        w: 120
+        h: 60
+      ResourceEventTrace:
+        w: 150
+        h: 90
+      ResourcePort:
+        w: 15
+        h: 15
+      Service:
+        w: 15
+        h: 15
+      ServiceDescription:
+        w: 150
+        h: 90
+      ServiceInteraction:
+        w: 150
+        h: 90
+      ServicePolicy:
+        w: 120
+        h: 60
+      StandardConfiguration:
+        w: 120
+        h: 60
+      StereotypeExtension:
+        w: 120
+        h: 60
+      View:
+        w: 150
+        h: 90
+      Viewpoint:
+        w: 150
+        h: 90
+      VisionStatement:
+        w: 120
+        h: 60
     spacing:
       item_gap_x: 80
       item_gap_y: 50
@@ -676,6 +2100,7 @@ diagram_types:
       - opacity
       - icon
   UPDM2_OV::OV-4 Typical:
+    token: UPDM2_OV::OV-4 Typical
     base: Logical
     grammar: graph
     title: frame-header
@@ -683,6 +2108,84 @@ diagram_types:
       default:
         w: 100
         h: 70
+      ActualPropertySet:
+        w: 120
+        h: 60
+      Alias:
+        w: 120
+        h: 60
+      ArchitecturalDescription:
+        w: 150
+        h: 90
+      ArchitectureMetadata:
+        w: 120
+        h: 60
+      Definition:
+        w: 120
+        h: 60
+      Information:
+        w: 120
+        h: 60
+      LogicalDataModel:
+        w: 150
+        h: 90
+      Metadata:
+        w: 120
+        h: 60
+      NodePort:
+        w: 15
+        h: 15
+      OperationalConstraint:
+        w: 120
+        h: 60
+      OperationalEventTrace:
+        w: 150
+        h: 90
+      OperationalParameter:
+        w: 15
+        h: 15
+      PhysicalDataModel:
+        w: 150
+        h: 90
+      Request:
+        w: 15
+        h: 15
+      ResourceConstraint:
+        w: 120
+        h: 60
+      ResourceEventTrace:
+        w: 150
+        h: 90
+      ResourcePort:
+        w: 15
+        h: 15
+      Service:
+        w: 15
+        h: 15
+      ServiceDescription:
+        w: 150
+        h: 90
+      ServiceInteraction:
+        w: 150
+        h: 90
+      ServicePolicy:
+        w: 120
+        h: 60
+      StandardConfiguration:
+        w: 120
+        h: 60
+      StereotypeExtension:
+        w: 120
+        h: 60
+      View:
+        w: 150
+        h: 90
+      Viewpoint:
+        w: 150
+        h: 90
+      VisionStatement:
+        w: 120
+        h: 60
     spacing:
       item_gap_x: 80
       item_gap_y: 50
@@ -713,6 +2216,7 @@ diagram_types:
       - opacity
       - icon
   UPDM2_OV::OV-5:
+    token: UPDM2_OV::OV-5
     base: Activity
     grammar: graph
     title: frame-header
@@ -720,6 +2224,84 @@ diagram_types:
       default:
         w: 100
         h: 70
+      ActualPropertySet:
+        w: 120
+        h: 60
+      Alias:
+        w: 120
+        h: 60
+      ArchitecturalDescription:
+        w: 150
+        h: 90
+      ArchitectureMetadata:
+        w: 120
+        h: 60
+      Definition:
+        w: 120
+        h: 60
+      Information:
+        w: 120
+        h: 60
+      LogicalDataModel:
+        w: 150
+        h: 90
+      Metadata:
+        w: 120
+        h: 60
+      NodePort:
+        w: 15
+        h: 15
+      OperationalConstraint:
+        w: 120
+        h: 60
+      OperationalEventTrace:
+        w: 150
+        h: 90
+      OperationalParameter:
+        w: 15
+        h: 15
+      PhysicalDataModel:
+        w: 150
+        h: 90
+      Request:
+        w: 15
+        h: 15
+      ResourceConstraint:
+        w: 120
+        h: 60
+      ResourceEventTrace:
+        w: 150
+        h: 90
+      ResourcePort:
+        w: 15
+        h: 15
+      Service:
+        w: 15
+        h: 15
+      ServiceDescription:
+        w: 150
+        h: 90
+      ServiceInteraction:
+        w: 150
+        h: 90
+      ServicePolicy:
+        w: 120
+        h: 60
+      StandardConfiguration:
+        w: 120
+        h: 60
+      StereotypeExtension:
+        w: 120
+        h: 60
+      View:
+        w: 150
+        h: 90
+      Viewpoint:
+        w: 150
+        h: 90
+      VisionStatement:
+        w: 120
+        h: 60
     spacing:
       item_gap_x: 80
       item_gap_y: 50
@@ -750,6 +2332,7 @@ diagram_types:
       - opacity
       - icon
   UPDM2_OV::OV-6a:
+    token: UPDM2_OV::OV-6a
     base: Activity
     grammar: graph
     title: frame-header
@@ -757,6 +2340,84 @@ diagram_types:
       default:
         w: 100
         h: 70
+      ActualPropertySet:
+        w: 120
+        h: 60
+      Alias:
+        w: 120
+        h: 60
+      ArchitecturalDescription:
+        w: 150
+        h: 90
+      ArchitectureMetadata:
+        w: 120
+        h: 60
+      Definition:
+        w: 120
+        h: 60
+      Information:
+        w: 120
+        h: 60
+      LogicalDataModel:
+        w: 150
+        h: 90
+      Metadata:
+        w: 120
+        h: 60
+      NodePort:
+        w: 15
+        h: 15
+      OperationalConstraint:
+        w: 120
+        h: 60
+      OperationalEventTrace:
+        w: 150
+        h: 90
+      OperationalParameter:
+        w: 15
+        h: 15
+      PhysicalDataModel:
+        w: 150
+        h: 90
+      Request:
+        w: 15
+        h: 15
+      ResourceConstraint:
+        w: 120
+        h: 60
+      ResourceEventTrace:
+        w: 150
+        h: 90
+      ResourcePort:
+        w: 15
+        h: 15
+      Service:
+        w: 15
+        h: 15
+      ServiceDescription:
+        w: 150
+        h: 90
+      ServiceInteraction:
+        w: 150
+        h: 90
+      ServicePolicy:
+        w: 120
+        h: 60
+      StandardConfiguration:
+        w: 120
+        h: 60
+      StereotypeExtension:
+        w: 120
+        h: 60
+      View:
+        w: 150
+        h: 90
+      Viewpoint:
+        w: 150
+        h: 90
+      VisionStatement:
+        w: 120
+        h: 60
     spacing:
       item_gap_x: 80
       item_gap_y: 50
@@ -787,6 +2448,7 @@ diagram_types:
       - opacity
       - icon
   UPDM2_OV::OV-6b:
+    token: UPDM2_OV::OV-6b
     base: Statechart
     grammar: ea-semantic
     title: frame-header
@@ -794,6 +2456,84 @@ diagram_types:
       default:
         w: 100
         h: 70
+      ActualPropertySet:
+        w: 120
+        h: 60
+      Alias:
+        w: 120
+        h: 60
+      ArchitecturalDescription:
+        w: 150
+        h: 90
+      ArchitectureMetadata:
+        w: 120
+        h: 60
+      Definition:
+        w: 120
+        h: 60
+      Information:
+        w: 120
+        h: 60
+      LogicalDataModel:
+        w: 150
+        h: 90
+      Metadata:
+        w: 120
+        h: 60
+      NodePort:
+        w: 15
+        h: 15
+      OperationalConstraint:
+        w: 120
+        h: 60
+      OperationalEventTrace:
+        w: 150
+        h: 90
+      OperationalParameter:
+        w: 15
+        h: 15
+      PhysicalDataModel:
+        w: 150
+        h: 90
+      Request:
+        w: 15
+        h: 15
+      ResourceConstraint:
+        w: 120
+        h: 60
+      ResourceEventTrace:
+        w: 150
+        h: 90
+      ResourcePort:
+        w: 15
+        h: 15
+      Service:
+        w: 15
+        h: 15
+      ServiceDescription:
+        w: 150
+        h: 90
+      ServiceInteraction:
+        w: 150
+        h: 90
+      ServicePolicy:
+        w: 120
+        h: 60
+      StandardConfiguration:
+        w: 120
+        h: 60
+      StereotypeExtension:
+        w: 120
+        h: 60
+      View:
+        w: 150
+        h: 90
+      Viewpoint:
+        w: 150
+        h: 90
+      VisionStatement:
+        w: 120
+        h: 60
     spacing:
       item_gap_x: 80
       item_gap_y: 50
@@ -825,6 +2565,7 @@ diagram_types:
       - opacity
       - icon
   UPDM2_AcV/PV::PV-1:
+    token: UPDM2_AcV/PV::PV-1
     base: Logical
     grammar: graph
     title: frame-header
@@ -832,6 +2573,84 @@ diagram_types:
       default:
         w: 100
         h: 70
+      ActualPropertySet:
+        w: 120
+        h: 60
+      Alias:
+        w: 120
+        h: 60
+      ArchitecturalDescription:
+        w: 150
+        h: 90
+      ArchitectureMetadata:
+        w: 120
+        h: 60
+      Definition:
+        w: 120
+        h: 60
+      Information:
+        w: 120
+        h: 60
+      LogicalDataModel:
+        w: 150
+        h: 90
+      Metadata:
+        w: 120
+        h: 60
+      NodePort:
+        w: 15
+        h: 15
+      OperationalConstraint:
+        w: 120
+        h: 60
+      OperationalEventTrace:
+        w: 150
+        h: 90
+      OperationalParameter:
+        w: 15
+        h: 15
+      PhysicalDataModel:
+        w: 150
+        h: 90
+      Request:
+        w: 15
+        h: 15
+      ResourceConstraint:
+        w: 120
+        h: 60
+      ResourceEventTrace:
+        w: 150
+        h: 90
+      ResourcePort:
+        w: 15
+        h: 15
+      Service:
+        w: 15
+        h: 15
+      ServiceDescription:
+        w: 150
+        h: 90
+      ServiceInteraction:
+        w: 150
+        h: 90
+      ServicePolicy:
+        w: 120
+        h: 60
+      StandardConfiguration:
+        w: 120
+        h: 60
+      StereotypeExtension:
+        w: 120
+        h: 60
+      View:
+        w: 150
+        h: 90
+      Viewpoint:
+        w: 150
+        h: 90
+      VisionStatement:
+        w: 120
+        h: 60
     spacing:
       item_gap_x: 80
       item_gap_y: 50
@@ -862,6 +2681,7 @@ diagram_types:
       - opacity
       - icon
   UPDM2_AcV/PV::PV-2:
+    token: UPDM2_AcV/PV::PV-2
     base: Logical
     grammar: graph
     title: frame-header
@@ -869,6 +2689,84 @@ diagram_types:
       default:
         w: 100
         h: 70
+      ActualPropertySet:
+        w: 120
+        h: 60
+      Alias:
+        w: 120
+        h: 60
+      ArchitecturalDescription:
+        w: 150
+        h: 90
+      ArchitectureMetadata:
+        w: 120
+        h: 60
+      Definition:
+        w: 120
+        h: 60
+      Information:
+        w: 120
+        h: 60
+      LogicalDataModel:
+        w: 150
+        h: 90
+      Metadata:
+        w: 120
+        h: 60
+      NodePort:
+        w: 15
+        h: 15
+      OperationalConstraint:
+        w: 120
+        h: 60
+      OperationalEventTrace:
+        w: 150
+        h: 90
+      OperationalParameter:
+        w: 15
+        h: 15
+      PhysicalDataModel:
+        w: 150
+        h: 90
+      Request:
+        w: 15
+        h: 15
+      ResourceConstraint:
+        w: 120
+        h: 60
+      ResourceEventTrace:
+        w: 150
+        h: 90
+      ResourcePort:
+        w: 15
+        h: 15
+      Service:
+        w: 15
+        h: 15
+      ServiceDescription:
+        w: 150
+        h: 90
+      ServiceInteraction:
+        w: 150
+        h: 90
+      ServicePolicy:
+        w: 120
+        h: 60
+      StandardConfiguration:
+        w: 120
+        h: 60
+      StereotypeExtension:
+        w: 120
+        h: 60
+      View:
+        w: 150
+        h: 90
+      Viewpoint:
+        w: 150
+        h: 90
+      VisionStatement:
+        w: 120
+        h: 60
     spacing:
       item_gap_x: 80
       item_gap_y: 50
@@ -899,6 +2797,7 @@ diagram_types:
       - opacity
       - icon
   UPDM2_AcV/PV::PV-3:
+    token: UPDM2_AcV/PV::PV-3
     base: Logical
     grammar: graph
     title: frame-header
@@ -906,6 +2805,84 @@ diagram_types:
       default:
         w: 100
         h: 70
+      ActualPropertySet:
+        w: 120
+        h: 60
+      Alias:
+        w: 120
+        h: 60
+      ArchitecturalDescription:
+        w: 150
+        h: 90
+      ArchitectureMetadata:
+        w: 120
+        h: 60
+      Definition:
+        w: 120
+        h: 60
+      Information:
+        w: 120
+        h: 60
+      LogicalDataModel:
+        w: 150
+        h: 90
+      Metadata:
+        w: 120
+        h: 60
+      NodePort:
+        w: 15
+        h: 15
+      OperationalConstraint:
+        w: 120
+        h: 60
+      OperationalEventTrace:
+        w: 150
+        h: 90
+      OperationalParameter:
+        w: 15
+        h: 15
+      PhysicalDataModel:
+        w: 150
+        h: 90
+      Request:
+        w: 15
+        h: 15
+      ResourceConstraint:
+        w: 120
+        h: 60
+      ResourceEventTrace:
+        w: 150
+        h: 90
+      ResourcePort:
+        w: 15
+        h: 15
+      Service:
+        w: 15
+        h: 15
+      ServiceDescription:
+        w: 150
+        h: 90
+      ServiceInteraction:
+        w: 150
+        h: 90
+      ServicePolicy:
+        w: 120
+        h: 60
+      StandardConfiguration:
+        w: 120
+        h: 60
+      StereotypeExtension:
+        w: 120
+        h: 60
+      View:
+        w: 150
+        h: 90
+      Viewpoint:
+        w: 150
+        h: 90
+      VisionStatement:
+        w: 120
+        h: 60
     spacing:
       item_gap_x: 80
       item_gap_y: 50
@@ -936,6 +2913,7 @@ diagram_types:
       - opacity
       - icon
   UPDM2_SV/SvcV::SV-1:
+    token: UPDM2_SV/SvcV::SV-1
     base: Logical
     grammar: graph
     title: frame-header
@@ -943,6 +2921,84 @@ diagram_types:
       default:
         w: 100
         h: 70
+      ActualPropertySet:
+        w: 120
+        h: 60
+      Alias:
+        w: 120
+        h: 60
+      ArchitecturalDescription:
+        w: 150
+        h: 90
+      ArchitectureMetadata:
+        w: 120
+        h: 60
+      Definition:
+        w: 120
+        h: 60
+      Information:
+        w: 120
+        h: 60
+      LogicalDataModel:
+        w: 150
+        h: 90
+      Metadata:
+        w: 120
+        h: 60
+      NodePort:
+        w: 15
+        h: 15
+      OperationalConstraint:
+        w: 120
+        h: 60
+      OperationalEventTrace:
+        w: 150
+        h: 90
+      OperationalParameter:
+        w: 15
+        h: 15
+      PhysicalDataModel:
+        w: 150
+        h: 90
+      Request:
+        w: 15
+        h: 15
+      ResourceConstraint:
+        w: 120
+        h: 60
+      ResourceEventTrace:
+        w: 150
+        h: 90
+      ResourcePort:
+        w: 15
+        h: 15
+      Service:
+        w: 15
+        h: 15
+      ServiceDescription:
+        w: 150
+        h: 90
+      ServiceInteraction:
+        w: 150
+        h: 90
+      ServicePolicy:
+        w: 120
+        h: 60
+      StandardConfiguration:
+        w: 120
+        h: 60
+      StereotypeExtension:
+        w: 120
+        h: 60
+      View:
+        w: 150
+        h: 90
+      Viewpoint:
+        w: 150
+        h: 90
+      VisionStatement:
+        w: 120
+        h: 60
     spacing:
       item_gap_x: 80
       item_gap_y: 50
@@ -973,6 +3029,7 @@ diagram_types:
       - opacity
       - icon
   UPDM2_SV/SvcV::SV-2:
+    token: UPDM2_SV/SvcV::SV-2
     base: Logical
     grammar: graph
     title: frame-header
@@ -980,6 +3037,84 @@ diagram_types:
       default:
         w: 100
         h: 70
+      ActualPropertySet:
+        w: 120
+        h: 60
+      Alias:
+        w: 120
+        h: 60
+      ArchitecturalDescription:
+        w: 150
+        h: 90
+      ArchitectureMetadata:
+        w: 120
+        h: 60
+      Definition:
+        w: 120
+        h: 60
+      Information:
+        w: 120
+        h: 60
+      LogicalDataModel:
+        w: 150
+        h: 90
+      Metadata:
+        w: 120
+        h: 60
+      NodePort:
+        w: 15
+        h: 15
+      OperationalConstraint:
+        w: 120
+        h: 60
+      OperationalEventTrace:
+        w: 150
+        h: 90
+      OperationalParameter:
+        w: 15
+        h: 15
+      PhysicalDataModel:
+        w: 150
+        h: 90
+      Request:
+        w: 15
+        h: 15
+      ResourceConstraint:
+        w: 120
+        h: 60
+      ResourceEventTrace:
+        w: 150
+        h: 90
+      ResourcePort:
+        w: 15
+        h: 15
+      Service:
+        w: 15
+        h: 15
+      ServiceDescription:
+        w: 150
+        h: 90
+      ServiceInteraction:
+        w: 150
+        h: 90
+      ServicePolicy:
+        w: 120
+        h: 60
+      StandardConfiguration:
+        w: 120
+        h: 60
+      StereotypeExtension:
+        w: 120
+        h: 60
+      View:
+        w: 150
+        h: 90
+      Viewpoint:
+        w: 150
+        h: 90
+      VisionStatement:
+        w: 120
+        h: 60
     spacing:
       item_gap_x: 80
       item_gap_y: 50
@@ -1010,6 +3145,7 @@ diagram_types:
       - opacity
       - icon
   UPDM2_SV/SvcV::SV-3:
+    token: UPDM2_SV/SvcV::SV-3
     base: Logical
     grammar: matrix
     title: frame-header
@@ -1017,6 +3153,84 @@ diagram_types:
       default:
         w: 100
         h: 70
+      ActualPropertySet:
+        w: 120
+        h: 60
+      Alias:
+        w: 120
+        h: 60
+      ArchitecturalDescription:
+        w: 150
+        h: 90
+      ArchitectureMetadata:
+        w: 120
+        h: 60
+      Definition:
+        w: 120
+        h: 60
+      Information:
+        w: 120
+        h: 60
+      LogicalDataModel:
+        w: 150
+        h: 90
+      Metadata:
+        w: 120
+        h: 60
+      NodePort:
+        w: 15
+        h: 15
+      OperationalConstraint:
+        w: 120
+        h: 60
+      OperationalEventTrace:
+        w: 150
+        h: 90
+      OperationalParameter:
+        w: 15
+        h: 15
+      PhysicalDataModel:
+        w: 150
+        h: 90
+      Request:
+        w: 15
+        h: 15
+      ResourceConstraint:
+        w: 120
+        h: 60
+      ResourceEventTrace:
+        w: 150
+        h: 90
+      ResourcePort:
+        w: 15
+        h: 15
+      Service:
+        w: 15
+        h: 15
+      ServiceDescription:
+        w: 150
+        h: 90
+      ServiceInteraction:
+        w: 150
+        h: 90
+      ServicePolicy:
+        w: 120
+        h: 60
+      StandardConfiguration:
+        w: 120
+        h: 60
+      StereotypeExtension:
+        w: 120
+        h: 60
+      View:
+        w: 150
+        h: 90
+      Viewpoint:
+        w: 150
+        h: 90
+      VisionStatement:
+        w: 120
+        h: 60
     spacing:
       item_gap_x: 80
       item_gap_y: 50
@@ -1046,6 +3260,7 @@ diagram_types:
       - opacity
       - icon
   UPDM2_SV/SvcV::SV-4:
+    token: UPDM2_SV/SvcV::SV-4
     base: Logical
     grammar: graph
     title: frame-header
@@ -1053,6 +3268,84 @@ diagram_types:
       default:
         w: 100
         h: 70
+      ActualPropertySet:
+        w: 120
+        h: 60
+      Alias:
+        w: 120
+        h: 60
+      ArchitecturalDescription:
+        w: 150
+        h: 90
+      ArchitectureMetadata:
+        w: 120
+        h: 60
+      Definition:
+        w: 120
+        h: 60
+      Information:
+        w: 120
+        h: 60
+      LogicalDataModel:
+        w: 150
+        h: 90
+      Metadata:
+        w: 120
+        h: 60
+      NodePort:
+        w: 15
+        h: 15
+      OperationalConstraint:
+        w: 120
+        h: 60
+      OperationalEventTrace:
+        w: 150
+        h: 90
+      OperationalParameter:
+        w: 15
+        h: 15
+      PhysicalDataModel:
+        w: 150
+        h: 90
+      Request:
+        w: 15
+        h: 15
+      ResourceConstraint:
+        w: 120
+        h: 60
+      ResourceEventTrace:
+        w: 150
+        h: 90
+      ResourcePort:
+        w: 15
+        h: 15
+      Service:
+        w: 15
+        h: 15
+      ServiceDescription:
+        w: 150
+        h: 90
+      ServiceInteraction:
+        w: 150
+        h: 90
+      ServicePolicy:
+        w: 120
+        h: 60
+      StandardConfiguration:
+        w: 120
+        h: 60
+      StereotypeExtension:
+        w: 120
+        h: 60
+      View:
+        w: 150
+        h: 90
+      Viewpoint:
+        w: 150
+        h: 90
+      VisionStatement:
+        w: 120
+        h: 60
     spacing:
       item_gap_x: 80
       item_gap_y: 50
@@ -1083,6 +3376,7 @@ diagram_types:
       - opacity
       - icon
   UPDM2_SV/SvcV::SV-5:
+    token: UPDM2_SV/SvcV::SV-5
     base: Logical
     grammar: graph
     title: frame-header
@@ -1090,6 +3384,84 @@ diagram_types:
       default:
         w: 100
         h: 70
+      ActualPropertySet:
+        w: 120
+        h: 60
+      Alias:
+        w: 120
+        h: 60
+      ArchitecturalDescription:
+        w: 150
+        h: 90
+      ArchitectureMetadata:
+        w: 120
+        h: 60
+      Definition:
+        w: 120
+        h: 60
+      Information:
+        w: 120
+        h: 60
+      LogicalDataModel:
+        w: 150
+        h: 90
+      Metadata:
+        w: 120
+        h: 60
+      NodePort:
+        w: 15
+        h: 15
+      OperationalConstraint:
+        w: 120
+        h: 60
+      OperationalEventTrace:
+        w: 150
+        h: 90
+      OperationalParameter:
+        w: 15
+        h: 15
+      PhysicalDataModel:
+        w: 150
+        h: 90
+      Request:
+        w: 15
+        h: 15
+      ResourceConstraint:
+        w: 120
+        h: 60
+      ResourceEventTrace:
+        w: 150
+        h: 90
+      ResourcePort:
+        w: 15
+        h: 15
+      Service:
+        w: 15
+        h: 15
+      ServiceDescription:
+        w: 150
+        h: 90
+      ServiceInteraction:
+        w: 150
+        h: 90
+      ServicePolicy:
+        w: 120
+        h: 60
+      StandardConfiguration:
+        w: 120
+        h: 60
+      StereotypeExtension:
+        w: 120
+        h: 60
+      View:
+        w: 150
+        h: 90
+      Viewpoint:
+        w: 150
+        h: 90
+      VisionStatement:
+        w: 120
+        h: 60
     spacing:
       item_gap_x: 80
       item_gap_y: 50
@@ -1120,6 +3492,7 @@ diagram_types:
       - opacity
       - icon
   UPDM2_SV/SvcV::SV-6:
+    token: UPDM2_SV/SvcV::SV-6
     base: Logical
     grammar: matrix
     title: frame-header
@@ -1127,6 +3500,84 @@ diagram_types:
       default:
         w: 100
         h: 70
+      ActualPropertySet:
+        w: 120
+        h: 60
+      Alias:
+        w: 120
+        h: 60
+      ArchitecturalDescription:
+        w: 150
+        h: 90
+      ArchitectureMetadata:
+        w: 120
+        h: 60
+      Definition:
+        w: 120
+        h: 60
+      Information:
+        w: 120
+        h: 60
+      LogicalDataModel:
+        w: 150
+        h: 90
+      Metadata:
+        w: 120
+        h: 60
+      NodePort:
+        w: 15
+        h: 15
+      OperationalConstraint:
+        w: 120
+        h: 60
+      OperationalEventTrace:
+        w: 150
+        h: 90
+      OperationalParameter:
+        w: 15
+        h: 15
+      PhysicalDataModel:
+        w: 150
+        h: 90
+      Request:
+        w: 15
+        h: 15
+      ResourceConstraint:
+        w: 120
+        h: 60
+      ResourceEventTrace:
+        w: 150
+        h: 90
+      ResourcePort:
+        w: 15
+        h: 15
+      Service:
+        w: 15
+        h: 15
+      ServiceDescription:
+        w: 150
+        h: 90
+      ServiceInteraction:
+        w: 150
+        h: 90
+      ServicePolicy:
+        w: 120
+        h: 60
+      StandardConfiguration:
+        w: 120
+        h: 60
+      StereotypeExtension:
+        w: 120
+        h: 60
+      View:
+        w: 150
+        h: 90
+      Viewpoint:
+        w: 150
+        h: 90
+      VisionStatement:
+        w: 120
+        h: 60
     spacing:
       item_gap_x: 80
       item_gap_y: 50
@@ -1156,6 +3607,7 @@ diagram_types:
       - opacity
       - icon
   UPDM2_SV/SvcV::SV-7:
+    token: UPDM2_SV/SvcV::SV-7
     base: Logical
     grammar: matrix
     title: frame-header
@@ -1163,6 +3615,84 @@ diagram_types:
       default:
         w: 100
         h: 70
+      ActualPropertySet:
+        w: 120
+        h: 60
+      Alias:
+        w: 120
+        h: 60
+      ArchitecturalDescription:
+        w: 150
+        h: 90
+      ArchitectureMetadata:
+        w: 120
+        h: 60
+      Definition:
+        w: 120
+        h: 60
+      Information:
+        w: 120
+        h: 60
+      LogicalDataModel:
+        w: 150
+        h: 90
+      Metadata:
+        w: 120
+        h: 60
+      NodePort:
+        w: 15
+        h: 15
+      OperationalConstraint:
+        w: 120
+        h: 60
+      OperationalEventTrace:
+        w: 150
+        h: 90
+      OperationalParameter:
+        w: 15
+        h: 15
+      PhysicalDataModel:
+        w: 150
+        h: 90
+      Request:
+        w: 15
+        h: 15
+      ResourceConstraint:
+        w: 120
+        h: 60
+      ResourceEventTrace:
+        w: 150
+        h: 90
+      ResourcePort:
+        w: 15
+        h: 15
+      Service:
+        w: 15
+        h: 15
+      ServiceDescription:
+        w: 150
+        h: 90
+      ServiceInteraction:
+        w: 150
+        h: 90
+      ServicePolicy:
+        w: 120
+        h: 60
+      StandardConfiguration:
+        w: 120
+        h: 60
+      StereotypeExtension:
+        w: 120
+        h: 60
+      View:
+        w: 150
+        h: 90
+      Viewpoint:
+        w: 150
+        h: 90
+      VisionStatement:
+        w: 120
+        h: 60
     spacing:
       item_gap_x: 80
       item_gap_y: 50
@@ -1192,6 +3722,7 @@ diagram_types:
       - opacity
       - icon
   UPDM2_SV/SvcV::SV-8:
+    token: UPDM2_SV/SvcV::SV-8
     base: Logical
     grammar: graph
     title: frame-header
@@ -1199,6 +3730,84 @@ diagram_types:
       default:
         w: 100
         h: 70
+      ActualPropertySet:
+        w: 120
+        h: 60
+      Alias:
+        w: 120
+        h: 60
+      ArchitecturalDescription:
+        w: 150
+        h: 90
+      ArchitectureMetadata:
+        w: 120
+        h: 60
+      Definition:
+        w: 120
+        h: 60
+      Information:
+        w: 120
+        h: 60
+      LogicalDataModel:
+        w: 150
+        h: 90
+      Metadata:
+        w: 120
+        h: 60
+      NodePort:
+        w: 15
+        h: 15
+      OperationalConstraint:
+        w: 120
+        h: 60
+      OperationalEventTrace:
+        w: 150
+        h: 90
+      OperationalParameter:
+        w: 15
+        h: 15
+      PhysicalDataModel:
+        w: 150
+        h: 90
+      Request:
+        w: 15
+        h: 15
+      ResourceConstraint:
+        w: 120
+        h: 60
+      ResourceEventTrace:
+        w: 150
+        h: 90
+      ResourcePort:
+        w: 15
+        h: 15
+      Service:
+        w: 15
+        h: 15
+      ServiceDescription:
+        w: 150
+        h: 90
+      ServiceInteraction:
+        w: 150
+        h: 90
+      ServicePolicy:
+        w: 120
+        h: 60
+      StandardConfiguration:
+        w: 120
+        h: 60
+      StereotypeExtension:
+        w: 120
+        h: 60
+      View:
+        w: 150
+        h: 90
+      Viewpoint:
+        w: 150
+        h: 90
+      VisionStatement:
+        w: 120
+        h: 60
     spacing:
       item_gap_x: 80
       item_gap_y: 50
@@ -1229,6 +3838,7 @@ diagram_types:
       - opacity
       - icon
   UPDM2_SV/SvcV::SV-9:
+    token: UPDM2_SV/SvcV::SV-9
     base: Logical
     grammar: graph
     title: frame-header
@@ -1236,6 +3846,84 @@ diagram_types:
       default:
         w: 100
         h: 70
+      ActualPropertySet:
+        w: 120
+        h: 60
+      Alias:
+        w: 120
+        h: 60
+      ArchitecturalDescription:
+        w: 150
+        h: 90
+      ArchitectureMetadata:
+        w: 120
+        h: 60
+      Definition:
+        w: 120
+        h: 60
+      Information:
+        w: 120
+        h: 60
+      LogicalDataModel:
+        w: 150
+        h: 90
+      Metadata:
+        w: 120
+        h: 60
+      NodePort:
+        w: 15
+        h: 15
+      OperationalConstraint:
+        w: 120
+        h: 60
+      OperationalEventTrace:
+        w: 150
+        h: 90
+      OperationalParameter:
+        w: 15
+        h: 15
+      PhysicalDataModel:
+        w: 150
+        h: 90
+      Request:
+        w: 15
+        h: 15
+      ResourceConstraint:
+        w: 120
+        h: 60
+      ResourceEventTrace:
+        w: 150
+        h: 90
+      ResourcePort:
+        w: 15
+        h: 15
+      Service:
+        w: 15
+        h: 15
+      ServiceDescription:
+        w: 150
+        h: 90
+      ServiceInteraction:
+        w: 150
+        h: 90
+      ServicePolicy:
+        w: 120
+        h: 60
+      StandardConfiguration:
+        w: 120
+        h: 60
+      StereotypeExtension:
+        w: 120
+        h: 60
+      View:
+        w: 150
+        h: 90
+      Viewpoint:
+        w: 150
+        h: 90
+      VisionStatement:
+        w: 120
+        h: 60
     spacing:
       item_gap_x: 80
       item_gap_y: 50
@@ -1266,6 +3954,7 @@ diagram_types:
       - opacity
       - icon
   UPDM2_SV/SvcV::SV-10a:
+    token: UPDM2_SV/SvcV::SV-10a
     base: Logical
     grammar: graph
     title: frame-header
@@ -1273,6 +3962,84 @@ diagram_types:
       default:
         w: 100
         h: 70
+      ActualPropertySet:
+        w: 120
+        h: 60
+      Alias:
+        w: 120
+        h: 60
+      ArchitecturalDescription:
+        w: 150
+        h: 90
+      ArchitectureMetadata:
+        w: 120
+        h: 60
+      Definition:
+        w: 120
+        h: 60
+      Information:
+        w: 120
+        h: 60
+      LogicalDataModel:
+        w: 150
+        h: 90
+      Metadata:
+        w: 120
+        h: 60
+      NodePort:
+        w: 15
+        h: 15
+      OperationalConstraint:
+        w: 120
+        h: 60
+      OperationalEventTrace:
+        w: 150
+        h: 90
+      OperationalParameter:
+        w: 15
+        h: 15
+      PhysicalDataModel:
+        w: 150
+        h: 90
+      Request:
+        w: 15
+        h: 15
+      ResourceConstraint:
+        w: 120
+        h: 60
+      ResourceEventTrace:
+        w: 150
+        h: 90
+      ResourcePort:
+        w: 15
+        h: 15
+      Service:
+        w: 15
+        h: 15
+      ServiceDescription:
+        w: 150
+        h: 90
+      ServiceInteraction:
+        w: 150
+        h: 90
+      ServicePolicy:
+        w: 120
+        h: 60
+      StandardConfiguration:
+        w: 120
+        h: 60
+      StereotypeExtension:
+        w: 120
+        h: 60
+      View:
+        w: 150
+        h: 90
+      Viewpoint:
+        w: 150
+        h: 90
+      VisionStatement:
+        w: 120
+        h: 60
     spacing:
       item_gap_x: 80
       item_gap_y: 50
@@ -1303,6 +4070,7 @@ diagram_types:
       - opacity
       - icon
   UPDM2_SV/SvcV::SV-10b:
+    token: UPDM2_SV/SvcV::SV-10b
     base: Statechart
     grammar: ea-semantic
     title: frame-header
@@ -1310,6 +4078,84 @@ diagram_types:
       default:
         w: 100
         h: 70
+      ActualPropertySet:
+        w: 120
+        h: 60
+      Alias:
+        w: 120
+        h: 60
+      ArchitecturalDescription:
+        w: 150
+        h: 90
+      ArchitectureMetadata:
+        w: 120
+        h: 60
+      Definition:
+        w: 120
+        h: 60
+      Information:
+        w: 120
+        h: 60
+      LogicalDataModel:
+        w: 150
+        h: 90
+      Metadata:
+        w: 120
+        h: 60
+      NodePort:
+        w: 15
+        h: 15
+      OperationalConstraint:
+        w: 120
+        h: 60
+      OperationalEventTrace:
+        w: 150
+        h: 90
+      OperationalParameter:
+        w: 15
+        h: 15
+      PhysicalDataModel:
+        w: 150
+        h: 90
+      Request:
+        w: 15
+        h: 15
+      ResourceConstraint:
+        w: 120
+        h: 60
+      ResourceEventTrace:
+        w: 150
+        h: 90
+      ResourcePort:
+        w: 15
+        h: 15
+      Service:
+        w: 15
+        h: 15
+      ServiceDescription:
+        w: 150
+        h: 90
+      ServiceInteraction:
+        w: 150
+        h: 90
+      ServicePolicy:
+        w: 120
+        h: 60
+      StandardConfiguration:
+        w: 120
+        h: 60
+      StereotypeExtension:
+        w: 120
+        h: 60
+      View:
+        w: 150
+        h: 90
+      Viewpoint:
+        w: 150
+        h: 90
+      VisionStatement:
+        w: 120
+        h: 60
     spacing:
       item_gap_x: 80
       item_gap_y: 50
@@ -1341,6 +4187,7 @@ diagram_types:
       - opacity
       - icon
   UPDM2_TV/StdV::StdV-1:
+    token: UPDM2_TV/StdV::StdV-1
     base: Logical
     grammar: graph
     title: frame-header
@@ -1348,6 +4195,84 @@ diagram_types:
       default:
         w: 100
         h: 70
+      ActualPropertySet:
+        w: 120
+        h: 60
+      Alias:
+        w: 120
+        h: 60
+      ArchitecturalDescription:
+        w: 150
+        h: 90
+      ArchitectureMetadata:
+        w: 120
+        h: 60
+      Definition:
+        w: 120
+        h: 60
+      Information:
+        w: 120
+        h: 60
+      LogicalDataModel:
+        w: 150
+        h: 90
+      Metadata:
+        w: 120
+        h: 60
+      NodePort:
+        w: 15
+        h: 15
+      OperationalConstraint:
+        w: 120
+        h: 60
+      OperationalEventTrace:
+        w: 150
+        h: 90
+      OperationalParameter:
+        w: 15
+        h: 15
+      PhysicalDataModel:
+        w: 150
+        h: 90
+      Request:
+        w: 15
+        h: 15
+      ResourceConstraint:
+        w: 120
+        h: 60
+      ResourceEventTrace:
+        w: 150
+        h: 90
+      ResourcePort:
+        w: 15
+        h: 15
+      Service:
+        w: 15
+        h: 15
+      ServiceDescription:
+        w: 150
+        h: 90
+      ServiceInteraction:
+        w: 150
+        h: 90
+      ServicePolicy:
+        w: 120
+        h: 60
+      StandardConfiguration:
+        w: 120
+        h: 60
+      StereotypeExtension:
+        w: 120
+        h: 60
+      View:
+        w: 150
+        h: 90
+      Viewpoint:
+        w: 150
+        h: 90
+      VisionStatement:
+        w: 120
+        h: 60
     spacing:
       item_gap_x: 80
       item_gap_y: 50
@@ -1378,6 +4303,7 @@ diagram_types:
       - opacity
       - icon
   UPDM2_TV/StdV::StdV-2:
+    token: UPDM2_TV/StdV::StdV-2
     base: Logical
     grammar: graph
     title: frame-header
@@ -1385,6 +4311,84 @@ diagram_types:
       default:
         w: 100
         h: 70
+      ActualPropertySet:
+        w: 120
+        h: 60
+      Alias:
+        w: 120
+        h: 60
+      ArchitecturalDescription:
+        w: 150
+        h: 90
+      ArchitectureMetadata:
+        w: 120
+        h: 60
+      Definition:
+        w: 120
+        h: 60
+      Information:
+        w: 120
+        h: 60
+      LogicalDataModel:
+        w: 150
+        h: 90
+      Metadata:
+        w: 120
+        h: 60
+      NodePort:
+        w: 15
+        h: 15
+      OperationalConstraint:
+        w: 120
+        h: 60
+      OperationalEventTrace:
+        w: 150
+        h: 90
+      OperationalParameter:
+        w: 15
+        h: 15
+      PhysicalDataModel:
+        w: 150
+        h: 90
+      Request:
+        w: 15
+        h: 15
+      ResourceConstraint:
+        w: 120
+        h: 60
+      ResourceEventTrace:
+        w: 150
+        h: 90
+      ResourcePort:
+        w: 15
+        h: 15
+      Service:
+        w: 15
+        h: 15
+      ServiceDescription:
+        w: 150
+        h: 90
+      ServiceInteraction:
+        w: 150
+        h: 90
+      ServicePolicy:
+        w: 120
+        h: 60
+      StandardConfiguration:
+        w: 120
+        h: 60
+      StereotypeExtension:
+        w: 120
+        h: 60
+      View:
+        w: 150
+        h: 90
+      Viewpoint:
+        w: 150
+        h: 90
+      VisionStatement:
+        w: 120
+        h: 60
     spacing:
       item_gap_x: 80
       item_gap_y: 50
@@ -1415,6 +4419,7 @@ diagram_types:
       - opacity
       - icon
   UPDM2_SV/SvcV::SvcV-1:
+    token: UPDM2_SV/SvcV::SvcV-1
     base: Logical
     grammar: graph
     title: frame-header
@@ -1422,6 +4427,84 @@ diagram_types:
       default:
         w: 100
         h: 70
+      ActualPropertySet:
+        w: 120
+        h: 60
+      Alias:
+        w: 120
+        h: 60
+      ArchitecturalDescription:
+        w: 150
+        h: 90
+      ArchitectureMetadata:
+        w: 120
+        h: 60
+      Definition:
+        w: 120
+        h: 60
+      Information:
+        w: 120
+        h: 60
+      LogicalDataModel:
+        w: 150
+        h: 90
+      Metadata:
+        w: 120
+        h: 60
+      NodePort:
+        w: 15
+        h: 15
+      OperationalConstraint:
+        w: 120
+        h: 60
+      OperationalEventTrace:
+        w: 150
+        h: 90
+      OperationalParameter:
+        w: 15
+        h: 15
+      PhysicalDataModel:
+        w: 150
+        h: 90
+      Request:
+        w: 15
+        h: 15
+      ResourceConstraint:
+        w: 120
+        h: 60
+      ResourceEventTrace:
+        w: 150
+        h: 90
+      ResourcePort:
+        w: 15
+        h: 15
+      Service:
+        w: 15
+        h: 15
+      ServiceDescription:
+        w: 150
+        h: 90
+      ServiceInteraction:
+        w: 150
+        h: 90
+      ServicePolicy:
+        w: 120
+        h: 60
+      StandardConfiguration:
+        w: 120
+        h: 60
+      StereotypeExtension:
+        w: 120
+        h: 60
+      View:
+        w: 150
+        h: 90
+      Viewpoint:
+        w: 150
+        h: 90
+      VisionStatement:
+        w: 120
+        h: 60
     spacing:
       item_gap_x: 80
       item_gap_y: 50
@@ -1452,6 +4535,7 @@ diagram_types:
       - opacity
       - icon
   UPDM2_SV/SvcV::SvcV-2:
+    token: UPDM2_SV/SvcV::SvcV-2
     base: Logical
     grammar: graph
     title: frame-header
@@ -1459,6 +4543,84 @@ diagram_types:
       default:
         w: 100
         h: 70
+      ActualPropertySet:
+        w: 120
+        h: 60
+      Alias:
+        w: 120
+        h: 60
+      ArchitecturalDescription:
+        w: 150
+        h: 90
+      ArchitectureMetadata:
+        w: 120
+        h: 60
+      Definition:
+        w: 120
+        h: 60
+      Information:
+        w: 120
+        h: 60
+      LogicalDataModel:
+        w: 150
+        h: 90
+      Metadata:
+        w: 120
+        h: 60
+      NodePort:
+        w: 15
+        h: 15
+      OperationalConstraint:
+        w: 120
+        h: 60
+      OperationalEventTrace:
+        w: 150
+        h: 90
+      OperationalParameter:
+        w: 15
+        h: 15
+      PhysicalDataModel:
+        w: 150
+        h: 90
+      Request:
+        w: 15
+        h: 15
+      ResourceConstraint:
+        w: 120
+        h: 60
+      ResourceEventTrace:
+        w: 150
+        h: 90
+      ResourcePort:
+        w: 15
+        h: 15
+      Service:
+        w: 15
+        h: 15
+      ServiceDescription:
+        w: 150
+        h: 90
+      ServiceInteraction:
+        w: 150
+        h: 90
+      ServicePolicy:
+        w: 120
+        h: 60
+      StandardConfiguration:
+        w: 120
+        h: 60
+      StereotypeExtension:
+        w: 120
+        h: 60
+      View:
+        w: 150
+        h: 90
+      Viewpoint:
+        w: 150
+        h: 90
+      VisionStatement:
+        w: 120
+        h: 60
     spacing:
       item_gap_x: 80
       item_gap_y: 50
@@ -1489,6 +4651,7 @@ diagram_types:
       - opacity
       - icon
   UPDM2_SV/SvcV::SvcV-3a:
+    token: UPDM2_SV/SvcV::SvcV-3a
     base: Logical
     grammar: matrix
     title: frame-header
@@ -1496,6 +4659,84 @@ diagram_types:
       default:
         w: 100
         h: 70
+      ActualPropertySet:
+        w: 120
+        h: 60
+      Alias:
+        w: 120
+        h: 60
+      ArchitecturalDescription:
+        w: 150
+        h: 90
+      ArchitectureMetadata:
+        w: 120
+        h: 60
+      Definition:
+        w: 120
+        h: 60
+      Information:
+        w: 120
+        h: 60
+      LogicalDataModel:
+        w: 150
+        h: 90
+      Metadata:
+        w: 120
+        h: 60
+      NodePort:
+        w: 15
+        h: 15
+      OperationalConstraint:
+        w: 120
+        h: 60
+      OperationalEventTrace:
+        w: 150
+        h: 90
+      OperationalParameter:
+        w: 15
+        h: 15
+      PhysicalDataModel:
+        w: 150
+        h: 90
+      Request:
+        w: 15
+        h: 15
+      ResourceConstraint:
+        w: 120
+        h: 60
+      ResourceEventTrace:
+        w: 150
+        h: 90
+      ResourcePort:
+        w: 15
+        h: 15
+      Service:
+        w: 15
+        h: 15
+      ServiceDescription:
+        w: 150
+        h: 90
+      ServiceInteraction:
+        w: 150
+        h: 90
+      ServicePolicy:
+        w: 120
+        h: 60
+      StandardConfiguration:
+        w: 120
+        h: 60
+      StereotypeExtension:
+        w: 120
+        h: 60
+      View:
+        w: 150
+        h: 90
+      Viewpoint:
+        w: 150
+        h: 90
+      VisionStatement:
+        w: 120
+        h: 60
     spacing:
       item_gap_x: 80
       item_gap_y: 50
@@ -1525,6 +4766,7 @@ diagram_types:
       - opacity
       - icon
   UPDM2_SV/SvcV::SvcV-3b:
+    token: UPDM2_SV/SvcV::SvcV-3b
     base: Logical
     grammar: matrix
     title: frame-header
@@ -1532,6 +4774,84 @@ diagram_types:
       default:
         w: 100
         h: 70
+      ActualPropertySet:
+        w: 120
+        h: 60
+      Alias:
+        w: 120
+        h: 60
+      ArchitecturalDescription:
+        w: 150
+        h: 90
+      ArchitectureMetadata:
+        w: 120
+        h: 60
+      Definition:
+        w: 120
+        h: 60
+      Information:
+        w: 120
+        h: 60
+      LogicalDataModel:
+        w: 150
+        h: 90
+      Metadata:
+        w: 120
+        h: 60
+      NodePort:
+        w: 15
+        h: 15
+      OperationalConstraint:
+        w: 120
+        h: 60
+      OperationalEventTrace:
+        w: 150
+        h: 90
+      OperationalParameter:
+        w: 15
+        h: 15
+      PhysicalDataModel:
+        w: 150
+        h: 90
+      Request:
+        w: 15
+        h: 15
+      ResourceConstraint:
+        w: 120
+        h: 60
+      ResourceEventTrace:
+        w: 150
+        h: 90
+      ResourcePort:
+        w: 15
+        h: 15
+      Service:
+        w: 15
+        h: 15
+      ServiceDescription:
+        w: 150
+        h: 90
+      ServiceInteraction:
+        w: 150
+        h: 90
+      ServicePolicy:
+        w: 120
+        h: 60
+      StandardConfiguration:
+        w: 120
+        h: 60
+      StereotypeExtension:
+        w: 120
+        h: 60
+      View:
+        w: 150
+        h: 90
+      Viewpoint:
+        w: 150
+        h: 90
+      VisionStatement:
+        w: 120
+        h: 60
     spacing:
       item_gap_x: 80
       item_gap_y: 50
@@ -1561,6 +4881,7 @@ diagram_types:
       - opacity
       - icon
   UPDM2_SV/SvcV::SvcV-4:
+    token: UPDM2_SV/SvcV::SvcV-4
     base: Logical
     grammar: graph
     title: frame-header
@@ -1568,6 +4889,84 @@ diagram_types:
       default:
         w: 100
         h: 70
+      ActualPropertySet:
+        w: 120
+        h: 60
+      Alias:
+        w: 120
+        h: 60
+      ArchitecturalDescription:
+        w: 150
+        h: 90
+      ArchitectureMetadata:
+        w: 120
+        h: 60
+      Definition:
+        w: 120
+        h: 60
+      Information:
+        w: 120
+        h: 60
+      LogicalDataModel:
+        w: 150
+        h: 90
+      Metadata:
+        w: 120
+        h: 60
+      NodePort:
+        w: 15
+        h: 15
+      OperationalConstraint:
+        w: 120
+        h: 60
+      OperationalEventTrace:
+        w: 150
+        h: 90
+      OperationalParameter:
+        w: 15
+        h: 15
+      PhysicalDataModel:
+        w: 150
+        h: 90
+      Request:
+        w: 15
+        h: 15
+      ResourceConstraint:
+        w: 120
+        h: 60
+      ResourceEventTrace:
+        w: 150
+        h: 90
+      ResourcePort:
+        w: 15
+        h: 15
+      Service:
+        w: 15
+        h: 15
+      ServiceDescription:
+        w: 150
+        h: 90
+      ServiceInteraction:
+        w: 150
+        h: 90
+      ServicePolicy:
+        w: 120
+        h: 60
+      StandardConfiguration:
+        w: 120
+        h: 60
+      StereotypeExtension:
+        w: 120
+        h: 60
+      View:
+        w: 150
+        h: 90
+      Viewpoint:
+        w: 150
+        h: 90
+      VisionStatement:
+        w: 120
+        h: 60
     spacing:
       item_gap_x: 80
       item_gap_y: 50
@@ -1598,6 +4997,7 @@ diagram_types:
       - opacity
       - icon
   UPDM2_SV/SvcV::SvcV-5:
+    token: UPDM2_SV/SvcV::SvcV-5
     base: Logical
     grammar: graph
     title: frame-header
@@ -1605,6 +5005,84 @@ diagram_types:
       default:
         w: 100
         h: 70
+      ActualPropertySet:
+        w: 120
+        h: 60
+      Alias:
+        w: 120
+        h: 60
+      ArchitecturalDescription:
+        w: 150
+        h: 90
+      ArchitectureMetadata:
+        w: 120
+        h: 60
+      Definition:
+        w: 120
+        h: 60
+      Information:
+        w: 120
+        h: 60
+      LogicalDataModel:
+        w: 150
+        h: 90
+      Metadata:
+        w: 120
+        h: 60
+      NodePort:
+        w: 15
+        h: 15
+      OperationalConstraint:
+        w: 120
+        h: 60
+      OperationalEventTrace:
+        w: 150
+        h: 90
+      OperationalParameter:
+        w: 15
+        h: 15
+      PhysicalDataModel:
+        w: 150
+        h: 90
+      Request:
+        w: 15
+        h: 15
+      ResourceConstraint:
+        w: 120
+        h: 60
+      ResourceEventTrace:
+        w: 150
+        h: 90
+      ResourcePort:
+        w: 15
+        h: 15
+      Service:
+        w: 15
+        h: 15
+      ServiceDescription:
+        w: 150
+        h: 90
+      ServiceInteraction:
+        w: 150
+        h: 90
+      ServicePolicy:
+        w: 120
+        h: 60
+      StandardConfiguration:
+        w: 120
+        h: 60
+      StereotypeExtension:
+        w: 120
+        h: 60
+      View:
+        w: 150
+        h: 90
+      Viewpoint:
+        w: 150
+        h: 90
+      VisionStatement:
+        w: 120
+        h: 60
     spacing:
       item_gap_x: 80
       item_gap_y: 50
@@ -1635,6 +5113,7 @@ diagram_types:
       - opacity
       - icon
   UPDM2_SV/SvcV::SvcV-6:
+    token: UPDM2_SV/SvcV::SvcV-6
     base: Logical
     grammar: matrix
     title: frame-header
@@ -1642,6 +5121,84 @@ diagram_types:
       default:
         w: 100
         h: 70
+      ActualPropertySet:
+        w: 120
+        h: 60
+      Alias:
+        w: 120
+        h: 60
+      ArchitecturalDescription:
+        w: 150
+        h: 90
+      ArchitectureMetadata:
+        w: 120
+        h: 60
+      Definition:
+        w: 120
+        h: 60
+      Information:
+        w: 120
+        h: 60
+      LogicalDataModel:
+        w: 150
+        h: 90
+      Metadata:
+        w: 120
+        h: 60
+      NodePort:
+        w: 15
+        h: 15
+      OperationalConstraint:
+        w: 120
+        h: 60
+      OperationalEventTrace:
+        w: 150
+        h: 90
+      OperationalParameter:
+        w: 15
+        h: 15
+      PhysicalDataModel:
+        w: 150
+        h: 90
+      Request:
+        w: 15
+        h: 15
+      ResourceConstraint:
+        w: 120
+        h: 60
+      ResourceEventTrace:
+        w: 150
+        h: 90
+      ResourcePort:
+        w: 15
+        h: 15
+      Service:
+        w: 15
+        h: 15
+      ServiceDescription:
+        w: 150
+        h: 90
+      ServiceInteraction:
+        w: 150
+        h: 90
+      ServicePolicy:
+        w: 120
+        h: 60
+      StandardConfiguration:
+        w: 120
+        h: 60
+      StereotypeExtension:
+        w: 120
+        h: 60
+      View:
+        w: 150
+        h: 90
+      Viewpoint:
+        w: 150
+        h: 90
+      VisionStatement:
+        w: 120
+        h: 60
     spacing:
       item_gap_x: 80
       item_gap_y: 50
@@ -1671,6 +5228,7 @@ diagram_types:
       - opacity
       - icon
   UPDM2_SV/SvcV::SvcV-7:
+    token: UPDM2_SV/SvcV::SvcV-7
     base: Logical
     grammar: matrix
     title: frame-header
@@ -1678,6 +5236,84 @@ diagram_types:
       default:
         w: 100
         h: 70
+      ActualPropertySet:
+        w: 120
+        h: 60
+      Alias:
+        w: 120
+        h: 60
+      ArchitecturalDescription:
+        w: 150
+        h: 90
+      ArchitectureMetadata:
+        w: 120
+        h: 60
+      Definition:
+        w: 120
+        h: 60
+      Information:
+        w: 120
+        h: 60
+      LogicalDataModel:
+        w: 150
+        h: 90
+      Metadata:
+        w: 120
+        h: 60
+      NodePort:
+        w: 15
+        h: 15
+      OperationalConstraint:
+        w: 120
+        h: 60
+      OperationalEventTrace:
+        w: 150
+        h: 90
+      OperationalParameter:
+        w: 15
+        h: 15
+      PhysicalDataModel:
+        w: 150
+        h: 90
+      Request:
+        w: 15
+        h: 15
+      ResourceConstraint:
+        w: 120
+        h: 60
+      ResourceEventTrace:
+        w: 150
+        h: 90
+      ResourcePort:
+        w: 15
+        h: 15
+      Service:
+        w: 15
+        h: 15
+      ServiceDescription:
+        w: 150
+        h: 90
+      ServiceInteraction:
+        w: 150
+        h: 90
+      ServicePolicy:
+        w: 120
+        h: 60
+      StandardConfiguration:
+        w: 120
+        h: 60
+      StereotypeExtension:
+        w: 120
+        h: 60
+      View:
+        w: 150
+        h: 90
+      Viewpoint:
+        w: 150
+        h: 90
+      VisionStatement:
+        w: 120
+        h: 60
     spacing:
       item_gap_x: 80
       item_gap_y: 50
@@ -1707,6 +5343,7 @@ diagram_types:
       - opacity
       - icon
   UPDM2_SV/SvcV::SvcV-8:
+    token: UPDM2_SV/SvcV::SvcV-8
     base: Logical
     grammar: graph
     title: frame-header
@@ -1714,6 +5351,84 @@ diagram_types:
       default:
         w: 100
         h: 70
+      ActualPropertySet:
+        w: 120
+        h: 60
+      Alias:
+        w: 120
+        h: 60
+      ArchitecturalDescription:
+        w: 150
+        h: 90
+      ArchitectureMetadata:
+        w: 120
+        h: 60
+      Definition:
+        w: 120
+        h: 60
+      Information:
+        w: 120
+        h: 60
+      LogicalDataModel:
+        w: 150
+        h: 90
+      Metadata:
+        w: 120
+        h: 60
+      NodePort:
+        w: 15
+        h: 15
+      OperationalConstraint:
+        w: 120
+        h: 60
+      OperationalEventTrace:
+        w: 150
+        h: 90
+      OperationalParameter:
+        w: 15
+        h: 15
+      PhysicalDataModel:
+        w: 150
+        h: 90
+      Request:
+        w: 15
+        h: 15
+      ResourceConstraint:
+        w: 120
+        h: 60
+      ResourceEventTrace:
+        w: 150
+        h: 90
+      ResourcePort:
+        w: 15
+        h: 15
+      Service:
+        w: 15
+        h: 15
+      ServiceDescription:
+        w: 150
+        h: 90
+      ServiceInteraction:
+        w: 150
+        h: 90
+      ServicePolicy:
+        w: 120
+        h: 60
+      StandardConfiguration:
+        w: 120
+        h: 60
+      StereotypeExtension:
+        w: 120
+        h: 60
+      View:
+        w: 150
+        h: 90
+      Viewpoint:
+        w: 150
+        h: 90
+      VisionStatement:
+        w: 120
+        h: 60
     spacing:
       item_gap_x: 80
       item_gap_y: 50
@@ -1744,6 +5459,7 @@ diagram_types:
       - opacity
       - icon
   UPDM2_SV/SvcV::SvcV-9:
+    token: UPDM2_SV/SvcV::SvcV-9
     base: Logical
     grammar: graph
     title: frame-header
@@ -1751,6 +5467,84 @@ diagram_types:
       default:
         w: 100
         h: 70
+      ActualPropertySet:
+        w: 120
+        h: 60
+      Alias:
+        w: 120
+        h: 60
+      ArchitecturalDescription:
+        w: 150
+        h: 90
+      ArchitectureMetadata:
+        w: 120
+        h: 60
+      Definition:
+        w: 120
+        h: 60
+      Information:
+        w: 120
+        h: 60
+      LogicalDataModel:
+        w: 150
+        h: 90
+      Metadata:
+        w: 120
+        h: 60
+      NodePort:
+        w: 15
+        h: 15
+      OperationalConstraint:
+        w: 120
+        h: 60
+      OperationalEventTrace:
+        w: 150
+        h: 90
+      OperationalParameter:
+        w: 15
+        h: 15
+      PhysicalDataModel:
+        w: 150
+        h: 90
+      Request:
+        w: 15
+        h: 15
+      ResourceConstraint:
+        w: 120
+        h: 60
+      ResourceEventTrace:
+        w: 150
+        h: 90
+      ResourcePort:
+        w: 15
+        h: 15
+      Service:
+        w: 15
+        h: 15
+      ServiceDescription:
+        w: 150
+        h: 90
+      ServiceInteraction:
+        w: 150
+        h: 90
+      ServicePolicy:
+        w: 120
+        h: 60
+      StandardConfiguration:
+        w: 120
+        h: 60
+      StereotypeExtension:
+        w: 120
+        h: 60
+      View:
+        w: 150
+        h: 90
+      Viewpoint:
+        w: 150
+        h: 90
+      VisionStatement:
+        w: 120
+        h: 60
     spacing:
       item_gap_x: 80
       item_gap_y: 50
@@ -1781,6 +5575,7 @@ diagram_types:
       - opacity
       - icon
   UPDM2_SV/SvcV::SvcV-10a:
+    token: UPDM2_SV/SvcV::SvcV-10a
     base: Logical
     grammar: graph
     title: frame-header
@@ -1788,6 +5583,84 @@ diagram_types:
       default:
         w: 100
         h: 70
+      ActualPropertySet:
+        w: 120
+        h: 60
+      Alias:
+        w: 120
+        h: 60
+      ArchitecturalDescription:
+        w: 150
+        h: 90
+      ArchitectureMetadata:
+        w: 120
+        h: 60
+      Definition:
+        w: 120
+        h: 60
+      Information:
+        w: 120
+        h: 60
+      LogicalDataModel:
+        w: 150
+        h: 90
+      Metadata:
+        w: 120
+        h: 60
+      NodePort:
+        w: 15
+        h: 15
+      OperationalConstraint:
+        w: 120
+        h: 60
+      OperationalEventTrace:
+        w: 150
+        h: 90
+      OperationalParameter:
+        w: 15
+        h: 15
+      PhysicalDataModel:
+        w: 150
+        h: 90
+      Request:
+        w: 15
+        h: 15
+      ResourceConstraint:
+        w: 120
+        h: 60
+      ResourceEventTrace:
+        w: 150
+        h: 90
+      ResourcePort:
+        w: 15
+        h: 15
+      Service:
+        w: 15
+        h: 15
+      ServiceDescription:
+        w: 150
+        h: 90
+      ServiceInteraction:
+        w: 150
+        h: 90
+      ServicePolicy:
+        w: 120
+        h: 60
+      StandardConfiguration:
+        w: 120
+        h: 60
+      StereotypeExtension:
+        w: 120
+        h: 60
+      View:
+        w: 150
+        h: 90
+      Viewpoint:
+        w: 150
+        h: 90
+      VisionStatement:
+        w: 120
+        h: 60
     spacing:
       item_gap_x: 80
       item_gap_y: 50
@@ -1818,6 +5691,7 @@ diagram_types:
       - opacity
       - icon
   UPDM2_SV/SvcV::SvcV-10b:
+    token: UPDM2_SV/SvcV::SvcV-10b
     base: Statechart
     grammar: ea-semantic
     title: frame-header
@@ -1825,6 +5699,84 @@ diagram_types:
       default:
         w: 100
         h: 70
+      ActualPropertySet:
+        w: 120
+        h: 60
+      Alias:
+        w: 120
+        h: 60
+      ArchitecturalDescription:
+        w: 150
+        h: 90
+      ArchitectureMetadata:
+        w: 120
+        h: 60
+      Definition:
+        w: 120
+        h: 60
+      Information:
+        w: 120
+        h: 60
+      LogicalDataModel:
+        w: 150
+        h: 90
+      Metadata:
+        w: 120
+        h: 60
+      NodePort:
+        w: 15
+        h: 15
+      OperationalConstraint:
+        w: 120
+        h: 60
+      OperationalEventTrace:
+        w: 150
+        h: 90
+      OperationalParameter:
+        w: 15
+        h: 15
+      PhysicalDataModel:
+        w: 150
+        h: 90
+      Request:
+        w: 15
+        h: 15
+      ResourceConstraint:
+        w: 120
+        h: 60
+      ResourceEventTrace:
+        w: 150
+        h: 90
+      ResourcePort:
+        w: 15
+        h: 15
+      Service:
+        w: 15
+        h: 15
+      ServiceDescription:
+        w: 150
+        h: 90
+      ServiceInteraction:
+        w: 150
+        h: 90
+      ServicePolicy:
+        w: 120
+        h: 60
+      StandardConfiguration:
+        w: 120
+        h: 60
+      StereotypeExtension:
+        w: 120
+        h: 60
+      View:
+        w: 150
+        h: 90
+      Viewpoint:
+        w: 150
+        h: 90
+      VisionStatement:
+        w: 120
+        h: 60
     spacing:
       item_gap_x: 80
       item_gap_y: 50
@@ -1856,6 +5808,7 @@ diagram_types:
       - opacity
       - icon
   UPDM2_StV/CV::StV-1:
+    token: UPDM2_StV/CV::StV-1
     base: Logical
     grammar: graph
     title: frame-header
@@ -1863,6 +5816,84 @@ diagram_types:
       default:
         w: 100
         h: 70
+      ActualPropertySet:
+        w: 120
+        h: 60
+      Alias:
+        w: 120
+        h: 60
+      ArchitecturalDescription:
+        w: 150
+        h: 90
+      ArchitectureMetadata:
+        w: 120
+        h: 60
+      Definition:
+        w: 120
+        h: 60
+      Information:
+        w: 120
+        h: 60
+      LogicalDataModel:
+        w: 150
+        h: 90
+      Metadata:
+        w: 120
+        h: 60
+      NodePort:
+        w: 15
+        h: 15
+      OperationalConstraint:
+        w: 120
+        h: 60
+      OperationalEventTrace:
+        w: 150
+        h: 90
+      OperationalParameter:
+        w: 15
+        h: 15
+      PhysicalDataModel:
+        w: 150
+        h: 90
+      Request:
+        w: 15
+        h: 15
+      ResourceConstraint:
+        w: 120
+        h: 60
+      ResourceEventTrace:
+        w: 150
+        h: 90
+      ResourcePort:
+        w: 15
+        h: 15
+      Service:
+        w: 15
+        h: 15
+      ServiceDescription:
+        w: 150
+        h: 90
+      ServiceInteraction:
+        w: 150
+        h: 90
+      ServicePolicy:
+        w: 120
+        h: 60
+      StandardConfiguration:
+        w: 120
+        h: 60
+      StereotypeExtension:
+        w: 120
+        h: 60
+      View:
+        w: 150
+        h: 90
+      Viewpoint:
+        w: 150
+        h: 90
+      VisionStatement:
+        w: 120
+        h: 60
     spacing:
       item_gap_x: 80
       item_gap_y: 50
@@ -1893,6 +5924,7 @@ diagram_types:
       - opacity
       - icon
   UPDM2_StV/CV::StV-4:
+    token: UPDM2_StV/CV::StV-4
     base: Logical
     grammar: graph
     title: frame-header
@@ -1900,6 +5932,84 @@ diagram_types:
       default:
         w: 100
         h: 70
+      ActualPropertySet:
+        w: 120
+        h: 60
+      Alias:
+        w: 120
+        h: 60
+      ArchitecturalDescription:
+        w: 150
+        h: 90
+      ArchitectureMetadata:
+        w: 120
+        h: 60
+      Definition:
+        w: 120
+        h: 60
+      Information:
+        w: 120
+        h: 60
+      LogicalDataModel:
+        w: 150
+        h: 90
+      Metadata:
+        w: 120
+        h: 60
+      NodePort:
+        w: 15
+        h: 15
+      OperationalConstraint:
+        w: 120
+        h: 60
+      OperationalEventTrace:
+        w: 150
+        h: 90
+      OperationalParameter:
+        w: 15
+        h: 15
+      PhysicalDataModel:
+        w: 150
+        h: 90
+      Request:
+        w: 15
+        h: 15
+      ResourceConstraint:
+        w: 120
+        h: 60
+      ResourceEventTrace:
+        w: 150
+        h: 90
+      ResourcePort:
+        w: 15
+        h: 15
+      Service:
+        w: 15
+        h: 15
+      ServiceDescription:
+        w: 150
+        h: 90
+      ServiceInteraction:
+        w: 150
+        h: 90
+      ServicePolicy:
+        w: 120
+        h: 60
+      StandardConfiguration:
+        w: 120
+        h: 60
+      StereotypeExtension:
+        w: 120
+        h: 60
+      View:
+        w: 150
+        h: 90
+      Viewpoint:
+        w: 150
+        h: 90
+      VisionStatement:
+        w: 120
+        h: 60
     spacing:
       item_gap_x: 80
       item_gap_y: 50
@@ -1930,6 +6040,7 @@ diagram_types:
       - opacity
       - icon
   UPDM2_StV/CV::StV-6:
+    token: UPDM2_StV/CV::StV-6
     base: Logical
     grammar: graph
     title: frame-header
@@ -1937,6 +6048,84 @@ diagram_types:
       default:
         w: 100
         h: 70
+      ActualPropertySet:
+        w: 120
+        h: 60
+      Alias:
+        w: 120
+        h: 60
+      ArchitecturalDescription:
+        w: 150
+        h: 90
+      ArchitectureMetadata:
+        w: 120
+        h: 60
+      Definition:
+        w: 120
+        h: 60
+      Information:
+        w: 120
+        h: 60
+      LogicalDataModel:
+        w: 150
+        h: 90
+      Metadata:
+        w: 120
+        h: 60
+      NodePort:
+        w: 15
+        h: 15
+      OperationalConstraint:
+        w: 120
+        h: 60
+      OperationalEventTrace:
+        w: 150
+        h: 90
+      OperationalParameter:
+        w: 15
+        h: 15
+      PhysicalDataModel:
+        w: 150
+        h: 90
+      Request:
+        w: 15
+        h: 15
+      ResourceConstraint:
+        w: 120
+        h: 60
+      ResourceEventTrace:
+        w: 150
+        h: 90
+      ResourcePort:
+        w: 15
+        h: 15
+      Service:
+        w: 15
+        h: 15
+      ServiceDescription:
+        w: 150
+        h: 90
+      ServiceInteraction:
+        w: 150
+        h: 90
+      ServicePolicy:
+        w: 120
+        h: 60
+      StandardConfiguration:
+        w: 120
+        h: 60
+      StereotypeExtension:
+        w: 120
+        h: 60
+      View:
+        w: 150
+        h: 90
+      Viewpoint:
+        w: 150
+        h: 90
+      VisionStatement:
+        w: 120
+        h: 60
     spacing:
       item_gap_x: 80
       item_gap_y: 50
@@ -1967,6 +6156,7 @@ diagram_types:
       - opacity
       - icon
   UPDM2_SOV::SOV-1:
+    token: UPDM2_SOV::SOV-1
     base: Logical
     grammar: graph
     title: frame-header
@@ -1974,6 +6164,84 @@ diagram_types:
       default:
         w: 100
         h: 70
+      ActualPropertySet:
+        w: 120
+        h: 60
+      Alias:
+        w: 120
+        h: 60
+      ArchitecturalDescription:
+        w: 150
+        h: 90
+      ArchitectureMetadata:
+        w: 120
+        h: 60
+      Definition:
+        w: 120
+        h: 60
+      Information:
+        w: 120
+        h: 60
+      LogicalDataModel:
+        w: 150
+        h: 90
+      Metadata:
+        w: 120
+        h: 60
+      NodePort:
+        w: 15
+        h: 15
+      OperationalConstraint:
+        w: 120
+        h: 60
+      OperationalEventTrace:
+        w: 150
+        h: 90
+      OperationalParameter:
+        w: 15
+        h: 15
+      PhysicalDataModel:
+        w: 150
+        h: 90
+      Request:
+        w: 15
+        h: 15
+      ResourceConstraint:
+        w: 120
+        h: 60
+      ResourceEventTrace:
+        w: 150
+        h: 90
+      ResourcePort:
+        w: 15
+        h: 15
+      Service:
+        w: 15
+        h: 15
+      ServiceDescription:
+        w: 150
+        h: 90
+      ServiceInteraction:
+        w: 150
+        h: 90
+      ServicePolicy:
+        w: 120
+        h: 60
+      StandardConfiguration:
+        w: 120
+        h: 60
+      StereotypeExtension:
+        w: 120
+        h: 60
+      View:
+        w: 150
+        h: 90
+      Viewpoint:
+        w: 150
+        h: 90
+      VisionStatement:
+        w: 120
+        h: 60
     spacing:
       item_gap_x: 80
       item_gap_y: 50
@@ -2004,6 +6272,7 @@ diagram_types:
       - opacity
       - icon
   UPDM2_SOV::SOV-2:
+    token: UPDM2_SOV::SOV-2
     base: Logical
     grammar: graph
     title: frame-header
@@ -2011,6 +6280,84 @@ diagram_types:
       default:
         w: 100
         h: 70
+      ActualPropertySet:
+        w: 120
+        h: 60
+      Alias:
+        w: 120
+        h: 60
+      ArchitecturalDescription:
+        w: 150
+        h: 90
+      ArchitectureMetadata:
+        w: 120
+        h: 60
+      Definition:
+        w: 120
+        h: 60
+      Information:
+        w: 120
+        h: 60
+      LogicalDataModel:
+        w: 150
+        h: 90
+      Metadata:
+        w: 120
+        h: 60
+      NodePort:
+        w: 15
+        h: 15
+      OperationalConstraint:
+        w: 120
+        h: 60
+      OperationalEventTrace:
+        w: 150
+        h: 90
+      OperationalParameter:
+        w: 15
+        h: 15
+      PhysicalDataModel:
+        w: 150
+        h: 90
+      Request:
+        w: 15
+        h: 15
+      ResourceConstraint:
+        w: 120
+        h: 60
+      ResourceEventTrace:
+        w: 150
+        h: 90
+      ResourcePort:
+        w: 15
+        h: 15
+      Service:
+        w: 15
+        h: 15
+      ServiceDescription:
+        w: 150
+        h: 90
+      ServiceInteraction:
+        w: 150
+        h: 90
+      ServicePolicy:
+        w: 120
+        h: 60
+      StandardConfiguration:
+        w: 120
+        h: 60
+      StereotypeExtension:
+        w: 120
+        h: 60
+      View:
+        w: 150
+        h: 90
+      Viewpoint:
+        w: 150
+        h: 90
+      VisionStatement:
+        w: 120
+        h: 60
     spacing:
       item_gap_x: 80
       item_gap_y: 50
@@ -2041,6 +6388,7 @@ diagram_types:
       - opacity
       - icon
   UPDM2_SOV::SOV-3:
+    token: UPDM2_SOV::SOV-3
     base: Logical
     grammar: graph
     title: frame-header
@@ -2048,6 +6396,84 @@ diagram_types:
       default:
         w: 100
         h: 70
+      ActualPropertySet:
+        w: 120
+        h: 60
+      Alias:
+        w: 120
+        h: 60
+      ArchitecturalDescription:
+        w: 150
+        h: 90
+      ArchitectureMetadata:
+        w: 120
+        h: 60
+      Definition:
+        w: 120
+        h: 60
+      Information:
+        w: 120
+        h: 60
+      LogicalDataModel:
+        w: 150
+        h: 90
+      Metadata:
+        w: 120
+        h: 60
+      NodePort:
+        w: 15
+        h: 15
+      OperationalConstraint:
+        w: 120
+        h: 60
+      OperationalEventTrace:
+        w: 150
+        h: 90
+      OperationalParameter:
+        w: 15
+        h: 15
+      PhysicalDataModel:
+        w: 150
+        h: 90
+      Request:
+        w: 15
+        h: 15
+      ResourceConstraint:
+        w: 120
+        h: 60
+      ResourceEventTrace:
+        w: 150
+        h: 90
+      ResourcePort:
+        w: 15
+        h: 15
+      Service:
+        w: 15
+        h: 15
+      ServiceDescription:
+        w: 150
+        h: 90
+      ServiceInteraction:
+        w: 150
+        h: 90
+      ServicePolicy:
+        w: 120
+        h: 60
+      StandardConfiguration:
+        w: 120
+        h: 60
+      StereotypeExtension:
+        w: 120
+        h: 60
+      View:
+        w: 150
+        h: 90
+      Viewpoint:
+        w: 150
+        h: 90
+      VisionStatement:
+        w: 120
+        h: 60
     spacing:
       item_gap_x: 80
       item_gap_y: 50
@@ -2078,6 +6504,7 @@ diagram_types:
       - opacity
       - icon
   UPDM2_SOV::SOV-4a:
+    token: UPDM2_SOV::SOV-4a
     base: Logical
     grammar: graph
     title: frame-header
@@ -2085,6 +6512,84 @@ diagram_types:
       default:
         w: 100
         h: 70
+      ActualPropertySet:
+        w: 120
+        h: 60
+      Alias:
+        w: 120
+        h: 60
+      ArchitecturalDescription:
+        w: 150
+        h: 90
+      ArchitectureMetadata:
+        w: 120
+        h: 60
+      Definition:
+        w: 120
+        h: 60
+      Information:
+        w: 120
+        h: 60
+      LogicalDataModel:
+        w: 150
+        h: 90
+      Metadata:
+        w: 120
+        h: 60
+      NodePort:
+        w: 15
+        h: 15
+      OperationalConstraint:
+        w: 120
+        h: 60
+      OperationalEventTrace:
+        w: 150
+        h: 90
+      OperationalParameter:
+        w: 15
+        h: 15
+      PhysicalDataModel:
+        w: 150
+        h: 90
+      Request:
+        w: 15
+        h: 15
+      ResourceConstraint:
+        w: 120
+        h: 60
+      ResourceEventTrace:
+        w: 150
+        h: 90
+      ResourcePort:
+        w: 15
+        h: 15
+      Service:
+        w: 15
+        h: 15
+      ServiceDescription:
+        w: 150
+        h: 90
+      ServiceInteraction:
+        w: 150
+        h: 90
+      ServicePolicy:
+        w: 120
+        h: 60
+      StandardConfiguration:
+        w: 120
+        h: 60
+      StereotypeExtension:
+        w: 120
+        h: 60
+      View:
+        w: 150
+        h: 90
+      Viewpoint:
+        w: 150
+        h: 90
+      VisionStatement:
+        w: 120
+        h: 60
     spacing:
       item_gap_x: 80
       item_gap_y: 50
@@ -2115,6 +6620,7 @@ diagram_types:
       - opacity
       - icon
   UPDM2_SOV::SOV-4b:
+    token: UPDM2_SOV::SOV-4b
     base: Statechart
     grammar: ea-semantic
     title: frame-header
@@ -2122,6 +6628,84 @@ diagram_types:
       default:
         w: 100
         h: 70
+      ActualPropertySet:
+        w: 120
+        h: 60
+      Alias:
+        w: 120
+        h: 60
+      ArchitecturalDescription:
+        w: 150
+        h: 90
+      ArchitectureMetadata:
+        w: 120
+        h: 60
+      Definition:
+        w: 120
+        h: 60
+      Information:
+        w: 120
+        h: 60
+      LogicalDataModel:
+        w: 150
+        h: 90
+      Metadata:
+        w: 120
+        h: 60
+      NodePort:
+        w: 15
+        h: 15
+      OperationalConstraint:
+        w: 120
+        h: 60
+      OperationalEventTrace:
+        w: 150
+        h: 90
+      OperationalParameter:
+        w: 15
+        h: 15
+      PhysicalDataModel:
+        w: 150
+        h: 90
+      Request:
+        w: 15
+        h: 15
+      ResourceConstraint:
+        w: 120
+        h: 60
+      ResourceEventTrace:
+        w: 150
+        h: 90
+      ResourcePort:
+        w: 15
+        h: 15
+      Service:
+        w: 15
+        h: 15
+      ServiceDescription:
+        w: 150
+        h: 90
+      ServiceInteraction:
+        w: 150
+        h: 90
+      ServicePolicy:
+        w: 120
+        h: 60
+      StandardConfiguration:
+        w: 120
+        h: 60
+      StereotypeExtension:
+        w: 120
+        h: 60
+      View:
+        w: 150
+        h: 90
+      Viewpoint:
+        w: 150
+        h: 90
+      VisionStatement:
+        w: 120
+        h: 60
     spacing:
       item_gap_x: 80
       item_gap_y: 50
@@ -2153,6 +6737,7 @@ diagram_types:
       - opacity
       - icon
   UPDM2_SOV::SOV-5:
+    token: UPDM2_SOV::SOV-5
     base: Activity
     grammar: graph
     title: frame-header
@@ -2160,6 +6745,84 @@ diagram_types:
       default:
         w: 100
         h: 70
+      ActualPropertySet:
+        w: 120
+        h: 60
+      Alias:
+        w: 120
+        h: 60
+      ArchitecturalDescription:
+        w: 150
+        h: 90
+      ArchitectureMetadata:
+        w: 120
+        h: 60
+      Definition:
+        w: 120
+        h: 60
+      Information:
+        w: 120
+        h: 60
+      LogicalDataModel:
+        w: 150
+        h: 90
+      Metadata:
+        w: 120
+        h: 60
+      NodePort:
+        w: 15
+        h: 15
+      OperationalConstraint:
+        w: 120
+        h: 60
+      OperationalEventTrace:
+        w: 150
+        h: 90
+      OperationalParameter:
+        w: 15
+        h: 15
+      PhysicalDataModel:
+        w: 150
+        h: 90
+      Request:
+        w: 15
+        h: 15
+      ResourceConstraint:
+        w: 120
+        h: 60
+      ResourceEventTrace:
+        w: 150
+        h: 90
+      ResourcePort:
+        w: 15
+        h: 15
+      Service:
+        w: 15
+        h: 15
+      ServiceDescription:
+        w: 150
+        h: 90
+      ServiceInteraction:
+        w: 150
+        h: 90
+      ServicePolicy:
+        w: 120
+        h: 60
+      StandardConfiguration:
+        w: 120
+        h: 60
+      StereotypeExtension:
+        w: 120
+        h: 60
+      View:
+        w: 150
+        h: 90
+      Viewpoint:
+        w: 150
+        h: 90
+      VisionStatement:
+        w: 120
+        h: 60
     spacing:
       item_gap_x: 80
       item_gap_y: 50
@@ -2190,6 +6853,7 @@ diagram_types:
       - opacity
       - icon
   UPDM2_TV/StdV::TV-1:
+    token: UPDM2_TV/StdV::TV-1
     base: Logical
     grammar: graph
     title: frame-header
@@ -2197,6 +6861,84 @@ diagram_types:
       default:
         w: 100
         h: 70
+      ActualPropertySet:
+        w: 120
+        h: 60
+      Alias:
+        w: 120
+        h: 60
+      ArchitecturalDescription:
+        w: 150
+        h: 90
+      ArchitectureMetadata:
+        w: 120
+        h: 60
+      Definition:
+        w: 120
+        h: 60
+      Information:
+        w: 120
+        h: 60
+      LogicalDataModel:
+        w: 150
+        h: 90
+      Metadata:
+        w: 120
+        h: 60
+      NodePort:
+        w: 15
+        h: 15
+      OperationalConstraint:
+        w: 120
+        h: 60
+      OperationalEventTrace:
+        w: 150
+        h: 90
+      OperationalParameter:
+        w: 15
+        h: 15
+      PhysicalDataModel:
+        w: 150
+        h: 90
+      Request:
+        w: 15
+        h: 15
+      ResourceConstraint:
+        w: 120
+        h: 60
+      ResourceEventTrace:
+        w: 150
+        h: 90
+      ResourcePort:
+        w: 15
+        h: 15
+      Service:
+        w: 15
+        h: 15
+      ServiceDescription:
+        w: 150
+        h: 90
+      ServiceInteraction:
+        w: 150
+        h: 90
+      ServicePolicy:
+        w: 120
+        h: 60
+      StandardConfiguration:
+        w: 120
+        h: 60
+      StereotypeExtension:
+        w: 120
+        h: 60
+      View:
+        w: 150
+        h: 90
+      Viewpoint:
+        w: 150
+        h: 90
+      VisionStatement:
+        w: 120
+        h: 60
     spacing:
       item_gap_x: 80
       item_gap_y: 50
@@ -2227,6 +6969,7 @@ diagram_types:
       - opacity
       - icon
   UPDM2_TV/StdV::TV-2:
+    token: UPDM2_TV/StdV::TV-2
     base: Logical
     grammar: graph
     title: frame-header
@@ -2234,6 +6977,84 @@ diagram_types:
       default:
         w: 100
         h: 70
+      ActualPropertySet:
+        w: 120
+        h: 60
+      Alias:
+        w: 120
+        h: 60
+      ArchitecturalDescription:
+        w: 150
+        h: 90
+      ArchitectureMetadata:
+        w: 120
+        h: 60
+      Definition:
+        w: 120
+        h: 60
+      Information:
+        w: 120
+        h: 60
+      LogicalDataModel:
+        w: 150
+        h: 90
+      Metadata:
+        w: 120
+        h: 60
+      NodePort:
+        w: 15
+        h: 15
+      OperationalConstraint:
+        w: 120
+        h: 60
+      OperationalEventTrace:
+        w: 150
+        h: 90
+      OperationalParameter:
+        w: 15
+        h: 15
+      PhysicalDataModel:
+        w: 150
+        h: 90
+      Request:
+        w: 15
+        h: 15
+      ResourceConstraint:
+        w: 120
+        h: 60
+      ResourceEventTrace:
+        w: 150
+        h: 90
+      ResourcePort:
+        w: 15
+        h: 15
+      Service:
+        w: 15
+        h: 15
+      ServiceDescription:
+        w: 150
+        h: 90
+      ServiceInteraction:
+        w: 150
+        h: 90
+      ServicePolicy:
+        w: 120
+        h: 60
+      StandardConfiguration:
+        w: 120
+        h: 60
+      StereotypeExtension:
+        w: 120
+        h: 60
+      View:
+        w: 150
+        h: 90
+      Viewpoint:
+        w: 150
+        h: 90
+      VisionStatement:
+        w: 120
+        h: 60
     spacing:
       item_gap_x: 80
       item_gap_y: 50
@@ -2264,6 +7085,7 @@ diagram_types:
       - opacity
       - icon
   UPDM2_StV/CV::StV-2:
+    token: UPDM2_StV/CV::StV-2
     base: Logical
     grammar: graph
     title: frame-header
@@ -2271,6 +7093,84 @@ diagram_types:
       default:
         w: 100
         h: 70
+      ActualPropertySet:
+        w: 120
+        h: 60
+      Alias:
+        w: 120
+        h: 60
+      ArchitecturalDescription:
+        w: 150
+        h: 90
+      ArchitectureMetadata:
+        w: 120
+        h: 60
+      Definition:
+        w: 120
+        h: 60
+      Information:
+        w: 120
+        h: 60
+      LogicalDataModel:
+        w: 150
+        h: 90
+      Metadata:
+        w: 120
+        h: 60
+      NodePort:
+        w: 15
+        h: 15
+      OperationalConstraint:
+        w: 120
+        h: 60
+      OperationalEventTrace:
+        w: 150
+        h: 90
+      OperationalParameter:
+        w: 15
+        h: 15
+      PhysicalDataModel:
+        w: 150
+        h: 90
+      Request:
+        w: 15
+        h: 15
+      ResourceConstraint:
+        w: 120
+        h: 60
+      ResourceEventTrace:
+        w: 150
+        h: 90
+      ResourcePort:
+        w: 15
+        h: 15
+      Service:
+        w: 15
+        h: 15
+      ServiceDescription:
+        w: 150
+        h: 90
+      ServiceInteraction:
+        w: 150
+        h: 90
+      ServicePolicy:
+        w: 120
+        h: 60
+      StandardConfiguration:
+        w: 120
+        h: 60
+      StereotypeExtension:
+        w: 120
+        h: 60
+      View:
+        w: 150
+        h: 90
+      Viewpoint:
+        w: 150
+        h: 90
+      VisionStatement:
+        w: 120
+        h: 60
     spacing:
       item_gap_x: 80
       item_gap_y: 50
@@ -2301,6 +7201,7 @@ diagram_types:
       - opacity
       - icon
   UPDM2_StV/CV::StV-5:
+    token: UPDM2_StV/CV::StV-5
     base: Logical
     grammar: graph
     title: frame-header
@@ -2308,6 +7209,84 @@ diagram_types:
       default:
         w: 100
         h: 70
+      ActualPropertySet:
+        w: 120
+        h: 60
+      Alias:
+        w: 120
+        h: 60
+      ArchitecturalDescription:
+        w: 150
+        h: 90
+      ArchitectureMetadata:
+        w: 120
+        h: 60
+      Definition:
+        w: 120
+        h: 60
+      Information:
+        w: 120
+        h: 60
+      LogicalDataModel:
+        w: 150
+        h: 90
+      Metadata:
+        w: 120
+        h: 60
+      NodePort:
+        w: 15
+        h: 15
+      OperationalConstraint:
+        w: 120
+        h: 60
+      OperationalEventTrace:
+        w: 150
+        h: 90
+      OperationalParameter:
+        w: 15
+        h: 15
+      PhysicalDataModel:
+        w: 150
+        h: 90
+      Request:
+        w: 15
+        h: 15
+      ResourceConstraint:
+        w: 120
+        h: 60
+      ResourceEventTrace:
+        w: 150
+        h: 90
+      ResourcePort:
+        w: 15
+        h: 15
+      Service:
+        w: 15
+        h: 15
+      ServiceDescription:
+        w: 150
+        h: 90
+      ServiceInteraction:
+        w: 150
+        h: 90
+      ServicePolicy:
+        w: 120
+        h: 60
+      StandardConfiguration:
+        w: 120
+        h: 60
+      StereotypeExtension:
+        w: 120
+        h: 60
+      View:
+        w: 150
+        h: 90
+      Viewpoint:
+        w: 150
+        h: 90
+      VisionStatement:
+        w: 120
+        h: 60
     spacing:
       item_gap_x: 80
       item_gap_y: 50
@@ -2338,6 +7317,7 @@ diagram_types:
       - opacity
       - icon
   UPDM2_OV::OV-7:
+    token: UPDM2_OV::OV-7
     base: Logical
     grammar: graph
     title: frame-header
@@ -2345,6 +7325,84 @@ diagram_types:
       default:
         w: 100
         h: 70
+      ActualPropertySet:
+        w: 120
+        h: 60
+      Alias:
+        w: 120
+        h: 60
+      ArchitecturalDescription:
+        w: 150
+        h: 90
+      ArchitectureMetadata:
+        w: 120
+        h: 60
+      Definition:
+        w: 120
+        h: 60
+      Information:
+        w: 120
+        h: 60
+      LogicalDataModel:
+        w: 150
+        h: 90
+      Metadata:
+        w: 120
+        h: 60
+      NodePort:
+        w: 15
+        h: 15
+      OperationalConstraint:
+        w: 120
+        h: 60
+      OperationalEventTrace:
+        w: 150
+        h: 90
+      OperationalParameter:
+        w: 15
+        h: 15
+      PhysicalDataModel:
+        w: 150
+        h: 90
+      Request:
+        w: 15
+        h: 15
+      ResourceConstraint:
+        w: 120
+        h: 60
+      ResourceEventTrace:
+        w: 150
+        h: 90
+      ResourcePort:
+        w: 15
+        h: 15
+      Service:
+        w: 15
+        h: 15
+      ServiceDescription:
+        w: 150
+        h: 90
+      ServiceInteraction:
+        w: 150
+        h: 90
+      ServicePolicy:
+        w: 120
+        h: 60
+      StandardConfiguration:
+        w: 120
+        h: 60
+      StereotypeExtension:
+        w: 120
+        h: 60
+      View:
+        w: 150
+        h: 90
+      Viewpoint:
+        w: 150
+        h: 90
+      VisionStatement:
+        w: 120
+        h: 60
     spacing:
       item_gap_x: 80
       item_gap_y: 50
@@ -2375,6 +7433,7 @@ diagram_types:
       - opacity
       - icon
   UPDM2_SV/SvcV::SV-11:
+    token: UPDM2_SV/SvcV::SV-11
     base: Logical
     grammar: graph
     title: frame-header
@@ -2382,6 +7441,84 @@ diagram_types:
       default:
         w: 100
         h: 70
+      ActualPropertySet:
+        w: 120
+        h: 60
+      Alias:
+        w: 120
+        h: 60
+      ArchitecturalDescription:
+        w: 150
+        h: 90
+      ArchitectureMetadata:
+        w: 120
+        h: 60
+      Definition:
+        w: 120
+        h: 60
+      Information:
+        w: 120
+        h: 60
+      LogicalDataModel:
+        w: 150
+        h: 90
+      Metadata:
+        w: 120
+        h: 60
+      NodePort:
+        w: 15
+        h: 15
+      OperationalConstraint:
+        w: 120
+        h: 60
+      OperationalEventTrace:
+        w: 150
+        h: 90
+      OperationalParameter:
+        w: 15
+        h: 15
+      PhysicalDataModel:
+        w: 150
+        h: 90
+      Request:
+        w: 15
+        h: 15
+      ResourceConstraint:
+        w: 120
+        h: 60
+      ResourceEventTrace:
+        w: 150
+        h: 90
+      ResourcePort:
+        w: 15
+        h: 15
+      Service:
+        w: 15
+        h: 15
+      ServiceDescription:
+        w: 150
+        h: 90
+      ServiceInteraction:
+        w: 150
+        h: 90
+      ServicePolicy:
+        w: 120
+        h: 60
+      StandardConfiguration:
+        w: 120
+        h: 60
+      StereotypeExtension:
+        w: 120
+        h: 60
+      View:
+        w: 150
+        h: 90
+      Viewpoint:
+        w: 150
+        h: 90
+      VisionStatement:
+        w: 120
+        h: 60
     spacing:
       item_gap_x: 80
       item_gap_y: 50
@@ -2412,6 +7549,7 @@ diagram_types:
       - opacity
       - icon
   UPDM2_SV/SvcV::SV-12:
+    token: UPDM2_SV/SvcV::SV-12
     base: Logical
     grammar: graph
     title: frame-header
@@ -2419,6 +7557,84 @@ diagram_types:
       default:
         w: 100
         h: 70
+      ActualPropertySet:
+        w: 120
+        h: 60
+      Alias:
+        w: 120
+        h: 60
+      ArchitecturalDescription:
+        w: 150
+        h: 90
+      ArchitectureMetadata:
+        w: 120
+        h: 60
+      Definition:
+        w: 120
+        h: 60
+      Information:
+        w: 120
+        h: 60
+      LogicalDataModel:
+        w: 150
+        h: 90
+      Metadata:
+        w: 120
+        h: 60
+      NodePort:
+        w: 15
+        h: 15
+      OperationalConstraint:
+        w: 120
+        h: 60
+      OperationalEventTrace:
+        w: 150
+        h: 90
+      OperationalParameter:
+        w: 15
+        h: 15
+      PhysicalDataModel:
+        w: 150
+        h: 90
+      Request:
+        w: 15
+        h: 15
+      ResourceConstraint:
+        w: 120
+        h: 60
+      ResourceEventTrace:
+        w: 150
+        h: 90
+      ResourcePort:
+        w: 15
+        h: 15
+      Service:
+        w: 15
+        h: 15
+      ServiceDescription:
+        w: 150
+        h: 90
+      ServiceInteraction:
+        w: 150
+        h: 90
+      ServicePolicy:
+        w: 120
+        h: 60
+      StandardConfiguration:
+        w: 120
+        h: 60
+      StereotypeExtension:
+        w: 120
+        h: 60
+      View:
+        w: 150
+        h: 90
+      Viewpoint:
+        w: 150
+        h: 90
+      VisionStatement:
+        w: 120
+        h: 60
     spacing:
       item_gap_x: 80
       item_gap_y: 50
@@ -2449,6 +7665,7 @@ diagram_types:
       - opacity
       - icon
   UPDM2_StV/CV::StV-3:
+    token: UPDM2_StV/CV::StV-3
     base: Logical
     grammar: graph
     title: frame-header
@@ -2456,6 +7673,84 @@ diagram_types:
       default:
         w: 100
         h: 70
+      ActualPropertySet:
+        w: 120
+        h: 60
+      Alias:
+        w: 120
+        h: 60
+      ArchitecturalDescription:
+        w: 150
+        h: 90
+      ArchitectureMetadata:
+        w: 120
+        h: 60
+      Definition:
+        w: 120
+        h: 60
+      Information:
+        w: 120
+        h: 60
+      LogicalDataModel:
+        w: 150
+        h: 90
+      Metadata:
+        w: 120
+        h: 60
+      NodePort:
+        w: 15
+        h: 15
+      OperationalConstraint:
+        w: 120
+        h: 60
+      OperationalEventTrace:
+        w: 150
+        h: 90
+      OperationalParameter:
+        w: 15
+        h: 15
+      PhysicalDataModel:
+        w: 150
+        h: 90
+      Request:
+        w: 15
+        h: 15
+      ResourceConstraint:
+        w: 120
+        h: 60
+      ResourceEventTrace:
+        w: 150
+        h: 90
+      ResourcePort:
+        w: 15
+        h: 15
+      Service:
+        w: 15
+        h: 15
+      ServiceDescription:
+        w: 150
+        h: 90
+      ServiceInteraction:
+        w: 150
+        h: 90
+      ServicePolicy:
+        w: 120
+        h: 60
+      StandardConfiguration:
+        w: 120
+        h: 60
+      StereotypeExtension:
+        w: 120
+        h: 60
+      View:
+        w: 150
+        h: 90
+      Viewpoint:
+        w: 150
+        h: 90
+      VisionStatement:
+        w: 120
+        h: 60
     spacing:
       item_gap_x: 80
       item_gap_y: 50
@@ -2486,6 +7781,7 @@ diagram_types:
       - opacity
       - icon
   UPDM2_TV/StdV::TV-3:
+    token: UPDM2_TV/StdV::TV-3
     base: Logical
     grammar: graph
     title: frame-header
@@ -2493,6 +7789,84 @@ diagram_types:
       default:
         w: 100
         h: 70
+      ActualPropertySet:
+        w: 120
+        h: 60
+      Alias:
+        w: 120
+        h: 60
+      ArchitecturalDescription:
+        w: 150
+        h: 90
+      ArchitectureMetadata:
+        w: 120
+        h: 60
+      Definition:
+        w: 120
+        h: 60
+      Information:
+        w: 120
+        h: 60
+      LogicalDataModel:
+        w: 150
+        h: 90
+      Metadata:
+        w: 120
+        h: 60
+      NodePort:
+        w: 15
+        h: 15
+      OperationalConstraint:
+        w: 120
+        h: 60
+      OperationalEventTrace:
+        w: 150
+        h: 90
+      OperationalParameter:
+        w: 15
+        h: 15
+      PhysicalDataModel:
+        w: 150
+        h: 90
+      Request:
+        w: 15
+        h: 15
+      ResourceConstraint:
+        w: 120
+        h: 60
+      ResourceEventTrace:
+        w: 150
+        h: 90
+      ResourcePort:
+        w: 15
+        h: 15
+      Service:
+        w: 15
+        h: 15
+      ServiceDescription:
+        w: 150
+        h: 90
+      ServiceInteraction:
+        w: 150
+        h: 90
+      ServicePolicy:
+        w: 120
+        h: 60
+      StandardConfiguration:
+        w: 120
+        h: 60
+      StereotypeExtension:
+        w: 120
+        h: 60
+      View:
+        w: 150
+        h: 90
+      Viewpoint:
+        w: 150
+        h: 90
+      VisionStatement:
+        w: 120
+        h: 60
     spacing:
       item_gap_x: 80
       item_gap_y: 50
