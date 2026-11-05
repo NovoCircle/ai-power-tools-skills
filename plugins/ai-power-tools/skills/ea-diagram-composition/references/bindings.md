@@ -189,6 +189,8 @@ Values are copied into the spec verbatim. See §5.1.
 > `grammar: lanes` and all three set both, so in `bpmn2.0.yaml` those two are recorded measurements
 > rather than layout input — kept for a future nested-grid or bands rendering, and labeled as such at
 > the point they are set.
+> Each generated `conventions.yaml` states every gap in the standard, and each composer reads the ones
+> it uses, so a gap a composer doesn't read is not a bug.
 
 ### 4.5 `routing`
 
