@@ -37,6 +37,8 @@ for _path in (COMPOSE_TOOLS, ADVISOR_TOOLS):
         sys.path.insert(0, str(_path))
 import bindings  # noqa: E402
 import compose  # noqa: E402
+import compose_chevron  # noqa: E402
+import compose_matrix  # noqa: E402
 import lint  # noqa: E402
 
 GENERATED = sorted((ROOT / gen.EA_REL).glob(f"*/{gen.GENERATED_NAME}"))
@@ -328,11 +330,148 @@ def test_the_route_rule_supplies_what_a_language_leaves_out(tree):
 
 def test_a_diagram_type_with_nothing_listed_takes_the_defaults(tree):
     path = tree / gen.SHELF_REL / "bpmn-2" / "language.yaml"
-    _edit(path, lambda d: d["layout"]["diagram_types"].pop("Process"))
+    _edit(path, lambda d: d["layout"]["diagram_types"].update(Process={}))
     body = yaml.safe_load(gen.generate_language(gen.Sources(tree), "bpmn-2"))["diagram_types"]["Business Process"]
     assert body["grammar"] == "graph"
     assert body["title"] == "frame-header"
     assert body["routing"]["default"] == "Direct"
+
+
+def test_a_guide_name_outside_the_layout_block_is_refused_not_defaulted(tree):
+    path = tree / gen.EA_REL / "bpmn-2" / "ea.yaml"
+    _edit(path, lambda d: d["layout_map"]["diagram_types"]["Choreography"].update(guide="Choreografy"))
+    with pytest.raises(gen.GenerationError, match="Choreografy"):
+        gen.expected_files(tree)
+    ea = _doc(path)
+    language = _doc(tree / gen.SHELF_REL / "bpmn-2" / "language.yaml")
+    assert any("Choreografy" in p for p in gen.map_problems(ea, language, _standard(), {}))
+
+
+def test_a_list_of_guide_names_is_judged_by_the_one_that_is_drawn(tree):
+    """A map can send several guide views to one EA diagram. The first one supplies the layout."""
+    ea = {"language": "wba", "layout_map": {"technology": "WBA", "diagram_types": {
+        "One": {"guide": ["Real", "Another view"]}, "Two": {"guide": ["Typo", "Real"]}}}}
+    language = {"id": "wba", "stub": True, "layout": {"diagram_types": {"Real": {}}}}
+    problems = gen.map_problems(ea, language, _standard(), {})
+    assert len(problems) == 1 and "`Two`" in problems[0] and "Typo" in problems[0]
+
+
+def test_a_viewpoint_exception_with_a_reason_passes_the_check_and_the_build(tree):
+    path = tree / gen.EA_REL / "archimate-3" / "ea.yaml"
+    _edit(path, lambda d: d["layout_map"].setdefault("viewpoints", {}).update(
+        Elsewhere={"guide": "NoSuchView", "diagram_type": "Business",
+                   "reason": "EA ships it, and the standard has no such view."}))
+    ea = _doc(path)
+    language = _doc(tree / gen.SHELF_REL / "archimate-3" / "language.yaml")
+    assert gen.map_problems(ea, language, _standard(), {}) == []
+    text = gen.generate_language(gen.Sources(tree), "archimate-3")
+    row = yaml.safe_load(text)["viewpoints"]["Elsewhere"]
+    assert row == {"diagram_type": "Business"}
+    generated = tree / gen.EA_REL / "archimate-3" / gen.GENERATED_NAME
+    generated.write_text(text, encoding="utf-8")
+    assert bindings.load_binding(generated).viewpoint("Elsewhere").diagram_type == "Business"
+
+
+def test_a_viewpoint_with_no_reason_is_still_refused_by_both(tree):
+    path = tree / gen.EA_REL / "archimate-3" / "ea.yaml"
+    _edit(path, lambda d: d["layout_map"].setdefault("viewpoints", {}).update(
+        Elsewhere={"guide": "NoSuchView", "diagram_type": "Business"}))
+    language = _doc(tree / gen.SHELF_REL / "archimate-3" / "language.yaml")
+    assert any("NoSuchView" in p for p in gen.map_problems(_doc(path), language, _standard(), {}))
+    with pytest.raises(gen.GenerationError, match="NoSuchView"):
+        gen.generate_language(gen.Sources(tree), "archimate-3")
+
+
+def _catalog_with_no_maps(tmp_path) -> Path:
+    for rel in (gen.STANDARD_REL, gen.TRANSLATION_REL):
+        (tmp_path / rel).parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy(ROOT / rel, tmp_path / rel)
+    return tmp_path
+
+
+def test_an_empty_catalog_fails_the_check_and_the_write(tmp_path):
+    root = _catalog_with_no_maps(tmp_path)
+    script = ROOT / "tools" / "gen_conventions.py"
+    for args in (["--check"], []):
+        done = subprocess.run([sys.executable, str(script), *args, "--root", str(root)],
+                              capture_output=True, text=True)
+        assert done.returncode != 0, args
+        assert "no `ea.yaml` has a `layout_map`" in done.stderr
+
+
+def test_the_plugin_build_refuses_an_empty_catalog(tmp_path):
+    spec = importlib.util.spec_from_file_location("build_plugin_for_test", ROOT / "tools" / "build-plugin.py")
+    build = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(build)
+    problems = build.generated_problems(_catalog_with_no_maps(tmp_path))
+    assert len(problems) == 1 and "no `ea.yaml` has a `layout_map`" in problems[0]
+
+
+@pytest.mark.parametrize("change,named", [
+    (lambda m: m.update(presentation_profiles={"NoSuchProfile": {"show_notes": True}}), "NoSuchProfile"),
+    (lambda m: m.update(viewpoints={"View": {"diagram_type": "Business"}}), "`guide`"),
+    (lambda m: m.update(viewpoints={"View": {"guide": "Whatever"}}), "`diagram_type`"),
+    (lambda m: m.pop("technology"), "`technology`"),
+    (lambda m: m.pop("diagram_types"), "`diagram_types`"),
+    (lambda m: m["diagram_types"].update(Business="not a mapping"), "archimate-3"),
+], ids=["profile", "view-guide", "view-type", "technology", "diagram-types", "wrong-shape"])
+def test_a_malformed_source_is_named_not_a_traceback(tree, change, named):
+    _edit(tree / gen.EA_REL / "archimate-3" / "ea.yaml", lambda d: change(d["layout_map"]))
+    with pytest.raises(gen.GenerationError) as caught:
+        gen.expected_files(tree)
+    assert named in str(caught.value)
+
+
+def test_a_malformed_standard_is_named_not_a_traceback(tree):
+    _edit(tree / gen.TRANSLATION_REL, lambda d: d.pop("unit"))
+    with pytest.raises(gen.GenerationError, match="malformed"):
+        gen.expected_files(tree)
+
+
+def _sized_map(**entry) -> tuple[dict, dict]:
+    ea = {"language": "wba", "stub": True, "layout_map": {"technology": "WBA", "diagram_types": {
+        "Logical": {"size_keys": {"Thing": "actor"}, **entry}}}}
+    language = {"id": "wba", "stub": True, "layout": {"element_types": {"Thing": "box"}}}
+    return ea, language
+
+
+def test_a_size_key_that_differs_from_the_guide_is_caught_by_the_check():
+    ea, language = _sized_map()
+    problems = gen.map_problems(ea, language, _standard(), {})
+    assert len(problems) == 1 and "`Thing`" in problems[0] and "'actor'" in problems[0]
+    ea["layout_map"]["diagram_types"]["Logical"]["size_keys"]["Thing"] = "box"
+    assert gen.map_problems(ea, language, _standard(), {}) == []
+
+
+def test_a_recorded_exception_or_a_stated_reason_clears_a_size_difference():
+    ea, language = _sized_map(size_reason={"Thing": "EA draws this one as a stick figure."})
+    assert gen.map_problems(ea, language, _standard(), {}) == []
+    ea, language = _sized_map(size_reason={"Other": "Says nothing about Thing."})
+    assert len(gen.map_problems(ea, language, _standard(), {})) == 1
+    ea, language = _sized_map(size_reason="A sentence with no key excuses nothing in particular.")
+    assert len(gen.map_problems(ea, language, _standard(), {})) == 1
+    ea, language = _sized_map()
+    language["layout"]["exceptions"] = {"Thing": {"reason": "Every tool draws it so.", "source": "8.1"}}
+    assert gen.map_problems(ea, language, _standard(), {}) == []
+
+
+def test_a_size_key_through_a_concept_is_compared_by_its_size_class():
+    ea, language = _sized_map()
+    language["layout"]["element_types"]["Person"] = "actor"
+    ea["layout_map"]["diagram_types"]["Logical"]["size_keys"]["Thing"] = "Person"
+    assert len(gen.map_problems(ea, language, _standard(), {})) == 1
+
+
+def test_the_build_refuses_a_size_difference_nobody_stated(tree):
+    path = tree / gen.EA_REL / "bpmn-2" / "ea.yaml"
+    _edit(path, lambda d: d["layout_map"]["diagram_types"]["Business Process"].setdefault(
+        "size_keys", {}).update(StartEvent="box"))
+    with pytest.raises(gen.GenerationError, match="StartEvent"):
+        gen.expected_files(tree)
+    _edit(path, lambda d: d["layout_map"]["diagram_types"]["Business Process"].update(
+        size_reason={"StartEvent": "Planted, and stated."}))
+    gen.expected_files(tree)
+    assert "size_reason" not in gen.generate_language(gen.Sources(tree), "bpmn-2")
 
 
 # ---------------------------------------------------------------------------
@@ -349,10 +488,29 @@ def test_the_engines_defaults_agree_with_the_standard():
     assert defaults["band_gap"] == standard["spacing"]["between_bands"]["value"]
     assert defaults["origin_left"] == standard["spacing"]["page_margin"]["value"]
     assert defaults["origin_top"] == -standard["spacing"]["page_margin"]["value"]
+    box = standard["element_types"]["box"]
+    assert defaults["item_gap_flow"] == standard["spacing"]["along_flow"]["value"]
+    for spec in (defaults, compose_matrix.DEFAULT_MATRIX_SPEC):
+        assert spec["item_width"] == box["w"]
+        assert spec["item_height"] == box["h"]
+        assert spec["item_gap_x"] == standard["spacing"]["across"]["value"]
+        assert spec["item_gap_y"] == standard["spacing"]["down"]["value"]
+    assert compose_chevron.DEFAULT_CHEVRON_SPEC["item_width"] == box["w"]
+    assert compose_chevron.DEFAULT_CHEVRON_SPEC["item_height"] == box["h"]
 
 
-def test_the_engine_check_fails_on_a_planted_difference(monkeypatch):
-    monkeypatch.setitem(compose.DEFAULT_SPEC, "band_gap", 31)
+@pytest.mark.parametrize("key,value", [("band_gap", 31), ("item_width", 140), ("item_height", 60),
+                                       ("item_gap_x", 20), ("item_gap_y", 20), ("item_gap_flow", 30)])
+def test_the_engine_check_fails_on_a_planted_difference(monkeypatch, key, value):
+    monkeypatch.setitem(compose.DEFAULT_SPEC, key, value)
+    with pytest.raises(AssertionError):
+        test_the_engines_defaults_agree_with_the_standard()
+
+
+@pytest.mark.parametrize("module,name", [("compose_matrix", "DEFAULT_MATRIX_SPEC"),
+                                         ("compose_chevron", "DEFAULT_CHEVRON_SPEC")])
+def test_the_engine_check_reads_the_composers_with_their_own_defaults(monkeypatch, module, name):
+    monkeypatch.setitem(getattr(sys.modules[module], name), "item_width", 140)
     with pytest.raises(AssertionError):
         test_the_engines_defaults_agree_with_the_standard()
 
@@ -412,6 +570,29 @@ def test_a_shape_with_no_line_is_caught_and_a_stated_reason_clears_it():
     assert any("`Thing`" in p and "UML Constraint" in p for p in problems)
     stated = {"not_drawn": {"reason": "Shown inside its owner.", "concepts": ["Hex", "Thing"]}}
     assert gen.layout_problems(_small_guide(no_element_type=stated), _standard()) == []
+
+
+@pytest.mark.parametrize("groups,word", [
+    ({"not_drawn": {"reason": "See the notation.", "concepts": "see `notation.not_specified`"}}, "not_drawn"),
+    ({"not_drawn": {"reason": "No names at all."}}, "not_drawn"),
+    ({"not_drawn": ["Hex"]}, "not_drawn"),
+    (["Hex"], "no_element_type"),
+], ids=["text-for-a-list", "no-list", "group-is-a-list", "block-is-a-list"])
+def test_a_no_element_type_block_the_checks_cant_read_is_a_problem(groups, word):
+    problems = gen.layout_problems(_small_guide(no_element_type=groups), _standard())
+    assert any(word in p and "`Hex`" not in p for p in problems), problems
+    # And none of its names clears the concepts it meant to.
+    assert any("`Hex`" in p for p in problems)
+
+
+def test_a_malformed_no_element_type_block_is_caught_on_a_stub_too():
+    language = {"id": "wba", "stub": True, "layout": {"no_element_type": {"g": {"concepts": "Hex"}}}}
+    assert gen.layout_problems(language, _standard()) != []
+
+
+def test_a_diagram_type_is_checked_even_when_the_guide_lists_none():
+    guide = _small_guide(diagram_types={"Made up": {}})
+    assert any("`Made up`" in p for p in gen.layout_problems(guide, _standard()))
 
 
 def test_element_types_may_name_what_the_notation_names():

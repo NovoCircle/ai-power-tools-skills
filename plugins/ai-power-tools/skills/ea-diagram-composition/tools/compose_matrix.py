@@ -151,13 +151,13 @@ DEFAULT_MATRIX_SPEC: dict[str, Any] = {
     # One element inside a cell. Uniform everywhere: an element in a matrix
     # stands for the same kind of thing wherever it sits, and the variation this
     # grammar carries is HOW MANY are in a cell, not how big they are.
-    "item_width": 140,
-    "item_height": 60,
+    "item_width": 100,
+    "item_height": 70,
 
     # Gaps between elements inside one cell. POSITIVE, not merely non-negative -
     # see `_resolve_spec`.
-    "item_gap_x": 20,
-    "item_gap_y": 20,
+    "item_gap_x": 80,
+    "item_gap_y": 50,
 
     # Clear space inside a cell's border, on every side.
     "cell_pad": 12,
