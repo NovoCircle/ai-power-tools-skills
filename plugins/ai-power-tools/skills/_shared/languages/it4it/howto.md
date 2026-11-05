@@ -133,6 +133,6 @@ These are tool choices, not additions to the standard. The guide records how the
 
 The IT4IT ruleset, `rulesets/it4it/it4it_rules.yaml`, has 72 rules. They check that two data objects link only where the standard lists a link, which is a warning because the standard allows local links. They also check that each data object isn't inside the wrong component, that a component sits only in a group or a package, that a group holds only its own components and has a name on its list, and that each line joins the right kinds of shape.
 
-**This ruleset needs server 3.6.5 or later.** On 3.6.4 and earlier, 71 of its 72 rules report nothing, with no error, so a clean result there means nothing.
+62 of 72 rules in this ruleset use formats newer than 3.6.4, and on that server they report nothing or don't run as written. Use server 3.6.5 or later, because a clean result on 3.6.4 doesn't mean the model passes.
 
 **A check reports what's wrong, never what's missing.** The standard says data objects "can" relate, so a clean result on a partial model doesn't mean the model is complete. A clean result also doesn't mean conformance to the published standard, because these rules are read from the draft. Everything else needs a person: naming style, a Digital Product reaching its Service Offer, when a flow counts as a system of record integration, and what a tool or a practice must do.
