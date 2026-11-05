@@ -717,4 +717,6 @@ layout:
       - UniqueConstraint
       - CheckConstraint
       - Index
+      - PrimaryKey
+      - AlternateKey
   viewpoints: {}

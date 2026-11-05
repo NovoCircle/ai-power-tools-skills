@@ -763,6 +763,7 @@ harvest:
 # EA's names for this language's layout. tools/gen_conventions.py reads layout_map.
 layout_map:
   technology: ERD_dp
+  technology_reason: EA stores this diagram under its ERD_dp profile, as ERD_dp::ERD_DP.
   display_name: Entity Relationship Diagram
   extends: UML
   stereotype_prefix: ERD_
