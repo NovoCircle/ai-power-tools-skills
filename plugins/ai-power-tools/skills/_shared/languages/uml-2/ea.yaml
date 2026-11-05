@@ -2886,6 +2886,7 @@ layout_map:
       base: Timing
       default_type: container
     Analysis:
+      token_reason: EA's own diagram type, kept from the existing conventions. The UML guide has no such type.
       base: Analysis
       arrangement: graph
       title: frame-header
