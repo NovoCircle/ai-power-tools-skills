@@ -570,3 +570,10 @@ layout:
         - font_color
         - opacity
   viewpoints: {}
+  no_element_type:
+    interchange_record:
+      reason: 'A diagram interchange record: it is drawn as the element it depicts, or as a line across
+        a decision service, and takes no element size of its own.'
+      concepts:
+      - DMNShape
+      - DMNDecisionServiceDividerLine
