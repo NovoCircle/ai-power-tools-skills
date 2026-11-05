@@ -49,6 +49,7 @@ PINS = ("APT-2026-0521",)
 # The data assets this module covers (read by tools/register.py).
 COVERS = ("asset:plugins/ai-power-tools/skills/_shared/languages/*",)
 
+import functools
 import sys
 from collections import Counter
 from pathlib import Path
@@ -60,15 +61,16 @@ if str(_HERE) not in sys.path:
     sys.path.insert(0, str(_HERE))
 
 import measure_binding as mb  # noqa: E402
-from bindings import MDG_SEPARATOR, find_binding  # noqa: E402
+from bindings import MDG_SEPARATOR, available_bindings, find_binding  # noqa: E402
 
 pytest.importorskip("yaml", reason="PyYAML is required to read bindings")
 
 _BINDINGS = _HERE.parent.parent / "_shared" / "languages"
 
-#: Technology ids exactly as the bindings declare them. The qualified form is built from the
-#: separator, never written as a literal: the release gate reads a literal `<id>::<name>` as an
-#: unrecognized MDG namespace.
+#: What the model's diagrams store as the first part of their tokens, exactly as stored. It isn't
+#: always the id a binding declares, so `_binding` also finds a binding by the tokens it claims.
+#: The qualified form is built from the separator, never written as a literal: the release gate
+#: reads a literal `<id>::<name>` as an unrecognized MDG namespace.
 TECHNOLOGIES = (
     "ArchiMate3", "BPMN2.0", "DMN1.1", "ERD_dp", "SysML1.4", "UAFP_Framework",
     mb.BASE_NOTATION, "ZF Interface",
@@ -120,10 +122,17 @@ def model():
         )
 
 
+@functools.lru_cache(maxsize=None)
 def _binding(technology: str):
     found = find_binding(technology, _BINDINGS)
-    assert found is not None, f"no binding is shipped for {technology!r}"
-    return found
+    if found is not None:
+        return found
+    family = _qualified(technology, "")
+    owners = [binding for binding in map(lambda t: find_binding(t, _BINDINGS),
+                                         available_bindings(_BINDINGS))
+              if any(token.startswith(family) for token in binding.tokens)]
+    assert len(owners) == 1, f"no one binding is shipped for {technology!r}: {owners}"
+    return owners[0]
 
 
 def _is_base(technology: str) -> bool:
@@ -192,7 +201,7 @@ CASES = _cases()
 @needs_model
 @pytest.mark.parametrize("technology", TECHNOLOGIES)
 def test_the_technology_id_is_the_one_the_model_registers(model, technology):
-    """A guessed id resolves to nothing, silently; the model is the arbiter of the real one."""
+    """A guessed token group selects nothing, silently; the model is the arbiter of the real one."""
     if _is_base(technology):
         # EA's base notation is never tagged, so it must not be registered as a technology.
         assert technology not in model.known
@@ -339,6 +348,6 @@ def test_the_wrong_form_matches_nothing(model, case):
         assert not collisions, (
             f"{_case_id(case)}: the bare form matched {sorted(collisions)} on its own "
             "diagrams, so the prefix is not part of the stored name")
-    qualified = {_qualified(technology, s) for s in vocabulary}
+    qualified = {_qualified(t, s) for t in (technology, dt.technology) for s in vocabulary}
     assert not (qualified & set(model.stereotypes)), (
         f"{_case_id(case)}: the technology-qualified form is stored as a stereotype")
