@@ -15,6 +15,8 @@ Source codes used throughout:
 
 The later IDEF1X standard, IEEE 1320.2-1998 (IDEF1X97), is paywalled and was not read. Where this reference says "IDEF1X" it means the 1993 federal standard.
 
+SQLDOC citations use the manual's own section numbers: 5.5 is its section on constraints, and within it 5.5.1 covers check constraints, 5.5.2 not-null constraints, 5.5.3 unique constraints, 5.5.4 primary keys and 5.5.5 foreign keys.
+
 ---
 
 ## 1. Levels of a data model
