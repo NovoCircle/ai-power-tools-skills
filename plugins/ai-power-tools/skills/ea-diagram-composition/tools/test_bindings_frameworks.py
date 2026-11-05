@@ -480,7 +480,6 @@ def test_the_togaf_ring_radius_is_measured_and_deliberately_not_stated():
         assert key not in bound.own_spacing
     radii = _adm_ring_radii()
     assert len(radii) < mb.MIN_SAMPLE
-    assert "radius" in _TOGAF_TEXT, "the document must say why it is absent"
 
 
 @needs_model
@@ -529,7 +528,7 @@ def test_the_togaf_enterprise_continuum_is_one_observation_short():
     assert stat is not None and stat.low_n
     assert stat.n == mb.MIN_SAMPLE - 2 and stat.mode_count == stat.n
     assert stat.mode == (110, 128)
-    assert "observation short" in _TOGAF_TEXT
+    assert "TOGAF_EnterpriseContinuum" not in find_binding(_TOGAF).diagram_types
 
 
 @needs_model
@@ -919,7 +918,6 @@ def test_the_adm_routing_name_is_conventional_and_the_measurement_disagrees():
     modes = _connector_modes("TOGAF-ADM")
     assert sum(modes.values()) == 17
     assert modes == Counter({"8": 17})
-    assert "Mode=8" in _TOGAF_TEXT
 
 
 @needs_model

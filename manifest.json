@@ -309,7 +309,7 @@
         "ea-diagram-composition/tools/test_bindings.py": "7d3ddf568045006f446969c421d3f411115aa54470118c44d6b6187dde4f913a",
         "ea-diagram-composition/tools/test_bindings_data.py": "c527b811a0afb62f3d2e79458706e1bacf54f616ea2d9b38b979fee5add405e8",
         "ea-diagram-composition/tools/test_bindings_datamodel.py": "86aa8fa11561131fdcf783bc91998393d17717999648973e2c8942fc3f51a7f5",
-        "ea-diagram-composition/tools/test_bindings_frameworks.py": "6d34373c33e3a1fe8fe21f073ec4d28a4c603055e1cf0338ffa14e8afc885e1a",
+        "ea-diagram-composition/tools/test_bindings_frameworks.py": "c1b458493332f354836df59e068e93a4c1b94988d69bd2806a639ce710ef3b6f",
         "ea-diagram-composition/tools/test_bindings_real_model.py": "c5d40a9958afd3dd3c1cb7e6204de269e80b85f2130a4266fd285528c5d6a226",
         "ea-diagram-composition/tools/test_bindings_strategy.py": "af6ab601ac706175360ce63998940721180244891c021100853b24390fe8782a",
         "ea-diagram-composition/tools/test_bindings_sysphs.py": "4432baecd03a646ae2939e8d5099d96f6a17fb77e04e66b2d087643538d6670e",
