@@ -8,7 +8,7 @@ display_name: SoaML
 extends: UML
 stereotype_prefix: ''
 notes: |
-  EA has two diagram types for this language. `SoaML` draws the guide's Services Architecture and its other views except Choreography. `SoaMLSequence` is stored as a sequence diagram, so its arrangement is fixed here on EA's side, and the guide doesn't state it. The standard names no diagram types. Route names are conventions, not measurements.
+  EA has two diagram types for this language. `SoaML` draws the guide's Services Architecture and its other views except Choreography. This map has no entry for `SoaMLSequence`, because UML leaves its Sequence base to EA and an entry on that base would pull plain UML sequence diagrams into SoaML. The standard names no diagram types. Route names are conventions, not measurements.
 
   `SoaML` is the id EA reports, measured on EA 17.1 build 1716.
 diagram_types:
@@ -95,94 +95,6 @@ diagram_types:
       claimed:
         line_style: Solid against dashed separates a service channel from a role binding or a use (6.4.15,
           6.2.1).
-      free:
-      - fill
-      - border
-      - border_width
-      - line_color
-      - font_color
-      - opacity
-      - icon
-  SoaMLSequence:
-    base: Sequence
-    grammar: ea-semantic
-    title: frame-header
-    sizing:
-      default:
-        w: 100
-        h: 70
-      Collaboration:
-        w: 130
-        h: 80
-      CollaborationUse:
-        w: 130
-        h: 80
-      Milestone:
-        w: 120
-        h: 60
-      Port:
-        w: 15
-        h: 15
-      Request:
-        w: 15
-        h: 15
-      Service:
-        w: 15
-        h: 15
-      ServiceContract:
-        w: 130
-        h: 80
-      ServicesArchitecture:
-        w: 130
-        h: 80
-      collaboration:
-        w: 130
-        h: 80
-      collaborationUse:
-        w: 130
-        h: 80
-      milestone:
-        w: 120
-        h: 60
-      port:
-        w: 15
-        h: 15
-      request:
-        w: 15
-        h: 15
-      requestPoint:
-        w: 15
-        h: 15
-      service:
-        w: 15
-        h: 15
-      serviceContract:
-        w: 130
-        h: 80
-      servicePoint:
-        w: 15
-        h: 15
-      servicesArchitecture:
-        w: 130
-        h: 80
-    spacing:
-      item_gap_x: 80
-      item_gap_y: 50
-      item_gap_flow: 60
-      lane_gap: 0
-      min_lane_thickness: 120
-      band_gap: 30
-      origin_left: 40
-      origin_top: -40
-      band_pad_x: 12
-      band_pad_y: 12
-      lane_pad: 12
-      grid_pad: 12
-      label_height: 28
-    routing:
-      default: Direct
-    channels:
-      fill: null
       free:
       - fill
       - border
