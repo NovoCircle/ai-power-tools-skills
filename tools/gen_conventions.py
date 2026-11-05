@@ -323,6 +323,13 @@ def _names(block: Any) -> set[str]:
     return set()
 
 
+def _stated_none(layout: Mapping[str, Any]) -> set[str]:
+    """Concepts a guide says take no element type: `no_element_type` groups, each with a reason."""
+    groups = layout.get("no_element_type") or {}
+    return {str(concept) for group in groups.values() if isinstance(group, Mapping)
+            for concept in group.get("concepts") or ()}
+
+
 def layout_problems(language: Mapping[str, Any], standard: Mapping[str, Any]) -> list[str]:
     """What's wrong with one `language.yaml`'s `layout` block.
 
@@ -364,7 +371,10 @@ def layout_problems(language: Mapping[str, Any], standard: Mapping[str, Any]) ->
     if language.get("stub"):
         return problems
 
-    concepts = _names(language.get("concepts"))
+    notation = language.get("notation")
+    drawn = notation.get("elements") if isinstance(notation, Mapping) else None
+    stated_none = _stated_none(layout)
+    concepts = _names(language.get("concepts")) | _names(drawn)
     for concept in element_types:
         if concept not in concepts:
             problems.append(f"{where}: `element_types` names `{concept}`, which is not a concept "
@@ -375,12 +385,10 @@ def layout_problems(language: Mapping[str, Any], standard: Mapping[str, Any]) ->
             problems.append(f"{where}: `layout.diagram_types` names `{name}`, which is not a "
                             f"diagram type in this guide")
 
-    notation = language.get("notation")
-    drawn = notation.get("elements") if isinstance(notation, Mapping) else None
     if isinstance(drawn, Mapping):
         for concept, entry in drawn.items():
             shape = entry.get("shape") if isinstance(entry, Mapping) else entry
-            if not shape or concept in element_types:
+            if not shape or concept in element_types or concept in stated_none:
                 continue
             if _BOX_WORDS.search(str(shape)) or _NOT_DRAWN.search(str(shape)):
                 continue
@@ -391,8 +399,10 @@ def layout_problems(language: Mapping[str, Any], standard: Mapping[str, Any]) ->
     if isinstance(rows, Mapping):
         for concept, entry in rows.items():
             base = entry.get("uml_base") if isinstance(entry, Mapping) else None
-            if base in _UML_BASES_NOT_BOX and concept not in element_types:
-                problems.append(f"{where}: `{concept}` is drawn as a UML {base}, so it needs an "
+            bases = base if isinstance(base, list) else [base]
+            hit = next((b for b in bases if b in _UML_BASES_NOT_BOX), None)
+            if hit and concept not in element_types and concept not in stated_none:
+                problems.append(f"{where}: `{concept}` is drawn as a UML {hit}, so it needs an "
                                 f"`element_types` line")
     return problems
 
@@ -441,7 +451,8 @@ def map_problems(ea: Mapping[str, Any], language: Mapping[str, Any] | None,
         return problems
 
     # The whole ea.yaml is here, so the map must agree with it.
-    if technology and ea.get("technology") not in (None, "none", technology):
+    if (technology and ea.get("technology") not in (None, "none", technology)
+            and not layout_map.get("technology_reason")):
         problems.append(f"{where}: technology {technology!r} differs from ea.yaml's "
                         f"{ea.get('technology')!r}")
     if language:
