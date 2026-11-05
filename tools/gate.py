@@ -173,6 +173,8 @@ KNOWN_SPACED_IDS = (
     "TOGAF Diagrams",
     # Sparx-shipped group on the Resources tab (`EA Requirements`), whose stored token is `Extended::Requirements`.
     "EA Requirements",
+    # Sparx-shipped diagram type of Core Extensions (`Data Modeling`), ending the stored token `Extended::Data Modeling`.
+    "Data Modeling",
     # Sparx-shipped, and the technology behind the corpus row whose
     # diagram type is TechnicalReferenceModel -- which was being counted
     # under TOGAF until it was measured.
