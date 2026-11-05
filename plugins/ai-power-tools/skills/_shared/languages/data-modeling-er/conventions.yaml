@@ -3,14 +3,17 @@
 # shelf. EA's names come from `layout_map` in this folder's ea.yaml. To change a value,
 # change the source and run `python tools/gen_conventions.py`.
 
-technology: ERD_dp
+technology: ERD
 display_name: Entity Relationship Diagram
 extends: UML
 stereotype_prefix: ERD_
 notes: |
   `ERD_DP` is one EA diagram type, and it draws both the guide's Chen and crow's foot diagrams, so the map names both guide types and the first sets its layout. The map has no entry for `Extended::Data Modeling`. Route names are conventions, not measurements.
+
+  `ERD` is the id EA reports, measured on EA 17.1 build 1716.
 diagram_types:
   ERD_DP:
+    token: ERD_dp::ERD_DP
     base: Logical
     grammar: graph
     title: frame-header
