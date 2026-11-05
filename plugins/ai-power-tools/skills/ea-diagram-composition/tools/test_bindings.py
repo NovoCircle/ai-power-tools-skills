@@ -1384,7 +1384,7 @@ diagram_types:
     sizing:
       default: {w: 90, h: 70}
       Package: {w: 148, h: 90}
-    spacing: {item_gap_x: 56, item_gap_y: 50}
+    spacing: {item_gap_x: 56, item_gap_y: 55}
     routing: {default: Direct}
     channels:
       fill: ~
@@ -1443,13 +1443,14 @@ def test_a_child_diagram_type_takes_the_substrate_slots_it_does_not_state(tmp_pa
     assert dt.title == "drawn"
     assert dt.routing["default"] == "OrthogonalSquare"
     # Unstated by the child: the substrate's, and reported as inherited.
-    assert dt.spacing["item_gap_y"] == 50
-    assert dt.inherited_spacing() == {"item_gap_y": 50}
+    assert dt.spacing["item_gap_y"] == 55
+    assert dt.inherited_spacing() == {"item_gap_y": 55}
     assert dt.size_for("Package") == (148, 90)
     assert dt.inherited_sizing() == {"Package": {"w": 148, "h": 90}}
     # And the spec the engine takes carries the inherited value, which is where
-    # the engine's own default used to answer.
-    assert dt.spec()["item_gap_y"] == 50 != DEFAULT_SPEC["item_gap_y"]
+    # the engine's own default used to answer. The parent states a gap the engine's
+    # default doesn't hold, because the default is the standard's value now.
+    assert dt.spec()["item_gap_y"] == 55 != DEFAULT_SPEC["item_gap_y"]
 
 
 def test_a_child_does_not_acquire_the_substrates_diagram_type_catalog(tmp_path):
@@ -1534,7 +1535,7 @@ diagram_types:
     assert dt.substrate == "WBA::Logical"
     assert dt.size_for() == (200, 80)
     assert dt.size_for("Package") == (148, 90)
-    assert dt.spacing == {"item_gap_x": 56, "item_gap_y": 50}
+    assert dt.spacing == {"item_gap_x": 56, "item_gap_y": 55}
 
 
 # ---------------------------------------------------------------------------
