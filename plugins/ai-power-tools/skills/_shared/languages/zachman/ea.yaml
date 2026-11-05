@@ -1626,8 +1626,7 @@ harvest:
 
 # EA's names for this language's layout. tools/gen_conventions.py reads layout_map.
 layout_map:
-  technology: ZF Interface
-  technology_reason: EA's Zachman technology registers this diagram type under its ZF Interface profile.
+  technology: ZF
   display_name: Zachman Framework (framework grid)
   extends: UML
   stereotype_prefix: ''
@@ -1640,9 +1639,12 @@ layout_map:
 
     Not bound: the 28 diagram types under ZF Planner, ZF Owner, ZF Designer, ZF Builder, ZF Subcontractor and ZF. None has enough elements to support a default size. ZF Owner's OwnerTime reaches a default of 15 by 15, but that is the size of its event markers and not of its business events, so it isn't used.
 
-    No viewpoints. The 36 cells are 36 named views, but the diagram type behind each one belongs to one of those other technologies, and a map binds one technology.
+    No viewpoints. The 36 cells are 36 named views, but the diagram type behind each one is under one of those other token groups, which this map doesn't bind.
+
+    `ZF` is the id EA reports, measured on EA 17.1 build 1716.
   diagram_types:
     ZF_Interface:
+      token: ZF Interface::ZF_Interface
       base: Logical
       default_type: large-box
       arrangement: matrix

@@ -3,7 +3,7 @@
 # shelf. EA's names come from `layout_map` in this folder's ea.yaml. To change a value,
 # change the source and run `python tools/gen_conventions.py`.
 
-technology: ZF Interface
+technology: ZF
 display_name: Zachman Framework (framework grid)
 extends: UML
 stereotype_prefix: ''
@@ -16,9 +16,12 @@ notes: |
 
   Not bound: the 28 diagram types under ZF Planner, ZF Owner, ZF Designer, ZF Builder, ZF Subcontractor and ZF. None has enough elements to support a default size. ZF Owner's OwnerTime reaches a default of 15 by 15, but that is the size of its event markers and not of its business events, so it isn't used.
 
-  No viewpoints. The 36 cells are 36 named views, but the diagram type behind each one belongs to one of those other technologies, and a map binds one technology.
+  No viewpoints. The 36 cells are 36 named views, but the diagram type behind each one is under one of those other token groups, which this map doesn't bind.
+
+  `ZF` is the id EA reports, measured on EA 17.1 build 1716.
 diagram_types:
   ZF_Interface:
+    token: ZF Interface::ZF_Interface
     base: Logical
     grammar: matrix
     title: frame-header
