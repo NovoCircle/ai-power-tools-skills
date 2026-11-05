@@ -56,6 +56,14 @@ diagram_types:
       default: OrthogonalSquare
     channels:
       fill: null
+      free:
+      - fill
+      - border
+      - border_width
+      - line_color
+      - font_color
+      - opacity
+      - icon
   CapabilityHeatmap:
     base: Logical
     grammar: nested-grid

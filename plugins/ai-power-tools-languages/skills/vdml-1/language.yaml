@@ -3232,6 +3232,16 @@ layout:
         - font_color
         - opacity
         - icon
-    Activity Network: {arrangement: lanes}   # each Role is a swim-lane
+    Activity Network:   # each Role is a swim-lane
+      arrangement: lanes
+      channels:
+        free:
+        - fill
+        - border
+        - border_width
+        - line_color
+        - font_color
+        - opacity
+        - icon
     CapabilityLibrary: {arrangement: nested-grid}   # a child capability is drawn inside its parent
     Capability Heatmap: {arrangement: nested-grid}   # same shapes as CapabilityLibrary
