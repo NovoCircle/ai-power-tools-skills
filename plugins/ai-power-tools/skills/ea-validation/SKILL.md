@@ -11,6 +11,11 @@ description: Author and run YAML sidecar conformance rules against a Sparx EA mo
 > `validate_model` is exposed as `ea_validate(operation="audit", params={"rules_path_or_content": ...})`.
 > The underlying behavior is unchanged.
 
+> **Every ruleset in this package needs server 3.6.5 or later.** Check `update.server_version`
+> from `ping` first. On an older server, don't run them: between 1 of 8 and all of a ruleset's
+> rules report nothing or don't run as written, by language (each how-to gives its count), and
+> that reads like a clean model. Tell the user to update the server.
+
 > **Building a complete ruleset for a modeling language?** Use the `ea-ruleset-author`
 > skill instead — it covers the full workflow: spec research → rule-category planning →
 > YAML authoring → testing → publishing to the skills bundle. This skill covers the YAML
@@ -134,9 +139,9 @@ result = ea_validate(operation="audit", params={
     "package_id": 42,
 })
 
-# URL fetch — server downloads and runs the ruleset (v1.2.0+)
+# A ruleset that ships in the plugin, by path from the plugin root
 result = ea_validate(operation="audit", params={
-    "rules_path_or_content": "https://raw.githubusercontent.com/NovoCircle/ai-power-tools-skills/main/ruleset-archimate31/archimate31_rules.yaml",
+    "rules_path_or_content": "<plugin root>/rulesets/archimate-3/archimate-3_rules.yaml",
 })
 ```
 
@@ -168,39 +173,29 @@ Rulesets ship in this plugin, one folder per language. Each path below is from t
 | `csdm-5` | `rulesets/csdm-5/csdm-5_rules.yaml` | 14 | CSDM 5 |
 | `it4it` | `rulesets/it4it/it4it_rules.yaml` | 72 | IT4IT 3.0, read from the public draft |
 
-### Using hosted rulesets (v1.2.0+)
+`rules_path_or_content` accepts a path, an `https://` URL (v1.2.0+) or inline YAML.
 
-`rules_path_or_content` accepts an `https://` URL — the server fetches the YAML at call time. No local file needed.
+From a skill folder a path is `../../rulesets/<id>/<id>_rules.yaml`. On desktop chat and Claude Cowork,
+which cannot read the plugin's files by path, pass the YAML as inline content.
 
-**Pre-built hosted rulesets (install via `install_skills` then reference by URL):**
-
-| Ruleset | Description | URL fragment |
-|---------|-------------|--------------|
-| `ruleset-archimate31` | 27-rule ArchiMate 3.1 conformance set | `ruleset-archimate31/archimate31_rules.yaml` |
-
-Base URL: `https://raw.githubusercontent.com/NovoCircle/ai-power-tools-skills/main/`
-
-**Typical workflow with a hosted ruleset:**
+The ArchiMate ruleset is at `rulesets/archimate-3/archimate-3_rules.yaml` in this plugin. It replaces
+`ruleset-archimate31`. It has 4 rules in place of 27: one checks every relationship against the
+standard's table, the 14 rules the standard doesn't require are gone, and the six collaboration and
+interaction rules become two warnings, because the standard states those numbers in prose. On a server
+older than 3.6.5,
+the old set is at `https://raw.githubusercontent.com/NovoCircle/ai-power-tools-skills/v3.6.4/ruleset-archimate31/archimate31_rules.yaml`,
+because that server can't read this one.
 
 ```python
-# 1. Run directly via URL — no install step needed, server fetches at call time
+# 1. Run the shipped ruleset by path
 result = ea_validate(operation="audit", params={
-    "rules_path_or_content": (
-        "https://raw.githubusercontent.com/NovoCircle/ai-power-tools-skills"
-        "/main/ruleset-archimate31/archimate31_rules.yaml"
-    ),
+    "rules_path_or_content": "<plugin root>/rulesets/archimate-3/archimate-3_rules.yaml"
 })
 
-# 2. Or install locally first, then run from the installed path (needs v3.6.0+,
-#    which expands the `~`).
-#    Rulesets do NOT install among the skills -- they carry no SKILL.md, so
-#    they go under the product data directory instead. install_skills stands
-#    down on a machine that has the plugin (the skills load from the plugin),
-#    and the ruleset is not part of the plugin, so pass force=true; with names
-#    limited to the ruleset it writes that one ruleset and nothing else.
-ea_repository(operation="install_skills", params={"names": ["ruleset-archimate31"], "force": True})
+# 2. A ruleset of your own can sit under ~/.claude/ai-power-tools/rulesets/ (needs v3.6.0+,
+#    which expands the `~`). Rulesets carry no SKILL.md, so they never go among the skills.
 result = ea_validate(operation="audit", params={
-    "rules_path_or_content": "~/.claude/ai-power-tools/rulesets/ruleset-archimate31/archimate31_rules.yaml"
+    "rules_path_or_content": "~/.claude/ai-power-tools/rulesets/my-rules/my_rules.yaml"
 })
 
 # 3. Or pass inline YAML content as a string (no file or URL required)

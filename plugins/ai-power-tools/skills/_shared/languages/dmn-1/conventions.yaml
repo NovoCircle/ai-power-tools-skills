@@ -13,6 +13,8 @@ notes: |
   CONTAINMENT EXISTS AND IS NOT THE STRUCTURE, which is what refuses nested-grid. 36 of the 287 objects across the 31 diagrams sit inside another (12.5%), and every one of the parents is a `DecisionService`. So the enclosure is a real feature on the diagrams that have one, and it is a minority of one concept while the requirement links are the content everywhere: nested-grid's own test asks whether an arrow between two boxes would add anything, and here it always would, because the arrow is which requirement it is.
 
   SPACING IS NOW STATED, REVERSING AN EARLIER DRAFT OF THIS FILE. The draft left both gaps unset on the argument that in a graph these distances follow edge density rather than a convention of the notation. That argument is true and it is equally true of every `graph` diagram type in the parent binding, all of which state both axes: a `graph` layout takes them as its column and layer spacing, so they are read rather than inert, and the alternative is the engine's 20, which nobody measured. What the rules ask of a gap is that it clear ten observations and that no single diagram supply more than half of the population, and these two clear both by a wider margin than any other gap in the tree: 25 and 23 diagrams contribute and the densest supplies 13%. Each figure below is the median of its population, with its spread disclosed, and is a fact about that population rather than a convention.
+
+  `DMN1.1` is the id EA reports, measured on EA 17.1 build 1716.
 diagram_types:
   DMNDiagram:
     base: Analysis
@@ -39,14 +41,13 @@ diagram_types:
     routing:
       default: Direct
     channels:
-      fill: Element kind. Claimed rather than free, because recoloring a diagram whose fill already encodes
-        kind breaks it, while leaving a channel unused costs nothing.
+      fill: Kind of element. Decisions, input data, knowledge models and knowledge sources should read
+        differently, so a fill that already separates them stays as it is.
       claimed:
-        position: Dependency direction. The requiring element usually sits above the element it requires,
-          so moving an element up or down to encode something else reverses the reading.
-        size: Enclosure, for one concept. A DecisionService is sized by the decisions inside it, so resizing
-          one changes what it is drawn as containing.
-        icon: 'Decision logic kind: a decision draws a table or a chevron glyph.'
+        position: Direction of dependency. The element that requires another sits above it, so moving
+          an element up or down for another reason reverses the reading.
+        size: Enclosure, for a decision service only. It is sized by the decisions inside it.
+        icon: Kind of decision logic. A decision may show a table or a chevron glyph.
       free:
       - border
       - border_width

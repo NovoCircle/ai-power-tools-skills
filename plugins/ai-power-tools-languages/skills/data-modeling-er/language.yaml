@@ -1,27 +1,656 @@
-# Stub: holds only the layout block until the guide arrives.
-# The guide replaces this file and keeps the `layout` block.
+# Data modeling and entity-relationship (ER) modeling: language file (schema_version 1).
+# Written from public sources only (see standard.sources). There is no single standard, owner or version for this language.
+# Concept names are PascalCase names for the constructs the sources describe. Tool-neutral: no tool facts live here.
+# Keys beyond the base schema: standard.sources, model_levels, scopes,
+#   concepts.elements[].role, concepts.elements[].inferred, relationships.references[].inferred, constraints[].inferred.
+# constraints[].checkable: static = a validator that sees only the saved model can check it; partial = only the structure or simple
+#   cases; runtime = needs instance data; none = judgment or documentation, not a property a checker can see.
+# constraints[].applies_when: omitted = always; otherwise one of the scope tokens defined under scopes.
+# Strength policy: must = error, should = warning, note = advice only. Normal forms are should or note (a decision for this language).
+schema_version: 1
 id: data-modeling-er
 name: Data modeling and entity-relationship (ER) modeling
-stub: true
+owner: {name: 'None. No single body governs this language. Sources: P. P.-S. Chen (entity-relationship model), NIST (IDEF1X, FIPS 184), E. F. Codd (relational model).', kind: body-of-knowledge}
+standard:
+  name: Data modeling and entity-relationship modeling (a composite of public sources)
+  version: none
+  status: no-single-standard
+  reference: 'Chen, ACM Transactions on Database Systems 1(1), March 1976 (the entity-relationship model); NIST FIPS PUB 184, 21 December 1993, withdrawn 2 September 2008 (IDEF1X); Codd, Communications of the ACM, June 1970, and Kent, Communications of the ACM, February 1983 (relational model and normal forms); a public database manual for SQL constraint behavior; two secondary sources for crow''s foot notation.'
+  sources:
+    CHEN76: {citation: 'P. P.-S. Chen, The Entity-Relationship Model: Toward a Unified View of Data, ACM Transactions on Database Systems 1(1), March 1976, pp. 9-36', kind: paper that defines the model, url: 'https://dl.acm.org/doi/pdf/10.1145/320434.320440'}
+    FIPS184: {citation: 'FIPS PUB 184, Integration Definition for Information Modeling (IDEF1X), NIST, 21 December 1993 (withdrawn 2 September 2008)', kind: 'formal standard, withdrawn', url: 'https://nvlpubs.nist.gov/nistpubs/Legacy/FIPS/fipspub184.pdf', withdrawal: 'https://www.govinfo.gov/content/pkg/FR-2008-09-02/pdf/E8-20138.pdf'}
+    CODD70: {citation: 'E. F. Codd, A Relational Model of Data for Large Shared Data Banks, Communications of the ACM 13(6), June 1970, pp. 377-387', kind: paper that defines the relational model, url: 'https://dl.acm.org/doi/pdf/10.1145/362384.362685'}
+    KENT83: {citation: 'W. Kent, A Simple Guide to Five Normal Forms in Relational Database Theory, Communications of the ACM 26(2), February 1983, pp. 120-125', kind: tutorial article, url: 'https://www.bkent.net/Doc/simple5.htm'}
+    SQLDOC: {citation: 'A public database manual, chapter on constraints (a public description of how SQL constraints behave; ISO/IEC 9075 itself was not read)', kind: public database manual}
+    WIKIER: {citation: 'Wikipedia, Entity-relationship model (secondary source; carries a maintenance banner about possible machine-written text)', kind: secondary, url: 'https://en.wikipedia.org/wiki/Entity%E2%80%93relationship_model'}
+    CFOOT: {citation: 'A blog article on crow''s foot notation and its cardinality symbols, dated 2 August 2026 (secondary source)', kind: secondary}
+  later_versions: 'IDEF1X97 (IEEE Std 1320.2-1998, approved 25 June 1998, inactive-reserved since 25 March 2021) is later than FIPS 184 and is not described here: it is paywalled and was not read. No other source has a later version to track.'
+model_levels:
+  # Two different ideas of level; both are kept and they are not the same axis.
+  idef1x_view_levels:
+    note: "All three describe one logical model at increasing completeness (FIPS184 3.10, Table 1)."
+    EntityRelationship: {section: 'FIPS184 3.10.1, 3.10.3', contains: 'entities, relationships, optional attributes, categorizations, non-specific relationships', 'no': 'primary, alternate or foreign keys'}
+    KeyBased: {section: FIPS184 3.10.1, adds: 'primary keys, alternate keys, foreign keys, dependent and independent entities, identifying and non-identifying relationships, mandatory and optional parents, discriminators', prohibits: non-specific relationships}
+    FullyAttributed: {section: FIPS184 3.10.1, adds: all relevant non-key attributes, requires: everything the key-based level requires}
+  abstraction_levels:
+    note: "The conceptual, logical and physical tradition (WIKIER, secondary) and Chen's four levels of logical view (CHEN76 2.1). A model is at one of these abstraction levels independent of its IDEF1X view level."
+    Conceptual: {detail: least; scope and master entities}
+    Logical: {detail: 'entities, attributes, identifiers, relationships; independent of any database product'}
+    Physical: {detail: 'tables, columns, keys, indexes and constraints; depends on the database product'}
+scopes:
+  note: "Tokens used in constraints[].applies_when. A rule with no token always applies."
+  keyed-level: "The model records keys: IDEF1X key-based and fully-attributed views, and any logical model with attributes and identifiers."
+  er-level: "The entity-relationship level of IDEF1X, where keys are not recorded."
+  chen: "Chen's model and diagram technique."
+  idef1x: "IDEF1X notation (FIPS 184)."
+  idef1x-or-crows-foot: "A model drawn in IDEF1X or crow's foot notation, as opposed to Chen's."
+  physical: "The table level: tables, columns, constraints, indexes."
+concepts:
+  source: "33 concepts from CHEN76 (entities, relationships, roles, value sets, weak entities), FIPS184 (IDEF1X entities, domains, attributes, connection and categorization relationships, keys, views, notes), CODD70 and the public database manual (tables, columns, key and foreign key constraints, indexes). Generalizations are ours: the sources declare none. Role concepts (generic and category entities) are roles an entity plays, not separate kinds of entity."
+  groups:
+    Entities: {defined_by: 'CHEN76 2; FIPS184 3.1, 3.6', notes: 'Entity and its variants. Chen: entity set, weak entity set. IDEF1X: independent and dependent entity, generic and category entity.', diagram_type: all logical diagram types}
+    Attributes: {defined_by: 'CHEN76 2.2.3; FIPS184 3.2, 3.4', notes: Attributes and the domains (value sets) they draw on., diagram_type: all logical diagram types}
+    Chen relationships: {defined_by: 'CHEN76 2.2.2, 3.1', notes: 'Chen''s relationship set: n-ary, with roles and attributes.', diagram_type: ChenDiagram}
+    IDEF1X relationships: {defined_by: FIPS184 3.5 to 3.7, notes: 'IDEF1X connection, categorization and non-specific relationships, and the category cluster.', diagram_type: IDEF1XEntityRelationshipView; IDEF1XKeyBasedView; IDEF1XFullyAttributedView; CrowsFootDiagram}
+    Keys: {defined_by: 'CODD70 1.3; FIPS184 3.8, 3.9', notes: 'Candidate, primary, alternate and foreign keys.', diagram_type: IDEF1XKeyBasedView; IDEF1XFullyAttributedView; CrowsFootDiagram}
+    Model containers: {defined_by: 'FIPS184 3.3, 3.13', notes: Views and notes of an IDEF1X model., diagram_type: IDEF1X views}
+    Physical level: {defined_by: CODD70 1.3; SQLDOC 5.5, notes: 'Tables, columns, constraints and indexes.', diagram_type: PhysicalDataModelDiagram}
+  elements:
+    Entity: {display: Entity, category: Entities, section: 'CHEN76 2.2.1; FIPS184 2.21, 3.1', attributes: [{"name": "name", "multiplicity": "1", "section": "FIPS184 3.1.2, 3.1.3(a)", "note": "A singular noun phrase, unique in the model."}, {"name": "number", "type": "PositiveInteger", "multiplicity": "0..1", "section": "FIPS184 3.1.2", "note": "Written after the name, separated by a slash."}, {"name": "description", "multiplicity": "1", "section": "FIPS184 3.12", "note": "Held in the glossary, not drawn."}, {"name": "aliases", "multiplicity": "*", "section": "FIPS184 3.12", "note": "Held in the glossary, not drawn."}]}
+    WeakEntity: {display: Weak entity (identifier-dependent entity), category: Entities, specializes: Entity, inferred: true, section: 'CHEN76 2.3.2, 3.1(5); FIPS184 2.33, 3.1.1'}
+    AssociativeEntity: {display: Associative entity (intersection entity), category: Entities, specializes: Entity, inferred: true, section: FIPS184 3.7.1}
+    GenericEntity: {display: Generic entity (supertype), category: Entities, role: true, specializes: Entity, section: 'FIPS184 2.24, 3.6'}
+    CategoryEntity: {display: Category entity (subtype), category: Entities, role: true, specializes: Entity, section: 'FIPS184 2.22, 3.6'}
+    Attribute: {display: Attribute, category: Attributes, section: 'CHEN76 2.2.3; FIPS184 2.3, 3.4', attributes: [{"name": "name", "multiplicity": "1", "section": "FIPS184 3.4.2", "note": "The name of its underlying domain, a singular noun phrase."}, {"name": "optional", "multiplicity": "0..1", "section": "FIPS184 3.4.3(f)", "note": "Marked (O) after the name when a value may be null. Never on a primary key attribute."}, {"name": "roleName", "multiplicity": "0..1", "section": "FIPS184 3.9.1.1", "note": "Used when a migrated attribute needs its own name."}]}
+    Domain: {display: Domain (value set), category: Attributes, section: 'CHEN76 2.2.3; FIPS184 2.19, 3.2', attributes: [{"name": "name", "multiplicity": "1", "section": "FIPS184 3.2.3(a)"}, {"name": "description", "multiplicity": "1", "section": "FIPS184 3.12", "note": "Held in the glossary. A typed domain also references its super-domain."}, {"name": "aliases", "multiplicity": "*", "section": "FIPS184 3.12"}]}
+    BaseDomain: {display: Base domain, category: Attributes, specializes: Domain, section: FIPS184 3.2.1, attributes: [{"name": "dataType", "type": "BaseDataType", "multiplicity": "0..1", "section": "FIPS184 3.2.1, 3.2.3(c)"}, {"name": "domainRule", "type": "DomainRule", "multiplicity": "0..1", "section": "FIPS184 3.2.1, 3.2.3(d)"}]}
+    TypedDomain: {display: Typed domain, category: Attributes, specializes: Domain, section: FIPS184 3.2.1, attributes: [{"name": "superDomain", "type": "Domain", "multiplicity": "1", "section": "FIPS184 3.2.3(h)(i)"}, {"name": "domainRule", "type": "DomainRule", "multiplicity": "0..1", "section": "FIPS184 3.2.1", "note": "Narrows the rules of the domain it references."}]}
+    Relationship: {display: Relationship (relationship set), category: Chen relationships, section: 'CHEN76 2.2.2, 3.1', attributes: [{"name": "name", "multiplicity": "1", "section": "CHEN76 3.1", "note": "For example PROJECT-WORKER."}, {"name": "mapping", "type": "ChenMapping", "multiplicity": "1", "section": "CHEN76 3.1(4)"}, {"name": "role", "multiplicity": "1..*", "section": "CHEN76 2.2.2, 3.1", "note": "One role for each participating entity set."}, {"name": "minimumMaximum", "multiplicity": "0..1", "section": "CHEN76 3.2, p. 21", "note": "Minimum and maximum number of entities on a side. The paper does not state a type."}]}
+    ConnectionRelationship: {display: Specific connection relationship (parent-child), category: IDEF1X relationships, section: 'FIPS184 2.57, 3.5', attributes: [{"name": "name", "multiplicity": "1", "section": "FIPS184 3.5.3", "note": "A verb phrase; two directions are written as two phrases separated by a slash."}, {"name": "childCardinality", "type": "ChildCardinality", "multiplicity": "1", "section": "FIPS184 3.5.2", "note": "Zero, one or more is the default."}, {"name": "exactNumberOrRange", "type": "PositiveInteger", "multiplicity": "0..2", "section": "FIPS184 3.5.2", "note": "Present only for exactly n or from n to m."}]}
+    IdentifyingRelationship: {display: Identifying relationship, category: IDEF1X relationships, specializes: ConnectionRelationship, section: 'FIPS184 2.50, 3.5.1.1'}
+    NonIdentifyingRelationship: {display: Non-identifying relationship, category: IDEF1X relationships, specializes: ConnectionRelationship, section: 'FIPS184 2.54, 3.5.1.2'}
+    MandatoryNonIdentifyingRelationship: {display: Mandatory non-identifying relationship, category: IDEF1X relationships, specializes: NonIdentifyingRelationship, section: 'FIPS184 2.51, 3.5.2.3'}
+    OptionalNonIdentifyingRelationship: {display: Optional non-identifying relationship, category: IDEF1X relationships, specializes: NonIdentifyingRelationship, section: 'FIPS184 2.55, 3.5.2.4'}
+    CategorizationRelationship: {display: Categorization relationship, category: IDEF1X relationships, section: 'FIPS184 2.48, 3.6'}
+    CategoryCluster: {display: Category cluster, category: IDEF1X relationships, section: 'FIPS184 2.10, 3.6.1', attributes: [{"name": "completeness", "type": "ClusterCompleteness", "multiplicity": "1", "section": "FIPS184 3.6.1"}, {"name": "discriminator", "type": "Attribute", "multiplicity": "0..1", "section": "FIPS184 3.6.1, 3.10.1", "note": "Required at the key-based and fully-attributed levels."}]}
+    NonSpecificRelationship: {display: Non-specific relationship (many-to-many), category: IDEF1X relationships, section: 'FIPS184 2.53, 3.7', attributes: [{"name": "name", "multiplicity": "0..1", "section": "FIPS184 3.7.2", "note": "Two verb phrases separated by a slash."}, {"name": "endCardinality", "type": "ChildCardinality", "multiplicity": "2", "section": "FIPS184 3.7.2", "note": "One for each end; the default is zero, one or more."}]}
+    Key: {display: Key, category: Keys, abstract: true, inferred: true, section: CODD70 1.3; FIPS184 2.34-2.41}
+    CandidateKey: {display: Candidate key, category: Keys, specializes: Key, section: CODD70 1.3; FIPS184 2.34}
+    PrimaryKey: {display: Primary key, category: Keys, specializes: CandidateKey, section: CHEN76 2.3.1; CODD70 1.3; FIPS184 2.41}
+    AlternateKey: {display: Alternate key, category: Keys, specializes: CandidateKey, section: 'FIPS184 2.35, 3.8', attributes: [{"name": "number", "type": "Integer", "multiplicity": "1", "section": "FIPS184 3.8.2", "note": "Unique within the entity; written as AKn."}]}
+    ForeignKey: {display: Foreign key, category: Keys, specializes: Key, section: 'CODD70 1.3; FIPS184 2.38, 3.9', attributes: [{"name": "roleName", "multiplicity": "0..1", "section": "FIPS184 3.9.1.1, 3.9.2.1", "note": "Written before the migrated attribute name, joined by a period."}]}
+    View: {display: View, category: Model containers, section: 'FIPS184 2.64, 3.3', attributes: [{"name": "name", "multiplicity": "1", "section": "FIPS184 3.3.1, 3.3.3(a)", "note": "Unique within the model."}, {"name": "level", "type": "ViewLevel", "multiplicity": "0..1", "section": "FIPS184 3.3.1, 3.10"}, {"name": "description", "multiplicity": "0..1", "section": "FIPS184 3.3.1, 3.12", "note": "Author, dates, completion status and a textual description are optional."}]}
+    Note: {display: Note, category: Model containers, section: FIPS184 3.13, attributes: [{"name": "number", "type": "PositiveInteger", "multiplicity": "1", "section": "FIPS184 3.13, 3.14.5"}, {"name": "text", "multiplicity": "1", "section": "FIPS184 3.14.5", "note": "Any characters."}]}
+    Table: {display: Table (relation), category: Physical level, section: CODD70 1.3; SQLDOC 5.5, attributes: [{"name": "name", "multiplicity": "1", "section": "CODD70 1.3; SQLDOC 5.5"}]}
+    Column: {display: Column, category: Physical level, section: CODD70 1.3; SQLDOC 5.5, attributes: [{"name": "name", "multiplicity": "1", "section": "CODD70 1.3", "note": "Unique within the table."}, {"name": "notNull", "multiplicity": "0..1", "section": "SQLDOC 5.5.2", "note": "A not-null constraint on the column."}]}
+    TableConstraint: {display: Table constraint, category: Physical level, abstract: true, inferred: true, section: SQLDOC 5.5}
+    PrimaryKeyConstraint: {display: Primary key constraint, category: Physical level, specializes: TableConstraint, section: SQLDOC 5.5.4}
+    UniqueConstraint: {display: Unique constraint, category: Physical level, specializes: TableConstraint, section: SQLDOC 5.5.3}
+    ForeignKeyConstraint: {display: Foreign key constraint, category: Physical level, specializes: TableConstraint, section: SQLDOC 5.5.5, attributes: [{"name": "onDelete", "type": "ReferentialAction", "multiplicity": "1", "section": "SQLDOC 5.5.5", "note": "NO ACTION is the default."}, {"name": "onUpdate", "type": "ReferentialAction", "multiplicity": "1", "section": "SQLDOC 5.5.5", "note": "NO ACTION is the default."}, {"name": "match", "type": "ForeignKeyMatch", "multiplicity": "1", "section": "SQLDOC 5.5.5", "note": "MATCH SIMPLE is the default."}]}
+    CheckConstraint: {display: Check constraint, category: Physical level, specializes: TableConstraint, section: SQLDOC 5.5.1}
+    Index: {display: Index, category: Physical level, section: CODD70 1.2.2; SQLDOC 5.5.3}
+  enumerations:
+    ViewLevel: {values: [EntityRelationship, KeyBased, FullyAttributed], section: FIPS184 3.10}
+    ChildCardinality: {values: [ZeroOneOrMore (default), OneOrMore (P), ZeroOrOne (Z), ExactlyN, RangeNtoM], default: ZeroOneOrMore (default), section: FIPS184 3.5.2}
+    ChenMapping: {values: ['1:1', '1:n', 'm:n'], section: CHEN76 3.1(4)}
+    BaseDataType: {values: [Character, Numeric, Boolean], note: 'Other data types (dates, times, binary) may also be used.', section: FIPS184 3.2.1}
+    DomainRule: {values: [ValueList, Range], section: FIPS184 3.2.1}
+    ClusterCompleteness: {values: [Complete, Incomplete], section: FIPS184 3.6.1}
+    ReferentialAction: {values: [NO ACTION, RESTRICT, CASCADE, SET NULL, SET DEFAULT], default: NO ACTION, section: SQLDOC 5.5.5}
+    ForeignKeyMatch: {values: [MATCH SIMPLE (default), MATCH FULL], section: SQLDOC 5.5.5}
+relationships:
+  note: "The sources give no allowed-relationship matrix. connection_tables lists which concepts a drawn connector may join in each diagram type. references lists the links between concepts, with roles and multiplicities; multiplicity keys follow the BMM file: targets_per_source is how many target instances one source instance may link to, sources_per_target the reverse; '*' means zero or more. Several multiplicities hold only at the keyed levels (see the constraints)."
+  connection_tables:
+    ChenDiagram:
+    - {name: Participation line, source: Entity, target: Relationship, section: CHEN76 3.1}
+    - {name: Attribute line (oval), source: Entity or Relationship, target: Attribute, section: WIKIER (Chen notation); the 1976 paper shows attributes in tables, secondary: true}
+    IDEF1XViews:
+    - {name: 'Identifying, mandatory non-identifying or optional non-identifying relationship', source: Entity (parent), target: Entity (child), section: FIPS184 3.5}
+    - {name: Categorization (through a cluster), source: Entity (generic), target: Entity (category), section: FIPS184 3.6}
+    - {name: Non-specific relationship, source: Entity, target: Entity, section: FIPS184 3.7, levels: EntityRelationship only}
+    PhysicalDataModelDiagram:
+    - {name: Foreign key constraint, source: Table (referencing), target: Table (referenced), section: SQLDOC 5.5.5}
+  references:
+  - {name: EntityOwnsAttribute, source: Entity, target: Attribute, roles: {source: ownerEntity, target: ownedAttribute}, kind: containment, multiplicity: {targets_per_source: '*', sources_per_target: '1'}, section: CHEN76 2.2.3; FIPS184 3.4.3(b), note: Exactly one owner at the key-based and fully-attributed levels (single-owner rule). At the entity-relationship level attributes are optional.}
+  - {name: RelationshipOwnsAttribute, source: Relationship, target: Attribute, roles: {source: ownerRelationship, target: ownedAttribute}, kind: containment, multiplicity: {targets_per_source: '*', sources_per_target: '1'}, section: CHEN76 2.2.3, note: Chen only. IDEF1X and crow's foot give relationships no attributes.}
+  - {name: EntityParticipatesInRelationship, source: Entity, target: Relationship, roles: {source: participant, target: relationship}, kind: association, multiplicity: {targets_per_source: '*', sources_per_target: '*'}, section: 'CHEN76 2.2.2, 3.1', note: 'Carries a role name, a mapping (1, n or m) and optionally minimum and maximum numbers. A relationship has one or more participations; the same entity may participate twice in different roles.'}
+  - {name: WeakEntityDependsOnOwner, source: WeakEntity, target: Entity, roles: {source: weakEntity, target: ownerEntity}, kind: association, multiplicity: {targets_per_source: '1', sources_per_target: '*'}, section: 'CHEN76 2.3.2, 3.1(5)', note: Through a binary one-to-many relationship with existence dependence.}
+  - {name: EntitySubsetOfEntity, source: Entity, target: Entity, roles: {source: subsetEntity, target: supersetEntity}, kind: association, multiplicity: {targets_per_source: '*', sources_per_target: '*'}, section: CHEN76 2.2.1, note: 'Entity sets need not be disjoint; one may be a subset of another (male person, person). Chen gives no symbol for it.'}
+  - {name: AttributeDrawsOnDomain, source: Attribute, target: Domain, roles: {source: attribute, target: domain}, kind: reference, multiplicity: {targets_per_source: '1', sources_per_target: '*'}, section: 'FIPS184 2.19, 3.4', note: Exactly one underlying domain in IDEF1X. Chen allows a product of several value sets.}
+  - {name: TypedDomainNarrowsDomain, source: TypedDomain, target: Domain, roles: {source: typedDomain, target: superDomain}, kind: reference, multiplicity: {targets_per_source: '1', sources_per_target: '*'}, section: FIPS184 3.2.3(h)(i)(j), note: Acyclic.}
+  - {name: KeyIncludesAttribute, source: Key, target: Attribute, roles: {source: key, target: keyAttribute}, kind: reference, multiplicity: {targets_per_source: 1..*, sources_per_target: '*'}, section: FIPS184 3.8.3(c)(d), note: An attribute may belong to more than one key.}
+  - {name: EntityHasPrimaryKey, source: Entity, target: PrimaryKey, roles: {source: entity, target: primaryKey}, kind: containment, multiplicity: {targets_per_source: '1', sources_per_target: '1'}, section: FIPS184 3.8.3(a), note: Required at the key-based and fully-attributed levels; none at the entity-relationship level.}
+  - {name: EntityHasAlternateKey, source: Entity, target: AlternateKey, roles: {source: entity, target: alternateKey}, kind: containment, multiplicity: {targets_per_source: '*', sources_per_target: '1'}, section: FIPS184 3.8.3(b)}
+  - {name: ConnectionHasParent, source: ConnectionRelationship, target: Entity, roles: {source: connection, target: parentEntity}, kind: reference, multiplicity: {targets_per_source: '1', sources_per_target: '*'}, section: FIPS184 3.5.4(a), note: 'Parent and child are different roles; the same entity may be both ends of a non-identifying relationship (recursive). Parent cardinality: exactly one, or zero-or-one for optional non-identifying.'}
+  - {name: ConnectionHasChild, source: ConnectionRelationship, target: Entity, roles: {source: connection, target: childEntity}, kind: reference, multiplicity: {targets_per_source: '1', sources_per_target: '*'}, section: FIPS184 3.5.4(a), note: 'Child cardinality: zero-or-more (default), one-or-more, zero-or-one, exactly n or n-m.'}
+  - {name: ConnectionMigratesForeignKey, source: ConnectionRelationship, target: ForeignKey, roles: {source: connection, target: foreignKey}, kind: association, multiplicity: {targets_per_source: '1', sources_per_target: '1'}, section: FIPS184 3.9.3(a), note: Required at the key-based and fully-attributed levels.}
+  - {name: ForeignKeyHeldByEntity, source: ForeignKey, target: Entity, roles: {source: foreignKey, target: holdingEntity}, kind: containment, multiplicity: {targets_per_source: '1', sources_per_target: '*'}, section: FIPS184 3.9.3(a), note: The child or category entity.}
+  - {name: ForeignKeyReferencesPrimaryKey, source: ForeignKey, target: PrimaryKey, roles: {source: foreignKey, target: referencedKey}, kind: reference, multiplicity: {targets_per_source: '1', sources_per_target: '*'}, section: CODD70 1.3; FIPS184 3.9.3(g), note: The primary key of the parent or generic entity. SQL also allows a unique key as the target (see the physical level).}
+  - {name: ClusterHasGeneric, source: CategoryCluster, target: Entity, roles: {source: cluster, target: genericEntity}, kind: reference, multiplicity: {targets_per_source: '1', sources_per_target: '*'}, section: FIPS184 3.6.1, note: An entity may be generic in several clusters.}
+  - {name: ClusterHasCategorization, source: CategoryCluster, target: CategorizationRelationship, roles: {source: cluster, target: categorization}, kind: containment, multiplicity: {targets_per_source: 1..*, sources_per_target: '1'}, section: FIPS184 3.6.1}
+  - {name: CategorizationHasCategory, source: CategorizationRelationship, target: CategoryEntity, roles: {source: categorization, target: categoryEntity}, kind: reference, multiplicity: {targets_per_source: '1', sources_per_target: '1'}, section: FIPS184 3.6.3(a), note: A category entity belongs to exactly one cluster.}
+  - {name: ClusterHasDiscriminator, source: CategoryCluster, target: Attribute, roles: {source: cluster, target: discriminator}, kind: reference, multiplicity: {targets_per_source: 0..1, sources_per_target: '*'}, section: 'FIPS184 3.6.1, 3.10.1', note: 'Optional at the entity-relationship level, required at the key-based and fully-attributed levels. An attribute of the generic entity or of a generic ancestor.'}
+  - {name: NonSpecificHasEnd, source: NonSpecificRelationship, target: Entity, roles: {source: relationship, target: endEntity}, kind: reference, multiplicity: {targets_per_source: '2', sources_per_target: '*'}, section: FIPS184 3.7.3(a)(d), note: 'Exactly two ends, which may be the same entity.'}
+  - {name: ViewContainsEntity, source: View, target: Entity, roles: {source: view, target: entity}, kind: containment, multiplicity: {targets_per_source: '*', sources_per_target: '*'}, section: FIPS184 3.3, note: 'An entity may appear in many views, once per diagram.'}
+  - {name: NoteAnnotatesItem, source: Note, target: Entity, roles: {source: note, target: annotatedItem}, kind: association, multiplicity: {targets_per_source: '1', sources_per_target: '*'}, section: FIPS184 3.13, note: 'A note may annotate an entity, relationship, attribute or view; shown against Entity for brevity.'}
+  - {name: TableHasColumn, source: Table, target: Column, roles: {source: table, target: column}, kind: containment, multiplicity: {targets_per_source: 1..*, sources_per_target: '1'}, section: CODD70 1.3; SQLDOC 5.5}
+  - {name: TableHasConstraint, source: Table, target: TableConstraint, roles: {source: table, target: constraint}, kind: containment, multiplicity: {targets_per_source: '*', sources_per_target: '1'}, section: SQLDOC 5.5, note: At most one primary key constraint.}
+  - {name: ConstraintCoversColumn, source: TableConstraint, target: Column, roles: {source: constraint, target: column}, kind: reference, multiplicity: {targets_per_source: 1..*, sources_per_target: '*'}, section: SQLDOC 5.5.3-5.5.5, note: 'For primary key, unique and foreign key constraints (the referencing columns).'}
+  - {name: ForeignKeyConstraintReferencesKey, source: ForeignKeyConstraint, target: TableConstraint, roles: {source: foreignKeyConstraint, target: referencedConstraint}, kind: reference, multiplicity: {targets_per_source: '1', sources_per_target: '*'}, section: SQLDOC 5.5.5, note: The target is the primary key constraint or a unique constraint of the referenced table.}
+  - {name: IndexCoversColumn, source: Index, target: Column, roles: {source: index, target: column}, kind: reference, multiplicity: {targets_per_source: 1..*, sources_per_target: '*'}, section: SQLDOC 5.5.3, note: An index belongs to one table.}
+  - {name: EntityRealizedAsTable, source: Entity, target: Table, roles: {source: entity, target: table}, kind: realization, multiplicity: {targets_per_source: '*', sources_per_target: '*'}, section: CHEN76 2.3; FIPS184 1.2(d); WIKIER (physical model), inferred: true, note: Usually one table per entity; subtype and association handling vary (see the mapping rules).}
+  - {name: AttributeRealizedAsColumn, source: Attribute, target: Column, roles: {source: attribute, target: column}, kind: realization, multiplicity: {targets_per_source: '*', sources_per_target: '*'}, section: CHEN76 2.3; WIKIER (physical model), inferred: true, note: A composite attribute may become several columns.}
+  - {name: KeyRealizedAsConstraint, source: Key, target: TableConstraint, roles: {source: key, target: constraint}, kind: realization, multiplicity: {targets_per_source: '*', sources_per_target: '*'}, section: CODD70 1.3; SQLDOC 5.5.3-5.5.5, inferred: true, note: 'Primary key to primary key constraint, alternate key to unique constraint, foreign key to foreign key constraint.'}
+diagram_types:
+  # The sources do not define a closed list of diagram types. These six are the drawing forms they describe (grouping is ours).
+  ChenDiagram:
+    defined_by: CHEN76 3.1 (the technique); oval attributes and participation marks from WIKIER (secondary)
+    levels:
+    - Conceptual
+    - Logical
+    admits:
+    - Entity
+    - WeakEntity
+    - Relationship
+    - Attribute
+    admits_note: A relationship set may be n-ary and may have attributes. Roles and the mapping (1, n, m) are written on the participation lines. Chen shows attributes in tables; ovals are a later convention.
+    excludes:
+    - ConnectionRelationship
+    - CategoryCluster
+    - NonSpecificRelationship
+    - PrimaryKey
+    - ForeignKey
+    conventions: chen
+  IDEF1XEntityRelationshipView:
+    defined_by: FIPS184 3.10, Table 1 (entity-relationship level)
+    levels:
+    - Conceptual
+    - Logical
+    admits:
+    - Entity
+    - GenericEntity
+    - CategoryEntity
+    - ConnectionRelationship
+    - CategorizationRelationship
+    - CategoryCluster
+    - NonSpecificRelationship
+    - Attribute
+    - Note
+    admits_note: No primary, alternate or foreign keys. Connection relationships need not be marked identifying or non-identifying, entities need not be marked dependent or independent, and parent cardinality is not stated. Attributes are optional and are not marked key or non-key.
+    excludes:
+    - PrimaryKey
+    - AlternateKey
+    - ForeignKey
+    conventions: idef1x
+  IDEF1XKeyBasedView:
+    defined_by: FIPS184 3.10, Table 1 (key-based level)
+    levels:
+    - Logical
+    admits:
+    - Entity
+    - WeakEntity
+    - GenericEntity
+    - CategoryEntity
+    - IdentifyingRelationship
+    - MandatoryNonIdentifyingRelationship
+    - OptionalNonIdentifyingRelationship
+    - CategorizationRelationship
+    - CategoryCluster
+    - PrimaryKey
+    - AlternateKey
+    - ForeignKey
+    - Attribute
+    - Note
+    admits_note: Every entity has a primary key and a foreign key for each relationship in which it is child or category. Non-key attributes may appear. WeakEntity stands for the identifier-dependent entity.
+    excludes:
+    - NonSpecificRelationship
+    conventions: idef1x
+  IDEF1XFullyAttributedView:
+    defined_by: FIPS184 3.10, Table 1 (fully-attributed level)
+    levels:
+    - Logical
+    admits:
+    - Entity
+    - WeakEntity
+    - GenericEntity
+    - CategoryEntity
+    - IdentifyingRelationship
+    - MandatoryNonIdentifyingRelationship
+    - OptionalNonIdentifyingRelationship
+    - CategorizationRelationship
+    - CategoryCluster
+    - PrimaryKey
+    - AlternateKey
+    - ForeignKey
+    - Attribute
+    - Note
+    admits_note: As the key-based view, and it contains all non-key attributes relevant to its subject.
+    excludes:
+    - NonSpecificRelationship
+    conventions: idef1x
+  CrowsFootDiagram:
+    defined_by: Crow's foot (information engineering) notation as described in WIKIER and CFOOT (secondary); no governing document was read
+    levels:
+    - Conceptual
+    - Logical
+    admits:
+    - Entity
+    - WeakEntity
+    - AssociativeEntity
+    - Attribute
+    - PrimaryKey
+    - ForeignKey
+    - ConnectionRelationship
+    - IdentifyingRelationship
+    - NonIdentifyingRelationship
+    admits_note: Entities are boxes with attributes listed inside; relationships are lines whose ends carry ring, bar and crow's foot symbols. A many-to-many line is legal in a conceptual model and is resolved into an associative entity for a logical or physical one. Relationships carry no attributes. Subtype notation is not covered by the sources read; use the category cluster of the IDEF1X views.
+    excludes:
+    - Relationship
+    - Domain
+    conventions: crows_foot
+  PhysicalDataModelDiagram:
+    defined_by: WIKIER (physical data model, secondary) and SQLDOC 5.5; the sources define no notation for it
+    levels:
+    - Physical
+    admits:
+    - Table
+    - Column
+    - PrimaryKeyConstraint
+    - UniqueConstraint
+    - ForeignKeyConstraint
+    - CheckConstraint
+    - Index
+    - Note
+    admits_note: Tables with columns, key and unique constraints, check constraints and indexes, joined by foreign key constraint lines. Tools commonly draw it in crow's foot or IDEF1X style.
+    excludes:
+    - Entity
+    - Relationship
+    - CategoryCluster
+    - NonSpecificRelationship
+    conventions: physical
+constraints:
+- {id: DATA-ENT-001, strength: must, section: 'FIPS184 3.1.3(c), 3.8.1, 3.8.3(a), pp. 9, 26-27; CHEN76 2.3.1, p. 14', checkable: static, applies_when: keyed-level, statement: Every entity has at least one candidate key and exactly one candidate key is designated the primary key. The key attributes are owned by the entity or migrated into it through a relationship.}
+- {id: DATA-ENT-002, strength: note, section: 'FIPS184 3.10.1, 3.10.3(b), pp. 31-32; CHEN76 2.3.1', checkable: none, applies_when: er-level, inferred: true, statement: 'At the entity-relationship (conceptual) level no keys are recorded, but the instances of each entity must still be distinguishable. Say how in the entity definition.'}
+- {id: DATA-ENT-003, strength: must, section: 'FIPS184 3.1.3(a)(f)(g), p. 9; B.5.3.5', checkable: static, statement: 'Each entity has a unique name in the model. The same name always has the same meaning, and the same meaning is not carried by different names unless they are aliases. No view contains two entities whose names are synonyms.'}
+- {id: DATA-ENT-004, strength: must, section: 'FIPS184 3.1.3(e), 3.5.4(e)(f), 3.6.2, B.5.3.13, pp. 9, 20, 22', checkable: static, applies_when: keyed-level, statement: An entity is identifier-dependent exactly when it is the child in an identifying relationship or a category in a categorization. Every other entity is identifier-independent. A child in an identifying relationship is always dependent; a child in only non-identifying relationships stays independent.}
+- {id: DATA-ENT-005, strength: must, section: 'CHEN76 2.3.2, pp. 17-18', checkable: static, applies_when: chen, statement: 'A weak entity cannot be identified by its own attribute values alone. It is identified by those values together with the key of one owner entity, through a binary one-to-many relationship in which the existence of the weak entity depends on the owner.'}
+- {id: DATA-ENT-006, strength: must, section: 'CHEN76 3.5 Table III, p. 25; FIPS184 2.27, p. 3', checkable: runtime, statement: 'An existence-dependent instance never exists without its parent or owner. Deleting the parent either deletes the dependents or is refused. Existence dependence arises from weak entities, identifying relationships, categorizations and mandatory non-identifying relationships.'}
+- {id: DATA-ENT-007, strength: note, section: 'CHEN76 2.2 footnote 1, p. 10', checkable: none, statement: Whether something is modeled as an entity or as a relationship is a modeling decision. Let one authority settle it for the enterprise so the choice is consistent.}
+- {id: DATA-ENT-008, strength: must, section: 'FIPS184 3.1.2, p. 9', checkable: static, statement: 'An entity appears at most once in a given diagram, though it may appear in any number of diagrams and views.'}
+- {id: DATA-ENT-009, strength: note, section: 'FIPS184 3.1.1, p. 7', checkable: none, statement: 'One real-world thing may be represented by more than one entity in a view (a person as both employee and buyer), and one instance may stand for a combination of things (a married couple).'}
+- {id: DATA-ATT-001, strength: must, section: 'FIPS184 3.4.1, 3.4.3(b)(c), B.5.3.15-16, pp. 13-14, 141-142', checkable: static, applies_when: keyed-level, statement: Every attribute is owned by exactly one entity (single-owner rule). An attribute reaches another entity only by migrating as a foreign key. An attribute that does not apply to all instances of an entity belongs on a category entity.}
+- {id: DATA-ATT-002, strength: must, section: 'FIPS184 3.4.3(e), p. 15; CHEN76 2.2.3, p. 12; CODD70 1.4, p. 381', checkable: partial, statement: An instance of an entity has at most one value for each of its attributes (no-repeat rule). A repeating group is not an attribute; model it as a further entity.}
+- {id: DATA-ATT-003, strength: must, section: 'FIPS184 3.4.3(d), B.5.3.10; SQLDOC 5.5.4', checkable: runtime, statement: Every instance has a value for every attribute in its primary key.}
+- {id: DATA-ATT-004, strength: must, section: 'FIPS184 3.4.3(f), B.5.3.10, pp. 15, 139', checkable: static, applies_when: keyed-level, statement: A non-key attribute that may be null is marked optional. A primary key attribute is never optional.}
+- {id: DATA-ATT-005, strength: must, section: 'FIPS184 2.19, 3.4.3(a), p. 3', checkable: static, applies_when: idef1x, statement: Every attribute is defined on exactly one domain. Several attributes may share a domain.}
+- {id: DATA-ATT-006, strength: note, section: 'CHEN76 2.2.3, p. 12', checkable: none, applies_when: chen, statement: In Chen's model an attribute is a function from an entity set or relationship set into a value set or a product of value sets (a name drawn from first-name and last-name). Attribute and value set are distinct even when they share a name.}
+- {id: DATA-ATT-007, strength: must, section: 'FIPS184 3.2.3(b)(h)(i)(j), B.5.3.2, pp. 11-12, 136', checkable: static, statement: 'A domain is a base domain or a typed domain. A typed domain narrows exactly one base or typed domain and references it. No domain is, directly or indirectly, a narrowing of itself.'}
+- {id: DATA-ATT-008, strength: must, section: 'FIPS184 3.2.1, 3.2.3(d)-(g), B.5.3.4, pp. 10-11, 137', checkable: runtime, statement: A domain rule is a value list or a range. A value must satisfy its own domain rule and the rules of every ancestor domain. An alias domain has no rule of its own.}
+- {id: DATA-ATT-009, strength: note, section: 'FIPS184 3.2.1, 3.2.3(c), pp. 10-11', checkable: none, statement: 'A base domain has a data type: character, numeric or boolean by default. Other types such as dates, times and binary may also be used.'}
+- {id: DATA-ATT-010, strength: must, section: 'FIPS184 3.2.1, p. 10', checkable: runtime, statement: 'Each value in a domain has a unique representation within that domain (state names, abbreviations or numbers, but not the first letter alone).'}
+- {id: DATA-KEY-001, strength: must, section: 'FIPS184 3.8.3(f), p. 27; CODD70 1.3, p. 380', checkable: static, statement: A primary or alternate key contains only attributes needed for unique identification. Dropping any attribute would stop the key identifying every instance (smallest-key rule).}
+- {id: DATA-KEY-002, strength: note, section: 'FIPS184 3.8.2, 3.8.3(b)-(e), pp. 26-27', checkable: none, statement: 'A key may be one attribute or several. An attribute may belong to more than one key. An entity may have any number of alternate keys, each numbered. Key attributes may be owned or migrated.'}
+- {id: DATA-KEY-003, strength: must, section: 'FIPS184 3.9.3(a)(g), B.5.3.23, pp. 30-31, 144-145', checkable: static, applies_when: keyed-level, statement: 'Each child or category entity holds a foreign key for every connection or categorization in which it is child or category. The foreign key has as many attributes as the parent (or generic) primary key, and each foreign key attribute references exactly one primary key attribute of that parent.'}
+- {id: DATA-KEY-004, strength: must, section: 'FIPS184 3.4.1, 3.9.3(d), pp. 13, 30', checkable: static, applies_when: keyed-level, statement: 'Only primary key attributes migrate. Every migrated attribute is a primary key attribute of a related parent or generic entity, and every primary key attribute of a parent or generic entity migrates into each related child or category entity.'}
+- {id: DATA-KEY-005, strength: must, section: 'FIPS184 3.9.1.1, 3.9.3(e)(f), pp. 28, 31', checkable: static, applies_when: keyed-level, statement: 'When the same key migrates into an entity more than once, give each occurrence its own role name if the values may differ, and the same name (or none) if they must always be equal. A role name is unique and means one thing.'}
+- {id: DATA-KEY-006, strength: must, section: 'FIPS184 3.9.3(c), p. 30', checkable: static, applies_when: keyed-level, statement: A child must not hold two complete foreign keys that identify the same ancestor instance unless they arrive through separate relationship paths with intervening entities.}
+- {id: DATA-KEY-007, strength: must, section: 'FIPS184 3.5.2.4, 3.5.4(b)(c), pp. 18-20; CODD70 1.3, p. 380', checkable: runtime, statement: Referential integrity. A child instance whose foreign key attributes all have values has a parent instance with an equal primary key. In an identifying or mandatory relationship the foreign key is never null; in an optional relationship the requirement holds only when the foreign key has values.}
+- {id: DATA-KEY-008, strength: note, section: 'CHEN76 2.3.1, p. 14', checkable: none, statement: 'If no attribute set identifies an entity, define an artificial attribute (a surrogate) so that identification is possible. When several keys exist, choose a semantically meaningful one as the primary key.'}
+- {id: DATA-REL-001, strength: must, section: 'FIPS184 3.5.4(a), p. 20', checkable: static, statement: 'A connection relationship joins exactly two entities, a parent and a child.'}
+- {id: DATA-REL-002, strength: must, section: 'FIPS184 3.5.4(b)(c)(d), p. 20', checkable: runtime, statement: 'In an identifying or mandatory non-identifying relationship each child instance has exactly one parent instance. In an optional non-identifying relationship each child has zero or one parent. A parent may have zero, one or more children according to the stated cardinality.'}
+- {id: DATA-REL-003, strength: must, section: 'FIPS184 3.9.1, B.5.3.21, pp. 27-28, 143-144', checkable: static, applies_when: keyed-level, statement: 'A relationship is identifying when all primary key attributes of the parent migrate into the child primary key. If any migrated attribute lies outside the child primary key, including a split key, it is non-identifying.'}
+- {id: DATA-REL-004, strength: must, section: 'FIPS184 3.5.1, 3.5.2, B.5.3.18, pp. 15-16, 142', checkable: static, statement: 'The child-side cardinality of a connection is zero-one-or-more (the default), one-or-more, zero-or-one, an exact number or a range. Any other cardinality is recorded as a note. A low bound never exceeds the high bound.'}
+- {id: DATA-REL-005, strength: must, section: 'FIPS184 3.5.4(h), p. 20', checkable: static, statement: Only non-identifying relationships may be recursive (relate an instance of an entity to another instance of the same entity).}
+- {id: DATA-REL-006, strength: must, section: 'FIPS184 3.5.3, pp. 19-20', checkable: static, statement: Relationship names between the same two entities are unique. A two-direction label states the parent perspective first.}
+- {id: DATA-REL-007, strength: must, section: 'FIPS184 3.7.1, 3.7.3(c), 3.10.1, pp. 23-25, 31', checkable: static, applies_when: keyed-level, statement: 'Every non-specific (many-to-many) relationship is replaced by specific relationships, typically through an associative entity that is a child of both original entities.'}
+- {id: DATA-REL-008, strength: must, section: 'FIPS184 3.7.3(a)(b)(d), p. 25', checkable: static, statement: 'A non-specific relationship joins exactly two entities and may be recursive. An instance on either side may relate to zero, one or many instances on the other.'}
+- {id: DATA-REL-009, strength: must, section: 'CHEN76 2.2.2, 3.1, pp. 11-12, 20', checkable: static, applies_when: chen, statement: 'A relationship is defined on one or more entity sets, not necessarily distinct, so it may be unary, binary or n-ary. More than one relationship may be defined on the same entity sets.'}
+- {id: DATA-REL-010, strength: should, section: 'CHEN76 3.1(4), 3.2, pp. 20-21', checkable: none, applies_when: chen, statement: 'State for each relationship the mapping (1:1, 1:n or m:n) and, where known, the minimum and maximum number of entities on each side.'}
+- {id: DATA-REL-011, strength: should, section: 'CHEN76 2.2.2, 3.1, pp. 11-12, 19', checkable: none, applies_when: chen, statement: 'State the role of each participating entity, especially when one entity set participates more than once in a relationship.'}
+- {id: DATA-REL-012, strength: must, section: 'CHEN76 2.3.2, p. 17', checkable: static, applies_when: chen, statement: 'A relationship is identified by the keys of the entities involved. Those keys are not attributes of the relationship, which carries only its own attributes (for example a percentage of time).'}
+- {id: DATA-REL-013, strength: should, section: 'FIPS184 3.4.3(b), 3.7.1, pp. 14, 24; WIKIER (crow''s foot notation)', checkable: static, applies_when: idef1x-or-crows-foot, inferred: true, statement: A relationship has no attributes. A fact about an association is held by an associative entity placed between the two entities.}
+- {id: DATA-REL-014, strength: should, section: 'FIPS184 3.5.3, pp. 19-20; CFOOT section 02', checkable: none, statement: 'Name a relationship with a verb phrase, in the parent-to-child direction. Entity name, relationship name, cardinality and entity name read as a true sentence, and the reverse reading also holds. Check both readings.'}
+- {id: DATA-REL-015, strength: should, section: 'FIPS184 3.13, pp. 34-35', checkable: none, statement: 'Where two paths lead from a descendant to the same ancestor, state whether the ancestor instances must be the same or must differ, using role names or a note.'}
+- {id: DATA-REL-016, strength: note, section: 'FIPS184 3.13, p. 35', checkable: none, statement: 'Boolean constraints between relationships, such as exclusive-or, are recorded as notes. If both entities refer to the same real-world thing, use a categorization instead.'}
+- {id: DATA-REL-017, strength: note, section: WIKIER (model usability issues), checkable: none, statement: 'Two traps appear in models read by queries: a fan trap, when one master fans out to several one-to-many branches and aggregates double-count, and a chasm trap, when a path between entities is missing for some instances.'}
+- {id: DATA-CAT-001, strength: must, section: 'FIPS184 3.6.3(a), p. 23', checkable: static, statement: 'A category entity has exactly one generic entity, so it belongs to exactly one cluster.'}
+- {id: DATA-CAT-002, strength: must, section: 'FIPS184 3.6.3(b)(c), p. 23', checkable: static, statement: 'An entity may be the generic entity of any number of category clusters, and a category entity may itself be the generic entity of another cluster.'}
+- {id: DATA-CAT-003, strength: must, section: 'FIPS184 3.6.1, p. 21', checkable: runtime, statement: 'Within one cluster an instance of the generic entity is associated with at most one category, so the categories are mutually exclusive. Categories in different clusters of the same generic entity are not exclusive of each other.'}
+- {id: DATA-CAT-004, strength: must, section: 'FIPS184 3.6.3(d), 3.9.3(b), pp. 23, 30', checkable: static, statement: 'The primary key of every category entity is the primary key of its generic entity, migrated through the categorization. Role names may be used.'}
+- {id: DATA-CAT-005, strength: must, section: 'FIPS184 3.6.1, 3.6.2, pp. 21-22', checkable: static, statement: 'A category entity is always identifier-dependent. Each category instance is the same real-world thing as exactly one generic instance, so the cardinality toward the category is zero or one and is not stated.'}
+- {id: DATA-CAT-006, strength: must, section: 'FIPS184 3.6.3(f), B.5.3.1, pp. 23, 136', checkable: static, statement: 'No entity is its own generic ancestor: categorizations contain no cycle.'}
+- {id: DATA-CAT-007, strength: must, section: 'FIPS184 3.6.1, 3.6.3(e)(g), B.5.3.8, pp. 21, 23, 138', checkable: static, statement: A discriminator attribute belongs to the generic entity or one of its generic ancestors. No two clusters of one generic entity share a discriminator. All instances of one category share a discriminator value and different categories have different values.}
+- {id: DATA-CAT-008, strength: must, section: 'FIPS184 3.10.1, p. 31', checkable: static, applies_when: keyed-level, statement: Each category cluster has a discriminator attribute. At the entity-relationship level it is optional.}
+- {id: DATA-CAT-009, strength: must, section: 'FIPS184 3.6.3(h), B.5.3.9, pp. 23, 139', checkable: static, statement: The discriminator of a complete category cluster is not optional.}
+- {id: DATA-CAT-010, strength: must, section: 'FIPS184 3.6.3 (closing sentence), p. 23', checkable: static, applies_when: keyed-level, statement: A category entity may be the child of an identifying relationship only if the key it receives lies wholly inside its own primary key and its primary key still equals its generic entity's primary key.}
+- {id: DATA-CAT-011, strength: should, section: 'FIPS184 2.48, 3.4.1, 3.6.1, pp. 5, 13, 20-21', checkable: none, statement: 'Introduce a category entity when the category has attributes of its own, or takes part in relationships, that not all instances of the generic entity share.'}
+- {id: DATA-CAT-012, strength: note, section: 'FIPS184 3.6.1, 3.6.2, pp. 21-23', checkable: none, statement: 'A cluster is complete when every generic instance belongs to some category, and incomplete when some do not. An incomplete cluster reads "can be"; a complete one reads "must be".'}
+- {id: DATA-CAT-013, strength: note, section: 'CHEN76 2.2.1, p. 11', checkable: none, applies_when: chen, statement: 'Entity sets need not be disjoint: one may be a subset of another (male person within person). Chen shows no symbol for this.'}
+- {id: DATA-LVL-001, strength: must, section: 'FIPS184 3.10.1, 3.10.3(a)-(c), Table 1, pp. 31-32', checkable: static, applies_when: er-level, statement: 'An entity-relationship level view contains entities and relationships, may contain attributes, and contains no primary, alternate or foreign keys.'}
+- {id: DATA-LVL-002, strength: must, section: 'FIPS184 3.10.1, p. 31', checkable: static, applies_when: keyed-level, statement: 'A key-based view contains entities, relationships, primary keys and foreign keys. Entities are marked dependent or independent, connections identifying or non-identifying, non-identifying parents mandatory or optional, and each cluster has a discriminator. Non-specific relationships are prohibited. Each entity has a primary key and an alternate key for each further uniqueness constraint.'}
+- {id: DATA-LVL-003, strength: must, section: 'FIPS184 3.10.1, p. 32', checkable: static, applies_when: keyed-level, statement: A fully-attributed view meets every requirement of a key-based view and also contains all non-key attributes relevant to the subject of the view.}
+- {id: DATA-LVL-004, strength: note, section: 'FIPS184 3.10.3(d)(e)(f), p. 32', checkable: none, applies_when: er-level, statement: 'At the entity-relationship level parent cardinality is not specified, entities need not be marked dependent or independent (categories count as dependent), and relationships need not be marked identifying or non-identifying.'}
+- {id: DATA-LVL-005, strength: must, section: 'FIPS184 3.3.3, p. 12', checkable: static, statement: Each view has a unique name. A model may mix views of different levels. A view whose syntax conflicts with the standard is labeled "for exposition only".}
+- {id: DATA-LVL-006, strength: must, section: 'FIPS184 3 (introduction), 3.3.3(b), pp. 7, 12', checkable: none, statement: 'A model is accompanied by a statement of purpose, a statement of scope and a description of the author conventions. Author conventions never violate the rules and are consistent across the views of a model.'}
+- {id: DATA-LVL-007, strength: must, section: 'FIPS184 3.11, p. 33', checkable: static, statement: 'A presentation may hide constructs (keys, attributes, role names, cardinalities) to simplify a view. All syntactic and semantic rules still hold for what is hidden.'}
+- {id: DATA-LVL-008, strength: note, section: 'WIKIER (introduction); CHEN76 2.1, p. 10', checkable: none, statement: 'Data models are commonly built at three levels: conceptual (scope and master entities, least detail), logical (more detail, independent of any database product) and physical (enough detail to build a database, dependent on the product). Chen distinguishes four levels of logical views, from entities in the mind to access-path-dependent structures.'}
+- {id: DATA-NAM-001, strength: must, section: 'FIPS184 3.12, pp. 33-34', checkable: none, statement: 'The model has a glossary defining every view, entity and domain. A definition applies to every alias of the name. Views have no aliases.'}
+- {id: DATA-NAM-002, strength: should, section: 'FIPS184 3.1.2, 3.4.2, pp. 8, 13', checkable: none, statement: Name entities and attributes with singular noun phrases. Abbreviations and acronyms are allowed if the name stays meaningful and consistent across the model.}
+- {id: DATA-NAM-003, strength: must, section: 'FIPS184 3.14.1, 3.14.4, pp. 35-37', checkable: static, applies_when: idef1x, statement: 'Names of views, entities and domains begin with a letter, use only letters, digits, dashes, underscores and spaces, and are at most 120 characters. Case and the separators space, dash and underscore are not significant. Relationship names use letters, digits and single spaces, at most 120 characters.'}
+- {id: DATA-NAM-004, strength: must, section: 'FIPS184 B.5.3.3, B.5.3.2, pp. 136-137', checkable: static, statement: 'No alias entity or alias domain is, directly or indirectly, an alias of itself.'}
+- {id: DATA-NAM-005, strength: must, section: 'FIPS184 3.13.1, p. 35', checkable: static, statement: 'Note numbers are unique within a view, and the same text applies wherever the same note number is used in a view.'}
+- {id: DATA-NAM-006, strength: note, section: WIKIER (role naming), checkable: none, statement: 'Naming a role with a noun (owner, possession) rather than a phrase (is the owner of) helps when physical column names are generated from the model, for example owner_person.'}
+- {id: DATA-PHY-001, strength: must, section: 'CODD70 1.3, p. 380', checkable: static, applies_when: physical, statement: 'A table has one or more columns. Column names in a table are unique; where the same domain is used twice, a role name tells the columns apart.'}
+- {id: DATA-PHY-002, strength: must, section: 'SQLDOC 5.5.4; CODD70 1.3, p. 380', checkable: static, applies_when: physical, statement: Every table has a primary key.}
+- {id: DATA-PHY-003, strength: must, section: SQLDOC 5.5.4, checkable: static, applies_when: physical, statement: A table has at most one primary key constraint. It may have any number of unique constraints.}
+- {id: DATA-PHY-004, strength: must, section: 'SQLDOC 5.5.4; CODD70 1.3, p. 380', checkable: runtime, applies_when: physical, statement: The columns of a primary key are unique across the table and never null.}
+- {id: DATA-PHY-005, strength: must, section: 'SQLDOC 5.5.5; CODD70 1.3, p. 380', checkable: static, applies_when: physical, statement: 'A foreign key constraint references the primary key or a unique constraint of the referenced table. If no columns are named, the primary key is the target.'}
+- {id: DATA-PHY-006, strength: must, section: SQLDOC 5.5.5, checkable: static, applies_when: physical, statement: 'A foreign key has the same number of columns as the key it references, and the column types match pairwise.'}
+- {id: DATA-PHY-007, strength: must, section: SQLDOC 5.5.5, checkable: runtime, applies_when: physical, statement: 'Referential integrity. Every referencing row whose foreign key columns are non-null matches a row of the referenced table. By default a row escapes the check if any referencing column is null; with a full match, only if all are null.'}
+- {id: DATA-PHY-008, strength: must, section: SQLDOC 5.5.5, checkable: static, applies_when: physical, statement: 'The delete and update action of a foreign key is one of no action (the default), restrict, cascade, set null or set default. A set-null or set-default action must still leave every other constraint satisfied (not-null columns, primary key columns, the default value existing in the referenced table).'}
+- {id: DATA-PHY-009, strength: should, section: 'SQLDOC 5.5.5; CHEN76 3.5 Table III, p. 25; FIPS184 2.27', checkable: none, applies_when: physical, statement: 'Choose the referential action from the dependence between the tables: cascade when the child is a component of the parent and cannot exist alone; restrict or no action when the two are independent; set null or set default for optional relationships.'}
+- {id: DATA-PHY-010, strength: must, section: SQLDOC 5.5.5; CFOOT section 04; FIPS184 3.7.3(c), checkable: static, applies_when: physical, statement: No many-to-many relationship remains at the physical level. A third table holds a foreign key to each side (an association table).}
+- {id: DATA-PHY-011, strength: should, section: SQLDOC 5.5.5, checkable: none, applies_when: physical, statement: 'Index the referencing columns of a foreign key when rows of the referenced table are deleted or its keys updated often. The database does not create that index for you, and each such change otherwise scans the referencing table.'}
+- {id: DATA-PHY-012, strength: note, section: SQLDOC 5.5.3, checkable: none, applies_when: physical, statement: 'A primary key or unique constraint is enforced through a unique index. Whether two nulls count as equal in a unique constraint is implementation-defined, so rows with nulls may repeat unless the product is told otherwise.'}
+- {id: DATA-PHY-013, strength: note, section: 'CODD70 1.2.2, p. 378', checkable: none, applies_when: physical, statement: 'An index is a redundant, performance-oriented structure. It can be added or dropped without changing what the data means, and queries must not depend on it.'}
+- {id: DATA-PHY-014, strength: should, section: SQLDOC 5.5.2; FIPS184 2.45, checkable: none, applies_when: physical, statement: Mark most columns not null. Allow null only where a value does not apply or is not known.}
+- {id: DATA-PHY-015, strength: should, section: SQLDOC 5.5.1, checkable: none, applies_when: physical, statement: 'A check constraint restricts the row being checked. It passes when the condition is true or null, so pair it with not null when a value is required. Rules across rows or tables belong to unique, foreign key or exclusion constraints, or to triggers.'}
+- {id: DATA-PHY-016, strength: note, section: 'SQLDOC 5.5.1, 5.5.5; CODD70 1.3, p. 380', checkable: none, applies_when: physical, statement: 'A table may reference itself (a tree, a bill of materials); the rows at the top leave the reference null. Name constraints so that errors and changes can refer to them.'}
+- {id: DATA-MAP-001, strength: should, section: 'CHEN76 2.3, pp. 14-17; FIPS184 1.2(d), p. 1; WIKIER (physical data model)', checkable: none, inferred: true, statement: 'Implement each entity as a table, each attribute as a column, a primary key as a primary key constraint, an alternate key as a unique constraint and a foreign key as a foreign key constraint.'}
+- {id: DATA-MAP-002, strength: must, section: 'FIPS184 3.9.1, B.5.3.21, pp. 27-28, 143', checkable: static, applies_when: physical, statement: 'In an identifying relationship the foreign key columns form part of the child primary key. In a non-identifying relationship they are ordinary columns, not part of that key.'}
+- {id: DATA-MAP-003, strength: must, section: 'FIPS184 3.5.2.3, 3.5.2.4, B.5.3.20, pp. 18-19, 143', checkable: static, applies_when: physical, statement: 'Foreign key columns are not null when the relationship is identifying or mandatory, and may be null when it is optional.'}
+- {id: DATA-MAP-004, strength: should, section: 'CHEN76 2.3.2, p. 17; FIPS184 3.7.1, p. 24; CFOOT section 04', checkable: none, applies_when: physical, inferred: true, statement: 'Resolve a many-to-many relationship into an association table with a foreign key to each side. Its key is normally the combination of those foreign keys, and attributes of the relationship become its columns.'}
+- {id: DATA-MAP-005, strength: must, section: 'FIPS184 3.6.3(d), 3.9.3(b), pp. 23, 30', checkable: static, applies_when: physical, statement: 'If category entities become separate tables, the primary key of each is the primary key of the generic table and is also a foreign key to it.'}
+- {id: DATA-MAP-006, strength: must, section: 'CHEN76 2.3.2, 3.2, pp. 17-22', checkable: static, applies_when: physical, statement: 'The table of a weak entity has a primary key made of the owner''s key plus the weak entity''s own partial key, and a foreign key to the owner table.'}
+- {id: DATA-MAP-007, strength: should, section: 'FIPS184 3.2.1, p. 10; SQLDOC 5.5.1', checkable: none, applies_when: physical, inferred: true, statement: Implement a base domain as a column data type and a domain rule as a check constraint.}
+- {id: DATA-MAP-008, strength: note, section: 'CHEN76 2.2.3, 4.1.1, pp. 12, 26', checkable: none, applies_when: physical, statement: An attribute that maps to a product of value sets becomes several columns (a name as first name and last name).}
+- {id: DATA-NRM-001, strength: should, section: 'FIPS184 3.8.3(g), 2.43, pp. 4, 27; KENT83 3.1', checkable: partial, applies_when: keyed-level, statement: 'Second normal form: every non-key attribute depends on the whole primary key, not on part of it.'}
+- {id: DATA-NRM-002, strength: should, section: 'FIPS184 3.8.3(h), 2.43, pp. 4, 27; KENT83 3.2', checkable: partial, applies_when: keyed-level, statement: 'Third normal form: no non-key attribute depends on another non-key attribute. Each non-key attribute is a fact about the key, the whole key and nothing but the key.'}
+- {id: DATA-NRM-003, strength: should, section: KENT83 4.1, checkable: none, applies_when: keyed-level, statement: 'Fourth normal form: an entity does not hold two or more independent multi-valued facts about the same thing.'}
+- {id: DATA-NRM-004, strength: note, section: KENT83 4.2, checkable: none, applies_when: keyed-level, statement: 'Fifth normal form: split an entity when its information can be rebuilt from smaller pieces. It differs from fourth normal form only where a symmetric constraint exists among the pieces.'}
+- {id: DATA-NRM-005, strength: note, section: 'KENT83 1, 7', checkable: none, statement: 'Normalization is a design guideline, not an obligation. It prevents update anomalies but can slow retrieval. If you denormalize on purpose, record why.'}
+- {id: DATA-NRM-006, strength: note, section: KENT83 3.3, checkable: none, statement: Normal forms are defined only where identifiers are unique and singular. The same fact spelled two ways hides a violation.}
+- {id: DATA-NRM-007, strength: note, section: 'CHEN76 4.1.3, pp. 28-29', checkable: none, statement: 'Entities and relationships built top-down with Chen''s method come out close to third normal form, with clearer meaning, without a decomposition step.'}
+data_types:
+  coverage: partial
+  section: FIPS184 3.2.1
+  note: IDEF1X names three base data types and allows others, Chen gives value-set representations only as an example, and no source read defines the column types of a physical table.
+  types:
+    - {name: Character, kind: primitive, section: FIPS184 3.2.1, note: One of the three base data types of IDEF1X and a value of BaseDataType.}
+    - {name: Numeric, kind: primitive, section: FIPS184 3.2.1, note: One of the three base data types of IDEF1X and a value of BaseDataType.}
+    - {name: Boolean, kind: primitive, section: FIPS184 3.2.1, note: One of the three base data types of IDEF1X and a value of BaseDataType.}
+    - {name: 'Other base data types', kind: other, section: FIPS184 3.2.1, note: 'Dates, times and binary are named as allowed; the standard lists no others and keeps the three above as the defaults.'}
+    - {name: PositiveInteger, kind: primitive, section: 'FIPS184 3.1.2, 3.5.2, 3.14.5', note: 'The type of an entity number, of an exact or range child cardinality, and of a note number.'}
+    - {name: Integer, kind: primitive, section: FIPS184 3.8.2, note: The type of the number in an alternate key mark such as AK1.}
+    - {name: INTEGER, kind: other, section: 'CHEN76 3.2, p. 21', note: 'A value-set representation in Chen''s sample declaration, written with a digit count, as in INTEGER (4). Chen says the syntax of the data definition is not important.'}
+    - {name: CHARACTER, kind: other, section: 'CHEN76 3.2, p. 21', note: 'A value-set representation in Chen''s sample declaration, written with a character count, as in CHARACTER (8).'}
+    - {name: FIXED, kind: other, section: 'CHEN76 3.2, p. 21', note: 'A value-set representation in Chen''s sample declaration, written FIXED (5.2) for a percentage that allows 0 to 100.00.'}
+    - {name: ProductOfValueSets, kind: structured, section: 'CHEN76 2.2.3, p. 12', note: 'An attribute may map an entity to a combination of value sets, so a name draws on first name and last name together.'}
+    - {name: BaseDataType, kind: enumeration, values: [Character, Numeric, Boolean], section: FIPS184 3.2.1}
+    - {name: DomainRule, kind: enumeration, values: [ValueList, Range], section: FIPS184 3.2.1, note: 'A value list names the acceptable values; a range gives a lower or upper bound or both. Chen''s sample declaration gives allowable values as a range or as ALL.'}
+    - {name: ViewLevel, kind: enumeration, values: [EntityRelationship, KeyBased, FullyAttributed], section: FIPS184 3.10}
+    - {name: ChildCardinality, kind: enumeration, values: [ZeroOneOrMore, OneOrMore, ZeroOrOne, ExactlyN, RangeNtoM], section: FIPS184 3.5.2, note: 'ZeroOneOrMore is the default; OneOrMore is marked P and ZeroOrOne is marked Z.'}
+    - {name: ChenMapping, kind: enumeration, values: ['1:1', '1:n', 'm:n'], section: CHEN76 3.1(4)}
+    - {name: ClusterCompleteness, kind: enumeration, values: [Complete, Incomplete], section: FIPS184 3.6.1}
+    - {name: ReferentialAction, kind: enumeration, values: [NO ACTION, RESTRICT, CASCADE, SET NULL, SET DEFAULT], section: SQLDOC 5.5.5, note: NO ACTION is the default.}
+    - {name: ForeignKeyMatch, kind: enumeration, values: [MATCH SIMPLE, MATCH FULL], section: SQLDOC 5.5.5, note: MATCH SIMPLE is the default.}
+  attributes:
+    coverage: some_concepts
+    where: concepts
+    section: FIPS184 3.1.2, 3.2, 3.4, 3.5, 3.12
+    note: A concept entry lists under attributes the properties a source names, with a type and multiplicity only where the source states them. No source states a type for names and descriptions, and the remaining concepts have no listed properties.
+notation:
+  coverage: normative
+  section: FIPS184 3
+  note: Only IDEF1X has a normative drawing syntax; Chen's diagram is informal in his paper, crow's foot comes from two secondary sources, and the physical level has no drawing defined.
+  by_notation:
+    idef1x: {coverage: normative, section: 'FIPS184 3.1.2, 3.4.2, 3.5.2, 3.6.2, 3.7.2, 3.8.2, 3.9.2, 3.10.2, 3.13, 3.14; Figures 1 to 12'}
+    chen: {coverage: informative, section: 'CHEN76 3.1, Figures 10 and 11; ovals, double lines, thick lines and underlined keys are from WIKIER (secondary)'}
+    crows_foot: {coverage: informative, section: 'WIKIER (crow''s foot notation); CFOOT sections 01 to 03 (secondary; no governing document read)'}
+    physical: {coverage: none, section: 'WIKIER (physical data model); SQLDOC 5.5'}
+  reading_rule: Unless a key names another notation, shape, line, marker, label and the end keys describe IDEF1X. The keys chen and crows_foot give those notations' forms. A line is drawn between the shapes of the two concepts it joins.
+  not_stated: [sizes, colors, fonts, line routing, the position of a relationship label other than beside the line, the size of a dot or diamond]
+  end_marks:
+    idef1x:
+      filled_dot: 'A small filled circle on the line where it meets the child entity, and at both ends of a non-specific line. With nothing beside it, it means zero, one or more (FIPS184 3.5.2, 3.7.2, Figure 4).'
+      letter_P: 'The capital letter P beside the dot: one or more (FIPS184 3.5.2, Figure 4).'
+      letter_Z: 'The capital letter Z beside the dot: zero or one (FIPS184 3.5.2, Figure 4).'
+      number: 'A positive integer beside the dot: exactly that many (FIPS184 3.5.2, Figure 4).'
+      range: 'Two positive integers joined by a hyphen beside the dot, as in n-m: from n to m (FIPS184 3.5.2, Figure 4).'
+      note_reference: 'A note number in parentheses beside the dot: the cardinality is stated in that note (FIPS184 3.5.2, Figure 4).'
+      open_diamond: 'A small open diamond at the parent end of a dashed line: the parent is optional, so a child has zero or one parent (FIPS184 3.5.2.4, Figure 7).'
+      plain_parent_end: 'No mark where the line meets the parent entity: each child has exactly one parent (FIPS184 3.5.2.1, 3.5.2.3, Figures 5 and 6).'
+      circle_with_underline: 'A small open circle joined to the generic entity by a line, with one short horizontal line under it (incomplete) or two (complete); the category entities hang from it (FIPS184 3.6.2, Figure 8).'
+    chen:
+      one_m_n_labels: 'The label 1, M or N (the text says 1, m, n) beside a line, next to the entity rectangle; Figure 11 also uses P for a third participant (CHEN76 3.1 item 4, Figure 11).'
+      arrowhead: 'A filled arrowhead on the line between a relationship diamond and a weak entity, pointing at the weak entity: the weak entity depends on its owner for its existence (CHEN76 3.1 item 5, Figure 11).'
+      double_line: 'Secondary: two parallel lines between an entity rectangle and a diamond mean every entity takes part (WIKIER).'
+      thick_line: 'Secondary: one thick line means both the participation and the key constraint (WIKIER).'
+      key_arrow: 'Secondary: an arrow from an entity to a relationship means each entity takes part in at most one relationship; the paper uses an arrow for existence dependence instead (WIKIER; CHEN76 3.1).'
+    crows_foot:
+      bar: 'A short stroke across the line: one (WIKIER; CFOOT 01).'
+      ring: 'A small open circle on the line: zero. It is only ever the mark nearer the middle of the line (WIKIER; CFOOT 01).'
+      crows_foot: 'Three prongs spreading from one point on the line toward the entity: many. It is only ever the mark at the entity (WIKIER; CFOOT 01).'
+      pairs: 'Two marks at each end: the mark nearest the entity is the maximum and the one inside it is the minimum. Bar and bar: exactly one. Ring and bar: zero or one. Bar and crow''s foot: one or more. Ring and crow''s foot: zero or more (WIKIER; CFOOT 01).'
+  line_styles:
+    solid: 'IDEF1X: an identifying relationship, a categorization line, and a non-specific relationship (FIPS184 3.5.2.1, 3.6.2, 3.7.2). Crow''s foot: an identifying relationship, by convention only (CFOOT 03).'
+    dashed: 'IDEF1X and crow''s foot: a non-identifying relationship, where the foreign key is an ordinary attribute (FIPS184 3.5.2.2; CFOOT 03). Tools disagree, so the box should show the key as well (CFOOT 03).'
+    solid_or_dashed_unspecified: 'IDEF1X entity-relationship view: connection lines are solid or dashed but identification is left unspecified (FIPS184 3.10.2).'
+  elements:
+    Entity:
+      shape: A box with square corners. The attribute list is written inside the box.
+      label: 'The unique entity name above the box, optionally followed by a slash and a positive integer entity number, as in Employee/32.'
+      attribute_area: 'At the key-based and fully-attributed levels a horizontal line crosses the box: primary key attributes above it and the other attributes below it. At the entity-relationship level there is no such line.'
+      chen: {shape: A rectangle, label: The entity set name inside the rectangle, section: 'CHEN76 3.1, Figure 10'}
+      crows_foot: {shape: 'A box with the attributes listed inside it', label: The entity name, section: WIKIER (crow's foot notation)}
+      section: FIPS184 3.1.2, 3.10.2, Figures 1 and 3
+    WeakEntity:
+      shape: 'A box with rounded corners (the identifier-dependent entity), with the same label and attribute area as Entity.'
+      chen: {shape: 'A rectangle with a second rectangle drawn just inside it, giving a double outline', label: The name inside, marker: 'a filled arrowhead on the line from its relationship diamond, pointing at it', section: 'CHEN76 3.1 item 5, Figure 11'}
+      crows_foot: {shape: 'No box of its own; the line to its owner is drawn solid by convention', section: CFOOT 03}
+      section: 'FIPS184 3.1.2, 3.5.2.1, Figure 5; CHEN76 3.1'
+    AssociativeEntity:
+      shape: 'An ordinary entity box. The standard gives it no symbol of its own: it is drawn like any entity, with a connection to each of the two entities it joins, and is rounded if those connections are identifying.'
+      section: FIPS184 3.7.1
+    GenericEntity:
+      shape: 'An entity box, square-cornered unless it is also a child in an identifying relationship or a category of another cluster. A line joins it to the circle of each category cluster it has.'
+      section: FIPS184 3.6.2, Figure 8
+    CategoryEntity:
+      shape: 'An entity box with rounded corners, because a category entity is always identifier-dependent. A line joins it to the underline of the cluster circle. No cardinality is written for it.'
+      section: FIPS184 3.6.2, Figure 8
+    Attribute:
+      shape: 'The attribute name as one line of text inside the entity box, primary key attributes above the dividing line and the others below it.'
+      marker: 'A suffix in parentheses after the name: (O) when the attribute may be null; (FK) when migrated; (AKn) for alternate key n. A migrated attribute with a role name is written role name, a period, then the original name, with no spaces around the period.'
+      chen: {shape: 'Not part of the diagram in 3.1. The paper lists attributes as columns of a table headed by the entity relation name (Figures 4 to 9), and in conceptual figures draws one as an arrow from an entity dot to a dot inside a circle that stands for a value set (Figures 2 and 3)', section: 'CHEN76 2.2.3, 2.3, Figures 2 to 9'}
+      chen_secondary: {shape: 'An oval joined by a line to exactly one entity rectangle or relationship diamond; a key attribute has its name underlined', section: WIKIER}
+      crows_foot: {shape: Listed inside the entity box, section: WIKIER (crow's foot notation)}
+      section: 'FIPS184 3.4.2, 3.4.3(f), 3.9.2, 3.14.3, Figures 3 and 12'
+    CategoryCluster:
+      shape: 'A small open circle with a short horizontal line under it when the cluster is incomplete, or two parallel short lines under it when it is complete. The lines are wider than the circle. One line joins the generic entity to the circle, and a separate line joins the underline to each category entity.'
+      label: 'The discriminator attribute name written beside the circle. If no discriminator has been identified at the entity-relationship level, no name appears.'
+      marker: 'Single underline: incomplete set of categories. Double underline: complete set of categories.'
+      section: 'FIPS184 3.6.2, 3.10.2, Figure 8'
+    PrimaryKey:
+      shape: 'The names of the key attributes form the top group of the attribute list, above the horizontal dividing line. There is no suffix.'
+      chen: {shape: 'In the paper''s table form, a bracket labeled PRIMARY KEY spans the key columns above the table (Figure 9)', section: 'CHEN76 2.3.2, Figure 9'}
+      chen_secondary: {shape: The attribute name is underlined, section: WIKIER}
+      section: 'FIPS184 3.8.2, 3.4.2, Figure 3'
+    AlternateKey:
+      shape: 'The suffix (AKn) after each attribute name in the key, where n is a unique integer for that key, as in Social-Security-No (AK1). An attribute in two alternate keys carries both, as (AK1)(AK2) or (AK1,AK2). Alternate key attributes are written below the dividing line unless they are also primary key attributes.'
+      section: FIPS184 3.8.2, Figure 10
+    ForeignKey:
+      shape: 'The suffix (FK) after the name of each migrated attribute. It sits above the dividing line when the migrated attribute is part of the child primary key (the child box is then rounded) and below it otherwise.'
+      section: FIPS184 3.9.2, Figures 11 and 12
+    Note:
+      shape: 'The note number in parentheses, placed after the label of the entity, attribute, relationship or view it applies to. Several notes on one item are written (1) (2) or (1,2). In a two-direction relationship label, the number for the first phrase goes before the slash. The note text is listed elsewhere, as the number, a space, then the text.'
+      section: 'FIPS184 3.13, 3.14.5'
+  relationships:
+    Relationship:
+      shape: 'A diamond with the relationship set name inside it. Chen only.'
+      line: 'A plain solid line from the diamond to the rectangle of each participating entity set. An entity set that takes part twice has two lines to the same diamond.'
+      source_end: 'No mark at the diamond.'
+      target_end: 'The label 1, M or N (or P) beside the line, next to the entity rectangle.'
+      label: 'The role of each entity is written on its line.'
+      section: 'CHEN76 3.1, Figures 10 and 11'
+    ConnectionRelationship:
+      line: 'A straight line from the parent entity to the child entity, solid or dashed according to its kind.'
+      source_end: 'No mark at the parent, except the small open diamond of an optional parent.'
+      target_end: 'A small filled circle at the child, with P, Z, a number, a range or a note number beside it when the cardinality is not zero, one or more.'
+      label: 'A verb phrase beside the line, parent perspective first; two directions are written as two phrases separated by a slash.'
+      chen: {shape: 'A relationship diamond between two entity rectangles, with mapping letters 1, M, N on the lines', section: 'CHEN76 3.1, Figure 10'}
+      crows_foot: {line: 'A line with the paired marks (ring, bar, crow''s foot) at each end', label: 'A verb phrase on the line, read from both ends', section: 'WIKIER; CFOOT 02'}
+      section: 'FIPS184 3.5.2, 3.5.3, Figure 4'
+    IdentifyingRelationship:
+      line: 'Solid.'
+      source_end: 'No mark at the parent.'
+      target_end: 'Small filled circle at the child, with an optional cardinality mark beside it. The child entity box has rounded corners, and the parent key attributes appear above the dividing line in the child box marked (FK).'
+      label: 'A verb phrase beside the line.'
+      crows_foot: {line: 'Solid by convention; tools disagree, so the box should show the key as well', section: CFOOT 03}
+      chen: {shape: 'The weak entity rectangle with a double outline, joined to its relationship diamond by a line with a filled arrowhead pointing at the weak entity', section: 'CHEN76 3.1 item 5, Figure 11'}
+      section: 'FIPS184 3.5.2.1, Figure 5'
+    NonIdentifyingRelationship:
+      line: 'Dashed.'
+      source_end: 'No mark at the parent, or a small open diamond when the parent is optional.'
+      target_end: 'Small filled circle at the child, with an optional cardinality mark beside it. The child box keeps square corners unless it is a child in some identifying relationship.'
+      label: 'A verb phrase beside the line.'
+      crows_foot: {line: Dashed, section: CFOOT 03}
+      section: 'FIPS184 3.5.2.2, 3.5.2.3, 3.5.2.4'
+    MandatoryNonIdentifyingRelationship:
+      line: 'Dashed.'
+      source_end: 'No mark at the parent: each child has exactly one parent.'
+      target_end: 'Small filled circle at the child, with an optional cardinality mark beside it. The migrated key is written below the dividing line in the child box, marked (FK).'
+      label: 'A verb phrase beside the line.'
+      section: FIPS184 3.5.2.3, Figure 6
+    OptionalNonIdentifyingRelationship:
+      line: 'Dashed.'
+      source_end: 'A small open diamond at the parent: each child has zero or one parent.'
+      target_end: 'Small filled circle at the child, with an optional cardinality mark beside it. The migrated key is written below the dividing line in the child box, marked (FK).'
+      label: 'A verb phrase beside the line.'
+      section: FIPS184 3.5.2.4, Figure 7
+    CategorizationRelationship:
+      line: 'Solid. One line from the generic entity to the circle of the cluster, and one line from the underline of the circle to the category entity.'
+      source_end: 'No mark at the generic entity.'
+      target_end: 'No mark at the category entity; its cardinality is always zero or one and is not written.'
+      label: 'Not named in the drawing. It is read as "can be" from generic to category, "must be" for a complete cluster, and "is a" in the other direction.'
+      section: 'FIPS184 3.6.2, Figure 8'
+    NonSpecificRelationship:
+      line: 'Solid, drawn between the two entities.'
+      source_end: 'A small filled circle, with an optional cardinality mark beside it.'
+      target_end: 'A small filled circle, with an optional cardinality mark beside it. A dot with no mark means zero, one or more.'
+      label: 'Two verb phrases separated by a slash, the first read from the left entity to the right entity, or from the top entity to the bottom entity when they are arranged vertically (the vertical reading wins when both apply).'
+      crows_foot: {line: 'A crow''s foot at both ends, legal in a conceptual model only', section: 'WIKIER; CFOOT 04'}
+      chen: {shape: 'A relationship diamond with mapping m:n on its two lines', section: 'CHEN76 3.1 item 4, Figure 11'}
+      section: 'FIPS184 3.7.2, Figure 9'
+  not_specified: [Domain, BaseDomain, TypedDomain, Key, CandidateKey, View, Table, Column, TableConstraint, PrimaryKeyConstraint, UniqueConstraint, ForeignKeyConstraint, CheckConstraint, Index]
+  not_specified_reasons:
+    domains: 'IDEF1X states that there is no current concrete syntax for domains; they are kept in the glossary, and the oval hierarchy of Figure 2 is an informal illustration (FIPS184 3.2.2, Figure 2). Chen draws value sets only as circles in conceptual figures (CHEN76 2.2.3, Figures 2 and 3).'
+    keys: 'Key and CandidateKey are groupings the sources never draw. Primary, alternate and foreign keys are drawn through the marks listed under their own entries.'
+    view: 'A view is shown by a diagram. The standard gives the diagram no frame, title position or symbol (FIPS184 3.3).'
+    physical_level: 'The sources read define no drawing for tables, columns, constraints or indexes. The convention block records common practice and is not a source fact (WIKIER physical data model; SQLDOC 5.5).'
+conventions:
+  provenance:
+    status: mixed
+    note: Drawing conventions, not validation. IDEF1X conventions are the standard's own (FIPS184). Chen's are from his paper where stated (CHEN76 3.1) and from a secondary source where marked. Crow's foot conventions come from two secondary sources. Layout numbers are not part of any source.
+  cardinality_notations:
+    note: 'All three notations state a count look-across: the mark at one end says how many instances of that end''s entity go with one instance of the other.'
+    exactly_one:
+      chen: label 1 on that side
+      crows_foot: bar and bar at the entity
+      idef1x: no mark at the parent end (identifying and mandatory relationships)
+    zero_or_one:
+      chen: label 1 with an arrow or no total participation mark (secondary)
+      crows_foot: ring then bar
+      idef1x: letter Z beside the child dot; small diamond at the parent end for an optional parent
+    zero_or_more:
+      chen: label n or m
+      crows_foot: ring then crow's foot
+      idef1x: plain dot at the child end (the default)
+    one_or_more:
+      chen: label n with minimum 1, or a double line (secondary)
+      crows_foot: bar then crow's foot
+      idef1x: letter P beside the child dot
+    exactly_n_or_range:
+      chen: minimum and maximum numbers may be specified
+      crows_foot: not expressible; use a note
+      idef1x: the number or range beside the dot
+    many_to_many:
+      chen: m:n relationship set
+      crows_foot: crow's foot at both ends (legal conceptually)
+      idef1x: 'non-specific relationship: dot at both ends, entity-relationship level only'
+    identifying:
+      chen: weak entity set with an arrow of existence dependence
+      crows_foot: solid line (tool-dependent; some tools invert it)
+      idef1x: solid line, child box with rounded corners
+    non_identifying:
+      chen: regular entity set
+      crows_foot: dashed line
+      idef1x: dashed line
+    section: CHEN76 3.1; FIPS184 3.5.2, 3.7.2; WIKIER; CFOOT sections 01 to 03
+  chen:
+    shapes:
+      Entity: rectangle (CHEN76 3.1)
+      WeakEntity: special rectangle (CHEN76 3.1, item 5)
+      Relationship: diamond joined by lines to its participants (CHEN76 3.1)
+      Attribute: oval joined to exactly one entity or relationship (secondary); the paper uses tables
+    lines:
+      mapping: labels 1, m, n on the lines give one-to-one, one-to-many, many-to-many (CHEN76 3.1 item 4)
+      roles: the role of each entity is written on its line (CHEN76 3.1)
+      existence_dependence: an arrow in the relationship (CHEN76 3.1 item 5)
+      key_attribute: underlined name (secondary)
+      total_participation: double line (secondary)
+    secondary_note: The arrow is existence dependence in the paper and a key (at-most-one) constraint in the secondary description; a tool that uses both meanings needs a legend.
+  idef1x:
+    entity: box; rounded corners when identifier-dependent; label above the box with the unique name and optional /number (FIPS184 3.1.2)
+    attributes: listed in the box; primary key attributes above a horizontal line; foreign keys end (FK); alternate keys end (AKn); optional attributes end (O) (FIPS184 3.4.2, 3.8.2, 3.9.2)
+    relationships:
+      identifying: solid line, dot at the child end (FIPS184 3.5.2.1)
+      non_identifying: dashed line, dot at the child end (FIPS184 3.5.2.2)
+      optional_parent: dashed line with a small diamond at the parent end (FIPS184 3.5.2.4)
+      child_cardinality: P, Z, a number or a range beside the dot (FIPS184 3.5.2)
+      non_specific: line with a dot at both ends (FIPS184 3.7.2)
+      label: verb phrase beside the line; two directions written as "verb / verb" (FIPS184 3.5.3, 3.7.2)
+    categorization: line from the generic entity to a circle with an underline, lines from the circle to each category; single underline = incomplete, double underline = complete; discriminator name beside the circle (FIPS184 3.6.2)
+    role_name_label: role name, a period, the original attribute name, with no spaces around the period (FIPS184 3.14.3)
+    notes: number in parentheses beside the item; several as (1)(2) or (1,2) (FIPS184 3.13, 3.14.5)
+    hiding: entity numbers, attributes, keys, role names, cardinalities and similar may be hidden for presentation; all rules still apply (FIPS184 3.11)
+    section: FIPS184 3.1 to 3.14
+  crows_foot:
+    symbols: ring = zero, bar = one, crow's foot = many; inner mark is the minimum and outer mark the maximum (WIKIER; CFOOT 01)
+    reading: the marks at an end describe the entity at that end; read the line from the other entity; both readings must be true (CFOOT 02)
+    lines: solid for identifying and dashed for non-identifying by common convention; tools disagree, so show the composite key in the box too (CFOOT 03)
+    relationships: cannot carry attributes; promote to an associative entity (WIKIER)
+    section: WIKIER; CFOOT (secondary)
+  physical:
+    note: The sources define no physical notation. Tables are conventionally boxes with columns listed, a key marker on primary key columns and a foreign key marker on referencing columns, joined by crow's foot or IDEF1X style lines.
+    section: WIKIER (physical data model)
+notes: "There is no single standard. Six diagram types are the drawing forms the sources describe. Rules are scoped by applies_when so that a validator applies Chen's rules to Chen models, IDEF1X rules to IDEF1X models and physical rules to the table level. FIPS 184 words second and third normal form as rules; here they are should, a decision for this language, and the other normal forms are should or note. IDEF1X97 was not read. Multiplicity keys: targets_per_source is how many target instances one source instance may link to; sources_per_target is how many source instances one target instance may link to; '*' means zero or more."
 layout:
   basis: Our conventions, not this standard's.  Sizes and spacing come from the shared layout standard.
-  element_types: {}
+  element_types:
+    Entity: box
+    WeakEntity: box
+    AssociativeEntity: box
+    GenericEntity: box
+    CategoryEntity: box
+    Attribute: box
+    Relationship: box
+    Table: box
+    CategoryCluster: small-node
+    Note: note
   exceptions: {}
   diagram_types:
-    ChenDiagram: &id001
+    ChenDiagram:
       arrangement: graph
-      title: frame-header
       route: straight
+      title: frame-header
       channels:
-        fill: null
         claimed:
-          position: Spoken for twice over. Automatic layout overwrites anything set beforehand, and an
-            attribute's position says which entity it belongs to, since it is drawn in the fan around
-            that entity.
-          size: Node kind. An entity is drawn wider than its own attributes, so using width to encode
-            something else blurs the one distinction size carries here.
-          line_style: 'Normative underneath: dashed against solid separates one kind of line from another.
-            Overwriting it changes what a connector means.'
+          position: The arrangement sets it, and an attribute's position says which entity it belongs
+            to, because it sits in the fan around that entity.
+          size: Marks the kind of node.  An entity is drawn wider than its own attributes, so width should
+            not carry another meaning.
+          line_style: Carries the meaning of a line, such as identifying against non-identifying.  Do
+            not reuse it.
         free:
         - fill
         - border
@@ -30,5 +659,69 @@ layout:
         - font_color
         - opacity
         - icon
-    CrowsFootDiagram: *id001
+        fill: null
+    CrowsFootDiagram:
+      arrangement: graph
+      route: straight
+      title: frame-header
+      channels:
+        claimed:
+          position: The arrangement sets it, and an attribute's position says which entity it belongs
+            to, because it sits in the fan around that entity.
+          size: Marks the kind of node.  An entity is drawn wider than its own attributes, so width should
+            not carry another meaning.
+          line_style: Carries the meaning of a line, such as identifying against non-identifying.  Do
+            not reuse it.
+        free:
+        - fill
+        - border
+        - border_width
+        - line_color
+        - font_color
+        - opacity
+        - icon
+        fill: null
+  no_element_type:
+    drawn_as_line:
+      reason: Drawn as a line between two boxes, with end marks, so there is no symbol to size.
+      concepts:
+      - ConnectionRelationship
+      - IdentifyingRelationship
+      - NonIdentifyingRelationship
+      - MandatoryNonIdentifyingRelationship
+      - OptionalNonIdentifyingRelationship
+      - CategorizationRelationship
+      - NonSpecificRelationship
+      - ForeignKeyConstraint
+    drawn_as_marker:
+      reason: Drawn as a suffix on an attribute name inside an entity box, not as a shape.
+      concepts:
+      - PrimaryKey
+      - AlternateKey
+      - ForeignKey
+    not_drawn_groupings:
+      reason: A grouping of attributes that the sources never draw.
+      concepts:
+      - Key
+      - CandidateKey
+    not_drawn_domains:
+      reason: The sources give domains no concrete syntax.
+      concepts:
+      - Domain
+      - BaseDomain
+      - TypedDomain
+    not_drawn_view:
+      reason: A view is shown by a diagram, not by a shape in one.
+      concepts:
+      - View
+    drawn_as_text:
+      reason: Listed inside the table box.  The sources define no physical drawing, and common practice
+        lists these rows in the table.
+      concepts:
+      - Column
+      - TableConstraint
+      - PrimaryKeyConstraint
+      - UniqueConstraint
+      - CheckConstraint
+      - Index
   viewpoints: {}

@@ -1,11 +1,626 @@
-# Stub: holds only the layout block until the guide arrives.
-# The guide replaces this file and keeps the `layout` block.
+# Zachman Framework for Enterprise Architecture: language file (schema_version 1).
+# Written from the author's published papers only (see standard.reference). The framework is a classification schema,
+# not a notation: it has columns, rows and cells instead of diagram types.
+# Keys beyond the base schema:
+#   classification            : columns, rows and cells (the schema has no place for dimension tables)
+#   concepts.elements[].column, .definition, .section, .abstract
+#   relationships[].via       : the connector primitive of a column's basic model
+#   constraints[].applies_when, .checkable 
+#     checkable: static  = a validator that sees only the saved model can check it, PROVIDED the model carries each
+#                          element's cell (row and column) as a label or a place;
+#                partial = only the structure can be checked, the meaning cannot;
+#                none    = a statement about intent, method or meaning
+#     applies_when: scope-row = only for cells of row 1; not-scope-row = only for cells of rows 2 to 6
+schema_version: 1
 id: zachman
 name: Zachman Framework for Enterprise Architecture
-stub: true
+owner: {name: 'John A. Zachman / Zachman International, Inc.', kind: author}
+standard:
+  name: The Zachman Framework (framework for information systems architecture; later, for enterprise architecture)
+  version: six columns by six rows, pre-3.0 naming; rules as stated in 1992
+  status: author-defined classification framework; not a formal standard; no machine-readable model
+  reference: 'J. A. Zachman, "A framework for information systems architecture", IBM Systems Journal 26(3), 1987, pp. 276 to 292 (origin; three columns described). J. F. Sowa and J. A. Zachman, "Extending
+    and formalizing the framework for information systems architecture", IBM Systems Journal 31(3), 1992, pp. 590 to 616 (six columns; the seven rules of the framework, pp. 599 to 604 and 611 to 613). Zachman
+    International, "The Zachman Framework Evolution" (history of the graphic from 1984 to 2011; source for the sixth row, instances and the primitive versus composite distinction). Newer: Zachman Framework
+    3.0, "The Enterprise Ontology", 2011; not described here beyond its alias names.'
+  newer_versions:
+  - {name: Zachman Framework 3.0 (The Enterprise Ontology), date: '2011', described: aliases only}
+classification:
+  kind: two-dimensional classification schema
+  dimensions: columns (interrogatives, no order) by rows (perspectives, from scope to the functioning enterprise)
+  source: 1992 pp. 591 to 604 and 611 to 613 for columns, rows 1 to 5 and the rules; Evolution page for row 6, the reification names and the 3.0 alias names (InfoQ, 9 September 2011, for the row audience
+    names).
+  columns_have_order: false
+  columns:
+  - id: A
+    question: what
+    name: Data
+    primitives: {variable: Entity, connector: Relationship}
+    generic_model: entity - relationship - entity
+    alias_3_0: inventory (3.0 wording as reported in 2011)
+  - id: B
+    question: how
+    name: Function
+    primitives: {variable: Function, connector: Argument}
+    generic_model: 'function - argument - function (1987: input - process - output)'
+    alias_3_0: Process Flows
+  - id: C
+    question: where
+    name: Network
+    primitives: {variable: Node, connector: Link}
+    generic_model: node - link - node
+    alias_3_0: Distribution Networks
+  - id: D
+    question: who
+    name: People
+    primitives: {variable: Agent, connector: Work}
+    generic_model: agent - work - agent
+    alias_3_0: Responsibility Assignments
+  - id: E
+    question: when
+    name: Time
+    primitives: {variable: Time, connector: Cycle}
+    generic_model: time (event) - cycle - time (event)
+    alias_3_0: Timing Cycles
+  - id: F
+    question: why
+    name: Motivation
+    primitives: {variable: Ends, connector: Means}
+    generic_model: ends - means - ends
+    alias_3_0: motivation (3.0 wording as reported in 2011)
+  rows:
+  - {id: 1, perspective: Planner, model: Scope, reification: Identification, audience_3_0: Executive, concern: 'Gross size and scope of the enterprise or system: lists of classes that support the decision
+      where to invest. No detail of relationships.'}
+  - {id: 2, perspective: Owner, model: Enterprise (business) model, reification: Definition, audience_3_0: Business Management, concern: 'The business as the owner perceives it, in business terms; usability
+      constraints.'}
+  - {id: 3, perspective: Designer, model: System model, reification: Representation, audience_3_0: Architect, concern: The logical design of the system that serves the business; design constraints (the
+      laws of nature).}
+  - {id: 4, perspective: Builder, model: Technology model, reification: Specification, audience_3_0: Engineer, concern: The physical design under the limits of the chosen technology; construction constraints.}
+  - {id: 5, perspective: Subcontractor, model: Components, reification: Configuration, audience_3_0: Technician, concern: Parts specified out of the context of the whole; the detail given to those who build
+      one component.}
+  - {id: 6, perspective: Functioning enterprise, model: Functioning system, reification: Instantiation, audience_3_0: Enterprise, concern: The enterprise actually operating. Holds instances of the abstractions
+      in rows 1 to 5; it is the result of the architecture rather than part of it.}
+  cells:
+  - id: A1
+    column: A
+    row: 1
+    name: List of things important to the business
+    variable_means: a class of business thing
+    connector_means: not defined in this cell
+    example_notations: [list of entity classes]
+    basis: read
+  - id: A2
+    column: A
+    row: 2
+    name: Semantic (entity-relationship) model
+    variable_means: business entity
+    connector_means: business rule or constraint
+    example_notations: [entity-relationship diagram]
+    basis: read
+  - id: A3
+    column: A
+    row: 3
+    name: Logical data model
+    variable_means: data entity (a record in the system)
+    connector_means: data relationship
+    example_notations: [data model]
+    basis: read
+  - id: A4
+    column: A
+    row: 4
+    name: Physical data design
+    variable_means: segment or row, depending on the chosen technology
+    connector_means: pointer or key
+    example_notations: [physical data design]
+    basis: read
+  - id: A5
+    column: A
+    row: 5
+    name: Data definition
+    variable_means: field
+    connector_means: address
+    example_notations: [data definition language statements]
+    basis: read
+  - {id: A6, column: A, row: 6, name: Data actually held, variable_means: an instance of a data entity, connector_means: an instance of a data relationship, basis: evolution-page}
+  - id: B1
+    column: B
+    row: 1
+    name: List of processes the business performs
+    variable_means: a class of business process
+    connector_means: not defined in this cell
+    example_notations: [list of process classes]
+    basis: read
+  - id: B2
+    column: B
+    row: 2
+    name: Process (functional flow) model
+    variable_means: business process
+    connector_means: business resource (people, cash, material, product)
+    example_notations: [process flow diagram]
+    basis: read
+  - id: B3
+    column: B
+    row: 3
+    name: Application architecture
+    variable_means: application function
+    connector_means: user view
+    example_notations: [data flow diagram]
+    basis: read
+  - id: B4
+    column: B
+    row: 4
+    name: System design
+    variable_means: computer function
+    connector_means: screen or device format
+    example_notations: [structure chart]
+    basis: read
+  - id: B5
+    column: B
+    row: 5
+    name: Program
+    variable_means: language statement
+    connector_means: control block
+    example_notations: [program]
+    basis: read
+  - {id: B6, column: B, row: 6, name: Functions actually running, variable_means: an instance of a function, connector_means: an instance of an argument, basis: evolution-page}
+  - id: C1
+    column: C
+    row: 1
+    name: List of locations in which the business operates
+    variable_means: major business location
+    connector_means: not defined in this cell
+    example_notations: [list or map of locations]
+    basis: read
+  - id: C2
+    column: C
+    row: 2
+    name: Logistics network
+    variable_means: business unit at a location
+    connector_means: business linkage (flows and communications)
+    example_notations: [logistics network]
+    basis: read
+  - id: C3
+    column: C
+    row: 3
+    name: Distributed system architecture
+    variable_means: system function (processor, storage, access point)
+    connector_means: conceptual line type
+    example_notations: [distributed system architecture]
+    basis: read
+  - id: C4
+    column: C
+    row: 4
+    name: System (technology) architecture
+    variable_means: hardware and system software
+    connector_means: line specification
+    example_notations: [system architecture]
+    basis: read
+  - id: C5
+    column: C
+    row: 5
+    name: Network architecture
+    variable_means: address
+    connector_means: protocol
+    example_notations: [network definition]
+    basis: read
+  - {id: C6, column: C, row: 6, name: Network actually in place, variable_means: an instance of a node, connector_means: an instance of a link, basis: evolution-page}
+  - id: D1
+    column: D
+    row: 1
+    name: List of organizations
+    variable_means: class of agent
+    connector_means: not defined in this cell
+    example_notations: [list of organization units]
+    basis: partial
+  - id: D2
+    column: D
+    row: 2
+    name: Organization (work) model
+    variable_means: organization unit
+    connector_means: work product
+    example_notations: [organization chart]
+    basis: partial
+  - id: D3
+    column: D
+    row: 3
+    name: Human interface architecture
+    variable_means: role
+    connector_means: deliverable
+    example_notations: [human interface architecture]
+    basis: partial
+  - id: D4
+    column: D
+    row: 4
+    name: Presentation (human and technology interface) architecture
+    variable_means: user
+    connector_means: job
+    example_notations: [human and technology interface]
+    basis: partial
+  - id: D5
+    column: D
+    row: 5
+    name: Security architecture
+    variable_means: identity
+    connector_means: transaction
+    example_notations: [security architecture]
+    basis: partial
+  - {id: D6, column: D, row: 6, name: People actually working, variable_means: an instance of an agent, connector_means: an instance of a work item, basis: evolution-page}
+  - id: E1
+    column: E
+    row: 1
+    name: List of events
+    variable_means: major event
+    connector_means: major cycle
+    example_notations: [list of events]
+    basis: read
+  - id: E2
+    column: E
+    row: 2
+    name: Master schedule
+    variable_means: business event
+    connector_means: business cycle
+    example_notations: [master schedule]
+    basis: read
+  - id: E3
+    column: E
+    row: 3
+    name: Processing structure
+    variable_means: system event
+    connector_means: processing cycle
+    example_notations: [processing structure]
+    basis: read
+  - id: E4
+    column: E
+    row: 4
+    name: Control architecture
+    variable_means: execute
+    connector_means: component cycle
+    example_notations: [control structure]
+    basis: read
+  - id: E5
+    column: E
+    row: 5
+    name: Timing definition
+    variable_means: interrupt
+    connector_means: machine cycle
+    example_notations: [timing definition]
+    basis: read
+  - {id: E6, column: E, row: 6, name: Schedule actually followed, variable_means: an instance of an event, connector_means: an instance of a cycle, basis: evolution-page}
+  - id: F1
+    column: F
+    row: 1
+    name: List of business objectives
+    variable_means: major objective
+    connector_means: major strategy
+    example_notations: [list of objectives and strategies]
+    basis: partial
+  - id: F2
+    column: F
+    row: 2
+    name: Business plan
+    variable_means: business objective
+    connector_means: business strategy
+    example_notations: [business plan]
+    basis: partial
+  - id: F3
+    column: F
+    row: 3
+    name: Knowledge architecture
+    variable_means: criterion
+    connector_means: option
+    example_notations: [knowledge architecture]
+    basis: partial
+  - id: F4
+    column: F
+    row: 4
+    name: Knowledge design
+    variable_means: condition
+    connector_means: action
+    example_notations: [knowledge design]
+    basis: partial
+  - id: F5
+    column: F
+    row: 5
+    name: Knowledge definition
+    variable_means: subcondition
+    connector_means: step
+    example_notations: [knowledge definition]
+    basis: partial
+  - {id: F6, column: F, row: 6, name: Strategy actually followed, variable_means: an instance of an end, connector_means: an instance of a means, basis: evolution-page}
+  cells_note: 'Cell ids follow the 1992 paper ("Cell A2", "Column B, Row 5"): the column letter then the row number. "basis" says how well the source supports the cell: read = clear in the text; partial
+    = the text layer of a table or figure was garbled; hypothetical-in-source = the authors call the column hypothetical; evolution-page = row 6 content, read only as a description of instances. The people
+    and motivation columns are marked partial AND are hypothetical in the paper itself (1992 pp. 596, 605). Example notations are the papers'' examples, not requirements.'
+concepts:
+  source: The framework defines no classes in the object-modeling sense. These concepts are its dimensions (Column, Row, Cell), the kinds of model it distinguishes (Cell Model, Composite Model, Row Composite,
+    Instance) and the twelve primitives of the six basic models. CellModel, RowComposite and PrimitiveConcept are names given here to things the source describes without naming. 20 concepts.
+  elements:
+    Column: {display: Column, category: Structure, definition: 'One of six abstractions of the enterprise, each answering one question word. Columns are peers and have no order.', section: '1992 pp. 596,
+        599'}
+    Row: {display: Row, category: Structure, definition: 'One of six perspectives on the enterprise, from scope to the functioning enterprise. A different kind of description, not a finer level of detail.',
+      section: '1992 pp. 591 to 593, 601'}
+    Cell: {display: Cell, category: Structure, definition: 'The intersection of one row and one column: a unique class of description with its own meaning for the column''s primitives. 36 in all.', section: '1992
+        pp. 591, 602'}
+    CellModel: {display: Cell Model, category: Models, definition: 'A primitive model held in one cell: the column''s two primitives at the row''s meaning and nothing else.', section: '1992 pp. 601, 611
+        (Rule 2); Evolution page (primitive models)'}
+    CompositeModel: {display: Composite Model, category: Models, definition: 'A model that binds primitives from more than one cell, usually more than one column, into one structure. A combination of primitives,
+        not a primitive.', section: Evolution page; 1992 p. 603 ("compounds")}
+    RowComposite: {display: Row Composite, category: Models, specializes: CompositeModel, definition: The integration of all the cell models of one row; a complete model from that row's perspective., section: 1992
+        p. 603 (Rule 6)}
+    Instance: {display: Instance, category: Models, definition: A particular occurrence in the functioning enterprise that one of the abstractions in rows 1 to 5 describes. Proper nouns and countable occurrences
+        belong here., section: 'Evolution page, 2001 and 2011 entries'}
+    PrimitiveConcept: {display: Primitive Concept, category: Primitives, abstract: true, definition: The general kind of the twelve primitives (a columnar variable or a connector). The name is ours; the
+        source speaks of "meta entities" and "basic model" parts., section: 1992 pp. 600 to 601 (Rule 2)}
+    Entity: {display: Entity, category: Primitives, specializes: PrimitiveConcept, column: A, definition: 'The columnar variable of the what column: a thing of the kind the cell is about (a business thing,
+        a data entity, a segment or row, a field).', section: 1992 pp. 601 to 602; 1987 pp. 284 to 288}
+    Relationship: {display: Relationship, category: Primitives, specializes: PrimitiveConcept, column: A, definition: 'The connector of the what column: how two entities relate (a business rule, a data
+        relationship, a pointer or key, an address).', section: 1992 pp. 601 to 602; 1987 pp. 284 to 288}
+    Function: {display: Function, category: Primitives, specializes: PrimitiveConcept, column: B, definition: 'The columnar variable of the how column: a transformation (a business process, an application
+        function, a computer function, a language statement).', section: 1992 p. 601; 1987 pp. 288 to 289}
+    Argument: {display: Argument, category: Primitives, specializes: PrimitiveConcept, column: B, definition: 'The connector of the how column: what a function takes in or gives out (business resources,
+        user views, screen or device formats, control blocks). The 1987 paper called it input and output.', section: '1992 pp. 597, 601; 1987 pp. 288 to 289'}
+    Node: {display: Node, category: Primitives, specializes: PrimitiveConcept, column: C, definition: 'The columnar variable of the where column: a place that holds or does something (a business location,
+        a system function, hardware, an address).', section: 1992 p. 601; 1987 pp. 289 to 290}
+    Link: {display: Link, category: Primitives, specializes: PrimitiveConcept, column: C, definition: 'The connector of the where column: how two nodes are joined (a business linkage, a line characteristic,
+        a line specification, a protocol).', section: 1992 p. 601; 1987 pp. 289 to 290}
+    Agent: {display: Agent, category: Primitives, specializes: PrimitiveConcept, column: D, definition: 'The columnar variable of the who column: a party that works (an organization unit, a role, a user,
+        an identity). May be human or a software agent.', section: '1992 pp. 597, 611'}
+    Work: {display: Work, category: Primitives, specializes: PrimitiveConcept, column: D, definition: 'The connector of the who column: what is assigned or passed between agents, read as the work product
+        (a work product, a deliverable, a job, a transaction).', section: '1992 pp. 597, 611'}
+    Time: {display: Time, category: Primitives, specializes: PrimitiveConcept, column: E, definition: 'The columnar variable of the when column: a point in time or an event (a major event, a business event,
+        a system event, an interrupt).', section: '1992 pp. 597, 611'}
+    Cycle: {display: Cycle, category: Primitives, specializes: PrimitiveConcept, column: E, definition: 'The connector of the when column: the duration or cycle between two events (a business cycle, a processing
+        cycle, a machine cycle).', section: 1992 p. 597}
+    Ends: {display: Ends, category: Primitives, specializes: PrimitiveConcept, column: F, definition: 'The columnar variable of the why column: a goal, objective, criterion or condition the enterprise or
+        system aims for.', section: '1992 pp. 597, 599; Table 4'}
+    Means: {display: Means, category: Primitives, specializes: PrimitiveConcept, column: F, definition: 'The connector of the why column: how an end is reached (a strategy, an option, an action, a step).',
+      section: '1992 pp. 597, 599; Table 4'}
+relationships:
+- name: CellInRow
+  source: Cell
+  target: Row
+  roles: {source: cell, target: row}
+  multiplicity: {targets_per_source: '1', sources_per_target: '6'}
+  section: 1992 p. 602 (Rules 4 and 5)
+- name: CellInColumn
+  source: Cell
+  target: Column
+  roles: {source: cell, target: column}
+  multiplicity: {targets_per_source: '1', sources_per_target: '6'}
+  section: 1992 p. 602 (Rules 3 and 5)
+- name: CellModelHeldInCell
+  source: CellModel
+  target: Cell
+  roles: {source: cellModel, target: holdingCell}
+  multiplicity: {targets_per_source: '1', sources_per_target: '*'}
+  section: 1992 p. 602 (Rule 5)
+- name: CellModelUsesPrimitive
+  source: CellModel
+  target: PrimitiveConcept
+  roles: {source: cellModel, target: usedPrimitive}
+  multiplicity: {targets_per_source: 1..2, sources_per_target: '*'}
+  note: Only the two primitives of the column the holding cell belongs to. A scope-row cell may use only the first (see ZF-CELL-007).
+  section: 1992 pp. 601, 611 (Rules 2 and 3)
+- name: EntityViaRelationshipToEntity
+  source: Entity
+  target: Entity
+  roles: {source: fromEntity, target: toEntity}
+  via: Relationship
+  multiplicity: {targets_per_source: not-stated, sources_per_target: not-stated}
+  section: 1987 p. 284; 1992 pp. 601, 611
+- name: FunctionViaArgumentToFunction
+  source: Function
+  target: Function
+  roles: {source: fromFunction, target: toFunction}
+  via: Argument
+  multiplicity: {targets_per_source: not-stated, sources_per_target: not-stated}
+  section: 1987 p. 283; 1992 pp. 601, 611
+- name: NodeViaLinkToNode
+  source: Node
+  target: Node
+  roles: {source: fromNode, target: toNode}
+  via: Link
+  multiplicity: {targets_per_source: not-stated, sources_per_target: not-stated}
+  section: 1987 p. 283; 1992 pp. 601, 611
+- name: AgentViaWorkToAgent
+  source: Agent
+  target: Agent
+  roles: {source: fromAgent, target: toAgent}
+  via: Work
+  multiplicity: {targets_per_source: not-stated, sources_per_target: not-stated}
+  section: 1992 pp. 597, 611
+- name: TimeViaCycleToTime
+  source: Time
+  target: Time
+  roles: {source: fromTime, target: toTime}
+  via: Cycle
+  multiplicity: {targets_per_source: not-stated, sources_per_target: not-stated}
+  section: 1992 p. 597
+- name: EndsViaMeansToEnds
+  source: Ends
+  target: Ends
+  roles: {source: fromEnds, target: toEnds}
+  via: Means
+  multiplicity: {targets_per_source: not-stated, sources_per_target: not-stated}
+  section: 1992 pp. 597, 599
+- name: CellIntegratesWithCell
+  source: Cell
+  target: Cell
+  roles: {source: cell, target: integratedCell}
+  multiplicity: {targets_per_source: '5', sources_per_target: '5'}
+  note: Between cells of the same row. At a minimum every cell is related to every other cell of its row.
+  section: 1992 p. 603 (Rule 6)
+- name: CellTransformsToCellBelow
+  source: Cell
+  target: Cell
+  roles: {source: upperCell, target: lowerCell}
+  multiplicity: {targets_per_source: 0..1, sources_per_target: 0..1}
+  note: Between cells of the same column, one row apart. A transformation, not a decomposition.
+  section: 1992 p. 603 (Rule 6); Evolution page
+- name: RowCompositeIntegratesCell
+  source: RowComposite
+  target: Cell
+  roles: {source: rowComposite, target: integratedCell}
+  multiplicity: {targets_per_source: '6', sources_per_target: '*'}
+  note: All six cells of one row.
+  section: 1992 p. 603 (Rule 6)
+- name: CompositeModelCombinesCellModel
+  source: CompositeModel
+  target: CellModel
+  roles: {source: compositeModel, target: combinedCellModel}
+  multiplicity: {targets_per_source: 2..*, sources_per_target: '*'}
+  note: Two or more cell models, ordinarily from different cells.
+  section: Evolution page; 1992 p. 603
+- name: InstanceInstantiatesCellModel
+  source: Instance
+  target: CellModel
+  roles: {source: instance, target: instantiatedCellModel}
+  multiplicity: {targets_per_source: 1..*, sources_per_target: '*'}
+  note: The instance lives in row 6; the cell model it instantiates is in rows 1 to 5.
+  section: Evolution page, 2001 and 2011 entries
+constraints:
+- {id: ZF-COL-001, statement: 'The framework has exactly six columns, one for each question word: what, how, where, who, when, why. Every classified element or model belongs to one of them.', strength: must,
+  checkable: static, section: 1992 p. 596 (extended framework); 1987 pp. 282 to 283}
+- {id: ZF-COL-002, statement: 'The columns have no order. Order implies priority and biases the design toward one aspect, so no column comes first and none is more important than another. The tabular order
+    is only a concession to flat displays.', strength: must, checkable: none, section: 1992 p. 599 (Rule 1); p. 611}
+- {id: ZF-COL-003, statement: 'Each column has one simple basic model made of two primitives, a columnar variable and a connector, and it is the same generic model for every cell of the column (for example
+    entity - relationship - entity in the what column).', strength: must, checkable: partial, section: 1992 pp. 600 to 601 (Rule 2); p. 611}
+- {id: ZF-COL-004, statement: 'The basic model of each column is unique to it. No primitive of one column (entity and relationship, function and argument, node and link, agent and work, time and cycle,
+    ends and means) recurs, in name or in concept, as a primitive of another column.', strength: must, checkable: static, section: 1992 p. 601 (Rule 3); p. 612}
+- {id: ZF-COL-005, statement: 'The framework presents its two classifications, interrogatives across and perspectives down, as comprehensive and complete, so that the cells at their intersections are too.',
+  strength: note, checkable: none, section: 'Evolution page, 2011 entry ("What has not changed")'}
+- {id: ZF-ROW-001, statement: 'The framework has six rows, from the scope of the enterprise to the functioning enterprise itself: planner (scope), owner (enterprise model), designer (system model), builder
+    (technology model), subcontractor (components) and the functioning enterprise. The 1992 paper counts five rows and shows the functioning system beneath them; the sixth row is taken from the author-side
+    history.', strength: must, checkable: static, section: '1992 pp. 591 to 593; Evolution page, 2001 and 2011 entries'}
+- {id: ZF-ROW-002, statement: 'Each row is a distinct, unique perspective with its own set of constraints. The constraints that matter to the owner, the designer and the builder are different.', strength: must,
+  checkable: none, section: 1992 pp. 601 to 602 (Rule 4)}
+- {id: ZF-ROW-003, statement: 'Rows are not decompositions of one another. A lower row is a transformation of the row above it, different in nature and meaning, not the same description at a finer level
+    of detail. Level of detail varies inside any one cell.', strength: must, checkable: none, section: '1987 p. 281; 1992 p. 593; Evolution page, 2004 and 2011 entries'}
+- {id: ZF-ROW-004, statement: 'The meaning of a column''s primitive changes from row to row (a business entity for the owner, a data entity for the designer, a segment or row for the builder). An element
+    that stands for the primitive at one row''s meaning does not also stand for it at another row''s meaning.', strength: must, checkable: partial, section: 1992 p. 601 (Rule 4); 1987 pp. 284 to 288}
+- {id: ZF-ROW-005, statement: 'Instances (particular occurrences, such as a named city or an actual record) belong only in the last row, the functioning enterprise. Rows 1 to 5 hold abstractions: classes,
+    types and lists of them.', strength: must, checkable: partial, section: 'Evolution page, 2001 and 2011 entries'}
+- {id: ZF-ROW-006, statement: 'When a constraint at a lower row conflicts with the model of a higher row, the people responsible for the two rows talk it through, and the owner is told and an alternative
+    negotiated where needed.', strength: should, checkable: none, section: 1992 p. 593}
+- {id: ZF-ROW-007, statement: The constraints of a lower row are added to the model of the row above it. The new model should not become so different that the higher-row model can no longer be recognized
+    in it or inferred from it., strength: should, checkable: none, section: 1992 p. 593}
+- {id: ZF-ROW-008, statement: 'The rows deal with different kinds of constraint: the owner with usability constraints in the conceptual view, the designer with design constraints in the logical view, the
+    builder with construction constraints (the state of the art in methods and technology) in the physical view.', strength: note, checkable: none, section: 1992 p. 601 (Rule 4)}
+- {id: ZF-CELL-001, statement: 'Every cell is identified by exactly one row and one column, and each combination of a row and a column is exactly one cell: six rows by six columns, 36 cells.', strength: must,
+  checkable: static, section: '1992 pp. 591, 602 (Rule 5)'}
+- {id: ZF-CELL-002, statement: Every classified element or model is placed in exactly one cell. No meta entity shows up in more than one cell., strength: must, checkable: static, section: 1992 p. 602 (Rule
+    5)}
+- {id: ZF-CELL-003, statement: 'The concept an element stands for must be one of the two primitives of its cell''s column, at the meaning its cell''s row gives it. A business entity belongs only in the
+    data cell of the owner row, a data entity only in the data cell of the designer row, a business process only in the function cell of the owner row, an application function only in the function cell
+    of the designer row.', strength: must, checkable: partial, section: 1992 p. 602 (Rule 5); 1987 pp. 284 to 290}
+- {id: ZF-CELL-004, statement: A model in a cell uses only the primitives of that cell's own column. A model that also uses a primitive of another column is not a model of that cell., strength: must, checkable: partial,
+  section: '1992 pp. 601, 611 to 612 (Rules 2 and 3); Evolution page'}
+- {id: ZF-CELL-005, statement: 'Different cells call for different notations. A cell''s notation should not be widened to carry content that belongs to another cell, because that complicates the design
+    and can damage the integrity of the other cell (for example drawing a data store on a process-flow model).', strength: should, checkable: none, section: 1992 p. 603}
+- {id: ZF-CELL-006, statement: The context of a cell defines the meaning of the words used in the models in it., strength: note, checkable: none, section: 'Evolution page, 2011 entry'}
+- {id: ZF-CELL-007, statement: 'A scope-row cell is a list of classes of the column''s first primitive (things, processes, locations, organizations, events, objectives). It need not define the connector,
+    and relationships among the listed items are not expected to be definitive.', strength: should, applies_when: scope-row, checkable: partial, section: 1987 p. 284; 1992 Figure 1}
+- {id: ZF-PRIM-001, statement: 'A primitive model has exactly two kinds of meta entity, a columnar variable and a connector, joined in the form variable - connector - variable.', strength: must, applies_when: not-scope-row,
+  checkable: partial, section: '1992 pp. 600 to 601 (Rule 2); Evolution page, 2011 entry'}
+- {id: ZF-PRIM-002, statement: 'A model that binds primitives of more than one column into one structure is a composite and is not a primitive. It is not placed in a cell as that cell''s primitive model.
+    Examples from the history: a process (a verb) hard-bound into an entity model, and control and mechanism arrows hard-bound into a process model.', strength: must, checkable: partial, section: 'Evolution
+    page (1984, 1987, 1993, 2001 and 2003 entries); 1992 p. 603'}
+- {id: ZF-PRIM-003, statement: 'Primitives combine in many ways into compounds, just as chemical elements do. A composite built by combining primitives is a legitimate working model; the framework treats
+    the primitive cells as the elements and the composites as combinations of them.', strength: note, checkable: none, section: 1992 p. 603 (Rule 5)}
+- {id: ZF-INT-001, statement: 'The composite, or integration, of all the cell models of one row is a complete model from the perspective of that row.', strength: must, checkable: none, section: 1992 p.
+    603 (Rule 6); p. 612}
+- {id: ZF-INT-002, statement: 'Each cell of a row is related, at a minimum, to every other cell of that row, because each is one abstraction of the same reality. Where a dependency exists, a change to one
+    cell is likely to affect the other.', strength: should, checkable: partial, section: 1992 p. 603 (Rule 6)}
+- {id: ZF-INT-003, statement: 'Within a column, a cell depends on the cell above it and the cell below it. A change to a cell is likely to affect both.', strength: should, checkable: partial, section: 1992
+    p. 603 (Rule 6)}
+- {id: ZF-INT-004, statement: 'Each cell description added to a row, including every cell of a column the framework defines later, must be consistent with that row''s perspective.', strength: should, checkable: none,
+  section: 1992 p. 603 (Rule 6)}
+- {id: ZF-REC-001, statement: 'The logic is recursive. It can describe any complex product, an enterprise, an information system or a tool maker; it can be applied to as-is and to-be versions; and it can
+    be applied to the framework itself, since each cell is an engineering product with its own owner, designer and builder.', strength: note, checkable: none, section: 1992 pp. 603 to 605 (Rule 7); p. 613}
+- {id: ZF-GUID-001, statement: 'The framework is a classification, not a method. It prescribes no order in which cells are populated; a methodology chooses a subset of cells and a sequence, and the cell
+    produced first strongly influences the ones that follow.', strength: note, checkable: none, section: '1992 p. 591, p. 603; Evolution page, 2011 entry'}
+- {id: ZF-GUID-002, statement: 'For the people, time and motivation columns the cell contents are hypothetical and the terminology is suggestive, not definitive. The rules of the framework must still be
+    followed when filling those cells.', strength: note, checkable: none, section: '1992 pp. 596, 605'}
+- {id: ZF-GUID-003, statement: The names of the primitives and of the rows and columns have changed over time (the function connector was renamed from input and output to argument; the work connector is
+    read as work product; the 2011 version renamed rows and columns for a business audience) without changing the structure or the rules., strength: note, checkable: none, section: '1992 p. 597; Evolution
+    page, 2011 entry'}
+- {id: ZF-GUID-004, statement: 'The framework defines no relationship notation, no diagram type and no drawing rule. It classifies descriptions; each cell may use whatever notation suits it.', strength: note,
+  checkable: none, section: '1992 pp. 591, 593'}
+- {id: ZF-GUID-005, statement: 'The entity at the scope row is the same kind of thing as the owner row''s entity, only at a higher level of aggregation. It supports the decision about where to invest, so
+    the entities not selected are as significant as those selected.', strength: note, checkable: none, section: 1987 p. 284}
+diagram_types: none-in-standard
+data_types:
+  coverage: none
+  note: The framework defines no data types and no attributes; its cells name kinds of description and the two primitives of each column, not typed fields (read in 1992 pp. 591 to 604 and Figures 1 and 6; 1987).
+  attributes:
+    coverage: none
+    where: concepts
+notation:
+  coverage: none
+  note: No symbols, line styles or connector shapes are defined; the framework is shown as a matrix of cells, and each cell uses whatever notation suits it (1992 pp. 592, 603; Evolution page, 2011 entry). The layout below is how the author's own figures arrange the grid, not a rule.
+  not_specified: all
+  example_notations: see classification.cells[].example_notations (the papers' examples only, none required)
+  layout:
+    form: a matrix of six columns by six rows, 36 cells; the schema is "depicted in matrix form"
+    status: the author's figures and graphic history; illustrations, not requirements
+    section: 1992 Figure 1 (p. 593) and Figure 6 (pp. 600 to 601); Evolution page, 2011 entry ("What Has NOT Changed")
+    columns:
+      direction: across the top, one per question word (Data, Function, Network, People, Time, Motivation in the figures)
+      heading: the column name, with two small boxes beneath it that name the column's two primitives (for example ENTITY and RELN under Data)
+      order: no meaning; the figures use one order for printing and the rules say no column comes first
+      section: 1992 Figures 1 and 6; p. 599 (Rule 1); p. 611
+    rows:
+      direction: down the side, scope at the top to the functioning system at the bottom
+      label: the row's model name above its perspective name (for example SCOPE above PLANNER), at the left edge; Figure 6 is printed across two pages and shows the labels at the left of the first half and at the right edge of the second
+      meaning: row order is a sequence of transformation, not of detail
+      section: 1992 Figures 1 and 6; Evolution page, 2004 and 2011 entries
+    cell:
+      shape: a rectangle at the crossing of one row and one column
+      caption: a short title, either a list title ("LIST OF ...") or "E.G." followed by a notation name
+      picture: a small sketch of an example notation (a list for row 1; for example a box-diamond-box for the entity-relationship example, a box with arrows for a process flow, circles joined by lines for a network, a chart of boxes for an organization)
+      legend: at the foot of the cell, each primitive set equal to its meaning at that row (for example ENTITY = BUSINESS ENTITY)
+      last_row: in the 1992 figures the functioning-system cells hold only the caption ("E.G., DATA") and no picture or legend
+      section: 1992 Figure 1 (p. 593), Figure 6 (pp. 600 to 601); p. 592 (examples inside the cells)
+    later_graphics:
+      status: the author's later graphics, as reported on the evolution page; a graphic choice, not part of the logic
+      items:
+        - what: translucent outer banding that carries the column names across the top and the row audience names at the left
+          year: '2011'
+          section: Evolution page, 2011 entry
+        - what: integration lines linking the example models of cells across a row
+          year: '2011'
+          section: Evolution page, 2011 entry
+        - what: crooked arrows between cells down a column, showing transformation
+          year: '2011'
+          section: Evolution page, 2011 entry
+        - what: level of detail shown as the height inside each cell, high at its top and fine at its bottom, not by row
+          year: '2011'
+          section: Evolution page, 2011 entry
+        - what: light-to-dark gradient banding down each column to show transformation
+          year: 2002 and 2003
+          section: Evolution page, 2002 and 2003 entries
+        - what: one color per row as a teaching aid (red, orange, yellow, green, blue, then orange again for the last row to match row 2)
+          year: '2001'
+          section: Evolution page, 2001 entry
+    peers_picture: the six columns drawn as peers around a hexagon instead of in a row, to show they have no order (1992 Figure 18, p. 612; not re-read from the source for this guide)
+    column_sample_graphics:
+      status: samples the authors give for the people, time and motivation columns; hypothetical in the source, not definitions
+      people: an organization chart where the vertical direction stands for delegation of authority and the horizontal for assignment of responsibility (Figure 3, p. 596)
+      time: a graph with a control axis (vertical) and a duration axis (horizontal), points in time shown as circles and durations as curved cycles (Figure 4, p. 597 to 598)
+      motivation: a tree of objectives as rectangles over strategies as circles, with dashed lines between branches for relations such as conflict (Figure 5, p. 598)
+conventions:
+  provenance: {status: standard, note: 'The only presentation statement the source makes: the tabular order of the columns is a historical accident and a concession to flat displays, so a display must not
+      read any priority into it (1992 p. 611, Rule 1; Figure 18 draws the six as peers). Everything else about drawing is the notation of a cell, which the framework leaves open.'}
+  display: {column_order: no meaning; any order is acceptable and none implies priority, row_order: 'scope at the top to the functioning enterprise at the bottom is the customary reading, as perspectives
+      in sequence of transformation (not of detail)', section: '1992 pp. 599, 611'}
+notes: 'The Zachman Framework is a classification schema, not a notation or a method. It defines no diagram types, no relationship notation and no validation file. Multiplicity keys: targets_per_source
+  is how many target instances one source instance may link to; sources_per_target is how many source instances one target instance may link to; "*" is zero or more; "not-stated" means the source says nothing.
+  The seven rules of the framework (1992) are encoded as constraints ZF-COL-002 to 004, ZF-ROW-002 to 004, ZF-CELL-001 to 004, ZF-INT-001 to 003 and ZF-REC-001. The people, time and motivation columns are
+  hypothetical in the source.'
+
 layout:
-  basis: Our conventions, not this standard's.  Sizes and spacing come from the shared layout standard.
-  element_types: {}
+  basis: Our conventions, not this standard's. Sizes and spacing come from the shared layout standard.
+  element_types:
+    Cell: large-box
   exceptions: {}
   diagram_types: {}
   viewpoints: {}
