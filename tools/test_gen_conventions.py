@@ -400,22 +400,22 @@ def test_the_fixture_holds_thirty_two_rows_all_of_them_generated():
     assert set(RECORDED) <= generated
 
 
-def _guide(**layout):
+def _small_guide(**layout):
     return {"id": "wba", "layout": {"basis": "Ours.", **layout},
             "concepts": {"Thing": {"uml_base": ["Class", "Constraint"]}},
             "notation": {"elements": {"Hex": {"shape": "hexagon"}}}}
 
 
 def test_a_shape_with_no_line_is_caught_and_a_stated_reason_clears_it():
-    problems = gen.layout_problems(_guide(), _standard())
+    problems = gen.layout_problems(_small_guide(), _standard())
     assert any("`Hex`" in p for p in problems)
     assert any("`Thing`" in p and "UML Constraint" in p for p in problems)
     stated = {"not_drawn": {"reason": "Shown inside its owner.", "concepts": ["Hex", "Thing"]}}
-    assert gen.layout_problems(_guide(no_element_type=stated), _standard()) == []
+    assert gen.layout_problems(_small_guide(no_element_type=stated), _standard()) == []
 
 
 def test_element_types_may_name_what_the_notation_names():
-    assert gen.layout_problems(_guide(element_types={"Hex": "decision-diamond", "Thing": "note"}), _standard()) == []
+    assert gen.layout_problems(_small_guide(element_types={"Hex": "decision-diamond", "Thing": "note"}), _standard()) == []
 
 
 def test_a_map_on_another_technology_needs_a_reason():
