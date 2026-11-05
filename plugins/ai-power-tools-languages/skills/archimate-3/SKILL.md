@@ -232,9 +232,9 @@ Coverage: none. The specification defines no data types and no attributes for an
 
 ## How it is drawn
 
-Sizes and spacing come from `../_languages/layout-standard.yaml`, and the concept mapping from `layout` in `language.yaml`.
-
 Coverage: informative. Appendix A gives one default iconography, and a conforming tool has to support it (1.3). A modeler may draw another way (3.7). Every concrete concept and relationship is described in `notation` in `language.yaml`, with its section; the abstract concepts have no drawing.
+
+Sizes and spacing come from `../_languages/layout-standard.yaml`, and the concept mapping from `layout` in `language.yaml`.
 
 - **Elements** are a box with a small icon in the upper right corner. In most cases the icon alone may stand in for the box. Behavior elements (process, function, interaction, service, event, and the strategy and migration behaviors) are rounded rectangles. Active and passive structure elements are plain rectangles. Passive structure is told apart by a line near the top (business object, data object), two lines (contract), or a wavy bottom edge (representation, deliverable, gap). Motivation elements are rectangles with the corners cut off diagonally. Node-like physical elements and plateau use a three-dimensional box. Grouping is a dashed rectangle with a tab; meaning is a cloud and value an ellipse.
 - **Relationships** are lines. Composition and aggregation end in a filled or hollow diamond at the source. Assignment starts with a filled dot and ends in a filled arrowhead. Realization is dotted with a hollow triangle, specialization solid with a hollow triangle. Serving is solid with an open arrowhead, access dotted with an optional small arrowhead for write, read or both, influence dashed with an open arrowhead and an optional sign. Triggering is solid and flow dashed, both with a filled arrowhead. Association is a plain line, optionally with a small arrowhead when directed. A junction is a small filled (and) or hollow (or) circle.

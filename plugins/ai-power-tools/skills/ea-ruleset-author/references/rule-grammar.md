@@ -116,7 +116,7 @@ data. So for an ArchiMate ruleset the selector reads:
 ```yaml
     selector:
       type: connector
-      connector_stereotypes: [ArchiMate_Assignment]   # NOT `Assignment` — that matches 0
+      connector_stereotypes: [ArchiMate_Assignment]   # NOT `Assignment`, which matches 0
 ```
 
 *Measure it, do not infer it.* Run `summarize_stereotype_usage`, or read
@@ -297,4 +297,4 @@ Use ASCII section headers to visually group rules:
 ## See Also
 
 - `ea-ruleset-author/SKILL.md` — the workflow this grammar supports
-- `rulesets/archimate-3/archimate-3_rules.yaml` — the canonical reference implementation
+- `rulesets/archimate-3/archimate-3_rules.yaml`: the canonical reference implementation

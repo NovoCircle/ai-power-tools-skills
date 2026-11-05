@@ -5,7 +5,7 @@ description: Work out what modeling-language situation a Sparx EA repository is 
 
 # Assessing an MDG situation
 
-For a language that has a file in `../_shared/languages/<id>/ea.yaml` (ArchiMate 3.1 is the first), that file holds the technology id, stored stereotype names and diagram types. Read it before measuring them again.
+For a language that has a file in `../_shared/languages/<id>/ea.yaml`, that file holds the technology id, stored stereotype names and diagram types. Read it before measuring them again.
 
 `ea_mdg(operation="assess_mdg_situation", params={})` classifies the modeling-language state
 of the connected repository so the next step is picked on evidence, not assumption. This skill

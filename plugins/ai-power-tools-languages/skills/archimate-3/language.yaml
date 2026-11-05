@@ -624,7 +624,7 @@ notation:
     Serving: {line: 'solid', source_end: 'none', target_end: 'open arrowhead (two strokes, not filled)', label: 'optional', section: 'A.3; 5.2.1; 5.2'}
     Access: {line: 'dotted', source_end: 'none, or a small open arrowhead for read or read and write access', target_end: 'none, or a small open arrowhead for write or read and write access', label: 'optional', section: 'A.3; 5.2.2', alternative: 'nest the passive element inside the behavior or active element that accesses it (5.2.2)'}
     Influence: {line: 'dashed', source_end: 'none', target_end: 'open arrowhead (two strokes, not filled)', label: 'optional sign or strength written above the line, for example + or -', section: 'A.3; 5.2.3; 5.2'}
-    Association: {line: 'solid', source_end: 'none', target_end: 'none, or a small open arrowhead when the association is directed', label: 'optional', section: 'A.3; 5.2.4; E.2'}
+    Association: {line: 'solid', source_end: 'none', target_end: 'none, or a half arrowhead when the association is directed', label: 'optional', section: 'A.3; 5.2.4; E.2'}
     Triggering: {line: 'solid', source_end: 'none', target_end: 'filled arrowhead', label: 'optional', section: 'A.3; 5.3.1'}
     Flow: {line: 'dashed', source_end: 'none', target_end: 'filled arrowhead', label: 'optional', section: 'A.3; 5.3.2'}
     Specialization: {line: 'solid', source_end: 'none', target_end: 'hollow triangle arrowhead', label: 'optional', section: 'A.3; 5.4.1'}
@@ -651,9 +651,9 @@ layout:
         - Composition
         - Specialization
       channels:
-        fill: 'ArchiMate layer and aspect. Normative: the standard palette is the notation, and recoloring
-          it by lifecycle or ownership destroys the reader''s ability to tell a business service from
-          an application one.'
+        fill: 'Layer and aspect, by our convention: yellow business, blue application, green technology,
+          as in the standard''s examples (3.9). Not normative, but keep it, because recoloring by lifecycle
+          or ownership stops a reader telling a business service from an application one.'
         claimed:
           position: Abstraction level. Y position says which layer an element belongs to, so moving an
             element between bands changes what the diagram asserts.
@@ -677,7 +677,7 @@ layout:
         - Composition
         - Specialization
       channels:
-        fill: ArchiMate layer and aspect. Normative.
+        fill: ArchiMate layer and aspect.
         claimed:
           position: 'Abstraction level: which layer band an element sits in.'
           size: Role. Uniform within a band.
@@ -700,7 +700,7 @@ layout:
         - Composition
         - Specialization
       channels:
-        fill: ArchiMate layer and aspect. Normative.
+        fill: ArchiMate layer and aspect.
         claimed:
           position: 'Abstraction level: which layer band an element sits in.'
           size: Role. Uniform within a band.
@@ -723,7 +723,7 @@ layout:
         - Specialization
       channels:
         fill: ArchiMate aspect. The motivation elements share one layer, so fill distinguishes stakeholder
-          from driver from goal. Still normative.
+          from driver from goal.
         claimed:
           position: 'Level of intent: driver, goal, requirement, principle.'
           size: Role. Uniform within a band.
@@ -749,6 +749,52 @@ layout:
         claimed:
           position: Migration sequence. Plateaus read left to right or top to bottom as successive states,
             so position carries time here.
+          size: Role. Uniform within a band.
+        free:
+        - border
+        - border_width
+        - line_color
+        - font_color
+        - opacity
+        - icon
+    Strategy:
+      arrangement: layered-bands
+      title: drawn
+      route: orthogonal
+      trunk:
+        route: orthogonal
+        for:
+        - Realization
+        - Aggregation
+        - Composition
+        - Specialization
+      channels:
+        fill: 'ArchiMate aspect: resource, capability, value stream, course of action.'
+        claimed:
+          position: 'Level of abstraction: course of action, then capability and value stream, then resource.'
+          size: Role. Uniform within a band.
+        free:
+        - border
+        - border_width
+        - line_color
+        - font_color
+        - opacity
+        - icon
+    Physical:
+      arrangement: layered-bands
+      title: drawn
+      route: orthogonal
+      trunk:
+        route: orthogonal
+        for:
+        - Realization
+        - Aggregation
+        - Composition
+        - Specialization
+      channels:
+        fill: 'ArchiMate aspect: equipment, facility, distribution network, material.'
+        claimed:
+          position: 'Abstraction level: which layer band an element sits in.'
           size: Role. Uniform within a band.
         free:
         - border

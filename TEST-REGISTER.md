@@ -73,8 +73,8 @@ Required: U, a test module whose module-level `COVERS` names the asset. Tests th
 
 | Unit | Required | U | Verdict |
 |---|---|---|---|
-| asset:plugins/ai-power-tools-languages/skills/_languages/layout-standard.yaml | U | present (17 tests, test_languages.py) | complete |
-| asset:plugins/ai-power-tools/rulesets/* | U | present (17 tests, test_languages.py) | complete |
+| asset:plugins/ai-power-tools-languages/skills/_languages/layout-standard.yaml | U | present (19 tests, test_languages.py) | complete |
+| asset:plugins/ai-power-tools/rulesets/* | U | present (19 tests, test_languages.py) | complete |
 | asset:plugins/ai-power-tools/skills/_shared/languages/* | U | present (133 tests, test_bindings_frameworks.py, test_bindings_real_model.py, test_bindings_strategy.py, test_gen_conventions.py) | complete |
 | asset:ruleset-archimate31/archimate31_rules.yaml | U | present (12 tests, test_ruleset_archimate31.py) | complete |
 
@@ -82,7 +82,7 @@ Required: U, a test module whose module-level `COVERS` names the asset. Tests th
 
 | Unit | Required | U | D | Verdict |
 |---|---|---|---|---|
-| srf:languages-plugin | U D | 1 test modules (17 tests) + 0 CI steps | case file tools/surfaces/languages-plugin.md | complete |
+| srf:languages-plugin | U D | 1 test modules (19 tests) + 0 CI steps | case file tools/surfaces/languages-plugin.md | complete |
 | srf:plugin | U D | 2 test modules (143 tests) + 2 CI steps | — | missing D |
 
 ## Integration cases
@@ -101,7 +101,7 @@ Every satisfying test id, grouped by unit and kind. A unit with no entry has no 
 that kind. Function ids are read from the syntax tree, so a parametrized test is one id, and a
 method of a test class is written `Class.test_name`.
 
-- `asset:plugins/ai-power-tools-languages/skills/_languages/layout-standard.yaml` U (17)
+- `asset:plugins/ai-power-tools-languages/skills/_languages/layout-standard.yaml` U (19)
   - `tools/test_languages.py::test_the_plugin_ships_no_server_no_dependency_and_the_tool_plugins_version`
   - `tools/test_languages.py::test_the_reader_page_ships_and_names_no_tool`
   - `tools/test_languages.py::test_the_marketplace_has_no_language_entry_before_a_release_tag_exists`
@@ -111,6 +111,8 @@ method of a test class is written `Class.test_name`.
   - `tools/test_languages.py::test_each_guide_has_the_shared_shape`
   - `tools/test_languages.py::test_each_guide_holds_its_id_everywhere`
   - `tools/test_languages.py::test_each_ruleset_holds_its_id_and_every_rule_resolves`
+  - `tools/test_languages.py::test_ea_validation_states_the_server_floor_and_the_old_rulesets_tagged_address`
+  - `tools/test_languages.py::test_the_authoring_guide_does_not_teach_the_bare_form`
   - `tools/test_languages.py::test_the_layout_standard_names_no_tool_once_it_is_there`
   - `tools/test_languages.py::test_a_good_guide_passes`
   - `tools/test_languages.py::test_a_stub_needs_only_its_id_name_and_layout`
@@ -119,7 +121,7 @@ method of a test class is written `Class.test_name`.
   - `tools/test_languages.py::test_a_missing_reference_fails`
   - `tools/test_languages.py::test_implements_is_read_however_a_ruleset_groups_its_rules`
   - `tools/test_languages.py::test_an_implements_that_names_no_rule_fails_and_so_does_none`
-- `asset:plugins/ai-power-tools/rulesets/*` U (17)
+- `asset:plugins/ai-power-tools/rulesets/*` U (19)
   - `tools/test_languages.py::test_the_plugin_ships_no_server_no_dependency_and_the_tool_plugins_version`
   - `tools/test_languages.py::test_the_reader_page_ships_and_names_no_tool`
   - `tools/test_languages.py::test_the_marketplace_has_no_language_entry_before_a_release_tag_exists`
@@ -129,6 +131,8 @@ method of a test class is written `Class.test_name`.
   - `tools/test_languages.py::test_each_guide_has_the_shared_shape`
   - `tools/test_languages.py::test_each_guide_holds_its_id_everywhere`
   - `tools/test_languages.py::test_each_ruleset_holds_its_id_and_every_rule_resolves`
+  - `tools/test_languages.py::test_ea_validation_states_the_server_floor_and_the_old_rulesets_tagged_address`
+  - `tools/test_languages.py::test_the_authoring_guide_does_not_teach_the_bare_form`
   - `tools/test_languages.py::test_the_layout_standard_names_no_tool_once_it_is_there`
   - `tools/test_languages.py::test_a_good_guide_passes`
   - `tools/test_languages.py::test_a_stub_needs_only_its_id_name_and_layout`
@@ -2448,7 +2452,7 @@ method of a test class is written `Class.test_name`.
   - `plugins/ai-power-tools/skills/prol-start-here/references/test-cases.md#TC-40`
   - `plugins/ai-power-tools/skills/prol-start-here/references/test-cases.md#TC-41`
   - `plugins/ai-power-tools/skills/prol-start-here/references/test-cases.md#TC-42`
-- `srf:languages-plugin` U (17)
+- `srf:languages-plugin` U (19)
   - `tools/test_languages.py::test_the_plugin_ships_no_server_no_dependency_and_the_tool_plugins_version`
   - `tools/test_languages.py::test_the_reader_page_ships_and_names_no_tool`
   - `tools/test_languages.py::test_the_marketplace_has_no_language_entry_before_a_release_tag_exists`
@@ -2458,6 +2462,8 @@ method of a test class is written `Class.test_name`.
   - `tools/test_languages.py::test_each_guide_has_the_shared_shape`
   - `tools/test_languages.py::test_each_guide_holds_its_id_everywhere`
   - `tools/test_languages.py::test_each_ruleset_holds_its_id_and_every_rule_resolves`
+  - `tools/test_languages.py::test_ea_validation_states_the_server_floor_and_the_old_rulesets_tagged_address`
+  - `tools/test_languages.py::test_the_authoring_guide_does_not_teach_the_bare_form`
   - `tools/test_languages.py::test_the_layout_standard_names_no_tool_once_it_is_there`
   - `tools/test_languages.py::test_a_good_guide_passes`
   - `tools/test_languages.py::test_a_stub_needs_only_its_id_name_and_layout`

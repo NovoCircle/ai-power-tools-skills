@@ -46,9 +46,9 @@ diagram_types:
       - Composition
       - Specialization
     channels:
-      fill: 'ArchiMate layer and aspect. Normative: the standard palette is the notation, and recoloring
-        it by lifecycle or ownership destroys the reader''s ability to tell a business service from an
-        application one.'
+      fill: 'Layer and aspect, by our convention: yellow business, blue application, green technology,
+        as in the standard''s examples (3.9). Not normative, but keep it, because recoloring by lifecycle
+        or ownership stops a reader telling a business service from an application one.'
       claimed:
         position: Abstraction level. Y position says which layer an element belongs to, so moving an element
           between bands changes what the diagram asserts.
@@ -94,7 +94,7 @@ diagram_types:
       - Composition
       - Specialization
     channels:
-      fill: ArchiMate layer and aspect. Normative.
+      fill: ArchiMate layer and aspect.
       claimed:
         position: 'Abstraction level: which layer band an element sits in.'
         size: Role. Uniform within a band.
@@ -139,7 +139,7 @@ diagram_types:
       - Composition
       - Specialization
     channels:
-      fill: ArchiMate layer and aspect. Normative.
+      fill: ArchiMate layer and aspect.
       claimed:
         position: 'Abstraction level: which layer band an element sits in.'
         size: Role. Uniform within a band.
@@ -184,7 +184,7 @@ diagram_types:
       - Specialization
     channels:
       fill: ArchiMate aspect. The motivation elements share one layer, so fill distinguishes stakeholder
-        from driver from goal. Still normative.
+        from driver from goal.
       claimed:
         position: 'Level of intent: driver, goal, requirement, principle.'
         size: Role. Uniform within a band.

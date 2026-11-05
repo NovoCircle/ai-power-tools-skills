@@ -11,7 +11,8 @@ Checks:
 * each guide's shape (`tools/languages_check.py`), and its `layout` block;
 * the id rule: one string in the folder, `SKILL.md`, `language.yaml`, `ea.yaml`, the ruleset's folder
   and file name, and the ruleset's `meta.language`;
-* each ruleset rule's `implements` resolves to a rule in that guide's `references/rules.md`.
+* each ruleset rule's `implements` resolves to a rule in that guide's `references/rules.md`;
+* `ea-validation` states the server floor, and `ea-ruleset-author` shows the prefixed selector.
 
 The checks are shown failing on planted files at the end of this module. The publish and gate halves
 of the plugin are in `tools/test_publish_plugin.py` and `tools/test_gate.py`.
@@ -184,6 +185,28 @@ def test_each_ruleset_holds_its_id_and_every_rule_resolves(folder):
     assert rules_md.is_file(), f"no guide on the language plugin for {folder.name}"
     assert _rules_of(ruleset), "a ruleset with no rules this test can read"
     assert _implements_faults(ruleset, rules_md.read_text(encoding="utf-8")) == []
+
+
+def test_ea_validation_states_the_server_floor_and_the_old_rulesets_tagged_address():
+    """A customer on an older server gets no error from a ruleset, only silence, so this text is the warning."""
+    text = (EA / "skills" / "ea-validation" / "SKILL.md").read_text(encoding="utf-8")
+    flat = " ".join(text.replace(">", " ").replace("*", "").split())
+    for sentence in (
+        "Every ruleset in this package needs server 3.6.5 or later.",
+        "Check `update.server_version` from `ping` first.",
+        "On an older server, don't run them: nearly every rule reports nothing, and that reads like a clean model.",
+        "Tell the user to update the server.",
+    ):
+        assert sentence in flat
+    assert ("https://raw.githubusercontent.com/NovoCircle/ai-power-tools-skills/v3.6.4/"
+            "ruleset-archimate31/archimate31_rules.yaml") in flat
+
+
+def test_the_authoring_guide_does_not_teach_the_bare_form():
+    """Stereotypes are stored with the prefix, so a bare name in a selector matches nothing and reports no fault."""
+    text = (EA / "skills" / "ea-ruleset-author" / "SKILL.md").read_text(encoding="utf-8")
+    assert "bare names without namespace prefix" not in text
+    assert "connector_stereotypes: [ArchiMate_Assignment]" in text
 
 
 def test_the_layout_standard_names_no_tool_once_it_is_there():

@@ -179,7 +179,9 @@ which cannot read the plugin's files by path, pass the YAML as inline content.
 
 The ArchiMate ruleset is at `rulesets/archimate-3/archimate-3_rules.yaml` in this plugin. It replaces
 `ruleset-archimate31`. It has 4 rules in place of 27: one checks every relationship against the
-standard's table, and the 14 rules the standard doesn't require are gone. On a server older than 3.6.5,
+standard's table, the 14 rules the standard doesn't require are gone, and the six collaboration and
+interaction rules become two warnings, because the standard states those numbers in prose. On a server
+older than 3.6.5,
 the old set is at `https://raw.githubusercontent.com/NovoCircle/ai-power-tools-skills/v3.6.4/ruleset-archimate31/archimate31_rules.yaml`,
 because that server can't read this one.
 
@@ -197,9 +199,7 @@ result = ea_validate(operation="audit", params={
 
 # 3. Or pass inline YAML content as a string (no file or URL required)
 result = ea_validate(operation="audit", params={
-    "rules_path_or_content": "rules:
-- id: QUICK-001
-  ..."
+    "rules_path_or_content": "rules:\n- id: QUICK-001\n  ..."
 })
 ```
 

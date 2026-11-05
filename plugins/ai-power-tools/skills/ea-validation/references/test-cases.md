@@ -463,7 +463,7 @@ a model was checked against a standard it was never checked against.
 
 Covers: Shipped rulesets
 
-**Marks:** BLOCKED
+**Marks:** BLOCKED (desktop chat and Claude Cowork can't read the plugin's path, so the run needs inline content there)
 
 **Ask:** "Run the standard ArchiMate 3.1 conformance checks on this model."
 
