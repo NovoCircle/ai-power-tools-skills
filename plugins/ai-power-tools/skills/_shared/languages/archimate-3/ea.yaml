@@ -6426,3 +6426,108 @@ quick_links:
       Serving: "cgo"
       Specialization: "cgo"
       Triggering: "cgo"
+
+# EA's names for this language's layout. tools/gen_conventions.py reads layout_map.
+layout_map:
+  technology: ArchiMate3
+  display_name: ArchiMate 3
+  extends: UML
+  stereotype_prefix: ArchiMate_
+  notes: |
+    EA's ArchiMate3 MDG declares five diagram types, all based on Logical. There is no Strategy diagram type: strategy concepts (Capability, Resource, CourseOfAction, ValueStream) are stereotypes drawn on a Business diagram.
+
+    FILL IS NOT MERELY CLAIMED HERE, IT IS SOMETIMES UNAVAILABLE. Measured on EA 17.1 build 1716: Node and Grouping ignore a per-diagram fill outright. The write succeeds, the property reads back, and EA draws the element in its own colors -- Node's shape script paints the faces of a 3D box, and a Grouping is a dashed container ArchiMate gives no fill. Seven other concepts tested (ApplicationComponent, Device, SystemSoftware, Equipment, Facility, BusinessService, Artifact) honor it. Nine concepts is a sample, not a sweep, so the answer is a note here rather than data a consumer could trust; the full sweep and a per-concept schema field are filed separately. If you need a color-coded technology layer, reach for Device or SystemSoftware rather than Node, or use a free channel.
+  diagram_types:
+    Business:
+      guide: Business Layer
+      base: Logical
+      size_keys:
+        Junction: small-node
+    Application:
+      guide: Application Layer
+      base: Logical
+      size_keys:
+        Junction: small-node
+    Technology:
+      guide: Technology Layer
+      base: Logical
+      size_keys:
+        Junction: small-node
+    Motivation:
+      guide: Motivation
+      base: Logical
+      size_keys:
+        Junction: small-node
+    Implementation:
+      guide: Implementation and Migration
+      base: Logical
+      size_keys:
+        Junction: small-node
+  viewpoints:
+    ApplicationCooperation:
+      guide: Application Cooperation
+      diagram_type: Application
+    ApplicationUsage:
+      guide: Application Usage
+      diagram_type: Application
+    ApplicationStructure:
+      guide: Application Structure
+      diagram_type: Application
+    InformationStructure:
+      guide: Information Structure
+      diagram_type: Application
+    BusinessProcessCooperation:
+      guide: Business Process Cooperation
+      diagram_type: Business
+    Organization:
+      guide: Organization
+      diagram_type: Business
+    ServiceRealization:
+      guide: Service Realization
+      diagram_type: Business
+    ProductViewpoint:
+      guide: Product
+      diagram_type: Business
+    Capability:
+      guide: Capability Map
+      diagram_type: Business
+    StrategyViewpoint:
+      guide: Strategy
+      diagram_type: Business
+    TechnologyViewpoint:
+      guide: Technology
+      diagram_type: Technology
+    TechnologyUsage:
+      guide: Technology Usage
+      diagram_type: Technology
+    LayeredViewpoint:
+      guide: Layered
+      diagram_type: Business
+    MotivationViewpoint:
+      guide: Motivation
+      diagram_type: Motivation
+    RequirementsRealization:
+      guide: Requirements Realization
+      diagram_type: Motivation
+    Principles:
+      guide: Principles
+      diagram_type: Motivation
+    ImplementationAndMigration:
+      guide: Implementation and Migration
+      diagram_type: Implementation
+    MigrationViewpoint:
+      guide: Migration
+      diagram_type: Implementation
+    ImplementationAndDeployment:
+      guide: Implementation and Deployment
+      diagram_type: Implementation
+  presentation_profiles:
+    detail:
+      description: Everything. The working view, for people building the model.
+    review:
+      description: For a design review. Keeps relationship names, drops the notation furniture that a
+        reviewer already knows.
+    executive:
+      description: 'For an audience reading the shape, not the detail. Collapsing hides relationships,
+        so this profile REQUIRES an annotation saying what was summarized: an executive view that hides
+        complexity without saying so is misleading.'

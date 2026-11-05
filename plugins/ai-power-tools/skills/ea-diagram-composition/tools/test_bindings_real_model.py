@@ -46,16 +46,7 @@ from __future__ import annotations
 PINS = ("APT-2026-0521",)
 
 # The data assets this module covers (read by tools/register.py).
-COVERS = (
-    "asset:ea-diagram-composition/bindings/archimate3.yaml",
-    "asset:ea-diagram-composition/bindings/bpmn2.0.yaml",
-    "asset:ea-diagram-composition/bindings/dmn1.1.yaml",
-    "asset:ea-diagram-composition/bindings/erd_dp.yaml",
-    "asset:ea-diagram-composition/bindings/sysml1.4.yaml",
-    "asset:ea-diagram-composition/bindings/uafp_framework.yaml",
-    "asset:ea-diagram-composition/bindings/uml.yaml",
-    "asset:ea-diagram-composition/bindings/zf-interface.yaml",
-)
+COVERS = ("asset:plugins/ai-power-tools/skills/_shared/languages/*",)
 
 import sys
 from collections import Counter
@@ -72,7 +63,7 @@ from bindings import MDG_SEPARATOR, find_binding  # noqa: E402
 
 pytest.importorskip("yaml", reason="PyYAML is required to read bindings")
 
-_BINDINGS = _HERE.parent / "bindings"
+_BINDINGS = _HERE.parent.parent / "_shared" / "languages"
 
 #: Technology ids exactly as the bindings declare them. The qualified form is built from the
 #: separator, never written as a literal: the release gate reads a literal `<id>::<name>` as an
