@@ -6,7 +6,7 @@
 technology: UPDM2
 display_name: UPDM 2.0
 extends: UML
-stereotype_prefix: UPDM2
+stereotype_prefix: ''
 notes: |
   The other diagram types ea.yaml lists are each bound to the Annex B product it realizes, by its full token. NOT BOUND: UPDM2_AV::AV-3 and UPDM2_Framework::UPDM Framework are EA's own and have no product in the guide. The four Sequence tokens (OV-6c, SOV-4c, SV-10c, SvcV-10c) are stored on a base the UML binding does not hold, so they would inherit nothing, and time fixes their layout.
 
