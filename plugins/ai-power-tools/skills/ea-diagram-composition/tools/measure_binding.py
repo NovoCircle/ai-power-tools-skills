@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
 """Measure the numbers a language binding needs from a Sparx-authored model.
 
-A binding (`bindings/<tech>.yaml`) states element sizes and the gap between
-neighbors for one modeling technology. Those numbers are conventions, and a
-convention that was guessed is worse than one that is absent. This tool mines
-them from a model in which the technology is drawn in practice - Sparx's own
-example model, `EAExample.qea` - so that each new binding starts from a
-measurement with a sample size attached instead of an estimate.
+Shipped bindings take their sizes and gaps from the layout standard. This tool
+is how the next measurement gets taken, as evidence for changing the standard: it
+mines element sizes and the gap between neighbors for one modeling technology from
+a model in which the technology is drawn in practice - Sparx's own example model,
+`EAExample.qea` - with a sample size attached instead of an estimate.
 
     python measure_binding.py --list
     python measure_binding.py --technology BPMN2.0 --diagram-type "Business Process"

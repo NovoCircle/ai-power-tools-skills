@@ -625,8 +625,8 @@ conventions:
     section: WIKIER (physical data model)
 notes: "There is no single standard. Six diagram types are the drawing forms the sources describe. Rules are scoped by applies_when so that a validator applies Chen's rules to Chen models, IDEF1X rules to IDEF1X models and physical rules to the table level. FIPS 184 words second and third normal form as rules; here they are should, a decision for this language, and the other normal forms are should or note. IDEF1X97 was not read. Multiplicity keys: targets_per_source is how many target instances one source instance may link to; sources_per_target is how many source instances one target instance may link to; '*' means zero or more."
 layout:
-  basis: "Our conventions, not this standard's.  Sizes and spacing come from the shared layout standard."
-  element_types:                # concept -> size class; the shape each concept takes is in `notation`
+  basis: Our conventions, not this standard's.  Sizes and spacing come from the shared layout standard.
+  element_types:
     Entity: box
     WeakEntity: box
     AssociativeEntity: box
@@ -638,29 +638,83 @@ layout:
     CategoryCluster: small-node
     Note: note
   exceptions: {}
-  diagram_types:                # the guide's own names; the four unlisted types take the shared defaults (graph, straight lines, header title)
-    ChenDiagram: {arrangement: graph, route: straight, title: frame-header, channels: &erchannels
-      {claimed: {position: "The arrangement sets it, and an attribute's position says which entity it belongs to, because it sits in the fan around that entity.",
-                 size: "Marks the kind of node.  An entity is drawn wider than its own attributes, so width should not carry another meaning.",
-                 line_style: "Carries the meaning of a line, such as identifying against non-identifying.  Do not reuse it."},
-       free: [fill, border, border_width, line_color, font_color, opacity, icon]}}
-    CrowsFootDiagram: {arrangement: graph, route: straight, title: frame-header, channels: *erchannels}
-  no_element_type:               # concepts that take no size class, each group with its reason
+  diagram_types:
+    ChenDiagram:
+      arrangement: graph
+      route: straight
+      title: frame-header
+      channels:
+        claimed:
+          position: The arrangement sets it, and an attribute's position says which entity it belongs
+            to, because it sits in the fan around that entity.
+          size: Marks the kind of node.  An entity is drawn wider than its own attributes, so width should
+            not carry another meaning.
+          line_style: Carries the meaning of a line, such as identifying against non-identifying.  Do
+            not reuse it.
+        free: &id001
+        - fill
+        - border
+        - border_width
+        - line_color
+        - font_color
+        - opacity
+        - icon
+        fill: null
+    CrowsFootDiagram:
+      arrangement: graph
+      route: straight
+      title: frame-header
+      channels:
+        claimed:
+          position: The arrangement sets it, and an attribute's position says which entity it belongs
+            to, because it sits in the fan around that entity.
+          size: Marks the kind of node.  An entity is drawn wider than its own attributes, so width should
+            not carry another meaning.
+          line_style: Carries the meaning of a line, such as identifying against non-identifying.  Do
+            not reuse it.
+        free: *id001
+        fill: null
+  no_element_type:
     drawn_as_line:
-      reason: "Drawn as a line between two boxes, with end marks, so there is no symbol to size."
-      concepts: [ConnectionRelationship, IdentifyingRelationship, NonIdentifyingRelationship, MandatoryNonIdentifyingRelationship, OptionalNonIdentifyingRelationship, CategorizationRelationship, NonSpecificRelationship, ForeignKeyConstraint]
+      reason: Drawn as a line between two boxes, with end marks, so there is no symbol to size.
+      concepts:
+      - ConnectionRelationship
+      - IdentifyingRelationship
+      - NonIdentifyingRelationship
+      - MandatoryNonIdentifyingRelationship
+      - OptionalNonIdentifyingRelationship
+      - CategorizationRelationship
+      - NonSpecificRelationship
+      - ForeignKeyConstraint
     drawn_as_marker:
-      reason: "Drawn as a suffix on an attribute name inside an entity box, not as a shape."
-      concepts: [PrimaryKey, AlternateKey, ForeignKey]
+      reason: Drawn as a suffix on an attribute name inside an entity box, not as a shape.
+      concepts:
+      - PrimaryKey
+      - AlternateKey
+      - ForeignKey
     not_drawn_groupings:
-      reason: "A grouping of attributes that the sources never draw."
-      concepts: [Key, CandidateKey]
+      reason: A grouping of attributes that the sources never draw.
+      concepts:
+      - Key
+      - CandidateKey
     not_drawn_domains:
-      reason: "The sources give domains no concrete syntax."
-      concepts: [Domain, BaseDomain, TypedDomain]
+      reason: The sources give domains no concrete syntax.
+      concepts:
+      - Domain
+      - BaseDomain
+      - TypedDomain
     not_drawn_view:
-      reason: "A view is shown by a diagram, not by a shape in one."
-      concepts: [View]
+      reason: A view is shown by a diagram, not by a shape in one.
+      concepts:
+      - View
     drawn_as_text:
-      reason: "Listed inside the table box.  The sources define no physical drawing, and common practice lists these rows in the table."
-      concepts: [Column, TableConstraint, PrimaryKeyConstraint, UniqueConstraint, CheckConstraint, Index]
+      reason: Listed inside the table box.  The sources define no physical drawing, and common practice
+        lists these rows in the table.
+      concepts:
+      - Column
+      - TableConstraint
+      - PrimaryKeyConstraint
+      - UniqueConstraint
+      - CheckConstraint
+      - Index
+  viewpoints: {}

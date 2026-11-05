@@ -1,0 +1,155 @@
+# The layout standard.
+#
+# These are our conventions for good-looking diagrams, and no modeling standard's.
+# None of the languages on this shelf states a size or a gap, so nothing here is a
+# claim about what a standard requires. Every language uses the same unit, the same
+# element types, and the same spacing, so a diagram looks alike whichever tool draws
+# it. Each tool's own skills say how to translate these numbers into its own units.
+
+schema_version: 1
+
+unit:
+  name: unit
+  per_inch: 96
+  note: One unit is 1/96 inch, a physical length with a fixed conversion to any tool's measure.
+  rounding:
+    sizes: 5
+    spacing: 10
+
+# A type is a size class. The tool draws the shape the language's guide names, at the
+# type's size: a hexagon mapped to decision-diamond stays a hexagon, 40 by 40.
+element_types:
+  box:
+    w: 100
+    h: 70
+    reason: Holds a short name on a few lines, and is the plain box most sources settle near.
+  large-box:
+    w: 130
+    h: 80
+    reason: For things that hold more than a name, such as a subprocess, a use case, a grid cell, or a tile.
+  event-circle:
+    w: 30
+    h: 30
+    reason: A marker with the label outside. Sources agree on this size exactly.
+  small-node:
+    w: 20
+    h: 20
+    reason: A dot that marks a point in a line.
+  decision-diamond:
+    w: 40
+    h: 40
+    reason: A marker with the label outside. A language whose diamond holds its text maps that concept to box.
+  data-item:
+    w: 40
+    h: 50
+    reason: A small icon with the label outside. Sources disagree, and this one keeps the icon from competing with boxes.
+  actor:
+    w: 45
+    h: 90
+    reason: A figure that is taller than it is wide. Sources agree.
+  attached-item:
+    w: 15
+    h: 15
+    reason: Sits on its parent's edge, so it stays small enough not to hide the edge.
+  note:
+    w: 120
+    h: 60
+    grows_with: text
+    reason: A starting box. The text decides the final size, and no source settles it.
+  container:
+    w: 150
+    h: 90
+    minimum: true
+    grows_with: content
+    inner_padding: 12
+    label_strip: 28
+    reason: The smallest size for a package, group, pool, or frame. It grows to hold what it contains.
+  line-label:
+    h: 15
+    lines: 1
+    clear_of_line: 10
+    reason: Keeps a label readable without touching its line.
+
+spacing:
+  across:
+    value: 80
+    reason: Between neighbors in a row. Leaves room for a line and its label between two boxes.
+  down:
+    value: 50
+    reason: Between rows. Sources sit close to this value.
+  along_flow:
+    value: 60
+    reason: Between steps along a flow in a lane. Flows read as one line, so they run tighter than neighbors do.
+  between_lanes:
+    value: 0
+    reason: Lanes touch.
+  lane_thickness:
+    value: 120
+    minimum: true
+    reason: Fits a box with padding.
+  between_bands:
+    value: 30
+    reason: Keeps stacked bands apart without pushing them out of one view.
+  page_margin:
+    value: 40
+    reason: Clear space around the whole drawing.
+
+rules:
+  text: A box widens until its longest word fits, and never shrinks below the standard. Measuring text is the tool's job, because fonts differ.
+  title: A diagram shows its title once. The default is frame-header. A language can state drawn. A tool with no frame draws it.
+
+# What a language or a diagram type takes when it lists nothing, so every language can
+# be drawn.
+defaults:
+  arrangement: graph
+  title: frame-header
+
+# The route by arrangement. A language can say otherwise per diagram type.
+route_by_arrangement:
+  lanes: orthogonal
+  layered-bands: orthogonal
+  nested-grid: orthogonal
+  matrix: orthogonal
+  graph: straight
+  radial-tree: curved
+
+# The shared vocabulary every language's `layout` block uses.
+vocabulary:
+  arrangements:
+    - layered-bands
+    - lanes
+    - nested-grid
+    - radial
+    - two-column-cycle
+    - computed-geometry
+    - matrix
+    - radial-tree
+    - chevron-stack
+    - treemap
+    - graph
+    - type-fixed
+  routes:
+    - straight
+    - orthogonal
+    - orthogonal-rounded
+    - curved
+    - auto
+    - custom
+    - tree-vertical
+    - tree-horizontal
+    - lateral-vertical
+    - lateral-horizontal
+  channels:
+    - fill
+    - border
+    - border_width
+    - line_color
+    - line_style
+    - font_color
+    - opacity
+    - icon
+    - size
+    - position
+  titles:
+    - drawn
+    - frame-header
