@@ -3628,8 +3628,9 @@ notation:
   not_specified: [LocationHolder, MeasurableElement, PropertySet, ActualState, Exchange, Resource, Activity, CapableElement, Rule, Achiever, Desirer, ConceptItem, OperationalAgent, OperationalExchangeItem, OperationalActivityEdge, SubjectOfOperationalConstraint, OrganizationalResource, PhysicalResource, ResourcePerformer, ResourceExchangeItem, FunctionEdge, SubjectOfResourceConstraint, SubjectOfForecast, VersionedElement, ProtocolImplementation, Asset, AssetRole, SubjectOfSecurityConstraint, ActualOrganizationalResource, ActualResponsibleResource, Architecture, Stakeholder, UAFElement, SecurityMeasurement, ActivityPerformableUnderCondition, SecurityControlAction, Caveat, SecurityAvailability, SecurityCategory, SecurityClassification, SecurityClassificationKind, SecurityIntegrity]
 
 layout:
-  basis: Our conventions, not this standard's. Sizes and spacing come from the shared layout standard; this block only says which element type each concept takes.
-  element_types:        # concept -> element type; a concept left out is drawn as a rectangle (box)
+  basis: Our conventions, not this standard's. Sizes and spacing come from the shared layout standard;
+    this block only says which element type each concept takes.
+  element_types:
     OperationalPort: attached-item
     ServicePort: attached-item
     ResourcePort: attached-item
@@ -3645,28 +3646,111 @@ layout:
     SecurityConstraint: note
     DataModel: container
     ArchitecturalDescription: container
-  exceptions: {}        # none: no standard states a size
-  no_element_type:      # concepts with no element of their own, and why
+  exceptions: {}
+  no_element_type:
     line:
       reason: 'A relationship: it is drawn as a line between elements and takes no element size.'
-      concepts: [SameAs, IsCapableToPerform, PerformsInContext, ArchitecturalReference, Implements, CapabilityForTask,
-        AchievedEffect, DesiredEffect, Exhibits, MapsToCapability, OrganizationInEnterprise, ArbitraryConnector,
-        OperationalConnector, OperationalExchange, OperationalControlFlow, OperationalObjectFlow, OperationalMessage,
-        ServiceConnector, ServiceMessage, Consumes, Command, Control, CompetenceToConduct, CompetenceForRole,
-        RequiresCompetence, ResponsibleFor, ResourceConnector, ResourceExchange, FunctionControlFlow,
-        FunctionObjectFlow, ResourceMessage, Forecast, VersionSuccession, Enhances, Protects, ProtectsInContext,
-        Affects, AffectsInContext, Mitigates, OwnsRisk, OwnsRiskInContext, MilestoneDependency, ProjectSequence,
-        ActualResourceRelationship, FillsPost, ProvidesCompetence, OwnsProcess]
+      concepts:
+      - SameAs
+      - IsCapableToPerform
+      - PerformsInContext
+      - ArchitecturalReference
+      - Implements
+      - CapabilityForTask
+      - AchievedEffect
+      - DesiredEffect
+      - Exhibits
+      - MapsToCapability
+      - OrganizationInEnterprise
+      - ArbitraryConnector
+      - OperationalConnector
+      - OperationalExchange
+      - OperationalControlFlow
+      - OperationalObjectFlow
+      - OperationalMessage
+      - ServiceConnector
+      - ServiceMessage
+      - Consumes
+      - Command
+      - Control
+      - CompetenceToConduct
+      - CompetenceForRole
+      - RequiresCompetence
+      - ResponsibleFor
+      - ResourceConnector
+      - ResourceExchange
+      - FunctionControlFlow
+      - FunctionObjectFlow
+      - ResourceMessage
+      - Forecast
+      - VersionSuccession
+      - Enhances
+      - Protects
+      - ProtectsInContext
+      - Affects
+      - AffectsInContext
+      - Mitigates
+      - OwnsRisk
+      - OwnsRiskInContext
+      - MilestoneDependency
+      - ProjectSequence
+      - ActualResourceRelationship
+      - FillsPost
+      - ProvidesCompetence
+      - OwnsProcess
     text-inside:
-      reason: Written as a line of text inside the box that owns it (a slot, operation, parameter, reception or literal), so it has no box of its own.
-      concepts: [ActualMeasurement, ISO8601DateTime, OperationalMethod, OperationalParameter, ServiceMethod, ServiceParameter,
-        ResourceMethod, ResourceParameter, ProjectStatus, ActualProjectMilestoneRole, ActualProjectRole,
-        ActualOrganizationRole, ActualResourceRole]
+      reason: Written as a line of text inside the box that owns it (a slot, operation, parameter, reception
+        or literal), so it has no box of its own.
+      concepts:
+      - ActualMeasurement
+      - ISO8601DateTime
+      - OperationalMethod
+      - OperationalParameter
+      - ServiceMethod
+      - ServiceParameter
+      - ResourceMethod
+      - ResourceParameter
+      - ProjectStatus
+      - ActualProjectMilestoneRole
+      - ActualProjectRole
+      - ActualOrganizationRole
+      - ActualResourceRole
     not-drawn:
       reason: Abstract, or a concept that exists only in the metamodel, so nothing is drawn for it.
-      concepts: [LocationHolder, MeasurableElement, PropertySet, ActualState, Exchange, Resource, Activity, CapableElement,
-        Rule, Achiever, Desirer, ConceptItem, OperationalAgent, OperationalExchangeItem, OperationalActivityEdge,
-        SubjectOfOperationalConstraint, OrganizationalResource, PhysicalResource, ResourcePerformer,
-        ResourceExchangeItem, FunctionEdge, SubjectOfResourceConstraint, SubjectOfForecast, VersionedElement,
-        ProtocolImplementation, Asset, AssetRole, SubjectOfSecurityConstraint, ActualOrganizationalResource,
-        ActualResponsibleResource, Architecture, Stakeholder, UAFElement, SecurityMeasurement]
+      concepts:
+      - LocationHolder
+      - MeasurableElement
+      - PropertySet
+      - ActualState
+      - Exchange
+      - Resource
+      - Activity
+      - CapableElement
+      - Rule
+      - Achiever
+      - Desirer
+      - ConceptItem
+      - OperationalAgent
+      - OperationalExchangeItem
+      - OperationalActivityEdge
+      - SubjectOfOperationalConstraint
+      - OrganizationalResource
+      - PhysicalResource
+      - ResourcePerformer
+      - ResourceExchangeItem
+      - FunctionEdge
+      - SubjectOfResourceConstraint
+      - SubjectOfForecast
+      - VersionedElement
+      - ProtocolImplementation
+      - Asset
+      - AssetRole
+      - SubjectOfSecurityConstraint
+      - ActualOrganizationalResource
+      - ActualResponsibleResource
+      - Architecture
+      - Stakeholder
+      - UAFElement
+      - SecurityMeasurement
+  diagram_types: {}
+  viewpoints: {}

@@ -1,0 +1,34 @@
+# Stub: holds only the layout block until the guide arrives.
+# The guide replaces this file and keeps the `layout` block.
+id: data-modeling-er
+name: Data modeling and entity-relationship (ER) modeling
+stub: true
+layout:
+  basis: Our conventions, not this standard's.  Sizes and spacing come from the shared layout standard.
+  element_types: {}
+  exceptions: {}
+  diagram_types:
+    ChenDiagram: &id001
+      arrangement: graph
+      title: frame-header
+      route: straight
+      channels:
+        fill: null
+        claimed:
+          position: Spoken for twice over. Automatic layout overwrites anything set beforehand, and an
+            attribute's position says which entity it belongs to, since it is drawn in the fan around
+            that entity.
+          size: Node kind. An entity is drawn wider than its own attributes, so using width to encode
+            something else blurs the one distinction size carries here.
+          line_style: 'Normative underneath: dashed against solid separates one kind of line from another.
+            Overwriting it changes what a connector means.'
+        free:
+        - fill
+        - border
+        - border_width
+        - line_color
+        - font_color
+        - opacity
+        - icon
+    CrowsFootDiagram: *id001
+  viewpoints: {}

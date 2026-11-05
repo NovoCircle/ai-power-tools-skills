@@ -1,0 +1,165 @@
+{
+  "note": "Each EA diagram type's grammar in the convention files as they stood on 2026-11-04. section 5.8's arrangement check compares layout_map and layout blocks against these.",
+  "rows": [
+    {
+      "technology": "ArchiMate3",
+      "diagram_type": "Business",
+      "grammar": "layered-bands"
+    },
+    {
+      "technology": "ArchiMate3",
+      "diagram_type": "Application",
+      "grammar": "layered-bands"
+    },
+    {
+      "technology": "ArchiMate3",
+      "diagram_type": "Technology",
+      "grammar": "layered-bands"
+    },
+    {
+      "technology": "ArchiMate3",
+      "diagram_type": "Motivation",
+      "grammar": "layered-bands"
+    },
+    {
+      "technology": "ArchiMate3",
+      "diagram_type": "Implementation",
+      "grammar": "layered-bands"
+    },
+    {
+      "technology": "BPMN2.0",
+      "diagram_type": "Business Process",
+      "grammar": "lanes"
+    },
+    {
+      "technology": "BPMN2.0",
+      "diagram_type": "Collaboration",
+      "grammar": "lanes"
+    },
+    {
+      "technology": "BPMN2.0",
+      "diagram_type": "Choreography",
+      "grammar": "lanes"
+    },
+    {
+      "technology": "DMN1.1",
+      "diagram_type": "DMNDiagram",
+      "grammar": "graph"
+    },
+    {
+      "technology": "ERD_dp",
+      "diagram_type": "ERD_DP",
+      "grammar": "graph"
+    },
+    {
+      "technology": "MindMapping",
+      "diagram_type": "MindMapping",
+      "grammar": "radial-tree"
+    },
+    {
+      "technology": "StrategyMap",
+      "diagram_type": "StrategyMap",
+      "grammar": "layered-bands"
+    },
+    {
+      "technology": "StrategyMap",
+      "diagram_type": "DecisionTree",
+      "grammar": "graph"
+    },
+    {
+      "technology": "StrategyMap",
+      "diagram_type": "OrgChart",
+      "grammar": "graph"
+    },
+    {
+      "technology": "StrategyMap",
+      "diagram_type": "ValueChain",
+      "grammar": "chevron-stack"
+    },
+    {
+      "technology": "SysML1.4",
+      "diagram_type": "BlockDefinition",
+      "grammar": "layered-bands"
+    },
+    {
+      "technology": "SysML1.4",
+      "diagram_type": "Requirement",
+      "grammar": "layered-bands"
+    },
+    {
+      "technology": "TOGAF Diagrams",
+      "diagram_type": "TOGAF_Interface",
+      "grammar": "radial"
+    },
+    {
+      "technology": "UAFP_Framework",
+      "diagram_type": "UPDM Framework",
+      "grammar": "layered-bands"
+    },
+    {
+      "technology": "UML",
+      "diagram_type": "Logical",
+      "grammar": "graph"
+    },
+    {
+      "technology": "UML",
+      "diagram_type": "Statechart",
+      "grammar": "graph"
+    },
+    {
+      "technology": "UML",
+      "diagram_type": "Activity",
+      "grammar": "graph"
+    },
+    {
+      "technology": "UML",
+      "diagram_type": "Package",
+      "grammar": "graph"
+    },
+    {
+      "technology": "UML",
+      "diagram_type": "Deployment",
+      "grammar": "graph"
+    },
+    {
+      "technology": "UML",
+      "diagram_type": "Use Case",
+      "grammar": "graph"
+    },
+    {
+      "technology": "UML",
+      "diagram_type": "Component",
+      "grammar": "graph"
+    },
+    {
+      "technology": "UML",
+      "diagram_type": "CompositeStructure",
+      "grammar": "graph"
+    },
+    {
+      "technology": "UML",
+      "diagram_type": "Object",
+      "grammar": "graph"
+    },
+    {
+      "technology": "UML",
+      "diagram_type": "Timing",
+      "grammar": "ea-semantic"
+    },
+    {
+      "technology": "UML",
+      "diagram_type": "Analysis",
+      "grammar": "graph"
+    },
+    {
+      "technology": "UML",
+      "diagram_type": "Custom",
+      "grammar": "graph"
+    },
+    {
+      "technology": "ZF Interface",
+      "diagram_type": "ZF_Interface",
+      "grammar": "matrix"
+    }
+  ]
+}
