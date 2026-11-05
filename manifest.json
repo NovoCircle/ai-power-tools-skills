@@ -11,6 +11,8 @@
       "version": "1.5.1",
       "min_server_version": "2.3.0",
       "files": [
+        "_shared/languages/archimate-3/ea.yaml",
+        "_shared/languages/archimate-3/howto.md",
         "_shared/references/ea-ui-verification.md",
         "_shared/references/file-encoding.md",
         "_shared/references/latency.md",
@@ -95,6 +97,8 @@
         "_shared/tools/tmdl.py"
       ],
       "sha256": {
+        "_shared/languages/archimate-3/ea.yaml": "e0105a39ab7adf2a909db551d1ccda9db7dc827f06c2316e4b6c2c7acd312a85",
+        "_shared/languages/archimate-3/howto.md": "2deca29d38e79b7e17b299b3d09b75bb6d15cc9d8ef35eeb6a6458592fa15492",
         "_shared/references/ea-ui-verification.md": "4f74960eed2c33a1097b19f8931a82c2f60fce90de70f5bb7c77f4105ecbe2ba",
         "_shared/references/file-encoding.md": "5759bac841234558071a4cde555587e45cabebe5a90420188b07f8323d62f7fe",
         "_shared/references/latency.md": "af565b7e08f3a79a9239f548c63115181ef3ea7bd845b94ef0363a28f035d06f",
@@ -332,7 +336,7 @@
         "ea-diagram-composition/tools/test_bindings_data.py": "6d222a2cb44121aa3c46e8678cc907ea31e0c828ba4627fa30128cedbfc1b6e8",
         "ea-diagram-composition/tools/test_bindings_datamodel.py": "a9728a125435d4ba74986e661e1972dcf3c874ea5a0f7981de2a9c42d45c2fce",
         "ea-diagram-composition/tools/test_bindings_frameworks.py": "d12704b7f37f7d94666359d396aab7ff5370bb811a150d4909c95dac406556c0",
-        "ea-diagram-composition/tools/test_bindings_real_model.py": "09dd8d2b70af4d471c98f6396a7c504893b86bfb1eacf0b8fd9265544370b41a",
+        "ea-diagram-composition/tools/test_bindings_real_model.py": "4612c96642cbc53e97217e05055213b407d8f8bd09a74ab262b4015a8a50a9cc",
         "ea-diagram-composition/tools/test_bindings_strategy.py": "06bf740c0afbc197175ba697e0962b98c9b43bc6dbfccc58523b5551de636bd3",
         "ea-diagram-composition/tools/test_bindings_sysphs.py": "806701b325cc047db560c66eda22310e65ab4912516849f71b80ad74066c1aa1",
         "ea-diagram-composition/tools/test_compose.py": "0add2924c55d38e51178aeaee043b7ed6c113eaec46e9010ef05ccce61b2c14b",
@@ -399,7 +403,7 @@
         "ea-mdg-assess/references/verification-walkthrough.md"
       ],
       "sha256": {
-        "ea-mdg-assess/SKILL.md": "3b4ed40d0505f941d84e140a02fb12c576751d7c839d6650bc11d256ef294a6f",
+        "ea-mdg-assess/SKILL.md": "11b49c43d24525c3973990c55b08ac3ebd69f39f173fda1eab6a8e94e94a8ea1",
         "ea-mdg-assess/references/test-cases.md": "2c7e6920426f5cd756f81dfa1ba8e37c81ba4e79d745f53b9419471c3b1832f7",
         "ea-mdg-assess/references/three-states.md": "8de928edaab2da95eebf2c945dd03d98edfc365f8eeb34effca0e74d5f722592",
         "ea-mdg-assess/references/verification-walkthrough.md": "d561d0d81dd3d1de9a8d9c805ede92a12510c8727d13fac26e93827dd63ff490"
@@ -422,7 +426,7 @@
         "ea-mdg-author/references/xml-skeleton.md"
       ],
       "sha256": {
-        "ea-mdg-author/SKILL.md": "efc325faab2bd8741c75b56b0dd3138fa9d6d4f8e774592b176cc4a8b2f0bfaa",
+        "ea-mdg-author/SKILL.md": "ccfda82660ce5a77484b5ad60c0ae969d59d6dc6d6d4295b4d50a334b1dcf939",
         "ea-mdg-author/references/diagrams-toolboxes.md": "384918bad2126adc0195a967e8dc0c74e98c57e047a89a2f74f1a2e66db8f73c",
         "ea-mdg-author/references/post-install-migration.md": "230f1189519851f8d1e60bb9e8cbed3837aadb6322058d18c141d9ba2cf66ed3",
         "ea-mdg-author/references/quick-linker.md": "c1e77c9410344baa29706fb81d9adbf8b19c0453b076dd3f1b97dca187233dd4",
@@ -461,7 +465,7 @@
         "ea-mdg-model-build/references/test-cases.md"
       ],
       "sha256": {
-        "ea-mdg-model-build/SKILL.md": "45ae86f4168f64b5b043e869189955e73181c8244786ca3540f9690e22ce499f",
+        "ea-mdg-model-build/SKILL.md": "59c1b6cf4719303937ee9399de9be138e1b86d2cd91b6aeec702c8decc14253d",
         "ea-mdg-model-build/references/generating-from-a-census.md": "70e682c06efc17d9b80081daa6c6344a5d45ee0b6e462beac30143a50487957d",
         "ea-mdg-model-build/references/test-cases.md": "00e29ca6239f027aed923e2a134405baef46d404e5d92c40a048900d2a108d02"
       }
@@ -597,9 +601,9 @@
         "ea-ruleset-author/references/test-cases.md"
       ],
       "sha256": {
-        "ea-ruleset-author/SKILL.md": "d943c50f91fb24a4df4ed33749123dda5a6e1e8922c722065c62ac8f2b071756",
-        "ea-ruleset-author/references/rule-grammar.md": "ea6d7c257a3bcb86c790763a2c546c696027cd2a461fb19a70e0c23d4f92acdc",
-        "ea-ruleset-author/references/test-cases.md": "2d3fb7b5a61e7b6a749bfd8c92a4263b72b17a3255a600f1cfb3ae9c0580ec05"
+        "ea-ruleset-author/SKILL.md": "969217658d67f21d3e867e44e62d66070d107a9b66520a9d65c5a9b2a3f3c4fa",
+        "ea-ruleset-author/references/rule-grammar.md": "a0589383beb663722d3ec0562386dac4b97a0e96c79b8065945846c5655437c2",
+        "ea-ruleset-author/references/test-cases.md": "f0d694eabe6782f4208ba804c321e6ec7e6d9a8c5964c45911822cea80781d45"
       }
     },
     {
@@ -645,7 +649,7 @@
         "ea-validation/references/test-cases.md"
       ],
       "sha256": {
-        "ea-validation/SKILL.md": "f11e7254561939da689244522cf540cd0ef54927f56731c7a938642cf5b8be23",
+        "ea-validation/SKILL.md": "0cb815613a2fc5393b44ba291552f0aa26657a87ad2dd82dc96ebfb2875a7019",
         "ea-validation/references/test-cases.md": "f2c219d934921f3d69647d5388d2c4c74f12f38410d626723e3c73d35668aa0d"
       }
     },
@@ -737,7 +741,7 @@
       ],
       "sha256": {
         "ruleset-archimate31/archimate31_rules.yaml": "8e2bc0d0c46c319d7d54a8af11c21d1a3052f8f1bc92efcf9084eef3e7bc518e",
-        "ruleset-archimate31/tools/test_ruleset_archimate31.py": "66d791530db5aacc83a6fbd5459350049b9aa50bff460a02d5d36b76d5b12956"
+        "ruleset-archimate31/tools/test_ruleset_archimate31.py": "404836849915e743efe55aefeaf980359c4d2e5ba999c0a723f31b9471cc4502"
       }
     }
   ]

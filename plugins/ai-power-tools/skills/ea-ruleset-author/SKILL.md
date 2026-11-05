@@ -34,7 +34,7 @@ The YAML has two top-level keys:
 | `meta:` | Human-readable header: language, version, sources, severity legend |
 | `rules:` | List of rule objects, one per conformance constraint |
 
-The ArchiMate 3.1 ruleset (`ruleset-archimate31/archimate31_rules.yaml`) is the canonical
+The ArchiMate 3.1 ruleset (`rulesets/archimate-3/archimate-3_rules.yaml`, which replaces `ruleset-archimate31`) is the canonical
 reference implementation. Read it before starting a new language.
 
 ---
@@ -163,7 +163,7 @@ your first rule.
   technology NAMESPACE off (`ArchiMate3::...`), but do not strip a prefix that is
   part of the stereotype's own name: EA's built-in ArchiMate MDG stores
   `ArchiMate_Assignment`, so the selector is
-  `connector_stereotype: ArchiMate_Assignment` and `Assignment` matches nothing,
+  `connector_stereotypes: [ArchiMate_Assignment]` and `Assignment` matches nothing,
   while EA's BPMN2.0 MDG stores a bare `BusinessProcess`. Per-technology
   measurement, never a guess -- see `references/rule-grammar.md`.
 
@@ -224,7 +224,7 @@ Track progress here as new rulesets are authored.
 
 | Language | Directory | Rules | Status | Server req |
 |----------|-----------|-------|--------|-----------|
-| ArchiMate 3.1 | `ruleset-archimate31` | 27 | ✅ Published (bundle 1.3.0) | ≥ 1.2.0 |
+| ArchiMate 3.1 | `rulesets/archimate-3` | 4 | ✅ Shipped in the plugin | ≥ 3.6.5 |
 | BPMN 2.0 | `ruleset-bpmn2` | — | ⏳ Planned | ≥ 1.2.0 |
 | UML 2.5 | `ruleset-uml25` | — | ⏳ Planned | ≥ 1.2.0 |
 | SysML 1.6 | `ruleset-sysml16` | — | ⏳ Planned | ≥ 1.2.0 |
@@ -278,4 +278,4 @@ it; always cite sources.
   reference, and worked examples
 - `ea-validation` — YAML syntax reference and how to run the validator
 - `ea-mdg-author` — Authoring the MDG Technology XML that defines the stereotypes you're validating
-- ArchiMate 3.1 reference implementation: `ruleset-archimate31/archimate31_rules.yaml`
+- ArchiMate 3.1 reference implementation: `rulesets/archimate-3/archimate-3_rules.yaml`

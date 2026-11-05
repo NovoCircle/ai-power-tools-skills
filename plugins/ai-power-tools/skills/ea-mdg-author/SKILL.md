@@ -5,6 +5,8 @@ description: Author a Sparx EA MDG Technology XML file — define stereotypes, t
 
 # Authoring a Sparx EA MDG Technology
 
+For a language that has a file in `../_shared/languages/<id>/ea.yaml` (ArchiMate 3.1 is the first), that file holds the technology id, stored stereotype names and diagram types. Read it before measuring them again.
+
 *Verified against EA 17.0 Build 1704. All XML patterns here load and deploy correctly.*
 
 ## Before you start — does this MDG already have a source model?

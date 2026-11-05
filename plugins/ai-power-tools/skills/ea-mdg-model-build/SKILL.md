@@ -5,6 +5,8 @@ description: Build a Sparx EA MDG Technology from a model held inside the reposi
 
 # Building an MDG Technology from a Model
 
+For a language that has a file in `../_shared/languages/<id>/ea.yaml` (ArchiMate 3.1 is the first), that file holds the technology id, stored stereotype names and diagram types. Read it before measuring them again.
+
 *Grounded in an end-to-end, model-driven build of the Westbrook Bank Architecture (`WBA`)
 technology. Tool-surface claims verified against `ea-mcp-server` v2.2.0 — see the
 note at the bottom of Quick Reference.*
