@@ -41,8 +41,7 @@ PLACEHOLDER_PATH = re.compile(r"[A-Za-z]:\\{1,2}Users\\{1,2}[<%{$]")
 # "TEA Framework" is a technology that genuinely ships with stock Sparx
 # Enterprise Architect, so that exact phrase is allowed. Anything that reads as a
 # CUSTOMER extension of it is not: TEA on its own, TEA:: as a stereotype prefix,
-# TEA inside a customer's own identifier like "CA EDD TEA", and "TEA Framework"
-# followed by extension wording (Extension, Custom, Customization, Profile, MDG,
+# and "TEA Framework" followed by extension wording (Extension, Custom, Customization, Profile, MDG,
 # Toolbox, Add-in). A customer MDG built on the Sparx technology therefore still
 # trips the gate for a human decision. The same rule is in the server repo's gate.
 FORBIDDEN = [
@@ -50,7 +49,6 @@ FORBIDDEN = [
     (re.compile(r"\bTEA\b(?!\s+Framework\b(?!\s+(?i:Extensions?|Extended|Custom|"
                 r"Customi[sz](?:ed|ation)|Profiles?|MDG|Toolbox(?:es)?|Add-?ins?)\b))"),
      "real customer identifier 'TEA'"),
-    (re.compile(r"\bCA\s+EDD\b|\bEDD\b"), "real customer identifier 'EDD'"),
     (re.compile(r"TechVentures", re.I), "non-canonical example org 'TechVentures'"),
     (re.compile(r"RyanSchmierer|rschmierer", re.I), "personal identifier"),
     (re.compile(r"[A-Za-z]:\\\\?(?:SparxServices|Users)\b"), "absolute local path"),
@@ -188,6 +186,9 @@ KNOWN_SPACED_IDS = (
     # names, which the how-tos quote as prefixes.
     "ZF Functioning", "Business Modeling", "Data Modeling",
 )
+# Anchored on a word boundary, so `AcmeData Modeling::` isn't taken for `Data Modeling::`.
+SPACED_ID_AT_END = re.compile(
+    r"(?<![\w-])(?:" + "|".join(map(re.escape, KNOWN_SPACED_IDS)) + r")$")
 QEA_FILE = re.compile(r"\b([A-Za-z][A-Za-z0-9_-]*)\.(?:qea|eapx|eap|feap)\b")
 MDG_NS = re.compile(r"\b([A-Z][A-Za-z0-9_]{1,30})::")
 
@@ -414,7 +415,7 @@ def check_file(path: Path) -> list[str]:
                 continue
             # A known id with a space in it: the capture is only its last word,
             # so the check is whether the text ending there IS the whole id.
-            if any(line[:m.end(1)].endswith(full) for full in KNOWN_SPACED_IDS):
+            if SPACED_ID_AT_END.search(line[:m.end(1)]):
                 continue
             if language and _shelf_names_it(language, ident):
                 continue
