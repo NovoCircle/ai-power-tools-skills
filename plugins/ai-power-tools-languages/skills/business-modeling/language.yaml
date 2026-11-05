@@ -393,6 +393,9 @@ layout:
   no_element_type:   # concepts that take no size class, with the reason
     drawn_as_line:
       reason: The relationship kinds and the use case realization are lines, so there is no symbol to size.
-      concepts: see `notation.relationships` and `notation.not_specified`
+      concepts:
+      - Communicate
+      - Subscribe
+      - UseCaseRealization
   exceptions: {}
   diagram_types: {}   # the standard defines no diagram type, so every diagram takes the defaults (graph, frame-header)

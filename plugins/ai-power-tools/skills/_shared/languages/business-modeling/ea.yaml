@@ -285,3 +285,29 @@ harvest:
   samples_in_ea: 'model-pattern: two business patterns, 4 diagrams'
   toolbox_quick_links: 'ui, EA 17.1 build 1716, 2026-11-04: the Business Modeling toolbox page and the quick links of one Business Use Case were read; the
     EAUML profile rows were not recounted'
+
+# EA's names for this language's layout. tools/gen_conventions.py reads layout_map.
+layout_map:
+  technology: EAExtended
+  display_name: Business Modeling (EA Business Modeling)
+  extends: UML
+  stereotype_prefix: ''
+  notes: |
+    The standard defines no diagram type, so this one is EA's own. Its arrangement and route are the shared defaults, not measurements.
+  diagram_types:
+    Business Modeling:
+      token_reason: EA stores this diagram as Extended::Business Modeling. Another language uses the same Extended id, and one id can have only one file, so this map keeps ea.yaml's technology. Whether EA's helpers reach it by another route is not measured.
+      base: Logical
+      arrangement: graph
+      title: frame-header
+      route: straight
+      channels:
+        fill: null
+        free:
+        - fill
+        - border
+        - border_width
+        - line_color
+        - font_color
+        - opacity
+        - icon
