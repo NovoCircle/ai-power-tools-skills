@@ -3568,7 +3568,7 @@ constraints:
 data_types:
   coverage: partial
   section: "7.1, Annex B"
-  note: The standard defines no primitive types or units of its own (it uses the UML ones), but it defines a date-time format, 17 enumerations, five data-type elements, and an Annex B library of property groups with two more enumerations, all listed here.
+  note: The standard defines no primitive types or units of its own (it uses the UML ones), but it defines a date-time format, 17 enumerations (the 15 kinds, StatusIndicators, and the metamodel's SecurityClassificationKind), five data-type elements, and an Annex B library of property groups with two more enumerations, all listed here.
   inherits_from: uml-2
   # Primitive types used below (String, Boolean, Integer, Real) are UML's and are not repeated. SysML value types and units are SysML's, not UAF's.
   types:
@@ -3752,5 +3752,13 @@ layout:
       - Stakeholder
       - UAFElement
       - SecurityMeasurement
+      - ActivityPerformableUnderCondition
+      - SecurityControlAction
+      - Caveat
+      - SecurityAvailability
+      - SecurityCategory
+      - SecurityClassification
+      - SecurityClassificationKind
+      - SecurityIntegrity
   diagram_types: {}
   viewpoints: {}

@@ -30,7 +30,7 @@
 # rules). Most of UAF's typing and exchange rules are about those, so they are not in this file. An element with two stereotypes (for
 # example a UAF stereotype and a SysML block) stores only the first in t_object.Stereotype, which is all a rule sees.
 #
-# EA'S UAF TECHNOLOGY HAS NO STEREOTYPE for the abstract groupings, the fifteen kinds enumerations, ActualMeasurement and the other five
+# EA'S UAF TECHNOLOGY HAS NO STEREOTYPE for the abstract groupings, the 16 enumerations (the 15 kinds and SecurityClassificationKind), ActualMeasurement and the other five
 # slot concepts (the tab lists them; EA binds none), SecurityControlAction, SecurityProperty and a few others; rules about them are not
 # written.
 #
