@@ -225,8 +225,10 @@ def _source(rel: str, root: Path) -> Path:
 #: branches add a ruleset each, and a row per file would make every one of them
 #: rewrite this register. tools/test_languages.py reads every file it finds there.
 #: The layout standard is a unit from before the file lands, so its branch needs no
-#: register change; the test covering it runs once the file is there.
+#: register change; the test covering it runs once the file is there. The EA
+#: translation folder is one unit too, for the same reason as the rulesets.
 PLUGIN_ONLY_ASSETS = ("plugins/ai-power-tools/rulesets/*",
+                      "plugins/ai-power-tools/skills/_shared/languages/*",
                       "plugins/ai-power-tools-languages/skills/_languages/layout-standard.yaml")
 
 

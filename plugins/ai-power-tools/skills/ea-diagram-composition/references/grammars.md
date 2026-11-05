@@ -76,10 +76,11 @@ should be taking one more parameter.
 
 ---
 
-## 3. Status — eight grammars, three placements
+## 3. Status — twelve grammars, three placements
 
-The vocabulary has **eight** values. Six are layouts this library computes coordinates for; the
-other two are the cases where it computes none. What separates them is *who places the geometry*,
+The vocabulary has **twelve** values. Ten are layouts this library computes coordinates for; the
+other two are the cases where it computes none. `matrix`, `radial-tree`, `chevron-stack` and `treemap`
+each live in a module of their own and are described in their modules' docstrings. What separates them is *who places the geometry*,
 because that decides what may be done with a diagram type that names the grammar.
 
 | Grammar | Who places the geometry | Status |
@@ -89,7 +90,7 @@ because that decides what may be done with a diagram type that names the grammar
 | Nested grid | Our arithmetic | **Implemented** — `compose_nested_grid` |
 | Radial | Our arithmetic | **Implemented** — `compose_radial` |
 | Two-column cycle | Our arithmetic | **Implemented** — `compose_two_column_cycle` |
-| Computed geometry | Our arithmetic, not yet written | **Not built.** What remains under the name: the treemap |
+| Computed geometry | Our arithmetic, not yet written | **Not built.** The treemap has its own name and composer now |
 | Graph | EA's own layout, which we tidy afterward | **Producible today**, with no composer behind it |
 | EA-semantic | The diagram type itself | **Not producible.** Recorded so the gap is visible as data |
 
