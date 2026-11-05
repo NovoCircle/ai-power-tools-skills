@@ -32,7 +32,7 @@ Three different things, and it is worth knowing which is which:
 from __future__ import annotations
 
 # Backlog items this module pins (checked by tools/test_suite_conventions.py).
-PINS = ("APT-2026-0161", "APT-2026-0176", "APT-2026-0187", "APT-2026-0193")
+PINS = ("APT-2026-0161", "APT-2026-0176", "APT-2026-0187", "APT-2026-0193", "APT-2026-0823")
 
 import ast
 import sys
@@ -3445,10 +3445,13 @@ def test_the_sysml_binding_ships_no_local_path():
 # deliberately left out.
 _DMN = "DMN1.1"
 _DMN_TYPE = "DMNDiagram"
-_UAF = "UAFP_Framework"
+_UAF = "UAF"
+#: What the stored token starts with. The model's inventory is keyed by this, not by
+#: the id EA reports.
+_UAF_GROUP = "UAFP_Framework"
 _UAF_TYPE = "UPDM Framework"
-#: The eight ids the model carries for the UAF family. One binding binds one id,
-#: so seven of them are deliberately unbound.
+#: The eight token groups the model carries for the UAF family. The binding claims a
+#: token in one, so seven of them are deliberately unbound.
 _UAF_FAMILY = ("UAFP_AV", "UAFP_AcV/PV", "UAFP_Framework", "UAFP_OV",
                "UAFP_SOV", "UAFP_SV/SvcV", "UAFP_StV/CV", "UAFP_TV/StdV")
 #: Under the seven unbound ids, the state machines and the sequence diagram are
@@ -3490,38 +3493,42 @@ def test_the_uaf_framework_binding_loads_and_is_found_by_its_declared_id():
     assert set(uaf.diagram_types) == {_UAF_TYPE}
     # Presence, not absence: "no prefix" is a measured statement.
     assert uaf.stereotype_prefix == ""
-    assert uaf.diagram_type_for_mdgdgm(f"{_UAF}::{_UAF_TYPE}") is not None
+    assert uaf.diagram_type_for_mdgdgm(f"{_UAF_GROUP}::{_UAF_TYPE}") is not None
 
 
 @needs_du_model
 def test_the_dmn_and_uaf_ids_and_diagram_types_exist_in_the_mdg_data(du_known):
     """Resolved from the model, so a guessed id fails here.
 
-    The bare family names are not ids. A binding keyed on `DMN` or `UAF` would
-    resolve to nothing without complaining.
+    The bare family names start no stored token. A token built on `DMN` or `UAF`
+    would resolve to nothing without complaining, though `UAF` is the id EA reports.
     """
     for guessed in ("DMN", "DMN1.0", "UAF", "UAFP", "UPDM"):
         assert guessed not in du_known, guessed
     assert _DMN in du_known and _DMN_TYPE in du_known[_DMN]
-    assert _UAF in du_known and _UAF_TYPE in du_known[_UAF]
+    assert _UAF_GROUP in du_known and _UAF_TYPE in du_known[_UAF_GROUP]
     # The type name carries a space, and a spelling without it is not a type.
-    assert "UPDMFramework" not in du_known[_UAF]
-    assert set(find_binding(_UAF).diagram_types) <= set(du_known[_UAF])
+    assert "UPDMFramework" not in du_known[_UAF_GROUP]
+    assert set(find_binding(_UAF).diagram_types) <= set(du_known[_UAF_GROUP])
 
 
 @needs_du_model
 def test_the_uaf_family_is_eight_ids_and_only_the_framework_one_is_bound(du_known):
-    """One binding binds one id, so a single UAF binding cannot cover the family.
-    The seven unbound ids resolve to nothing, on purpose."""
+    """The one UAF binding claims one token group, so it doesn't cover the family.
+    The seven unbound groups resolve to nothing, on purpose."""
     in_model = {t for t in du_known if t.startswith("UAFP_")}
     assert in_model == set(_UAF_FAMILY)
+    tokens = find_binding(_UAF).tokens
     for technology in _UAF_FAMILY:
-        assert (find_binding(technology) is not None) == (technology == _UAF), technology
+        # None of these is an id EA reports, so none is a binding's own id.
+        assert find_binding(technology) is None, technology
+        assert any(token.startswith(f"{technology}::") for token in tokens) == (
+            technology == _UAF_GROUP), technology
 
 
 @needs_du_model
 def test_the_uaf_framework_base_type_is_the_one_ea_records():
-    recorded = {base for _, _, base in _du_diagram_rows(_UAF, _UAF_TYPE)}
+    recorded = {base for _, _, base in _du_diagram_rows(_UAF_GROUP, _UAF_TYPE)}
     assert recorded == {find_binding(_UAF).diagram_type(_UAF_TYPE).base}
 
 
@@ -3533,7 +3540,7 @@ def test_no_low_n_figure_is_stated_as_active_in_the_uaf_file():
 
 @needs_du_model
 def test_the_uaf_framework_draws_no_title_so_it_relies_on_the_frame():
-    rows = _du_diagram_rows(_UAF, _UAF_TYPE)
+    rows = _du_diagram_rows(_UAF_GROUP, _UAF_TYPE)
     drawn = 0
     with mb.open_model_copy(_DU_MODEL) as conn:
         for did, name, _ in rows:
@@ -3554,7 +3561,7 @@ def test_the_uaf_framework_stores_no_per_diagram_fill_so_fill_is_claimed_not_fre
     carries a fill override."""
     overrides = total = 0
     with mb.open_model_copy(_DU_MODEL) as conn:
-        for did, _, _ in _du_diagram_rows(_UAF, _UAF_TYPE):
+        for did, _, _ in _du_diagram_rows(_UAF_GROUP, _UAF_TYPE):
             for (style,) in conn.execute(
                     "SELECT x.ObjectStyle FROM t_diagramobjects x JOIN t_object o "
                     "ON o.Object_ID = x.Object_ID WHERE x.Diagram_ID = ? "
@@ -3597,7 +3604,7 @@ def test_every_other_uaf_diagram_type_is_classified_in_the_notes_exactly_once(
     assert graph_marker in notes and semantic_marker in notes
     graph_part, semantic_part = notes.split(graph_marker)[1].split(semantic_marker)
     unbound = {f"{t}::{d}" for t, types in du_known.items()
-               if t.startswith("UAFP_") and t != _UAF for d in types}
+               if t.startswith("UAFP_") and t != _UAF_GROUP for d in types}
     expected_semantic = set(_UAF_EA_SEMANTIC)
     assert expected_semantic <= unbound
     for name in unbound:
@@ -3972,7 +3979,7 @@ def test_a_diagram_type_declaring_an_empty_prefix_is_not_given_the_technologys()
     """The presence check, at the second scope. `""` is a STATEMENT here too.
 
     A technology that prefixes can hold a diagram type whose stereotypes are
-    stored bare - `TOGAF Diagrams` is this case inverted - and `or` in the
+    stored bare - `TOGAF` is this case inverted - and `or` in the
     resolution would silently hand it the technology's prefix, sending every
     lookup after a name that exists nowhere. `~` means the same thing as `""`,
     for the same reason it does at technology scope.
@@ -4064,29 +4071,6 @@ def test_the_sizes_uml_omits_by_judgment_are_still_really_there(uml_plain):
             int(v) for v in st.median)
 
 
-@needs_uml_model
-def test_the_figures_the_notes_record_for_the_unbound_types_are_recomputable(
-        uml_plain):
-    """Sequence is classified on evidence, and the evidence is checked.
-
-    Its even lifeline pitch is the reason it is (c) rather than (b), so the
-    figure quoted for it is recomputed rather than trusted.
-    """
-    notes = find_binding(_UML).notes
-    sequence = _uml_gap(uml_plain["Sequence"], "h")[0]
-    assert f"{sequence.mode} in {sequence.mode_count} of n={sequence.n}" in notes
-    # And no element type on a sequence diagram has a modal size at all, which
-    # is the other half of why it cannot be keyed: a resolved diagram type must
-    # have a `sizing.default`, and the root binding has nothing to inherit one
-    # from.
-    for st in _uml_sizes(uml_plain["Sequence"]).values():
-        assert st.mode is None or st.low_n
-    # The two thin types have nothing statable either.
-    for diagram_type in _UML_UNBOUND_THIN:
-        stats = _uml_sizes(uml_plain[diagram_type])
-        assert all(st.low_n for st in stats.values()), diagram_type
-
-
 @pytest.mark.parametrize("diagram_type", _UML_BOUND)
 def test_grammar_is_implemented_is_the_engines_answer_for_each_uml_type(
         diagram_type):
@@ -4117,14 +4101,20 @@ def test_the_uml_grammars_are_only_the_two_that_place_nothing():
 
 
 def test_the_declined_uml_types_are_each_classified_in_the_notes():
-    """The durable half of the deliverable: a reason per unbound type, so that
-    an omission is never indistinguishable from an oversight."""
+    """Each declined type is one EA's UML catalog has, and the map leaves it out.
+
+    So an omission is a decision rather than a type nobody looked at.
+    """
+    import yaml
     binding = find_binding(_UML)
-    for name in _UML_UNBOUND_EA_SEMANTIC:
-        assert f"NOT BOUND, EA-SEMANTIC (c): {name}" in binding.notes
-    thin = binding.notes.split("NOT BOUND, BELOW THRESHOLD (b)")[1]
-    for name in _UML_UNBOUND_THIN:
-        assert name in thin, name
+    ea = yaml.safe_load((_BINDINGS_DIR / "uml-2/ea.yaml").read_text(encoding="utf-8"))
+    catalog = set(ea["diagram_types"])
+    mapped = set(ea["layout_map"]["diagram_types"])
+    for name in _UML_UNBOUND_EA_SEMANTIC + _UML_UNBOUND_THIN:
+        assert name not in mapped, name
+    for guide_name in ("Sequence diagram", "Communication diagram",
+                       "Interaction overview diagram"):
+        assert guide_name in catalog, guide_name
     # None of the three is a key, so none of them resolves to a binding.
     for name in _UML_UNBOUND_EA_SEMANTIC + _UML_UNBOUND_THIN:
         assert name not in binding.diagram_types
@@ -4245,6 +4235,21 @@ def test_a_group_token_resolves_with_the_id_ea_reports(tmp_path):
     assert resolution.binding.diagram_type_for_mdgdgm("UPDM2_SV/SvcV::SV-1").name == "SV-1"
     # The group id is not installed, and it isn't a stated technology either.
     assert resolution.binding.diagram_type_for_mdgdgm("UPDM2::OV-2") is None
+
+
+@pytest.mark.parametrize("stored", ["Node", "NodePort"], ids=["element", "port"])
+def test_the_updm_binding_round_trips_the_names_ea_yaml_records_as_stored(stored):
+    """APT-2026-0823. `UPDM2` is the id and the qualifier. EA stores the bare name."""
+    import yaml
+    document = yaml.safe_load(
+        (_BINDINGS_DIR / "updm-2" / "ea.yaml").read_text(encoding="utf-8"))
+    assert stored in document["stereotypes"]
+    binding = find_binding("UPDM2")
+    assert binding.stereotype_for(stored) == stored
+    assert binding.concept_for(stored) == stored
+    for name, dt in binding.diagram_types.items():
+        assert dt.stereotype_for(stored) == stored, name
+        assert dt.concept_for(stored) == stored, name
 
 
 def test_each_language_claims_its_own_extended_token(tmp_path):

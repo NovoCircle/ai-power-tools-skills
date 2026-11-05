@@ -1,0 +1,286 @@
+# Requirements modeling: language file (schema_version 1).
+# Written from public sources, none of which defines a requirements metamodel on its own:
+#   - ISO/IEC/IEEE 29148:2018 (requirements engineering). The standard is paid and was not read. Every fact taken from it
+#     comes from third-party summaries of its clauses and carries basis: iso-summary. Its wording of strength (shall, should)
+#     is unknown, so those facts are graded should.
+#   - OMG SysML 1.5 clause 16 (requirement concepts and relationships), described by the sysml-1 skill. basis: sysml-skill.
+#   - IIBA BABOK Guide v3 was not read and is not a source. Nothing here rests on it.
+# Keys beyond the base schema (as accepted from the BPMN, SysML and BMM drafts): constraints[].applies_when, .checkable, .basis, .category;
+#   concepts.elements[].group, .abstract, .basis, .definition, .attributes; data_types; notation; value_sets; information_items; views.
+#   constraints[].checkable : static = a validator that sees only the saved model can check it; partial = only the structure or simple cases;
+#                             runtime = needs process or history; none = a judgment, not a property a program can read.
+#   constraints[].basis     : iso-summary | sysml-skill | inferred.
+#   Strength policy: must = error, should = warning, note = advice only.
+schema_version: 1
+id: requirements
+name: Requirements modeling
+owner: {name: No single owner (ISO/IEC/IEEE 29148 with OMG SysML as a supporting source), kind: composite-of-public-sources}
+standard:
+  name: ISO/IEC/IEEE 29148 Systems and software engineering, Life cycle processes, Requirements engineering
+  version: '2018 (Edition 2)'
+  status: published
+  reference: ISO/IEC/IEEE 29148:2018, published 2018-11, last reviewed and confirmed 2024. https://www.iso.org/standard/72089.html. The supporting source is the sysml-1 skill (SysML 1.5 clause 16).
+  kind: A formal standard of processes and information items. It defines no metamodel and no notation. The relationship vocabulary comes from SysML, the classification from 29148.
+newer_versions:
+- {version: 'DIS 29148 Edition 1', date: 'not shown; ISO lists it as under development and expects it to replace the 2018 edition', url: 'https://www.iso.org/standard/72089.html', note: 'ISO reference 94091. Its own page was not opened.'}
+supersedes: ISO/IEC/IEEE 29148:2011 (withdrawn)
+extends:
+  - {language: sysml-1, note: 'SysML defines the requirement relationships (satisfy, verify, refine, trace, derive, copy, containment) and their endpoint constraints. This file names them and points to the SysML skill; it does not redefine them.'}
+concepts:
+  source: 'ISO/IEC/IEEE 29148:2018 clauses 5.2 (requirement construct, characteristics, language, attributes), 5.3, 6.x (processes) and 7, 9.x (information items), through third-party summaries; relationships from sysml-1 (clause 16); classification from 29148.'
+  count_defined_here: 30
+  groups:
+    Requirement levels: {defined_by: '29148 5.2.5, clause 7', notes: 'The level at which a requirement is stated: business, stakeholder, system, system element, software.'}
+    Requirement types: {defined_by: '29148 5.2.8, 6.4.3.3, 9.5', notes: 'What kind of thing a requirement requires. Orthogonal to the level: a requirement has one level and one type.'}
+    Related things: {defined_by: '29148 5.2.7, 6.x, 9.5.19; SysML clause 16 (via sysml-1)', notes: 'Stakeholders, needs, sources, assumptions, design elements and verification entities that requirements relate to.'}
+    Information items: {defined_by: '29148 clause 7 and 9', notes: 'The specifications 29148 requires to be produced.'}
+  elements:
+    Requirement:
+      display: Requirement
+      group: Requirement levels
+      abstract: true
+      basis: iso-summary
+      section: 5.2.4
+      definition: A statement that expresses a need together with the constraints and conditions on it. It names its subject and states an action or a constraint on that subject, and can be verified.
+      note: The standards declare no concept abstract; abstract here is the library reading (the concept is general, each requirement is given a level and a type).
+      attributes:
+      - {name: identifier, basis: iso-summary, section: '5.2.8', definition: 'Unique, never changed or reused, even if the requirement is revised or deleted.', constraints: [REQ-ATTR-001, REQ-ATTR-002]}
+      - {name: statement, basis: iso-summary, section: '5.2.4', definition: 'The requirement sentence.', constraints: [REQ-ATTR-003, REQ-QUAL-010]}
+      - {name: rationale, basis: iso-summary, section: '5.2.8; 6.4.3.3', definition: 'Why the requirement exists; points to the analysis, trade study, model or simulation behind it.', constraints: [REQ-ATTR-004]}
+      - {name: priority, basis: iso-summary, section: '5.2.8', definition: 'Stakeholder priority, agreed among stakeholders on a scale or as high, medium or low.', type: Priority, constraints: [REQ-ATTR-005, REQ-ATTR-016]}
+      - {name: source, basis: iso-summary, section: '6.3.3.7; 6.4.3.3', definition: 'Where the requirement comes from. Recorded as a link, see sourced from.', constraints: [REQ-ATTR-007, REQ-TRACE-001]}
+      - {name: verification method, basis: iso-summary, section: '6.4.3.3; 6.5.2.2', definition: 'How the requirement will be verified.', type: Verification method, constraints: [REQ-ATTR-008, REQ-VERIF-001, REQ-VERIF-002]}
+      - {name: version, basis: iso-summary, section: '5.2.8', definition: 'Which text is being implemented and how volatile it is.', constraints: [REQ-ATTR-009]}
+      - {name: owner, basis: iso-summary, section: '5.2.8', definition: 'Who maintains the requirement, approves changes and reports status.', constraints: [REQ-ATTR-010]}
+      - {name: risk, basis: iso-summary, section: '5.2.8', definition: 'A risk value, including risk inherited from the parent and from immature technology.', constraints: [REQ-ATTR-011]}
+      - {name: difficulty, basis: iso-summary, section: '5.2.8', definition: 'The assumed difficulty of meeting the requirement.', constraints: [REQ-ATTR-012]}
+      - {name: type, basis: iso-summary, section: '5.2.8', definition: 'Groups requirements for analysis and allocation. Modeled as the requirement types.', type: Requirement type, constraints: [REQ-ATTR-013, REQ-KIND-002]}
+      - {name: conditions and constraints, basis: iso-summary, section: '5.2.4', definition: 'Conditions and constraints on the requirement, held as attributes.', constraints: [REQ-ATTR-017]}
+    BusinessRequirement: {display: Business Requirement, group: Requirement levels, specializes: Requirement, basis: iso-summary, section: 'clause 7; 9.3', definition: 'A requirement stating why the change is wanted: goals, objectives and outcomes of the organization.'}
+    StakeholderRequirement: {display: Stakeholder Requirement, group: Requirement levels, specializes: Requirement, basis: iso-summary, section: '5.2.5; 9.4', definition: 'A requirement stating what a stakeholder or class of stakeholders needs, with acceptance criteria and without implementation detail.'}
+    SystemRequirement: {display: System Requirement, group: Requirement levels, specializes: Requirement, basis: iso-summary, section: '5.2.5; 9.5', definition: 'A requirement on the system of interest as a whole.'}
+    SystemElementRequirement: {display: System Element Requirement, group: Requirement levels, specializes: Requirement, basis: iso-summary, section: '5.2.5; 5.3.2; 6.5.1.2', definition: 'A requirement on one element of the system, usually derived by allocating system requirements while the architecture is defined.'}
+    SoftwareRequirement: {display: Software Requirement, group: Requirement levels, specializes: SystemElementRequirement, basis: inferred, section: 'clause 7; 9.6', definition: 'A requirement on a software product or software element, stated in a software requirements specification.', note: 'The generalization is inferred; 29148 lists the software requirements specification beside the system one without stating it.'}
+    FunctionalRequirement: {display: Functional Requirement, group: Requirement types, specializes: Requirement, basis: iso-summary, section: '5.2.8; 6.4.3.3; 9.5.5', definition: 'What a function, system or element must do: the behavior and information it manages.'}
+    PerformanceRequirement: {display: Performance Requirement, group: Requirement types, specializes: Requirement, basis: iso-summary, section: '5.2.8; 6.4.3.3', definition: 'How well a function must perform, in measures of performance or technical performance measures.'}
+    InterfaceRequirement: {display: Interface Requirement, group: Requirement types, specializes: Requirement, basis: iso-summary, section: '5.2.8; 6.5.1.2', definition: 'How elements interface and interact with each other and with outside systems or entities.'}
+    ProcessRequirement: {display: Process Requirement, group: Requirement types, specializes: Requirement, basis: iso-summary, section: '5.2.8', definition: 'A requirement on a process that the system, project or organization must follow.', note: 'The type is named in the attribute list and not elaborated in the summaries.'}
+    QualityRequirement: {display: Quality Requirement, group: Requirement types, specializes: Requirement, basis: iso-summary, section: '5.2.8; 9.6.18', definition: 'A requirement on a quality of the system as a whole, also called non-functional. It has a quality category from the quality category value set and is stated so that it can be measured.', synonyms: [Non-functional requirement, Quality of service requirement]}
+    UsabilityRequirement: {display: Usability Requirement, group: Requirement types, specializes: QualityRequirement, basis: inferred, section: '5.2.8; 9.5.5; 9.6.13', definition: 'A usability target or quality-in-use requirement, possibly with measurable criteria for effectiveness, efficiency and satisfaction.', note: 'The generalization is inferred.'}
+    HumanFactorsRequirement: {display: Human Factors Requirement, group: Requirement types, specializes: Requirement, basis: iso-summary, section: '5.2.8; 9.5.9', definition: 'A human system integration requirement: allocation of functions to people, personnel-equipment interaction, and the facilities people need.'}
+    Constraint: {display: Constraint, group: Requirement types, specializes: Requirement, basis: iso-summary, section: '6.4.3.3', definition: 'A necessary implementation or design constraint on the solution, validated with stakeholders. It limits the solution and cannot be changed by the team.'}
+    PolicyAndRegulationRequirement: {display: Policy And Regulation Requirement, group: Requirement types, specializes: Requirement, basis: iso-summary, section: '9.5.15', definition: 'An organization policy, business practice or outside regulation that bears on how the system operates or performs, stated as a requirement.'}
+    TransitionRequirement: {display: Transition Requirement, group: Requirement types, specializes: Requirement, basis: iso-summary, section: '6.4.3.3', definition: 'A temporary capability or condition needed only to move to the future state: transition, migration, installation, acceptance.'}
+    Stakeholder: {display: Stakeholder, group: Related things, basis: iso-summary, section: '6.3; 9.4', definition: 'A person or group whose needs and constraints the requirements express.'}
+    Need: {display: Need, group: Related things, basis: iso-summary, section: '6.3.3.7', definition: 'A stakeholder need before it is stated as a requirement. Trace links join needs to stakeholder requirements.'}
+    BusinessRule: {display: Business Rule, group: Related things, basis: bmm-skill, section: '29148 9.5.15; BMM 1.3, Business Rule', definition: 'A directive that guides what the business does, as the bmm-1 language defines it. A source of requirements; not itself a requirement in this language.'}
+    Assumption: {display: Assumption, group: Related things, basis: iso-summary, section: '5.2.7; 9.5.19', definition: 'Something relied on without confirmation behind a requirement. Each assumption is documented and validated.'}
+    SourceDocument: {display: Source Document, group: Related things, basis: iso-summary, section: '6.3.3.7', definition: 'A document or authority a requirement or need comes from, such as a contract, a regulation or a source document of the needs.'}
+    TradeStudy: {display: Trade Study, group: Related things, basis: iso-summary, section: '6.4.3.5', definition: 'A trade study or design study from which a requirement comes. The study in turn traces to the higher-level requirements that informed it.'}
+    DesignElement: {display: Design Element, group: Related things, basis: iso-summary, section: '6.4.3.5; 6.5.1.2; SysML clause 16', definition: 'An architectural entity or system element, hardware, software, logical or physical, to which a requirement is allocated and which implements it.'}
+    VerificationEntity: {display: Verification Entity, group: Related things, basis: iso-summary, section: '6.4.3.5; 6.5.2.2; SysML clause 16', definition: 'What shows a requirement is met: a test case, an analysis, an inspection record or a demonstration, with its criteria.'}
+    RequirementsSpecification: {display: Requirements Specification, group: Information items, abstract: true, basis: iso-summary, section: 'clause 7; 9.2', definition: 'A requirements information item: requirements and the content clause 9 requires. It may be a document or a part of a repository.'}
+    BusinessRequirementsSpecification: {display: Business Requirements Specification, abbreviation: BRS, group: Information items, specializes: RequirementsSpecification, basis: iso-summary, section: '9.3', definition: 'The organization-level reasons for the change, the business environment and processes, goals, and a high-level proposal of the system.'}
+    StakeholderRequirementsSpecification: {display: Stakeholder Requirements Specification, abbreviation: StRS, group: Information items, specializes: RequirementsSpecification, basis: iso-summary, section: '9.4', definition: 'Stakeholder expectations with acceptance criteria and no implementation detail, with the environment, operating modes and user classes.'}
+    SystemRequirementsSpecification: {display: System Requirements Specification, abbreviation: SyRS, group: Information items, specializes: RequirementsSpecification, basis: iso-summary, section: '9.5', definition: 'What the complete system must deliver: functional, usability, human system integration, modes and states, physical, adaptability, environmental, security, policy and regulation, verification, assumptions and dependencies.'}
+    SoftwareRequirementsSpecification: {display: Software Requirements Specification, abbreviation: SRS, group: Information items, specializes: RequirementsSpecification, basis: iso-summary, section: '9.6', definition: 'Software behavior in enough detail to design, build and verify it: relationship to its context, functions and their allocation, external interfaces, usability, data, software attributes, verification, supporting information.'}
+    OperationalConcept: {display: Operational Concept, abbreviation: OpsCon, group: Information items, basis: iso-summary, section: 'Annex A', definition: 'The operational scenarios, user roles and workflows that describe how the solution will be used.', note: 'Annex A is described as normative by one of the summaries only.'}
+value_sets:
+  Requirement type: {basis: iso-summary, section: '5.2.8', values: [functional and performance, interface, process, quality (non-functional), usability and quality in use, human factors], note: 'Modeled as the requirement type concepts. Constraint, policy and regulation, and transition come from the specification clauses.'}
+  Verification method: {basis: iso-summary, section: '6.5.2.2', values: [inspection, analysis, demonstration, test], also: [certification (a written assurance by an independent party, sometimes used instead), analysis by similarity (a form of analysis with conditions, REQ-VERIF-004), modeling and simulation (a form of analysis)]}
+  Quality category: {basis: iso-summary, section: '9.6.18; 9.5.5; 5.2.8', values: [performance, reliability, availability, security, maintainability, portability, usability (quality in use), cost targets], note: 'The set is open: a project may use its own.'}
+  Priority: {basis: iso-summary, section: '5.2.8', values: [high, medium, low], note: 'Or any scale the stakeholders agree.'}
+relationships:
+  note: 'Direction is client to supplier (source to target), as in SysML. 29148 defines no relationship vocabulary; it requires traceability, allocation, derived requirements and verification and validation links in prose. Names and endpoints come from sysml-1 where marked. Multiplicity is not stated by any source, so none is given; the cardinality rules are should rules. Endpoint lists mean every listed source with every listed target; specializations of a concept are allowed.'
+  count: 13
+  items:
+  - {name: derive, display: Requirement is derived from Requirement, source: Requirement, target: Requirement, basis: sysml-skill, section: '5.3.2; 6.4.3.5; SYSML-REQ-012, -013', roles: {source: derived requirement (client), target: parent requirement (supplier)}, note: 'Derived requirements arise during architecture definition and impose design constraints or performance levels on elements.'}
+  - {name: contain, display: Requirement contains Requirement, source: Requirement, target: Requirement, basis: sysml-skill, section: 'SYSML-REQ-005, -008', roles: {source: compound requirement, target: sub-requirement}, note: 'Only requirements nest in a requirement.'}
+  - {name: satisfy, display: Design Element satisfies Requirement, source: DesignElement, target: Requirement, basis: sysml-skill, section: '6.4.3.5; SYSML-REQ-016', roles: {source: satisfying element (client), target: satisfied requirement (supplier)}}
+  - {name: verify, display: Verification Entity verifies Requirement, source: VerificationEntity, target: Requirement, basis: sysml-skill, section: '6.4.3.5; 6.5.2.2; SYSML-REQ-019', roles: {source: verifying entity (client), target: verified requirement (supplier)}}
+  - {name: allocate, display: Requirement is allocated to Design Element, source: Requirement, target: DesignElement, basis: iso-summary, section: '6.5.1.2', roles: {source: allocated requirement, target: receiving element}}
+  - {name: refine, display: Element refines Requirement, source: [Requirement, DesignElement, VerificationEntity, Assumption, TradeStudy], target: Requirement, basis: sysml-skill, section: 'SysML clause 16 (via sysml-1)', note: 'SysML allows any named element at both ends. Narrowed here to the concepts of this language.'}
+  - {name: trace, display: Element traces to Element, source: [Requirement, Need, Stakeholder, SourceDocument, TradeStudy, DesignElement, VerificationEntity], target: [Requirement, Need, Stakeholder, SourceDocument, TradeStudy, DesignElement, VerificationEntity], basis: sysml-skill, section: 'SYSML-REQ-021; 6.3.3.7', note: 'A weak, general link. SysML advises against mixing it with the others (REQ-REL-006).'}
+  - {name: copy, display: Requirement is a copy of Requirement, source: Requirement, target: Requirement, basis: sysml-skill, section: 'SYSML-REQ-009 to -011', roles: {source: slave, target: master}, note: 'The slave text is a read-only copy of the master text.'}
+  - {name: sourced from, display: Requirement is sourced from its origin, source: Requirement, target: [Stakeholder, Need, SourceDocument, TradeStudy, BusinessRule, Requirement], basis: iso-summary, section: '6.3.3.7; 6.4.3.3; 6.4.3.5', note: 'Defined here as the union of the origins the clauses name. No source defines one relationship by this name.'}
+  - {name: constrained by, display: Requirement is constrained by Constraint, source: Requirement, target: Constraint, basis: iso-summary, section: '5.2.4'}
+  - {name: assumes, display: Requirement assumes Assumption, source: Requirement, target: Assumption, basis: iso-summary, section: '5.2.7; 9.5.19'}
+  - {name: specified in, display: Requirement is specified in Requirements Specification, source: Requirement, target: RequirementsSpecification, basis: iso-summary, section: 'clause 7; 9.x'}
+  - {name: held by, display: Need is held by Stakeholder, source: Need, target: Stakeholder, basis: inferred, section: '6.3'}
+  allowed_note: 'The allowed matrix is the endpoint lists above, expanded through specialization. There is no table of allowed pairs in any source. Pairs outside the lists are not defined by the language; REQ-REL rules say which endpoints are errors.'
+diagram_types: none-in-standard
+data_types:
+  coverage: partial
+  section: '5.2.8; 6.5.2.2; 9.6.18'
+  note: 'The sources define no type system: no primitive types, no unit types, no structured types, and no type for any attribute. They do name fixed or suggested value lists for a few attributes, listed here as enumerations. All of it rests on third-party summaries of 29148, not on the standard itself.'
+  types:
+    - {name: Verification method, kind: enumeration, values: [inspection, analysis, demonstration, test], section: '6.5.2.2', note: 'The four standard methods. Certification, a written assurance usually from an independent party, is sometimes used instead; modeling and simulation count as analysis. Closed list in the summaries, apart from certification.'}
+    - {name: Priority, kind: enumeration, values: [high, medium, low], section: '5.2.8', note: 'Or any scale the stakeholders agree on; the summaries say "on a scale". The list is a default, not a closed set.'}
+    - {name: Requirement type, kind: enumeration, values: [functional and performance, interface, process, quality (non-functional), usability and quality in use, human factors], section: '5.2.8', note: 'Modeled in this language as the requirement type concepts. Constraint, policy and regulation, and transition come from other clauses, not from this list.'}
+    - {name: Quality category, kind: enumeration, values: [performance, reliability, availability, security, maintainability, portability, usability (quality in use), cost targets], section: '9.6.18; 9.5.5; 5.2.8', note: 'Assembled from three clauses of the summaries. The set is open: a project may use its own.'}
+  attributes:
+    coverage: some_concepts
+    where: concepts
+    note: 'The attributes of a requirement (5.2.8, 5.2.4, 6.4.3.3) sit on the Requirement entry; every requirement level and type inherits them. No other concept has a defined attribute. The sources give no type for any attribute except where `type` names one of the enumerations above, and no multiplicity.'
+notation:
+  coverage: none
+  note: 'No symbols, shapes, line styles or diagram types are defined: 29148 defines the requirement, its attributes and its information items, presented as specifications and matrices, and the SysML requirement diagram belongs to the SysML skill (sysml-1), not to this language.'
+  not_specified: all
+  see_also: {language: sysml-1, section: 'SYSML-DIAG-013', note: 'The only drawing of requirements among the sources. Described there, not here.'}
+information_items:
+  note: '29148 requires these items to be produced (clause 7). They are specifications, not diagrams; a repository may hold them instead of documents. Each admits the requirement levels shown, by the matching clause.'
+  items:
+  - {name: BusinessRequirementsSpecification, section: '9.3', admits: [BusinessRequirement, Need, Stakeholder]}
+  - {name: StakeholderRequirementsSpecification, section: '9.4', admits: [StakeholderRequirement, Need, Stakeholder, Constraint]}
+  - {name: SystemRequirementsSpecification, section: '9.5', admits: [SystemRequirement, SystemElementRequirement, FunctionalRequirement, PerformanceRequirement, InterfaceRequirement, QualityRequirement, UsabilityRequirement, HumanFactorsRequirement, Constraint, PolicyAndRegulationRequirement, TransitionRequirement, Assumption]}
+  - {name: SoftwareRequirementsSpecification, section: '9.6', admits: [SoftwareRequirement, FunctionalRequirement, PerformanceRequirement, InterfaceRequirement, QualityRequirement, UsabilityRequirement, Constraint, TransitionRequirement, Assumption]}
+  - {name: OperationalConcept, section: 'Annex A', admits: [Stakeholder, Need]}
+views:
+  note: 'Matrices named in 29148 as places to hold trace and verification records. They are views over relationships, not diagrams.'
+  items:
+  - {name: Requirements traceability matrix, abbreviation: RTM, section: '6.5.2.2; 6.5.3.3', shows: 'For each requirement, its trace links (derive, allocate, satisfy, verify, sourced from).'}
+  - {name: Verification cross-reference matrix, abbreviation: VCRM, section: '6.5.2.2', shows: 'For each requirement, its verification method, criteria, lead, event and venue.'}
+  - {name: Requirement diagram, defined_by: sysml-1, section: 'SYSML-DIAG-013', note: 'Described in the SysML skill. Not defined by 29148.'}
+constraints:
+# ---- KIND: classification of requirements
+- {id: REQ-KIND-001, category: KIND, strength: should, checkable: static, basis: iso-summary, section: '5.2.5; clause 7', statement: 'Every requirement has a level: business, stakeholder, system, system element (including software).'}
+- {id: REQ-KIND-002, category: KIND, strength: should, checkable: static, basis: iso-summary, section: '5.2.8', statement: 'Every requirement has a type: functional or performance, interface, process, quality (non-functional), usability or quality in use, or human factors; constraint, policy and regulation, and transition requirements are further types.'}
+- {id: REQ-KIND-003, category: KIND, strength: should, checkable: none, basis: iso-summary, section: '6.4.3.3', statement: 'Necessary implementation constraints are defined and validated with the stakeholders, including those of interfacing and enabling systems and of regulation.'}
+- {id: REQ-KIND-005, category: KIND, strength: should, checkable: static, basis: iso-summary, section: '9.6.18; 9.5.5', statement: 'A quality requirement names its quality category, from the quality category value set or one the project defines.', applies_when: 'quality requirement'}
+- {id: REQ-KIND-009, category: KIND, strength: should, checkable: none, basis: iso-summary, section: '5.2.4', statement: 'A requirement expresses a capability or performance of the system, not of the user or operator.'}
+# ---- ATTR: attributes
+- {id: REQ-ATTR-001, category: ATTR, strength: should, checkable: static, basis: iso-summary, section: '5.2.8; SYSML-REQ-007', statement: 'Every requirement has an identifier, and no two requirements have the same identifier.'}
+- {id: REQ-ATTR-002, category: ATTR, strength: should, checkable: runtime, basis: iso-summary, section: '5.2.8', statement: 'An identifier is never changed or reused, even when the requirement is revised or deleted, so that tracing stays intact.'}
+- {id: REQ-ATTR-003, category: ATTR, strength: should, checkable: static, basis: iso-summary, section: '5.2.4; SYSML-REQ-007', statement: 'Every requirement has a statement (its text).'}
+- {id: REQ-ATTR-004, category: ATTR, strength: should, checkable: static, basis: iso-summary, section: '5.2.8; 6.4.3.3', statement: 'Every requirement has a rationale, pointing to the analysis, trade study, model or simulation behind it.'}
+- {id: REQ-ATTR-005, category: ATTR, strength: should, checkable: static, basis: iso-summary, section: '5.2.8', statement: 'Every requirement has a stakeholder priority.'}
+- {id: REQ-ATTR-007, category: ATTR, strength: should, checkable: static, basis: iso-summary, section: '6.3.3.7; 6.4.3.3', statement: 'The source of every requirement is recorded. Recorded as a link, so this rule is checked by REQ-TRACE-001.'}
+- {id: REQ-ATTR-008, category: ATTR, strength: should, checkable: static, basis: iso-summary, section: '6.4.3.3; 6.5.2.2', statement: 'Every requirement has a verification method, ideally assigned as the requirement is written.'}
+- {id: REQ-ATTR-009, category: ATTR, strength: should, checkable: static, basis: iso-summary, section: '5.2.8', statement: 'Every requirement has a version stating which text is being implemented and how volatile it is.'}
+- {id: REQ-ATTR-010, category: ATTR, strength: should, checkable: static, basis: iso-summary, section: '5.2.8', statement: 'Every requirement has an owner who maintains it, approves its changes and reports its status.'}
+- {id: REQ-ATTR-011, category: ATTR, strength: should, checkable: static, basis: iso-summary, section: '5.2.8', statement: 'Every requirement has a risk value, including risk inherited from its parent and risk from immature technology.'}
+- {id: REQ-ATTR-012, category: ATTR, strength: note, checkable: none, basis: iso-summary, section: '5.2.8', statement: 'A requirement may carry the assumed difficulty of meeting it.'}
+- {id: REQ-ATTR-013, category: ATTR, strength: should, checkable: static, basis: iso-summary, section: '5.2.8', statement: 'Every requirement has a type, used to group requirements for analysis and allocation.'}
+- {id: REQ-ATTR-016, category: ATTR, strength: should, checkable: partial, basis: iso-summary, section: '5.2.8', statement: 'Priority is stated on a scale the stakeholders have agreed, or as high, medium or low.'}
+- {id: REQ-ATTR-017, category: ATTR, strength: should, checkable: none, basis: iso-summary, section: '5.2.4; 5.2.5', statement: 'Conditions, constraints and extra detail are held as attributes of the requirement (for example the rationale), not packed into its statement.'}
+# ---- QUAL: characteristics of one requirement, construct and language
+- {id: REQ-QUAL-001, category: QUAL, strength: should, checkable: none, basis: iso-summary, section: '5.2.5', statement: 'A requirement is necessary: it states an essential capability, characteristic, constraint or quality factor, its removal would leave a gap that nothing else fills, and it is still current. A planned expiry or applicability date is marked.'}
+- {id: REQ-QUAL-002, category: QUAL, strength: should, checkable: none, basis: iso-summary, section: '5.2.5', statement: 'A requirement is appropriate: its detail and intent suit the level of the entity it is stated for, leaving architecture and design free where possible, with extra detail held in attributes such as rationale.'}
+- {id: REQ-QUAL-003, category: QUAL, strength: should, checkable: partial, basis: iso-summary, section: '5.2.5', statement: 'A requirement is unambiguous: it can be read in one way only and is simply stated.'}
+- {id: REQ-QUAL-004, category: QUAL, strength: should, checkable: partial, basis: iso-summary, section: '5.2.5', statement: 'A requirement is complete: it can be understood without further information.'}
+- {id: REQ-QUAL-005, category: QUAL, strength: should, checkable: partial, basis: iso-summary, section: '5.2.5', statement: 'A requirement is singular: it states one capability, characteristic, constraint or quality factor, although several conditions may apply.'}
+- {id: REQ-QUAL-006, category: QUAL, strength: should, checkable: none, basis: iso-summary, section: '5.2.5', statement: 'A requirement is feasible: it can be achieved within cost, schedule and technical limits at acceptable risk.'}
+- {id: REQ-QUAL-007, category: QUAL, strength: should, checkable: partial, basis: iso-summary, section: '5.2.5', statement: 'A requirement is verifiable: its realization can be proven to the customer at the level where it sits, helped by being measurable.'}
+- {id: REQ-QUAL-008, category: QUAL, strength: should, checkable: none, basis: iso-summary, section: '5.2.5', statement: 'A requirement is correct: it is a faithful expression of the need it came from.'}
+- {id: REQ-QUAL-009, category: QUAL, strength: should, checkable: partial, basis: iso-summary, section: '5.2.5', statement: 'A requirement is conforming: it follows the approved template and style where one applies.'}
+- {id: REQ-QUAL-010, category: QUAL, strength: should, checkable: partial, basis: iso-summary, section: '5.2.4', statement: 'A requirement names its subject (for example the system or the software) and states either an action or a constraint on that subject, answering a problem, objective or stakeholder concern.'}
+- {id: REQ-QUAL-011, category: QUAL, strength: should, checkable: partial, basis: iso-summary, section: '5.2.4', statement: 'Where it applies, a requirement carries measurable conditions and is bounded by constraints.'}
+- {id: REQ-QUAL-012, category: QUAL, strength: should, checkable: partial, basis: iso-summary, section: '5.2.4', statement: 'The project agrees the marker words before writing starts: shall for a requirement, will for a fact, futurity or purpose, should for a goal that is not a requirement, may for an allowance.'}
+- {id: REQ-QUAL-013, category: QUAL, strength: should, checkable: partial, basis: iso-summary, section: '5.2.4', statement: 'The words "must" and "shall be able to" are avoided, and so are negative and passive phrasing.'}
+- {id: REQ-QUAL-014, category: QUAL, strength: should, checkable: partial, basis: iso-summary, section: '5.2.4', statement: 'Requirements-engineering terms are defined once and used consistently.'}
+- {id: REQ-QUAL-015, category: QUAL, strength: should, checkable: none, basis: iso-summary, section: '5.2.7', statement: 'A requirement says what the system of interest needs, not how it is achieved; design decisions appear only as they are recognized from higher levels during allocation.'}
+- {id: REQ-QUAL-016, category: QUAL, strength: should, checkable: partial, basis: iso-summary, section: '5.2.7', statement: 'Vague and unbounded wording is avoided: superlatives, subjective language, vague pronouns, ambiguous adverbs and adjectives, open-ended phrases, comparatives, loopholes such as if possible or as applicable, and words implying totality such as all or never.'}
+- {id: REQ-QUAL-017, category: QUAL, strength: should, checkable: partial, basis: iso-summary, section: '5.2.7', statement: 'The logic words "or" and "and/or" are avoided in a requirement; such a requirement is split into separate requirements.'}
+- {id: REQ-QUAL-018, category: QUAL, strength: should, checkable: partial, basis: iso-summary, section: '5.2.7', statement: 'A reference to another document gives its date, version and the applicable part.'}
+- {id: REQ-QUAL-019, category: QUAL, strength: should, checkable: partial, basis: iso-summary, section: '5.2.7; 9.5.19', statement: 'Every assumption behind a requirement is documented and validated, in an attribute such as rationale or in an accompanying document.'}
+- {id: REQ-QUAL-020, category: QUAL, strength: should, checkable: none, basis: iso-summary, section: '5.2.7', statement: 'A definition is written as a declarative statement, not as a requirement.'}
+- {id: REQ-QUAL-021, category: QUAL, strength: note, checkable: none, basis: iso-summary, section: '5.2.5', statement: 'The nine characteristics apply to stakeholder requirements, system requirements and system element requirements alike.'}
+# ---- SET: characteristics of a set of requirements
+- {id: REQ-SET-001, category: SET, strength: should, checkable: partial, basis: iso-summary, section: '5.2.6', statement: 'A requirement set is complete: it stands alone, describing the needed capabilities, characteristics, constraints and quality factors without outside information.'}
+- {id: REQ-SET-002, category: SET, strength: should, checkable: partial, basis: iso-summary, section: '5.2.6', statement: 'A requirement set holds no unresolved open-item markers (to be defined, to be specified, to be resolved); any that remain have a timeframe for settling them, set by risk and dependencies.'}
+- {id: REQ-SET-003, category: SET, strength: note, checkable: none, basis: iso-summary, section: '5.2.6', statement: 'Completeness improves when every relevant requirement type, every life cycle stage and every stakeholder group is covered.'}
+- {id: REQ-SET-004, category: SET, strength: should, checkable: partial, basis: iso-summary, section: '5.2.6', statement: 'A requirement set is consistent: its requirements are unique and do not conflict or overlap.'}
+- {id: REQ-SET-005, category: SET, strength: should, checkable: partial, basis: iso-summary, section: '5.2.6', statement: 'A requirement set uses homogeneous units and measurement systems.'}
+- {id: REQ-SET-006, category: SET, strength: should, checkable: partial, basis: iso-summary, section: '5.2.6', statement: 'Each term in a requirement set keeps one meaning throughout.'}
+- {id: REQ-SET-007, category: SET, strength: should, checkable: none, basis: iso-summary, section: '5.2.6', statement: 'A requirement set is feasible as a whole, which includes being affordable.'}
+- {id: REQ-SET-008, category: SET, strength: should, checkable: none, basis: iso-summary, section: '5.2.6', statement: 'A requirement set is comprehensible: what is expected, and how it relates to the containing system, is clear.'}
+- {id: REQ-SET-009, category: SET, strength: should, checkable: none, basis: iso-summary, section: '5.2.6', statement: 'A requirement set is able to be validated: meeting the set will practically achieve the needs within cost, schedule, technical, legal and regulatory limits.'}
+- {id: REQ-SET-010, category: SET, strength: note, checkable: none, basis: iso-summary, section: '5.2.6', statement: 'The set is checked against these properties so that requirements creep does not later drive cost, schedule or quality.'}
+# ---- TRACE: traceability
+- {id: REQ-TRACE-001, category: TRACE, strength: should, checkable: static, basis: iso-summary, section: '6.2.3.6; 6.3.3.7; 6.4.3.5', statement: 'Every requirement traces to a source (a stakeholder, a need, a source document, a trade study, a business rule or a parent requirement), so that the source can be recovered.'}
+- {id: REQ-TRACE-002, category: TRACE, strength: should, checkable: static, basis: iso-summary, section: '6.4.3.5; 6.5.2.2', statement: 'Every system, system element and software requirement is verified by at least one verification entity.', applies_when: 'system, system element or software requirement'}
+- {id: REQ-TRACE-003, category: TRACE, strength: should, checkable: static, basis: iso-summary, section: '6.5.3.3', statement: 'Every business and stakeholder requirement can be traced to what validates it, showing that the right system was built.', applies_when: 'validation is planned'}
+- {id: REQ-TRACE-004, category: TRACE, strength: should, checkable: static, basis: iso-summary, section: '6.5.1.2; 6.4.3.5', statement: 'Every system requirement is allocated to at least one design element.', applies_when: 'the architecture is defined'}
+- {id: REQ-TRACE-005, category: TRACE, strength: should, checkable: static, basis: iso-summary, section: '6.4.3.5', statement: 'Every system and system element requirement is satisfied by at least one design element.', applies_when: 'a design exists'}
+- {id: REQ-TRACE-006, category: TRACE, strength: should, checkable: static, basis: iso-summary, section: '6.4.3.5; 5.3.2', statement: 'Every requirement below the business level traces upward to at least one parent requirement or the need it came from, so that every lower-level requirement is justified.'}
+- {id: REQ-TRACE-007, category: TRACE, strength: should, checkable: static, basis: iso-summary, section: '6.4.3.5', statement: 'Every stakeholder requirement is met by at least one lower-level requirement or design element, so that the coverage of stakeholder requirements can be shown.', applies_when: 'lower levels exist'}
+- {id: REQ-TRACE-008, category: TRACE, strength: should, checkable: static, basis: iso-summary, section: '6.5.1.2', statement: 'An interface requirement is traceable to both sides of the interface it governs.', applies_when: 'interface requirement'}
+- {id: REQ-TRACE-009, category: TRACE, strength: should, checkable: partial, basis: iso-summary, section: '6.4.3.5', statement: 'A requirement that came from a trade study or design study traces to that study, and the study traces to the higher-level requirements that informed it.', applies_when: 'requirement from a study'}
+- {id: REQ-TRACE-010, category: TRACE, strength: should, checkable: runtime, basis: iso-summary, section: '6.3.3.7; 6.4.3.5; 6.6.2.2.3', statement: 'Trace links, rationale, decisions, assumptions and change history are kept under configuration control as the requirements change.'}
+- {id: REQ-TRACE-011, category: TRACE, strength: should, checkable: runtime, basis: iso-summary, section: '6.5.1.2', statement: 'The verification and validation criteria for an element are written down when its derived requirements are created.'}
+- {id: REQ-TRACE-012, category: TRACE, strength: note, checkable: none, basis: iso-summary, section: '6.4.3.5', statement: 'Traceability is bidirectional and supports coverage analysis, compliance analysis and impact analysis.'}
+# ---- REL: endpoints of the relationships
+- {id: REQ-REL-001, category: REL, strength: must, checkable: static, basis: sysml-skill, section: 'SYSML-REQ-012; SYSML-REQ-013', statement: 'Both ends of a derive relationship are requirements.'}
+- {id: REQ-REL-002, category: REL, strength: must, checkable: static, basis: sysml-skill, section: 'SYSML-REQ-016', statement: 'The target of a satisfy relationship is a requirement.'}
+- {id: REQ-REL-003, category: REL, strength: must, checkable: static, basis: sysml-skill, section: 'SYSML-REQ-019', statement: 'The target of a verify relationship is a requirement.'}
+- {id: REQ-REL-004, category: REL, strength: must, checkable: static, basis: sysml-skill, section: 'SYSML-REQ-009', statement: 'Both ends of a copy relationship are requirements.'}
+- {id: REQ-REL-005, category: REL, strength: must, checkable: static, basis: sysml-skill, section: 'SYSML-REQ-005', statement: 'Only requirements are contained in a requirement.'}
+- {id: REQ-REL-006, category: REL, strength: should, checkable: partial, basis: sysml-skill, section: 'SYSML-REQ-021', statement: 'The trace relationship has weak meaning and is not mixed with the other requirement relationships.'}
+- {id: REQ-REL-007, category: REL, strength: note, checkable: none, basis: sysml-skill, section: 'SYSML-REQ-010; SYSML-REQ-011', statement: 'The text of a copy is a read-only copy of its master text, and the rule applies to all sub-requirements.'}
+- {id: REQ-REL-008, category: REL, strength: should, checkable: static, basis: inferred, section: '5.3.2; SYSML-REQ-012', statement: 'A requirement is not derived from itself, directly or through other derived requirements.'}
+- {id: REQ-REL-009, category: REL, strength: should, checkable: static, basis: inferred, section: '5.3.2', statement: 'A requirement is derived from a requirement at the same or a higher level (business, then stakeholder, then system, then system element), not from a lower one.'}
+- {id: REQ-REL-010, category: REL, strength: should, checkable: static, basis: iso-summary, section: '6.5.1.2', statement: 'The source of an allocate relationship is a requirement and its target is a design element.'}
+- {id: REQ-REL-012, category: REL, strength: note, checkable: none, basis: sysml-skill, section: 'SYSML-REQ-001 to -006', statement: 'In SysML a requirement is a leaf of its own kind: it owns no operations or attributes, takes part in no association or generalization, and types nothing. That is a rule of the SysML profile, not of this language.'}
+# ---- VERIF: verification
+- {id: REQ-VERIF-001, category: VERIF, strength: should, checkable: static, basis: iso-summary, section: '6.5.2.2', statement: 'An appropriate verification method, with its criteria, is selected for every verification action, ideally as each requirement is written.'}
+- {id: REQ-VERIF-002, category: VERIF, strength: should, checkable: static, basis: iso-summary, section: '6.5.2.2', statement: 'A verification method is one of inspection, analysis, demonstration or test; certification is sometimes used instead.'}
+- {id: REQ-VERIF-003, category: VERIF, strength: should, checkable: partial, basis: iso-summary, section: '6.5.2.2', statement: 'Each verification method states how compliance will be shown, the success criteria and how the item is closed, who leads, when it happens (an event-based milestone rather than a calendar date), and where.'}
+- {id: REQ-VERIF-004, category: VERIF, strength: should, checkable: none, basis: iso-summary, section: '6.5.2.2', statement: 'Analysis by similarity is used only when the items match in design, manufacture and use, the earlier verification was equal or stricter, and the intended environment is no harsher.', applies_when: 'analysis by similarity'}
+- {id: REQ-VERIF-005, category: VERIF, strength: should, checkable: partial, basis: iso-summary, section: '6.5.2.2', statement: 'Verification methods and results are recorded in a requirements traceability matrix, a verification cross-reference matrix, or verification statements in a verification plan.'}
+- {id: REQ-VERIF-006, category: VERIF, strength: note, checkable: none, basis: iso-summary, section: '6.5.2.2', statement: 'Inspection examines against named documents or drawings; analysis includes modeling and simulation and names its tools and input data; demonstration is a qualitative showing of function; test is quantitative verification under controlled real or simulated conditions.'}
+# ---- SPEC: information items
+- {id: REQ-SPEC-001, category: SPEC, strength: should, checkable: none, basis: iso-summary, section: 'clause 7', statement: 'Requirements engineering produces a business requirements specification, a stakeholder requirements specification, a system requirements specification and, under ISO/IEC/IEEE 12207, a software requirements specification, each with the content clause 9 defines.'}
+- {id: REQ-SPEC-002, category: SPEC, strength: note, checkable: none, basis: iso-summary, section: 'clause 7', statement: 'Several instances of each specification may exist (for example a system requirements specification per system element); they may carry other titles or sit inside other information items if their content can be clearly referenced. Physical documents are not required if the content is readily reachable and logically organized.'}
+- {id: REQ-SPEC-003, category: SPEC, strength: should, checkable: partial, basis: iso-summary, section: '9.2', statement: 'A specification kept in document form has identification, front matter, definitions, references and spelled-out acronyms.'}
+- {id: REQ-SPEC-004, category: SPEC, strength: should, checkable: partial, basis: iso-summary, section: '9.6.10', statement: 'The requirements in a system or software requirements specification show all the characteristics of a requirement (REQ-QUAL-001 to -009) and are detailed enough to design, build and verify the current increment.'}
+- {id: REQ-SPEC-005, category: SPEC, strength: should, checkable: partial, basis: iso-summary, section: '9.5.18; 9.6.19', statement: 'A system or software requirements specification states how the system or software will be qualified, giving the verification approach and method alongside each requirement area.'}
+- {id: REQ-SPEC-006, category: SPEC, strength: should, checkable: partial, basis: iso-summary, section: '9.5.19', statement: 'A system requirements specification records each assumption and dependency behind its requirements.'}
+- {id: REQ-SPEC-007, category: SPEC, strength: note, checkable: none, basis: iso-summary, section: '9.4; 9.5.15', statement: 'A stakeholder requirements specification states expectations with acceptance criteria and no implementation detail; a system requirements specification turns relevant policies, business practices and outside regulation into requirements.'}
+- {id: REQ-SPEC-008, category: SPEC, strength: should, checkable: runtime, basis: iso-summary, section: '6.4.3.5; 6.6.2.2.3', statement: 'The specifications are placed under configuration control and provided as baselined items.'}
+# ---- GUID: guidance
+- {id: REQ-GUID-001, category: GUID, strength: note, checkable: none, basis: iso-summary, section: 'clause 4', statement: 'A claim of conformance may cover the processes, the information items, or both. No body certifies against the standard.'}
+- {id: REQ-GUID-002, category: GUID, strength: should, checkable: none, basis: iso-summary, section: '5.3.2', statement: 'Critical requirements, those with high risk or affecting public safety, the environment or health, are analyzed more rigorously than others.'}
+- {id: REQ-GUID-003, category: GUID, strength: note, checkable: none, basis: iso-summary, section: '5.3.2', statement: 'Requirements are written recursively: derived requirements arise during architecture definition, and iteration back into requirements is expected because requirements are never perfect.'}
+- {id: REQ-GUID-004, category: GUID, strength: should, checkable: none, basis: iso-summary, section: '6.3.3.6', statement: 'The whole body of stakeholder requirements is analyzed against the characteristics of one requirement and of a set, then ranked and classified, and fed back to the stakeholders to confirm their needs are captured before resources are committed.'}
+- {id: REQ-GUID-005, category: GUID, strength: note, checkable: none, basis: iso-summary, section: '6.4.3.5', statement: 'Requirements are configuration controlled, with rationale, decisions, assumptions, change history and categorization recorded.'}
+conventions: {provenance: {status: not-applicable, note: 'The sources define no drawing rules for requirements. The requirement diagram of SysML is described in the sysml-1 skill.'}}
+notes: 'The constraint ids are REQ-<CAT>-nnn; the categories are listed in references/rules.md. Strength policy: must is an error, should a warning, note advice only. 29148 was read only through third-party summaries, so every 29148 rule is graded should; the only must rules are SysML formal endpoint constraints. Tool-specific encodings belong in the tool''s own file, not here.'
+layout:
+  basis: "Our conventions, not this standard's.  Sizes and spacing come from the shared layout standard."
+  element_types:                # the sources define no symbol, so every concept is a box
+    Requirement: box
+    BusinessRequirement: box
+    StakeholderRequirement: box
+    SystemRequirement: box
+    SystemElementRequirement: box
+    SoftwareRequirement: box
+    FunctionalRequirement: box
+    PerformanceRequirement: box
+    InterfaceRequirement: box
+    ProcessRequirement: box
+    QualityRequirement: box
+    UsabilityRequirement: box
+    HumanFactorsRequirement: box
+    Constraint: box
+    PolicyAndRegulationRequirement: box
+    TransitionRequirement: box
+    Stakeholder: box
+    Need: box
+    BusinessRule: box
+    Assumption: box
+    SourceDocument: box
+    TradeStudy: box
+    DesignElement: box
+    VerificationEntity: box
+    RequirementsSpecification: box
+    BusinessRequirementsSpecification: box
+    StakeholderRequirementsSpecification: box
+    SystemRequirementsSpecification: box
+    SoftwareRequirementsSpecification: box
+    OperationalConcept: box
+  exceptions: {}
+  diagram_types: {}              # the sources define none; the shared defaults apply
+  no_element_type:               # concepts that take no size class, each group with its reason
+    drawn_as_line:
+      reason: "A relationship joins two elements as a line.  The sources define no drawing for it, and a line has no symbol to size."
+      concepts: [derive, contain, satisfy, verify, allocate, refine, trace, copy, "sourced from", "constrained by", assumes, "specified in", "held by"]
