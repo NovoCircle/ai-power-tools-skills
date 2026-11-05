@@ -34,7 +34,7 @@ The YAML has two top-level keys:
 | `meta:` | Human-readable header: language, version, sources, severity legend |
 | `rules:` | List of rule objects, one per conformance constraint |
 
-The ArchiMate 3.1 ruleset (`ruleset-archimate31/archimate31_rules.yaml`) is the canonical
+The ArchiMate 3.1 ruleset (`rulesets/archimate-3/archimate-3_rules.yaml`, which replaces `ruleset-archimate31`) is the canonical
 reference implementation. Read it before starting a new language.
 
 ---
@@ -163,7 +163,7 @@ your first rule.
   technology NAMESPACE off (`ArchiMate3::...`), but do not strip a prefix that is
   part of the stereotype's own name: EA's built-in ArchiMate MDG stores
   `ArchiMate_Assignment`, so the selector is
-  `connector_stereotype: ArchiMate_Assignment` and `Assignment` matches nothing,
+  `connector_stereotypes: [ArchiMate_Assignment]` and `Assignment` matches nothing,
   while EA's BPMN2.0 MDG stores a bare `BusinessProcess`. Per-technology
   measurement, never a guess -- see `references/rule-grammar.md`.
 
@@ -292,4 +292,4 @@ it; always cite sources.
   reference, and worked examples
 - `ea-validation` — YAML syntax reference and how to run the validator
 - `ea-mdg-author` — Authoring the MDG Technology XML that defines the stereotypes you're validating
-- ArchiMate 3.1 reference implementation: `ruleset-archimate31/archimate31_rules.yaml`
+- ArchiMate 3.1 reference implementation: `rulesets/archimate-3/archimate-3_rules.yaml`
