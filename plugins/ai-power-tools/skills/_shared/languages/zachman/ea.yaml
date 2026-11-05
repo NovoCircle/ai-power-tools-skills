@@ -1627,6 +1627,7 @@ harvest:
 # EA's names for this language's layout. tools/gen_conventions.py reads layout_map.
 layout_map:
   technology: ZF Interface
+  technology_reason: EA's Zachman technology registers this diagram type under its ZF Interface profile.
   display_name: Zachman Framework (framework grid)
   extends: UML
   stereotype_prefix: ''
