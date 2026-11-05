@@ -169,7 +169,7 @@ relationship is right: the table includes derivations the standard says may be w
 
 ## 10. Checking a model: what the ruleset needs from EA
 
-The ruleset is `rulesets/archimate-3/archimate-3_rules.yaml`. This ruleset needs server 3.6.5 or later. On 3.6.4 and earlier its rules report nothing, with no error, so a clean result there means nothing.
+The ruleset is `rulesets/archimate-3/archimate-3_rules.yaml`. 2 of 4 rules in this ruleset use formats newer than 3.6.4, and on that server they report nothing or don't run as written. Use server 3.6.5 or later, because a clean result on 3.6.4 doesn't mean the model passes.
 
 - Rule selectors use the stored name (`ArchiMate_Serving`), never the standard's name and never the qualified name.
 - A relationship rule needs both ends to carry an ArchiMate stereotype. An element created without one (a plain UML class)

@@ -56,7 +56,7 @@ skill's markdown for the program's file name, plus the programs that import it.
 | prog:_shared/tools/semantic_model.py | U | 10 tests (test_semantic_model.py) | ea-power-bi | complete |
 | prog:_shared/tools/tmdl.py | U | 56 tests (test_tmdl.py) | ea-power-bi | complete |
 | prog:ea-diagram-advisor/tools/advise.py | U | 45 tests (test_advise.py) | ea-diagram-advisor | complete |
-| prog:ea-diagram-composition/tools/bindings.py | U | 217 tests (test_bindings.py) | ea-diagram-composition | complete |
+| prog:ea-diagram-composition/tools/bindings.py | U | 232 tests (test_bindings.py) | ea-diagram-composition | complete |
 | prog:ea-diagram-composition/tools/compose.py | U | 195 tests (test_compose.py) | ea-diagram-composition | complete |
 | prog:ea-diagram-composition/tools/compose_chevron.py | U | 36 tests (test_compose_chevron.py) | ea-diagram-composition (via bindings.py, compose.py) | complete |
 | prog:ea-diagram-composition/tools/compose_matrix.py | U | 47 tests (test_compose_matrix.py) | ea-diagram-composition (via bindings.py, compose.py) | complete |
@@ -75,7 +75,7 @@ Required: U, a test module whose module-level `COVERS` names the asset. Tests th
 |---|---|---|---|
 | asset:plugins/ai-power-tools-languages/skills/_languages/layout-standard.yaml | U | present (19 tests, test_languages.py) | complete |
 | asset:plugins/ai-power-tools/rulesets/* | U | present (19 tests, test_languages.py) | complete |
-| asset:plugins/ai-power-tools/skills/_shared/languages/* | U | present (133 tests, test_bindings_frameworks.py, test_bindings_real_model.py, test_bindings_strategy.py, test_gen_conventions.py) | complete |
+| asset:plugins/ai-power-tools/skills/_shared/languages/* | U | present (139 tests, test_bindings_frameworks.py, test_bindings_real_model.py, test_bindings_strategy.py, test_gen_conventions.py) | complete |
 | asset:ruleset-archimate31/archimate31_rules.yaml | U | present (12 tests, test_ruleset_archimate31.py) | complete |
 
 ## Deployment surfaces
@@ -141,7 +141,7 @@ method of a test class is written `Class.test_name`.
   - `tools/test_languages.py::test_a_missing_reference_fails`
   - `tools/test_languages.py::test_implements_is_read_however_a_ruleset_groups_its_rules`
   - `tools/test_languages.py::test_an_implements_that_names_no_rule_fails_and_so_does_none`
-- `asset:plugins/ai-power-tools/skills/_shared/languages/*` U (133)
+- `asset:plugins/ai-power-tools/skills/_shared/languages/*` U (139)
   - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_frameworks.py::test_each_framework_binding_loads_and_is_found_by_its_declared_id`
   - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_frameworks.py::test_each_framework_binding_declares_a_measured_empty_prefix`
   - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_frameworks.py::test_each_framework_binding_is_built_on_uml_and_states_the_standards_gaps`
@@ -275,6 +275,12 @@ method of a test class is written `Class.test_name`.
   - `tools/test_gen_conventions.py::test_a_uml_base_not_drawn_as_a_box_needs_a_line`
   - `tools/test_gen_conventions.py::test_a_full_ea_yaml_must_agree_with_its_map`
   - `tools/test_gen_conventions.py::test_the_helpers_work_with_the_shelf_removed`
+  - `tools/test_gen_conventions.py::test_a_token_in_a_map_reaches_the_generated_file_and_the_resolver`
+  - `tools/test_gen_conventions.py::test_two_maps_claiming_one_token_fail_the_check`
+  - `tools/test_gen_conventions.py::test_a_stated_token_that_collides_with_a_map_with_no_token_fails_the_check`
+  - `tools/test_gen_conventions.py::test_a_map_states_a_token_whole_and_on_a_name_that_holds_the_separator`
+  - `tools/test_gen_conventions.py::test_a_stated_token_must_be_one_ea_yaml_lists`
+  - `tools/test_gen_conventions.py::test_a_map_may_use_the_id_the_api_reports`
 - `asset:ruleset-archimate31/archimate31_rules.yaml` U (12)
   - `ruleset-archimate31/tools/test_ruleset_archimate31.py::test_ruleset_matches_more_than_zero_archimate_elements`
   - `ruleset-archimate31/tools/test_ruleset_archimate31.py::test_ruleset_matches_more_than_zero_connectors`
@@ -686,7 +692,7 @@ method of a test class is written `Class.test_name`.
   - `plugins/ai-power-tools/skills/ea-diagram-advisor/tools/test_advise.py::test_a_binding_that_does_not_answer_producibility_is_not_read_as_silence`
   - `plugins/ai-power-tools/skills/ea-diagram-advisor/tools/test_advise.py::test_a_dominant_language_option_also_says_it_cannot_be_generated`
   - `plugins/ai-power-tools/skills/ea-diagram-advisor/tools/test_advise.py::test_the_advisor_holds_no_grammar_name_of_its_own`
-- `prog:ea-diagram-composition/tools/bindings.py` U (217)
+- `prog:ea-diagram-composition/tools/bindings.py` U (232)
   - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings.py::test_minimal_document_loads`
   - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings.py::test_a_diagram_type_translates_to_a_layout_spec`
   - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings.py::test_spec_overrides_win_over_the_binding`
@@ -904,6 +910,21 @@ method of a test class is written `Class.test_name`.
   - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings.py::test_a_plain_uml_diagram_resolves_through_diagram_type_not_mdgdgm`
   - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings.py::test_the_uml_base_types_are_the_diagram_type_ea_records`
   - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings.py::test_the_uml_binding_ships_no_local_path`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings.py::test_a_group_token_resolves_with_the_id_ea_reports`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings.py::test_each_language_claims_its_own_extended_token`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings.py::test_a_token_that_does_not_start_with_the_reported_id_resolves`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings.py::test_a_binding_for_an_id_the_repository_lacks_is_never_used_even_on_a_token`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings.py::test_a_full_token_wins_over_a_technology_match`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings.py::test_a_diagram_type_with_a_token_answers_only_to_that_token`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings.py::test_a_token_left_out_of_its_family_is_unbound_not_missing`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings.py::test_two_files_claiming_one_token_fail`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings.py::test_a_stated_token_collides_with_an_unstated_one`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings.py::test_bindings_handed_over_that_share_a_token_are_ambiguous`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings.py::test_one_file_may_not_claim_a_token_twice`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings.py::test_a_token_must_be_whole`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings.py::test_a_name_holding_the_separator_must_state_its_token`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings.py::test_a_map_with_one_technology_needs_no_token`
+  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings.py::test_no_two_shipped_files_claim_one_token`
 - `prog:ea-diagram-composition/tools/compose.py` U (195)
   - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_compose.py::test_overlap_helper_detects_a_real_overlap`
   - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_compose.py::test_overlap_helper_is_written_for_eas_inverted_y`

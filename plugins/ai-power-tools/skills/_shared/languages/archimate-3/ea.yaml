@@ -6437,6 +6437,8 @@ layout_map:
     EA's ArchiMate3 MDG declares five diagram types, all based on Logical. There is no Strategy diagram type: strategy concepts (Capability, Resource, CourseOfAction, ValueStream) are stereotypes drawn on a Business diagram.
 
     FILL IS NOT MERELY CLAIMED HERE, IT IS SOMETIMES UNAVAILABLE. Measured on EA 17.1 build 1716: Node and Grouping ignore a per-diagram fill outright. The write succeeds, the property reads back, and EA draws the element in its own colors -- Node's shape script paints the faces of a 3D box, and a Grouping is a dashed container ArchiMate gives no fill. Seven other concepts tested (ApplicationComponent, Device, SystemSoftware, Equipment, Facility, BusinessService, Artifact) honor it. Nine concepts is a sample, not a sweep, so the answer is a note here rather than data a consumer could trust; the full sweep and a per-concept schema field are filed separately. If you need a color-coded technology layer, reach for Device or SystemSoftware rather than Node, or use a free channel.
+
+    `ArchiMate3` is the id EA reports, measured on EA 17.1 build 1716.
   diagram_types:
     Business:
       guide: Business Layer
