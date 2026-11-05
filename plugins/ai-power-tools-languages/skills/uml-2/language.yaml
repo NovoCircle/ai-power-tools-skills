@@ -7488,6 +7488,8 @@ layout:
             and which state. This is what makes the arrangement type-fixed.'
           size: Width is duration. A timeline drawn wider covers a longer span, so resizing one restates
             the measurement.
+          line_style: 'Normative in UML: dashed against solid separates a reply or create message from
+            a call.'
         free:
         - fill
         - border
