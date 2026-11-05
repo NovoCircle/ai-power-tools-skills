@@ -554,7 +554,8 @@ def test_each_layout_block_and_map_passes_its_checks(name, language, ea):
 
 def test_the_fixture_holds_thirty_two_rows_all_of_them_generated():
     assert len(RECORDED) == 32
-    generated = {f"{doc['technology']}::{dt}" for doc in map(_doc, GENERATED) for dt in doc["diagram_types"]}
+    generated = {gen._token_of(doc["technology"], dt, entry) for doc in map(_doc, GENERATED)
+                 for dt, entry in doc["diagram_types"].items()}
     assert set(RECORDED) <= generated
 
 

@@ -3,26 +3,25 @@
 # shelf. EA's names come from `layout_map` in this folder's ea.yaml. To change a value,
 # change the source and run `python tools/gen_conventions.py`.
 
-technology: TOGAF Diagrams
+technology: TOGAF
 display_name: TOGAF 9 (TOGAF Diagrams MDG)
 extends: UML
 stereotype_prefix: ''
 notes: |
-  WHY `radial` FOR TOGAF_Interface, MEASURED RATHER THAN RECOGNIZED. The ADM wheel is the one arrangement in this technology that a composed grammar describes, and the geometry says so without being asked. Taking the `ADM_RequirementsManagement` element as the center: it is the largest element on the diagram, 146x147 against the 114x116 of the rest: eight of the nine remaining elements sit on a ring of radius 207.5 to 221.6 (median 215.4) at bearings of 90, 44, 0.1, -43.2, -90, -136.4, 178.6 and 133.4 degrees: eight spokes at 45-degree intervals over a full 360. The ninth, `ADM_Preliminary`, sits on the same bearing as `ADM_ArchitectureVision` at radius 381.5: outside the cycle, which is where TOGAF draws the preliminary phase: and is what `compose_radial`'s node-carrying-items form expresses as an outer ring of one. None of this is EA's layout: a hub, a ring and a bearing per phase are coordinates a caller computes, and `radial` is built.
+  `radial` for TOGAF_Interface. The ADM wheel is a hub with eight phases at equal steps around it, and the preliminary phase sits outside the ring. The steps are equal, so `radial` fits and `radial-tree`, which weights its branches, has nothing to weigh.
 
-  `radial`, NOT `radial-tree`, and the measurement decides that too. The weighted variant exists because `radial` splits its sweep evenly and a branch of eight children then gets the arc of a branch of one. Here an even split is exactly right: the eight phases are eight equal steps of 45 degrees, measured, and the one element outside the ring is a single outer node rather than a subtree with a weight. A weighted sweep would have nothing to weigh.
+  Radius, start angle and sweep aren't stated, because only one diagram shows them.
 
-  WHAT IS NOT STATED, AND THE OMISSION THAT WILL SURPRISE A READER. `radius` is a layout spec key and this diagram type's ring radius is NOT recorded, though it was measured. Eight spokes is below the ten-observation threshold, and all eight come from the single TOGAF_Interface diagram in the model, so one diagram would be supplying 100% of the population: refused twice over. `start_angle` and `sweep` are refused on the same population for the same reasons, though the measured ring starts at 90 degrees and sweeps 360. The engine's own default radius of 220 happens to sit just above the measured range; that is a coincidence a reader should know about and not a reason to write a figure down. State all three the day a second ADM diagram exists.
+  Route. `straight` is our default. The connectors on this diagram route differently from those on a plain Logical diagram, and which route name that is hasn't been confirmed, so this value may change.
 
-  ROUTING IS CONVENTIONAL, AND HERE THE MEASUREMENT SAYS THE CONVENTION IS WRONG WITHOUT BEING ABLE TO NAME A REPLACEMENT. All 17 connectors on the TOGAF_Interface diagram are Dependencies and all 17 carry `Mode=8` in `t_diagramlinks.Style`: unanimous, and NOT the `Mode=3` that 346 of 347 connectors on plain `Logical` diagrams carry. So this diagram type demonstrably routes differently from the canvas it is drawn on. Nothing in this skill maps EA's `Mode=` integer to one of the ten route names the schema validates against: that mapping lives in the server's `_ROUTE_STYLES`: so the name cannot be resolved here. The corpus row for this diagram records curved arcs around the ring, which points at `Bezier`; that is an inference and it is deliberately NOT promoted to data. `Direct` is stated because `routing.default` is mandatory and it is this library's convention. Confirming the `Mode=` mapping would settle it in one step, and would probably change this value.
+  Not bound, for want of enough elements to support a default size: TOGAF_EnterpriseContinuum, TOGAF_ADM, TOGAF_ACM, TOGAF_OrganizationStructure and IEEE1471_ConceptualFramework.
 
-  NOT BOUND, BELOW THRESHOLD (b): TOGAF_EnterpriseContinuum. The nearest miss in this file and the one to revisit first. Its tile size is 110x128 in 8 of 8 elements, unanimous, on the one of its nine diagrams that is not empty: one observation short of the ten the rules require, which is exactly the case the UML binding refuses for a 45x90 actor at n=9. `sizing.default` is mandatory, so a diagram type with no supportable default cannot be keyed at all. It would be `graph` when it is bound: 8 elements, zero nested, 14 Dependencies all at `Mode=3`, and the corpus row records a 2x4 grid of nodes joined by paired labeled arrows: a graph whose arrows are the content rather than a grid whose cells are.
+  No viewpoints. TOGAF publishes a catalog of them, but nothing here records which concepts each one accepts, so none is listed.
 
-  NOT BOUND, BELOW THRESHOLD (b): TOGAF_ADM, TOGAF_ACM, TOGAF_OrganizationStructure and IEEE1471_ConceptualFramework. None has a figure that clears the threshold and none is a design question; they need data. TOGAF_ADM has 10 diagrams and 7 stereotyped elements between them, 4 of the 10 empty, and every concept on it is n=1: the tool reports no unique modal size at all. TOGAF_ACM is one diagram of 6 `ModelView` frames, n=6. TOGAF_OrganizationStructure is one diagram of 3 `OrganizationUnit` boxes. IEEE1471_ConceptualFramework is one diagram of 2 elements, a Stakeholder and a Concern. All four would be `graph` on the evidence available: zero containment anywhere among them, and what content there is sits as boxes joined by dependencies: but a grammar is not enough to key a diagram type when the mandatory slots have nothing to put in them.
-
-  NO VIEWPOINT CATALOG, THOUGH TOGAF PUBLISHES ONE. TOGAF's deliverables and viewpoints are a real published catalog and this binding does not record it, because a `Viewpoint` carries an `admits` list of the concepts it accepts and nothing in the reference model establishes those lists. Inventing them would put a fabricated catalog behind view selection, which would then recommend TOGAF views on evidence nobody gathered. The block is absent rather than guessed; it is a documentation exercise against the TOGAF specification, not a measurement.
+  `TOGAF` is the id EA reports, measured on EA 17.1 build 1716.
 diagram_types:
   TOGAF_Interface:
+    token: TOGAF Diagrams::TOGAF_Interface
     base: Logical
     stereotype_prefix: ADM_
     grammar: radial
