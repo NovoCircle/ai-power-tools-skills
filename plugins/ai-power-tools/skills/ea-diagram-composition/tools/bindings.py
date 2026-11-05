@@ -90,6 +90,19 @@ child has already spoken, and inheriting a parent's `graph` over a child's
 `own_sizing` and `own_spacing` keep what the document itself said, so a test
 that pins a measurement reads the measurement rather than the inheritance.
 
+ONE FILE, ONE ID EA REPORTS, ANY NUMBER OF TOKENS
+-------------------------------------------------
+`technology` is the id EA reports, the one `IsTechnologyLoaded` answers to. What a
+diagram stores after `MDGDgm=` is a TOKEN, and its first part is often not that id:
+UPDM reports `UPDM2` and stores `UPDM2_OV::OV-2`, RAAML reports `RAAML1.0` and stores
+`RAAML::RAAML`, Requirements reports `EAExtended:Requirements` and stores
+`Extended::Requirements`. So a diagram type may state its full `token`, and one with
+no `token` is `<technology>::<name>`, which is every map whose token starts with the
+id. The resolver reads the token whole, so no file has to claim a group id as a
+technology, and several languages can each claim their own `Extended::` tokens. One
+token belongs to one file, and `DuplicateToken` refuses anything else, for the reason
+`DuplicateTechnology` gives.
+
 `stereotype_prefix` IS PER TECHNOLOGY *AND* PER DIAGRAM TYPE
 ------------------------------------------------------------
 One slot per technology was wrong, measured, for two shipped technologies, and
@@ -287,8 +300,10 @@ __all__ = [
     "find_binding",
     "available_bindings",
     "DuplicateTechnology",
+    "DuplicateToken",
     "declared_technologies",
     "binding_conflicts",
+    "token_conflicts",
     "mdg_diagram_key",
     "bindings_for_technologies",
     "resolve_diagram",
@@ -330,6 +345,16 @@ class DuplicateTechnology(BindingError):
 
     The message names the id and EVERY file that claims it, sorted, so the outcome
     does not depend on the order the filesystem enumerates them.
+    """
+
+
+class DuplicateToken(BindingError):
+    """Two binding files in one directory claim the same `MDGDgm` token.
+
+    The same mistake as `DuplicateTechnology` one level down, and refused for the same
+    reason: a diagram stating that token would take whichever file a reader met first.
+    A diagram type with no `token` claims `<technology>::<name>`, so a stated token can
+    collide with an unstated one.
     """
 
 
@@ -583,7 +608,7 @@ _TOP_LEVEL_KEYS = frozenset({
 })
 _DIAGRAM_TYPE_KEYS = frozenset({
     "grammar", "title", "sizing", "spacing", "routing", "channels", "notes",
-    "base", "stereotype_prefix",
+    "base", "stereotype_prefix", "token",
 })
 _VIEWPOINT_KEYS = frozenset({
     "diagram_type", "intent", "admits", "grammar", "notes",
@@ -1036,7 +1061,7 @@ class DiagramTypeBinding:
     docstring for the two shipped technologies that forced the second scope.
     """
 
-    __slots__ = ("technology", "name", "base", "grammar", "title", "sizing",
+    __slots__ = ("technology", "name", "token", "base", "grammar", "title", "sizing",
                  "spacing", "routing", "channels", "notes",
                  "own_sizing", "own_spacing", "substrate",
                  "own_stereotype_prefix", "stereotype_prefix")
@@ -1055,7 +1080,7 @@ class DiagramTypeBinding:
         self.stereotype_prefix = (technology_prefix
                                   if self.own_stereotype_prefix is None
                                   else self.own_stereotype_prefix)
-        for slot in ("base", "grammar", "title", "notes"):
+        for slot in ("token", "base", "grammar", "title", "notes"):
             setattr(self, slot, data.get(slot, ""))
         self.sizing = dict(data["sizing"])
         self.spacing = dict(data["spacing"])
@@ -1073,8 +1098,8 @@ class DiagramTypeBinding:
 
     @property
     def mdg_diagram_type(self) -> str:
-        """The `MDGDgm=` value EA writes for this diagram type."""
-        return f"{self.technology}::{self.name}"
+        """The `MDGDgm=` value EA writes for this diagram type: its token."""
+        return self.token or f"{self.technology}::{self.name}"
 
     @property
     def grammar_placement(self) -> str:
@@ -1470,7 +1495,7 @@ class Binding:
     """One technology's diagram conventions."""
 
     __slots__ = ("technology", "display_name", "extends", "stereotype_prefix",
-                 "notes", "source", "diagram_types", "viewpoints",
+                 "notes", "source", "diagram_types", "tokens", "viewpoints",
                  "presentation_profiles")
 
     def __init__(self, data: Mapping[str, Any], source: str = "<memory>"):
@@ -1498,6 +1523,9 @@ class Binding:
                 raise BindingError(
                     _no_resolved_default(source, self.extends, bound))
             self.diagram_types[name] = bound
+        #: `{token EA stores: diagram type}`. Every diagram type has exactly one.
+        self.tokens = {bound.mdg_diagram_type: bound
+                       for bound in self.diagram_types.values()}
         self.viewpoints = {
             name: Viewpoint(self.technology, name, body)
             for name, body in (data.get("viewpoints") or {}).items()
@@ -1576,17 +1604,14 @@ class Binding:
         return _strip_prefix(self.prefix_for(diagram_type), stereotype)
 
     def diagram_type_for_mdgdgm(self, mdgdgm: str) -> DiagramTypeBinding | None:
-        """Resolve an `MDGDgm=<Tech>::<DiagramType>` value against this binding.
+        """Resolve a whole `MDGDgm=` value against this binding's tokens.
 
-        Returns None when the value names another technology, so a caller can
-        try the next binding. Note that only about half of real diagrams carry
-        `MDGDgm` at all - the rest identify themselves through `Diagram_Type` -
-        so resolution needs a second path, which is `APT-2026-0147`.
+        Returns None when no diagram type here claims it, so a caller can try the
+        next binding. Note that only about half of real diagrams carry `MDGDgm` at
+        all - the rest identify themselves through `Diagram_Type` - so resolution
+        needs a second path, which is `APT-2026-0147`.
         """
-        technology, _, diagram_type = str(mdgdgm).partition("::")
-        if technology != self.technology:
-            return None
-        return self.diagram_types.get(diagram_type)
+        return self.tokens.get(str(mdgdgm))
 
     def viewpoints_admitting(self, concepts: Sequence[str]) -> list[Viewpoint]:
         """Viewpoints that admit every concept given, best coverage first.
@@ -1847,6 +1872,10 @@ def _validate_diagram_type(name: str, block: Any, where: str) -> dict:
         raise BindingError(f"{where}.routing: required")
     if "channels" not in body:
         raise BindingError(f"{where}.channels: required")
+    if "::" in name and not body.get("token"):
+        raise BindingError(
+            f"{where}: the name holds '::', so state it as `token`. Without one the "
+            f"token would be <technology>::{name}, which no diagram stores.")
 
     out = {
         "grammar": grammar,
@@ -1862,10 +1891,23 @@ def _validate_diagram_type(name: str, block: Any, where: str) -> dict:
     for optional in ("base", "notes"):
         if body.get(optional):
             out[optional] = _text(body[optional], f"{where}.{optional}")
+    if "token" in body:
+        out["token"] = _validate_token(body["token"], f"{where}.token")
     # Recorded only when stated, so that a declared `""` overrides a prefixed
     # technology instead of reading as silence. See `_validate_prefix`.
     out.update(_validate_prefix(body, where))
     return out
+
+
+def _validate_token(value: Any, where: str) -> str:
+    """A full `MDGDgm` value, as EA stores it: `<part>::<part>` and nothing else."""
+    token = _text(value, where)
+    first, _, rest = token.partition("::")
+    if not first.strip() or not rest.strip() or ";" in token or "=" in token:
+        raise BindingError(
+            f"{where}: {token!r} is not a whole token. State what EA stores after "
+            f"`MDGDgm=`, such as `Extended::Requirements`.")
+    return token
 
 
 def _validate_viewpoint(name: str, block: Any, where: str,
@@ -1934,6 +1976,13 @@ def _validate_profile(name: str, block: Any, where: str) -> dict:
     return out
 
 
+def _token_of(technology: str, name: str, body: Any) -> str:
+    """The token a diagram type claims: its own, or `<technology>::<name>`."""
+    stated = body.get("token") if isinstance(body, Mapping) else None
+    return stated if isinstance(stated, str) and stated.strip() else (
+        f"{technology}::{name}")
+
+
 def _validate(doc: Any, source: str) -> dict:
     data = _mapping(doc, source)
     _reject_unknown(data, _TOP_LEVEL_KEYS, source,
@@ -1962,6 +2011,14 @@ def _validate(doc: Any, source: str) -> dict:
             for name, body in raw_types.items()
         },
     }
+    claimed: dict[str, str] = {}
+    for name, body in out["diagram_types"].items():
+        token = _token_of(technology, name, body)
+        if token in claimed:
+            raise BindingError(
+                f"{source}.diagram_types: {claimed[token]!r} and {name!r} both claim "
+                f"the token {token!r}")
+        claimed[token] = name
     if out["extends"] is not None:
         out["extends"] = _text(out["extends"], f"{source}.extends")
         if out["extends"] == technology:
@@ -2227,19 +2284,23 @@ def declared_technologies(directory: str | Path | None = None
     `directory` and sorted, so the answer does not depend on the order the filesystem
     enumerates them.
     """
-    directory = _bindings_dir(directory)
-    if not directory.is_dir():
-        return {}
     claims: dict[str, list[str]] = {}
+    for file, doc in _parsed_documents(_bindings_dir(directory)):
+        claims.setdefault(doc["technology"], []).append(file)
+    return {tech: tuple(sorted(files)) for tech, files in sorted(claims.items())}
+
+
+def _parsed_documents(directory: Path) -> Iterable[tuple[str, Mapping[str, Any]]]:
+    """`(file, document)` for each file that parses and names a technology."""
+    if not directory.is_dir():
+        return
     for path in _binding_files(directory):
         try:
             doc = _parse(path.read_text(encoding="utf-8"), path.name)
         except (BindingError, OSError):
             continue
         if isinstance(doc, Mapping) and isinstance(doc.get("technology"), str):
-            claims.setdefault(doc["technology"], []).append(
-                _relative_name(path, directory))
-    return {tech: tuple(sorted(files)) for tech, files in sorted(claims.items())}
+            yield _relative_name(path, directory), doc
 
 
 def binding_conflicts(directory: str | Path | None = None
@@ -2254,9 +2315,40 @@ def binding_conflicts(directory: str | Path | None = None
             if len(files) > 1}
 
 
+def token_conflicts(directory: str | Path | None = None
+                    ) -> dict[str, tuple[str, ...]]:
+    """`{token: filenames}` for `MDGDgm` tokens claimed by MORE than one file.
+
+    Empty when the directory is unambiguous, and it never raises, like
+    `binding_conflicts`. Identity only, so a file that doesn't validate still claims
+    what it states.
+    """
+    claims: dict[str, set[str]] = {}
+    for file, doc in _parsed_documents(_bindings_dir(directory)):
+        diagram_types = doc.get("diagram_types")
+        if isinstance(diagram_types, Mapping):
+            for name, body in diagram_types.items():
+                claims.setdefault(_token_of(doc["technology"], name, body),
+                                  set()).add(file)
+    return {token: tuple(sorted(files)) for token, files in sorted(claims.items())
+            if len(files) > 1}
+
+
 def _require_unique_technologies(directory: Path) -> None:
-    """Raise `DuplicateTechnology` when any id in `directory` is claimed twice."""
+    """Refuse a directory where an id or a token is claimed twice.
+
+    Raises `DuplicateTechnology` or `DuplicateToken`.
+    """
     conflicts = binding_conflicts(directory)
+    tokens = token_conflicts(directory)
+    if tokens and not conflicts:
+        detail = "; ".join(f"{token!r} is claimed by " + ", ".join(files)
+                           for token, files in tokens.items())
+        raise DuplicateToken(
+            f"duplicate diagram token in {directory}: {detail}. Each token must be "
+            "claimed by exactly one binding file, because a diagram stating it would "
+            "otherwise take whichever file a reader met first. Nothing in this "
+            "directory can be resolved until it is fixed.")
     if not conflicts:
         return
     detail = "; ".join(f"{tech!r} is declared by " + ", ".join(files)
@@ -2390,8 +2482,8 @@ MDG_SEPARATOR = "::"
 # the two cannot drift: a path with no confidence, and a confidence attached to
 # no path, are both unrepresentable.
 #
-#   `qualified`      the diagram itself states `<Tech>::<DiagramType>`. The
-#                    technology wrote that value; nothing is inferred.
+#   `qualified`      the diagram itself states a token, and a binding claims it.
+#                    The technology wrote that value; nothing is inferred.
 #   `diagram-type`   `Diagram_Type` matched the NAME of a diagram type exactly
 #                    one installed binding declares. An inference, and a sound
 #                    one, but the diagram did not say so itself.
@@ -2476,7 +2568,9 @@ class Resolution:
 
     @property
     def key(self) -> str:
-        """The `<Tech>::<DiagramType>` this resolved to, or `""`."""
+        """The token this resolved to, or what was stated if unresolved, or `""`."""
+        if self.diagram_type is not None:
+            return self.diagram_type.mdg_diagram_type
         if self.technology and self.diagram_type_name:
             return f"{self.technology}{MDG_SEPARATOR}{self.diagram_type_name}"
         return ""
@@ -2613,7 +2707,13 @@ def _bound_summary(ids: frozenset[str], catalog: Mapping[str, Binding]) -> str:
 def _resolve_qualified(key: str, ids: frozenset[str],
                        catalog: Mapping[str, Binding],
                        declared: Mapping[str, frozenset[str]]) -> Resolution:
-    """The diagram stated `<Tech>::<DiagramType>` itself. Final either way.
+    """The diagram stated its whole token itself. Final either way.
+
+    THE WHOLE TOKEN IS READ FIRST, in every installed binding, because its first part
+    need not be an id EA reports. Only a token nobody claims gets read as
+    `<Tech>::<DiagramType>`, to say which kind of nothing it is. A first part some
+    binding claims other tokens under is that binding's family, so a diagram naming one
+    it left out is unbound, not `not-installed`.
 
     There is no fall-through to the `Diagram_Type` path on a miss, and that is
     a decision rather than an omission. A diagram stating a type we have no
@@ -2626,7 +2726,25 @@ def _resolve_qualified(key: str, ids: frozenset[str],
     """
     technology, _, name = key.partition(MDG_SEPARATOR)
     technology, name = technology.strip(), name.strip()
-    if technology not in ids:
+    key = f"{technology}{MDG_SEPARATOR}{name}"
+    claims = {binding.technology: (binding, binding.tokens[key])
+              for binding in catalog.values() if key in binding.tokens}
+    if len(claims) > 1:
+        return _decide(claims, "qualified", key, "is a token")
+    if claims:
+        binding, bound = next(iter(claims.values()))
+        return Resolution(
+            "qualified", technology=binding.technology, diagram_type_name=bound.name,
+            binding=binding, diagram_type=bound,
+            reason=(f"the diagram states {key!r} and the binding for "
+                    f"{binding.technology!r} binds that diagram type."
+                    + _inherited_default_note(binding, bound)))
+
+    family = f"{technology}{MDG_SEPARATOR}"
+    owners = {binding.technology: binding for binding in catalog.values()
+              if binding.technology == technology
+              or any(token.startswith(family) for token in binding.tokens)}
+    if technology not in ids and not owners:
         return Resolution(
             "not-installed", technology=technology, diagram_type_name=name,
             reason=(
@@ -2636,8 +2754,7 @@ def _resolve_qualified(key: str, ids: frozenset[str],
                 f"rather than against the notation's name - an id carries its "
                 f"own version and is not guessable, and a lookup on a guessed "
                 f"one resolves to nothing without complaining."))
-    binding = catalog.get(technology)
-    if binding is None:
+    if not owners:
         misspelled = (technology in declared
                       and name not in declared[technology])
         return Resolution(
@@ -2650,23 +2767,15 @@ def _resolve_qualified(key: str, ids: frozenset[str],
                     f"named {name!r} either, so the stated value is misspelled "
                     f"as well as unbound."
                     if misspelled else _bound_summary(ids, catalog))))
-    bound = binding.diagram_types.get(name)
-    if bound is None:
-        return Resolution(
-            "unbound", technology=technology, diagram_type_name=name,
-            reason=(
-                f"the binding for {technology!r} does not bind the diagram "
-                f"type {name!r} that the diagram states. Bound: "
-                f"{', '.join(sorted(binding.diagram_types))}. A binding may "
-                f"leave a declared diagram type out on purpose, and where it "
-                f"does, falling back to the engine's defaults is the intended "
-                f"outcome rather than a gap."))
     return Resolution(
-        "qualified", technology=technology, diagram_type_name=bound.name,
-        binding=binding, diagram_type=bound,
-        reason=(f"the diagram states {key!r} and the binding for "
-                f"{technology!r} binds that diagram type."
-                + _inherited_default_note(binding, bound)))
+        "unbound", technology=technology, diagram_type_name=name,
+        reason=(
+            f"the binding for {' and '.join(repr(t) for t in sorted(owners))} does "
+            f"not bind the diagram type {name!r} that the diagram states. Bound: "
+            f"{', '.join(sorted(n for b in owners.values() for n in b.diagram_types))}. "
+            f"A binding may leave a declared diagram type out on purpose, and "
+            f"where it does, falling back to the engine's defaults is the intended "
+            f"outcome rather than a gap."))
 
 
 def _inherited_default_note(binding: Binding,
@@ -2769,8 +2878,8 @@ def resolve_diagram(installed: Any, *, style_ex: str = "",
 
     The chain, in order, each step reporting its own confidence:
 
-      1. `MDGDgm=<Tech>::<DiagramType>` from `StyleEx`, where that technology is
-         installed and bound. Exact, and final whether or not it resolves.
+      1. The `MDGDgm=` token from `StyleEx`, where an installed binding claims it.
+         Exact, and final whether or not it resolves.
       2. `Diagram_Type` matching the name of exactly one bound diagram type.
       3. `Diagram_Type` matching the EA base type of exactly one bound diagram
          type. Weak.
