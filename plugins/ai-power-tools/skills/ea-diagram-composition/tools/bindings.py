@@ -10,6 +10,16 @@ So they live in data - one YAML binding per technology - and this module is the
 loader. It validates a binding, resolves `extends`, and translates a diagram
 type's conventions into the `spec` dict `compose.py` already takes.
 
+WHERE THE NUMBERS COME FROM
+---------------------------
+Every size and gap in a shipped binding comes from the layout standard on the
+language shelf (`_languages/layout-standard.yaml`). `tools/gen_conventions.py`
+translates it into `_shared/languages/<id>/conventions.yaml`, which is what this
+module reads. Those files are generated and nobody edits them. What only EA
+understands - technology ids, base diagram types, prefixes, route names - comes
+from `layout_map` in the language's `ea.yaml`. The measurements that used to live
+in these files are evidence now, kept privately.
+
 THE LAYER BOUNDARY
 ------------------
 `compose.py` contains no technology name and must not import this module. The
@@ -31,10 +41,10 @@ binding can only name a key the engine really has, spelled the way the engine
 spells it, so the translation to a spec is the identity and cannot drift. A
 binding that says `pitch:` is rejected with the key it probably meant.
 
-MEASURED, NOT ASSUMED
----------------------
-The numbers in the shipped bindings were measured from real diagrams rather
-than estimated, and the measurements corrected the sketch more than once:
+MEASURED, NOT ASSUMED: EA'S NAMES
+---------------------------------
+EA's own names can't be guessed, and measuring them corrected the sketch more
+than once:
 
   * BPMN's technology id is `BPMN2.0`, not `BPMN2`, and its diagram type is
     `Business Process` - with a space. A binding keyed on a guessed id resolves
@@ -46,9 +56,6 @@ than estimated, and the measurements corrected the sketch more than once:
     way the notation's own specification names them, and the prefix is applied
     to get what EA stores. And it is data at TWO scopes, because measurement
     found technologies where one value cannot be true - see below.
-  * ArchiMate diagrams are spaced more generously horizontally than
-    vertically; BPMN flows are tighter than either. Both were measured from
-    element rects, not eyeballed.
 
 THE BASE NOTATION IS THE ROOT OF THE TREE
 -----------------------------------------
@@ -200,6 +207,7 @@ parser rather than by a check here.
 """
 from __future__ import annotations
 
+import functools
 import math
 import sys
 import unicodedata
@@ -213,6 +221,10 @@ if str(_HERE) not in sys.path:
 
 import compose as _engine  # noqa: E402
 from compose import DEFAULT_SPEC  # noqa: E402
+from compose_chevron import DEFAULT_CHEVRON_SPEC  # noqa: E402
+from compose_matrix import DEFAULT_MATRIX_SPEC  # noqa: E402
+from compose_radial_tree import DEFAULT_TREE_SPEC  # noqa: E402
+from compose_treemap import DEFAULT_TREEMAP_SPEC  # noqa: E402
 
 # The clearance a label needs from its border, taken from the rule that judges
 # it rather than restated here. Prevention and detection have to agree on one
@@ -324,12 +336,13 @@ class DuplicateTechnology(BindingError):
 # ---------------------------------------------------------------------------
 # Closed vocabularies
 # ---------------------------------------------------------------------------
-# The grammars, and WHO PLACES THE GEOMETRY of a diagram that has one. Eight
+# The grammars, and WHO PLACES THE GEOMETRY of a diagram that has one. Twelve
 # names in three placements, and the placement is what decides what a consumer
 # may do with a binding that names one.
 #
-# SIX COMPOSED LAYOUTS - `layered-bands`, `lanes`, `nested-grid`, `radial`,
-# `two-column-cycle`, `computed-geometry` - are arrangements this library
+# TEN COMPOSED LAYOUTS - `layered-bands`, `lanes`, `nested-grid`, `radial`,
+# `two-column-cycle`, `computed-geometry`, `matrix`, `radial-tree`,
+# `chevron-stack`, `treemap` - are arrangements this library
 # computes coordinates for. `two-column-cycle` was the last row of the corpus
 # audit still waiting on engine code: a cycle drawn as two columns, flow down one
 # and back up the other. It is its own grammar rather than a radial variant
@@ -552,6 +565,17 @@ _PROFILE_KEYS = frozenset({
 _COMPARTMENT_VALUES = ("all", "none")
 
 _SPEC_KEYS = frozenset(DEFAULT_SPEC)
+
+# The composers that keep their own spec refuse a key they don't have, because
+# accepting one in silence would be a sizing that has no effect. A generated
+# binding states every gap the standard has, so `spec()` hands each of these only
+# the gaps it reads.
+_NARROW_SPEC_KEYS: dict[str, frozenset[str]] = {
+    "matrix": frozenset(DEFAULT_MATRIX_SPEC),
+    "radial-tree": frozenset(DEFAULT_TREE_SPEC),
+    "chevron-stack": frozenset(DEFAULT_CHEVRON_SPEC),
+    "treemap": frozenset(DEFAULT_TREEMAP_SPEC),
+}
 
 _TOP_LEVEL_KEYS = frozenset({
     "technology", "extends", "stereotype_prefix", "display_name", "notes",
@@ -1244,7 +1268,8 @@ class DiagramTypeBinding:
         """Build a `compose.py` spec from this diagram type's conventions.
 
         `sizing.default` becomes `item_width`/`item_height`; `spacing` is
-        copied across verbatim, because its keys are the engine's own. Caller
+        copied across verbatim, because its keys are the engine's own, except that a
+        composer with its own narrower spec gets only the keys it reads. Caller
         overrides win, so a caller can widen one diagram without editing the
         binding - but an override naming a key the engine does not have is
         refused here rather than by the engine, where the message would not
@@ -1296,7 +1321,9 @@ class DiagramTypeBinding:
         """
         width, height = self.size_for()
         spec: dict[str, Any] = {"item_width": width, "item_height": height}
-        spec.update(self.spacing)
+        narrow = _NARROW_SPEC_KEYS.get(self.grammar)
+        spec.update({key: value for key, value in self.spacing.items()
+                     if narrow is None or key in narrow})
         for key, value in (overrides or {}).items():
             if key not in _SPEC_KEYS:
                 raise BindingError(
@@ -1979,12 +2006,25 @@ def _yaml():
 def _parse(text: str, source: str) -> Any:
     yaml = _yaml()
     try:
-        # safe_load, always. It is why a binding cannot carry executable
-        # content: `!!python/object` is refused by the parser, not by a check
-        # here that someone could forget to run.
-        return yaml.safe_load(text)
+        return _safe_load(text)
     except yaml.YAMLError as exc:
         raise BindingError(f"{source}: not valid YAML: {exc}") from None
+
+
+@functools.lru_cache(maxsize=64)
+def _safe_load(text: str) -> Any:
+    """Parse YAML text, once per distinct text.
+
+    safe_load, always. It is why a binding cannot carry executable content:
+    `!!python/object` is refused by the parser, not by a check here that someone
+    could forget to run.
+
+    CACHED ON THE TEXT because one lookup reads the whole catalog, to refuse a
+    duplicate id before it answers, and the generated files state every value. A
+    changed file is different text, so it can't be served stale. Callers read the
+    result and never change it: `_validate` builds its own dicts.
+    """
+    return _yaml().safe_load(text)
 
 
 def load_binding_text(text: str, source: str = "<memory>") -> Binding:
@@ -1996,11 +2036,14 @@ def load_binding(path: str | Path, _seen: frozenset[str] = frozenset()
                  ) -> Binding:
     """Load, validate and resolve a binding file.
 
-    `extends` is resolved against the same directory and names the notation
-    underneath this one, whose diagram types become the substrate each of this
-    binding's own diagram types is measured against - see `_merge`. Child
-    statements win throughout; only what a child leaves unstated is inherited. A
-    cycle is refused by name rather than by recursion depth.
+    `extends` is resolved against the catalog this file belongs to and names the
+    notation underneath this one, whose diagram types become the substrate each of
+    this binding's own diagram types is drawn on - see `_merge`. Child statements win
+    throughout; only what a child leaves unstated is inherited. A cycle is refused by
+    name rather than by recursion depth.
+
+    A generated file's `source` names its language folder (`bpmn-2/conventions.yaml`),
+    because every one of them has the same file name.
     """
     path = Path(path)
     try:
@@ -2008,7 +2051,8 @@ def load_binding(path: str | Path, _seen: frozenset[str] = frozenset()
     except OSError as exc:
         raise BindingError(f"cannot read binding {path}: {exc}") from None
 
-    source = path.name
+    catalog = _catalog_root(path)
+    source = _relative_name(path, catalog)
     data = _validate(_parse(text, source), source)
     parent_id = data.get("extends")
     if parent_id:
@@ -2016,11 +2060,11 @@ def load_binding(path: str | Path, _seen: frozenset[str] = frozenset()
             chain = ", ".join(sorted(_seen | {data["technology"]}))
             raise BindingError(
                 f"{source}.extends: cycle through {chain}")
-        parent_path = _binding_path(parent_id, path.parent)
+        parent_path = _binding_path(parent_id, catalog)
         if parent_path is None:
             raise BindingError(
                 f"{source}.extends: no binding for technology {parent_id!r} "
-                f"in {path.parent}")
+                f"in {catalog}")
         parent = load_binding(parent_path,
                               _seen=_seen | {data["technology"]})
         data = _merge(parent, data)
@@ -2121,7 +2165,42 @@ def _unwrap(value: Any) -> Any:
 def _bindings_dir(directory: str | Path | None = None) -> Path:
     if directory is not None:
         return Path(directory)
-    return _HERE.parent / "bindings"
+    return _HERE.parent.parent / "_shared" / "languages"
+
+
+#: The one file a language folder contributes to the catalog.
+CONVENTIONS_FILE = "conventions.yaml"
+
+#: A sibling of the language folders that is the generator's input, not a binding.
+_TRANSLATION_FILE = "ea-translation.yaml"
+
+
+def _binding_files(directory: Path) -> list[Path]:
+    """Every file in `directory` that can hold a binding, in a stable order.
+
+    `directory/*.yaml` plus `directory/*/conventions.yaml`, AND NOTHING ELSE IN A
+    LANGUAGE FOLDER. An `ea.yaml` can hold a `technology:` equal to a binding's id,
+    so a wider glob would report that id as claimed twice and raise
+    `DuplicateTechnology` for a catalog with nothing wrong with it.
+    """
+    return sorted([*(path for path in directory.glob("*.yaml")
+                     if path.name != _TRANSLATION_FILE),
+                   *directory.glob(f"*/{CONVENTIONS_FILE}")],
+                  key=lambda path: path.relative_to(directory).as_posix())
+
+
+def _catalog_root(path: Path) -> Path:
+    """The directory `extends` resolves from for the binding at `path`.
+
+    A generated file sits one level below the catalog, in its language's folder;
+    a flat file sits in the catalog itself.
+    """
+    return path.parent.parent if path.name == CONVENTIONS_FILE else path.parent
+
+
+def _relative_name(path: Path, directory: Path) -> str:
+    """How a binding file is named to a caller: its path below the catalog."""
+    return path.relative_to(directory).as_posix()
 
 
 def _slug(technology: str) -> str:
@@ -2139,25 +2218,27 @@ def _slug(technology: str) -> str:
 
 def declared_technologies(directory: str | Path | None = None
                           ) -> dict[str, tuple[str, ...]]:
-    """`{technology id: filenames that declare it}`, every id claimed in `directory`.
+    """`{technology id: files that declare it}`, every id claimed in `directory`.
 
     IDENTITY ONLY. Each file is parsed and its `technology` key read; nothing is
     validated. That is deliberate: this is the one view of the directory that every
     reader can agree on, and it has to answer "who claims this id" for a file that
-    does not load as well as for one that does. Filenames are sorted, so the answer
-    does not depend on the order the filesystem enumerates them.
+    does not load as well as for one that does. Files are named relative to
+    `directory` and sorted, so the answer does not depend on the order the filesystem
+    enumerates them.
     """
     directory = _bindings_dir(directory)
     if not directory.is_dir():
         return {}
     claims: dict[str, list[str]] = {}
-    for path in sorted(directory.glob("*.yaml")):
+    for path in _binding_files(directory):
         try:
             doc = _parse(path.read_text(encoding="utf-8"), path.name)
         except (BindingError, OSError):
             continue
         if isinstance(doc, Mapping) and isinstance(doc.get("technology"), str):
-            claims.setdefault(doc["technology"], []).append(path.name)
+            claims.setdefault(doc["technology"], []).append(
+                _relative_name(path, directory))
     return {tech: tuple(sorted(files)) for tech, files in sorted(claims.items())}
 
 
@@ -2198,7 +2279,7 @@ def _binding_path(technology: str, directory: Path) -> Path | None:
         return candidate
     # Fall back to reading each binding's declared id, which is authoritative -
     # a file named anything at all still binds the technology it says it does.
-    for path in sorted(directory.glob("*.yaml")):
+    for path in _binding_files(directory):
         try:
             doc = _parse(path.read_text(encoding="utf-8"), path.name)
         except (BindingError, OSError):
@@ -2231,7 +2312,7 @@ def find_binding(technology: str,
 
 
 def available_bindings(directory: str | Path | None = None) -> dict[str, str]:
-    """`{technology id: filename}` for every valid binding on hand.
+    """`{technology id: file}` for every valid binding on hand, named below `directory`.
 
     Invalid bindings are omitted rather than raising, so one bad file does not
     make the whole catalog unreadable; load it directly to see why.
@@ -2248,12 +2329,12 @@ def available_bindings(directory: str | Path | None = None) -> dict[str, str]:
         return {}
     _require_unique_technologies(directory)
     out = {}
-    for path in sorted(directory.glob("*.yaml")):
+    for path in _binding_files(directory):
         try:
             binding = load_binding(path)
         except BindingError:
             continue
-        out[binding.technology] = path.name
+        out[binding.technology] = _relative_name(path, directory)
     return out
 
 

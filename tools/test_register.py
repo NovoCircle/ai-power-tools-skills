@@ -48,7 +48,8 @@ def test_the_register_finds_the_units_it_should():
     # An enumeration that finds nothing would make every check below pass vacuously.
     assert len(_by_kind("skill")) >= 24, [u.id for u in _by_kind("skill")]
     assert len(_by_kind("prog")) >= 18, [u.id for u in _by_kind("prog")]
-    assert len(_by_kind("asset")) >= 12, [u.id for u in _by_kind("asset")]
+    assert "asset:plugins/ai-power-tools/skills/_shared/languages/*" in {u.id for u in _by_kind("asset")}
+    assert len(_by_kind("asset")) >= 4, [u.id for u in _by_kind("asset")]
     assert {u.id for u in _by_kind("srf")} == {"srf:plugin", "srf:languages-plugin"}
 
 
