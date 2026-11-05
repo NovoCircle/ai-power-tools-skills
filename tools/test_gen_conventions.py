@@ -707,3 +707,93 @@ assert hasattr(lint, "LABEL_MARGIN") and hasattr(advise, "__file__")
 """
     done = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, cwd=tmp_path)
     assert done.returncode == 0, done.stderr
+
+
+# ---------------------------------------------------------------------------
+# A map declares each diagram token it serves
+# ---------------------------------------------------------------------------
+def _plant_map(tree: Path, folder: str, technology: str, entries: dict) -> None:
+    path = tree / gen.EA_REL / folder / "ea.yaml"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(yaml.safe_dump({"language": folder, "layout_map": {
+        "technology": technology, "extends": "UML", "stereotype_prefix": "",
+        "diagram_types": entries}}), encoding="utf-8")
+
+
+def _write_generated(tree: Path) -> None:
+    for path, text in gen.expected_files(tree).items():
+        path.write_bytes(text.encode("utf-8"))
+
+
+def test_a_token_in_a_map_reaches_the_generated_file_and_the_resolver(tree):
+    """The whole road: `layout_map`, then `conventions.yaml`, then the standard's sizes."""
+    _plant_map(tree, "updm-2", "UPDM2", {"OV-2": {"token": "UPDM2_OV::OV-2", "base": "Logical"}})
+    _plant_map(tree, "requirements", "EAExtended:Requirements",
+               {"Requirements": {"token": "Extended::Requirements", "base": "Custom"}})
+    _plant_map(tree, "business-modeling", "EAExtended",
+               {"Business Modeling": {"token": "Extended::Business Modeling", "base": "Logical"}})
+    _write_generated(tree)
+
+    directory = tree / gen.EA_REL
+    assert bindings.token_conflicts(directory) == {}
+    box = _standard()["element_types"]["box"]
+    installed = {"UML", "UPDM2", "EAExtended", "EAExtended:Requirements"}
+    for token, folder, name in (
+            ("UPDM2_OV::OV-2", "updm-2", "OV-2"),
+            ("Extended::Requirements", "requirements", "Requirements"),
+            ("Extended::Business Modeling", "business-modeling", "Business Modeling")):
+        assert _doc(directory / folder / gen.GENERATED_NAME)["diagram_types"][name]["token"] == token
+        resolution = bindings.resolve_diagram(installed, style_ex=f"MDGDgm={token};",
+                                              directory=directory)
+        assert resolution.path == "qualified", token
+        assert resolution.binding.source == f"{folder}/{gen.GENERATED_NAME}"
+        assert resolution.diagram_type.size_for() == (box["w"], box["h"])
+        assert resolution.diagram_type.spec()["item_width"] == box["w"]
+
+
+def test_two_maps_claiming_one_token_fail_the_check(tree):
+    for folder in ("one", "two"):
+        _plant_map(tree, folder, folder.title(), {"View": {"token": "Extended::Requirements"}})
+    with pytest.raises(gen.GenerationError, match=r"'Extended::Requirements' is claimed by one, two"):
+        gen.expected_files(tree)
+    with pytest.raises(gen.GenerationError, match="more than one claim"):
+        gen.stale_files(tree)
+    assert gen.main(["--check", "--root", str(tree)]) == 2
+
+
+def test_a_stated_token_that_collides_with_a_map_with_no_token_fails_the_check(tree):
+    _plant_map(tree, "one", "One", {"View": {"token": "BPMN2.0::Business Process"}})
+    with pytest.raises(gen.GenerationError, match="bpmn-2, one"):
+        gen.expected_files(tree)
+
+
+def test_a_map_states_a_token_whole_and_on_a_name_that_holds_the_separator():
+    ea = {"language": "wba", "layout_map": {"technology": "WBA", "diagram_types": {
+        "WBA_A::View": {},
+        "Other": {"token": "NoSeparator"},
+        "Fine": {"token": "WBA_A::Fine"},
+    }}}
+    problems = "\n".join(gen.map_problems(ea, None, _standard(), {}))
+    assert "`WBA_A::View` holds `::`" in problems
+    assert "`Other` has token 'NoSeparator'" in problems
+    assert "Fine" not in problems
+
+
+def test_a_stated_token_must_be_one_ea_yaml_lists():
+    ea = {"language": "wba", "technology": "WBA",
+          "diagram_types": {"View": {"token": "WBA_A::View"}},
+          "layout_map": {"technology": "WBA", "diagram_types": {
+              "View": {"token": "WBA_A::View"},
+              "Guess": {"token": "WBA_A::Guess"},
+              "Read": {"token": "WBA_B::Read", "token_reason": "Read from a sample model."},
+          }}}
+    problems = gen.map_problems(ea, None, _standard(), {})
+    assert problems == ["wba layout_map: `WBA_A::Guess` is not in ea.yaml's `diagram_types`"]
+
+
+def test_a_map_may_use_the_id_the_api_reports():
+    ea = {"language": "wba", "technology": "WBA", "api_technology_id": "WBA1.0",
+          "layout_map": {"technology": "WBA1.0"}}
+    assert gen.map_problems(ea, None, _standard(), {}) == []
+    ea["api_technology_id"] = "WBA2.0"
+    assert any("differs" in p for p in gen.map_problems(ea, None, _standard(), {}))

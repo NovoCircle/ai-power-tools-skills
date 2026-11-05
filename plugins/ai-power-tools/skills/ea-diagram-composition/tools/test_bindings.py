@@ -80,6 +80,8 @@ from bindings import (  # noqa: E402
     mdg_diagram_key,
     producible_grammars,
     resolve_diagram,
+    token_conflicts,
+    DuplicateToken,
     width_to_fit,
 )
 from lint import LABEL_MARGIN  # noqa: E402
@@ -4200,3 +4202,178 @@ def test_the_uml_base_types_are_the_diagram_type_ea_records():
 def test_the_uml_binding_ships_no_local_path():
     assert not re.search(r"[A-Za-z]:\\", _UML_TEXT)
     assert "\\Users\\" not in _UML_TEXT and "/Users/" not in _UML_TEXT
+
+
+# ---------------------------------------------------------------------------
+# One file, one id EA reports, any number of tokens
+# ---------------------------------------------------------------------------
+def _with_tokens(technology: str, tokens: dict[str, str]) -> str:
+    """A binding document whose diagram types each state the token given, if any."""
+    body = "\n".join(
+        f"""  "{name}":
+    {f'token: "{token}"' if token else 'notes: no token'}
+    base: Logical
+    grammar: graph
+    title: frame-header
+    sizing:
+      default: {{w: 100, h: 60}}
+    routing:
+      default: Direct
+    channels:
+      fill: ~""" for name, token in tokens.items())
+    return f'technology: "{technology}"\ndiagram_types:\n{body}\n'
+
+
+def _plant(directory: Path, folder: str, technology: str, tokens: dict[str, str]) -> None:
+    path = directory / folder / "conventions.yaml"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(_with_tokens(technology, tokens), encoding="utf-8")
+
+
+def test_a_group_token_resolves_with_the_id_ea_reports(tmp_path):
+    """UPDM reports `UPDM2` and stores `UPDM2_OV::OV-2`, which names no technology."""
+    _plant(tmp_path, "updm-2", "UPDM2", {"OV-2": "UPDM2_OV::OV-2", "SV-1": "UPDM2_SV/SvcV::SV-1"})
+    _plant(tmp_path, "uml-2", "UML", {"Logical": ""})
+    resolution = resolve_diagram({"UPDM2", "UML"}, style_ex="MDGDgm=UPDM2_OV::OV-2;",
+                                 directory=tmp_path)
+    assert (resolution.path, resolution.confidence) == ("qualified", "exact")
+    assert resolution.binding.source == "updm-2/conventions.yaml"
+    assert resolution.technology == "UPDM2"
+    assert resolution.diagram_type.name == "OV-2"
+    assert resolution.diagram_type.mdg_diagram_type == "UPDM2_OV::OV-2"
+    assert resolution.key == "UPDM2_OV::OV-2"
+    assert resolution.binding.diagram_type_for_mdgdgm("UPDM2_SV/SvcV::SV-1").name == "SV-1"
+    # The group id is not installed, and it isn't a stated technology either.
+    assert resolution.binding.diagram_type_for_mdgdgm("UPDM2::OV-2") is None
+
+
+def test_each_language_claims_its_own_extended_token(tmp_path):
+    """`Extended` is no technology. Two files share its tokens with no conflict."""
+    _plant(tmp_path, "requirements", "EAExtended:Requirements",
+           {"Requirements": "Extended::Requirements"})
+    _plant(tmp_path, "business-modeling", "EAExtended",
+           {"Business Modeling": "Extended::Business Modeling"})
+    assert token_conflicts(tmp_path) == {}
+    installed = {"EAExtended", "EAExtended:Requirements"}
+    assert set(available_bindings(tmp_path)) == installed
+    for token, file in (("Extended::Requirements", "requirements/conventions.yaml"),
+                        ("Extended::Business Modeling", "business-modeling/conventions.yaml")):
+        resolution = resolve_diagram(installed, style_ex=f"MDGDgm={token};", directory=tmp_path)
+        assert resolution.path == "qualified", token
+        assert resolution.binding.source == file
+        assert resolution.key == token
+
+
+@pytest.mark.parametrize("reported,technology,name,token", [
+    ("RAAML1.0", "RAAML1.0", "RAAML", "RAAML::RAAML"),
+    ("UAF", "UAF", "UPDM Framework", "UAFP_Framework::UPDM Framework"),
+], ids=["raaml", "uaf"])
+def test_a_token_that_does_not_start_with_the_reported_id_resolves(tmp_path, reported, technology,
+                                                                   name, token):
+    _plant(tmp_path, "language", technology, {name: token})
+    resolution = resolve_diagram({reported}, style_ex=f"MDGDgm={token};", directory=tmp_path)
+    assert resolution.path == "qualified"
+    assert resolution.diagram_type.name == name
+
+
+def test_a_binding_for_an_id_the_repository_lacks_is_never_used_even_on_a_token(tmp_path):
+    """The token doesn't bypass the installed list, which is the whole resolver's rule."""
+    _plant(tmp_path, "raaml-1", "RAAML1.0", {"RAAML": "RAAML::RAAML"})
+    resolution = resolve_diagram({"BPMN2.0"}, style_ex="MDGDgm=RAAML::RAAML;", directory=tmp_path)
+    assert resolution.path == "not-installed"
+    # The Resources tab's name isn't the id, so it finds no file either.
+    guessed = resolve_diagram({"RAAML"}, style_ex="MDGDgm=RAAML::RAAML;", directory=tmp_path)
+    assert guessed.path == "unbound"
+
+
+def test_a_full_token_wins_over_a_technology_match(tmp_path):
+    _plant(tmp_path, "alpha", "Alpha", {"Landscape": ""})
+    _plant(tmp_path, "beta", "Beta", {"View": "Alpha::Portfolio"})
+    installed = {"Alpha", "Beta"}
+    token = resolve_diagram(installed, style_ex="MDGDgm=Alpha::Portfolio;", directory=tmp_path)
+    assert (token.path, token.technology, token.diagram_type.name) == ("qualified", "Beta", "View")
+    named = resolve_diagram(installed, style_ex="MDGDgm=Alpha::Landscape;", directory=tmp_path)
+    assert (named.path, named.technology, named.diagram_type.name) == (
+        "qualified", "Alpha", "Landscape")
+
+
+def test_a_diagram_type_with_a_token_answers_only_to_that_token(tmp_path):
+    _plant(tmp_path, "raaml-1", "RAAML1.0", {"RAAML": "RAAML::RAAML"})
+    resolution = resolve_diagram({"RAAML1.0"}, style_ex="MDGDgm=RAAML1.0::RAAML;",
+                                 directory=tmp_path)
+    assert resolution.path == "unbound"
+    assert not resolution.resolved
+
+
+def test_a_token_left_out_of_its_family_is_unbound_not_missing(tmp_path):
+    """`UPDM2_AV::AV-3` is deliberately unbound. Calling UPDM uninstalled would mislead."""
+    _plant(tmp_path, "updm-2", "UPDM2", {"AV-1": "UPDM2_AV::AV-1"})
+    left_out = resolve_diagram({"UPDM2"}, style_ex="MDGDgm=UPDM2_AV::AV-3;", directory=tmp_path)
+    assert left_out.path == "unbound"
+    assert "UPDM2" in left_out.reason and "AV-1" in left_out.reason
+    unknown = resolve_diagram({"UPDM2"}, style_ex="MDGDgm=Alpha::AV-3;", directory=tmp_path)
+    assert unknown.path == "not-installed"
+
+
+def test_two_files_claiming_one_token_fail(tmp_path):
+    _plant(tmp_path, "one", "One", {"Requirements": "Extended::Requirements"})
+    _plant(tmp_path, "two", "Two", {"Other": "Extended::Requirements"})
+    conflicts = token_conflicts(tmp_path)
+    assert conflicts == {"Extended::Requirements": ("one/conventions.yaml", "two/conventions.yaml")}
+    with pytest.raises(DuplicateToken, match="one/conventions.yaml, two/conventions.yaml"):
+        available_bindings(tmp_path)
+    with pytest.raises(DuplicateToken):
+        find_binding("One", tmp_path)
+    with pytest.raises(DuplicateToken):
+        resolve_diagram({"One"}, style_ex="MDGDgm=Extended::Requirements;", directory=tmp_path)
+
+
+def test_a_stated_token_collides_with_an_unstated_one(tmp_path):
+    _plant(tmp_path, "alpha", "Alpha", {"Landscape": ""})
+    _plant(tmp_path, "beta", "Beta", {"View": "Alpha::Landscape"})
+    assert list(token_conflicts(tmp_path)) == ["Alpha::Landscape"]
+    with pytest.raises(DuplicateToken):
+        available_bindings(tmp_path)
+
+
+def test_bindings_handed_over_that_share_a_token_are_ambiguous(tmp_path):
+    """No directory to refuse here, and first-match is still never the answer."""
+    one = load_binding_text(_with_tokens("One", {"A": "Extended::Requirements"}))
+    two = load_binding_text(_with_tokens("Two", {"B": "Extended::Requirements"}))
+    resolution = resolve_diagram({"One", "Two"}, style_ex="MDGDgm=Extended::Requirements;",
+                                 bindings=[one, two])
+    assert resolution.path == "ambiguous"
+    assert resolution.candidates == ("One", "Two")
+
+
+def test_one_file_may_not_claim_a_token_twice():
+    with pytest.raises(BindingError, match="both claim"):
+        load_binding_text(_with_tokens("One", {"A": "G::X", "B": "G::X"}))
+    with pytest.raises(BindingError, match="both claim"):
+        load_binding_text(_with_tokens("Alpha", {"A": "", "B": "Alpha::A"}))
+
+
+@pytest.mark.parametrize("token", ["NoSeparator", "::Tail", "Alpha::", "A::B;DUID=1", "MDGDgm=A::B"])
+def test_a_token_must_be_whole(token):
+    with pytest.raises(BindingError, match="whole token"):
+        load_binding_text(_with_tokens("One", {"A": token}))
+
+
+def test_a_name_holding_the_separator_must_state_its_token():
+    with pytest.raises(BindingError, match="state it as `token`"):
+        load_binding_text(_with_tokens("UPDM2", {"UPDM2_OV::OV-2": ""}))
+    bound = load_binding_text(_with_tokens("UPDM2", {"UPDM2_OV::OV-2": "UPDM2_OV::OV-2"}))
+    assert bound.diagram_type_for_mdgdgm("UPDM2_OV::OV-2") is not None
+
+
+def test_a_map_with_one_technology_needs_no_token():
+    binding = load_binding_text(MINIMAL)
+    overview = binding.diagram_type("Overview")
+    assert overview.token == ""
+    assert overview.mdg_diagram_type == "WBA::Overview"
+    assert binding.diagram_type_for_mdgdgm("WBA::Overview") is overview
+    assert binding.diagram_type_for_mdgdgm("Alpha::Overview") is None
+
+
+def test_no_two_shipped_files_claim_one_token():
+    assert token_conflicts(_BINDINGS_DIR) == {}
