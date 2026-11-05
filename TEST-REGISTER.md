@@ -56,7 +56,7 @@ skill's markdown for the program's file name, plus the programs that import it.
 | prog:_shared/tools/semantic_model.py | U | 10 tests (test_semantic_model.py) | ea-power-bi | complete |
 | prog:_shared/tools/tmdl.py | U | 56 tests (test_tmdl.py) | ea-power-bi | complete |
 | prog:ea-diagram-advisor/tools/advise.py | U | 45 tests (test_advise.py) | ea-diagram-advisor | complete |
-| prog:ea-diagram-composition/tools/bindings.py | U | 232 tests (test_bindings.py) | ea-diagram-composition | complete |
+| prog:ea-diagram-composition/tools/bindings.py | U | 231 tests (test_bindings.py) | ea-diagram-composition | complete |
 | prog:ea-diagram-composition/tools/compose.py | U | 195 tests (test_compose.py) | ea-diagram-composition | complete |
 | prog:ea-diagram-composition/tools/compose_chevron.py | U | 36 tests (test_compose_chevron.py) | ea-diagram-composition (via bindings.py, compose.py) | complete |
 | prog:ea-diagram-composition/tools/compose_matrix.py | U | 47 tests (test_compose_matrix.py) | ea-diagram-composition (via bindings.py, compose.py) | complete |
@@ -688,7 +688,7 @@ method of a test class is written `Class.test_name`.
   - `plugins/ai-power-tools/skills/ea-diagram-advisor/tools/test_advise.py::test_a_binding_that_does_not_answer_producibility_is_not_read_as_silence`
   - `plugins/ai-power-tools/skills/ea-diagram-advisor/tools/test_advise.py::test_a_dominant_language_option_also_says_it_cannot_be_generated`
   - `plugins/ai-power-tools/skills/ea-diagram-advisor/tools/test_advise.py::test_the_advisor_holds_no_grammar_name_of_its_own`
-- `prog:ea-diagram-composition/tools/bindings.py` U (232)
+- `prog:ea-diagram-composition/tools/bindings.py` U (231)
   - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings.py::test_minimal_document_loads`
   - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings.py::test_a_diagram_type_translates_to_a_layout_spec`
   - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings.py::test_spec_overrides_win_over_the_binding`
@@ -897,7 +897,6 @@ method of a test class is written `Class.test_name`.
   - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings.py::test_a_diagram_type_never_inherits_its_substrates_prefix`
   - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings.py::test_naming_an_undeclared_diagram_type_in_a_prefix_lookup_raises`
   - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings.py::test_the_sizes_uml_omits_by_judgment_are_still_really_there`
-  - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings.py::test_the_figures_the_notes_record_for_the_unbound_types_are_recomputable`
   - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings.py::test_grammar_is_implemented_is_the_engines_answer_for_each_uml_type`
   - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings.py::test_the_uml_grammars_are_only_the_two_that_place_nothing`
   - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings.py::test_the_declined_uml_types_are_each_classified_in_the_notes`
