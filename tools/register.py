@@ -10,7 +10,8 @@ Nobody types the list of parts. It is read from the product itself:
   skill            plugins/ai-power-tools/skills/*/SKILL.md          requires A
   helper program   manifest.json: every shipped .py under a tools/
                    folder that is not test_*.py                      requires U
-  data asset       manifest.json: every shipped .yaml                requires U
+  data asset       manifest.json: every shipped .yaml, the rulesets
+                   folder, and the shared layout standard            requires U
   plugin surface   tools/register.toml, [[hand_row]]                 requires U and D
   integration case tools/integration/*.md                            requires I
 
@@ -219,6 +220,16 @@ def _source(rel: str, root: Path) -> Path:
     return plugin_skills(root) / rel
 
 
+#: Assets the manifest does not list, because they ship in the plugins only. The
+#: rulesets are one unit for the whole folder, not one per file: nineteen language
+#: branches add a ruleset each, and a row per file would make every one of them
+#: rewrite this register. tools/test_languages.py reads every file it finds there.
+#: The layout standard is a unit from before the file lands, so its branch needs no
+#: register change; the test covering it runs once the file is there.
+PLUGIN_ONLY_ASSETS = ("plugins/ai-power-tools/rulesets/*",
+                      "plugins/ai-power-tools-languages/skills/_languages/layout-standard.yaml")
+
+
 def _is_program(rel: str) -> bool:
     parts = rel.split("/")
     return rel.endswith(".py") and "tools" in parts[:-1] and not parts[-1].startswith("test_")
@@ -360,7 +371,7 @@ def build(root: Path = ROOT, config: dict | None = None, results: dict | None = 
                            "via_what": sorted(Path(p).name for p in importers.get(Path(rel).stem, ()))}))
 
     # -- data assets
-    for rel in sorted(f for f in manifest_files if _is_asset(f)):
+    for rel in sorted({*(f for f in manifest_files if _is_asset(f)), *PLUGIN_ONLY_ASSETS}):
         uid = f"asset:{rel}"
         mods = covered_by.get(uid, [])
         ids = [t for m in mods for t in m["tests"]]

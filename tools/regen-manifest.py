@@ -38,6 +38,17 @@ def _is_build_residue(p: Path) -> bool:
             or p.suffix in _RESIDUE_SUFFIXES)
 
 
+def _in_manifest(rel: str) -> bool:
+    """Whether an install-relative path belongs in the manifest.
+
+    `_shared/languages/` ships in the plugin only. `install_skills`, the one
+    reader of this file, is deprecated, and nineteen language branches add files
+    there at once: listing them would make every one of those branches rewrite
+    this file.
+    """
+    return not rel.startswith("_shared/languages/")
+
+
 def main() -> int:
     current = json.loads(MANIFEST.read_text(encoding="utf-8"))
     for entry in current["skills"]:
@@ -52,9 +63,10 @@ def main() -> int:
         # string. Both are unaffected by where the file sits in the repo, so
         # moving the skills under the plugin must not change these values.
         base = skill_dir.parent
-        files = sorted(str(p.relative_to(base).as_posix())
-                       for p in skill_dir.rglob("*")
-                       if p.is_file() and not _is_build_residue(p))
+        files = sorted(rel for rel in (str(p.relative_to(base).as_posix())
+                                       for p in skill_dir.rglob("*")
+                                       if p.is_file() and not _is_build_residue(p))
+                       if _in_manifest(rel))
         if not files:
             print(f"No files under: {name}", file=sys.stderr)
             return 1

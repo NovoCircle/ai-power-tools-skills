@@ -86,12 +86,13 @@ def remote_ref(remote: Path, ref: str) -> str | None:
 
 def build_archive(root: Path) -> None:
     """What tools/build-plugin.py writes, from the same file list."""
-    plugin = root / tool.PLUGIN_PATH
-    out = root / "dist" / "ai-power-tools.plugin"
-    out.parent.mkdir(exist_ok=True)
-    with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as zf:
-        for f in tool.build_plugin.plugin_files(plugin):
-            zf.writestr(f.relative_to(plugin).as_posix(), f.read_bytes())
+    for name, path in tool.PLUGINS:
+        plugin = root / path
+        out = root / "dist" / f"{name}.plugin"
+        out.parent.mkdir(exist_ok=True)
+        with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as zf:
+            for f in tool.build_plugin.plugin_files(plugin):
+                zf.writestr(f.relative_to(plugin).as_posix(), f.read_bytes())
 
 
 @pytest.fixture
@@ -106,6 +107,11 @@ def skills(tmp_path, monkeypatch, remote) -> Path:
     (plugin / "skills" / "demo").mkdir(parents=True)
     (plugin / "skills" / "demo" / "SKILL.md").write_bytes(SKILL_TEXT.encode())
     (plugin / "skills" / "demo" / "icon.png").write_bytes(BINARY)
+    shelf = root / tool.SHELF_PATH
+    _write_json(shelf / ".claude-plugin" / "plugin.json",
+                {"name": tool.SHELF_NAME, "version": VERSION, "description": "guides"})
+    (shelf / "skills" / "_languages").mkdir(parents=True)
+    (shelf / "skills" / "_languages" / "language-file.md").write_bytes(b"# Layout\n")
     _write_json(root / "manifest.json", {"bundle_version": VERSION, "skills": []})
     _write_json(root / ".claude-plugin" / "marketplace.json", {
         "name": "novocircle", "owner": {"name": "NovoCircle"},
@@ -208,6 +214,37 @@ class TestRefusesBeforeStaging:
         out = capsys.readouterr().out
         assert "differs between the archive" in out and "stale" in out
 
+    def test_a_missing_language_archive_refuses(self, skills, remote, capsys):
+        (skills / "dist" / f"{tool.SHELF_NAME}.plugin").unlink()
+        assert run(skills, remote) == 1
+        assert f"dist/{tool.SHELF_NAME}.plugin is missing" in capsys.readouterr().out
+
+    def test_a_stale_language_archive_refuses(self, skills, remote, capsys):
+        (skills / tool.SHELF_PATH / "skills" / "_languages" / "language-file.md").write_bytes(b"new\n")
+        assert run(skills, remote) == 1
+        out = capsys.readouterr().out
+        assert tool.SHELF_PATH in out and f"dist/{tool.SHELF_NAME}.plugin is stale" in out
+
+    def test_a_language_plugin_on_another_version_refuses(self, skills, remote, capsys):
+        _write_json(skills / tool.SHELF_PATH / ".claude-plugin" / "plugin.json",
+                    {"name": tool.SHELF_NAME, "version": "9.8.0"})
+        build_archive(skills)
+        assert run(skills, remote) == 1
+        assert "Version drift: language plugin.json" in capsys.readouterr().out
+        assert not (skills / tool.STAGING_DIR).exists()
+
+    def test_a_missing_language_plugin_refuses(self, skills, remote, capsys):
+        tool._rmtree(skills / tool.SHELF_PATH)
+        assert run(skills, remote) == 1
+        assert "Missing" in capsys.readouterr().out
+
+    def test_a_dependency_in_the_language_plugin_refuses(self, skills, remote, capsys):
+        _write_json(skills / tool.SHELF_PATH / ".claude-plugin" / "plugin.json",
+                    {"name": tool.SHELF_NAME, "version": VERSION, "dependencies": ["x"]})
+        build_archive(skills)
+        assert run(skills, remote) == 1
+        assert "declares dependencies" in capsys.readouterr().out
+
 
 # ---------------------------------------------------------------------------
 # Dry run
@@ -258,6 +295,43 @@ class TestDryRun:
         assert "README.md" in listed  # nothing outside the plugin is touched
 
 
+def test_both_trees_land_in_one_commit(skills, remote, capsys):
+    assert run(skills, remote) == 0
+    assert f"dist/{tool.SHELF_NAME}.plugin" in capsys.readouterr().out
+    clone = skills / tool.STAGING_DIR / "releases"
+    listed = git("ls-tree", "-r", "--name-only", "HEAD", cwd=clone)
+    assert f"{tool.PLUGIN_PATH}/skills/demo/SKILL.md" in listed
+    assert f"{tool.SHELF_PATH}/skills/_languages/language-file.md" in listed
+    assert git("rev-list", "--count", "HEAD~1..HEAD", cwd=clone) == "1"
+
+
+def test_a_dropped_language_file_does_not_survive_the_next_release(skills, remote, tmp_path):
+    work = tmp_path / "old"
+    git("clone", "--quiet", str(remote), str(work))
+    old = work / tool.SHELF_PATH / "skills" / "retired" / "SKILL.md"
+    old.parent.mkdir(parents=True)
+    old.write_text("retired\n", encoding="utf-8")
+    git("add", "-A", cwd=work)
+    git("commit", "--quiet", "-m", "old release", cwd=work)
+    git("push", "--quiet", "origin", "HEAD:main", cwd=work)
+    assert run(skills, remote) == 0
+    clone = skills / tool.STAGING_DIR / "releases"
+    assert "retired" not in git("ls-tree", "-r", "--name-only", "HEAD", cwd=clone)
+
+
+def test_uncommitted_language_changes_count_as_dirty(tmp_path):
+    root = tmp_path / "checkout"
+    shelf_file = root / tool.SHELF_PATH / "skills" / "x.md"
+    shelf_file.parent.mkdir(parents=True)
+    shelf_file.write_text("x\n", encoding="utf-8")
+    git("init", "--quiet", str(root))
+    git("add", "-A", cwd=root)
+    git("commit", "--quiet", "-m", "first", cwd=root)
+    assert tool.skills_source_rev(root)[1] is False
+    shelf_file.write_text("changed\n", encoding="utf-8")
+    assert tool.skills_source_rev(root)[1] is True
+
+
 def test_tree_problems_catches_an_altered_blob(skills, remote):
     assert run(skills, remote) == 0
     clone = skills / tool.STAGING_DIR / "releases"
@@ -301,6 +375,32 @@ class TestPublish:
         assert run(skills, remote, "--publish") == 0
         assert remote_ref(remote, f"refs/tags/v{VERSION}") == tag
         assert remote_ref(remote, "refs/heads/main") == main
+
+    def test_one_tag_carries_both_trees(self, skills, remote):
+        assert run(skills, remote, "--publish") == 0
+        tag = remote_ref(remote, f"refs/tags/v{VERSION}")
+        for path in (tool.PLUGIN_JSON, f"{tool.SHELF_PATH}/.claude-plugin/plugin.json"):
+            pj = subprocess.run(["git", "--git-dir", str(remote), "show", f"{tag}:{path}"],
+                                capture_output=True).stdout
+            assert json.loads(pj)["version"] == VERSION
+
+    def test_a_tag_without_the_language_tree_is_never_moved(self, skills, remote, tmp_path, capsys):
+        # An older release's tag carries the tool plugin alone.
+        work = tmp_path / "old"
+        git("clone", "--quiet", str(remote), str(work))
+        for rel, data in tool.read_archive(skills / "dist" / "ai-power-tools.plugin").items():
+            f = work / tool.PLUGIN_PATH / rel
+            f.parent.mkdir(parents=True, exist_ok=True)
+            f.write_bytes(data)
+        git("add", "-A", cwd=work)
+        git("commit", "--quiet", "-m", "tool only", cwd=work)
+        git("push", "--quiet", "origin", "HEAD:main", cwd=work)
+        git("tag", f"v{VERSION}", cwd=work)
+        git("push", "--quiet", "origin", f"refs/tags/v{VERSION}", cwd=work)
+        tag = remote_ref(remote, f"refs/tags/v{VERSION}")
+        assert run(skills, remote, "--publish") == 1
+        assert "never moved" in capsys.readouterr().out
+        assert remote_ref(remote, f"refs/tags/v{VERSION}") == tag
 
     def test_refuses_uncommitted_shipped_files(self, skills, remote, monkeypatch):
         monkeypatch.setattr(tool, "skills_source_rev", lambda _root: ("a" * 40, True))
@@ -356,7 +456,7 @@ class TestPinMarketplace:
             "sha": remote_ref(remote, f"refs/tags/v{VERSION}"),
         }
         assert e["version"] == VERSION and e["description"] == "d"
-        assert list(e) == ["name", "source", "version", "description"]
+        assert list(e) == ["name", "source", "version", "description", "dependencies"]
         raw = (skills / ".claude-plugin" / "marketplace.json").read_bytes()
         assert b"\r\n" not in raw
         # build-plugin's three-file agreement still holds after the pin.
@@ -364,6 +464,44 @@ class TestPinMarketplace:
             skills / tool.PLUGIN_PATH, skills / "manifest.json",
             skills / ".claude-plugin" / "marketplace.json")
         assert problems == []
+
+    def test_adds_the_language_entry_at_the_same_tag_and_commit(self, skills, remote):
+        assert run(skills, remote, "--publish") == 0
+        assert run(skills, remote, "--pin-marketplace") == 0
+        m = marketplace(skills)
+        assert [p["name"] for p in m["plugins"]] == [tool.PLUGIN_NAME, tool.SHELF_NAME]
+        shelf = tool.find_entry(m, tool.SHELF_NAME)
+        assert shelf["source"] == {**entry(skills)["source"], "path": tool.SHELF_PATH}
+        assert shelf["version"] == VERSION and shelf["description"] == "guides"
+        assert "dependencies" not in shelf
+
+    def test_declares_the_dependency_as_a_bare_name_in_the_tool_entry(self, skills, remote):
+        # Measured: a dependency in the marketplace entry alone installs it. A
+        # version range would resolve against tags our release doesn't make.
+        assert run(skills, remote, "--publish") == 0
+        assert run(skills, remote, "--pin-marketplace") == 0
+        assert entry(skills)["dependencies"] == [tool.SHELF_NAME]
+        for path in (tool.PLUGIN_PATH, tool.SHELF_PATH):
+            pj = json.loads((skills / path / ".claude-plugin" / "plugin.json").read_text(encoding="utf-8"))
+            assert "dependencies" not in pj
+
+    def test_a_second_pin_keeps_one_entry_each(self, skills, remote):
+        assert run(skills, remote, "--publish") == 0
+        assert run(skills, remote, "--pin-marketplace") == 0
+        before = marketplace(skills)
+        assert run(skills, remote, "--pin-marketplace") == 0
+        assert marketplace(skills) == before
+
+    def test_refuses_a_tag_whose_language_plugin_declares_a_server(self, skills, remote,
+                                                                   monkeypatch, capsys):
+        assert run(skills, remote, "--publish") == 0
+        real = tool.fetch_bytes
+        monkeypatch.setattr(tool, "fetch_bytes", lambda url: (
+            (json.dumps({"version": VERSION, "mcpServers": "x"}).encode(), "")
+            if tool.SHELF_PATH in url else real(url)))
+        assert run(skills, remote, "--pin-marketplace") == 1
+        assert f"{tool.SHELF_PATH}/.claude-plugin/plugin.json" in capsys.readouterr().out
+        assert entry(skills)["source"] == "./plugins/ai-power-tools"
 
 
 # ---------------------------------------------------------------------------
@@ -407,7 +545,7 @@ class TestVerify:
         _pinned(skills, remote)
         _edit_source(skills, sha="b" * 40)
         assert run(skills, remote, "--verify", "--local") == 1
-        assert "but the entry pins" in capsys.readouterr().out
+        assert f"but the {tool.PLUGIN_NAME} entry pins" in capsys.readouterr().out
 
     def test_fails_when_the_ref_is_another_release(self, skills, remote, capsys):
         _pinned(skills, remote)
@@ -422,6 +560,30 @@ class TestVerify:
             json.dumps({"version": VERSION, "mcpServers": "x"}).encode(), ""))
         assert run(skills, remote, "--verify", "--local") == 1
         assert "declares mcpServers" in capsys.readouterr().out
+
+    def test_fails_when_the_language_entry_is_missing(self, skills, remote, capsys):
+        _pinned(skills, remote)
+        m = marketplace(skills)
+        m["plugins"] = m["plugins"][:1]
+        _write_json(skills / ".claude-plugin" / "marketplace.json", m)
+        assert run(skills, remote, "--verify", "--local") == 1
+        assert f"no {tool.SHELF_NAME} entry" in capsys.readouterr().out
+
+    def test_fails_when_the_dependency_is_not_declared(self, skills, remote, capsys):
+        _pinned(skills, remote)
+        m = marketplace(skills)
+        del m["plugins"][0]["dependencies"]
+        _write_json(skills / ".claude-plugin" / "marketplace.json", m)
+        assert run(skills, remote, "--verify", "--local") == 1
+        assert "does not declare" in capsys.readouterr().out
+
+    def test_fails_when_the_language_entry_pins_another_commit(self, skills, remote, capsys):
+        _pinned(skills, remote)
+        m = marketplace(skills)
+        m["plugins"][1]["source"]["sha"] = "b" * 40
+        _write_json(skills / ".claude-plugin" / "marketplace.json", m)
+        assert run(skills, remote, "--verify", "--local") == 1
+        assert f"but the {tool.SHELF_NAME} entry pins" in capsys.readouterr().out
 
     def test_local_requires_verify(self, skills, remote):
         with pytest.raises(SystemExit):

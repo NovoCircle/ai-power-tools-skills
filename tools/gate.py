@@ -28,6 +28,7 @@ ROOT = Path(__file__).resolve().parent.parent
 #: because `ea-validation` pins a raw.githubusercontent URL into them.
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _layout import source_path as _source_path, asset_dirs as _asset_dirs  # noqa: E402
+import languages_check as _languages  # noqa: E402
 
 # --------------------------------------------------------------------------
 # Rule 1 — known real-customer identifiers. Denylist: catches what we know.
@@ -128,6 +129,34 @@ KNOWN_IDS = {
     "Alpha", "Beta", "Overlay",
     # Generic placeholder model filenames in tests. Not anybody's model.
     "model", "missing",
+    # Sparx-shipped ids the language how-tos and rulesets cite, each read from
+    # that language's EA run. Proof: the id is in the language's `ea.yaml`, or in
+    # the `MDGDgm` and `FQName` values of a model EA itself wrote.
+    "Archimate",        # archimate-3: EA's older spelling, a trap its how-to warns of
+    "SoaML", "VDML", "RAAML", "GML", "IFML", "FACE", "MARTE", "BABOK",
+    "EAREQ", "EAExtended", "EAUI",  # requirements, data-modeling-er, business-modeling
+    "ERD_dp", "IEEE1471", "EPProfile", "BusinessModeling",
+    "Requirements",     # requirements: one of EA's group names its how-to quotes
+    "UPDM2_AV", "UPDM2_OV", "UPDM2_SOV", "UPDM2_Framework",
+    # Ours: the two technology packs the csdm-5 and it4it how-tos ship.
+    "CSDM5", "IT4IT", "IT4ITArchitecture",
+}
+
+# On the language plugin `::` is mostly the standard's own qualified name
+# (`Property::isDerived`), so a left side passes when it names a concept or
+# relationship in that folder's language.yaml. These are the rest, measured across
+# the 19 guides: names the standard qualifies with but the guide doesn't list. Each
+# is valid only in its own folder, and a new name still trips the gate.
+SHELF_NAMESPACES = {
+    "uml-2": {"Metaclass", "ClassName"},
+    "sysml-1": {"PrimitiveTypes", "PrimitiveValueTypes"},
+    "dmn-1": {"DC"},
+    "uaf-1": {"Strategic", "Operational", "Services", "Personnel", "Resources",
+              "Security", "Standards"},
+    "raaml-1": {"Methods", "FTA", "FTALibrary", "Profile"},
+    # `Operrationalizes` is the source's own misprint: its relationships figure
+    # prints that spelling, and the guide quotes the figure.
+    "csdm-5": {"Operationalizes", "Operrationalizes", "Uses", "Contains", "Consumes"},
 }
 
 # Sparx-shipped technology ids that CONTAIN A SPACE, which `MDG_NS` cannot see:
@@ -147,6 +176,9 @@ KNOWN_SPACED_IDS = (
     # Sparx-shipped (see the TEA note under Rule 1). Its own namespace is
     # allowed; a customer extension's namespace is not.
     "TEA Framework",
+    # Sparx-shipped: the Zachman framework's row technology, and EA's own group
+    # names, which the how-tos quote as prefixes.
+    "ZF Functioning", "Business Modeling", "Data Modeling",
 )
 QEA_FILE = re.compile(r"\b([A-Za-z][A-Za-z0-9_-]*)\.(?:qea|eapx|eap|feap)\b")
 MDG_NS = re.compile(r"\b([A-Z][A-Za-z0-9_]{1,30})::")
@@ -252,6 +284,10 @@ GALLERY_WHY = "Sparx's, not ours; convert to Westbrook Bank"
 
 MAX_SKILL_LINES = 400
 
+# The language plugin (the "shelf"), which the checks below hold to its own rules.
+SHELF_REL = ("plugins", "ai-power-tools-languages")
+SHELF_SKILLS_REL = (*SHELF_REL, "skills")
+
 SKIP_DIRS = {".git", "node_modules", "__pycache__", ".venv", ".pytest_cache"}
 # tools/ holds this script, whose own patterns would trip it.
 # gate.py holds the forbidden patterns themselves, and test_gate.py holds
@@ -271,6 +307,9 @@ def iter_files(target: Path):
             continue
         if p.suffix.lower() in {".md", ".yaml", ".yml", ".json", ".py", ".txt"}:
             yield p
+        elif p.suffix.lower() == ".xml" and "pack" in p.parts:
+            # A technology pack ships beside its how-to, so it gets the same scan.
+            yield p
 
 
 class Advisory(str):
@@ -279,6 +318,41 @@ class Advisory(str):
     Severity is the type, never the wording: finding text can echo a skill's own
     name or path, so matching on substrings let a skill steer its own severity.
     """
+
+
+def _shelf_language(rel: Path) -> Optional[str]:
+    """The language folder `rel` sits in on the language plugin, or None."""
+    parts = rel.parts
+    if parts[:3] == SHELF_SKILLS_REL and len(parts) > 4 and not parts[3].startswith("_"):
+        return parts[3]
+    return None
+
+
+def _shelf_names_it(language: str, ident: str) -> bool:
+    if ident in SHELF_NAMESPACES.get(language, ()):
+        return True
+    data, _error = _load_language(ROOT.joinpath(*SHELF_SKILLS_REL, language))
+    return ident in _languages.known_names(data)
+
+
+_LANGUAGE_CACHE: dict[Path, tuple[dict, Optional[str]]] = {}
+
+
+def _load_language(folder: Path) -> tuple[dict, Optional[str]]:
+    """A folder's language.yaml as `(data, error)`. A language file is large, and
+    `check_file` asks once per namespace, so each is parsed once per run."""
+    if folder in _LANGUAGE_CACHE:
+        return _LANGUAGE_CACHE[folder]
+    try:
+        import yaml
+        data = yaml.safe_load((folder / "language.yaml").read_text(encoding="utf-8"))
+        result = (data if isinstance(data, dict) else {}, None)
+    except ImportError:
+        result = ({}, "PyYAML is not installed, so language.yaml cannot be read")
+    except Exception as exc:                 # noqa: BLE001 -- OSError or a YAML error; reported as a finding
+        result = ({}, str(exc).splitlines()[0] if str(exc) else type(exc).__name__)
+    _LANGUAGE_CACHE[folder] = result
+    return result
 
 
 def check_file(path: Path) -> list[str]:
@@ -291,6 +365,7 @@ def check_file(path: Path) -> list[str]:
 
     text = raw.decode("utf-8", errors="replace")
     lines = text.splitlines()
+    language = _shelf_language(rel)
 
     for pattern, subject in GALLERY_SUBJECTS:
         if pattern.search(rel.as_posix()):
@@ -332,6 +407,8 @@ def check_file(path: Path) -> list[str]:
             # A known id with a space in it: the capture is only its last word,
             # so the check is whether the text ending there IS the whole id.
             if any(line[:m.end(1)].endswith(full) for full in KNOWN_SPACED_IDS):
+                continue
+            if language and _shelf_names_it(language, ident):
                 continue
             out.append(f"{rel}:{n}: unrecognized MDG namespace '{ident}::' — "
                        f"if this is a real customer technology, convert it")
@@ -622,30 +699,156 @@ def check_bundle_floor() -> list[str]:
 
 
 def check_plugin_package() -> list[str]:
-    """The plugin is skills only, and its version files and stamp agree.
+    """Both plugins are skills only, and their version files and stamp agree.
 
     Fails when `plugin.json` declares `mcpServers` at all or the plugin tree has
     a top-level `bin/`: claude.ai refuses a plugin that points at an `.mcpb`,
     and a plugin's server never runs in Claude Desktop chat or Cowork, so the
     server is the separately installed Desktop extension. Also runs the version
     consistency check that `tools/build-plugin.py` runs, including the
-    skills-version stamp in `ea-start-here`.
+    skills-version stamp in `ea-start-here`. The language plugin is held to the
+    tool plugin's version, and depends on nothing.
     """
     import importlib.util
 
     plugin = ROOT / "plugins" / "ai-power-tools"
     manifest = ROOT / "manifest.json"
     marketplace = ROOT / ".claude-plugin" / "marketplace.json"
-    if not (plugin / ".claude-plugin" / "plugin.json").is_file():
+    shelf = ROOT.joinpath(*SHELF_REL)
+    has_plugin = (plugin / ".claude-plugin" / "plugin.json").is_file()
+    if not has_plugin and not shelf.is_dir():
         return []
     spec = importlib.util.spec_from_file_location(
         "build_plugin", Path(__file__).resolve().parent / "build-plugin.py")
     build = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(build)
-    out = [f"plugin: {p}" for p in build.package_problems(plugin)]
-    if manifest.is_file() and marketplace.is_file():
-        out.extend(f"plugin: {p}" for p in
-                   build.version_problems(plugin, manifest, marketplace)[1])
+    out = []
+    if has_plugin:
+        out.extend(f"plugin: {p}" for p in build.package_problems(plugin))
+        if manifest.is_file() and marketplace.is_file():
+            out.extend(f"plugin: {p}" for p in
+                       build.version_problems(plugin, manifest, marketplace)[1])
+    if shelf.is_dir():
+        out.extend(f"language plugin: {p}" for p in build.shelf_problems(shelf, plugin))
+    return out
+
+
+def check_language_plugin() -> list[str]:
+    """The language plugin is text, and each folder is a whole guide or a stub.
+
+    No program, image or XML, because the plugin has to work where nothing can
+    run. A language folder holds exactly the guide's files, so a private working
+    file cannot ship beside them, or it is a `stub: true` holding only
+    `language.yaml`, until its guide replaces it.
+    """
+    shelf = ROOT.joinpath(*SHELF_REL)
+    if not shelf.is_dir():
+        return []
+    out: list[str] = []
+    for p in sorted(shelf.rglob("*")):
+        if not p.is_file() or any(part in SKIP_DIRS for part in p.parts):
+            continue
+        if p.suffix.lower() in {".py", ".xml", *IMAGE_SUFFIXES}:
+            out.append(f"{p.relative_to(ROOT).as_posix()}: the language plugin holds "
+                       f"text only: no program, image or XML")
+    for folder in _languages.guides(ROOT.joinpath(*SHELF_SKILLS_REL)):
+        rel = folder.relative_to(ROOT).as_posix()
+        data, error = _load_language(folder)
+        if error:
+            out.append(f"{rel}/language.yaml: {error}")
+            continue
+        held = {p.relative_to(folder).as_posix() for p in folder.rglob("*")
+                if p.is_file() and not any(part in SKIP_DIRS for part in p.parts)}
+        if data.get("id") != folder.name:
+            out.append(f"{rel}/language.yaml: id {data.get('id')!r} is not the folder name")
+        if "layout" not in data:
+            out.append(f"{rel}/language.yaml: no layout block")
+        if _languages.is_stub(data):
+            if held != {"language.yaml"}:
+                out.append(f"{rel}: a stub holds only language.yaml, and this one "
+                           f"also holds {sorted(held - {'language.yaml'})}")
+            continue
+        for name in _languages.GUIDE_FILES:
+            if name not in held:
+                out.append(f"{rel}: {name} is missing")
+        allowed = {*_languages.GUIDE_FILES, *_languages.OPTIONAL_FILES.get(folder.name, ())}
+        for name in sorted(held - allowed):
+            out.append(f"{rel}/{name}: not part of a guide, and it would ship")
+        if "SKILL.md" in held:
+            fields = _frontmatter_fields(
+                (folder / "SKILL.md").read_bytes().decode("utf-8", errors="replace")) or {}
+            if fields.get("name") != folder.name:
+                out.append(f"{rel}/SKILL.md: name {fields.get('name')!r} is not the folder name")
+    return out
+
+
+# A citation that has to name a tool gets one line here: the file (relative to the
+# plugin), the literal text on the line, and why. Empty: no guide needs one.
+SHELF_TOOL_WORD_EXCEPTIONS: tuple[tuple[str, str, str], ...] = ()
+
+
+def check_shelf_tool_words() -> list[str]:
+    """Nothing on the language plugin names a tool, so any tool's skills can read it."""
+    shelf = ROOT.joinpath(*SHELF_REL)
+    if not shelf.is_dir():
+        return []
+    out: list[str] = []
+    for p in sorted(shelf.rglob("*")):
+        if not p.is_file() or any(part in SKIP_DIRS for part in p.parts):
+            continue
+        name = p.relative_to(shelf).as_posix()
+        allowed = [text for file, text, _why in SHELF_TOOL_WORD_EXCEPTIONS if file == name]
+        lines = p.read_bytes().decode("utf-8", errors="replace").splitlines()
+        for n, line in enumerate(lines, 1):
+            hits = _languages.tool_word_hits(line)
+            if hits and not any(text in line for text in allowed):
+                out.append(f"{p.relative_to(ROOT).as_posix()}:{n}: names a tool "
+                           f"({', '.join(sorted(set(hits)))}): {line.strip()[:90]}")
+    return out
+
+
+def layout_exceptions() -> list[tuple[str, str, object]]:
+    """Every `layout.exceptions` entry on the language plugin: `(language, name, entry)`."""
+    rows = []
+    for folder in _languages.guides(ROOT.joinpath(*SHELF_SKILLS_REL)):
+        data, _error = _load_language(folder)
+        rows += [(folder.name, name, entry)
+                 for name, entry in _languages.exceptions_of(data).items()]
+    return rows
+
+
+def check_layout_exceptions() -> list[str]:
+    """An exception to the shared standard has to say why, and where that comes from."""
+    return [f"{language}: layout exception {name} needs a reason and a source"
+            for language, name, entry in layout_exceptions()
+            if not isinstance(entry, dict) or not entry.get("reason") or not entry.get("source")]
+
+
+# Names of what stays private, and backlog ids, which a customer can't read. A URL is
+# taken out first, because a standards body's own address can hold the word research.
+INTERNAL_REFERENCE = re.compile(
+    r"research/|ea-samples-run|skill-draft|ruleset-draft|ea-reference|STANDARD-NOTES|"
+    r"OPEN-POINTS|\bAP[TV]-\d{4}-\d{4}\b")
+_URL = re.compile(r"https?://\S+")
+
+
+def check_internal_references() -> list[str]:
+    """What ships for a language points at nothing that doesn't ship."""
+    roots = (ROOT.joinpath(*SHELF_REL),
+             ROOT / "plugins" / "ai-power-tools" / "rulesets",
+             ROOT / "plugins" / "ai-power-tools" / "skills" / "_shared" / "languages")
+    out: list[str] = []
+    for root in roots:
+        if not root.is_dir():
+            continue
+        for p in iter_files(root):
+            text = p.read_bytes().decode("utf-8", errors="replace")
+            for n, line in enumerate(text.splitlines(), 1):
+                m = INTERNAL_REFERENCE.search(_URL.sub("", line.replace(BACKSLASH, "/")))
+                if m:
+                    out.append(f"{p.relative_to(ROOT).as_posix()}:{n}: points at "
+                               f"'{m.group(0)}', which customers don't have. State the "
+                               f"limit in plain words: {line.strip()[:90]}")
     return out
 
 
@@ -773,12 +976,16 @@ def check_op_drift(target: Path, server: Optional[Path] = None) -> list[str]:
 _RULESET_IN_SKILLS_DIR = re.compile(
     "[.]claude/skills/[^ ]*ruleset", re.I)
 _INSTALLED_RULESET_DIR = "ai-power-tools/rulesets"
+# The route a skill gives a customer: `rulesets/<id>/` inside the plugin. The old
+# install location, ~/.claude/ai-power-tools/rulesets/, is deliberately not it,
+# however much of the same text it holds.
+_PLUGIN_RULESET_PATH = re.compile(r"(?<![.]claude/ai-power-tools/)rulesets/[^/\s`'\"]+/")
 BACKSLASH = chr(92)
 
 
 def check_ruleset_paths(target: Path) -> list[str]:
-    """Two-sided: no skill may document the old path, and some skill must
-    document the new one.
+    """Two-sided: no skill may document the skills-directory path, and some skill
+    must document the plugin path `rulesets/<id>/`.
 
     The positive half matters because a rename or a deletion would satisfy the
     ban while quietly removing the only instruction a customer has for running
@@ -799,7 +1006,7 @@ def check_ruleset_paths(target: Path) -> list[str]:
         # text, so documenting the path in Windows form -- which is what a
         # customer on Windows needs, since the server does not expand `~` --
         # made this half fire on a correct change.
-        if _INSTALLED_RULESET_DIR in text.replace(BACKSLASH, "/"):
+        if _PLUGIN_RULESET_PATH.search(text.replace(BACKSLASH, "/")):
             documents_new = True
         for n, line in enumerate(text.splitlines(), 1):
             if _RULESET_IN_SKILLS_DIR.search(line.replace(BACKSLASH, "/")):
@@ -812,11 +1019,10 @@ def check_ruleset_paths(target: Path) -> list[str]:
                 )
     if not documents_new:
         out.append(
-            f"no shipped file documents the installed ruleset path "
-            f"(~/.claude/{_INSTALLED_RULESET_DIR}/). A customer who installs a "
-            f"ruleset has no instruction for running it from disk. If rulesets "
-            f"stopped being installable, remove this check in the same change "
-            f"and say why."
+            f"no shipped file documents the plugin's ruleset path "
+            f"(rulesets/<id>/). A customer has no instruction for running a "
+            f"ruleset from disk. If rulesets stopped shipping in the plugin, "
+            f"remove this check in the same change and say why."
         )
     return out
 
@@ -873,6 +1079,12 @@ def main() -> int:
         findings.extend(check_stated_server_version())
         findings.extend(check_bundle_floor())
         findings.extend(check_plugin_package())
+        findings.extend(check_language_plugin())
+        findings.extend(check_shelf_tool_words())
+        findings.extend(check_layout_exceptions())
+        findings.extend(check_internal_references())
+        for language, name, entry in layout_exceptions():
+            print(f"  layout exception: {language}: {name}: {entry}")
 
     # A check that did not run is not a check that passed. The verdict says so
     # whatever the findings, because the whole point of this item was a gate

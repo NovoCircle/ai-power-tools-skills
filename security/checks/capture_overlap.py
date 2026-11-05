@@ -36,6 +36,9 @@ from urllib.parse import unquote
 
 ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_SKILLS = ROOT / "plugins" / "ai-power-tools" / "skills"
+#: The language guides come from copyrighted standards, so they are reviewed the
+#: same way: without --skills, both roots are compared.
+LANGUAGE_SKILLS = ROOT / "plugins" / "ai-power-tools-languages" / "skills"
 
 #: Read before the list, every run, so whoever reads a hit is told what it does
 #: and does not prove.
@@ -132,14 +135,17 @@ def main(argv=None) -> int:
                         help='skill directories under review, a glob such as "prol-*"')
     parser.add_argument("--known", action="append", default=[], type=Path,
                         help="product documentation to treat as vocabulary (repeatable)")
-    parser.add_argument("--skills", type=Path, default=DEFAULT_SKILLS,
-                        help="the shipped skills directory (default: this repo's)")
+    parser.add_argument("--skills", action="append", type=Path, default=None,
+                        help="a shipped skills directory (repeatable; default: "
+                             "both of this repo's plugins)")
     args = parser.parse_args(argv)
-    for directory in [*args.captures, *args.known, args.skills]:
+    roots = args.skills or [r for r in (DEFAULT_SKILLS, LANGUAGE_SKILLS) if r.is_dir()]
+    for directory in [*args.captures, *args.known, *roots]:
         if not directory.is_dir():
             parser.error(f"not a directory: {directory}")
 
-    hits = compare(args.captures, args.skills, args.scope, args.known)
+    hits = [hit for root in roots
+            for hit in compare(args.captures, root, args.scope, args.known)]
     out = sys.stdout
     if hasattr(out, "reconfigure"):             # a Windows console is cp1252
         out.reconfigure(encoding="utf-8", errors="replace")
