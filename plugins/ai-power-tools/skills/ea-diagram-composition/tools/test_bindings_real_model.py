@@ -5,8 +5,7 @@ Run from the repository root:
 
     python -m pytest plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_real_model.py -q
 
-This is the binding-side counterpart of `ruleset-archimate31/tools/test_ruleset_archimate31.py`
-(APT-2026-0155), and it exists for the same reason. A binding names a technology id, diagram
+This is the binding-side counterpart of the ArchiMate ruleset's own test, and it exists for the same reason. A binding names a technology id, diagram
 types, a stereotype prefix and, in `sizing`, concepts. Every lookup a consumer makes with those
 names is an exact string comparison against what EA stored, with no normalization. A name that
 EA does not store does not fail: it selects nothing, and the engine falls back to a default as
