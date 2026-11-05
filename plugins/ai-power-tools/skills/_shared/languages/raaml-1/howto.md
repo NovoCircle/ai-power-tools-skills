@@ -111,6 +111,6 @@ Illustration (Westbrook Bank is fictitious): the FMEA item `Authorization unavai
 
 ## Checking a model
 
-This ruleset needs server 3.6.5 or later. On 3.6.4 and earlier some of its rules report nothing, with no error, so a clean result there means nothing.
+20 of 27 rules in this ruleset use formats newer than 3.6.4, and on that server they report nothing or don't run as written. Use server 3.6.5 or later, because a clean result on 3.6.4 doesn't mean the model passes.
 
 The ruleset is `rulesets/raaml-1/raaml-1_rules.yaml`, with 27 rules.

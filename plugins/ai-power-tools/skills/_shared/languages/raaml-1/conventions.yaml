@@ -3,7 +3,7 @@
 # shelf. EA's names come from `layout_map` in this folder's ea.yaml. To change a value,
 # change the source and run `python tools/gen_conventions.py`.
 
-technology: RAAML
+technology: RAAML1.0
 display_name: RAAML
 extends: UML
 stereotype_prefix: ''
@@ -11,8 +11,11 @@ notes: |
   Five of the eight diagram types ea.yaml lists are bound, the five whose token was created and read back. Sparx's FMEA and fault tree patterns both use RAAML::RAAML, so it takes the fault tree's arrangement, and an FMEA drawn on it does too.
 
   NOT BOUND, TOKEN NOT MEASURED. Failure Mode and Effect Analysis, Fault Tree Analysis, and ISO 26262 Road Vehicles - Functional Safety are listed by EA, and their stored tokens were not read.
+
+  `RAAML1.0` is the id EA reports, measured on EA 17.1 build 1716.
 diagram_types:
   RAAML:
+    token: RAAML::RAAML
     base: Logical
     grammar: layered-bands
     title: frame-header
@@ -20,6 +23,60 @@ diagram_types:
       default:
         w: 100
         h: 70
+      AND:
+        w: 40
+        h: 40
+      ASILOverrideRationale:
+        w: 120
+        h: 60
+      BasicEvent:
+        w: 30
+        h: 30
+      DormantEvent:
+        w: 40
+        h: 40
+      HazardAndRiskAssessment:
+        w: 150
+        h: 90
+      HouseEvent:
+        w: 30
+        h: 30
+      INHIBIT:
+        w: 40
+        h: 40
+      LessonLearned:
+        w: 120
+        h: 60
+      MAJORITY VOTE:
+        w: 40
+        h: 40
+      MAJORITY_VOTE:
+        w: 40
+        h: 40
+      NOT:
+        w: 40
+        h: 40
+      OR:
+        w: 40
+        h: 40
+      SEQ:
+        w: 40
+        h: 40
+      TransferIn:
+        w: 40
+        h: 40
+      Undeveloped:
+        w: 15
+        h: 15
+      UndevelopedEvent:
+        w: 30
+        h: 30
+      XOR:
+        w: 40
+        h: 40
+      ZeroEvent:
+        w: 30
+        h: 30
     spacing:
       item_gap_x: 80
       item_gap_y: 50
@@ -51,6 +108,7 @@ diagram_types:
       - font_color
       - opacity
   RAAML - Core:
+    token: RAAML::RAAML - Core
     base: Logical
     grammar: layered-bands
     title: frame-header
@@ -58,6 +116,60 @@ diagram_types:
       default:
         w: 100
         h: 70
+      AND:
+        w: 40
+        h: 40
+      ASILOverrideRationale:
+        w: 120
+        h: 60
+      BasicEvent:
+        w: 30
+        h: 30
+      DormantEvent:
+        w: 40
+        h: 40
+      HazardAndRiskAssessment:
+        w: 150
+        h: 90
+      HouseEvent:
+        w: 30
+        h: 30
+      INHIBIT:
+        w: 40
+        h: 40
+      LessonLearned:
+        w: 120
+        h: 60
+      MAJORITY VOTE:
+        w: 40
+        h: 40
+      MAJORITY_VOTE:
+        w: 40
+        h: 40
+      NOT:
+        w: 40
+        h: 40
+      OR:
+        w: 40
+        h: 40
+      SEQ:
+        w: 40
+        h: 40
+      TransferIn:
+        w: 40
+        h: 40
+      Undeveloped:
+        w: 15
+        h: 15
+      UndevelopedEvent:
+        w: 30
+        h: 30
+      XOR:
+        w: 40
+        h: 40
+      ZeroEvent:
+        w: 30
+        h: 30
     spacing:
       item_gap_x: 80
       item_gap_y: 50
@@ -90,6 +202,7 @@ diagram_types:
       - opacity
       - icon
   RAAML - General Concepts:
+    token: RAAML::RAAML - General Concepts
     base: Logical
     grammar: layered-bands
     title: frame-header
@@ -97,6 +210,60 @@ diagram_types:
       default:
         w: 100
         h: 70
+      AND:
+        w: 40
+        h: 40
+      ASILOverrideRationale:
+        w: 120
+        h: 60
+      BasicEvent:
+        w: 30
+        h: 30
+      DormantEvent:
+        w: 40
+        h: 40
+      HazardAndRiskAssessment:
+        w: 150
+        h: 90
+      HouseEvent:
+        w: 30
+        h: 30
+      INHIBIT:
+        w: 40
+        h: 40
+      LessonLearned:
+        w: 120
+        h: 60
+      MAJORITY VOTE:
+        w: 40
+        h: 40
+      MAJORITY_VOTE:
+        w: 40
+        h: 40
+      NOT:
+        w: 40
+        h: 40
+      OR:
+        w: 40
+        h: 40
+      SEQ:
+        w: 40
+        h: 40
+      TransferIn:
+        w: 40
+        h: 40
+      Undeveloped:
+        w: 15
+        h: 15
+      UndevelopedEvent:
+        w: 30
+        h: 30
+      XOR:
+        w: 40
+        h: 40
+      ZeroEvent:
+        w: 30
+        h: 30
     spacing:
       item_gap_x: 80
       item_gap_y: 50
@@ -129,6 +296,7 @@ diagram_types:
       - opacity
       - icon
   Systems Theoretic Process Analysis:
+    token: RAAML::Systems Theoretic Process Analysis
     base: Logical
     grammar: graph
     title: frame-header
@@ -136,6 +304,60 @@ diagram_types:
       default:
         w: 100
         h: 70
+      AND:
+        w: 40
+        h: 40
+      ASILOverrideRationale:
+        w: 120
+        h: 60
+      BasicEvent:
+        w: 30
+        h: 30
+      DormantEvent:
+        w: 40
+        h: 40
+      HazardAndRiskAssessment:
+        w: 150
+        h: 90
+      HouseEvent:
+        w: 30
+        h: 30
+      INHIBIT:
+        w: 40
+        h: 40
+      LessonLearned:
+        w: 120
+        h: 60
+      MAJORITY VOTE:
+        w: 40
+        h: 40
+      MAJORITY_VOTE:
+        w: 40
+        h: 40
+      NOT:
+        w: 40
+        h: 40
+      OR:
+        w: 40
+        h: 40
+      SEQ:
+        w: 40
+        h: 40
+      TransferIn:
+        w: 40
+        h: 40
+      Undeveloped:
+        w: 15
+        h: 15
+      UndevelopedEvent:
+        w: 30
+        h: 30
+      XOR:
+        w: 40
+        h: 40
+      ZeroEvent:
+        w: 30
+        h: 30
     spacing:
       item_gap_x: 80
       item_gap_y: 50
@@ -165,6 +387,7 @@ diagram_types:
       - opacity
       - icon
   Goal Structuring Notation:
+    token: RAAML::Goal Structuring Notation
     base: Logical
     grammar: layered-bands
     title: frame-header
@@ -172,6 +395,60 @@ diagram_types:
       default:
         w: 100
         h: 70
+      AND:
+        w: 40
+        h: 40
+      ASILOverrideRationale:
+        w: 120
+        h: 60
+      BasicEvent:
+        w: 30
+        h: 30
+      DormantEvent:
+        w: 40
+        h: 40
+      HazardAndRiskAssessment:
+        w: 150
+        h: 90
+      HouseEvent:
+        w: 30
+        h: 30
+      INHIBIT:
+        w: 40
+        h: 40
+      LessonLearned:
+        w: 120
+        h: 60
+      MAJORITY VOTE:
+        w: 40
+        h: 40
+      MAJORITY_VOTE:
+        w: 40
+        h: 40
+      NOT:
+        w: 40
+        h: 40
+      OR:
+        w: 40
+        h: 40
+      SEQ:
+        w: 40
+        h: 40
+      TransferIn:
+        w: 40
+        h: 40
+      Undeveloped:
+        w: 15
+        h: 15
+      UndevelopedEvent:
+        w: 30
+        h: 30
+      XOR:
+        w: 40
+        h: 40
+      ZeroEvent:
+        w: 30
+        h: 30
     spacing:
       item_gap_x: 80
       item_gap_y: 50

@@ -2212,7 +2212,7 @@ harvest:
 
 # EA's names for this language's layout. tools/gen_conventions.py reads layout_map.
 layout_map:
-  technology: RAAML
+  technology: RAAML1.0
   display_name: RAAML
   extends: UML
   stereotype_prefix: ''
@@ -2220,19 +2220,121 @@ layout_map:
     Five of the eight diagram types ea.yaml lists are bound, the five whose token was created and read back. Sparx's FMEA and fault tree patterns both use RAAML::RAAML, so it takes the fault tree's arrangement, and an FMEA drawn on it does too.
 
     NOT BOUND, TOKEN NOT MEASURED. Failure Mode and Effect Analysis, Fault Tree Analysis, and ISO 26262 Road Vehicles - Functional Safety are listed by EA, and their stored tokens were not read.
+
+    `RAAML1.0` is the id EA reports, measured on EA 17.1 build 1716.
   diagram_types:
     RAAML:
+      token: RAAML::RAAML
       guide: fault tree
       base: Logical
+      size_keys:
+        BasicEvent: BasicEvent
+        UndevelopedEvent: UndevelopedEvent
+        HouseEvent: HouseEvent
+        ZeroEvent: ZeroEvent
+        DormantEvent: DormantEvent
+        AND: AND
+        OR: OR
+        SEQ: SEQ
+        XOR: XOR
+        INHIBIT: INHIBIT
+        MAJORITY VOTE: MAJORITY_VOTE
+        MAJORITY_VOTE: MAJORITY_VOTE
+        NOT: NOT
+        TransferIn: TransferIn
+        Undeveloped: Undeveloped
+        LessonLearned: LessonLearned
+        ASILOverrideRationale: ASILOverrideRationale
+        HazardAndRiskAssessment: HazardAndRiskAssessment
     RAAML - Core:
+      token: RAAML::RAAML - Core
       guide: block definition
       base: Logical
+      size_keys:
+        BasicEvent: BasicEvent
+        UndevelopedEvent: UndevelopedEvent
+        HouseEvent: HouseEvent
+        ZeroEvent: ZeroEvent
+        DormantEvent: DormantEvent
+        AND: AND
+        OR: OR
+        SEQ: SEQ
+        XOR: XOR
+        INHIBIT: INHIBIT
+        MAJORITY VOTE: MAJORITY_VOTE
+        MAJORITY_VOTE: MAJORITY_VOTE
+        NOT: NOT
+        TransferIn: TransferIn
+        Undeveloped: Undeveloped
+        LessonLearned: LessonLearned
+        ASILOverrideRationale: ASILOverrideRationale
+        HazardAndRiskAssessment: HazardAndRiskAssessment
     RAAML - General Concepts:
+      token: RAAML::RAAML - General Concepts
       guide: block definition
       base: Logical
+      size_keys:
+        BasicEvent: BasicEvent
+        UndevelopedEvent: UndevelopedEvent
+        HouseEvent: HouseEvent
+        ZeroEvent: ZeroEvent
+        DormantEvent: DormantEvent
+        AND: AND
+        OR: OR
+        SEQ: SEQ
+        XOR: XOR
+        INHIBIT: INHIBIT
+        MAJORITY VOTE: MAJORITY_VOTE
+        MAJORITY_VOTE: MAJORITY_VOTE
+        NOT: NOT
+        TransferIn: TransferIn
+        Undeveloped: Undeveloped
+        LessonLearned: LessonLearned
+        ASILOverrideRationale: ASILOverrideRationale
+        HazardAndRiskAssessment: HazardAndRiskAssessment
     Systems Theoretic Process Analysis:
+      token: RAAML::Systems Theoretic Process Analysis
       guide: control structure
       base: Logical
+      size_keys:
+        BasicEvent: BasicEvent
+        UndevelopedEvent: UndevelopedEvent
+        HouseEvent: HouseEvent
+        ZeroEvent: ZeroEvent
+        DormantEvent: DormantEvent
+        AND: AND
+        OR: OR
+        SEQ: SEQ
+        XOR: XOR
+        INHIBIT: INHIBIT
+        MAJORITY VOTE: MAJORITY_VOTE
+        MAJORITY_VOTE: MAJORITY_VOTE
+        NOT: NOT
+        TransferIn: TransferIn
+        Undeveloped: Undeveloped
+        LessonLearned: LessonLearned
+        ASILOverrideRationale: ASILOverrideRationale
+        HazardAndRiskAssessment: HazardAndRiskAssessment
     Goal Structuring Notation:
+      token: RAAML::Goal Structuring Notation
       guide: GSN argument
       base: Logical
+      size_keys:
+        BasicEvent: BasicEvent
+        UndevelopedEvent: UndevelopedEvent
+        HouseEvent: HouseEvent
+        ZeroEvent: ZeroEvent
+        DormantEvent: DormantEvent
+        AND: AND
+        OR: OR
+        SEQ: SEQ
+        XOR: XOR
+        INHIBIT: INHIBIT
+        MAJORITY VOTE: MAJORITY_VOTE
+        MAJORITY_VOTE: MAJORITY_VOTE
+        NOT: NOT
+        TransferIn: TransferIn
+        Undeveloped: Undeveloped
+        LessonLearned: LessonLearned
+        ASILOverrideRationale: ASILOverrideRationale
+        HazardAndRiskAssessment: HazardAndRiskAssessment
