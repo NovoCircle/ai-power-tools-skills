@@ -503,7 +503,7 @@ concepts:
     Artifact: {display: Artifact, category: Artifacts, abstract: true, specializes: BaseElement, section: 8.4.1}
     Category: {display: Category, category: Artifacts, specializes: RootElement, section: 8.4.1}
     CategoryValue: {display: Category Value, category: Artifacts, specializes: BaseElement, section: 8.4.1}
-    Group: {display: Group, category: Artifacts, specializes: Artifact, drawn_as: Dashed rounded rectangle, section: 8.4.1}
+    Group: {display: Group, category: Artifacts, specializes: Artifact, drawn_as: Dash-dot rounded rectangle, section: 8.4.1}
     TextAnnotation: {display: Text Annotation, category: Artifacts, specializes: Artifact, drawn_as: Open rectangle, section: 8.4.1}
     ChoreographyActivity:
       display: Choreography Activity
@@ -1024,7 +1024,6 @@ diagram_types:
     excludes: [ChoreographyActivity, ChoreographyTask, SubChoreography, CallChoreography]
     root_of_plane: [Process, SubProcess, AdHocSubProcess, Transaction]
     home_concepts: [Events, Activities, Gateways, Data, Swimlanes, Artifacts]
-    conventions: not-measured
   Collaboration:
     defined_by: Clauses 2.2.1, 7.6.2 and 9.2. A collaboration diagram shows two or more pools and the message flows between them.
     conformance: [ProcessModeling, ChoreographyModeling]
@@ -1033,7 +1032,6 @@ diagram_types:
     excludes: [MessageFlow between two objects in one pool, SequenceFlow across a pool boundary]
     root_of_plane: [Collaboration]
     home_concepts: [Swimlanes, Connecting objects, Conversation, Choreography]
-    conventions: not-measured
   Choreography:
     defined_by: Clauses 2.5, 11 and 11.8. A choreography describes the expected message exchange between participants with no central controller.
     conformance: [ChoreographyModeling]
@@ -1042,7 +1040,6 @@ diagram_types:
     excludes: [DataObject, DataStore, Task, SubProcess, CallActivity, DataAssociation, Lane, LaneSet, pools of its own]
     root_of_plane: [Choreography, SubChoreography]
     home_concepts: [Choreography]
-    conventions: not-measured
   Conversation:
     defined_by: Clause 9.5 and 7.2.1. The standard describes the Conversation diagram as a particular use of the Collaboration diagram.
     conformance: [ProcessModeling]
@@ -1051,7 +1048,6 @@ diagram_types:
     excludes: [Choreography between the pools (usually)]
     root_of_plane: [Collaboration]
     home_concepts: [Conversation, Swimlanes]
-    conventions: not-measured
 
 # 263 constraints: 96 from clauses 2 to 12 and 15 (first pass) and 167 from Clauses 13 and 14, the annexes, correlation, resources and services (second pass). Ids are BPMN-<CAT>-nnn; categories: CONN Connection and containment; EVT Events; ACT Activities and processes; DATA Data; GATE Gateways; CHOR Choreography; CONF Conformance, notation and interchange; INST Execution scope and process instances; LIFE Activity behavior and life cycle; SUBP Sub-process, ad-hoc and loop behavior; EXGW Gateway execution; EXEV Events at runtime; COMP Compensation and transaction; BPEL WS-BPEL mapping; CORR Correlation; RSRC Resources and roles; SERV Services; ANNX Annexes.
 constraints:
@@ -2548,7 +2544,7 @@ conventions:
     flows: {sequence_flow: 'Solid line with a solid arrowhead. Conditional: a mini-diamond at the start when leaving an activity, none when leaving a gateway. Default: a slash marker (8.4.13).', message_flow: 'Dashed line, a circle at the start, an open arrowhead (9.4).', association: 'Dotted line, optionally with an arrowhead by associationDirection; a compensation association joins a compensation boundary event to its handler (8.4.1).', conversation_link: Double thin line (9.5.6)., section: 7.3.2; 7.5}
     pools: {pool: 'A named rectangle, horizontal or vertical, holding a process (white box) or empty (black box). One and only one pool may be drawn without a boundary; every other pool has one (9.3).', multiplicity: A multi-instance marker shows when the participant's maximum is greater than 1 (12.3)., section: 9.3; 10.8}
     choreography: {bands: Participants appear as bands on the activity; the non-initiating band is lightly shaded (11.5.1)., message_icons: A return message icon is lightly filled and the initiating message icon unfilled (11.5.1)., loop_markers: 'Loop, parallel multi-instance and sequential multi-instance match the activity''s loop type; only one marker at a time (11.5.1).', section: '11.5'}
-    artifacts: {group: A dashed rounded rectangle; does not affect flow; may span pools (8.4.1)., text_annotation: An open rectangle carrying free text (8.4.1)., section: 8.4.1}
+    artifacts: {group: A dash-dot rounded rectangle; does not affect flow; may span pools (8.4.1)., text_annotation: An open rectangle carrying free text (8.4.1)., section: 8.4.1}
     extension: {flexible: 'Size, color, line style and label position are flexible except where the standard states otherwise (2.2.3, 7.5).', permitted: New markers; new artifact shapes that do not conflict; colors with their own semantics; line styles that do not conflict., forbidden: 'Changing a shape (square to triangle, rounded to square); altering the footprint of events, activities and gateways; modifying or duplicating the line styles of sequence flows, message flows and text associations.', attributes: Extension attributes must not contradict BPMN semantics. A mandatory extension must be understood; an optional one may be ignored (7.7)., section: 2.2.3; 7.5; 7.7}
   depiction:
     source: Clause 12.3 (pp. 380 to 412), the depiction library; Annex B for the interchange classes. 177 rows. The depiction images were not read; the resolution tables were.

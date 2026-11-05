@@ -139,146 +139,68 @@ tables:
       Choreography:
         Choreography: "s"
   bpmn-2-conversation-link:
-    source: "OMG BPMN 2.0.2 (formal/13-12-09) Table 9.13 and 9.5.6 (rule BPMN-CONN-015): a conversation link joins one conversation node to a participant; derived from the rule, not printed as a table"
+    source: "OMG BPMN 2.0.2 (formal/13-12-09) Table 9.13 and 9.4.1 (rule BPMN-CONN-015): a conversation link joins one conversation node to one other interaction node, which is a participant, an activity or an event; derived from the rule, not printed as a table. A row with no cells names a stereotype that can't be the other end, so a link to it is reported"
     connectors:
       l: ConversationLink
     cells:
       Activity:
         Conversation: "l"
-      Assignment:
-        Conversation: "l"
-      BPELProcess:
-        Conversation: "l"
-      BusinessProcess:
-        Conversation: "l"
-      Category:
-        Conversation: "l"
-      CategoryValue:
-        Conversation: "l"
-      Choreography:
-        Conversation: "l"
-      ChoreographyModel:
-        Conversation: "l"
-      CollaborationModel:
-        Conversation: "l"
-      ComplexBehaviorDefinition:
-        Conversation: "l"
+      Assignment: {}
+      BPELProcess: {}
+      BusinessProcess: {}
+      Category: {}
+      CategoryValue: {}
+      Choreography: {}
+      ChoreographyModel: {}
+      CollaborationModel: {}
+      ComplexBehaviorDefinition: {}
       Conversation:
         Activity: "l"
-        Assignment: "l"
-        BPELProcess: "l"
-        BusinessProcess: "l"
-        Category: "l"
-        CategoryValue: "l"
-        Choreography: "l"
-        ChoreographyModel: "l"
-        CollaborationModel: "l"
-        ComplexBehaviorDefinition: "l"
-        ConversationModel: "l"
-        CorrelationKey: "l"
-        CorrelationProperty: "l"
-        CorrelationPropertyBinding: "l"
-        CorrelationPropertyRetrievalExpression: "l"
-        CorrelationSubscription: "l"
-        DataObject: "l"
-        DataStore: "l"
         EndEvent: "l"
-        EndPoint: "l"
-        Error: "l"
-        Escalation: "l"
-        Gateway: "l"
-        GlobalTask: "l"
-        Group: "l"
-        IOSpecification: "l"
-        InputOutputBinding: "l"
-        InputSet: "l"
-        Interface: "l"
         IntermediateEvent: "l"
-        ItemDefinition: "l"
-        Lane: "l"
-        Message: "l"
-        Operation: "l"
-        OutputSet: "l"
         Participant: "l"
-        PartnerEntity: "l"
-        PartnerRole: "l"
         Pool: "l"
-        Resource: "l"
-        ResourceParameter: "l"
-        ResourceRole: "l"
-        Signal: "l"
         StartEvent: "l"
-        TextAnnotation: "l"
-      ConversationModel:
-        Conversation: "l"
-      CorrelationKey:
-        Conversation: "l"
-      CorrelationProperty:
-        Conversation: "l"
-      CorrelationPropertyBinding:
-        Conversation: "l"
-      CorrelationPropertyRetrievalExpression:
-        Conversation: "l"
-      CorrelationSubscription:
-        Conversation: "l"
-      DataObject:
-        Conversation: "l"
-      DataStore:
-        Conversation: "l"
+      ConversationModel: {}
+      CorrelationKey: {}
+      CorrelationProperty: {}
+      CorrelationPropertyBinding: {}
+      CorrelationPropertyRetrievalExpression: {}
+      CorrelationSubscription: {}
+      DataObject: {}
+      DataStore: {}
       EndEvent:
         Conversation: "l"
-      EndPoint:
-        Conversation: "l"
-      Error:
-        Conversation: "l"
-      Escalation:
-        Conversation: "l"
-      Gateway:
-        Conversation: "l"
-      GlobalTask:
-        Conversation: "l"
-      Group:
-        Conversation: "l"
-      IOSpecification:
-        Conversation: "l"
-      InputOutputBinding:
-        Conversation: "l"
-      InputSet:
-        Conversation: "l"
-      Interface:
-        Conversation: "l"
+      EndPoint: {}
+      Error: {}
+      Escalation: {}
+      Gateway: {}
+      GlobalTask: {}
+      Group: {}
+      IOSpecification: {}
+      InputOutputBinding: {}
+      InputSet: {}
+      Interface: {}
       IntermediateEvent:
         Conversation: "l"
-      ItemDefinition:
-        Conversation: "l"
-      Lane:
-        Conversation: "l"
-      Message:
-        Conversation: "l"
-      Operation:
-        Conversation: "l"
-      OutputSet:
-        Conversation: "l"
+      ItemDefinition: {}
+      Lane: {}
+      Message: {}
+      Operation: {}
+      OutputSet: {}
       Participant:
         Conversation: "l"
-      PartnerEntity:
-        Conversation: "l"
-      PartnerRole:
-        Conversation: "l"
+      PartnerEntity: {}
+      PartnerRole: {}
       Pool:
         Conversation: "l"
-      Resource:
-        Conversation: "l"
-      ResourceParameter:
-        Conversation: "l"
-      ResourceRole:
-        Conversation: "l"
-      Signal:
-        Conversation: "l"
+      Resource: {}
+      ResourceParameter: {}
+      ResourceRole: {}
+      Signal: {}
       StartEvent:
         Conversation: "l"
-      TextAnnotation:
-        Conversation: "l"
+      TextAnnotation: {}
 
 rules:
   - id: BPMN2-CONN-002
@@ -766,9 +688,9 @@ rules:
   - id: BPMN2-CONN-015
     name: A conversation link has exactly one conversation node
     implements: BPMN-CONN-015
-    description: A conversation link joins one conversation node to a participant (a pool, an activity, an event); if one
-      end is not a conversation node the other must be, and it never joins two conversation nodes. [OMG BPMN 2.0.2 (formal/13-12-09)
-      Table 9.13 p. 133]
+    description: A conversation link joins one conversation node to an interaction node (a pool, a participant, an activity,
+      an event); if one end is not a conversation node the other must be, it never joins two conversation nodes, and any
+      other element at the far end is reported. [OMG BPMN 2.0.2 (formal/13-12-09) Table 9.13 p. 133]
     category: connection
     severity: error
     demo_trigger: false
@@ -781,7 +703,7 @@ rules:
       table: bpmn-2-conversation-link
       unknown_endpoint: ignore
     remediation:
-      short: Join a Conversation to a participant with the link; do not join two conversations or two participants.
+      short: Join a Conversation to a pool, a participant, an activity or an event with the link; do not join two conversations or two of the others.
       auto_fixable: false
 
   - id: BPMN2-CONN-019

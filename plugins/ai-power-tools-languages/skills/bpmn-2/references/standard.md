@@ -88,7 +88,7 @@ The full list, with generalizations, is in `language.yaml`. The groups follow th
 
 **Swimlanes (9.3, 10.8).** A *Participant*, drawn as a *Pool*, is a business entity or role in a collaboration; a pool holds a process (white box) or is empty (black box). *Partner Entity* and *Partner Role* are the kinds of participant; *Participant Multiplicity* gives minimum and maximum instance counts. A *Lane* is a sub-partition of a process, usually inside a pool, and may be nested; a *Lane Set* groups lanes of one partition. What a lane means is the modeler's choice.
 
-**Artifacts (8.4.1).** Additional information that does not change flow: *Association*, *Group* (a dashed rounded box that groups elements of one category value, informally, possibly across pools) and *Text Annotation*. *Category* and *Category Value* back the group.
+**Artifacts (8.4.1).** Additional information that does not change flow: *Association*, *Group* (a dash-dot rounded box that groups elements of one category value, informally, possibly across pools) and *Text Annotation*. *Category* and *Category Value* back the group.
 
 **Choreography (Clause 11).** A choreography is a kind of process that describes the expected message exchange between participants, with no central controller. Participants appear as bands on the activities, not as pools. A *Choreography Task* is atomic: one or two message exchanges between two or more participants, with one band per participant and one task-name band; the non-initiating bands are lightly shaded. A *Sub-Choreography* is a compound choreography activity. A *Call Choreography* calls a Choreography or a Global Choreography Task.
 
