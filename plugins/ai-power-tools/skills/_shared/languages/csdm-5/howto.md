@@ -153,10 +153,11 @@ These are tool choices, not additions to CSDM:
 3. **Product Model has child classes, and the lines name the parent.** The Model and Relates to lines are offered to the Product Model shape, not to Application Model or the other classes.
 4. **An empty field passes.** A blank life cycle stage or classification gets no finding. A service with no stage set isn't asked for an offering. The Business Application check is also looser than its dropdown: the dropdown offers four stages, and the check accepts every stage on the intangible list, so a wider stage set by script passes.
 5. **Asset and Install Base Item combine two lists,** tangible and intangible, and no check reads their values.
+6. **Operationalizes may not be on your platform.** CSDM's paper and documentation draw this relationship, but a ServiceNow community comment says the base system doesn't have it. We haven't verified it either way. The pack keeps the line as the paper draws it, so check your platform before you rely on it.
 
 ## 10. Checking a model
 
-The CSDM 5 ruleset has 14 rules. They check that:
+The CSDM 5 ruleset, `rulesets/csdm-5/csdm-5_rules.yaml`, has 14 rules. They check that:
 
 - A line joins only the pairs CSDM lists, as a warning, because CSDM doesn't forbid others.
 - A relationship line touches no Foundation entity other than Business Process.
@@ -167,6 +168,8 @@ The CSDM 5 ruleset has 14 rules. They check that:
 - A Business Application's Uses or Consumes reaches only an Application Service or an Information Object.
 - Life cycle values belong to the shape's process.
 
-Five of these rules read lines, and they need a server version later than 3.6.4. On 3.6.4 they report nothing, which reads like a clean result.
+**Five of these 14 rules read lines, and they need server 3.6.5 or later.** On 3.6.4 and earlier those five report nothing, with no error, so a clean result there says nothing about what they check.
+
+**The grading is ours.** CSDM is guidance and rarely says "must". The ruleset makes a finding an error only where CSDM states a flat limit, and a warning where CSDM recommends something or a line falls outside its list.
 
 **They can't check everything.** Capability hierarchy depth and loops need a chain of lines followed, which the rules can't do today. Judgment calls, and anything that depends on what happens in ServiceNow, need a person.

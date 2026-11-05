@@ -1,6 +1,6 @@
 ---
 name: csdm-5
-description: The ServiceNow Common Service Data Model (CSDM) 5, a vendor-defined data model that says where service data belongs in a ServiceNow configuration database (CMDB) and which relationships to use - business capability, business application, information object, SDLC component, application service and other service instances, technology management service (formerly technical service) and its offerings, dynamic CI group, business service and business service offering, service portfolio, request catalog, product models, value streams, and the seven domains (Foundation, Ideation and Strategy, Design and Planning, Build and Integration, Service Delivery, Service Consumption, Manage Portfolios). Use when someone is modeling services for IT service management or a service catalog, mapping applications to services to infrastructure, planning a CMDB or service mapping rollout, or asks what CSDM, the CSDM domains, the crawl-walk-run-fly path, Figure 16 relationships, or the life cycle stage and stage status values allow.
+description: The ServiceNow Common Service Data Model (CSDM) 5, a vendor-defined data model that says where service data belongs in a ServiceNow configuration database (CMDB) and which relationships to use for business capability, business application, information object, SDLC component, application service and other service instances, technology management service (formerly technical service) and its offerings, dynamic CI group, business service and business service offering, service portfolio, request catalog, product models, value streams, and the seven domains (Foundation, Ideation and Strategy, Design and Planning, Build and Integration, Service Delivery, Service Consumption, Manage Portfolios). Use when someone is modeling services for IT service management or a service catalog, mapping applications to services to infrastructure, planning a CMDB or service mapping rollout, or asks what CSDM, the CSDM domains, the crawl-walk-run-fly path, Figure 16 relationships, or the life cycle stage and stage status values allow.
 ---
 
 # ServiceNow Common Service Data Model (CSDM) 5
@@ -15,11 +15,11 @@ Version covered: **CSDM 5** (white paper published 6 May 2025; product documenta
 
 A CSDM model describes, for one organization, a chain from idea to consumption:
 
-1. **Why and what** - strategy, goals, ideas and planning items (Ideation and Strategy).
-2. **The logical design** - capabilities, business applications, information types (Design and Planning).
-3. **The build** - software components and AI assets (Build and Integration).
-4. **The running services** - deployed service instances, applications, infrastructure, and the technology services and offerings that manage them (Service Delivery).
-5. **What the business consumes** - business services and offerings, the catalog, the portfolio (Service Consumption).
+1. **Why and what:** strategy, goals, ideas and planning items (Ideation and Strategy).
+2. **The logical design:** capabilities, business applications, information types (Design and Planning).
+3. **The build:** software components and AI assets (Build and Integration).
+4. **The running services:** deployed service instances, applications, infrastructure, and the technology services and offerings that manage them (Service Delivery).
+5. **What the business consumes:** business services and offerings, the catalog, the portfolio (Service Consumption).
 6. **Shared reference data** under all of it (Foundation): value streams, business processes, contracts, product models, locations, groups, users, companies.
 
 Manage Portfolios is a view across parts of the other domains, for service owners. It is not a set of tables.
@@ -96,14 +96,14 @@ Service Instance, Business Service, Technology Management Service and Service Of
 
 The paper's Figure 16 lists the relationships it prescribes (35 entries, all in `language.yaml` with their types); the text adds about as many more references and hierarchies. Eight relationship types are named in the figure, each written Parent descriptor::Child descriptor:
 
-- **Provided by::Provides** - Business Capability to Business Application and to Business Service; Connection Service Instance to Network Service Instance; API to Application.
-- **Uses::Used by** - Business Application to Information Object and to Application Service. ServiceNow's documentation tells Enterprise Architecture Workspace users to keep the older **Consumes::Consumed by** for the Application Service link, so either is accepted there.
-- **Contains::Contained by** - Business Application to SDLC Component; SDLC Component to Application Service; Technology Management Service Offering to Service Instance and to Dynamic CI Group.
-- **Depends on::Used by** - Application Service, and the data, network, operational process and facility service instances, to Service Instance; Application Service to Application and to Application Service; Business Service Offering to Service Instance; Network Function to Network Function Application.
-- **Connected by::Connects** - Service Instance or Connected Device to Connection Service Instance.
-- **Receives data from::Sends data to** - API to Application Service and to Business Service Offering.
-- **Runs on::Runs** - Application, and Network Function Application, to Infrastructure CI.
-- **Operationalizes::Operationalized by** - Business Process to Business Capability.
+- **Provided by::Provides**: Business Capability to Business Application and to Business Service; Connection Service Instance to Network Service Instance; API to Application.
+- **Uses::Used by**: Business Application to Information Object and to Application Service. ServiceNow's documentation tells Enterprise Architecture Workspace users to keep the older **Consumes::Consumed by** for the Application Service link, so either is accepted there.
+- **Contains::Contained by**: Business Application to SDLC Component; SDLC Component to Application Service; Technology Management Service Offering to Service Instance and to Dynamic CI Group.
+- **Depends on::Used by**: Application Service, and the data, network, operational process and facility service instances, to Service Instance; Application Service to Application and to Application Service; Business Service Offering to Service Instance; Network Function to Network Function Application.
+- **Connected by::Connects**: Service Instance or Connected Device to Connection Service Instance.
+- **Receives data from::Sends data to**: API to Application Service and to Business Service Offering.
+- **Runs on::Runs**: Application, and Network Function Application, to Infrastructure CI.
+- **Operationalizes::Operationalized by**: Business Process to Business Capability.
 
 References (an attribute, not a relationship record): "Published as" from a Technology Management Service or Business Service to its offerings; "Is part of" from those services to a Service Portfolio; the legacy reference from Business Application to Business Process; the model reference from any CI to a Product Model. Many-to-many maps join Value Streams and Stages to Business Capabilities and Business Processes.
 

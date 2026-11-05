@@ -243,7 +243,7 @@ reference_data:
   relationship_types: ['Provided by::Provides', 'Uses::Used by', 'Consumes::Consumed by', 'Contains::Contained by', 'Depends on::Used by', 'Connected by::Connects', 'Receives data from::Sends data to', 'Runs on::Runs', 'Operationalizes::Operationalized by']
   relationship_kinds: {cmdb-relationship: 'A relationship record between two CIs, with a relationship type written Parent descriptor::Child descriptor (Figure 16 legend: CMDB relation).', reference: 'A reference attribute from one record to another (Figure 16 legend: entity relation).', map: 'A many-to-many mapping table (Figure 16 legend: m2m map).', hierarchy: A parent reference from an entity to its own kind., membership: A group or bill-of-materials containment stated in the text.}
 life_cycle:
-  source: 'CSDM 5 Figures 9 to 14 (figures win, decision of Ryan 2026-11-03). Stage, then each status with the kinds of record it applies to. A = Asset, BA = Business Application, CI = configuration item, Co = Contract, Doc = Document, IBI = Install Base Item, Lo = Location, PM = Product Model, SV = Service or Service Model.'
+  source: 'CSDM 5 Figures 9 to 14, which are the source used here where the figures and the written definitions differ. Stage, then each status with the kinds of record it applies to. A = Asset, BA = Business Application, CI = configuration item, Co = Contract, Doc = Document, IBI = Install Base Item, Lo = Location, PM = Product Model, SV = Service or Service Model.'
   product:
     applies_to: Product Model tables and the Service Model (Figure 10; p. 21).
     Ideation: {Under Evaluation: PM+SV, Pilot: PM+SV}
@@ -283,7 +283,7 @@ life_cycle:
     Design: {Chartered: Lo, Build: Lo}
     Operational: {Available: Lo, In Use: Lo, Pending Retirement: Lo}
     End of Life: {Sold: Lo, Lease Return: Lo, Obsolete: Lo}
-  differences: 'Sources disagree, and the figures are what is recorded here. Product: the paper definitions omit the Build & Integrate stage, Planning, In production, In Use and Sold; the docs definitions have the stage, Planning and In Production. Location: the paper and docs definitions say Ideation where Figure 14 and the text say Design. Tangible and intangible: the definitions differ on Pending Fulfillment, the Design stage, and the End of Life lists. Pending Fulfillment is defined only in the docs (tangible). Business Application: the docs add a restricted set of stages (Ideation, Design, Operational, End of Life) and say inherited stages may also appear. Figure 11 was read at low resolution for the kinds of record on Design/Build; confirm when the file is built.'
+  differences: 'Sources disagree, and the figures are what is recorded here. Product: the paper definitions omit the Build & Integrate stage, Planning, In production, In Use and Sold; the docs definitions have the stage, Planning and In Production. Location: the paper and docs definitions say Ideation where Figure 14 and the text say Design. Tangible and intangible: the definitions differ on Pending Fulfillment, the Design stage, and the End of Life lists. Pending Fulfillment is defined only in the docs (tangible). Business Application: the docs add a restricted set of stages (Ideation, Design, Operational, End of Life) and say inherited stages may also appear. Figure 11 was read at low resolution for the kinds of record on Design/Build, and that reading is not confirmed against the paper''s figure at full resolution.'
 constraints:
 - {id: CSDM-SVC-001, statement: 'A Business Service and a Technology Management Service are each single level: neither forms a hierarchy of services of its own kind.', strength: must, section: 'p. 11, What is a Service?', applies_when: 'Business Service, Technology Management Service', checkable: static}
 - {id: CSDM-SVC-002, statement: Every operational Business Service and Technology Management Service has at least one Service Offering., strength: should, section: 'pp. 43, 45, 54-55', applies_when: Business Service or Technology Management Service is operational, checkable: static}
@@ -479,11 +479,85 @@ notation:
 layout:
   basis: Our conventions, not this standard's.  Sizes and spacing come from the shared layout standard.
   element_types:
+    ConfigurationItem: box
+    Service: box
     ValueStream: box
-    ServiceInstance: box
-    SDLCComponent: box
+    ValueStreamCategory: box
+    ValueStreamStage: box
+    BusinessProcess: box
+    Contract: box
+    ProductModel: box
+    ApplicationModel: box
+    SystemComponentModel: box
+    SoftwareComponentModel: box
+    ServiceOfferingModel: box
+    FirmwareModel: box
+    AISystemProductModel: box
+    ServiceModel: box
+    SoftwareModel: box
+    ContentProductModel: box
+    AIContentProductModel: box
+    ContractModel: box
+    FacilityModel: box
+    HardwareModel: box
+    ConsumableModel: box
+    EnterpriseGoodModel: box
+    ProductFeature: box
+    SoftwareBillOfMaterials: box
+    CMDBGroup: box
+    Company: box
+    BusinessUnit: box
+    Department: box
     Location: box
+    Building: box
+    Group: box
+    User: box
+    Team: box
+    Knowledge: box
+    ProductIdea: box
+    PlanningItem: box
+    StrategicPlan: box
+    StrategicPriority: box
+    Goal: box
+    Target: box
+    BusinessCapability: box
+    BusinessApplication: box
+    InformationObject: box
+    SDLCComponent: box
+    AISystemDigitalAsset: box
+    AIModelDigitalAsset: box
+    AIDatasetDigitalAsset: box
+    AIPromptDigitalAsset: box
+    ServiceInstance: box
+    ApplicationService: box
+    DataServiceInstance: box
+    ConnectionServiceInstance: box
+    NetworkServiceInstance: box
+    OperationalProcessServiceInstance: box
+    FacilityServiceInstance: box
+    NetworkFunction: box
+    API: box
+    Application: box
+    NetworkFunctionApplication: box
+    AIFunction: box
+    AIApplication: box
+    OperationalTechnology: box
+    InfrastructureCI: box
+    Asset: box
+    InstallBaseItem: box
+    ConnectedDevice: box
+    TechnologyManagementService: box
+    TechnologyManagementServiceOffering: box
+    DynamicCIGroup: box
+    BusinessService: box
+    ServiceOffering: box
+    BusinessServiceOffering: box
+    ServiceCommitment: box
+    ServiceOfferingSubscription: box
     RequestCatalog: container
+    CatalogItem: box
+    Portfolio: box
+    ServicePortfolio: box
   exceptions: {}
   diagram_types:
     Configuration Item Relationships:
