@@ -467,8 +467,7 @@ def test_the_attribute_fan_that_erd_cites_for_refusing_radial(model):
                 from_attribute += 1
         hubs_per_diagram.append(len(hubs))
     assert (from_entity, from_attribute) == (21, 9)
-    binding = find_binding(_ERD)
-    assert f"{from_entity} join an entity" in binding.notes
+    assert _bound(_ERD, _ERD_TYPE).grammar != "radial"
     # Several fans, not one ring - which is what `radial` cannot compose.
     assert sorted(hubs_per_diagram) == [2, 6]
 
