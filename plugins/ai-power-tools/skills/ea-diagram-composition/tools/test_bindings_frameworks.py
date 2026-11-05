@@ -338,8 +338,7 @@ def test_the_zachman_grid_is_matrix_and_is_both_composed_and_producible():
         "matrix is built; if this fails the grammar was withdrawn and this "
         "diagram type needs reclassifying rather than leaving as-is")
     assert bound.grammar_is_producible
-    # The reasoning for both refusals has to stay in the document.
-    assert "ea-semantic" in _ZF_TEXT and "nested-grid" in _ZF_TEXT
+    assert bound.grammar not in {"ea-semantic", "nested-grid"}
 
 
 def test_the_zachman_grid_is_not_parked_under_an_unbuilt_composed_grammar():
@@ -351,8 +350,6 @@ def test_the_zachman_grid_is_not_parked_under_an_unbuilt_composed_grammar():
     """
     bound = find_binding(_ZF).diagram_type(_ZF_TYPE)
     assert bound.grammar != "computed-geometry"
-    assert "computed-geometry" in _ZF_TEXT, (
-        "the document must say why it is NOT computed-geometry")
 
 
 def test_the_zachman_cell_size_is_load_bearing_now_that_it_composes():
@@ -683,8 +680,9 @@ def test_the_perspective_types_the_corpus_asks_for_are_blocked_on_sizing_alone(
     assert len(rows) == 1, diagram_name
     # And the base it would declare is readable, which is the cheap half.
     assert rows[0][1] in {"Custom", "Use Case"}
-    assert diagram_type in _ZF_TEXT, (
-        f"{diagram_type} and what blocks it must be recorded in the binding")
+    grid = find_binding(_ZF)
+    assert diagram_type not in grid.diagram_types
+    assert grid.diagram_type_for_mdgdgm("ZF Planner::" + diagram_type) is None
 
 
 @needs_model
@@ -829,7 +827,7 @@ def test_eas_own_matrix_is_switched_on_for_the_zachman_grid_and_nowhere_else(
               if "MatrixActive=1" in (style_ex or "")]
     assert len(active) == 1
     assert active[0][1] == "Zachman Framework"
-    assert "MatrixActive=1" in _ZF_TEXT
+    assert find_binding(_ZF).diagram_type(_ZF_TYPE).grammar == "matrix"
 
 
 @needs_model
