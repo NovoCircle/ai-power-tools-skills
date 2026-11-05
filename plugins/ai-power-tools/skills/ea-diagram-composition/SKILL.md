@@ -126,8 +126,8 @@ its diagram types.
 | **graph** | a graph or tree where nothing dictates where a node sits — EA places it, you tidy | the content is really stratified, sequenced or nested, which a general layout ignores |
 | **ea-semantic** | the diagram type itself dictates the arrangement — lifelines and message order, a waveform against a time axis | you place boxes on it: coordinates are the wrong output |
 
-That is the full set, `bindings.GRAMMARS`: eight. Five have a composer (`layered-bands`, `lanes`,
-`nested-grid`, `radial`, `two-column-cycle`). `computed-geometry` is ours to compute and not built yet. For the last two
+`bindings.GRAMMARS` holds twelve: these eight, plus `matrix`, `radial-tree`, `chevron-stack`, and `treemap`.
+Nine have a composer. `computed-geometry` is ours to compute and not built yet. For the last two
 we place nothing: `graph` is fully producible through EA's layout, `ea-semantic` is not producible.
 See [`references/grammars.md`](references/grammars.md) for what each one is for, in detail, and for
 the EA coordinate convention.
@@ -160,11 +160,11 @@ vertical decision. The engine handles it; you only need to care when reading geo
 
 `spec` carries sizing and spacing. An unknown `spec` key raises rather than being ignored, so a
 typo cannot silently produce a default layout. Where there is a binding, get the spec from it —
-`dt.spec({"align": "center"})` — rather than writing the numbers by hand; a binding's are measured
-from real diagrams, and yours are not.
+`dt.spec({"align": "center"})` — rather than writing the numbers by hand. A binding's come from the
+layout standard, which every language shares, so a diagram drawn from one matches every other.
 
-**Pass the item names to `spec()`.** A binding's box size is measured for a typical name and knows
-nothing about the ones in your model. **EA does not clip a name it cannot fit — it grows the drawn
+**Pass the item names to `spec()`.** A binding's box size is the standard's, set for a typical name,
+and knows nothing about the ones in your model. **EA does not clip a name it cannot fit — it grows the drawn
 box and leaves the stored geometry alone**: measured live, a 36-character name with no space in it
 was drawn 169px wide against a stored 60, silently, and every check that reads the stored rect then
 reads a rect EA does not paint. With `names` the width is widened before the engine sees it, the
@@ -173,7 +173,7 @@ same width for every peer, and the returned spec says what it widened:
 ```python
 spec = dt.spec({"align": "center"}, names=[e["name"] for e in elements])
 if spec.widened:
-    print(spec.note)     # the measured convention was not the figure used — say which was
+    print(spec.note)     # the standard's size was not the figure used — say which was
 ```
 
 What has to fit is a name's **longest space-free run**, not the whole name: EA wraps on spaces only
