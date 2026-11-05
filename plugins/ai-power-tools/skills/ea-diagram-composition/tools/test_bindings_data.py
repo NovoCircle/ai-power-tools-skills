@@ -5,8 +5,8 @@ Three notations were taken together because they are the same kind of problem -
 small, EA-placed, data-shaped diagram types - and they came out three different
 ways. This file pins all three, including the refusal:
 
-  `ERD_dp`    two diagrams in the reference model. Bound, with its entity size
-              and both item gaps deliberately unstated.
+  `ERD`       two diagrams in the reference model, whose tokens start `ERD_dp`.
+              Bound, with its entity size and both item gaps deliberately unstated.
   `DMN1.1`    thirty-one diagrams. Bound, and the only binding in the tree whose
               gap populations are spread thinly enough across diagrams to state
               without a caveat about concentration.
@@ -61,7 +61,10 @@ from compose import DEFAULT_SPEC  # noqa: E402
 # The ids, read from the model's own `MDGDgm` values and written down here
 # because they are not derivable and not guessable.
 # ---------------------------------------------------------------------------
-_ERD = "ERD_dp"
+_ERD = "ERD"
+#: What the stored token starts with. The model's inventory is keyed by this, not by
+#: the id EA reports.
+_ERD_GROUP = "ERD_dp"
 _ERD_TYPE = "ERD_DP"
 _ERD_FILE = "data-modeling-er/conventions.yaml"
 _ERD_BASE = "Logical"
@@ -77,8 +80,9 @@ _DMN_BASE = "Analysis"
 _DATA = "Extended"
 _DATA_TYPE = "Data Modeling"
 
-#: Ids somebody would plausibly guess, and which resolve to nothing at all. The
-#: family names are what EA's own user interface calls these notations.
+#: Names somebody would plausibly guess, none of which starts a stored token, so a
+#: token built on one resolves to nothing at all. The family names are what EA's own
+#: user interface calls these notations, and `ERD` is also the id EA reports.
 _GUESSED = ("ERD", "ERD_DP", "erd", "DMN", "DMN1.0", "DMN1.1.1", "DataModel",
             "Data Modeling")
 
@@ -92,6 +96,11 @@ needs_model = pytest.mark.skipif(
             f"{mb.MODEL_ENV_VAR}; every figure in these bindings is measured "
             f"from it"),
 )
+
+
+def _group(technology: str) -> str:
+    """What the stored tokens of a bound technology start with."""
+    return _ERD_GROUP if technology == _ERD else technology
 
 
 def _qualified(technology: str, diagram_type: str) -> str:
@@ -134,7 +143,7 @@ def measured(model):
     for technology, diagram_type in ((_ERD, _ERD_TYPE), (_DMN, _DMN_TYPE),
                                      (_DATA, _DATA_TYPE)):
         out[technology] = mb.measure_diagrams(
-            diagrams, known, technology, diagram_type)
+            diagrams, known, _group(technology), diagram_type)
     return out
 
 
@@ -212,7 +221,7 @@ def test_the_ids_are_the_ones_the_model_carries_and_the_guessable_ones_are_not(
     """
     _, known = model
     for technology in _IDS:
-        assert technology in known, technology
+        assert _group(technology) in known, technology
     for guess in _GUESSED:
         assert guess not in known, f"{guess!r} is an id after all - re-check"
 
@@ -226,7 +235,7 @@ def test_the_bound_diagram_type_is_the_whole_catalog_its_technology_declares(
     type, which is why one bound type is a complete binding rather than a
     partial one."""
     _, known = model
-    assert set(known[technology]) == {diagram_type}
+    assert set(known[_group(technology)]) == {diagram_type}
 
 
 @needs_model
@@ -238,7 +247,7 @@ def test_the_base_is_the_ea_diagram_type_the_model_records(
     parent binding measures, and they sit on two different ones."""
     diagrams, _ = model
     recorded = {d.raw_type for d in diagrams.values()
-                if d.technology == technology and d.diagram_type == diagram_type}
+                if d.technology == _group(technology) and d.diagram_type == diagram_type}
     assert recorded == {base}
     assert find_binding("UML").diagram_types[base] is not None
 
@@ -378,7 +387,7 @@ def test_the_frame_supplies_the_title_because_no_diagram_draws_one(
         content = {oid: (name or "", note or "") for oid, name, note
                    in conn.execute("SELECT Object_ID, Name, Note FROM t_object")}
     selected = [d for d in diagrams.values()
-                if d.technology == technology and d.diagram_type == diagram_type]
+                if d.technology == _group(technology) and d.diagram_type == diagram_type]
     assert selected
     drawn = [d.diagram_id for d in selected if d.name.strip() and any(
         i.object_type in mb.FURNITURE_TYPES
@@ -401,7 +410,7 @@ def test_nesting_is_not_the_structure_on_either_type_so_no_grid_is_composed(
     def nesting(technology, diagram_type):
         inside, total, parents = 0, 0, set()
         for d in diagrams.values():
-            if d.technology != technology or d.diagram_type != diagram_type:
+            if d.technology != _group(technology) or d.diagram_type != diagram_type:
                 continue
             for a in d.items:
                 total += 1
@@ -442,7 +451,7 @@ def test_the_attribute_fan_that_erd_cites_for_refusing_radial(model):
     from_entity = from_attribute = 0
     hubs_per_diagram = []
     for d in diagrams.values():
-        if d.technology != _ERD or d.diagram_type != _ERD_TYPE:
+        if d.technology != _ERD_GROUP or d.diagram_type != _ERD_TYPE:
             continue
         here = {i.object_id for i in d.items}
         hubs = set()
@@ -458,8 +467,7 @@ def test_the_attribute_fan_that_erd_cites_for_refusing_radial(model):
                 from_attribute += 1
         hubs_per_diagram.append(len(hubs))
     assert (from_entity, from_attribute) == (21, 9)
-    binding = find_binding(_ERD)
-    assert f"{from_entity} join an entity" in binding.notes
+    assert _bound(_ERD, _ERD_TYPE).grammar != "radial"
     # Several fans, not one ring - which is what `radial` cannot compose.
     assert sorted(hubs_per_diagram) == [2, 6]
 
@@ -510,7 +518,7 @@ def test_a_diagram_that_names_itself_resolves_exactly_to_its_binding(
         technology, diagram_type, base):
     resolution = resolve_diagram(
         set(available_bindings()),
-        style_ex=f"MDGDgm={_qualified(technology, diagram_type)};DUID=A1B2;")
+        style_ex=f"MDGDgm={_qualified(_group(technology), diagram_type)};DUID=A1B2;")
     assert resolution.resolved and resolution.path == "qualified"
     assert resolution.confidence == "exact"
     assert resolution.technology == technology

@@ -116,14 +116,14 @@ data. So for an ArchiMate ruleset the selector reads:
 ```yaml
     selector:
       type: connector
-      connector_stereotype: ArchiMate_Assignment   # NOT `Assignment` — that matches 0
+      connector_stereotypes: [ArchiMate_Assignment]   # NOT `Assignment`, which matches 0
 ```
 
 *Measure it, do not infer it.* Run `summarize_stereotype_usage`, or read
 `SELECT DISTINCT Stereotype FROM t_object`, against a model actually built with the
 technology. Do not take the name from the notation's specification, and do not take it
 from the MDG's `metatype` attribute -- `metatype` is the concept name without the prefix,
-which is precisely the trap. `ruleset-archimate31/archimate31_rules.yaml` carries the
+which is precisely the trap. `rulesets/archimate-3/archimate-3_rules.yaml` carries the
 worked measurement in its header, including what the unprefixed form did when it shipped.
 
 *Sanity-check the run.* Zero violations and zero matched elements are the same output.
@@ -297,4 +297,4 @@ Use ASCII section headers to visually group rules:
 ## See Also
 
 - `ea-ruleset-author/SKILL.md` — the workflow this grammar supports
-- `ruleset-archimate31/archimate31_rules.yaml` — the canonical reference implementation
+- `rulesets/archimate-3/archimate-3_rules.yaml`: the canonical reference implementation

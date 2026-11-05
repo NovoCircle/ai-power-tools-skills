@@ -554,7 +554,8 @@ def test_each_layout_block_and_map_passes_its_checks(name, language, ea):
 
 def test_the_fixture_holds_thirty_two_rows_all_of_them_generated():
     assert len(RECORDED) == 32
-    generated = {f"{doc['technology']}::{dt}" for doc in map(_doc, GENERATED) for dt in doc["diagram_types"]}
+    generated = {gen._token_of(doc["technology"], dt, entry) for doc in map(_doc, GENERATED)
+                 for dt, entry in doc["diagram_types"].items()}
     assert set(RECORDED) <= generated
 
 
@@ -753,8 +754,8 @@ def test_a_token_in_a_map_reaches_the_generated_file_and_the_resolver(tree):
 
 def test_two_maps_claiming_one_token_fail_the_check(tree):
     for folder in ("one", "two"):
-        _plant_map(tree, folder, folder.title(), {"View": {"token": "Extended::Requirements"}})
-    with pytest.raises(gen.GenerationError, match=r"'Extended::Requirements' is claimed by one, two"):
+        _plant_map(tree, folder, folder.title(), {"View": {"token": "WBA_Shared::View"}})
+    with pytest.raises(gen.GenerationError, match=r"'WBA_Shared::View' is claimed by one, two"):
         gen.expected_files(tree)
     with pytest.raises(gen.GenerationError, match="more than one claim"):
         gen.stale_files(tree)
