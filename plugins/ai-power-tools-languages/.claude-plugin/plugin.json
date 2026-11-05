@@ -1,0 +1,10 @@
+{
+  "name": "ai-power-tools-languages",
+  "version": "3.6.4",
+  "description": "AI Power Tools Languages: one guide for each modeling language, covering its concepts, relationships, constraints, data types, how the standard draws it, and one shared layout standard for sizes and spacing. The guides describe the languages, not any diagramming tool, so any tool's skills can read them.",
+  "author": {
+    "name": "NovoCircle"
+  },
+  "homepage": "https://github.com/NovoCircle/ai-power-tools-skills",
+  "license": "MIT"
+}

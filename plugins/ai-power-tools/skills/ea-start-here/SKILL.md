@@ -133,6 +133,7 @@ neither.
 | If the task is… | Use |
 |---|---|
 | Creating or modifying elements, packages, connectors, diagrams in a model | **ea-modeling** |
+| Modeling in a language from the table in §7 | The language's skill, then **ea-modeling** with its how-to |
 | Building click-through navigation diagrams over hierarchical data | **ea-navigation-diagrams** |
 | Putting an icon or image on an element in a diagram (cloud-provider icons, a custom picture) | **ea-modeling**, [`references/diagrams_and_connectors.md`](../ea-modeling/references/diagrams_and_connectors.md) §6 — `find_icon`, `set_element_icon`, `add_image` |
 | Writing an MDG Technology XML by hand — stereotypes, tagged values, toolboxes, Quick Linker | **ea-mdg-author** |
@@ -236,6 +237,43 @@ The canonical definition — the 15 element stereotypes and 3 connector stereoty
 metaclasses, the tagged values, the diagram types and toolbox pages — is in
 `_shared/references/westbrook-example.md`. Read it before writing a new example, rather than
 inventing a parallel vocabulary.
+
+## 7. Modeling languages
+
+Each language below has a guide in a separate package, AI Power Tools Languages, from the same
+marketplace, and a how-to in this one. The guide says what the language is: its concepts, rules and
+notation. The how-to says how to build it in EA.
+
+| Language | Id | Guide skill | How-to |
+|---|---|---|---|
+| ArchiMate | `archimate-3` | `ai-power-tools-languages:archimate-3` | `../_shared/languages/archimate-3/howto.md` |
+| BPMN | `bpmn-2` | `ai-power-tools-languages:bpmn-2` | `../_shared/languages/bpmn-2/howto.md` |
+| Business Motivation Model (BMM) | `bmm-1` | `ai-power-tools-languages:bmm-1` | `../_shared/languages/bmm-1/howto.md` |
+| UML | `uml-2` | `ai-power-tools-languages:uml-2` | `../_shared/languages/uml-2/howto.md` |
+| SysML | `sysml-1` | `ai-power-tools-languages:sysml-1` | `../_shared/languages/sysml-1/howto.md` |
+| DMN | `dmn-1` | `ai-power-tools-languages:dmn-1` | `../_shared/languages/dmn-1/howto.md` |
+| CMMN | `cmmn-1` | `ai-power-tools-languages:cmmn-1` | `../_shared/languages/cmmn-1/howto.md` |
+| SoaML | `soaml-1` | `ai-power-tools-languages:soaml-1` | `../_shared/languages/soaml-1/howto.md` |
+| VDML | `vdml-1` | `ai-power-tools-languages:vdml-1` | `../_shared/languages/vdml-1/howto.md` |
+| UAF | `uaf-1` | `ai-power-tools-languages:uaf-1` | `../_shared/languages/uaf-1/howto.md` |
+| UPDM | `updm-2` | `ai-power-tools-languages:updm-2` | `../_shared/languages/updm-2/howto.md` |
+| RAAML | `raaml-1` | `ai-power-tools-languages:raaml-1` | `../_shared/languages/raaml-1/howto.md` |
+| TOGAF | `togaf-9` | `ai-power-tools-languages:togaf-9` | `../_shared/languages/togaf-9/howto.md` |
+| Data modeling and ER | `data-modeling-er` | `ai-power-tools-languages:data-modeling-er` | `../_shared/languages/data-modeling-er/howto.md` |
+| Requirements | `requirements` | `ai-power-tools-languages:requirements` | `../_shared/languages/requirements/howto.md` |
+| Business modeling | `business-modeling` | `ai-power-tools-languages:business-modeling` | `../_shared/languages/business-modeling/howto.md` |
+| Zachman | `zachman` | `ai-power-tools-languages:zachman` | `../_shared/languages/zachman/howto.md` |
+| CSDM | `csdm-5` | `ai-power-tools-languages:csdm-5` | `../_shared/languages/csdm-5/howto.md` |
+| IT4IT | `it4it` | `ai-power-tools-languages:it4it` | `../_shared/languages/it4it/howto.md` |
+
+Each language's conformance ruleset is in this plugin at `../../rulesets/<id>/<id>_rules.yaml`,
+from this skill's folder.
+
+**If `ai-power-tools-languages:<id>` isn't available,** tell the user the language guides are in a
+separate package, AI Power Tools Languages, from the same marketplace. Tell them to run
+`claude plugin install ai-power-tools-languages@novocircle`, or in Claude Desktop to upload
+`ai-power-tools-languages.plugin` from the latest release. Then stop the language work. Other EA
+work carries on.
 
 ## Verify in EA's UI
 
