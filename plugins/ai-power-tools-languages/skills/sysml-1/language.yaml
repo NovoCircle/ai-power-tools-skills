@@ -962,8 +962,8 @@ layout:
   exceptions: {}
   no_element_type:
     line:
-      reason: 'A relationship or a connector kind: it is a line between elements and takes no element
-        size.'
+      reason: 'A relationship or a connector kind, or a mark drawn on or along a line: it is a line between
+        elements or sits on one, and takes no element size.'
       concepts:
       - Conform
       - Expose
@@ -1019,6 +1019,8 @@ layout:
         symbol; it has no box of its own.
       concepts:
       - ClassifierBehaviorProperty
+      - ConnectorProperty
+      - ParticipantProperty
       - EndPathMultiplicity
       - DistributedProperty
       - FlowProperty
