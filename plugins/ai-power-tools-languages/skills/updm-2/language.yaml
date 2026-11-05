@@ -4911,6 +4911,7 @@ constraints:
   subject: SystemResource
   property: ownedPort
   checkable: static
+  note: The same section defines ResourcePort as an interface a resource provides, and UPDM-END-024 requires each end of a ResourceConnector to be a ResourcePort, so the standard conflicts with itself here.
 - id: UPDM-OWN-019
   statement: The owner of a ResourceStateMachine must be a SystemResource (or a specialization of it).
   strength: must
@@ -5016,6 +5017,7 @@ constraints:
   subject: Participant
   property: ownedPort
   checkable: static
+  note: A Node is a Participant by inheritance, and UPDM-OWN-003 allows a NodePort or a ServicePort on a Node, so the standard conflicts with itself here. The more specific clause, UPDM-OWN-003, governs a Node.
 - id: UPDM-OWN-034
   statement: Every attribute owned by an EntityItem must be an EntityAttribute (or a specialization of it).
   strength: must

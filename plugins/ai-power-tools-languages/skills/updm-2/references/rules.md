@@ -220,7 +220,7 @@ Section references: a number such as 8.3.1.1.4.4 is the clause of the UPDM 2.1 s
 | UPDM-OWN-015 | must | Every message in an OperationalEventTrace must be an OperationalMessage (or a specialization of it). | 8.3.1.1.4.1 (OperationalEventTrace) |
 | UPDM-OWN-016 | must | Every operation owned by a SystemResource must be a ResourceOperation (or a specialization of it). | 8.3.1.1.7.4 (SystemResource) |
 | UPDM-OWN-017 | must | What a SystemResource performs must be only a Function (or a specialization of it). (The standard writes "Functions".) | 8.3.1.1.7.4 (SystemResource) |
-| UPDM-OWN-018 | must | Every port owned by a SystemResource must be a ServicePort (or a specialization of it). | 8.3.1.1.7.4 (SystemResource) |
+| UPDM-OWN-018 | must | Every port owned by a SystemResource must be a ServicePort (or a specialization of it). The same section defines ResourcePort as an interface a resource provides, and UPDM-END-024 requires each end of a ResourceConnector to be a ResourcePort, so the standard conflicts with itself here. | 8.3.1.1.7.4 (SystemResource) |
 | UPDM-OWN-019 | must | The owner of a ResourceStateMachine must be a SystemResource (or a specialization of it). | 8.3.1.1.7.1 (ResourceStateMachine) |
 | UPDM-OWN-020 | must | Every state in the regions of a ResourceStateMachine must be a ResourceState (or a specialization of it). | 8.3.1.1.7.1 (ResourceStateMachine) |
 | UPDM-OWN-021 | must | A FunctionEdge must be owned, directly or indirectly, by a Function (or a specialization of it). | 8.3.1.1.7.1 (FunctionEdge) |
@@ -235,7 +235,7 @@ Section references: a number such as 8.3.1.1.4.4 is the clause of the UPDM 2.1 s
 | UPDM-OWN-030 | must | Every attribute owned by a PropertySet must be a Property (or a specialization of it). | 8.3.1.1.2.5 (PropertySet) |
 | UPDM-OWN-031 | must | Every attribute owned by a MeasurementSet must be a Measurement (or a specialization of it). | 8.3.1.1.2.5 (MeasurementSet) |
 | UPDM-OWN-032 | must | Every attribute owned by an Environment must be an EnvironmentProperty (or a specialization of it). | 8.3.1.1.2.4 (Environment) |
-| UPDM-OWN-033 | must | Every port owned by a Participant must be a ServicePort (or a specialization of it). | 8.3.1.1.2.6 (Participant) |
+| UPDM-OWN-033 | must | Every port owned by a Participant must be a ServicePort (or a specialization of it). A Node is a Participant by inheritance, and UPDM-OWN-003 allows a NodePort or a ServicePort on a Node, so the standard conflicts with itself here. The more specific clause, UPDM-OWN-003, governs a Node. | 8.3.1.1.2.6 (Participant) |
 | UPDM-OWN-034 | must | Every attribute owned by an EntityItem must be an EntityAttribute (or a specialization of it). | 8.3.1.1.8.5 (EntityItem) |
 | UPDM-OWN-035 | must | An EntityAttribute may be applied only to properties owned by an EntityItem (or a specialization of it). | 8.3.1.1.8.5 (EntityAttribute) |
 | UPDM-OWN-036 | must | Every feature of a ServiceInterface must be a ServiceFeature (or a specialization of it). | 8.3.1.1.5.2 (ServiceInterface) |

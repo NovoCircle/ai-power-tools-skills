@@ -5762,9 +5762,9 @@ rules:
   - id: UPDM2-OWN-018
     name: "Every port of a SystemResource is a ServicePort"
     implements: UPDM-OWN-018
-    description: "Every port owned by a SystemResource must be a ServicePort or a specialization of it. In Sparx's UPDM2 technology that is one of: Request, Service. The rule reports an owner that holds a child with another UPDM stereotype of the same kind (2: NodePort, ResourcePort), and names it. [OMG UPDM 2.1 (formal/13-08-04) 8.3.1.1.7.4 (SystemResource)]"
+    description: "Every port owned by a SystemResource must be a ServicePort or a specialization of it. Graded warning because the standard conflicts with itself: the same section defines ResourcePort for a resource, and a ResourceConnector must join ResourcePorts. In Sparx's UPDM2 technology that is one of: Request, Service. The rule reports an owner that holds a child with another UPDM stereotype of the same kind (2: NodePort, ResourcePort), and names it. [OMG UPDM 2.1 (formal/13-08-04) 8.3.1.1.7.4 (SystemResource)]"
     category: own
-    severity: error
+    severity: warning
     demo_trigger: false
     coverage: partial
     not_checked: "The grammar bounds children of a named kind, so the wrong ports are listed by name: a child with no stereotype, with another technology's stereotype, or a UML attribute (not an element in EA) is not seen. An owner that carries no UPDM stereotype, or another technology's stereotype as its first one, is not judged: the rule reads the owner's first stereotype only."
