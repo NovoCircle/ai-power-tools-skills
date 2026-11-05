@@ -509,7 +509,7 @@
         "ea-modeling/references/wba_mdg_reference.md"
       ],
       "sha256": {
-        "ea-modeling/SKILL.md": "764695d9d0e26128a449b3f69ae6d91694b1b1457f4a118429eed06485ae34ae",
+        "ea-modeling/SKILL.md": "9f771bc26c99908d4a555ac36293db6fea06d1d6e1fc68403e5d7eb378196fcc",
         "ea-modeling/references/class-modeling.md": "25db3027ad038312fec8268b2af7b5918fb4b70134fb708bb55d82c3e281214c",
         "ea-modeling/references/diagnostics_and_ui.md": "cfc1304b820bfe63fdb99602ad99ea0a411092aaf707a7795f99d2600a709645",
         "ea-modeling/references/diagrams_and_connectors.md": "e130a30dd18a5518bdf99d5c7a90ef84d79e7a8f0750a2d0818ea6b8bf6c7c9a",
@@ -634,7 +634,7 @@
         "ea-start-here/references/test-cases.md"
       ],
       "sha256": {
-        "ea-start-here/SKILL.md": "f9bb3dd570f77a943d71eed0614685d9abe7e52ff850e7687dfc6fe2501dc33e",
+        "ea-start-here/SKILL.md": "4b94141e34ba1f0afa9ec9d0a813e2c772f89706dc9a3dad9de72c39ba4e6b3e",
         "ea-start-here/references/test-cases.md": "bb3e631a8d9288d7f3aca097241e0889544db5b8a7fae86f9fd89e6a9666cb9c"
       }
     },

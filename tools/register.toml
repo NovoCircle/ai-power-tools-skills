@@ -40,6 +40,13 @@ u_ci_steps = [
 d_case = "tools/surfaces/plugin.md"
 note = "the plugin as installed from the marketplace or the packaged .plugin"
 
+[[hand_row]]
+unit = "srf:languages-plugin"
+required = ["U", "D"]
+u_tests = ["tools/test_languages.py"]
+d_case = "tools/surfaces/languages-plugin.md"
+note = "the language plugin, installed as a dependency of the tool plugin or by itself"
+
 # Ryan's step-2 decisions, answered 2026-10-14 ("Accept all four step-2 recommendations as
 # written", pm/DECISIONS-test-suite-step2-2026-10-14.md). The register quotes them.
 [decisions.d1_unused_programs]
