@@ -1621,17 +1621,151 @@ quick_links:
     cells: 212
 layout_map:
   technology: IT4IT
+  display_name: IT4IT
+  extends: UML
   stereotype_prefix: IT4IT_
   diagram_types:
     IT4IT_Level1Overview:
       guide: Level 1 End-to-End Overview
-      base: Diagram_Logical
+      base: Logical
+      size_keys:
+        Group: FunctionalGroup
+        ValueStream: ValueStream
+        Stakeholder: actor
+        FC_Policy: FunctionalComponent
+        FC_Strategy: FunctionalComponent
+        FC_EnterpriseArchitecture: FunctionalComponent
+        FC_PortfolioBacklog: FunctionalComponent
+        FC_Proposal: FunctionalComponent
+        FC_ProductPortfolio: FunctionalComponent
+        FC_ProductBacklog: FunctionalComponent
+        FC_Requirement: FunctionalComponent
+        FC_ProductDesign: FunctionalComponent
+        FC_SourceControl: FunctionalComponent
+        FC_Pipeline: FunctionalComponent
+        FC_BuildPackage: FunctionalComponent
+        FC_ReleaseComposition: FunctionalComponent
+        FC_Test: FunctionalComponent
+        FC_Defect: FunctionalComponent
+        FC_ConsumptionExperience: FunctionalComponent
+        FC_Identity: FunctionalComponent
+        FC_Offer: FunctionalComponent
+        FC_Order: FunctionalComponent
+        FC_Chargeback: FunctionalComponent
+        FC_Change: FunctionalComponent
+        FC_FulfillmentOrchestration: FunctionalComponent
+        FC_Resource: FunctionalComponent
+        FC_Fulfillment: FunctionalComponent
+        FC_Usage: FunctionalComponent
+        FC_ServiceLevel: FunctionalComponent
+        FC_Incident: FunctionalComponent
+        FC_Problem: FunctionalComponent
+        FC_Knowledge: FunctionalComponent
+        FC_Configuration: FunctionalComponent
+        FC_Monitoring: FunctionalComponent
+        FC_Event: FunctionalComponent
+        FC_DiagnosticsRemediation: FunctionalComponent
+        FC_CostModeling: FunctionalComponent
+        FC_Investment: FunctionalComponent
+        SG_GovernanceRiskCompliance: container
+        SG_WorkforceManagement: container
+        SG_SourcingVendorManagement: container
+        SG_IntelligenceReporting: container
+        SG_CollaborationCommunication: container
     IT4IT_Level2ValueStream:
       guide: Level 2 Value Stream Documentation
-      base: Diagram_Logical
+      base: Logical
+      size_keys:
+        Group: FunctionalGroup
+        ValueStream: ValueStream
+        Stakeholder: actor
+        FC_Policy: FunctionalComponent
+        FC_Strategy: FunctionalComponent
+        FC_EnterpriseArchitecture: FunctionalComponent
+        FC_PortfolioBacklog: FunctionalComponent
+        FC_Proposal: FunctionalComponent
+        FC_ProductPortfolio: FunctionalComponent
+        FC_ProductBacklog: FunctionalComponent
+        FC_Requirement: FunctionalComponent
+        FC_ProductDesign: FunctionalComponent
+        FC_SourceControl: FunctionalComponent
+        FC_Pipeline: FunctionalComponent
+        FC_BuildPackage: FunctionalComponent
+        FC_ReleaseComposition: FunctionalComponent
+        FC_Test: FunctionalComponent
+        FC_Defect: FunctionalComponent
+        FC_ConsumptionExperience: FunctionalComponent
+        FC_Identity: FunctionalComponent
+        FC_Offer: FunctionalComponent
+        FC_Order: FunctionalComponent
+        FC_Chargeback: FunctionalComponent
+        FC_Change: FunctionalComponent
+        FC_FulfillmentOrchestration: FunctionalComponent
+        FC_Resource: FunctionalComponent
+        FC_Fulfillment: FunctionalComponent
+        FC_Usage: FunctionalComponent
+        FC_ServiceLevel: FunctionalComponent
+        FC_Incident: FunctionalComponent
+        FC_Problem: FunctionalComponent
+        FC_Knowledge: FunctionalComponent
+        FC_Configuration: FunctionalComponent
+        FC_Monitoring: FunctionalComponent
+        FC_Event: FunctionalComponent
+        FC_DiagnosticsRemediation: FunctionalComponent
+        FC_CostModeling: FunctionalComponent
+        FC_Investment: FunctionalComponent
+        SG_GovernanceRiskCompliance: container
+        SG_WorkforceManagement: container
+        SG_SourcingVendorManagement: container
+        SG_IntelligenceReporting: container
+        SG_CollaborationCommunication: container
     IT4IT_Level3Architecture:
       guide: Level 3 Vendor-Independent Architecture
-      base: Diagram_Logical
+      base: Logical
+      size_keys:
+        Group: FunctionalGroup
+        ValueStream: ValueStream
+        Stakeholder: actor
+        FC_Policy: FunctionalComponent
+        FC_Strategy: FunctionalComponent
+        FC_EnterpriseArchitecture: FunctionalComponent
+        FC_PortfolioBacklog: FunctionalComponent
+        FC_Proposal: FunctionalComponent
+        FC_ProductPortfolio: FunctionalComponent
+        FC_ProductBacklog: FunctionalComponent
+        FC_Requirement: FunctionalComponent
+        FC_ProductDesign: FunctionalComponent
+        FC_SourceControl: FunctionalComponent
+        FC_Pipeline: FunctionalComponent
+        FC_BuildPackage: FunctionalComponent
+        FC_ReleaseComposition: FunctionalComponent
+        FC_Test: FunctionalComponent
+        FC_Defect: FunctionalComponent
+        FC_ConsumptionExperience: FunctionalComponent
+        FC_Identity: FunctionalComponent
+        FC_Offer: FunctionalComponent
+        FC_Order: FunctionalComponent
+        FC_Chargeback: FunctionalComponent
+        FC_Change: FunctionalComponent
+        FC_FulfillmentOrchestration: FunctionalComponent
+        FC_Resource: FunctionalComponent
+        FC_Fulfillment: FunctionalComponent
+        FC_Usage: FunctionalComponent
+        FC_ServiceLevel: FunctionalComponent
+        FC_Incident: FunctionalComponent
+        FC_Problem: FunctionalComponent
+        FC_Knowledge: FunctionalComponent
+        FC_Configuration: FunctionalComponent
+        FC_Monitoring: FunctionalComponent
+        FC_Event: FunctionalComponent
+        FC_DiagnosticsRemediation: FunctionalComponent
+        FC_CostModeling: FunctionalComponent
+        FC_Investment: FunctionalComponent
+        SG_GovernanceRiskCompliance: container
+        SG_WorkforceManagement: container
+        SG_SourcingVendorManagement: container
+        SG_IntelligenceReporting: container
+        SG_CollaborationCommunication: container
   differences:
   - concept: Stakeholder
     element_type: actor

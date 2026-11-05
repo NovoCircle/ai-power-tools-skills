@@ -4196,9 +4196,9 @@ layout:
       concepts: [SystemOfRecord, System]
   exceptions: {}
   diagram_types:
-    Level 1 End-to-End Overview: {arrangement: nested-grid, route: orthogonal, title: frame-header, channels: {fill: "the kind of data object: black for key, orange for backbone"}}
-    Level 2 Value Stream Documentation: {arrangement: nested-grid, route: orthogonal, title: frame-header}
-    Level 3 Vendor-Independent Architecture: {arrangement: nested-grid, route: orthogonal, title: frame-header, channels: {fill: "the kind of data object: black for key, orange for backbone", line_color: "the kind of integration: black for system of record, blue for engagement"}}
+    Level 1 End-to-End Overview: {arrangement: nested-grid, route: orthogonal, title: frame-header, channels: {fill: "The kind of data object is claimed: black for key, orange for backbone.", free: [border, border_width, font_color]}}
+    Level 2 Value Stream Documentation: {arrangement: nested-grid, route: orthogonal, title: frame-header, channels: {free: [border, border_width, font_color]}}
+    Level 3 Vendor-Independent Architecture: {arrangement: nested-grid, route: orthogonal, title: frame-header, channels: {fill: "The kind of data object is claimed: black for key, orange for backbone.", claimed: {line_color: "The kind of integration: black for system of record, blue for engagement."}, free: [border, border_width, font_color]}}
   viewpoints: {}
 conventions:
   provenance: Drawing facts stated in the text of 11.7 to 11.10. The top-level notation key adds what the standard's figures show.
