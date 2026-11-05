@@ -754,8 +754,8 @@ def test_a_token_in_a_map_reaches_the_generated_file_and_the_resolver(tree):
 
 def test_two_maps_claiming_one_token_fail_the_check(tree):
     for folder in ("one", "two"):
-        _plant_map(tree, folder, folder.title(), {"View": {"token": "Extended::Requirements"}})
-    with pytest.raises(gen.GenerationError, match=r"'Extended::Requirements' is claimed by one, two"):
+        _plant_map(tree, folder, folder.title(), {"View": {"token": "WBA_Shared::View"}})
+    with pytest.raises(gen.GenerationError, match=r"'WBA_Shared::View' is claimed by one, two"):
         gen.expected_files(tree)
     with pytest.raises(gen.GenerationError, match="more than one claim"):
         gen.stale_files(tree)
