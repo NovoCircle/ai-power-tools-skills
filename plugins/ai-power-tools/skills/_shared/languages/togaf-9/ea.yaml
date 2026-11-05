@@ -1607,6 +1607,7 @@ harvest:
 # EA's names for this language's layout. tools/gen_conventions.py reads layout_map.
 layout_map:
   technology: TOGAF Diagrams
+  technology_reason: EA's TOGAF technology registers these diagram types under its TOGAF Diagrams profile.
   display_name: TOGAF 9 (TOGAF Diagrams MDG)
   extends: UML
   stereotype_prefix: ''
