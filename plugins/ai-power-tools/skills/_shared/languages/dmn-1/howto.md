@@ -104,6 +104,6 @@ The "Listed Input Data" option of the standard (Input Data listed inside the Dec
 
 ## 8. Checking a model
 
-This ruleset needs server 3.6.5 or later. On 3.6.4 and earlier its rules report nothing, with no error, so a clean result there means nothing.
+5 of 6 rules in this ruleset use formats newer than 3.6.4, and on that server they report nothing or don't run as written. Use server 3.6.5 or later, because a clean result on 3.6.4 doesn't mean the model passes.
 
 The DMN ruleset (`rulesets/dmn-1/dmn-1_rules.yaml`, 6 rules) checks the decision requirements graph: that each requirement joins only the pairs of the connection table, that no requirement is held by an Input Data element, that an Information, Knowledge or Authority Requirement ends at an allowed kind of element, and that a Decision whose logic is an invocation, a context, a list or a relation has a Knowledge Requirement. It does not check decision tables, hit policies, completeness or overlap, boxed expressions, FEEL text, names, item definitions, Decision Service membership, diagrams or cycles in the graph; those need a person or a tool that reads the logic. Every other rule of the standard is outside this ruleset.
