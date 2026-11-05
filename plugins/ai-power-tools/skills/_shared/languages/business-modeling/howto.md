@@ -73,7 +73,7 @@ Specialization: a case worker and an internal worker specialize a worker. Draw a
 
 Three rules (`rulesets/business-modeling/business-modeling_rules.yaml`): communicate and subscribe join only the pairs BIZMOD-LNK-001 allows (the language's `relationships_allowed` table) (warning); an object model holds an object system (error); a work unit holds an entity (warning).
 
-This ruleset needs server 3.6.5 or later. On 3.6.4 and earlier its rules report nothing, with no error, so a clean result there means nothing.
+3 of 3 rules in this ruleset use formats newer than 3.6.4, and on that server they report nothing or don't run as written. Use server 3.6.5 or later, because a clean result on 3.6.4 doesn't mean the model passes.
 
 **To get these checks, type the OMG keywords as stereotypes.** EA's business modeling toolbox has no item for these
 five kinds, so nothing in EA marks them for you. Type the keyword, exactly as shown, into the Stereotype field:

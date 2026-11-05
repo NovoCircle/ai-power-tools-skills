@@ -294,9 +294,11 @@ layout_map:
   stereotype_prefix: ''
   notes: |
     The standard defines no diagram type, so this one is EA's own. Its arrangement and route are the shared defaults, not measurements.
+
+    `EAExtended` is the id EA reports, measured on EA 17.1 build 1716.
   diagram_types:
     Business Modeling:
-      token_reason: EA stores this diagram as Extended::Business Modeling. Another language uses the same Extended id, and one id can have only one file, so this map keeps ea.yaml's technology. Whether EA's helpers reach it by another route is not measured.
+      token: Extended::Business Modeling
       base: Logical
       arrangement: graph
       title: frame-header
