@@ -1,6 +1,6 @@
 # Modeling IT4IT in Sparx EA with the IT4IT pack
 
-This is how to model The Open Group's IT4IT reference architecture in Sparx EA with the IT4IT pack, version 3.0-draft.3, as built and measured on EA 17.1 build 1716 (2026-11-04). **The pack is read from The Open Group's public 3.0 draft of February 2022, and it makes no claim of conformance.** The published standard is version 3.0.1, and its names or lists may differ. Examples use Westbrook Bank, an invented bank, as an illustration: substitute your own products and names.
+This is how to model The Open Group's IT4IT reference architecture in Sparx EA with the IT4IT pack, version 3.0-draft.3, as built and measured on EA 17.1 build 1716 (2026-11-04). **The pack is read from The Open Group's public 3.0 draft of February 2022, and it makes no claim of conformance.** The pack is not affiliated with or endorsed by The Open Group. The published standard is version 3.0.1, and its names or lists may differ. Examples use Westbrook Bank, an invented bank, as an illustration: substitute your own products and names.
 
 ## 1. What the pack gives you
 
@@ -131,6 +131,8 @@ These are tool choices, not additions to the standard. The guide records how the
 
 ## 10. Checking a model
 
-The IT4IT ruleset has 72 rules. They check that two data objects link only where the standard lists a link, which is a warning because the standard allows local links. They also check that each data object isn't inside the wrong component, that a component sits only in a group or a package, that a group holds only its own components and has a name on its list, and that each line joins the right kinds of shape.
+The IT4IT ruleset, `rulesets/it4it/it4it_rules.yaml`, has 72 rules. They check that two data objects link only where the standard lists a link, which is a warning because the standard allows local links. They also check that each data object isn't inside the wrong component, that a component sits only in a group or a package, that a group holds only its own components and has a name on its list, and that each line joins the right kinds of shape.
+
+**This ruleset needs server 3.6.5 or later.** On 3.6.4 and earlier, 71 of its 72 rules report nothing, with no error, so a clean result there means nothing.
 
 **A check reports what's wrong, never what's missing.** The standard says data objects "can" relate, so a clean result on a partial model doesn't mean the model is complete. A clean result also doesn't mean conformance to the published standard, because these rules are read from the draft. Everything else needs a person: naming style, a Digital Product reaching its Service Offer, when a flow counts as a system of record integration, and what a tool or a practice must do.

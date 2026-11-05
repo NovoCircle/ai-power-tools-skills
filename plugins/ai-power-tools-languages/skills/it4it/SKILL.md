@@ -7,7 +7,7 @@ description: The Open Group IT4IT Standard (the IT4IT Reference Architecture), a
 
 IT4IT is The Open Group's reference architecture for managing the business of IT and the end-to-end lifecycle of **Digital Products**. It says which **value streams** an organization needs, which **functional components** support them, which **data objects** those components control, and how the data objects relate. It is independent of technology, vendor and process. It is not a drawing notation and not a method: it defines a model and the levels at which that model is described.
 
-**What this skill rests on.** The published standard (version 3.0.1, document C24A, 24 October 2024; version 3.0 is C221, 18 October 2022) needs a sign-in, so the content here comes from The Open Group's public **Snapshot draft of 3.0** (S220, February 2022). Counts and wording may differ in the published text. A newer draft, the 3.1 Snapshot (S261, October 2026), exists and is not covered. Say so when you quote a count. This guide makes no claim of conformance.
+**What this skill rests on.** The published standard (version 3.0.1, document C24A, 24 October 2024; version 3.0 is C221, 18 October 2022) needs a sign-in, so the content here comes from The Open Group's public **Snapshot draft of 3.0** (S220, February 2022). Counts and wording may differ in the published text. A newer draft, the 3.1 Snapshot (S261, October 2026), exists and is not covered. Say so when you quote a count. This guide makes no claim of conformance, and it is not affiliated with or endorsed by The Open Group.
 
 ## What you are creating
 

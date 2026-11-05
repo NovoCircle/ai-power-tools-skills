@@ -1628,6 +1628,8 @@ layout_map:
     IT4IT_Level1Overview:
       guide: Level 1 End-to-End Overview
       base: Logical
+      size_reason:
+        Stakeholder: The pack draws a stakeholder as EA's stick figure, so EA takes the layout standard's actor size where the guide says box.
       size_keys:
         Group: FunctionalGroup
         ValueStream: ValueStream
@@ -1675,6 +1677,8 @@ layout_map:
     IT4IT_Level2ValueStream:
       guide: Level 2 Value Stream Documentation
       base: Logical
+      size_reason:
+        Stakeholder: The pack draws a stakeholder as EA's stick figure, so EA takes the layout standard's actor size where the guide says box.
       size_keys:
         Group: FunctionalGroup
         ValueStream: ValueStream
@@ -1722,6 +1726,8 @@ layout_map:
     IT4IT_Level3Architecture:
       guide: Level 3 Vendor-Independent Architecture
       base: Logical
+      size_reason:
+        Stakeholder: The pack draws a stakeholder as EA's stick figure, so EA takes the layout standard's actor size where the guide says box.
       size_keys:
         Group: FunctionalGroup
         ValueStream: ValueStream
