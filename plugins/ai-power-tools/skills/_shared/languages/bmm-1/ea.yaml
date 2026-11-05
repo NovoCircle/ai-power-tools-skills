@@ -586,6 +586,8 @@ layout_map:
   stereotype_prefix: ''
   notes: |
     The standard defines no diagram type, so this one is EA's own. Its arrangement and route are the shared defaults, not measurements.
+
+    `BMM` is the id EA reports, measured on EA 17.1 build 1716.
   diagram_types:
     BMM Diagram:
       base: Custom
