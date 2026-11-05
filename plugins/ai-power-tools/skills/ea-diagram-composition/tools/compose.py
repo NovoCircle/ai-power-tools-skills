@@ -336,8 +336,8 @@ def resolve_width_misfit(
 DEFAULT_SPEC: dict[str, Any] = {
     # Where the top-left of the composition goes. `origin_top` is negative
     # because EA's vertical axis is.
-    "origin_left": 20,
-    "origin_top": -20,
+    "origin_left": 40,
+    "origin_top": -40,
 
     # Item box size. Uniform within a band or a lane; see the note in
     # _band_metrics on why that is a rule and not an accident.

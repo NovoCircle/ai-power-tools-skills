@@ -2777,17 +2777,25 @@ layout:
     SubConversation: decision-diamond
     CallConversation: decision-diamond
   exceptions: {}
-  diagram_types:   # a diagram kind not listed here (Conversation) takes the defaults
+  diagram_types:
     Process:
       arrangement: lanes
       route: orthogonal
       title: frame-header
       channels:
-        fill: Kind of node. Events, activities, gateways and data read differently. Conventional, since the standard fixes the shapes and not the colors.
+        fill: Kind of node. Events, activities, gateways and data read differently. Conventional, since
+          the standard fixes the shapes and not the colors.
         claimed:
-          position: Two things at once. The lane an element sits in says who does it, and how far along the flow it sits says when.
+          position: Two things at once. The lane an element sits in says who does it, and how far along
+            the flow it sits says when.
           size: Kind of node. An event is a circle because it is an event, so size is not a free channel.
-        free: [border, border_width, line_color, font_color, opacity, icon]
+        free:
+        - border
+        - border_width
+        - line_color
+        - font_color
+        - opacity
+        - icon
     Collaboration:
       arrangement: lanes
       route: orthogonal
@@ -2797,14 +2805,28 @@ layout:
         claimed:
           position: The pool says which participant; position along the flow says when.
           size: Kind of node.
-        free: [border, border_width, line_color, font_color, opacity, icon]
+        free:
+        - border
+        - border_width
+        - line_color
+        - font_color
+        - opacity
+        - icon
     Choreography:
       arrangement: lanes
       route: orthogonal
       title: frame-header
       channels:
-        fill: The initiator. The shaded participant band says who starts the exchange, which is the point of the notation.
+        fill: The initiator. The shaded participant band says who starts the exchange, which is the point
+          of the notation.
         claimed:
           position: Order of the exchange.
           size: Kind of node.
-        free: [border, border_width, line_color, font_color, opacity, icon]
+        free:
+        - border
+        - border_width
+        - line_color
+        - font_color
+        - opacity
+        - icon
+  viewpoints: {}
