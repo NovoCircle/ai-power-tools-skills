@@ -2907,6 +2907,7 @@ layout_map:
         - opacity
         - icon
     Custom:
+      token_reason: EA's own diagram type, kept from the existing conventions. The UML guide has no such type.
       base: Custom
       default_type: large-box
       arrangement: graph
