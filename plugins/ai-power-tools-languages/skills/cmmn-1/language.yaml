@@ -1432,4 +1432,10 @@ layout:
     CaseFileItem: data-item
     TextAnnotation: note
   exceptions: {}
-  diagram_types: {}   # CMMNDiagram is not listed and takes the defaults: where a shape sits means nothing in this notation
+  diagram_types: {}
+  no_element_type:
+    drawn_as_its_definition:
+      reason: Drawn as the shape of the definition it uses, and takes that definition's element size.
+      concepts:
+      - PlanItem
+      - DiscretionaryItem

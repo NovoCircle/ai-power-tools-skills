@@ -223,7 +223,7 @@ def test_every_sized_element_type_reaches_a_generated_file_or_is_waiting_for_a_g
     used: set[str] = set()
     for _, language, ea in _languages():
         element_types = ((language or {}).get("layout") or {}).get("element_types") or {}
-        for entry in ea["layout_map"]["diagram_types"].values():
+        for entry in (ea.get("layout_map") or {}).get("diagram_types", {}).values():
             used.add(entry.get("default_type", "box"))
             for target in (entry.get("size_keys") or {}).values():
                 used.add(element_types.get(target, target))
@@ -398,6 +398,31 @@ def test_the_fixture_holds_thirty_two_rows_all_of_them_generated():
     assert len(RECORDED) == 32
     generated = {f"{doc['technology']}::{dt}" for doc in map(_doc, GENERATED) for dt in doc["diagram_types"]}
     assert set(RECORDED) <= generated
+
+
+def _small_guide(**layout):
+    return {"id": "wba", "layout": {"basis": "Ours.", **layout},
+            "concepts": {"Thing": {"uml_base": ["Class", "Constraint"]}},
+            "notation": {"elements": {"Hex": {"shape": "hexagon"}}}}
+
+
+def test_a_shape_with_no_line_is_caught_and_a_stated_reason_clears_it():
+    problems = gen.layout_problems(_small_guide(), _standard())
+    assert any("`Hex`" in p for p in problems)
+    assert any("`Thing`" in p and "UML Constraint" in p for p in problems)
+    stated = {"not_drawn": {"reason": "Shown inside its owner.", "concepts": ["Hex", "Thing"]}}
+    assert gen.layout_problems(_small_guide(no_element_type=stated), _standard()) == []
+
+
+def test_element_types_may_name_what_the_notation_names():
+    assert gen.layout_problems(_small_guide(element_types={"Hex": "decision-diamond", "Thing": "note"}), _standard()) == []
+
+
+def test_a_map_on_another_technology_needs_a_reason():
+    ea = {"language": "wba", "technology": "WBA", "layout_map": {"technology": "WBA Diagrams"}}
+    assert any("differs" in p for p in gen.map_problems(ea, None, _standard(), {}))
+    ea["layout_map"]["technology_reason"] = "EA registers these diagrams under another profile."
+    assert gen.map_problems(ea, None, _standard(), {}) == []
 
 
 def test_a_planted_wrong_arrangement_fails():
