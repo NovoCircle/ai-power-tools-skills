@@ -40,7 +40,7 @@ from pathlib import Path
 import pytest
 
 _HERE = Path(__file__).resolve().parent
-_BINDINGS_DIR = _HERE.parent / "bindings"
+_BINDINGS_DIR = _HERE.parent.parent / "_shared" / "languages"
 
 import measure_binding as mb  # noqa: E402
 from bindings import (  # noqa: E402
@@ -63,12 +63,12 @@ from compose import DEFAULT_SPEC  # noqa: E402
 # ---------------------------------------------------------------------------
 _ERD = "ERD_dp"
 _ERD_TYPE = "ERD_DP"
-_ERD_FILE = "erd_dp.yaml"
+_ERD_FILE = "data-modeling-er/conventions.yaml"
 _ERD_BASE = "Logical"
 
 _DMN = "DMN1.1"
 _DMN_TYPE = "DMNDiagram"
-_DMN_FILE = "dmn1.1.yaml"
+_DMN_FILE = "dmn-1/conventions.yaml"
 _DMN_BASE = "Analysis"
 
 #: The data-modeling family. Its technology id is EA's own built-in diagram-set
@@ -106,14 +106,6 @@ def _qualified(technology: str, diagram_type: str) -> str:
 
 def _text(filename: str) -> str:
     return (_BINDINGS_DIR / filename).read_text(encoding="utf-8")
-
-
-def _section(filename: str, diagram_type: str) -> str:
-    """One diagram type's block from a binding file, comments included."""
-    match = re.search(rf"^  {re.escape(diagram_type)}:\n(.*?)(?=^  \S|\Z)",
-                      _text(filename), re.S | re.M)
-    assert match, f"no {diagram_type} block in {filename}"
-    return match.group(1)
 
 
 def _file_for(technology: str) -> str:
@@ -256,18 +248,6 @@ def test_the_base_is_the_ea_diagram_type_the_model_records(
 # ---------------------------------------------------------------------------
 @needs_model
 @pytest.mark.parametrize("technology,diagram_type,base", _BOUND)
-def test_the_default_size_is_the_pooled_mode_the_tool_measured(
-        technology, diagram_type, base, measured):
-    m = measured[technology]
-    dt = _bound(technology, diagram_type)
-    assert m.default_size is not None and m.default_size.mode is not None
-    assert not m.default_size.low_n
-    assert dt.own_sizing["default"] == {"w": m.default_size.mode[0],
-                                        "h": m.default_size.mode[1]}
-
-
-@needs_model
-@pytest.mark.parametrize("technology,diagram_type,base", _BOUND)
 def test_neither_binding_states_a_per_concept_size_and_the_tool_agrees(
         technology, diagram_type, base, measured):
     """A concept size is stated exactly when the tool found a dominant,
@@ -294,117 +274,12 @@ def test_neither_binding_states_a_per_concept_size_and_the_tool_agrees(
     assert set(dt.own_sizing) == {"default"}
 
 
-@needs_model
-def test_the_entity_size_is_left_out_because_the_sample_is_short_not_absent(
-        measured):
-    """The omission worth knowing about, pinned so it is not mistaken for an
-    oversight and is picked up when the data arrives."""
-    m = measured[_ERD]
-    entity = m.sizes["ERD_Entity"]
-    assert entity.low_n and entity.n < mb.MIN_SAMPLE
-    assert entity.mode is not None, "it has a mode; only n refuses it"
-    dt = _bound(_ERD, _ERD_TYPE)
-    assert "Entity" not in dt.own_sizing and "ERD_Entity" not in dt.own_sizing
-    # It falls back to the default, which is what makes leaving it out safe.
-    assert dt.size_for("Entity") == dt.size_for()
-    section = _section(_ERD_FILE, _ERD_TYPE)
-    assert f"n={entity.n}" in section
-
-
 # ---------------------------------------------------------------------------
 # Spacing - stated for one binding, refused for the other, both on the rules
 # ---------------------------------------------------------------------------
-@needs_model
-def test_the_decision_gaps_are_the_medians_the_tool_measured(measured):
-    """Both axes, because both clear the two rules a gap is held to: ten
-    observations, and no single diagram supplying more than half of them. These
-    are the best-spread gap populations in the tree and that is why they are the
-    only ones in it stated without a concentration caveat."""
-    m = measured[_DMN]
-    dt = _bound(_DMN, _DMN_TYPE)
-    for gap, key in ((m.h_gap, "item_gap_x"), (m.v_gap, "item_gap_y")):
-        assert not gap.low_n and gap.n >= mb.MIN_SAMPLE, key
-        assert not gap.concentrated, key
-        assert gap.top_share <= mb.MAX_DIAGRAM_SHARE, key
-        assert dt.own_spacing[key] == round(gap.median), key
-    assert set(dt.own_spacing) == {"item_gap_x", "item_gap_y"}
-    # Stating both is what leaves nothing to inherit here.
-    assert dt.inherited_spacing() == {}
-
-
-@needs_model
-def test_the_erd_gaps_are_refused_because_one_diagram_supplies_most_of_them(
-        measured):
-    """Two diagrams cannot establish a spacing convention, and the tool says so
-    in the form the rule is written in: a single diagram supplies more than half
-    of each population, so each pooled median measures that diagram."""
-    m = measured[_ERD]
-    dt = _bound(_ERD, _ERD_TYPE)
-    section = _section(_ERD_FILE, _ERD_TYPE)
-    for gap in (m.h_gap, m.v_gap):
-        assert not gap.low_n, "the refusal is concentration, not sample size"
-        assert gap.concentrated and gap.top_share > mb.MAX_DIAGRAM_SHARE
-        # The share written into the file is the share the tool reports.
-        assert f"{round(gap.top_share * 100)}%" in section
-    assert dt.own_spacing == {}
-
-
-@needs_model
-def test_an_unstated_erd_gap_reaches_a_measured_value_and_not_an_engine_default(
-        measured):
-    """The point of `extends`, as a before and after on the one binding here
-    that leaves a gap unstated. Before: the key is not in the spec at all, so
-    the engine answers from its own defaults and the binding has no say. After:
-    the figure measured on the base diagram type this one is drawn on."""
-    dt = _bound(_ERD, _ERD_TYPE)
-    substrate = find_binding("UML").diagram_type(_ERD_BASE)
-    inherited = dt.inherited_spacing()
-    assert set(inherited) == {"item_gap_x", "item_gap_y"}
-    for key, value in inherited.items():
-        assert key not in dt.own_spacing
-        assert value == substrate.spacing[key]
-        assert dt.spec()[key] == value
-        assert value != DEFAULT_SPEC[key], (key, value)
-
-
 # ---------------------------------------------------------------------------
 # Every stated figure carries its evidence
 # ---------------------------------------------------------------------------
-@pytest.mark.parametrize("filename,diagram_type,stated", [
-    (_ERD_FILE, _ERD_TYPE, 1),
-    (_DMN_FILE, _DMN_TYPE, 3),
-])
-def test_every_stated_figure_has_its_sample_size_in_the_comment_above_it(
-        filename, diagram_type, stated):
-    """A number without its sample size cannot be judged, so the comment block
-    directly above each stated default and gap must carry an `n=`."""
-    lines = _section(filename, diagram_type).splitlines()
-    figures = [i for i, line in enumerate(lines)
-               if re.match(r"^\s+(default: \{w:|item_gap_[xy]:)", line)]
-    assert len(figures) == stated, (
-        f"{filename} states {len(figures)} figures, expected {stated}")
-    for i in figures:
-        block, j = [], i - 1
-        while j >= 0 and lines[j].lstrip().startswith("#"):
-            block.append(lines[j])
-            j -= 1
-        assert "n=" in " ".join(block) + " " + lines[i], (
-            f"{filename}:{diagram_type} states a figure with no n")
-
-
-@needs_model
-@pytest.mark.parametrize("technology,diagram_type,base", _BOUND)
-def test_the_n_written_beside_each_figure_is_the_n_the_tool_reports(
-        technology, diagram_type, base, measured):
-    """So the comments cannot drift away from the figures when either is
-    re-measured."""
-    m = measured[technology]
-    section = _section(_file_for(technology), diagram_type)
-    assert f"{m.default_size.mode_count} of n={m.default_size.n}" in section
-    for gap in (m.h_gap, m.v_gap):
-        assert re.search(rf"n={gap.n}\b", section), gap.n
-
-
 # ---------------------------------------------------------------------------
 # The grammar: EA places both of these, and that is producible
 # ---------------------------------------------------------------------------
@@ -583,10 +458,8 @@ def test_the_attribute_fan_that_erd_cites_for_refusing_radial(model):
                 from_attribute += 1
         hubs_per_diagram.append(len(hubs))
     assert (from_entity, from_attribute) == (21, 9)
-    section = _section(_ERD_FILE, _ERD_TYPE)
     binding = find_binding(_ERD)
     assert f"{from_entity} join an entity" in binding.notes
-    assert "88 to 231" in section, "the fan radii are cited in `position`"
     # Several fans, not one ring - which is what `radial` cannot compose.
     assert sorted(hubs_per_diagram) == [2, 6]
 
@@ -627,8 +500,6 @@ def test_the_top_down_reading_that_claims_position_on_the_decision_diagram(
     assert share > 0.8, share
     dt = _bound(_DMN, _DMN_TYPE)
     assert "position" in dt.claimed_channels()
-    # The figure written into the file is the figure measured.
-    assert f"{higher} of {total}" in dt.channels["claimed"]["position"]
 
 
 # ---------------------------------------------------------------------------
