@@ -907,8 +907,9 @@ conventions:
 notes: 'SysML 1.5 is a profile of UML 2.5. Concepts defined here are the profile''s own; UML concepts are named in the Reused from UML group and defined by UML. Nine diagram kinds: activity, block definition, internal block, package, parametric, requirement, sequence, state machine, use case. Three are new (parametric, requirement) or modified (block definition, internal block, activity); package, sequence, state machine and use case are UML diagrams reused unchanged. The constraint ids are SYSML-<CAT>-nnn; the categories are listed in references/rules.md. Strength policy: must is an error, should a warning, note advice only. Tool-specific encodings belong in the tool''s own file, not here.'
 
 layout:
-  basis: Our conventions, not this standard's. Sizes and spacing come from the shared layout standard; this block only says which element type each concept takes.
-  element_types:        # concept -> element type; a concept left out is drawn as a rectangle (box)
+  basis: Our conventions, not this standard's. Sizes and spacing come from the shared layout standard;
+    this block only says which element type each concept takes.
+  element_types:
     AcceptEventAction: box
     SendSignalAction: box
     UseCase: large-box
@@ -957,27 +958,152 @@ layout:
     SysMLInteractionDiagram: container
     SysMLStateMachineDiagram: container
     SysMLUseCaseDiagram: container
-  exceptions: {}        # none: no standard states a size
-  no_element_type:      # concepts with no element of their own, and why
+  exceptions: {}
+  no_element_type:
     line:
-      reason: 'A relationship or a connector kind: it is a line between elements and takes no element size.'
-      concepts: [Conform, Expose, BindingConnector, Allocate, Satisfy, Verify, DeriveReqt, Refine, Trace, Copy, Dependency,
-        Abstraction, Realization, PackageImport, ElementImport, Generalization, GeneralizationSet, Association,
-        Connector, ConnectorEnd, InterfaceRealization, ItemFlow, InformationFlow, ControlFlow, ObjectFlow, Message,
-        GeneralOrdering, Transition, Include, Extend, Usage, Extension, ProfileApplication, AdjunctProperty,
-        DurationConstraint, DurationObservation, TimeConstraint, TimeObservation, RequirementContainment,
-        PartAssociation, ReferenceAssociation, SharedAssociation, BlockNamespaceContainment, ProvidedInterface,
-        RequiredInterface, PackageContainment, CommunicationPath, UseCaseGeneralization, MetamodelReference]
+      reason: 'A relationship or a connector kind: it is a line between elements and takes no element
+        size.'
+      concepts:
+      - Conform
+      - Expose
+      - BindingConnector
+      - Allocate
+      - Satisfy
+      - Verify
+      - DeriveReqt
+      - Refine
+      - Trace
+      - Copy
+      - Dependency
+      - Abstraction
+      - Realization
+      - PackageImport
+      - ElementImport
+      - Generalization
+      - GeneralizationSet
+      - Association
+      - Connector
+      - ConnectorEnd
+      - InterfaceRealization
+      - ItemFlow
+      - InformationFlow
+      - ControlFlow
+      - ObjectFlow
+      - Message
+      - GeneralOrdering
+      - Transition
+      - Include
+      - Extend
+      - Usage
+      - Extension
+      - ProfileApplication
+      - AdjunctProperty
+      - DurationConstraint
+      - DurationObservation
+      - TimeConstraint
+      - TimeObservation
+      - RequirementContainment
+      - PartAssociation
+      - ReferenceAssociation
+      - SharedAssociation
+      - BlockNamespaceContainment
+      - ProvidedInterface
+      - RequiredInterface
+      - PackageContainment
+      - CommunicationPath
+      - UseCaseGeneralization
+      - MetamodelReference
     text-inside:
-      reason: Written as a line of text inside the box that owns it, or as a keyword or value beside a symbol; it has no box of its own.
-      concepts: [ClassifierBehaviorProperty, EndPathMultiplicity, DistributedProperty, FlowProperty, DirectedFeature,
-        Operation, Reception, Property, Parameter, ParameterSet, ExtensionPoint, Rate, Continuous, Discrete,
-        Probability, NoBuffer, Overwrite, Optional, TriggerOnNestedPort, Trigger, ChangeEvent, FlowDirection,
-        FeatureDirection, TestCase, NestedConnectorEnd]
+      reason: Written as a line of text inside the box that owns it, or as a keyword or value beside a
+        symbol; it has no box of its own.
+      concepts:
+      - ClassifierBehaviorProperty
+      - EndPathMultiplicity
+      - DistributedProperty
+      - FlowProperty
+      - DirectedFeature
+      - Operation
+      - Reception
+      - Property
+      - Parameter
+      - ParameterSet
+      - ExtensionPoint
+      - Rate
+      - Continuous
+      - Discrete
+      - Probability
+      - NoBuffer
+      - Overwrite
+      - Optional
+      - TriggerOnNestedPort
+      - Trigger
+      - ChangeEvent
+      - FlowDirection
+      - FeatureDirection
+      - TestCase
+      - NestedConnectorEnd
     not-drawn:
       reason: Abstract, or a metaclass with no symbol of its own, so nothing is drawn for it.
-      concepts: [ElementPropertyPath, DirectedRelationshipPropertyPath, ChangeStructuralFeatureEvent,
-        AcceptChangeStructuralFeatureEventAction, AbstractRequirement, VerdictKind, SysMLDiagramElement, SysMLDiagram,
-        SysMLDiagramWithAssociations, SysMLStructureDiagram, SysMLBehaviorDiagram, NamedElement, Element,
-        DirectedRelationship, Behavior, Feature, Event, ConnectableElement, ActivityNode, Vertex, CreationEvent,
-        DestructionEvent, ModelLibrary]
+      concepts:
+      - ElementPropertyPath
+      - DirectedRelationshipPropertyPath
+      - ChangeStructuralFeatureEvent
+      - AcceptChangeStructuralFeatureEventAction
+      - AbstractRequirement
+      - VerdictKind
+      - SysMLDiagramElement
+      - SysMLDiagram
+      - SysMLDiagramWithAssociations
+      - SysMLStructureDiagram
+      - SysMLBehaviorDiagram
+      - NamedElement
+      - Element
+      - DirectedRelationship
+      - Behavior
+      - Feature
+      - Event
+      - ConnectableElement
+      - ActivityNode
+      - Vertex
+      - CreationEvent
+      - DestructionEvent
+      - ModelLibrary
+  diagram_types:
+    block definition:
+      arrangement: layered-bands
+      title: frame-header
+      route: orthogonal
+      channels:
+        fill: null
+        claimed:
+          position: Hierarchy level. Which band a block sits in says how deep in the generalization or
+            composition tree it is.
+          line_style: Relationship kind. Dashed lines are dependencies (import, verify), so a second variable
+            cannot use dash pattern.
+        free:
+        - fill
+        - border
+        - border_width
+        - line_color
+        - font_color
+        - opacity
+        - icon
+    requirement:
+      arrangement: layered-bands
+      title: frame-header
+      route: orthogonal
+      channels:
+        fill: 'Requirement kind. Treated as claimed: recoloring a diagram whose fill already encodes kind
+          breaks it, while leaving a channel unused costs nothing.'
+        claimed:
+          position: Decomposition level. Which band a requirement sits in says how deep in the containment
+            tree it is.
+          line_style: Relationship kind. Dashed lines are deriveReqt dependencies.
+        free:
+        - border
+        - border_width
+        - line_color
+        - font_color
+        - opacity
+        - icon
+  viewpoints: {}

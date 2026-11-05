@@ -45,6 +45,11 @@ jobs:
         # in the log instead of passing silently.
         run: python -m pytest -rs
 
+      - name: Check the generated convention files are current
+        # EA's helper programs read a build-time copy of the layout standard, so a
+        # source changed without regenerating would ship two sets of numbers.
+        run: python tools/gen_conventions.py --check
+
       - name: Check the manifest is current
         # regen-manifest must be a no-op on a clean tree. If it rewrites
         # anything, the committed manifest did not match the files and every
