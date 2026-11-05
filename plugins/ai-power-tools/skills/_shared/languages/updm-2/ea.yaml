@@ -5332,3 +5332,217 @@ harvest:
     names; the Toolboxes node was read; the OV-2 toolbox page, one quick-link source and the connector directions in connector_directions_on_screen
     were checked. The 181 rows were not recounted on screen; most other toolbox pages and quick-link sources were not read.'
   ea_build: 17.1 build 1716
+
+# EA's names for this language's layout. tools/gen_conventions.py reads layout_map.
+layout_map:
+  technology: UPDM2
+  display_name: UPDM 2.0
+  extends: UML
+  stereotype_prefix: UPDM2
+  notes: |
+    The other diagram types ea.yaml lists are each bound to the Annex B product it realizes, by its full token. NOT BOUND: UPDM2_AV::AV-3 and UPDM2_Framework::UPDM Framework are EA's own and have no product in the guide. The four Sequence tokens (OV-6c, SOV-4c, SV-10c, SvcV-10c) are stored on a base the UML binding does not hold, so they would inherit nothing, and time fixes their layout. Each token's group is an id of its own and this file names one technology, so a diagram's stored token does not find its entry through the lookup by stored token.
+  diagram_types:
+    UPDM2_AcV/PV::AcV-1:
+      guide: AcV-1/PV-1
+      base: Logical
+    UPDM2_AcV/PV::AcV-2:
+      guide: AcV-2/PV-2
+      base: Logical
+    UPDM2_AV::AV-1:
+      guide: AV-1
+      base: Logical
+    UPDM2_AV::AV-2:
+      guide: AV-2
+      base: Logical
+    UPDM2_StV/CV::CV-1:
+      guide: StV-1/CV-1
+      base: Logical
+    UPDM2_StV/CV::CV-2:
+      guide: StV-2/CV-2
+      base: Logical
+    UPDM2_StV/CV::CV-3:
+      guide: StV-3/CV-3
+      base: Logical
+    UPDM2_StV/CV::CV-4:
+      guide: StV-4/CV-4
+      base: Logical
+    UPDM2_StV/CV::CV-5:
+      guide: StV-5/CV-5
+      base: Logical
+    UPDM2_StV/CV::CV-6:
+      guide: StV-6/CV-6
+      base: Logical
+    UPDM2_StV/CV::CV-7:
+      guide: CV-7
+      base: Logical
+    UPDM2_OV::DIV-1:
+      guide: OV-7/DIV-1/DIV-2
+      base: Logical
+    UPDM2_OV::DIV-2:
+      guide: OV-7/DIV-1/DIV-2
+      base: Logical
+    UPDM2_SV/SvcV::DIV-3:
+      guide: SV-11/DIV-3
+      base: Logical
+    UPDM2_OV::OV-1:
+      guide: OV-1
+      base: Logical
+    UPDM2_OV::OV-2:
+      guide: OV-2
+      base: Logical
+    UPDM2_OV::OV-3:
+      guide: OV-3
+      base: Logical
+    UPDM2_OV::OV-4 Actual:
+      guide: OV-4 Actual
+      base: Object
+    UPDM2_OV::OV-4 Typical:
+      guide: OV-4 Typical
+      base: Logical
+    UPDM2_OV::OV-5:
+      guide: OV-5
+      base: Activity
+    UPDM2_OV::OV-6a:
+      guide: OV-6a
+      base: Activity
+    UPDM2_OV::OV-6b:
+      guide: OV-6b
+      base: Statechart
+    UPDM2_AcV/PV::PV-1:
+      guide: AcV-1/PV-1
+      base: Logical
+    UPDM2_AcV/PV::PV-2:
+      guide: AcV-2/PV-2
+      base: Logical
+    UPDM2_AcV/PV::PV-3:
+      guide: [PV-3 from project activity, PV-3 from project milestones]
+      base: Logical
+    UPDM2_SV/SvcV::SV-1:
+      guide: SV-1/SvcV-1
+      base: Logical
+    UPDM2_SV/SvcV::SV-2:
+      guide: SV-2/SvcV-2
+      base: Logical
+    UPDM2_SV/SvcV::SV-3:
+      guide: SV-3/SvcV-3a/3b
+      base: Logical
+    UPDM2_SV/SvcV::SV-4:
+      guide: SV-4/SvcV-4
+      base: Logical
+    UPDM2_SV/SvcV::SV-5:
+      guide: SV-5/SvcV-5
+      base: Logical
+    UPDM2_SV/SvcV::SV-6:
+      guide: SV-6/SvcV-6
+      base: Logical
+    UPDM2_SV/SvcV::SV-7:
+      guide: SV-7/SvcV-7
+      base: Logical
+    UPDM2_SV/SvcV::SV-8:
+      guide: SV-8/SvcV-8
+      base: Logical
+    UPDM2_SV/SvcV::SV-9:
+      guide: SV-9/SvcV-9
+      base: Logical
+    UPDM2_SV/SvcV::SV-10a:
+      guide: SV-10a/SvcV-10a
+      base: Logical
+    UPDM2_SV/SvcV::SV-10b:
+      guide: SV-10b/SvcV-10b
+      base: Statechart
+    UPDM2_TV/StdV::StdV-1:
+      guide: TV-1&2&3/StdV-1&2
+      base: Logical
+    UPDM2_TV/StdV::StdV-2:
+      guide: TV-1&2&3/StdV-1&2
+      base: Logical
+    UPDM2_SV/SvcV::SvcV-1:
+      guide: SV-1/SvcV-1
+      base: Logical
+    UPDM2_SV/SvcV::SvcV-2:
+      guide: SV-2/SvcV-2
+      base: Logical
+    UPDM2_SV/SvcV::SvcV-3a:
+      guide: SV-3/SvcV-3a/3b
+      base: Logical
+    UPDM2_SV/SvcV::SvcV-3b:
+      guide: SV-3/SvcV-3a/3b
+      base: Logical
+    UPDM2_SV/SvcV::SvcV-4:
+      guide: SV-4/SvcV-4
+      base: Logical
+    UPDM2_SV/SvcV::SvcV-5:
+      guide: SV-5/SvcV-5
+      base: Logical
+    UPDM2_SV/SvcV::SvcV-6:
+      guide: SV-6/SvcV-6
+      base: Logical
+    UPDM2_SV/SvcV::SvcV-7:
+      guide: SV-7/SvcV-7
+      base: Logical
+    UPDM2_SV/SvcV::SvcV-8:
+      guide: SV-8/SvcV-8
+      base: Logical
+    UPDM2_SV/SvcV::SvcV-9:
+      guide: SV-9/SvcV-9
+      base: Logical
+    UPDM2_SV/SvcV::SvcV-10a:
+      guide: SV-10a/SvcV-10a
+      base: Logical
+    UPDM2_SV/SvcV::SvcV-10b:
+      guide: SV-10b/SvcV-10b
+      base: Statechart
+    UPDM2_StV/CV::StV-1:
+      guide: StV-1/CV-1
+      base: Logical
+    UPDM2_StV/CV::StV-4:
+      guide: StV-4/CV-4
+      base: Logical
+    UPDM2_StV/CV::StV-6:
+      guide: StV-6/CV-6
+      base: Logical
+    UPDM2_SOV::SOV-1:
+      guide: SOV-1
+      base: Logical
+    UPDM2_SOV::SOV-2:
+      guide: SOV-2
+      base: Logical
+    UPDM2_SOV::SOV-3:
+      guide: SOV-3
+      base: Logical
+    UPDM2_SOV::SOV-4a:
+      guide: SOV-4a
+      base: Logical
+    UPDM2_SOV::SOV-4b:
+      guide: SOV-4b
+      base: Statechart
+    UPDM2_SOV::SOV-5:
+      guide: SOV-5
+      base: Activity
+    UPDM2_TV/StdV::TV-1:
+      guide: TV-1&2&3/StdV-1&2
+      base: Logical
+    UPDM2_TV/StdV::TV-2:
+      guide: TV-1&2&3/StdV-1&2
+      base: Logical
+    UPDM2_StV/CV::StV-2:
+      guide: StV-2/CV-2
+      base: Logical
+    UPDM2_StV/CV::StV-5:
+      guide: StV-5/CV-5
+      base: Logical
+    UPDM2_OV::OV-7:
+      guide: OV-7/DIV-1/DIV-2
+      base: Logical
+    UPDM2_SV/SvcV::SV-11:
+      guide: SV-11/DIV-3
+      base: Logical
+    UPDM2_SV/SvcV::SV-12:
+      guide: SV-12
+      base: Logical
+    UPDM2_StV/CV::StV-3:
+      guide: StV-3/CV-3
+      base: Logical
+    UPDM2_TV/StdV::TV-3:
+      guide: TV-1&2&3/StdV-1&2
+      base: Logical

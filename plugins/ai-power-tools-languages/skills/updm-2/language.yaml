@@ -2312,103 +2312,6 @@ concepts:
         - {name: "solution", type: "UPDMElement", multiplicity: "1..*"}
         - {name: "status", type: "DevelopmentStatus"}
         - {name: "version", type: "String"}
-enumerations:
-  OperationalExchangeKind:
-  - MaterielExchange
-  - OrganizationalExchange
-  - EnergyExchange
-  - InformationExchange
-  - ConfigurationExchange
-  - GeoPoliticalExtentExchange
-  RoleKind:
-  - Part
-  - Component
-  - Used Configuration
-  - Human Resource
-  - Platform
-  - System
-  - Sub Organization
-  - Post Role
-  - Responsibility Role
-  - Service Access Role
-  - Equipment
-  - Sub System Part
-  - Hosted Software
-  - Other
-  ActualPropertySetKind:
-  - Actual
-  - Required
-  - Estimate
-  LocationKind:
-  - SolidVolume
-  - Surface
-  - Line
-  - Point
-  - GeoStationaryPoint
-  - PlanarSurface
-  - PolygonArea
-  - RectangularArea
-  - ElipticalArea
-  - CircularArea
-  - Other
-  LocationTypeKind:
-  - OtherType
-  - SolidVolumeType
-  - SurfaceType
-  - LineType
-  - PointType
-  - GeoStationaryPointType
-  - PlanarSurfaceType
-  - PolygonAreaType
-  - RectangularAreaType
-  - ElipticalAreaType
-  - CircularAreaType
-  ArchitectureFrameworkKind:
-  - DoDAF
-  - MODAF
-  - NAF
-  RuleKind:
-  - StructuralAssertion
-  - ActionAssertion
-  - Derivation
-  - Agreement
-  - Constraint
-  - Guidance
-  - SecurityPolicy
-  ExchangeElementKind:
-  - InformationElement
-  - DataElement
-  InformationKind:
-  - Information
-  - DomainInformation
-  - PositionReferenceFrame
-  - PedigreeInformation
-  - Data
-  GeoPoliticalExtentKind:
-  - Other
-  - GeoFeature
-  - RegionOfCountry
-  - Country
-  - RegionOfWorld
-  - Facility
-  - Site
-  - Installation
-  GeoPoliticalExtentTypeKind:
-  - GeoFeatureType
-  - RegionOfCountryType
-  - CountryType
-  - RegionOfWorldType
-  - FacilityType
-  - SiteType
-  - InstallationType
-  - OtherType
-  DevelopmentStatus:
-  - Identified
-  - Draft
-  - Proposal
-  - Verified
-  - Rejected
-  - Obsolete
 relationships:
   multiplicity: The standard gives no multiplicity for any relationship; each is many-to-many and optional at both ends.
   allowed: 'The allowed ends are the formal constraints of the profile. A listed concept stands for itself and all its specializations; a source or target outside the list is an error (rules UPDM-END-nnn). Relationship concepts themselves are
@@ -5794,7 +5697,7 @@ layout:
         ActivityPartOfCapability, CapabilityOfPerformer, DesiredEffect, Trustline, OwnsProcess, Control,
         ProjectSequence, ProjectOwnership, MilestoneSequence, SameAs, Overlap, Contract]
     text-inside:
-      reason: Written as a line of text inside the box that owns it (a slot, operation, parameter, reception or literal), so it has no box of its own.
+      reason: Written as a line of text inside the box that owns it (a slot, operation, parameter, reception or literal), so it has no box of its own. ResourceParameter and ServiceParameter are here because the guide records no figure of them; OperationalParameter has a pin form in Annex D, Figure D.21, so it is an attached item.
       concepts: [ActualOrganizationRole, NodeOperation, ResourceParameter, ResourceOperation, ISO8601DateTime, ActualProperty,
         ActualMeasurement, ServiceLevelValue, ServiceMessageHandler, ServiceOperation, ServiceParameter,
         ActualProjectMilestoneRole, ProjectStatus]
@@ -5806,3 +5709,50 @@ layout:
         DataModel, PropertySet, UPDMElement, ConditionType, LocationHolder, Exchange, Participant, Resource, Rule,
         Activity, CapableElement, ProtocolImplementation, ServicePort, ServiceFeature, DesiredState, Desirer,
         ActivitySubject, Process, OntologyReference]
+  # The guide's matrix views are tables, and its state and time-ordered views are fixed by the kind of diagram. Everything else is a free graph: the figures of Annex B were not read, so no other arrangement is stated.
+  diagram_types:
+    'AcV-1/PV-1': {arrangement: graph, title: frame-header, route: straight, channels: {fill: null, claimed: {line_style: 'Relationship kind, as UML draws it: dashed for a dependency or a flow, solid for an association or a connector.'}, free: [fill, border, border_width, line_color, font_color, opacity, icon]}}
+    'AcV-2/PV-2': {arrangement: graph, title: frame-header, route: straight, channels: {fill: null, claimed: {line_style: 'Relationship kind, as UML draws it: dashed for a dependency or a flow, solid for an association or a connector.'}, free: [fill, border, border_width, line_color, font_color, opacity, icon]}}
+    'PV-3 from project activity': {arrangement: graph, title: frame-header, route: straight, channels: {fill: null, claimed: {line_style: 'Relationship kind, as UML draws it: dashed for a dependency or a flow, solid for an association or a connector.'}, free: [fill, border, border_width, line_color, font_color, opacity, icon]}}
+    'PV-3 from project milestones': {arrangement: graph, title: frame-header, route: straight, channels: {fill: null, claimed: {line_style: 'Relationship kind, as UML draws it: dashed for a dependency or a flow, solid for an association or a connector.'}, free: [fill, border, border_width, line_color, font_color, opacity, icon]}}
+    'AV-1': {arrangement: graph, title: frame-header, route: straight, channels: {fill: null, claimed: {line_style: 'Relationship kind, as UML draws it: dashed for a dependency or a flow, solid for an association or a connector.'}, free: [fill, border, border_width, line_color, font_color, opacity, icon]}}
+    'AV-2': {arrangement: graph, title: frame-header, route: straight, channels: {fill: null, claimed: {line_style: 'Relationship kind, as UML draws it: dashed for a dependency or a flow, solid for an association or a connector.'}, free: [fill, border, border_width, line_color, font_color, opacity, icon]}}
+    'OV-1': {arrangement: graph, title: frame-header, route: straight, channels: {fill: null, claimed: {line_style: 'Relationship kind, as UML draws it: dashed for a dependency or a flow, solid for an association or a connector.'}, free: [fill, border, border_width, line_color, font_color, opacity, icon]}}
+    'OV-2': {arrangement: graph, title: frame-header, route: straight, channels: {fill: null, claimed: {line_style: 'Relationship kind, as UML draws it: dashed for a dependency or a flow, solid for an association or a connector.'}, free: [fill, border, border_width, line_color, font_color, opacity, icon]}}
+    'OV-3': {arrangement: matrix, title: frame-header, route: orthogonal, channels: {fill: null, claimed: {position: Row and column say what each cell relates.}, free: [fill, border, border_width, line_color, font_color, opacity, icon]}}
+    'OV-4 Actual': {arrangement: graph, title: frame-header, route: straight, channels: {fill: null, claimed: {line_style: 'Relationship kind, as UML draws it: dashed for a dependency or a flow, solid for an association or a connector.'}, free: [fill, border, border_width, line_color, font_color, opacity, icon]}}
+    'OV-4 Typical': {arrangement: graph, title: frame-header, route: straight, channels: {fill: null, claimed: {line_style: 'Relationship kind, as UML draws it: dashed for a dependency or a flow, solid for an association or a connector.'}, free: [fill, border, border_width, line_color, font_color, opacity, icon]}}
+    'OV-5': {arrangement: graph, title: frame-header, route: straight, channels: {fill: null, claimed: {line_style: 'Relationship kind, as UML draws it: dashed for a dependency or a flow, solid for an association or a connector.'}, free: [fill, border, border_width, line_color, font_color, opacity, icon]}}
+    'OV-6a': {arrangement: graph, title: frame-header, route: straight, channels: {fill: null, claimed: {line_style: 'Relationship kind, as UML draws it: dashed for a dependency or a flow, solid for an association or a connector.'}, free: [fill, border, border_width, line_color, font_color, opacity, icon]}}
+    'OV-6b': {arrangement: type-fixed, title: frame-header, route: straight, channels: {fill: null, claimed: {position: The transitions between states decide where a state sits., line_style: 'Relationship kind, as UML draws it: dashed for a dependency or a flow, solid for an association or a connector.'}, free: [fill, border, border_width, line_color, font_color, opacity, icon]}}
+    'OV-6c': {arrangement: type-fixed, title: frame-header, route: straight, channels: {fill: null, claimed: {position: Time runs down the page and the order of messages decides where each sits., line_style: 'Relationship kind, as UML draws it: dashed for a dependency or a flow, solid for an association or a connector.'}, free: [fill, border, border_width, line_color, font_color, opacity, icon]}}
+    'OV-7/DIV-1/DIV-2': {arrangement: graph, title: frame-header, route: straight, channels: {fill: null, claimed: {line_style: 'Relationship kind, as UML draws it: dashed for a dependency or a flow, solid for an association or a connector.'}, free: [fill, border, border_width, line_color, font_color, opacity, icon]}}
+    'SOV-1': {arrangement: graph, title: frame-header, route: straight, channels: {fill: null, claimed: {line_style: 'Relationship kind, as UML draws it: dashed for a dependency or a flow, solid for an association or a connector.'}, free: [fill, border, border_width, line_color, font_color, opacity, icon]}}
+    'SOV-2': {arrangement: graph, title: frame-header, route: straight, channels: {fill: null, claimed: {line_style: 'Relationship kind, as UML draws it: dashed for a dependency or a flow, solid for an association or a connector.'}, free: [fill, border, border_width, line_color, font_color, opacity, icon]}}
+    'SOV-3': {arrangement: graph, title: frame-header, route: straight, channels: {fill: null, claimed: {line_style: 'Relationship kind, as UML draws it: dashed for a dependency or a flow, solid for an association or a connector.'}, free: [fill, border, border_width, line_color, font_color, opacity, icon]}}
+    'SOV-4a': {arrangement: graph, title: frame-header, route: straight, channels: {fill: null, claimed: {line_style: 'Relationship kind, as UML draws it: dashed for a dependency or a flow, solid for an association or a connector.'}, free: [fill, border, border_width, line_color, font_color, opacity, icon]}}
+    'SOV-4b': {arrangement: type-fixed, title: frame-header, route: straight, channels: {fill: null, claimed: {position: The transitions between states decide where a state sits., line_style: 'Relationship kind, as UML draws it: dashed for a dependency or a flow, solid for an association or a connector.'}, free: [fill, border, border_width, line_color, font_color, opacity, icon]}}
+    'SOV-4c': {arrangement: type-fixed, title: frame-header, route: straight, channels: {fill: null, claimed: {position: Time runs down the page and the order of messages decides where each sits., line_style: 'Relationship kind, as UML draws it: dashed for a dependency or a flow, solid for an association or a connector.'}, free: [fill, border, border_width, line_color, font_color, opacity, icon]}}
+    'SOV-5': {arrangement: graph, title: frame-header, route: straight, channels: {fill: null, claimed: {line_style: 'Relationship kind, as UML draws it: dashed for a dependency or a flow, solid for an association or a connector.'}, free: [fill, border, border_width, line_color, font_color, opacity, icon]}}
+    'CV-7': {arrangement: graph, title: frame-header, route: straight, channels: {fill: null, claimed: {line_style: 'Relationship kind, as UML draws it: dashed for a dependency or a flow, solid for an association or a connector.'}, free: [fill, border, border_width, line_color, font_color, opacity, icon]}}
+    'StV-1/CV-1': {arrangement: graph, title: frame-header, route: straight, channels: {fill: null, claimed: {line_style: 'Relationship kind, as UML draws it: dashed for a dependency or a flow, solid for an association or a connector.'}, free: [fill, border, border_width, line_color, font_color, opacity, icon]}}
+    'StV-2/CV-2': {arrangement: graph, title: frame-header, route: straight, channels: {fill: null, claimed: {line_style: 'Relationship kind, as UML draws it: dashed for a dependency or a flow, solid for an association or a connector.'}, free: [fill, border, border_width, line_color, font_color, opacity, icon]}}
+    'StV-3/CV-3': {arrangement: graph, title: frame-header, route: straight, channels: {fill: null, claimed: {line_style: 'Relationship kind, as UML draws it: dashed for a dependency or a flow, solid for an association or a connector.'}, free: [fill, border, border_width, line_color, font_color, opacity, icon]}}
+    'StV-4/CV-4': {arrangement: graph, title: frame-header, route: straight, channels: {fill: null, claimed: {line_style: 'Relationship kind, as UML draws it: dashed for a dependency or a flow, solid for an association or a connector.'}, free: [fill, border, border_width, line_color, font_color, opacity, icon]}}
+    'StV-5/CV-5': {arrangement: graph, title: frame-header, route: straight, channels: {fill: null, claimed: {line_style: 'Relationship kind, as UML draws it: dashed for a dependency or a flow, solid for an association or a connector.'}, free: [fill, border, border_width, line_color, font_color, opacity, icon]}}
+    'StV-6/CV-6': {arrangement: graph, title: frame-header, route: straight, channels: {fill: null, claimed: {line_style: 'Relationship kind, as UML draws it: dashed for a dependency or a flow, solid for an association or a connector.'}, free: [fill, border, border_width, line_color, font_color, opacity, icon]}}
+    'SV-1/SvcV-1': {arrangement: graph, title: frame-header, route: straight, channels: {fill: null, claimed: {line_style: 'Relationship kind, as UML draws it: dashed for a dependency or a flow, solid for an association or a connector.'}, free: [fill, border, border_width, line_color, font_color, opacity, icon]}}
+    'SV-10a/SvcV-10a': {arrangement: graph, title: frame-header, route: straight, channels: {fill: null, claimed: {line_style: 'Relationship kind, as UML draws it: dashed for a dependency or a flow, solid for an association or a connector.'}, free: [fill, border, border_width, line_color, font_color, opacity, icon]}}
+    'SV-10b/SvcV-10b': {arrangement: type-fixed, title: frame-header, route: straight, channels: {fill: null, claimed: {position: The transitions between states decide where a state sits., line_style: 'Relationship kind, as UML draws it: dashed for a dependency or a flow, solid for an association or a connector.'}, free: [fill, border, border_width, line_color, font_color, opacity, icon]}}
+    'SV-10c/SvcV-10c': {arrangement: type-fixed, title: frame-header, route: straight, channels: {fill: null, claimed: {position: Time runs down the page and the order of messages decides where each sits., line_style: 'Relationship kind, as UML draws it: dashed for a dependency or a flow, solid for an association or a connector.'}, free: [fill, border, border_width, line_color, font_color, opacity, icon]}}
+    'SV-11/DIV-3': {arrangement: graph, title: frame-header, route: straight, channels: {fill: null, claimed: {line_style: 'Relationship kind, as UML draws it: dashed for a dependency or a flow, solid for an association or a connector.'}, free: [fill, border, border_width, line_color, font_color, opacity, icon]}}
+    'SV-12': {arrangement: graph, title: frame-header, route: straight, channels: {fill: null, claimed: {line_style: 'Relationship kind, as UML draws it: dashed for a dependency or a flow, solid for an association or a connector.'}, free: [fill, border, border_width, line_color, font_color, opacity, icon]}}
+    'SV-2/SvcV-2': {arrangement: graph, title: frame-header, route: straight, channels: {fill: null, claimed: {line_style: 'Relationship kind, as UML draws it: dashed for a dependency or a flow, solid for an association or a connector.'}, free: [fill, border, border_width, line_color, font_color, opacity, icon]}}
+    'SV-3/SvcV-3a/3b': {arrangement: matrix, title: frame-header, route: orthogonal, channels: {fill: null, claimed: {position: Row and column say what each cell relates.}, free: [fill, border, border_width, line_color, font_color, opacity, icon]}}
+    'SV-4/SvcV-4': {arrangement: graph, title: frame-header, route: straight, channels: {fill: null, claimed: {line_style: 'Relationship kind, as UML draws it: dashed for a dependency or a flow, solid for an association or a connector.'}, free: [fill, border, border_width, line_color, font_color, opacity, icon]}}
+    'SV-5/SvcV-5': {arrangement: graph, title: frame-header, route: straight, channels: {fill: null, claimed: {line_style: 'Relationship kind, as UML draws it: dashed for a dependency or a flow, solid for an association or a connector.'}, free: [fill, border, border_width, line_color, font_color, opacity, icon]}}
+    'SV-6/SvcV-6': {arrangement: matrix, title: frame-header, route: orthogonal, channels: {fill: null, claimed: {position: Row and column say what each cell relates.}, free: [fill, border, border_width, line_color, font_color, opacity, icon]}}
+    'SV-7/SvcV-7': {arrangement: matrix, title: frame-header, route: orthogonal, channels: {fill: null, claimed: {position: Row and column say what each cell relates.}, free: [fill, border, border_width, line_color, font_color, opacity, icon]}}
+    'SV-8/SvcV-8': {arrangement: graph, title: frame-header, route: straight, channels: {fill: null, claimed: {line_style: 'Relationship kind, as UML draws it: dashed for a dependency or a flow, solid for an association or a connector.'}, free: [fill, border, border_width, line_color, font_color, opacity, icon]}}
+    'SV-9/SvcV-9': {arrangement: graph, title: frame-header, route: straight, channels: {fill: null, claimed: {line_style: 'Relationship kind, as UML draws it: dashed for a dependency or a flow, solid for an association or a connector.'}, free: [fill, border, border_width, line_color, font_color, opacity, icon]}}
+    'TV-1&2&3/StdV-1&2': {arrangement: graph, title: frame-header, route: straight, channels: {fill: null, claimed: {line_style: 'Relationship kind, as UML draws it: dashed for a dependency or a flow, solid for an association or a connector.'}, free: [fill, border, border_width, line_color, font_color, opacity, icon]}}
