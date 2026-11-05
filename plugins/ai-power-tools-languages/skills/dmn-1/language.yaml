@@ -551,15 +551,22 @@ layout:
     Binding: box
     ContextEntry: box
   exceptions: {}
-  diagram_types:   # BoxedExpression is not listed and takes the defaults
+  diagram_types:
     DecisionRequirementsDiagram:
       arrangement: graph
       route: straight
       title: frame-header
       channels:
-        fill: Kind of element. Decisions, input data, knowledge models and knowledge sources should read differently, so a fill that already separates them stays as it is.
+        fill: Kind of element. Decisions, input data, knowledge models and knowledge sources should read
+          differently, so a fill that already separates them stays as it is.
         claimed:
-          position: Direction of dependency. The element that requires another sits above it, so moving an element up or down for another reason reverses the reading.
+          position: Direction of dependency. The element that requires another sits above it, so moving
+            an element up or down for another reason reverses the reading.
           size: Enclosure, for a decision service only. It is sized by the decisions inside it.
           icon: Kind of decision logic. A decision may show a table or a chevron glyph.
-        free: [border, border_width, font_color, opacity]
+        free:
+        - border
+        - border_width
+        - font_color
+        - opacity
+  viewpoints: {}
