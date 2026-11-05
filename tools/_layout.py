@@ -31,6 +31,21 @@ _PLUGIN_REL = ("plugins", "ai-power-tools", "skills")
 def plugin_skills(root: Path | None = None) -> Path:
     return (Path(root) if root is not None else ROOT).joinpath(*_PLUGIN_REL)
 
+
+#: The two plugins the repository ships. The first is the tool plugin, which
+#: `plugin_skills` and the manifest mean; the second is the language plugin (the
+#: "shelf"), which carries no program, no ruleset and no manifest entry.
+PLUGINS = ("ai-power-tools", "ai-power-tools-languages")
+EA_PLUGIN, LANGUAGES_PLUGIN = PLUGINS
+
+
+def plugin_root(name: str, root: Path | None = None) -> Path:
+    """The folder of one of the two plugins under `root`."""
+    if name not in PLUGINS:
+        raise ValueError(f"unknown plugin {name!r}; expected one of {PLUGINS}")
+    return (Path(root) if root is not None else ROOT).joinpath("plugins", name)
+
+
 #: Data entries -- the rulesets -- deliberately stay at the repository root.
 #: `ea-validation` pins a raw.githubusercontent URL into
 #: `main/ruleset-archimate31/...`, so moving that directory would break every
