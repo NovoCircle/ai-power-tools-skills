@@ -2029,8 +2029,8 @@ def test_every_shipped_prefix_round_trips_at_the_scope_that_declares_it():
     One assertion per prefix actually in force, whichever scope stated it, so a
     binding that grows a per-diagram-type prefix is covered the day it does
     without an edit here. The two counters at the end are what stop this passing
-    vacuously: `StrategyMap` and `TOGAF Diagrams` supply the diagram-type scope
-    and `ArchiMate3` and `ERD_dp` the technology scope, and if either group
+    vacuously: `StrategyMap` and `TOGAF` supply the diagram-type scope
+    and `ArchiMate3` and `ERD` the technology scope, and if either group
     disappeared the remaining lines would still all pass.
     """
     at_type, at_technology = 0, 0
@@ -3972,7 +3972,7 @@ def test_a_diagram_type_declaring_an_empty_prefix_is_not_given_the_technologys()
     """The presence check, at the second scope. `""` is a STATEMENT here too.
 
     A technology that prefixes can hold a diagram type whose stereotypes are
-    stored bare - `TOGAF Diagrams` is this case inverted - and `or` in the
+    stored bare - `TOGAF` is this case inverted - and `or` in the
     resolution would silently hand it the technology's prefix, sending every
     lookup after a name that exists nowhere. `~` means the same thing as `""`,
     for the same reason it does at technology scope.
