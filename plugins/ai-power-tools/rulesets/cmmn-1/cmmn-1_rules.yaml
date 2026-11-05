@@ -25,7 +25,7 @@
 # WHAT THE VALIDATOR CANNOT SEE. It cannot read an element's description, so it cannot see a condition; it cannot read a
 # connector's properties or the criterion a connector leaves; it cannot compare one connector's end with another element's host.
 # The rules.md ids that need those (which sentry holds an on-part, a repeating item's entry criterion, everything about
-# expressions, references and events) are not in this file. each one is outside this ruleset.
+# expressions, references and events) are not in this file.
 #
 # NON-BLOCKING. Only a HumanTask has the tag IsBlocking, and a new one defaults to false (non-blocking, drawn as a hand). The
 # two non-blocking rules (CMMN1-CRT-005, CMMN1-PLN-011) select a HumanTask whose IsBlocking is false, so they also report a

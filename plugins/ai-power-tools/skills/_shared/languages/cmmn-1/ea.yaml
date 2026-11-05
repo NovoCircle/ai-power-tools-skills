@@ -704,3 +704,25 @@ harvest:
   - constraints
   - the definition file (encrypted)
   ea_build: 17.1 build 1716
+# EA's names for this language's layout. tools/gen_conventions.py reads layout_map.
+layout_map:
+  technology: CMMN
+  display_name: CMMN 1.1
+  extends: UML
+  stereotype_prefix: ''
+  notes: |
+    Sizes, gaps and the route come from the layout standard, through `layout` in the language file. How CMMN diagrams are laid out in EA was not measured.
+  diagram_types:
+    CMMN:
+      guide: CMMNDiagram
+      base: Logical
+      size_keys:
+        CasePlanModel: CasePlanModel
+        Stage: Stage
+        PlanFragment: PlanFragment
+        TimerEventListener: TimerEventListener
+        UserEventListener: UserEventListener
+        EntryCriterion: EntryCriterion
+        ExitCriterion: ExitCriterion
+        PlanningTable: PlanningTable
+        CaseFileItem: CaseFileItem

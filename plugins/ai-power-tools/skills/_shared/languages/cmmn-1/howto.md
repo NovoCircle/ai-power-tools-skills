@@ -48,7 +48,7 @@ Create the element with the stereotype below. Stored names are bare (`HumanTask`
 | Planning table | `PlanningTable` | Port | `IsExpanded`, `ShowLabel` |
 
 - **Criteria and planning tables are children, not siblings.** They are `Port` elements. Created in a package EA refuses them (`Invalid parent for Port (Package)`); create each as a child of the item it belongs to (a task, stage or milestone for an entry criterion; the case plan model, a stage or a task for an exit criterion; a case plan model, a stage or a human task for a planning table). EA accepted a Task, a Stage and a HumanTask as hosts; it was not tested whether it refuses others, so the standard's limits on which item may have which criterion are not enforced by EA. The CMMN ruleset reports a criterion or planning table on an item the standard does not allow (section 8; rules CRT-003 to CRT-006, STR-005, DEC-005).
-- **Tasks and stages are not nested in the model.** The Westbrook sample puts the plan items in the package and shows them inside the stage on the diagram; nesting is visual. Whether to nest them in the model tree is a choice that was not tested.
+- **Tasks and stages are not nested in the model.** In the illustration in section 6 the plan items sit in the package and are shown inside the stage on the diagram; nesting is visual. Whether to nest them in the model tree is a choice that was not tested.
 
 ## 4. Decorators and flags
 
@@ -98,7 +98,9 @@ An example, as an illustration (substitute your own case). Westbrook Bank's card
 
 ## 8. Checking a model
 
-The CMMN ruleset (`cmmn-1_rules.yaml`, 11 rules) checks two things.
+This ruleset needs server 3.6.5 or later. On 3.6.4 and earlier its rules report nothing, with no error, so a clean result there means nothing.
+
+The CMMN ruleset (`rulesets/cmmn-1/cmmn-1_rules.yaml`, 11 rules) checks two things.
 
 - **Links.** A `Connector` joins only the elements the standard's links allow (the on-part connector and the discretionary association), and no `Connector` touches a text annotation or an element of another technology.
 - **Where a criterion or planning table sits.** The validator reads the item a Port is a child of, so the ruleset reports: an entry criterion on anything but a task, stage or milestone; an exit criterion on anything but the case plan model, a stage or a task; an entry or exit criterion on an event listener, an exit criterion on a milestone, an entry criterion on the case plan model; an exit criterion or a planning table on a non-blocking human task (`IsBlocking` false); a planning table on anything but the case plan model, a stage or a human task; and a case plan model attached to another element instead of sitting in a package. A process task or case task has no blocking flag, so a non-blocking one is not seen.

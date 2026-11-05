@@ -1432,7 +1432,25 @@ layout:
     CaseFileItem: data-item
     TextAnnotation: note
   exceptions: {}
-  diagram_types: {}
+  diagram_types:
+    CMMNDiagram:
+      arrangement: nested-grid
+      title: frame-header
+      route: orthogonal
+      channels:
+        fill: Free in the standard (2.2), so it carries no meaning here.
+        claimed:
+          position: Containment. An item drawn inside a case plan model, stage or plan fragment belongs to
+            it, and a criterion or planning table sits on the border of the shape it belongs to.
+          size: Enclosure. A case plan model, stage or plan fragment is sized by what it holds.
+          line_style: Dashed outlines mean discretionary, and the three kinds of line are told apart by their
+            style (clause 6).
+          icon: Kind of task or event listener, and the decorators.
+        free:
+        - border_width
+        - line_color
+        - font_color
+        - opacity
   no_element_type:
     drawn_as_its_definition:
       reason: Drawn as the shape of the definition it uses, and takes that definition's element size.
