@@ -73,7 +73,7 @@ tables:
         ERD_Attribute: "c"
         ERD_Entity: "cr"
   data-modeling-er-physical:
-    source: "PGDOC 5.5.5 (foreign key constraint), the language file's relationships.connection_tables for PhysicalDataModelDiagram, mapped to the stereotypes of EA's EAUML data-modeling profile"
+    source: "SQLDOC 5.5.5 (foreign key constraint), the language file's relationships.connection_tables for PhysicalDataModelDiagram, mapped to the stereotypes of EA's EAUML data-modeling profile"
     connectors:
       "f": FK
     cells:
@@ -256,7 +256,7 @@ rules:
     name: "A foreign key line joins two tables"
     description: >
       A foreign key constraint references the primary key or a unique constraint of the referenced
-      table (PGDOC 5.5.5). In EA's data model a foreign key is an association stereotyped FK from the
+      table (SQLDOC 5.5.5). In EA's data model a foreign key is an association stereotyped FK from the
       referencing table to the referenced table (the language file's order), besides an FK operation
       on the referencing table. The table holds that one pair, table to table. An FK line that starts
       or ends on anything else (an ERD entity, a view) is reported. Partial: that the target columns

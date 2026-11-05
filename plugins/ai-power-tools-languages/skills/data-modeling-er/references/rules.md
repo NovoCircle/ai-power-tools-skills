@@ -4,7 +4,7 @@ Generated from `language.yaml` (`constraints`). Do not edit by hand; change the 
 
 Each rule has a stable id of the form `DATA-<CAT>-nnn`. The number never changes once assigned. A rule that is retired keeps its id and is marked withdrawn rather than reused.
 
-This language has no single governing standard. Each rule cites the source it comes from (codes are explained in `references/standard.md`): CHEN76 (Chen, 1976), FIPS184 (IDEF1X, 1993, withdrawn), CODD70, KENT83, PGDOC (a public database manual), and the secondary sources WIKIER and CFOOT. "[reconstructed]" marks a rule that is our reading rather than a sentence of a source.
+This language has no single governing standard. Each rule cites the source it comes from (codes are explained in `references/standard.md`): CHEN76 (Chen, 1976), FIPS184 (IDEF1X, 1993, withdrawn), CODD70, KENT83, SQLDOC (a public database manual), and the secondary sources WIKIER and CFOOT. "[reconstructed]" marks a rule that is our reading rather than a sentence of a source.
 
 ## Strength
 
@@ -43,7 +43,7 @@ This language has no single governing standard. Each rule cites the source it co
 | MAP | Logical to physical | How logical constructs become physical ones. | 8 |
 | NRM | Normalization guidance | Normal forms as guidance; trade-offs. | 7 |
 
-Totals: 102 rules, 64 must, 16 should, 22 note.
+Totals: 102 rules, 63 must, 17 should, 22 note.
 
 Section references are to the numbered sections and pages of the sources (see the source codes above); "p." gives the printed page.
 
@@ -67,7 +67,7 @@ Section references are to the numbered sections and pages of the sources (see th
 |---|---|---|---|---|---|
 | DATA-ATT-001 | must | static | keyed-level | Every attribute is owned by exactly one entity (single-owner rule). An attribute reaches another entity only by migrating as a foreign key. An attribute that does not apply to all instances of an entity belongs on a category entity. | FIPS184 3.4.1, 3.4.3(b)(c), B.5.3.15-16, pp. 13-14, 141-142 |
 | DATA-ATT-002 | must | partial | always | An instance of an entity has at most one value for each of its attributes (no-repeat rule). A repeating group is not an attribute; model it as a further entity. | FIPS184 3.4.3(e), p. 15; CHEN76 2.2.3, p. 12; CODD70 1.4, p. 381 |
-| DATA-ATT-003 | must | runtime | always | Every instance has a value for every attribute in its primary key. | FIPS184 3.4.3(d), B.5.3.10; PGDOC 5.5.4 |
+| DATA-ATT-003 | must | runtime | always | Every instance has a value for every attribute in its primary key. | FIPS184 3.4.3(d), B.5.3.10; SQLDOC 5.5.4 |
 | DATA-ATT-004 | must | static | keyed-level | A non-key attribute that may be null is marked optional. A primary key attribute is never optional. | FIPS184 3.4.3(f), B.5.3.10, pp. 15, 139 |
 | DATA-ATT-005 | must | static | idef1x | Every attribute is defined on exactly one domain. Several attributes may share a domain. | FIPS184 2.19, 3.4.3(a), p. 3 |
 | DATA-ATT-006 | note | none | chen | In Chen's model an attribute is a function from an entity set or relationship set into a value set or a product of value sets (a name drawn from first-name and last-name). Attribute and value set are distinct even when they share a name. | CHEN76 2.2.3, p. 12 |
@@ -105,7 +105,7 @@ Section references are to the numbered sections and pages of the sources (see th
 | DATA-REL-010 | should | none | chen | State for each relationship the mapping (1:1, 1:n or m:n) and, where known, the minimum and maximum number of entities on each side. | CHEN76 3.1(4), 3.2, pp. 20-21 |
 | DATA-REL-011 | should | none | chen | State the role of each participating entity, especially when one entity set participates more than once in a relationship. | CHEN76 2.2.2, 3.1, pp. 11-12, 19 |
 | DATA-REL-012 | must | static | chen | A relationship is identified by the keys of the entities involved. Those keys are not attributes of the relationship, which carries only its own attributes (for example a percentage of time). | CHEN76 2.3.2, p. 17 |
-| DATA-REL-013 | must | static | idef1x-or-crows-foot | A relationship has no attributes. A fact about an association is held by an associative entity placed between the two entities. [reconstructed] | FIPS184 3.4.3(b), 3.7.1, pp. 14, 24; WIKIER (crow's foot notation) |
+| DATA-REL-013 | should | static | idef1x-or-crows-foot | A relationship has no attributes. A fact about an association is held by an associative entity placed between the two entities. [reconstructed] | FIPS184 3.4.3(b), 3.7.1, pp. 14, 24; WIKIER (crow's foot notation) |
 | DATA-REL-014 | should | none | always | Name a relationship with a verb phrase, in the parent-to-child direction. Entity name, relationship name, cardinality and entity name read as a true sentence, and the reverse reading also holds. Check both readings. | FIPS184 3.5.3, pp. 19-20; CFOOT section 02 |
 | DATA-REL-015 | should | none | always | Where two paths lead from a descendant to the same ancestor, state whether the ancestor instances must be the same or must differ, using role names or a note. | FIPS184 3.13, pp. 34-35 |
 | DATA-REL-016 | note | none | always | Boolean constraints between relationships, such as exclusive-or, are recorded as notes. If both entities refer to the same real-world thing, use a categorization instead. | FIPS184 3.13, p. 35 |
@@ -158,21 +158,21 @@ Section references are to the numbered sections and pages of the sources (see th
 | Id | Strength | Checkable | Applies when | Rule | Section |
 |---|---|---|---|---|---|
 | DATA-PHY-001 | must | static | physical | A table has one or more columns. Column names in a table are unique; where the same domain is used twice, a role name tells the columns apart. | CODD70 1.3, p. 380 |
-| DATA-PHY-002 | must | static | physical | Every table has a primary key. | PGDOC 5.5.4; CODD70 1.3, p. 380 |
-| DATA-PHY-003 | must | static | physical | A table has at most one primary key constraint. It may have any number of unique constraints. | PGDOC 5.5.4 |
-| DATA-PHY-004 | must | runtime | physical | The columns of a primary key are unique across the table and never null. | PGDOC 5.5.4; CODD70 1.3, p. 380 |
-| DATA-PHY-005 | must | static | physical | A foreign key constraint references the primary key or a unique constraint of the referenced table. If no columns are named, the primary key is the target. | PGDOC 5.5.5; CODD70 1.3, p. 380 |
-| DATA-PHY-006 | must | static | physical | A foreign key has the same number of columns as the key it references, and the column types match pairwise. | PGDOC 5.5.5 |
-| DATA-PHY-007 | must | runtime | physical | Referential integrity. Every referencing row whose foreign key columns are non-null matches a row of the referenced table. By default a row escapes the check if any referencing column is null; with a full match, only if all are null. | PGDOC 5.5.5 |
-| DATA-PHY-008 | must | static | physical | The delete and update action of a foreign key is one of no action (the default), restrict, cascade, set null or set default. A set-null or set-default action must still leave every other constraint satisfied (not-null columns, primary key columns, the default value existing in the referenced table). | PGDOC 5.5.5 |
-| DATA-PHY-009 | should | none | physical | Choose the referential action from the dependence between the tables: cascade when the child is a component of the parent and cannot exist alone; restrict or no action when the two are independent; set null or set default for optional relationships. | PGDOC 5.5.5; CHEN76 3.5 Table III, p. 25; FIPS184 2.27 |
-| DATA-PHY-010 | must | static | physical | No many-to-many relationship remains at the physical level. A third table holds a foreign key to each side (an association table). | PGDOC 5.5.5; CFOOT section 04; FIPS184 3.7.3(c) |
-| DATA-PHY-011 | should | none | physical | Index the referencing columns of a foreign key when rows of the referenced table are deleted or its keys updated often. The database does not create that index for you, and each such change otherwise scans the referencing table. | PGDOC 5.5.5 |
-| DATA-PHY-012 | note | none | physical | A primary key or unique constraint is enforced through a unique index. Whether two nulls count as equal in a unique constraint is implementation-defined, so rows with nulls may repeat unless the product is told otherwise. | PGDOC 5.5.3 |
+| DATA-PHY-002 | must | static | physical | Every table has a primary key. | SQLDOC 5.5.4; CODD70 1.3, p. 380 |
+| DATA-PHY-003 | must | static | physical | A table has at most one primary key constraint. It may have any number of unique constraints. | SQLDOC 5.5.4 |
+| DATA-PHY-004 | must | runtime | physical | The columns of a primary key are unique across the table and never null. | SQLDOC 5.5.4; CODD70 1.3, p. 380 |
+| DATA-PHY-005 | must | static | physical | A foreign key constraint references the primary key or a unique constraint of the referenced table. If no columns are named, the primary key is the target. | SQLDOC 5.5.5; CODD70 1.3, p. 380 |
+| DATA-PHY-006 | must | static | physical | A foreign key has the same number of columns as the key it references, and the column types match pairwise. | SQLDOC 5.5.5 |
+| DATA-PHY-007 | must | runtime | physical | Referential integrity. Every referencing row whose foreign key columns are non-null matches a row of the referenced table. By default a row escapes the check if any referencing column is null; with a full match, only if all are null. | SQLDOC 5.5.5 |
+| DATA-PHY-008 | must | static | physical | The delete and update action of a foreign key is one of no action (the default), restrict, cascade, set null or set default. A set-null or set-default action must still leave every other constraint satisfied (not-null columns, primary key columns, the default value existing in the referenced table). | SQLDOC 5.5.5 |
+| DATA-PHY-009 | should | none | physical | Choose the referential action from the dependence between the tables: cascade when the child is a component of the parent and cannot exist alone; restrict or no action when the two are independent; set null or set default for optional relationships. | SQLDOC 5.5.5; CHEN76 3.5 Table III, p. 25; FIPS184 2.27 |
+| DATA-PHY-010 | must | static | physical | No many-to-many relationship remains at the physical level. A third table holds a foreign key to each side (an association table). | SQLDOC 5.5.5; CFOOT section 04; FIPS184 3.7.3(c) |
+| DATA-PHY-011 | should | none | physical | Index the referencing columns of a foreign key when rows of the referenced table are deleted or its keys updated often. The database does not create that index for you, and each such change otherwise scans the referencing table. | SQLDOC 5.5.5 |
+| DATA-PHY-012 | note | none | physical | A primary key or unique constraint is enforced through a unique index. Whether two nulls count as equal in a unique constraint is implementation-defined, so rows with nulls may repeat unless the product is told otherwise. | SQLDOC 5.5.3 |
 | DATA-PHY-013 | note | none | physical | An index is a redundant, performance-oriented structure. It can be added or dropped without changing what the data means, and queries must not depend on it. | CODD70 1.2.2, p. 378 |
-| DATA-PHY-014 | should | none | physical | Mark most columns not null. Allow null only where a value does not apply or is not known. | PGDOC 5.5.2; FIPS184 2.45 |
-| DATA-PHY-015 | should | none | physical | A check constraint restricts the row being checked. It passes when the condition is true or null, so pair it with not null when a value is required. Rules across rows or tables belong to unique, foreign key or exclusion constraints, or to triggers. | PGDOC 5.5.1 |
-| DATA-PHY-016 | note | none | physical | A table may reference itself (a tree, a bill of materials); the rows at the top leave the reference null. Name constraints so that errors and changes can refer to them. | PGDOC 5.5.1, 5.5.5; CODD70 1.3, p. 380 |
+| DATA-PHY-014 | should | none | physical | Mark most columns not null. Allow null only where a value does not apply or is not known. | SQLDOC 5.5.2; FIPS184 2.45 |
+| DATA-PHY-015 | should | none | physical | A check constraint restricts the row being checked. It passes when the condition is true or null, so pair it with not null when a value is required. Rules across rows or tables belong to unique, foreign key or exclusion constraints, or to triggers. | SQLDOC 5.5.1 |
+| DATA-PHY-016 | note | none | physical | A table may reference itself (a tree, a bill of materials); the rows at the top leave the reference null. Name constraints so that errors and changes can refer to them. | SQLDOC 5.5.1, 5.5.5; CODD70 1.3, p. 380 |
 
 ## MAP: Logical to physical
 
@@ -184,7 +184,7 @@ Section references are to the numbered sections and pages of the sources (see th
 | DATA-MAP-004 | should | none | physical | Resolve a many-to-many relationship into an association table with a foreign key to each side. Its key is normally the combination of those foreign keys, and attributes of the relationship become its columns. [reconstructed] | CHEN76 2.3.2, p. 17; FIPS184 3.7.1, p. 24; CFOOT section 04 |
 | DATA-MAP-005 | must | static | physical | If category entities become separate tables, the primary key of each is the primary key of the generic table and is also a foreign key to it. | FIPS184 3.6.3(d), 3.9.3(b), pp. 23, 30 |
 | DATA-MAP-006 | must | static | physical | The table of a weak entity has a primary key made of the owner's key plus the weak entity's own partial key, and a foreign key to the owner table. | CHEN76 2.3.2, 3.2, pp. 17-22 |
-| DATA-MAP-007 | should | none | physical | Implement a base domain as a column data type and a domain rule as a check constraint. [reconstructed] | FIPS184 3.2.1, p. 10; PGDOC 5.5.1 |
+| DATA-MAP-007 | should | none | physical | Implement a base domain as a column data type and a domain rule as a check constraint. [reconstructed] | FIPS184 3.2.1, p. 10; SQLDOC 5.5.1 |
 | DATA-MAP-008 | note | none | physical | An attribute that maps to a product of value sets becomes several columns (a name as first name and last name). | CHEN76 2.2.3, 4.1.1, pp. 12, 26 |
 
 ## NRM: Normalization guidance

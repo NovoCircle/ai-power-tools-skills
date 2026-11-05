@@ -89,10 +89,6 @@ KNOWN_IDS = {
     # which the census has to recognize in order to EXCLUDE it - so the id has
     # to be nameable in our own source.
     "EAUML",
-    # Data modeling language (data-modeling-er guide). ERD_dp is the Entity Relationship Diagram technology's key in
-    # the stored diagram type (`MDGDgm=ERD_dp::ERD_DP`), read from the diagram rows of the data-modeling test model;
-    # EAExtended and EAUI are Core Extensions' own ids, read from Resources tab of EA 17.1 build 1716.
-    "ERD_dp", "EAExtended", "EAUI",
     # The UML 2 Standard Profile EA ships and applies by default. Real
     # repositories carry `StandardProfileL2::Realization` on ordinary
     # Realization connectors, so a skill citing what `t_xref` actually holds
@@ -169,10 +165,6 @@ SHELF_NAMESPACES = {
 # against the line instead and the bare word stays unknown.
 KNOWN_SPACED_IDS = (
     "TOGAF Diagrams",
-    # Sparx-shipped group on the Resources tab (`EA Requirements`), whose stored token is `Extended::Requirements`.
-    "EA Requirements",
-    # Sparx-shipped diagram type of Core Extensions (`Data Modeling`), ending the stored token `Extended::Data Modeling`.
-    "Data Modeling",
     # Sparx-shipped, and the technology behind the corpus row whose
     # diagram type is TechnicalReferenceModel -- which was being counted
     # under TOGAF until it was measured.

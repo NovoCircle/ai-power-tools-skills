@@ -44,7 +44,7 @@ Create an element with the stereotype in the second column; pass the **qualified
 | Categorization | `ERD_Disjoint` or `ERD_Overlapping` | Generalization | A connector from the **category to the generic** entity. Tag `Participation` (partial, total; default partial). `ERD_Overlapping` lets an instance belong to several categories, which IDEF1X does not. |
 | Many-to-many relationship | `ERD_Relationship` | Association | No marker beyond `*` on both ends. |
 
-No stereotype exists for a domain, a typed domain, a key other than the primary key, a foreign key attribute, a category cluster as an object, an identifying or non-identifying marker, or an IDEF1X view. Seven of the language file's 33 concepts have no stereotype at all (Key, Candidate key, Table constraint, Domain, Typed domain, View, Note); the rest map as above or in section 3.2. `EAUML::Entity` is **not** an ERD entity (section 7, trap 2).
+No stereotype exists for a domain, a typed domain, a key other than the primary key, a foreign key attribute, a category cluster as an object, an identifying or non-identifying marker, or an IDEF1X view. Seven of the language file's 33 concepts have no stereotype at all (Key, Candidate key, Table constraint, Domain, Typed domain, View, Note); the rest map as above or in section 3.2. A base domain has only the nearest fact, the `commonDataType` tag on an `ERD_Attribute`. `EAUML::Entity` is **not** an ERD entity (section 7, trap 2).
 
 ### Data-model level (logical with keys, and physical)
 
@@ -61,7 +61,7 @@ No stereotype exists for a domain, a typed domain, a key other than the primary 
 
 #### 3.1 Columns, keys and indexes are not elements
 
-A table is one element. Its columns are rows of `t_attribute`, its keys and indexes rows of `t_operation` (with their columns as `t_operationparams`), measured on the Westbrook tables. Anything that selects elements (a script that lists stereotypes, a ruleset rule, an element count) sees the table and nothing inside it. To count columns, test for a primary key, or check that a foreign key's columns match, read the table's attributes and operations; that needs the API (`Element.Attributes`, `Element.Methods`) or SQL on `t_attribute` and `t_operation`.
+A table is one element. Its columns are rows of `t_attribute`, its keys and indexes rows of `t_operation` (with their columns as `t_operationparams`), measured on a test model's tables. Anything that selects elements (a script that lists stereotypes, a ruleset rule, an element count) sees the table and nothing inside it. To count columns, test for a primary key, or check that a foreign key's columns match, read the table's attributes and operations; that needs the API (`Element.Attributes`, `Element.Methods`) or SQL on `t_attribute` and `t_operation`.
 
 #### 3.2 How the language's concepts reach each level
 
@@ -132,3 +132,5 @@ A diagram can hold only what you drop on it: the diagram's elements and connecto
 ## 8. Checking a model
 
 The data-modeling ruleset (`rulesets/data-modeling-er/data-modeling-er_rules.yaml`, 6 rules) checks: that a relationship, attribute or categorization line joins only the ERD pairs the language allows and that a foreign key line joins two tables; that an `ERD_Attribute` has exactly one owner and is not marked multi-valued; that a weak entity has an owner's relationship; and that a category entity has at most one generic entity. It does not check names, cardinalities, columns, keys, indexes, referential actions, normal forms, views of a model, or anything about instance data; those need a person or a tool that reads attributes and operations. The ruleset's header says why: the grammar cannot read a name, a cardinality, an attribute or an operation.
+
+This ruleset needs server 3.6.5 or later. On 3.6.4 and earlier some of its rules report nothing, with no error, so a clean result there doesn't mean the model passes.

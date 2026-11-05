@@ -10,7 +10,7 @@ Source codes used throughout:
 | FIPS184 | FIPS PUB 184, Integration Definition for Information Modeling (IDEF1X), NIST, 21 December 1993; withdrawn 2 September 2008 | Formal US federal standard, withdrawn but public. The only precise public definition of a keyed logical data modeling language |
 | CODD70 | E. F. Codd, "A Relational Model of Data for Large Shared Data Banks", Communications of the ACM, June 1970 | Paper that defines the relational model |
 | KENT83 | William Kent, "A Simple Guide to Five Normal Forms in Relational Database Theory", Communications of the ACM, February 1983 | Tutorial article |
-| PGDOC | PostgreSQL 18 manual, chapter 5.5 Constraints | Public database manual, used for how SQL constraints behave. The ISO SQL standard is paywalled and was not read |
+| SQLDOC | A public database manual, chapter on constraints | Public database manual, used for how SQL constraints behave. The ISO SQL standard is paywalled and was not read |
 | WIKIER, CFOOT | An encyclopedia article on the entity-relationship model and an online crow's foot notation article (August 2026) | Secondary sources, used only for notation conventions and marked wherever used |
 
 The later IDEF1X standard, IEEE 1320.2-1998 (IDEF1X97), is paywalled and was not read. Where this reference says "IDEF1X" it means the 1993 federal standard.
@@ -110,7 +110,7 @@ The standard words two normal form requirements as rules for key-based and fully
 Crow's foot has no governing document that I could read. It descends from the information engineering method and from the early diagrams of Gordon Everest (1976) and was spread by the CASE tools of the 1980s (WIKIER, secondary). Two secondary sources describe it and agree.
 
 - **Entities** are boxes, attributes are listed inside, relationships are lines.
-- **Symbols at a line end** come in pairs. The **outer** symbol is the maximum and the **inner** one the minimum. A **bar** means one, a **crow's foot** (three prongs) means many, a **ring** means zero. The four cases are exactly one (bar, bar), zero or one (ring, bar), one or more (bar, crow's foot) and zero or more (ring, crow's foot).
+- **Symbols at a line end** come in pairs. The **outer** symbol is the maximum and the **inner** one the minimum. A **bar** means one, a **crow's foot** (three prongs) means many, a **ring** means zero. The four cases are exactly one (bar, bar), zero or one (ring, bar), one or more (bar, crow's foot) and zero or more (ring, crow's foot). The crow's foot article's prose and its table differ on which mark is the maximum, and this reference follows the table (CFOOT).
 - The symbols at an end describe the entity at that end. Read the line starting from the other entity: a crow's foot next to Order on a Customer-to-Order line means one customer has zero or more orders. Every relationship has two readings and both should be true (CFOOT section 02; DATA-REL-014).
 - **Relationships cannot carry attributes.** A fact about the association (when and where an artist performed a song) makes it an associative entity (DATA-REL-013).
 - **Identifying and non-identifying.** A solid line is conventionally an identifying relationship, where the parent's key is part of the child's key. A dashed line means the foreign key is an ordinary attribute. Tools disagree on this; show the key in the box as well (CFOOT section 03).
@@ -143,9 +143,9 @@ These are conventions for drawing. They are not constraints. The constraints tha
 
 **Relations and tables.** In the relational model (CODD70 1.3) a relation is a set of rows (tuples), all distinct, over named domains; row order does not matter. The columns are identified by name, and when two columns share a domain a role name tells them apart (DATA-PHY-001). A table in a SQL database is the practical form.
 
-**Keys.** A domain or combination that uniquely identifies each row is a **primary key**. A relation may have several keys that are not redundant, one chosen as the primary key. A **foreign key** is a column or combination that is not the table's own primary key but whose values are values of the primary key of some table, possibly the same table. Relational theory says every table has a primary key; SQL does not enforce it, and the manual advises following the rule (PGDOC 5.5.4; DATA-PHY-002).
+**Keys.** A domain or combination that uniquely identifies each row is a **primary key**. A relation may have several keys that are not redundant, one chosen as the primary key. A **foreign key** is a column or combination that is not the table's own primary key but whose values are values of the primary key of some table, possibly the same table. Relational theory says every table has a primary key; SQL does not enforce it, and the manual advises following the rule (SQLDOC 5.5.4; DATA-PHY-002).
 
-**SQL constraints** (PGDOC 5.5):
+**SQL constraints** (SQLDOC 5.5):
 
 - A **primary key constraint** makes the columns unique and not null; a table has at most one (DATA-PHY-003, DATA-PHY-004).
 - A **unique constraint** makes a column or group unique; any number per table. By default two nulls are not equal, so rows with nulls may repeat; this is implementation-defined (DATA-PHY-012).
