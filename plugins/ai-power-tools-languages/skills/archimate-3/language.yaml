@@ -615,6 +615,7 @@ notation:
     ImplementationEvent: {shape: 'rounded rectangle', marker: 'flag shape (a notch cut into the left edge, a rounded right end), in the upper right corner', alternative: 'the flag shape alone', label: 'inside', section: 'A.2; 13.2.3'}
     Plateau: {shape: 'three-dimensional box (front face, top face and right side face)', marker: 'three short horizontal bars of different lengths, stacked, in the upper right corner', alternative: 'the three bars alone', label: 'inside', section: 'A.2; 13.2.4'}
     Gap: {shape: 'rectangle with a wavy bottom edge', marker: 'circle with two horizontal lines through it, in the upper right corner', alternative: 'the circle with its two lines alone', label: 'name at the top', section: 'A.2; 13.2.5'}
+    Junction: {shape: 'small filled circle for an and junction, small hollow circle for an or junction; the relationships of one type meet at the circle', label: 'none', section: 'A.3; 5.5.1'}
   relationships:
     Composition: {line: 'solid', source_end: 'filled diamond', target_end: 'none', label: 'optional', section: 'A.3; 5.1.1', alternative: 'nest the part inside the whole (3.8; 5.1)'}
     Aggregation: {line: 'solid', source_end: 'hollow diamond', target_end: 'none', label: 'optional', section: 'A.3; 5.1.2', alternative: 'nest the part inside the whole (3.8; 5.1)'}
@@ -627,7 +628,6 @@ notation:
     Triggering: {line: 'solid', source_end: 'none', target_end: 'filled arrowhead', label: 'optional', section: 'A.3; 5.3.1'}
     Flow: {line: 'dashed', source_end: 'none', target_end: 'filled arrowhead', label: 'optional', section: 'A.3; 5.3.2'}
     Specialization: {line: 'solid', source_end: 'none', target_end: 'hollow triangle arrowhead', label: 'optional', section: 'A.3; 5.4.1'}
-    Junction: {shape: 'small filled circle for an and junction, small hollow circle for an or junction; the relationships of one type meet at the circle', label: 'none', section: 'A.3; 5.5.1'}
   not_specified: [Element, StructureElement, ActiveStructureElement, InternalActiveStructureElement, Interface, PassiveStructureElement, BehaviorElement, InternalBehaviorElement, Service, Event, Collaboration, Interaction, Process, Function, MotivationElement, CompositeElement, BusinessInternalActiveStructureElement, BusinessInternalBehaviorElement, BusinessPassiveStructureElement, ApplicationInternalActiveStructureElement, ApplicationInternalBehaviorElement, ApplicationPassiveStructureElement, TechnologyInternalActiveStructureElement, TechnologyInternalBehaviorElement, TechnologyObject]   # abstract concepts are never instantiated, so the standard gives them no drawing
 
 layout:
