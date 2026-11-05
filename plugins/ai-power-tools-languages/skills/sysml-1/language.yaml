@@ -1,0 +1,48 @@
+# Stub: holds only the layout block until the guide arrives.
+# The guide replaces this file and keeps the `layout` block.
+id: sysml-1
+name: OMG Systems Modeling Language (SysML)
+stub: true
+layout:
+  basis: Our conventions, not this standard's.  Sizes and spacing come from the shared layout standard.
+  element_types: {}
+  exceptions: {}
+  diagram_types:
+    block definition:
+      arrangement: layered-bands
+      title: frame-header
+      route: orthogonal
+      channels:
+        fill: null
+        claimed:
+          position: Hierarchy level. Which band a block sits in says how deep in the generalization or
+            composition tree it is.
+          line_style: Relationship kind. Dashed lines are dependencies (import, verify), so a second variable
+            cannot use dash pattern.
+        free:
+        - fill
+        - border
+        - border_width
+        - line_color
+        - font_color
+        - opacity
+        - icon
+    requirement:
+      arrangement: layered-bands
+      title: frame-header
+      route: orthogonal
+      channels:
+        fill: 'Requirement kind. Treated as claimed: recoloring a diagram whose fill already encodes kind
+          breaks it, while leaving a channel unused costs nothing.'
+        claimed:
+          position: Decomposition level. Which band a requirement sits in says how deep in the containment
+            tree it is.
+          line_style: Relationship kind. Dashed lines are deriveReqt dependencies.
+        free:
+        - border
+        - border_width
+        - line_color
+        - font_color
+        - opacity
+        - icon
+  viewpoints: {}

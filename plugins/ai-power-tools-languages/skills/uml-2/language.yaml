@@ -1,0 +1,242 @@
+# Stub: holds only the layout block until the guide arrives.
+# The guide replaces this file and keeps the `layout` block.
+id: uml-2
+name: Unified Modeling Language (UML)
+stub: true
+layout:
+  basis: Our conventions, not this standard's.  Sizes and spacing come from the shared layout standard.
+  element_types:
+    Actor: actor
+    Package: container
+    Port: attached-item
+    UseCase: large-box
+    Comment: note
+    DecisionNode: decision-diamond
+    MergeNode: decision-diamond
+    Pseudostate: small-node
+    FinalState: small-node
+    InitialNode: small-node
+    ActivityFinalNode: small-node
+    FlowFinalNode: small-node
+    InputPin: attached-item
+    OutputPin: attached-item
+    ValuePin: attached-item
+    ActionInputPin: attached-item
+  exceptions: {}
+  diagram_types:
+    Class diagram:
+      arrangement: graph
+      title: frame-header
+      route: straight
+      trunk:
+        route: tree-vertical
+        for:
+        - Generalization
+      channels:
+        fill: null
+        claimed:
+          position: Set by automatic layout rather than by the notation. UML gives position no meaning
+            on this diagram, and a layout pass overwrites anything set beforehand, so it can't carry a
+            second variable.
+          size: Compartment content. A class box is sized by the attributes and operations it shows, so
+            using size to encode something else fights the content.
+          line_style: 'Normative in UML: dashed against solid separates a dependency or a realization
+            from an association. Overwriting it changes what a connector means.'
+        free:
+        - fill
+        - border
+        - border_width
+        - line_color
+        - font_color
+        - opacity
+        - icon
+    State machine diagram:
+      arrangement: graph
+      title: frame-header
+      route: straight
+      channels:
+        fill: null
+        claimed:
+          position: Set by automatic layout rather than by the notation. UML gives position no meaning
+            on this diagram, and a layout pass overwrites anything set beforehand, so it can't carry a
+            second variable.
+          size: Node kind. A pseudostate is a small node because it is a pseudostate, and a state is sized
+            by its name and its internal compartments.
+          line_style: 'Normative in UML: dashed against solid separates a dependency or a realization
+            from an association. Overwriting it changes what a connector means.'
+        free:
+        - fill
+        - border
+        - border_width
+        - line_color
+        - font_color
+        - opacity
+        - icon
+    Activity diagram:
+      arrangement: graph
+      title: frame-header
+      route: straight
+      channels:
+        fill: null
+        claimed:
+          position: Set by automatic layout rather than by the notation. UML gives position no meaning
+            on this diagram, and a layout pass overwrites anything set beforehand, so it can't carry a
+            second variable.
+          size: 'Node kind: a pin is small and a decision is a diamond.'
+          line_style: 'Normative in UML: dashed against solid separates a dependency or a realization
+            from an association. Overwriting it changes what a connector means.'
+        free:
+        - fill
+        - border
+        - border_width
+        - line_color
+        - font_color
+        - opacity
+        - icon
+    Package diagram:
+      arrangement: graph
+      title: frame-header
+      route: straight
+      channels:
+        fill: null
+        claimed:
+          position: Set by automatic layout rather than by the notation. UML gives position no meaning
+            on this diagram, and a layout pass overwrites anything set beforehand, so it can't carry a
+            second variable.
+          size: Set by the package name, which is usually the longest thing on it.
+          line_style: 'Normative in UML: dashed against solid separates a dependency or a realization
+            from an association. Overwriting it changes what a connector means.'
+        free:
+        - fill
+        - border
+        - border_width
+        - line_color
+        - font_color
+        - opacity
+        - icon
+    Deployment diagram:
+      arrangement: graph
+      title: frame-header
+      route: straight
+      channels:
+        fill: null
+        claimed:
+          position: Set by automatic layout rather than by the notation. UML gives position no meaning
+            on this diagram, and a layout pass overwrites anything set beforehand, so it can't carry a
+            second variable.
+          size: Set by what is deployed inside. A node stretched to hold three artifacts is wider because
+            of them.
+          line_style: 'Normative in UML: dashed against solid separates a dependency or a realization
+            from an association. Overwriting it changes what a connector means.'
+        free:
+        - fill
+        - border
+        - border_width
+        - line_color
+        - font_color
+        - opacity
+        - icon
+    Use case diagram:
+      arrangement: graph
+      title: frame-header
+      route: straight
+      channels:
+        fill: null
+        claimed:
+          position: Set by automatic layout rather than by the notation. UML gives position no meaning
+            on this diagram, and a layout pass overwrites anything set beforehand, so it can't carry a
+            second variable.
+          size: 'Node kind: an actor is a stick figure.'
+          line_style: 'Normative in UML: dashed against solid separates a dependency or a realization
+            from an association. Overwriting it changes what a connector means.'
+        free:
+        - fill
+        - border
+        - border_width
+        - line_color
+        - font_color
+        - opacity
+        - icon
+    Component diagram:
+      arrangement: graph
+      title: frame-header
+      route: straight
+      channels:
+        fill: null
+        claimed:
+          position: 'Spoken for twice over: automatic layout places the components, and a port or an interface
+            sits on its parent''s border, which is containment rather than layout.'
+          size: 'Node kind: a port and an interface lollipop are small.'
+          line_style: 'Normative in UML: dashed against solid separates a dependency or a realization
+            from an association. Overwriting it changes what a connector means.'
+        free:
+        - fill
+        - border
+        - border_width
+        - line_color
+        - font_color
+        - opacity
+        - icon
+    Composite structure diagram:
+      arrangement: graph
+      title: frame-header
+      route: straight
+      channels:
+        fill: null
+        claimed:
+          position: A part sits inside its classifier and a port on its border, so position carries containment
+            here.
+          size: Set by the parts a classifier holds.
+          line_style: 'Normative in UML: dashed against solid separates a dependency or a realization
+            from an association. Overwriting it changes what a connector means.'
+        free:
+        - fill
+        - border
+        - border_width
+        - line_color
+        - font_color
+        - opacity
+        - icon
+    Object diagram:
+      arrangement: graph
+      title: frame-header
+      route: straight
+      channels:
+        fill: null
+        claimed:
+          position: Set by automatic layout rather than by the notation. UML gives position no meaning
+            on this diagram, and a layout pass overwrites anything set beforehand, so it can't carry a
+            second variable.
+          size: Set by the slots an instance shows.
+          line_style: 'Normative in UML: dashed against solid separates a dependency or a realization
+            from an association. Overwriting it changes what a connector means.'
+        free:
+        - fill
+        - border
+        - border_width
+        - line_color
+        - font_color
+        - opacity
+        - icon
+    Timing diagram:
+      arrangement: type-fixed
+      title: frame-header
+      route: straight
+      channels:
+        fill: null
+        claimed:
+          position: 'Entirely: the horizontal axis is time, and the vertical position says which timeline
+            and which state. This is what makes the arrangement type-fixed.'
+          size: Width is duration. A timeline drawn wider covers a longer span, so resizing one restates
+            the measurement.
+          line_style: 'Normative in UML: dashed against solid separates a dependency or a realization
+            from an association. Overwriting it changes what a connector means.'
+        free:
+        - fill
+        - border
+        - border_width
+        - line_color
+        - font_color
+        - opacity
+        - icon
+  viewpoints: {}

@@ -125,10 +125,18 @@ def shelf_problems(shelf: Path = SHELF, plugin: Path = PLUGIN) -> list[str]:
     return problems
 
 
-def generated_problems() -> list[str]:
-    """Generated files must be current. Nothing generates any yet; the layout
-    standard branch (tools/gen_conventions.py) fills this in."""
-    return []
+def generated_problems(root: Path = ROOT) -> list[str]:
+    """Generated files must be current, so a build can't ship two sets of numbers."""
+    tools = str(Path(__file__).resolve().parent)
+    if tools not in sys.path:
+        sys.path.insert(0, tools)
+    import gen_conventions
+    try:
+        stale = gen_conventions.stale_files(root)
+    except gen_conventions.GenerationError as exc:
+        return [f"Generated files can't be checked: {exc}"]
+    return [f"Stale generated file: {rel}. Run tools/gen_conventions.py and commit the result."
+            for rel in stale]
 
 
 def version_problems(plugin: Path = PLUGIN, manifest: Path = MANIFEST,

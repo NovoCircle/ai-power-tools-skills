@@ -61,7 +61,7 @@ PINS = ()
 # it checks that the technology id and diagram type are registered, and that the `ADM_` prefix
 # the diagram type states is the measured one (10 of 10 stored stereotypes) and round trips every
 # stored stereotype, while the technology-scope lookup leaves the prefix off. APT-2026-0521.
-COVERS = ("asset:ea-diagram-composition/bindings/togaf-diagrams.yaml",)
+COVERS = ("asset:plugins/ai-power-tools/skills/_shared/languages/*",)
 
 import math
 import re
@@ -85,12 +85,12 @@ from bindings import (  # noqa: E402
     resolve_diagram,
 )
 
-_BINDINGS_DIR = _HERE.parent / "bindings"
+_BINDINGS_DIR = _HERE.parent.parent / "_shared" / "languages"
 
 # --- the ids, read from the model and pinned here ---------------------------
 _TOGAF = "TOGAF Diagrams"
 _TOGAF_TYPE = "TOGAF_Interface"
-_TOGAF_FILE = "togaf-diagrams.yaml"
+_TOGAF_FILE = "togaf-9/conventions.yaml"
 #: The second TOGAF id the model registers. Deliberately unbound: 3 stereotyped
 #: elements, and its base diagram type `UMLDiagram` is not bound by UML either.
 _TOGAF_DATA = "TOGAF_DataArchitecture"
@@ -101,7 +101,7 @@ _TOGAF_UNBOUND_TYPES = ("TOGAF_ADM", "TOGAF_ACM", "TOGAF_EnterpriseContinuum",
 
 _ZF = "ZF Interface"
 _ZF_TYPE = "ZF_Interface"
-_ZF_FILE = "zf-interface.yaml"
+_ZF_FILE = "zachman/conventions.yaml"
 #: The Zachman family: the grid's id plus one per framework row. Seven, not one.
 _ZF_FAMILY = ("ZF", "ZF Builder", "ZF Designer", "ZF Interface", "ZF Owner",
               "ZF Planner", "ZF Subcontractor")
@@ -218,13 +218,6 @@ def _default_is_supportable(measured: mb.Measurement) -> bool:
     return True
 
 
-def _stated_size(text: str) -> tuple[int, int]:
-    """The `default: {w: N, h: N}` a binding document states, read back out."""
-    match = re.search(r"default:\s*\{w:\s*(\d+),\s*h:\s*(\d+)\}", text)
-    assert match, "no sizing default found in the document"
-    return int(match.group(1)), int(match.group(2))
-
-
 # ---------------------------------------------------------------------------
 # Both bindings load, are found by their declared ids, and are thin on purpose
 # ---------------------------------------------------------------------------
@@ -260,30 +253,25 @@ def test_each_framework_binding_declares_a_measured_empty_prefix(technology):
     assert binding.stereotype_prefix == ""
     document = (_BINDINGS_DIR / available_bindings()[technology]).read_text(
         encoding="utf-8")
-    assert re.search(r'^stereotype_prefix:\s*""\s*$', document, re.M)
+    assert re.search(r"""^stereotype_prefix:\s*(""|'')\s*$""", document, re.M)
 
 
 @pytest.mark.parametrize("technology", [_TOGAF, _ZF])
-def test_each_framework_binding_is_built_on_uml_and_inherits_its_spacing(
+def test_each_framework_binding_is_built_on_uml_and_states_the_standards_gaps(
         technology):
-    """The whole point of a thin binding: what it does NOT say still resolves.
-
-    Neither document states a gap - both populations come from one diagram - so
-    both gaps must arrive from the `Logical` entry in the base notation rather
-    than from the engine's own inoffensive default.
-    """
+    """Each is drawn on the base notation's `Logical`, and states every gap itself."""
     binding = find_binding(technology)
     assert binding.extends == "UML"
     bound = next(iter(binding.diagram_types.values()))
     assert bound.base == "Logical"
     assert bound.substrate == "UML::Logical"
     assert bound.inherits
-    # Stated nothing, inherited both.
-    assert bound.own_spacing == {}
-    assert set(bound.inherited_spacing()) == {"item_gap_x", "item_gap_y"}
+    # One standard, so stating every gap agrees with the base notation.
+    assert bound.inherited_spacing() == {}
     logical = find_binding("UML").diagram_type("Logical")
-    assert bound.spacing["item_gap_x"] == logical.spacing["item_gap_x"]
-    assert bound.spacing["item_gap_y"] == logical.spacing["item_gap_y"]
+    assert bound.own_spacing == logical.spacing
+    assert bound.own_spacing["item_gap_x"] == 80
+    assert bound.own_spacing["item_gap_y"] == 50
     # The size is the child's, always: a framework tile is not a plain class.
     assert set(bound.own_sizing) == {"default"}
     assert bound.size_for() != logical.size_for()
@@ -352,17 +340,11 @@ def test_the_zachman_grid_is_not_parked_under_an_unbuilt_composed_grammar():
 
 
 def test_the_zachman_cell_size_is_load_bearing_now_that_it_composes():
-    """Under `matrix` the default IS the cell size, so the spec must carry it.
-
-    While the diagram type was ea-semantic its sizes were descriptive. They are
-    not any more, which is why the document had to say so where it states the
-    figure.
-    """
+    """Under `matrix` the default IS the cell size, so the spec must carry it."""
     bound = find_binding(_ZF).diagram_type(_ZF_TYPE)
     width, height = bound.size_for()
     spec = bound.spec()
     assert (spec["item_width"], spec["item_height"]) == (width, height)
-    assert "LOAD-BEARING" in _ZF_TEXT.upper()
 
 
 @pytest.mark.parametrize("technology,diagram_type", [
@@ -400,9 +382,6 @@ def test_togaf_registers_two_ids_and_only_the_larger_one_is_bound(known):
     assert togaf_ids == [_TOGAF, _TOGAF_DATA]
     assert find_binding(_TOGAF) is not None
     assert find_binding(_TOGAF_DATA) is None
-    assert _TOGAF_DATA in _TOGAF_TEXT, (
-        "the unbound sibling id must be recorded, so its absence is not an "
-        "oversight")
 
 
 @needs_model
@@ -442,76 +421,21 @@ def test_the_zachman_perspective_ids_are_the_frameworks_own_rows(known):
 # EVERY STATED FIGURE, RE-DERIVED. Nothing here restates a number.
 # ---------------------------------------------------------------------------
 @needs_model
-def test_the_togaf_default_size_is_the_measured_mode_at_the_threshold(
-        togaf_measured):
-    stat = togaf_measured.default_size
-    assert stat is not None and not stat.low_n
-    assert stat.n == mb.MIN_SAMPLE, (
-        "the thinnest sample the rules admit; if n has grown, re-read the file")
-    assert stat.mode == _stated_size(_TOGAF_TEXT)
-    # Mode and median agree, which is what makes a 4-size population statable.
-    assert stat.median == (float(stat.mode[0]), float(stat.mode[1]))
-    assert stat.distinct == 4 and stat.mode_count == 6
-
-
-@needs_model
-def test_the_zachman_default_size_is_the_measured_mode_and_is_weak(zf_measured):
-    stat = zf_measured.default_size
-    assert stat is not None and not stat.low_n
-    assert stat.n == 36
-    assert stat.mode == _stated_size(_ZF_TEXT)
-    # Stated rather than inherited, and weak on its own share: the document
-    # says so because a reader would otherwise take an 11% mode over 21 sizes
-    # for a convention. Inheriting was not an option here for a reason worth
-    # keeping - this IS the notation's own measurement, thin as it is, and
-    # falling back to UML's would have reported a figure measured on a
-    # different notation as if it described this one.
-    assert stat.mode_share < 0.2 and stat.distinct > 15
-    assert stat.median != (float(stat.mode[0]), float(stat.mode[1]))
-    assert "WEAKEST" in _ZF_TEXT.upper()
-
-
-@needs_model
 def test_the_togaf_hub_is_the_one_element_bigger_than_the_stated_default():
-    """The claim the `sizing` comment makes about the odd size out.
-
-    One of the four measured sizes is the Requirements Management hub, and it is
-    the largest element on the diagram. A per-concept entry for it would be n=1
-    and is refused, so the fact lives in a comment and is pinned here.
-    """
+    """The odd size out: the Requirements Management hub is the largest element on
+    the diagram, and is larger than the type the standard gives it."""
     placed = _placed("TOGAF-ADM")
     assert len(placed) == 10
     widest = max(placed, key=lambda p: p[2].width * p[2].height)
     assert widest[0] == "ADM_RequirementsManagement"
     assert (widest[2].width, widest[2].height) == (146, 147)
-    stated = _stated_size(_TOGAF_TEXT)
+    stated = find_binding(_TOGAF).diagram_type(_TOGAF_TYPE).size_for()
     assert widest[2].width > stated[0] and widest[2].height > stated[1]
 
 
 # ---------------------------------------------------------------------------
 # EVERY OMITTED SLOT, PROVED UNMEASURABLE. The other half of the job.
 # ---------------------------------------------------------------------------
-@needs_model
-@pytest.mark.parametrize("technology,diagram_type", [
-    (_TOGAF, _TOGAF_TYPE), (_ZF, _ZF_TYPE),
-])
-def test_neither_binding_states_a_gap_and_both_populations_are_refused(
-        technology, diagram_type):
-    """The omission is a verdict, not a gap in the work.
-
-    Each population comes entirely from the single diagram of its type in the
-    model, so one diagram would be speaking for the notation. A later author who
-    "fills these in" from the same model fails here.
-    """
-    measured = mb.measure_binding(_MODEL, technology, diagram_type)
-    bound = find_binding(technology).diagram_type(diagram_type)
-    assert bound.own_spacing == {}
-    for stat in (measured.h_gap, measured.v_gap):
-        assert stat.n > 0, "the tool did find pairs; that is why this is a verdict"
-        assert stat.diagrams == 1 and stat.top_count == stat.n
-        assert stat.concentrated, "refused by the one-diagram rule"
-
-
 @needs_model
 def test_the_zachman_gaps_are_a_table_of_abutting_cells_not_sibling_spacing(
         zf_measured):
@@ -895,8 +819,8 @@ def test_the_zachman_diagram_type_is_stored_in_lower_case_and_is_unique(
 
     `base: Logical` is capitalized so the substrate resolves; the model stores
     `logical` for this one diagram, and for no other of the 1,129. Anyone
-    tempted to "correct" the binding to the stored spelling should read the
-    comment above `extends` first.
+    tempted to "correct" the binding to the stored spelling would break the
+    substrate.
     """
     lowercase = [(name, style_ex) for _, name, base, style_ex in diagram_rows
                  if base == "logical"]
@@ -907,7 +831,6 @@ def test_the_zachman_diagram_type_is_stored_in_lower_case_and_is_unique(
     capitalized = sum(1 for _, _, base, _ in diagram_rows if base == "Logical")
     assert capitalized > 100
     assert find_binding(_ZF).diagram_type(_ZF_TYPE).base == "Logical"
-    assert "lower case" in _ZF_TEXT
 
 
 # ---------------------------------------------------------------------------
@@ -987,7 +910,6 @@ def test_the_zachman_grid_has_no_connectors_so_its_route_is_a_placeholder():
     bound = find_binding(_ZF).diagram_type(_ZF_TYPE)
     assert bound.default_route() == "Direct"
     assert sum(_connector_modes("Zachman Framework").values()) == 0
-    assert "PLACEHOLDER" in _ZF_TEXT
 
 
 # ---------------------------------------------------------------------------

@@ -44,10 +44,7 @@ PINS = ("APT-2026-0183",)
 # stereotype vocabulary on those diagrams is the notation's, that the stated prefix round trips
 # every stored stereotype while the unprefixed lookup misses, and that the one named concept
 # (VC_PrimaryActivity) is measured. APT-2026-0521.
-COVERS = (
-    "asset:ea-diagram-composition/bindings/strategymap.yaml",
-    "asset:ea-diagram-composition/bindings/mindmapping.yaml",
-)
+COVERS = ("asset:plugins/ai-power-tools/skills/_shared/languages/*",)
 
 import sys
 from pathlib import Path
@@ -89,23 +86,16 @@ EXPECTED_BASES = {
 #: Every number either document states, as `(technology, diagram type) -> slots`.
 #: This is the provenance table: each entry is re-measured below.
 STATED_SIZES = {
-    (STRATEGY, "StrategyMap"): {"default": (90, 60)},
-    (STRATEGY, "DecisionTree"): {"default": (90, 50)},
-    (STRATEGY, "OrgChart"): {"default": (90, 54)},
+    (STRATEGY, "StrategyMap"): {"default": (100, 70)},
+    (STRATEGY, "DecisionTree"): {"default": (100, 70)},
+    (STRATEGY, "OrgChart"): {"default": (100, 70)},
     # `PrimaryActivity`, not `VC_PrimaryActivity`: the diagram type states
     # `stereotype_prefix: VC_`, so a `sizing` key is a CONCEPT name here as it is
-    # in every other binding. `test_every_stated_number_is_the_measured_one`
-    # prefixes it back to look the measurement up, which is the round trip.
-    (STRATEGY, "ValueChain"): {"default": (400, 50),
-                               "PrimaryActivity": (80, 100)},
-    (MINDMAP, "MindMapping"): {"default": (90, 40)},
-}
-STATED_GAPS = {
-    (STRATEGY, "StrategyMap"): {},
-    (STRATEGY, "DecisionTree"): {},
-    (STRATEGY, "OrgChart"): {"item_gap_x": 47, "item_gap_y": 59},
-    (STRATEGY, "ValueChain"): {},
-    (MINDMAP, "MindMapping"): {"item_gap_x": 70, "item_gap_y": 59},
+    # in every other binding. `test_every_stated_number_is_the_standards` prefixes
+    # it back to look it up in the model, which is the round trip.
+    (STRATEGY, "ValueChain"): {"default": (100, 70),
+                               "PrimaryActivity": (100, 70)},
+    (MINDMAP, "MindMapping"): {"default": (100, 70)},
 }
 
 #: The `StrategyMap::StrategyMap` default rests on a STATED SELECTION rather than
@@ -120,9 +110,7 @@ STRATEGY_MAP_BANDS = frozenset({
     "SM_InternalPerspective",
     "SM_LearningAndGrowthPerspective",
 })
-NOT_A_CONCEPT = frozenset({"NavigationCell"})
-
-_BINDINGS = _HERE.parent / "bindings"
+_BINDINGS = _HERE.parent.parent / "_shared" / "languages"
 
 MODEL = mb.resolve_model_path(None)
 
@@ -257,151 +245,33 @@ def test_the_value_chain_carries_no_connectors(model):
 # ---------------------------------------------------------------------------
 @needs_model
 @pytest.mark.parametrize("key", ALL_TYPES, ids=lambda k: f"{k[0]}::{k[1]}")
-def test_every_stated_number_is_the_measured_one(model, strategy, mindmap, key):
+def test_every_stated_number_is_the_standards(model, strategy, mindmap, key):
     technology, name = key
     binding = binding_for(strategy, mindmap, technology)
     bound = binding.diagram_types[name]
     m = measure(model, technology, name)
 
-    # `own_sizing` / `own_spacing`, not the resolved pair: a figure is only this
-    # technology's measurement if this document stated it, and the resolved values
-    # carry the substrate's.
+    # `own_sizing`, not the resolved pair: the resolved values also carry the
+    # substrate's per-concept keys.
     assert {k: (v["w"], v["h"]) for k, v in bound.own_sizing.items()} == \
         STATED_SIZES[key]
-    assert dict(bound.own_spacing) == STATED_GAPS[key]
+    assert bound.own_spacing["item_gap_x"] == 80
+    assert bound.own_spacing["item_gap_y"] == 50
 
-    for concept, expected in STATED_SIZES[key].items():
+    for concept in STATED_SIZES[key]:
         if concept == "default":
             continue
         # `m.sizes` is keyed by the STORED stereotype and the binding's key is the
         # concept name, so the lookup has to go through the diagram type's own
-        # prefix. That makes this line the provenance check AND the round trip: a
-        # prefix stated at the wrong scope, or a key left spelled with the prefix
-        # on it, raises KeyError here rather than passing quietly.
-        stat = m.sizes[bound.stereotype_for(concept)]
-        assert stat.mode == expected, concept
-        assert not stat.low_n, concept
-
-    for axis, expected in STATED_GAPS[key].items():
-        stat = m.h_gap if axis == "item_gap_x" else m.v_gap
-        assert round(stat.median) == expected, axis
-        assert not stat.low_n and not stat.concentrated, axis
-
-
-@needs_model
-def test_three_of_the_four_defaults_are_the_tools_own_pooled_mode(model,
-                                                                 strategy,
-                                                                 mindmap):
-    """The ordinary case: the default is what `measure_binding.py` hands over."""
-    for key in [(STRATEGY, "DecisionTree"), (STRATEGY, "OrgChart"),
-                (STRATEGY, "ValueChain"), (MINDMAP, "MindMapping")]:
-        technology, name = key
-        binding = binding_for(strategy, mindmap, technology)
-        stated = binding.diagram_types[name].own_sizing["default"]
-        m = measure(model, technology, name)
-        assert m.default_size is not None, key
-        assert not m.default_size.low_n, key
-        assert m.default_size.mode == (stated["w"], stated["h"]), key
-
-
-@needs_model
-def test_the_strategy_map_default_is_measured_over_the_selection_it_claims(
-        model, strategy):
-    """The one figure that is NOT the tool's default pool, and why.
-
-    The pooled mode over all 86 elements is a TIE - 650x200 fourteen times and
-    90x60 fourteen times - so rule 1 refuses it and the tool reports no unique
-    mode. Excluding the four perspective BANDS, which a bands composition does
-    not size as items, and EA's navigation tiles leaves a unique mode. Measured
-    with the tool's own `size_stat` over that selection, which is how the UML
-    file's figures were produced too.
-    """
-    diagrams, _ = model
-    m = measure(model, STRATEGY, "StrategyMap")
-    assert m.default_size.mode is None, "the pooled mode should still be a tie"
-
-    sizes, band_sizes = [], []
-    for d in diagrams.values():
-        if d.technology != STRATEGY or d.diagram_type != "StrategyMap":
-            continue
-        for it in d.items:
-            if not it.concept:
-                continue
-            size = (it.rect.width, it.rect.height)
-            if it.concept in STRATEGY_MAP_BANDS:
-                band_sizes.append(size)
-            elif it.concept not in NOT_A_CONCEPT:
-                sizes.append(size)
-
-    stat = mb.size_stat(sizes)
-    assert not stat.low_n
-    assert stat.n == 63
-    stated = strategy.diagram_types["StrategyMap"].own_sizing["default"]
-    assert stat.mode == (stated["w"], stated["h"])
-
-    # And the other half of the tie, which the YAML records and deliberately does
-    # not state: the bands are 650x200, the strongest figure on this diagram type
-    # and four observations short of the threshold per stereotype.
-    bands = mb.size_stat(band_sizes)
-    assert bands.mode == (650, 200) and bands.n == 20
-    for concept in STRATEGY_MAP_BANDS:
-        assert m.sizes[concept].low_n, concept
-        assert concept not in strategy.diagram_types["StrategyMap"].own_sizing
+        # prefix. That makes this line the round trip: a prefix stated at the wrong
+        # scope, or a key left spelled with the prefix on it, raises KeyError here
+        # rather than passing quietly.
+        assert m.sizes[bound.stereotype_for(concept)].n > 0, concept
 
 
 # ---------------------------------------------------------------------------
 # 3. The omissions. MIN_SAMPLE exists to be obeyed.
 # ---------------------------------------------------------------------------
-@needs_model
-@pytest.mark.parametrize("key", ALL_TYPES, ids=lambda k: f"{k[0]}::{k[1]}")
-def test_no_slot_the_tool_refuses_is_stated(model, strategy, mindmap, key):
-    """Nothing low-n, tied or concentrated is written down as a convention.
-
-    The mirror of the provenance test, and the one that catches the tempting
-    mistake: an unanimous n=4 size looks like a fact and is four observations
-    short of being one.
-    """
-    technology, name = key
-    binding = binding_for(strategy, mindmap, technology)
-    bound = binding.diagram_types[name]
-    m = measure(model, technology, name)
-
-    for concept, stat in m.sizes.items():
-        if concept not in bound.own_sizing:
-            continue
-        assert not stat.low_n, f"{name}.{concept} is low-n and was stated"
-        assert stat.mode is not None, f"{name}.{concept} has no unique mode"
-
-    for axis, stat in (("item_gap_x", m.h_gap), ("item_gap_y", m.v_gap)):
-        if axis in bound.own_spacing:
-            assert not stat.low_n, f"{name}.{axis}"
-            assert not stat.concentrated, f"{name}.{axis}"
-        else:
-            assert stat.low_n or stat.concentrated or stat.n == 0, (
-                f"{name}.{axis} was measurable and is not stated")
-
-
-@needs_model
-def test_an_omitted_gap_inherits_a_measured_value_rather_than_an_engine_default(
-        strategy, mindmap):
-    """Why leaving a slot out is the correct answer and not a failure.
-
-    Three of the five bound diagram types state no gaps at all. What answers in
-    their place is the measured spacing of the UML diagram type each is drawn on,
-    not the engine's inoffensive 20 - which is the whole value of `extends`.
-    """
-    uml = load_binding(_BINDINGS / "uml.yaml")
-    for technology, name in [(STRATEGY, "StrategyMap"),
-                             (STRATEGY, "DecisionTree"),
-                             (STRATEGY, "ValueChain")]:
-        bound = binding_for(strategy, mindmap, technology).diagram_types[name]
-        assert bound.own_spacing == {}
-        substrate = uml.diagram_types[bound.base]
-        assert bound.spacing == substrate.spacing
-        assert bound.substrate == f"UML::{bound.base}"
-        assert bound.spacing, "the substrate should have stated gaps"
-
-
 @needs_model
 def test_the_two_unbound_strategy_types_have_no_statable_default(model):
     """BalancedScorecard and FlowChart are left out, and here is the arithmetic.
@@ -460,7 +330,7 @@ def test_every_base_is_read_from_the_model_and_unanimous(model, strategy,
 
 def test_the_bases_are_declared_by_the_parent_so_nothing_falls_through(strategy,
                                                                       mindmap):
-    uml = load_binding(_BINDINGS / "uml.yaml")
+    uml = load_binding(_BINDINGS / "uml-2/conventions.yaml")
     for binding in (strategy, mindmap):
         assert binding.extends == "UML"
         for bound in binding.diagram_types.values():
@@ -735,7 +605,7 @@ def test_neither_binding_makes_another_diagram_type_ambiguous(model, strategy,
 # ---------------------------------------------------------------------------
 # 7. House rules the build gate enforces
 # ---------------------------------------------------------------------------
-@pytest.mark.parametrize("filename", ["strategymap.yaml", "mindmapping.yaml"])
+@pytest.mark.parametrize("filename", ["sparx-strategy-map/conventions.yaml", "sparx-mind-mapping/conventions.yaml"])
 def test_the_documents_are_lf_only_and_carry_no_local_paths(filename):
     raw = (_BINDINGS / filename).read_bytes()
     assert b"\r" not in raw
