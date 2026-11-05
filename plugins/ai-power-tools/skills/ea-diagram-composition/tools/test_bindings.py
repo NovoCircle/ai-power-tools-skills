@@ -3445,10 +3445,13 @@ def test_the_sysml_binding_ships_no_local_path():
 # deliberately left out.
 _DMN = "DMN1.1"
 _DMN_TYPE = "DMNDiagram"
-_UAF = "UAFP_Framework"
+_UAF = "UAF"
+#: What the stored token starts with. The model's inventory is keyed by this, not by
+#: the id EA reports.
+_UAF_GROUP = "UAFP_Framework"
 _UAF_TYPE = "UPDM Framework"
-#: The eight ids the model carries for the UAF family. One binding binds one id,
-#: so seven of them are deliberately unbound.
+#: The eight token groups the model carries for the UAF family. The binding claims a
+#: token in one, so seven of them are deliberately unbound.
 _UAF_FAMILY = ("UAFP_AV", "UAFP_AcV/PV", "UAFP_Framework", "UAFP_OV",
                "UAFP_SOV", "UAFP_SV/SvcV", "UAFP_StV/CV", "UAFP_TV/StdV")
 #: Under the seven unbound ids, the state machines and the sequence diagram are
@@ -3490,38 +3493,42 @@ def test_the_uaf_framework_binding_loads_and_is_found_by_its_declared_id():
     assert set(uaf.diagram_types) == {_UAF_TYPE}
     # Presence, not absence: "no prefix" is a measured statement.
     assert uaf.stereotype_prefix == ""
-    assert uaf.diagram_type_for_mdgdgm(f"{_UAF}::{_UAF_TYPE}") is not None
+    assert uaf.diagram_type_for_mdgdgm(f"{_UAF_GROUP}::{_UAF_TYPE}") is not None
 
 
 @needs_du_model
 def test_the_dmn_and_uaf_ids_and_diagram_types_exist_in_the_mdg_data(du_known):
     """Resolved from the model, so a guessed id fails here.
 
-    The bare family names are not ids. A binding keyed on `DMN` or `UAF` would
-    resolve to nothing without complaining.
+    The bare family names start no stored token. A token built on `DMN` or `UAF`
+    would resolve to nothing without complaining, though `UAF` is the id EA reports.
     """
     for guessed in ("DMN", "DMN1.0", "UAF", "UAFP", "UPDM"):
         assert guessed not in du_known, guessed
     assert _DMN in du_known and _DMN_TYPE in du_known[_DMN]
-    assert _UAF in du_known and _UAF_TYPE in du_known[_UAF]
+    assert _UAF_GROUP in du_known and _UAF_TYPE in du_known[_UAF_GROUP]
     # The type name carries a space, and a spelling without it is not a type.
-    assert "UPDMFramework" not in du_known[_UAF]
-    assert set(find_binding(_UAF).diagram_types) <= set(du_known[_UAF])
+    assert "UPDMFramework" not in du_known[_UAF_GROUP]
+    assert set(find_binding(_UAF).diagram_types) <= set(du_known[_UAF_GROUP])
 
 
 @needs_du_model
 def test_the_uaf_family_is_eight_ids_and_only_the_framework_one_is_bound(du_known):
-    """One binding binds one id, so a single UAF binding cannot cover the family.
-    The seven unbound ids resolve to nothing, on purpose."""
+    """The one UAF binding claims one token group, so it doesn't cover the family.
+    The seven unbound groups resolve to nothing, on purpose."""
     in_model = {t for t in du_known if t.startswith("UAFP_")}
     assert in_model == set(_UAF_FAMILY)
+    tokens = find_binding(_UAF).tokens
     for technology in _UAF_FAMILY:
-        assert (find_binding(technology) is not None) == (technology == _UAF), technology
+        # None of these is an id EA reports, so none is a binding's own id.
+        assert find_binding(technology) is None, technology
+        assert any(token.startswith(f"{technology}::") for token in tokens) == (
+            technology == _UAF_GROUP), technology
 
 
 @needs_du_model
 def test_the_uaf_framework_base_type_is_the_one_ea_records():
-    recorded = {base for _, _, base in _du_diagram_rows(_UAF, _UAF_TYPE)}
+    recorded = {base for _, _, base in _du_diagram_rows(_UAF_GROUP, _UAF_TYPE)}
     assert recorded == {find_binding(_UAF).diagram_type(_UAF_TYPE).base}
 
 
@@ -3533,7 +3540,7 @@ def test_no_low_n_figure_is_stated_as_active_in_the_uaf_file():
 
 @needs_du_model
 def test_the_uaf_framework_draws_no_title_so_it_relies_on_the_frame():
-    rows = _du_diagram_rows(_UAF, _UAF_TYPE)
+    rows = _du_diagram_rows(_UAF_GROUP, _UAF_TYPE)
     drawn = 0
     with mb.open_model_copy(_DU_MODEL) as conn:
         for did, name, _ in rows:
@@ -3554,7 +3561,7 @@ def test_the_uaf_framework_stores_no_per_diagram_fill_so_fill_is_claimed_not_fre
     carries a fill override."""
     overrides = total = 0
     with mb.open_model_copy(_DU_MODEL) as conn:
-        for did, _, _ in _du_diagram_rows(_UAF, _UAF_TYPE):
+        for did, _, _ in _du_diagram_rows(_UAF_GROUP, _UAF_TYPE):
             for (style,) in conn.execute(
                     "SELECT x.ObjectStyle FROM t_diagramobjects x JOIN t_object o "
                     "ON o.Object_ID = x.Object_ID WHERE x.Diagram_ID = ? "
@@ -3597,7 +3604,7 @@ def test_every_other_uaf_diagram_type_is_classified_in_the_notes_exactly_once(
     assert graph_marker in notes and semantic_marker in notes
     graph_part, semantic_part = notes.split(graph_marker)[1].split(semantic_marker)
     unbound = {f"{t}::{d}" for t, types in du_known.items()
-               if t.startswith("UAFP_") and t != _UAF for d in types}
+               if t.startswith("UAFP_") and t != _UAF_GROUP for d in types}
     expected_semantic = set(_UAF_EA_SEMANTIC)
     assert expected_semantic <= unbound
     for name in unbound:
