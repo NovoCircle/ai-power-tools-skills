@@ -138,3 +138,7 @@ The standard has no diagram types, so the choice is not between types but betwee
 ## 8. Checking a model
 
 The BMM ruleset (`rulesets/bmm-1/bmm-1_rules.yaml`, 13 rules) checks the relationship table, the stated cardinalities, like-kind inclusion, that an enforcement level has a Tactic behind it, and that Courses of Action are governed and Influencers categorized. It does not check wording (an Objective being measurable, a Mission having three parts, an Influencer being neutral), acyclic hierarchies, or the relationship between Assessments, Ends and Means across three elements; those need a person. The ruleset's header says how many of the language's 39 rules it covers and why the other 25 are left to a person.
+
+This ruleset needs server 3.6.5 or later. On 3.6.4 and earlier some of its rules report nothing, with no error, so a clean result there doesn't mean the model passes.
+
+An Influencer is classed as internal or external either by a subclass or by its Influencer Category, and `BMM13-REL-006` accepts both.

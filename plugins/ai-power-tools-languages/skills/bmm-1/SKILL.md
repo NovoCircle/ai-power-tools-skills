@@ -47,7 +47,7 @@ The standard has 33 concepts. The spelling below is how the standard writes the 
 ### Influencers - what acts on the enterprise
 
 - **Influencer**: a neutral fact about something that can change how the enterprise uses Means or reaches Ends.
-- **InternalInfluencer** and **ExternalInfluencer**: an Influencer from inside, or outside, the enterprise's boundaries. An Influencer is classed as internal or external either by one of these subclasses or by being placed in an internal or external Influencer Category. The ruleset accepts both mechanisms.
+- **InternalInfluencer** and **ExternalInfluencer**: an Influencer from inside, or outside, the enterprise's boundaries. An Influencer is classed as internal or external either by one of these subclasses or by being placed in an internal or external Influencer Category.
 - **Regulation**: an External Influencer that is an order from an authority. A Directive can play the role of a Regulation.
 - **InfluencerCategory**: a category of Influencer. The standard suggests defaults such as Competitor, Customer, Partner, Supplier, Technology, Assumption, Corporate Value, Habit, Issue and Infrastructure.
 - **InfluencingOrganization**: an organization that is a source of Influencers. An internal Organization Unit can play it.

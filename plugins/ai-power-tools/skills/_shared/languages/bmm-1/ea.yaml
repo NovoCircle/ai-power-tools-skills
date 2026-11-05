@@ -577,3 +577,28 @@ harvest:
   connector_direction: 'model-pattern: EA''s three BMM samples use Source -> Destination in the standard''s active reading for 8 stereotypes;
     assumed for the other 29'
   build: EA 17.1 build 1716
+
+# EA's names for this language's layout. tools/gen_conventions.py reads layout_map.
+layout_map:
+  technology: BMM
+  display_name: Business Motivation Model
+  extends: UML
+  stereotype_prefix: ''
+  notes: |
+    The standard defines no diagram type, so this one is EA's own. Its arrangement and route are the shared defaults, not measurements.
+  diagram_types:
+    BMM Diagram:
+      base: Custom
+      arrangement: graph
+      title: frame-header
+      route: straight
+      channels:
+        fill: null
+        free:
+        - fill
+        - border
+        - border_width
+        - line_color
+        - font_color
+        - opacity
+        - icon
