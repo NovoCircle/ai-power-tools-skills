@@ -2978,9 +2978,9 @@ constraints:
 notes: 'VDML 1.0, October 2015. VDML 1.1 (March 2018) exists and is not covered. The standard defines a limited normative graphical notation of eight diagram types (clause 8) and no viewpoint catalogue as such; Annex B (informative) maps VDML to other techniques. Measurement is delegated to SMM: VDML elements carry MeasuredCharacteristics, SMM supplies measures, characteristics, measurements and observations. Multiplicity keys: ''*'' means zero or more.'
 
 layout:
-  basis: Our conventions, not this standard's. Sizes and spacing come from the shared layout standard; this block says only which size class each concept takes and how each diagram type is arranged.
-  element_types:   # concept -> size class, for every concept the notation draws as a symbol
-    # box: ovals, rectangles, rounded rectangles and the stretched hexagon that hold their name
+  basis: Our conventions, not this standard's. Sizes and spacing come from the shared layout standard;
+    this block says only which size class each concept takes and how each diagram type is arranged.
+  element_types:
     Activity: box
     BusinessNetwork: box
     Capability: box
@@ -2994,21 +2994,27 @@ layout:
     OrgUnit: box
     Position: box
     Role: box
-    # data-item: the downward triangle, name outside
     Pool: data-item
     Store: data-item
-    # attached-item: the small square on the border of an Activity or Store
     InputPort: attached-item
     OutputPort: attached-item
-    # small-node: a small square, name outside
     ValueProposition: small-node
-  no_element_type:   # concepts that take no size class, each group with its reason
+  no_element_type:
     no_shape_of_its_own:
-      reason: The standard gives these no shape. A value add is shown by filling a port, a business item by the label of a flow, and an actor by its name as plain text at the end of a connector.
-      concepts: [Actor, BusinessItem, ValueAdd]
+      reason: The standard gives these no shape. A value add is shown by filling a port, a business item
+        by the label of a flow, and an actor by its name as plain text at the end of a connector.
+      concepts:
+      - Actor
+      - BusinessItem
+      - ValueAdd
     drawn_as_line:
-      reason: These concepts are lines (and the relationships under `notation.relationships` are lines too), so there is no symbol to size.
-      concepts: [Assignment, DeliverableFlow, InputDelegation, OutputDelegation]
+      reason: These concepts are lines (and the relationships under `notation.relationships` are lines
+        too), so there is no symbol to size.
+      concepts:
+      - Assignment
+      - DeliverableFlow
+      - InputDelegation
+      - OutputDelegation
     not_drawn:
       reason: The standard gives these no drawing of their own.
       concepts:
@@ -3208,7 +3214,8 @@ layout:
       route: straight
       channels:
         claimed:
-          line_style: Dashed joins an offer to what supports it, and dotted marks a method that depends on another offer (8.8).
+          line_style: Dashed joins an offer to what supports it, and dotted marks a method that depends
+            on another offer (8.8).
         free:
         - fill
         - border
@@ -3223,7 +3230,8 @@ layout:
       route: straight
       channels:
         claimed:
-          line_style: A thin solid line with a plus or minus marker shows positive or negative influence (8.9).
+          line_style: A thin solid line with a plus or minus marker shows positive or negative influence
+            (8.9).
         free:
         - fill
         - border
@@ -3232,7 +3240,7 @@ layout:
         - font_color
         - opacity
         - icon
-    Activity Network:   # each Role is a swim-lane
+    Activity Network:
       arrangement: lanes
       channels:
         free:
@@ -3243,5 +3251,27 @@ layout:
         - font_color
         - opacity
         - icon
-    CapabilityLibrary: {arrangement: nested-grid}   # a child capability is drawn inside its parent
-    Capability Heatmap: {arrangement: nested-grid}   # same shapes as CapabilityLibrary
+    CapabilityLibrary:
+      arrangement: nested-grid
+      channels:
+        free:
+        - fill
+        - border
+        - border_width
+        - line_color
+        - font_color
+        - opacity
+        - icon
+    Capability Heatmap:
+      arrangement: nested-grid
+      channels:
+        claimed:
+          border: Heat. A thick boundary on a Capability, and on its parents, means at least one CapabilityOffer
+            for it has a heat index at or above the threshold (8.6).
+          border_width: 'Heat, as the border: the thickness is the mark.'
+        free:
+        - fill
+        - line_color
+        - font_color
+        - opacity
+        - icon
