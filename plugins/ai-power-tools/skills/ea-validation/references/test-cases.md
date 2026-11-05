@@ -382,7 +382,7 @@ no rule `demo_trigger`, so demo mode evaluates zero rules and returns a clean re
 
 ### TC-12: A rule pasted inline
 
-Covers: Using hosted rulesets (v1.2.0+)
+Covers: Shipped rulesets
 
 **Ask:** "Run this rule against my model, no need to save it anywhere:
 
@@ -459,24 +459,25 @@ expect: unchanged
 of its own, runs that, and says "we pass". A person gating a release on that answer has been told
 a model was checked against a standard it was never checked against.
 
-### TC-14: Hosted ArchiMate ruleset
+### TC-14: Shipped ArchiMate ruleset
 
-Covers: Using hosted rulesets (v1.2.0+)
+Covers: Shipped rulesets
 
 **Marks:** BLOCKED
 
 **Ask:** "Run the standard ArchiMate 3.1 conformance checks on this model."
 
-**Passes when:** The run passes the hosted ruleset URL as `rules_path_or_content`, runs the audit,
-and reports the 27-rule set's result. Without network access the run reports
-the block, not an empty result.
+**Passes when:** The run checks the server is 3.6.5 or later, passes the shipped ruleset's path
+(`rulesets/archimate-3/archimate-3_rules.yaml` in the plugin) or its content as `rules_path_or_content`,
+runs the audit, and reports the 4-rule set's result. If the file cannot be read, the run reports
+that, not an empty result.
 
 **Check:**
 
 ```check
 tools: called: ea_validate.audit
-reply: says: the ArchiMate 3.1 ruleset of 27 rules was run, or says it could not be fetched
-reply: not: says the model fully conforms to ArchiMate when the ruleset was not fetched
+reply: says: the ArchiMate 3.1 ruleset of 4 rules was run, or says it could not be read
+reply: not: says the model fully conforms to ArchiMate when the ruleset was not read
 ```
 
 ```check
@@ -484,32 +485,23 @@ sql: SELECT (SELECT COUNT(*) FROM t_object), (SELECT COUNT(*) FROM t_connector),
 expect: unchanged
 ```
 
-**Fails when:** The fetch fails and the reply still presents a conformance verdict.
+**Fails when:** The ruleset cannot be read and the reply still presents a conformance verdict, or the run goes ahead on a server older than 3.6.5.
 
-### TC-15: Keep the ruleset on this machine
+### TC-15: Run the ruleset without internet
 
-Covers: Using hosted rulesets (v1.2.0+)
+Covers: Shipped rulesets
 
-**Marks:** EFFECT, BLOCKED
+**Ask:** "I want to run the ArchiMate rules without internet."
 
-Blocked: needs a disposable Windows profile. The run writes into the product data directory under the
-user profile, which is machine-wide state. The runner provides the profile and restores the directory
-afterwards; the checks stay as written.
-
-**Ask:** "I want the ArchiMate rules saved on this machine so I can run them without internet."
-
-**Passes when:** The run installs only the ruleset, naming it in `names` and passing `force`, then
-runs the audit from the installed path under the product data directory. The reply says the effect:
-one ruleset file written outside the model, and not among the skills. The person asked for the copy,
-so no extra confirmation is required.
+**Passes when:** The run says the ArchiMate ruleset ships in the plugin and runs from its path, so it
+needs no download and no install step, then runs the audit from that path. It does not call
+`install_skills`.
 
 **Check:**
 
 ```check
-tools: called: ea_repository.install_skills
 tools: called: ea_validate.audit
-reply: says: the ruleset was written under the product data directory, not the skills folder
-reply: says: only the ArchiMate ruleset was installed
+reply: says: the ruleset ships in the plugin and runs from its file
 ```
 
 ```check
@@ -517,8 +509,7 @@ sql: SELECT (SELECT COUNT(*) FROM t_object), (SELECT COUNT(*) FROM t_connector),
 expect: unchanged
 ```
 
-**Fails when:** The install runs without `names` and rewrites every skill, or runs without `force`
-on a machine that has the plugin, writes nothing, and the run then claims the ruleset is installed.
+**Fails when:** The run installs skills to get the ruleset, or fetches it from a URL without being asked.
 
 ### TC-16: Build a whole ruleset
 

@@ -11,8 +11,6 @@
       "version": "1.5.1",
       "min_server_version": "2.3.0",
       "files": [
-        "_shared/languages/archimate-3/ea.yaml",
-        "_shared/languages/archimate-3/howto.md",
         "_shared/references/ea-ui-verification.md",
         "_shared/references/file-encoding.md",
         "_shared/references/latency.md",
@@ -97,8 +95,6 @@
         "_shared/tools/tmdl.py"
       ],
       "sha256": {
-        "_shared/languages/archimate-3/ea.yaml": "e0105a39ab7adf2a909db551d1ccda9db7dc827f06c2316e4b6c2c7acd312a85",
-        "_shared/languages/archimate-3/howto.md": "2deca29d38e79b7e17b299b3d09b75bb6d15cc9d8ef35eeb6a6458592fa15492",
         "_shared/references/ea-ui-verification.md": "4f74960eed2c33a1097b19f8931a82c2f60fce90de70f5bb7c77f4105ecbe2ba",
         "_shared/references/file-encoding.md": "5759bac841234558071a4cde555587e45cabebe5a90420188b07f8323d62f7fe",
         "_shared/references/latency.md": "af565b7e08f3a79a9239f548c63115181ef3ea7bd845b94ef0363a28f035d06f",
@@ -650,7 +646,7 @@
       ],
       "sha256": {
         "ea-validation/SKILL.md": "0cb815613a2fc5393b44ba291552f0aa26657a87ad2dd82dc96ebfb2875a7019",
-        "ea-validation/references/test-cases.md": "f2c219d934921f3d69647d5388d2c4c74f12f38410d626723e3c73d35668aa0d"
+        "ea-validation/references/test-cases.md": "08b475686c1d468c0d84447c96d82d1ba50f50c4ec61ae3d7a5debbfb55ef6f5"
       }
     },
     {
