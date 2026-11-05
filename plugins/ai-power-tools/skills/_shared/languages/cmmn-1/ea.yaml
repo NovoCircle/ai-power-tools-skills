@@ -712,6 +712,8 @@ layout_map:
   stereotype_prefix: ''
   notes: |
     Sizes, gaps and the route come from the layout standard, through `layout` in the language file. How CMMN diagrams are laid out in EA was not measured.
+
+    `CMMN` is the id EA reports, measured on EA 17.1 build 1716.
   diagram_types:
     CMMN:
       guide: CMMNDiagram

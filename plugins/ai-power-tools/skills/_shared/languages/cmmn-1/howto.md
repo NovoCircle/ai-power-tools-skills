@@ -98,7 +98,7 @@ An example, as an illustration (substitute your own case). Westbrook Bank's card
 
 ## 8. Checking a model
 
-This ruleset needs server 3.6.5 or later. On 3.6.4 and earlier its rules report nothing, with no error, so a clean result there means nothing.
+10 of 11 rules in this ruleset use formats newer than 3.6.4, and on that server they report nothing or don't run as written. Use server 3.6.5 or later, because a clean result on 3.6.4 doesn't mean the model passes.
 
 The CMMN ruleset (`rulesets/cmmn-1/cmmn-1_rules.yaml`, 11 rules) checks two things.
 
