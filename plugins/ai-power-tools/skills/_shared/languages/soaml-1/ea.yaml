@@ -484,3 +484,31 @@ harvest:
     inferred second rows (agent, participant, capability, participantArchitecture) are listed with a component-style icon, but
     the tab prints no metaclass; Diagram Types, Toolboxes, the toolbox pages of one diagram and two quick-link sources were read.'
   ea_build: 17.1 build 1716
+
+# EA's names for this language's layout. tools/gen_conventions.py reads layout_map.
+layout_map:
+  technology: SoaML
+  display_name: SoaML
+  extends: UML
+  stereotype_prefix: ''
+  notes: |
+    EA has two diagram types for this language. `SoaML` draws the guide's Services Architecture and its other views except Choreography. `SoaMLSequence` is stored as a sequence diagram, so its arrangement is fixed here on EA's side, and the guide doesn't state it. The standard names no diagram types. Route names are conventions, not measurements.
+  diagram_types:
+    SoaML:
+      guide: Services Architecture
+      base: Component
+    SoaMLSequence:
+      base: Sequence
+      arrangement: type-fixed
+      title: frame-header
+      route: straight
+      channels:
+        fill: null
+        free:
+        - fill
+        - border
+        - border_width
+        - line_color
+        - font_color
+        - opacity
+        - icon

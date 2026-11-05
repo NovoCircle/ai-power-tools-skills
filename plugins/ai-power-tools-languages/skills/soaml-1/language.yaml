@@ -1261,7 +1261,7 @@ data_types:
     - {name: MessageType, kind: structured, section: "6.4.8", note: "pure data exchanged between parties; a UML data type (or class or signal) with no operations, no behaviors and only public attributes of a primitive type or another message type"}
     - {name: Attachment, kind: other, section: "6.4.2", note: "a part of a message that travels beside it, with its own encoding (String) and mimeType (String) attributes"}
   attributes:
-    coverage: every_concept
+    coverage: some_concepts
     where: concepts
     note: Each concept entry that has attributes lists them under `attributes` (name, type, multiplicity, default where stated). The standard states that every other concept adds no attributes, so those entries carry none. Types named there (Boolean, String, Integer, Signal, Expression) are UML's; End appears only in the metamodel.
 notation:
@@ -1352,6 +1352,25 @@ layout:
       - Categorization
     not_drawn:
       reason: The standard gives these no drawing of their own.
-      concepts: see `notation.not_specified`
+      concepts:
+      - NodeDescriptor
+      - FreeFormDescriptor
+      - FreeFormValue
+      - MotivationElement
   exceptions: {}
-  diagram_types: {}
+  diagram_types:
+    Services Architecture:
+      arrangement: graph
+      title: frame-header
+      route: straight
+      channels:
+        claimed:
+          line_style: Solid against dashed separates a service channel from a role binding or a use (6.4.15, 6.2.1).
+        free:
+        - fill
+        - border
+        - border_width
+        - line_color
+        - font_color
+        - opacity
+        - icon
