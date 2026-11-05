@@ -131,6 +131,6 @@ No stereotype for any abstract grouping, any kind enumeration, ISO8601DateTime, 
 
 ## Checking a model
 
-This ruleset needs server 3.6.5 or later. On 3.6.4 and earlier some of its rules report nothing, with no error, so a clean result there means nothing.
+70 of 84 rules in this ruleset use formats newer than 3.6.4, and on that server they report nothing or don't run as written. Use server 3.6.5 or later, because a clean result on 3.6.4 doesn't mean the model passes.
 
 The ruleset `rulesets/uaf-1/uaf-1_rules.yaml` has 84 rules that implement 124 of the skill's rules: for each of 41 relationships, the kinds of element allowed at its two ends (generated tables of concrete stereotypes); that a Forecast joins elements of the same kind; that 13 exactly-one properties carried as tagged values have a value; and, with the rule types that read where an element sits, that 29 kinds of element (roles and other parts, ports, state descriptions, actions, signal properties, information and data elements) are owned by the kind of element the standard names (the element they are nested under, or the `DataModel` package). The rest of the skill's static and partial rules (typing, operations, exchanges, annotation links, five statements that everything an owner holds of a kind is of one stereotype, rules about concepts EA has no stereotype for) cannot be stated over what EA stores through `validate_model`.
