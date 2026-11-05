@@ -146,7 +146,7 @@ result = ea_validate(operation="audit", params={
 
 ### Shipped rulesets
 
-These rulesets need server 3.6.5 or later. On 3.6.4 and earlier their rules report nothing, with no error, so a clean result there means nothing.
+Run these rulesets on server 3.6.5 or later. On 3.6.4 and earlier, rules that use newer formats report nothing or don't run as written, with no error. How many rules that affects differs by language, so a clean result there doesn't mean the model passes.
 
 Rulesets ship in this plugin, one folder per language. Each path below is from the plugin root.
 
