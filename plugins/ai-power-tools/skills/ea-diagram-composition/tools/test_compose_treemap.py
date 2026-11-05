@@ -239,8 +239,8 @@ def test_the_region_is_an_input_not_an_output():
                                            "region_height": 700})
     assert result["bounds"]["width"] == 1000
     assert result["bounds"]["height"] == 700
-    assert result["region"] == {"left": 20, "top": -20, "right": 1020,
-                                "bottom": -720}
+    assert result["region"] == {"left": 40, "top": -40, "right": 1040,
+                                "bottom": -740}
 
 
 # ---------------------------------------------------------------------------

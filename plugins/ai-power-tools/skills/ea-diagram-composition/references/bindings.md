@@ -15,6 +15,12 @@ every new notation is an engineering task and the library never covers more than
 hard-coded. So they live in data instead — one YAML binding per technology — and adding a notation is
 a data change rather than an engineering task.
 
+**The numbers come from the layout standard.** Every size and gap in a shipped binding is the shared
+standard's, on the language shelf at `_languages/layout-standard.yaml`, translated into EA's terms by
+`_shared/languages/ea-translation.yaml`. Each language's binding is generated from those, its `layout`
+block, and `layout_map` in its `ea.yaml`, and nobody edits it. Where this page says a figure was
+measured, it means what EA does (ids, prefixes, how EA draws), not a size or a gap.
+
 The dependency runs one way only. `compose.py` contains no technology name and does not import the
 loader: a binding is data that *feeds* the engine. A single `if technology == …` in the engine would
 quietly undo the whole design.
@@ -22,20 +28,24 @@ quietly undo the whole design.
 **The bindings are a tree, not a flat set of peers.** EA is a UML tool, so one binding holds EA's base
 notation and every MDG binding declares `extends` to it and records in `base` which of its diagram
 types each of its own is drawn on. What that buys is the slots a binding does *not* state: they resolve
-to the value measured for the diagram type it is actually drawn on instead of to an engine default.
+to the value of the diagram type it is actually drawn on instead of to an engine default. Generated
+bindings state every size and gap, so this matters to a binding you write by hand over one of them.
 §5.6 is the whole of it.
 
 ## 2. Where bindings live, and how one is found
 
-Bindings sit in `bindings/`, one file per technology. **Ask `available_bindings()` which ones ship**
+Bindings sit in `_shared/languages/<language id>/conventions.yaml`, one file per technology. Generated
+from the sources above, so edit those and run `tools/gen_conventions.py`. A directory you pass yourself
+may also hold flat `*.yaml` files. Nothing else in a language folder counts as a binding. **Ask
+`available_bindings()` which ones ship**
 rather than trusting a list in a document: this line read "two ship" for some time after the third
 one landed, and a stale inventory here is the one that sends a reader looking for a file that is not
 there — or worse, writing a second binding for a technology that already has one.
 
-The filename is a slug of the technology id — lowercased, with anything outside letters, digits, `.`,
-`_` and `-` flattened to `-`, so `BPMN2.0` becomes `bpmn2.0.yaml`. The **declared `technology` is
-authoritative**: when no slug matches, the loader reads each file's declared id, so a file named
-anything at all still binds the technology it says it does.
+The **declared `technology` is authoritative**: the loader reads each file's declared id, so a file
+named anything at all still binds the technology it says it does. A flat file named with a slug of the
+id (lowercased, with anything outside letters, digits, `.`, `_` and `-` flattened to `-`, so `BPMN2.0`
+becomes `bpmn2.0.yaml`) is found first.
 
 Bindings are parsed with `yaml.safe_load`, always. That is why a binding cannot carry executable
 content — `!!python/object` is refused by the parser rather than by a check someone could forget to
@@ -50,7 +60,7 @@ pip install pyyaml
 
 Four vocabularies are fixed. A value outside them is refused on load.
 
-**Grammars** — eight, in three placements. The placement is who computes the coordinates, and it
+**Grammars** — twelve, in three placements. The placement is who computes the coordinates, and it
 decides what a consumer may do with a diagram type that names the grammar.
 
 | Grammar | Placement | Geometry is ours | Producible today |
@@ -61,13 +71,16 @@ decides what a consumer may do with a diagram type that names the grammar.
 | `radial` | composed by us | yes | yes — `compose_radial` |
 | `two-column-cycle` | composed by us | yes | yes — `compose_two_column_cycle` |
 | `computed-geometry` | composed by us | yes | **no** — no composer yet |
+| `matrix` | composed by us | yes | yes — `compose_matrix` |
+| `radial-tree` | composed by us | yes | yes — `compose_radial_tree` |
+| `chevron-stack` | composed by us | yes | yes — `compose_chevron_stack` |
+| `treemap` | composed by us | yes | yes — `compose_treemap` |
 | `graph` | EA's layout places it | **no** | **yes** — via `layout_diagram`, then tidy |
 | `ea-semantic` | the diagram type dictates it | **no** | **no** — later design work |
 
-Six are compositional layouts this library computes coordinates for. `computed-geometry` is one of
-them and has no code behind it yet: **the treemap is all that remains under that name** after `radial`
-was split out and built, and the timing diagram was moved to `ea-semantic` — see §5.5.1 and
-`grammars.md` §7.
+Ten are compositional layouts this library computes coordinates for. `computed-geometry` is one of
+them and has no code behind it. `radial` and `treemap` were split out of it and built, and the timing
+diagram was moved to `ea-semantic` — see §5.5.1 and `grammars.md` §7.
 
 The other two are the cases where we place nothing, and they are not layouts:
 
@@ -115,7 +128,7 @@ mistakes are told what they probably meant.
 |---|---|---|
 | `technology` | yes | Non-empty string, and must not contain `::`. This is the part *before* the `::` in an `MDGDgm=<Tech>::<DiagramType>` value, and it has to match EA verbatim. |
 | `display_name` | no | Non-empty string. Defaults to `technology`. |
-| `extends` | no | Technology id of another binding in the same directory — **the notation this one is built on**. Cannot be this binding's own id; cycles are refused by name. Every shipped MDG binding names the base notation here; see §5.6. |
+| `extends` | no | Technology id of another binding in the same catalog — **the notation this one is built on**. Cannot be this binding's own id; cycles are refused by name. Every shipped MDG binding names the base notation here; see §5.6. |
 | `stereotype_prefix` | no | String, `""` included. See §5.3 — `""` is a statement, not an omission. |
 | `notes` | no | Non-empty string. |
 | `diagram_types` | yes | Mapping, at least one entry. |
@@ -524,10 +537,10 @@ document.
 
 | Call | Returns |
 |---|---|
-| `find_binding(technology, directory=None)` | The `Binding` for a technology id, or `None` if there is not one. Defaults to the skill's own `bindings/`. |
+| `find_binding(technology, directory=None)` | The `Binding` for a technology id, or `None` if there is not one. Defaults to `_shared/languages/`. |
 | `load_binding(path)` | Load, validate and resolve one file, following `extends`. |
 | `load_binding_text(text, source)` | Validate and load from YAML text. No directory, so no `extends` resolution. |
-| `available_bindings(directory=None)` | `{technology id: filename}` for every valid binding on hand. An invalid file is omitted rather than raising, so one bad file does not make the whole catalog unreadable; load it directly to see why. **A duplicate technology id is the exception and raises `DuplicateTechnology`** naming the id and every file that claims it — omitting one of two files that claim an id is not omitting it, it is picking a winner, and the readers of the directory used to pick different ones. |
+| `available_bindings(directory=None)` | `{technology id: file}` for every valid binding on hand, named below the directory (`bpmn-2/conventions.yaml`). An invalid file is omitted rather than raising, so one bad file does not make the whole catalog unreadable; load it directly to see why. **A duplicate technology id is the exception and raises `DuplicateTechnology`** naming the id and every file that claims it — omitting one of two files that claim an id is not omitting it, it is picking a winner, and the readers of the directory used to pick different ones. |
 | `declared_technologies(directory=None)` | `{technology id: filenames that declare it}` for every file that parses, validated or not. Identity only: the one view of the directory every reader agrees on. |
 | `binding_conflicts(directory=None)` | The subset of the above with more than one file per id. Never raises, so an audit or a health check can report a shadowed id instead of failing on it. Empty for a clean directory. |
 | `unvalidated_glyphs(name)` | The distinct characters of `name` that `HEADER_ADVANCE_PX` was never calibrated on — it was measured over printable ASCII in one font. The guard on that constant: a width predicted for a name carrying any of these is an extrapolation, and `spec(names=...)` reports it as `SpecFit.extrapolated`. |
