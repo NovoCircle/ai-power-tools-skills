@@ -747,3 +747,37 @@ harvest:
   - constraints
   - the definition file (encrypted)
   ea_build: 17.1 build 1716
+
+# EA's names for this language's layout. tools/gen_conventions.py reads layout_map.
+layout_map:
+  technology: VDML
+  display_name: Value Delivery Metamodel (VDML)
+  extends: UML
+  stereotype_prefix: ''
+  notes: |
+    Each EA diagram type here draws the guide diagram type named on its `guide` line. The display name is the one EA shows, which states no version. Route names are conventions, not measurements.
+  diagram_types:
+    ActivityNetwork:
+      guide: Activity Network
+      base: Logical
+    CapabilityHeatmap:
+      guide: Capability Heatmap
+      base: Logical
+    CapabilityLibrary:
+      guide: CapabilityLibrary
+      base: Logical
+    CapabilityManagement:
+      guide: Capability Management
+      base: Logical
+    CollaborationStructure:
+      guide: Collaboration Structure
+      base: Logical
+    MeasurementDependency:
+      guide: Measurement Dependency
+      base: Logical
+    RoleCollaboration:
+      guide: Role Collaboration
+      base: Logical
+    ValuePropositionExchange:
+      guide: ValueProposition Exchange
+      base: Logical

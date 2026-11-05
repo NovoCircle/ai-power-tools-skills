@@ -146,7 +146,8 @@ rules:
       between two Stores is not allowed [VDML 1.0 7.2.1.2.4 p. 39, 7.1.9 p. 20]. EA draws three of the standard's diagram
       kinds with this one stereotype: ports in an Activity Network (BoundaryPort to BoundaryPort), Roles in a Role
       Collaboration diagram (Role to Role) and a ValueProposition's provider and recipient in a ValueProposition Exchange
-      diagram (Role to ValueProposition and back). Any other pair is reported, including a flow drawn straight between two
+      diagram (Role to ValueProposition and back). The Role and ValueProposition pairs are the standard's
+      ProviderProvidedProposition and RecipientReceivedProposition relationships, not VDML-FLOW-001. Any other pair is reported, including a flow drawn straight between two
       Activities or two Stores instead of between their ports. A flow between two Store ports is not told apart from a flow
       between two Activity ports: a relationship table judges the stereotypes of the two ends, not the element each port
       sits in.

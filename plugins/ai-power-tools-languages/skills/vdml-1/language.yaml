@@ -3011,9 +3011,227 @@ layout:
       concepts: [Assignment, DeliverableFlow, InputDelegation, OutputDelegation]
     not_drawn:
       reason: The standard gives these no drawing of their own.
-      concepts: see `notation.not_specified`
+      concepts:
+      - ActivityCapabilityRequirement
+      - ActivityDuration
+      - ActivityImplementedPractice
+      - ActivityRecurrenceInterval
+      - ActivityResourceUse
+      - AnalysisContext
+      - AnanlysisContextAssignment
+      - Annotation
+      - Attribute
+      - BusinessItemBusinessItemDefinition
+      - BusinessItemCategory
+      - BusinessItemCharacteristicDefinition
+      - BusinessItemDefinition
+      - BusinessItemLibrary
+      - BusinessItemLibraryElement
+      - BusinessNetworkParty
+      - CalendarService
+      - CapabilityCharacteristicDefinition
+      - CapabilityDependency
+      - CapabilityDependencyDeliverableDefinition
+      - CapabilityDependencySource
+      - CapabilityDependencyTarget
+      - CapabilityLibrary
+      - CapabilityMethodCapability
+      - CapabilityOfferReleaseControl
+      - CapabilityPracticeDefinition
+      - CapabilityResourceDefinition
+      - CategoryItemCategory
+      - CategoryPracticeCategory
+      - CategoryRoleCategory
+      - CategoryValueCategory
+      - CharacteristicDefinition
+      - CharacteristicMeasurement
+      - CollaborationActivity
+      - CollaborationBusinessItem
+      - CollaborationFlow
+      - CollaborationOwnedAssignment
+      - CommunityMember
+      - ContextObservation
+      - DelegatedActivityDelegationContext
+      - DelegationContext
+      - DelegationContextCollaboration
+      - DelegationContextPortDelegation
+      - DependentResourceUseDeliverable
+      - ElementAnnotation
+      - ElementAttribute
+      - Expression
+      - ExpressionOperand
+      - FlowDeliverable
+      - FlowDuration
+      - FlowSource
+      - FlowTarget
+      - InputCorrelationExpression
+      - InputDefinition
+      - InputDelegationSource
+      - InputDelegationTarget
+      - LibraryBusinessItemLibraryElement
+      - LibraryCapability
+      - LibraryCapabilityDependency
+      - LibraryPracticeCategory
+      - LibraryPracticeDefinition
+      - LibraryRoleCategory
+      - LibraryRoleDefinition
+      - LibraryValueCategory
+      - LibraryValueDefinition
+      - MeasurableElement
+      - MeasureableElementCharacteristic
+      - Member
+      - MethodImplementedPractice
+      - MethodPerformer
+      - MethodResource
+      - ModelActor
+      - ModelBusinessItemLibrary
+      - ModelCapabilityLibrary
+      - ModelCollaboration
+      - ModelMetricsModel
+      - ModelPracticeLibrary
+      - ModelRoleLibrary
+      - ModelScenario
+      - ModelValueLibrary
+      - Operand
+      - OperandMeasuredCharacteristic
+      - OrgUnitPosition
+      - OutputDefinition
+      - OutputDelegationSource
+      - OutputDelegationTarget
+      - ParentChildBusinessItemCategory
+      - ParentChildPracticeCategory
+      - ParentChildValueCategory
+      - ParentContextDelegationContext
+      - Participant
+      - ParticipantCalendar
+      - Party
+      - Performer
+      - Person
+      - PoolPosition
+      - PoolSize
+      - Port
+      - PortBatchSize
+      - PortContainer
+      - PortDelegation
+      - PortHandler
+      - PortOffset
+      - PracticeCategory
+      - PracticeDefinition
+      - PracticeLibrary
+      - PracticeResource
+      - PropositionComponent
+      - PropositionOverallSatisfaction
+      - ReleaseControl
+      - ResourceResourceUse
+      - ResourceUse
+      - ResourceUseCondition
+      - ResourceUseDuration
+      - ResourceUsePlanningPercentage
+      - ResourceUseQuantity
+      - RoleCategory
+      - RoleCharacteristicDefinition
+      - RoleDefinition
+      - RoleLibrary
+      - RoleRoleDefinition
+      - Scenario
+      - ScenarioActor
+      - ScenarioCollaboration
+      - ScenarioHorizon
+      - ScenarioReleaseControlContext
+      - StoreCalendar
+      - StoreContext
+      - StoreDuration
+      - StoreInventoryLevel
+      - StoreResource
+      - ValueAggregation
+      - ValueCategory
+      - ValueCharacteristicDefinition
+      - ValueDefinition
+      - ValueDeliveryModel
+      - ValueElement
+      - ValueElementBenchmark
+      - ValueElementValueDefinition
+      - ValueElementValueMeasurement
+      - ValueLibrary
+      - ValuePropositionComponent
+      - ValuePropositionComponentSatisfactionLevel
+      - ValueWeight
+      - VdmlElement
   exceptions: {}
-  diagram_types:   # only the departures from the defaults (graph, frame-header); the other diagram types take the defaults
+  diagram_types:
+    Role Collaboration:
+      arrangement: graph
+      title: frame-header
+      route: straight
+      channels:
+        claimed:
+          line_style: Solid against dashed separates a tangible deliverable from an intangible one (8.2).
+        free:
+        - fill
+        - border
+        - border_width
+        - line_color
+        - font_color
+        - opacity
+        - icon
+    ValueProposition Exchange:
+      arrangement: graph
+      title: frame-header
+      route: straight
+      channels:
+        free:
+        - fill
+        - border
+        - border_width
+        - line_color
+        - font_color
+        - opacity
+        - icon
+    Collaboration Structure:
+      arrangement: graph
+      title: frame-header
+      route: straight
+      channels:
+        claimed:
+          line_style: Solid against dashed separates role containment from role assignment (8.5).
+        free:
+        - fill
+        - border
+        - border_width
+        - line_color
+        - font_color
+        - opacity
+        - icon
+    Capability Management:
+      arrangement: graph
+      title: frame-header
+      route: straight
+      channels:
+        claimed:
+          line_style: Dashed joins an offer to what supports it, and dotted marks a method that depends on another offer (8.8).
+        free:
+        - fill
+        - border
+        - border_width
+        - line_color
+        - font_color
+        - opacity
+        - icon
+    Measurement Dependency:
+      arrangement: graph
+      title: frame-header
+      route: straight
+      channels:
+        claimed:
+          line_style: A thin solid line with a plus or minus marker shows positive or negative influence (8.9).
+        free:
+        - fill
+        - border
+        - border_width
+        - line_color
+        - font_color
+        - opacity
+        - icon
     Activity Network: {arrangement: lanes}   # each Role is a swim-lane
     CapabilityLibrary: {arrangement: nested-grid}   # a child capability is drawn inside its parent
     Capability Heatmap: {arrangement: nested-grid}   # same shapes as CapabilityLibrary
