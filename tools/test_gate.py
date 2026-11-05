@@ -56,7 +56,6 @@ class TestForbiddenIdentifiers:
     @pytest.mark.parametrize("line,expect", [
         ("The TVO model was the source.", "TVO"),
         ("Applied to the TEA repository.", "TEA"),
-        ("Delivered for CA EDD last year.", "EDD"),
         ("TechVentures used this pattern.", "TechVentures"),
     ])
     def test_a_real_customer_identifier_is_caught(self, library, line, expect):

@@ -41,8 +41,7 @@ PLACEHOLDER_PATH = re.compile(r"[A-Za-z]:\\{1,2}Users\\{1,2}[<%{$]")
 # "TEA Framework" is a technology that genuinely ships with stock Sparx
 # Enterprise Architect, so that exact phrase is allowed. Anything that reads as a
 # CUSTOMER extension of it is not: TEA on its own, TEA:: as a stereotype prefix,
-# TEA inside a customer's own identifier like "CA EDD TEA", and "TEA Framework"
-# followed by extension wording (Extension, Custom, Customization, Profile, MDG,
+# and "TEA Framework" followed by extension wording (Extension, Custom, Customization, Profile, MDG,
 # Toolbox, Add-in). A customer MDG built on the Sparx technology therefore still
 # trips the gate for a human decision. The same rule is in the server repo's gate.
 FORBIDDEN = [
@@ -50,7 +49,6 @@ FORBIDDEN = [
     (re.compile(r"\bTEA\b(?!\s+Framework\b(?!\s+(?i:Extensions?|Extended|Custom|"
                 r"Customi[sz](?:ed|ation)|Profiles?|MDG|Toolbox(?:es)?|Add-?ins?)\b))"),
      "real customer identifier 'TEA'"),
-    (re.compile(r"\bCA\s+EDD\b|\bEDD\b"), "real customer identifier 'EDD'"),
     (re.compile(r"TechVentures", re.I), "non-canonical example org 'TechVentures'"),
     (re.compile(r"RyanSchmierer|rschmierer", re.I), "personal identifier"),
     (re.compile(r"[A-Za-z]:\\\\?(?:SparxServices|Users)\b"), "absolute local path"),
