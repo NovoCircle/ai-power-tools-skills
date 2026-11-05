@@ -75,7 +75,7 @@ Required: U, a test module whose module-level `COVERS` names the asset. Tests th
 |---|---|---|---|
 | asset:plugins/ai-power-tools-languages/skills/_languages/layout-standard.yaml | U | present (17 tests, test_languages.py) | complete |
 | asset:plugins/ai-power-tools/rulesets/* | U | present (17 tests, test_languages.py) | complete |
-| asset:plugins/ai-power-tools/skills/_shared/languages/* | U | present (117 tests, test_bindings_frameworks.py, test_bindings_real_model.py, test_bindings_strategy.py, test_gen_conventions.py) | complete |
+| asset:plugins/ai-power-tools/skills/_shared/languages/* | U | present (133 tests, test_bindings_frameworks.py, test_bindings_real_model.py, test_bindings_strategy.py, test_gen_conventions.py) | complete |
 | asset:ruleset-archimate31/archimate31_rules.yaml | U | present (12 tests, test_ruleset_archimate31.py) | complete |
 
 ## Deployment surfaces
@@ -83,7 +83,7 @@ Required: U, a test module whose module-level `COVERS` names the asset. Tests th
 | Unit | Required | U | D | Verdict |
 |---|---|---|---|---|
 | srf:languages-plugin | U D | 1 test modules (17 tests) + 0 CI steps | case file tools/surfaces/languages-plugin.md | complete |
-| srf:plugin | U D | 2 test modules (142 tests) + 2 CI steps | — | missing D |
+| srf:plugin | U D | 2 test modules (143 tests) + 2 CI steps | — | missing D |
 
 ## Integration cases
 
@@ -137,7 +137,7 @@ method of a test class is written `Class.test_name`.
   - `tools/test_languages.py::test_a_missing_reference_fails`
   - `tools/test_languages.py::test_implements_is_read_however_a_ruleset_groups_its_rules`
   - `tools/test_languages.py::test_an_implements_that_names_no_rule_fails_and_so_does_none`
-- `asset:plugins/ai-power-tools/skills/_shared/languages/*` U (117)
+- `asset:plugins/ai-power-tools/skills/_shared/languages/*` U (133)
   - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_frameworks.py::test_each_framework_binding_loads_and_is_found_by_its_declared_id`
   - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_frameworks.py::test_each_framework_binding_declares_a_measured_empty_prefix`
   - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_frameworks.py::test_each_framework_binding_is_built_on_uml_and_states_the_standards_gaps`
@@ -238,13 +238,29 @@ method of a test class is written `Class.test_name`.
   - `tools/test_gen_conventions.py::test_a_guide_that_lost_its_layout_block_is_named`
   - `tools/test_gen_conventions.py::test_the_route_rule_supplies_what_a_language_leaves_out`
   - `tools/test_gen_conventions.py::test_a_diagram_type_with_nothing_listed_takes_the_defaults`
+  - `tools/test_gen_conventions.py::test_a_guide_name_outside_the_layout_block_is_refused_not_defaulted`
+  - `tools/test_gen_conventions.py::test_a_list_of_guide_names_is_judged_by_the_one_that_is_drawn`
+  - `tools/test_gen_conventions.py::test_a_viewpoint_exception_with_a_reason_passes_the_check_and_the_build`
+  - `tools/test_gen_conventions.py::test_a_viewpoint_with_no_reason_is_still_refused_by_both`
+  - `tools/test_gen_conventions.py::test_an_empty_catalog_fails_the_check_and_the_write`
+  - `tools/test_gen_conventions.py::test_the_plugin_build_refuses_an_empty_catalog`
+  - `tools/test_gen_conventions.py::test_a_malformed_source_is_named_not_a_traceback`
+  - `tools/test_gen_conventions.py::test_a_malformed_standard_is_named_not_a_traceback`
+  - `tools/test_gen_conventions.py::test_a_size_key_that_differs_from_the_guide_is_caught_by_the_check`
+  - `tools/test_gen_conventions.py::test_a_recorded_exception_or_a_stated_reason_clears_a_size_difference`
+  - `tools/test_gen_conventions.py::test_a_size_key_through_a_concept_is_compared_by_its_size_class`
+  - `tools/test_gen_conventions.py::test_the_build_refuses_a_size_difference_nobody_stated`
   - `tools/test_gen_conventions.py::test_the_engines_defaults_agree_with_the_standard`
   - `tools/test_gen_conventions.py::test_the_engine_check_fails_on_a_planted_difference`
+  - `tools/test_gen_conventions.py::test_the_engine_check_reads_the_composers_with_their_own_defaults`
   - `tools/test_gen_conventions.py::test_lints_text_clearance_stays_the_tools_own_figure`
   - `tools/test_gen_conventions.py::test_the_nine_stubs_and_the_two_maps_are_there`
   - `tools/test_gen_conventions.py::test_each_layout_block_and_map_passes_its_checks`
   - `tools/test_gen_conventions.py::test_the_fixture_holds_thirty_two_rows_all_of_them_generated`
   - `tools/test_gen_conventions.py::test_a_shape_with_no_line_is_caught_and_a_stated_reason_clears_it`
+  - `tools/test_gen_conventions.py::test_a_no_element_type_block_the_checks_cant_read_is_a_problem`
+  - `tools/test_gen_conventions.py::test_a_malformed_no_element_type_block_is_caught_on_a_stub_too`
+  - `tools/test_gen_conventions.py::test_a_diagram_type_is_checked_even_when_the_guide_lists_none`
   - `tools/test_gen_conventions.py::test_element_types_may_name_what_the_notation_names`
   - `tools/test_gen_conventions.py::test_a_map_on_another_technology_needs_a_reason`
   - `tools/test_gen_conventions.py::test_a_planted_wrong_arrangement_fails`
@@ -2452,7 +2468,7 @@ method of a test class is written `Class.test_name`.
   - `tools/test_languages.py::test_an_implements_that_names_no_rule_fails_and_so_does_none`
 - `srf:languages-plugin` D (1)
   - `tools/surfaces/languages-plugin.md`
-- `srf:plugin` U (144)
+- `srf:plugin` U (145)
   - `tools/test_gate.py::TestForbiddenIdentifiers.test_a_real_customer_identifier_is_caught`
   - `tools/test_gate.py::TestForbiddenIdentifiers.test_the_sparx_shipped_tea_framework_is_allowed`
   - `tools/test_gate.py::TestForbiddenIdentifiers.test_a_customer_extension_of_tea_framework_is_caught`
@@ -2465,6 +2481,7 @@ method of a test class is written `Class.test_name`.
   - `tools/test_gate.py::TestUnknownIdentifiers.test_a_sparx_shipped_technology_is_not_reported`
   - `tools/test_gate.py::TestUnknownIdentifiers.test_a_sparx_id_containing_a_space_is_not_reported`
   - `tools/test_gate.py::TestUnknownIdentifiers.test_the_bare_word_before_the_space_is_still_unknown`
+  - `tools/test_gate.py::TestUnknownIdentifiers.test_a_known_spaced_id_must_start_on_a_word_boundary`
   - `tools/test_gate.py::TestEncoding.test_a_utf8_bom_is_caught`
   - `tools/test_gate.py::TestEncoding.test_mojibake_is_caught`
   - `tools/test_gate.py::TestEncoding.test_curly_quotes_inside_a_code_fence_are_caught`
