@@ -300,7 +300,7 @@ def test_band_pitch_acts_as_a_floor_not_a_cap():
         [{"name": "A", "items": _items("a")}, {"name": "B", "items": _items("b")}],
         {"band_pitch": 400},
     )
-    assert loose["containers"][1]["top"] == -20 - 400
+    assert loose["containers"][1]["top"] == DEFAULT_SPEC["origin_top"] - 400
 
     crowded = compose_layered_bands(
         [{"name": "A", "items": _items("a"), "item_height": 300},
