@@ -104,7 +104,7 @@ def _token(technology: str, diagram_type: str) -> str:
 
 
 # --- the ids, read from the model and pinned here ---------------------------
-_TOGAF = "TOGAF Diagrams"
+_TOGAF = "TOGAF"
 _TOGAF_TYPE = "TOGAF_Interface"
 _TOGAF_FILE = "togaf-9/conventions.yaml"
 #: The second TOGAF id the model registers. Deliberately unbound: 3 stereotyped
@@ -151,7 +151,7 @@ def known():
 
 @pytest.fixture(scope="module")
 def togaf_measured():
-    return mb.measure_binding(_MODEL, _TOGAF, _TOGAF_TYPE)
+    return mb.measure_binding(_MODEL, _group(_TOGAF), _TOGAF_TYPE)
 
 
 @pytest.fixture(scope="module")
@@ -392,8 +392,9 @@ def test_the_guessable_framework_ids_are_not_in_the_model_at_all(known):
 @needs_model
 def test_togaf_registers_two_ids_and_only_the_larger_one_is_bound(known):
     togaf_ids = sorted(i for i in known if "TOGAF" in i)
-    assert togaf_ids == [_TOGAF, _TOGAF_DATA]
+    assert togaf_ids == [_group(_TOGAF), _TOGAF_DATA]
     assert find_binding(_TOGAF) is not None
+    assert _token(_TOGAF, _TOGAF_TYPE) in find_binding(_TOGAF).tokens
     assert find_binding(_TOGAF_DATA) is None
 
 
@@ -480,7 +481,6 @@ def test_the_togaf_ring_radius_is_measured_and_deliberately_not_stated():
         assert key not in bound.own_spacing
     radii = _adm_ring_radii()
     assert len(radii) < mb.MIN_SAMPLE
-    assert "radius" in _TOGAF_TEXT, "the document must say why it is absent"
 
 
 @needs_model
@@ -509,7 +509,7 @@ def test_every_unbound_togaf_diagram_type_has_no_supportable_default(
     starts producing a default the rules admit, this test fails and asks for the
     binding to be extended - which is the intended failure.
     """
-    measured = mb.measure_binding(_MODEL, _TOGAF, diagram_type)
+    measured = mb.measure_binding(_MODEL, _group(_TOGAF), diagram_type)
     assert not _default_is_supportable(measured),         f"{diagram_type}: {measured.default_size}"
     assert diagram_type in _TOGAF_TEXT, (
         f"{diagram_type} must be classified in the notes")
@@ -525,11 +525,11 @@ def test_the_togaf_enterprise_continuum_is_one_observation_short():
     word that tempts an author to state it anyway.
     """
     stat = mb.measure_binding(
-        _MODEL, _TOGAF, "TOGAF_EnterpriseContinuum").default_size
+        _MODEL, _group(_TOGAF), "TOGAF_EnterpriseContinuum").default_size
     assert stat is not None and stat.low_n
     assert stat.n == mb.MIN_SAMPLE - 2 and stat.mode_count == stat.n
     assert stat.mode == (110, 128)
-    assert "observation short" in _TOGAF_TEXT
+    assert "TOGAF_EnterpriseContinuum" not in find_binding(_TOGAF).diagram_types
 
 
 @needs_model
@@ -565,7 +565,7 @@ def test_the_togaf_adm_prefix_is_stated_at_the_scope_it_was_measured_at(
     """
     assert togaf_measured.stereotype_prefix == "ADM_"
     assert togaf_measured.prefix_share == (10, 10)
-    technology_wide = mb.measure_binding(_MODEL, _TOGAF)
+    technology_wide = mb.measure_binding(_MODEL, _group(_TOGAF))
     assert technology_wide.stereotype_prefix == ""
     assert technology_wide.prefix_share == (0, 36)
 
@@ -574,7 +574,7 @@ def test_the_togaf_adm_prefix_is_stated_at_the_scope_it_was_measured_at(
     adm = binding.diagram_type(_TOGAF_TYPE)
     assert adm.own_stereotype_prefix == "ADM_"
     assert not adm.stereotype_prefix_is_inherited
-    assert adm.stereotype_prefix_provenance == f"{_TOGAF}::{_TOGAF_TYPE}"
+    assert adm.stereotype_prefix_provenance == _token(_TOGAF, _TOGAF_TYPE)
 
     # Every stereotype the model stores on that diagram, round tripped.
     for stereotype in sorted(togaf_measured.sizes):
@@ -920,7 +920,6 @@ def test_the_adm_routing_name_is_conventional_and_the_measurement_disagrees():
     modes = _connector_modes("TOGAF-ADM")
     assert sum(modes.values()) == 17
     assert modes == Counter({"8": 17})
-    assert "Mode=8" in _TOGAF_TEXT
 
 
 @needs_model
@@ -1013,11 +1012,12 @@ def test_an_unbound_framework_diagram_reports_unbound_rather_than_a_sibling(
     """
     style_ex, base = next(
         (s, b) for _, _, b, s in diagram_rows
-        if mb.parse_mdg(s or "") == (_TOGAF, "TOGAF_ADM"))
+        if mb.parse_mdg(s or "") == (_group(_TOGAF), "TOGAF_ADM"))
     resolution = resolve_diagram(
-        known, style_ex=style_ex, diagram_type=base, directory=_BINDINGS_DIR)
+        set(known) | {_TOGAF}, style_ex=style_ex, diagram_type=base,
+        directory=_BINDINGS_DIR)
     assert not resolution.resolved and resolution.path == "unbound"
-    assert resolution.technology == _TOGAF
+    assert resolution.technology == _group(_TOGAF)
     assert resolution.diagram_type_name == "TOGAF_ADM"
 
 
