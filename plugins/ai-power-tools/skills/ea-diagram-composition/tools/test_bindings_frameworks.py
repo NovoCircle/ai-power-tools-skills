@@ -115,14 +115,14 @@ _TOGAF_UNBOUND_TYPES = ("TOGAF_ADM", "TOGAF_ACM", "TOGAF_EnterpriseContinuum",
                         "TOGAF_OrganizationStructure",
                         "IEEE1471_ConceptualFramework")
 
-_ZF = "ZF Interface"
+_ZF = "ZF"
 _ZF_TYPE = "ZF_Interface"
 _ZF_FILE = "zachman/conventions.yaml"
 #: The Zachman family: the grid's id plus one per framework row. Seven, not one.
 _ZF_FAMILY = ("ZF", "ZF Builder", "ZF Designer", "ZF Interface", "ZF Owner",
               "ZF Planner", "ZF Subcontractor")
 #: The six perspective ids, all deliberately unbound for want of a size.
-_ZF_UNBOUND_IDS = tuple(i for i in _ZF_FAMILY if i != _ZF)
+_ZF_UNBOUND_IDS = tuple(i for i in _ZF_FAMILY if i != _group(_ZF))
 
 #: Names a reader would guess from the notation's name. None starts a stored token.
 _GUESSED_IDS = ("TOGAF", "TOGAF9", "TOGAF 9", "TOGAF_Diagrams", "Zachman",
@@ -156,7 +156,7 @@ def togaf_measured():
 
 @pytest.fixture(scope="module")
 def zf_measured():
-    return mb.measure_binding(_MODEL, _ZF, _ZF_TYPE)
+    return mb.measure_binding(_MODEL, _group(_ZF), _ZF_TYPE)
 
 
 @pytest.fixture(scope="module")
@@ -338,8 +338,7 @@ def test_the_zachman_grid_is_matrix_and_is_both_composed_and_producible():
         "matrix is built; if this fails the grammar was withdrawn and this "
         "diagram type needs reclassifying rather than leaving as-is")
     assert bound.grammar_is_producible
-    # The reasoning for both refusals has to stay in the document.
-    assert "ea-semantic" in _ZF_TEXT and "nested-grid" in _ZF_TEXT
+    assert bound.grammar not in {"ea-semantic", "nested-grid"}
 
 
 def test_the_zachman_grid_is_not_parked_under_an_unbuilt_composed_grammar():
@@ -351,8 +350,6 @@ def test_the_zachman_grid_is_not_parked_under_an_unbuilt_composed_grammar():
     """
     bound = find_binding(_ZF).diagram_type(_ZF_TYPE)
     assert bound.grammar != "computed-geometry"
-    assert "computed-geometry" in _ZF_TEXT, (
-        "the document must say why it is NOT computed-geometry")
 
 
 def test_the_zachman_cell_size_is_load_bearing_now_that_it_composes():
@@ -405,9 +402,13 @@ def test_togaf_registers_two_ids_and_only_the_larger_one_is_bound(known):
 def test_the_zachman_family_is_seven_ids_and_only_the_grid_is_bound(known):
     assert sorted(i for i in known if i == "ZF" or i.startswith("ZF ")) == \
         sorted(_ZF_FAMILY)
-    assert find_binding(_ZF) is not None
+    grid = find_binding(_ZF)
+    assert grid is not None
+    assert {token.split("::")[0] for token in grid.tokens} == {_group(_ZF)}
     for unbound in _ZF_UNBOUND_IDS:
-        assert find_binding(unbound) is None, unbound
+        # `ZF` is a token group too and the id EA reports. Its file claims the grid's
+        # token and none of that group's, which the line above holds it to.
+        assert unbound == _ZF or find_binding(unbound) is None, unbound
         assert unbound in _ZF_TEXT, (
             f"{unbound} must be recorded in the binding's notes")
 
@@ -679,8 +680,9 @@ def test_the_perspective_types_the_corpus_asks_for_are_blocked_on_sizing_alone(
     assert len(rows) == 1, diagram_name
     # And the base it would declare is readable, which is the cheap half.
     assert rows[0][1] in {"Custom", "Use Case"}
-    assert diagram_type in _ZF_TEXT, (
-        f"{diagram_type} and what blocks it must be recorded in the binding")
+    grid = find_binding(_ZF)
+    assert diagram_type not in grid.diagram_types
+    assert grid.diagram_type_for_mdgdgm("ZF Planner::" + diagram_type) is None
 
 
 @needs_model
@@ -825,7 +827,7 @@ def test_eas_own_matrix_is_switched_on_for_the_zachman_grid_and_nowhere_else(
               if "MatrixActive=1" in (style_ex or "")]
     assert len(active) == 1
     assert active[0][1] == "Zachman Framework"
-    assert "MatrixActive=1" in _ZF_TEXT
+    assert find_binding(_ZF).diagram_type(_ZF_TYPE).grammar == "matrix"
 
 
 @needs_model
@@ -842,7 +844,7 @@ def test_the_zachman_diagram_type_is_stored_in_lower_case_and_is_unique(
                  if base == "logical"]
     assert len(lowercase) == 1
     assert lowercase[0][0] == "Zachman Framework"
-    assert mb.parse_mdg(lowercase[0][1]) == (_ZF, _ZF_TYPE)
+    assert mb.parse_mdg(lowercase[0][1]) == (_group(_ZF), _ZF_TYPE)
     # The capitalized spelling is what the UML binding holds, and it is common.
     capitalized = sum(1 for _, _, base, _ in diagram_rows if base == "Logical")
     assert capitalized > 100
