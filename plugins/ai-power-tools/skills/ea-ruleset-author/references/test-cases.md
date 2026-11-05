@@ -479,13 +479,13 @@ Covers: File and directory naming
 
 **Ask:** "Start the ruleset for UML 2.5. What do I call the folder and the file?"
 
-**Passes when:** The reply names the directory `ruleset-uml25` (lowercase, hyphen) and the file
-`uml25_rules.yaml` (lowercase, underscore), one YAML file for the whole language.
+**Passes when:** The reply names the folder `rulesets/uml-2` (the language's id) and the file
+`uml-2_rules.yaml` (the id followed by `_rules.yaml`), one YAML file for the whole language.
 
 **Check:**
 
 ```check
-reply: says: the directory is ruleset-uml25 and the file is uml25_rules.yaml
+reply: says: the folder is rulesets/uml-2 and the file is uml-2_rules.yaml
 reply: not: says to use one file per rule
 ```
 

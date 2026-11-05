@@ -23,8 +23,8 @@ scratch. Follow the phases in order, one language at a time.
 ## Overview — What You're Building
 
 ```
-ruleset-{lang}/
-└── {lang}_rules.yaml        ← one YAML file, all rules for the language
+rulesets/{id}/
+└── {id}_rules.yaml        ← one YAML file, all rules for the language
 ```
 
 The YAML has two top-level keys:
@@ -121,12 +121,12 @@ quick checks. Choose rules that:
 ### File and directory naming
 
 ```
-ruleset-{lang}/
-└── {lang}_rules.yaml
+rulesets/{id}/
+└── {id}_rules.yaml
 ```
 
-Use lowercase, hyphens in the directory name, underscores in the file name. Examples:
-`ruleset-bpmn2/bpmn2_rules.yaml`, `ruleset-uml25/uml25_rules.yaml`.
+The folder is the language's id, and the file is that id followed by `_rules.yaml`. Examples:
+`rulesets/bpmn-2/bpmn-2_rules.yaml`, `rulesets/uml-2/uml-2_rules.yaml`.
 
 ### Grammar reference
 
@@ -224,11 +224,25 @@ Track progress here as new rulesets are authored.
 
 | Language | Directory | Rules | Status | Server req |
 |----------|-----------|-------|--------|-----------|
-| ArchiMate 3.1 | `rulesets/archimate-3` | 4 | ✅ Shipped in the plugin | ≥ 3.6.5 |
-| BPMN 2.0 | `ruleset-bpmn2` | — | ⏳ Planned | ≥ 1.2.0 |
-| UML 2.5 | `ruleset-uml25` | — | ⏳ Planned | ≥ 1.2.0 |
-| SysML 1.6 | `ruleset-sysml16` | — | ⏳ Planned | ≥ 1.2.0 |
-| TOGAF ADM | `ruleset-togaf-adm` | — | ⏳ Planned | ≥ 1.2.0 |
+| ArchiMate 3.1 | `rulesets/archimate-3` | 4 | Ships in the plugin | 3.6.5 or later |
+| BPMN 2.0.2 | `rulesets/bpmn-2` | 44 | Ships in the plugin | 3.6.5 or later |
+| BMM 1.3 | `rulesets/bmm-1` | 13 | Ships in the plugin | 3.6.5 or later |
+| DMN 1.2 | `rulesets/dmn-1` | 6 | Ships in the plugin | 3.6.5 or later |
+| CMMN 1.1 | `rulesets/cmmn-1` | 11 | Ships in the plugin | 3.6.5 or later |
+| SoaML 1.0.1 | `rulesets/soaml-1` | 3 | Ships in the plugin | 3.6.5 or later |
+| VDML 1.0 | `rulesets/vdml-1` | 17 | Ships in the plugin | 3.6.5 or later |
+| UML 2.5.1 | `rulesets/uml-2` | 25 | Ships in the plugin | 3.6.5 or later |
+| SysML 1.5 | `rulesets/sysml-1` | 21 | Ships in the plugin | 3.6.5 or later |
+| UAF 1.0 | `rulesets/uaf-1` | 84 | Ships in the plugin | 3.6.5 or later |
+| UPDM 2.1 | `rulesets/updm-2` | 88 | Ships in the plugin | 3.6.5 or later |
+| RAAML 1.0 | `rulesets/raaml-1` | 27 | Ships in the plugin | 3.6.5 or later |
+| TOGAF 9.1 | `rulesets/togaf-9` | 8 | Ships in the plugin | 3.6.5 or later |
+| Data modeling and ER, from a composite of public sources | `rulesets/data-modeling-er` | 6 | Ships in the plugin | 3.6.5 or later |
+| Requirements, on ISO/IEC/IEEE 29148:2018 | `rulesets/requirements` | 14 | Ships in the plugin | 3.6.5 or later |
+| Business Modeling, the OMG UML 1.3 to 1.5 profile | `rulesets/business-modeling` | 3 | Ships in the plugin | 3.6.5 or later |
+| Zachman Framework, rules as stated in 1992 | `rulesets/zachman` | 7 | Ships in the plugin | 3.6.5 or later |
+| CSDM 5 | `rulesets/csdm-5` | 14 | Ships in the plugin | 3.6.5 or later |
+| IT4IT 3.0, read from the public draft | `rulesets/it4it` | 72 | Ships in the plugin | 3.6.5 or later |
 
 ---
 

@@ -341,12 +341,12 @@ DEFAULT_SPEC: dict[str, Any] = {
 
     # Item box size. Uniform within a band or a lane; see the note in
     # _band_metrics on why that is a rule and not an accident.
-    "item_width": 140,
-    "item_height": 60,
+    "item_width": 100,
+    "item_height": 70,
 
     # Gaps used to derive pitches when a pitch is not given outright.
-    "item_gap_x": 20,
-    "item_gap_y": 20,
+    "item_gap_x": 80,
+    "item_gap_y": 50,
 
     # Pitch = step from one item's leading edge to the next one's, along the
     # axis named. Must be at least the item's extent on that axis, or items
@@ -376,7 +376,7 @@ DEFAULT_SPEC: dict[str, Any] = {
     # Lane container padding and stacking.
     "lane_pad": 12,
     "lane_gap": 0,                # swimlanes normally abut; 0 makes them touch
-    "item_gap_flow": 30,          # gap between successive slots along the flow
+    "item_gap_flow": 60,          # gap between successive slots along the flow
     "flow_pitch": None,           # optional MINIMUM slot-start to slot-start step
     "min_lane_thickness": None,   # None -> item cross extent + 2 * lane_pad
 

@@ -293,28 +293,28 @@
       ],
       "sha256": {
         "ea-diagram-composition/SKILL.md": "107783b320a45e2b407a47f393caec3359fe759d40955ed80923cd227878f7db",
-        "ea-diagram-composition/references/bindings.md": "2761e4e47e5bc6e704640f6fa935a61290471795d4e927f605856326ab7d0f7a",
+        "ea-diagram-composition/references/bindings.md": "bbcb4ea309557d293540135f22156f66d85f7f2884fb73f4da262550527db415",
         "ea-diagram-composition/references/grammars.md": "7469b39ce98c371fa4a5b298c7e9e58ed54d2c4599f70a485c0cb18ec18325c3",
         "ea-diagram-composition/references/test-cases.md": "01936ddb0c8dc5dc8c2c5b6d97a7778f086c69968265afb6d9ddaa268408db8f",
         "ea-diagram-composition/references/verification.md": "5c7e6b813008afa7752d072795c165d46c55b12a3aaa15bac16f71c659b718c2",
         "ea-diagram-composition/tools/bindings.py": "04eb2fa45592fb17b2b1270210ebfbbd98fc48260ea953d7e00c5f0471152f69",
-        "ea-diagram-composition/tools/compose.py": "1ac67fac5548aa13b4433aeada9b46838860731f3b39e6993bb4c940285a9acb",
-        "ea-diagram-composition/tools/compose_chevron.py": "bd9a8452ae19a13acf6307cbd15a93455fa8417a7753fac0835067ddc40fec24",
-        "ea-diagram-composition/tools/compose_matrix.py": "d2ca789c0734e64a1c51e61eae9a4283783dadb95142f270319b3daa77ec0483",
+        "ea-diagram-composition/tools/compose.py": "56bcba4316bb23136cdc217b8ac8ef7c3b2f663081f5a40c4022733f7bc39ffa",
+        "ea-diagram-composition/tools/compose_chevron.py": "dbf0709241a8c5ee9f1a5755208bd933b3a174f4c5b598af69d8e467079070cc",
+        "ea-diagram-composition/tools/compose_matrix.py": "22f2a6125a33028189c75066eb825cf7720645c9d2481850e54b5424fc1a8b1a",
         "ea-diagram-composition/tools/compose_radial_tree.py": "22fd47cfeb51b6c89adffd85f8e40a869b0dc1b2ec62253571e1e4a33095e5a1",
         "ea-diagram-composition/tools/compose_treemap.py": "8d4a5557b8af8fbb05c0ae69935489649797e0acfb5d9e37978e6e0f098297f4",
         "ea-diagram-composition/tools/fidelity.py": "3bdda20149d3f007a8a68a5a35612ac1ec2086b1aaaaf04c480a684c3534b0dc",
         "ea-diagram-composition/tools/lint.py": "570bd9657a8cee56c20d7540ca213e59deff3c663534b3880bbff4a6f91641fe",
         "ea-diagram-composition/tools/measure_binding.py": "0141327c7575587b50aa3fe23792018bfa6acd57a25ca9d3d12b99f9bd865930",
-        "ea-diagram-composition/tools/test_bindings.py": "8930a7f795e59f7a21cf60cf1fdc52c8d522b04cdfd4618605d3db64b0663a23",
+        "ea-diagram-composition/tools/test_bindings.py": "f1a9aa143265d47eb9e26f58126beeaaa3990cea39fcefbabfd1be1cc6bb049c",
         "ea-diagram-composition/tools/test_bindings_data.py": "c527b811a0afb62f3d2e79458706e1bacf54f616ea2d9b38b979fee5add405e8",
         "ea-diagram-composition/tools/test_bindings_datamodel.py": "86aa8fa11561131fdcf783bc91998393d17717999648973e2c8942fc3f51a7f5",
         "ea-diagram-composition/tools/test_bindings_frameworks.py": "a5d2f2f83f6a370b567261ddffdbef4762475b74a1e1cb2479fa4b542aea95a0",
-        "ea-diagram-composition/tools/test_bindings_real_model.py": "a36e6d678963d4dcb147eaffde60259b67829e98f1de78911b3cbda8de6430fa",
+        "ea-diagram-composition/tools/test_bindings_real_model.py": "c5d40a9958afd3dd3c1cb7e6204de269e80b85f2130a4266fd285528c5d6a226",
         "ea-diagram-composition/tools/test_bindings_strategy.py": "af6ab601ac706175360ce63998940721180244891c021100853b24390fe8782a",
         "ea-diagram-composition/tools/test_bindings_sysphs.py": "4432baecd03a646ae2939e8d5099d96f6a17fb77e04e66b2d087643538d6670e",
-        "ea-diagram-composition/tools/test_compose.py": "7287c4873030c72513c5a98bb8843d43ffd64b79f08068b7b6853b6a6aeb22c0",
-        "ea-diagram-composition/tools/test_compose_chevron.py": "b505b9638a26c43f81e6b6c1f623190744bab148c3d261a389f369c3d665ca68",
+        "ea-diagram-composition/tools/test_compose.py": "d6f45470e3393a22cea5e523db08de64307930afe5af735b43999bf6376301fe",
+        "ea-diagram-composition/tools/test_compose_chevron.py": "1bb2af735d3bd8d63dee7f00067ef3b2a87ea6aa55c2f98ddfd438a53770b301",
         "ea-diagram-composition/tools/test_compose_matrix.py": "d58d5b3b421fb73c96cb74c2f9b492be05ff12afed8f205362372bbf24c2c417",
         "ea-diagram-composition/tools/test_compose_radial_tree.py": "c47991a052ca0b333f6f6a576c279bebaeb4b5e725cdd6d70bb9f41cdca5dabf",
         "ea-diagram-composition/tools/test_compose_treemap.py": "c343d1ad494d7bb559744270806a36dfea052fb9ba290d7f078c41ed72e0a8a7",
@@ -377,7 +377,7 @@
         "ea-mdg-assess/references/verification-walkthrough.md"
       ],
       "sha256": {
-        "ea-mdg-assess/SKILL.md": "11b49c43d24525c3973990c55b08ac3ebd69f39f173fda1eab6a8e94e94a8ea1",
+        "ea-mdg-assess/SKILL.md": "3b4ed40d0505f941d84e140a02fb12c576751d7c839d6650bc11d256ef294a6f",
         "ea-mdg-assess/references/test-cases.md": "2c7e6920426f5cd756f81dfa1ba8e37c81ba4e79d745f53b9419471c3b1832f7",
         "ea-mdg-assess/references/three-states.md": "8de928edaab2da95eebf2c945dd03d98edfc365f8eeb34effca0e74d5f722592",
         "ea-mdg-assess/references/verification-walkthrough.md": "d561d0d81dd3d1de9a8d9c805ede92a12510c8727d13fac26e93827dd63ff490"
@@ -400,7 +400,7 @@
         "ea-mdg-author/references/xml-skeleton.md"
       ],
       "sha256": {
-        "ea-mdg-author/SKILL.md": "ccfda82660ce5a77484b5ad60c0ae969d59d6dc6d6d4295b4d50a334b1dcf939",
+        "ea-mdg-author/SKILL.md": "efc325faab2bd8741c75b56b0dd3138fa9d6d4f8e774592b176cc4a8b2f0bfaa",
         "ea-mdg-author/references/diagrams-toolboxes.md": "384918bad2126adc0195a967e8dc0c74e98c57e047a89a2f74f1a2e66db8f73c",
         "ea-mdg-author/references/post-install-migration.md": "230f1189519851f8d1e60bb9e8cbed3837aadb6322058d18c141d9ba2cf66ed3",
         "ea-mdg-author/references/quick-linker.md": "c1e77c9410344baa29706fb81d9adbf8b19c0453b076dd3f1b97dca187233dd4",
@@ -439,7 +439,7 @@
         "ea-mdg-model-build/references/test-cases.md"
       ],
       "sha256": {
-        "ea-mdg-model-build/SKILL.md": "59c1b6cf4719303937ee9399de9be138e1b86d2cd91b6aeec702c8decc14253d",
+        "ea-mdg-model-build/SKILL.md": "45ae86f4168f64b5b043e869189955e73181c8244786ca3540f9690e22ce499f",
         "ea-mdg-model-build/references/generating-from-a-census.md": "70e682c06efc17d9b80081daa6c6344a5d45ee0b6e462beac30143a50487957d",
         "ea-mdg-model-build/references/test-cases.md": "00e29ca6239f027aed923e2a134405baef46d404e5d92c40a048900d2a108d02"
       }
@@ -575,9 +575,9 @@
         "ea-ruleset-author/references/test-cases.md"
       ],
       "sha256": {
-        "ea-ruleset-author/SKILL.md": "969217658d67f21d3e867e44e62d66070d107a9b66520a9d65c5a9b2a3f3c4fa",
-        "ea-ruleset-author/references/rule-grammar.md": "a0589383beb663722d3ec0562386dac4b97a0e96c79b8065945846c5655437c2",
-        "ea-ruleset-author/references/test-cases.md": "f0d694eabe6782f4208ba804c321e6ec7e6d9a8c5964c45911822cea80781d45"
+        "ea-ruleset-author/SKILL.md": "a569cf273c36f8798c409c110c470d0a5d5bfafe5814927951ca0caa83dbb157",
+        "ea-ruleset-author/references/rule-grammar.md": "ea6d7c257a3bcb86c790763a2c546c696027cd2a461fb19a70e0c23d4f92acdc",
+        "ea-ruleset-author/references/test-cases.md": "6c0043c5b258c8dabd9f1ee8f94e2cbfe89d06f697b438c2f672838d9dbd1827"
       }
     },
     {
@@ -623,8 +623,8 @@
         "ea-validation/references/test-cases.md"
       ],
       "sha256": {
-        "ea-validation/SKILL.md": "0cb815613a2fc5393b44ba291552f0aa26657a87ad2dd82dc96ebfb2875a7019",
-        "ea-validation/references/test-cases.md": "08b475686c1d468c0d84447c96d82d1ba50f50c4ec61ae3d7a5debbfb55ef6f5"
+        "ea-validation/SKILL.md": "9bde51ab051e68bbcb6fb736d69464b452010045c69f84edc06959e0afeae19a",
+        "ea-validation/references/test-cases.md": "f2c219d934921f3d69647d5388d2c4c74f12f38410d626723e3c73d35668aa0d"
       }
     },
     {
@@ -715,7 +715,7 @@
       ],
       "sha256": {
         "ruleset-archimate31/archimate31_rules.yaml": "8e2bc0d0c46c319d7d54a8af11c21d1a3052f8f1bc92efcf9084eef3e7bc518e",
-        "ruleset-archimate31/tools/test_ruleset_archimate31.py": "404836849915e743efe55aefeaf980359c4d2e5ba999c0a723f31b9471cc4502"
+        "ruleset-archimate31/tools/test_ruleset_archimate31.py": "66d791530db5aacc83a6fbd5459350049b9aa50bff460a02d5d36b76d5b12956"
       }
     }
   ]

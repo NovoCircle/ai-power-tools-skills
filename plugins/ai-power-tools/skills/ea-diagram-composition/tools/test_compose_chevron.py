@@ -672,14 +672,14 @@ def test_the_linter_sees_no_overlap_however_deep_the_notch(
 def test_the_default_spec_composes_something_sane():
     result = compose_chevron_stack(_stages(5), _supports(3))
     assert result["grammar"] == "chevron_stack"
-    assert result["item_width"] == 140
+    assert result["item_width"] == 100
     assert result["notch_percent"] == 20
-    assert result["notch_depth"] == 28
-    assert result["support_height"] == 30
+    assert result["notch_depth"] == 20
+    assert result["support_height"] == 35
     assert_no_overlaps(result["items"], "defaults")
     for stage in _by_role(result, "stage"):
-        assert rect_width(stage) == 140
-        assert rect_height(stage) == 60
+        assert rect_width(stage) == 100
+        assert rect_height(stage) == 70
 
 
 def test_the_default_spec_is_not_mutated_by_a_call():
