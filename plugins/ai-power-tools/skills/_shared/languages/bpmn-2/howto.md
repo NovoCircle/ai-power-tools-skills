@@ -92,7 +92,7 @@ No `LaneSet`, no `GlobalChoreographyTask`, no separate data object reference or 
 
 ## Checking a model
 
-This ruleset needs server 3.6.5 or later. On 3.6.4 and earlier its rules report nothing, with no error, so a clean result there means nothing.
+5 of 44 rules in this ruleset use formats newer than 3.6.4, and on that server they report nothing or don't run as written. Use server 3.6.5 or later, because a clean result on 3.6.4 doesn't mean the model passes.
 
 The ruleset for this language (`rulesets/bpmn-2/bpmn-2_rules.yaml`) checks which flow nodes sequence and message flows may join, the incoming and outgoing flows of events and gateways, and the required tagged values of correlation and service elements. It has no rule for containment (which pool or lane an element is in), boundary-event rules, data associations, rules the standard limits to executable processes (except that a public process is not executable), or the WS-BPEL mapping. The ruleset was generated before the engine of 2026-10-21, which can read where an element sits (`contained_in`, `contains_count`) and select by EA type, so containment and boundary-event rules can now be written; none has been. The rules that follow a reference, need graph analysis or compare a value across elements still cannot be stated, so the ruleset leaves those rules out.
 
