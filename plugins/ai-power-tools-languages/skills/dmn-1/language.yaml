@@ -1,0 +1,29 @@
+# Stub: holds only the layout block until the guide arrives.
+# The guide replaces this file and keeps the `layout` block.
+id: dmn-1
+name: Decision Model and Notation (DMN)
+stub: true
+layout:
+  basis: Our conventions, not this standard's.  Sizes and spacing come from the shared layout standard.
+  element_types: {}
+  exceptions: {}
+  diagram_types:
+    DecisionRequirementsDiagram:
+      arrangement: graph
+      title: frame-header
+      route: straight
+      channels:
+        fill: Element kind. Claimed rather than free, because recoloring a diagram whose fill already
+          encodes kind breaks it, while leaving a channel unused costs nothing.
+        claimed:
+          position: Dependency direction. The requiring element usually sits above the element it requires,
+            so moving an element up or down to encode something else reverses the reading.
+          size: Enclosure, for one concept. A DecisionService is sized by the decisions inside it, so
+            resizing one changes what it is drawn as containing.
+          icon: 'Decision logic kind: a decision draws a table or a chevron glyph.'
+        free:
+        - border
+        - border_width
+        - font_color
+        - opacity
+  viewpoints: {}

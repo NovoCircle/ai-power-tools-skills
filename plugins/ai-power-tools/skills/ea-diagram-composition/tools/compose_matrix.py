@@ -145,8 +145,8 @@ DEFAULT_MATRIX_SPEC: dict[str, Any] = {
     # Top-left of the whole composition, which is the top-left of the CORNER -
     # the block where the two header strips cross. `origin_top` is negative
     # because EA's vertical axis is.
-    "origin_left": 20,
-    "origin_top": -20,
+    "origin_left": 40,
+    "origin_top": -40,
 
     # One element inside a cell. Uniform everywhere: an element in a matrix
     # stands for the same kind of thing wherever it sits, and the variation this
