@@ -9,6 +9,8 @@ extends: UML
 stereotype_prefix: ''
 notes: |
   Each EA diagram type here draws the guide diagram type named on its `guide` line. The display name is the one EA shows, which states no version. Route names are conventions, not measurements.
+
+  `VDML` is the id EA reports, measured on EA 17.1 build 1716.
 diagram_types:
   ActivityNetwork:
     base: Logical
@@ -18,6 +20,24 @@ diagram_types:
       default:
         w: 100
         h: 70
+      BoundaryPort:
+        w: 15
+        h: 15
+      InputPort:
+        w: 15
+        h: 15
+      OutputPort:
+        w: 15
+        h: 15
+      Pool:
+        w: 40
+        h: 50
+      Store:
+        w: 40
+        h: 50
+      ValueProposition:
+        w: 20
+        h: 20
     spacing:
       item_gap_x: 80
       item_gap_y: 50
@@ -44,6 +64,24 @@ diagram_types:
       default:
         w: 100
         h: 70
+      BoundaryPort:
+        w: 15
+        h: 15
+      InputPort:
+        w: 15
+        h: 15
+      OutputPort:
+        w: 15
+        h: 15
+      Pool:
+        w: 40
+        h: 50
+      Store:
+        w: 40
+        h: 50
+      ValueProposition:
+        w: 20
+        h: 20
     spacing:
       item_gap_x: 80
       item_gap_y: 50
@@ -70,6 +108,24 @@ diagram_types:
       default:
         w: 100
         h: 70
+      BoundaryPort:
+        w: 15
+        h: 15
+      InputPort:
+        w: 15
+        h: 15
+      OutputPort:
+        w: 15
+        h: 15
+      Pool:
+        w: 40
+        h: 50
+      Store:
+        w: 40
+        h: 50
+      ValueProposition:
+        w: 20
+        h: 20
     spacing:
       item_gap_x: 80
       item_gap_y: 50
@@ -96,6 +152,24 @@ diagram_types:
       default:
         w: 100
         h: 70
+      BoundaryPort:
+        w: 15
+        h: 15
+      InputPort:
+        w: 15
+        h: 15
+      OutputPort:
+        w: 15
+        h: 15
+      Pool:
+        w: 40
+        h: 50
+      Store:
+        w: 40
+        h: 50
+      ValueProposition:
+        w: 20
+        h: 20
     spacing:
       item_gap_x: 80
       item_gap_y: 50
@@ -133,6 +207,24 @@ diagram_types:
       default:
         w: 100
         h: 70
+      BoundaryPort:
+        w: 15
+        h: 15
+      InputPort:
+        w: 15
+        h: 15
+      OutputPort:
+        w: 15
+        h: 15
+      Pool:
+        w: 40
+        h: 50
+      Store:
+        w: 40
+        h: 50
+      ValueProposition:
+        w: 20
+        h: 20
     spacing:
       item_gap_x: 80
       item_gap_y: 50
@@ -169,6 +261,24 @@ diagram_types:
       default:
         w: 100
         h: 70
+      BoundaryPort:
+        w: 15
+        h: 15
+      InputPort:
+        w: 15
+        h: 15
+      OutputPort:
+        w: 15
+        h: 15
+      Pool:
+        w: 40
+        h: 50
+      Store:
+        w: 40
+        h: 50
+      ValueProposition:
+        w: 20
+        h: 20
     spacing:
       item_gap_x: 80
       item_gap_y: 50
@@ -206,6 +316,24 @@ diagram_types:
       default:
         w: 100
         h: 70
+      BoundaryPort:
+        w: 15
+        h: 15
+      InputPort:
+        w: 15
+        h: 15
+      OutputPort:
+        w: 15
+        h: 15
+      Pool:
+        w: 40
+        h: 50
+      Store:
+        w: 40
+        h: 50
+      ValueProposition:
+        w: 20
+        h: 20
     spacing:
       item_gap_x: 80
       item_gap_y: 50
@@ -242,6 +370,24 @@ diagram_types:
       default:
         w: 100
         h: 70
+      BoundaryPort:
+        w: 15
+        h: 15
+      InputPort:
+        w: 15
+        h: 15
+      OutputPort:
+        w: 15
+        h: 15
+      Pool:
+        w: 40
+        h: 50
+      Store:
+        w: 40
+        h: 50
+      ValueProposition:
+        w: 20
+        h: 20
     spacing:
       item_gap_x: 80
       item_gap_y: 50

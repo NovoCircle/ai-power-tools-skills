@@ -756,28 +756,86 @@ layout_map:
   stereotype_prefix: ''
   notes: |
     Each EA diagram type here draws the guide diagram type named on its `guide` line. The display name is the one EA shows, which states no version. Route names are conventions, not measurements.
+
+    `VDML` is the id EA reports, measured on EA 17.1 build 1716.
   diagram_types:
     ActivityNetwork:
       guide: Activity Network
       base: Logical
+      size_keys:
+        Pool: Pool
+        Store: Store
+        BoundaryPort: InputPort
+        InputPort: InputPort
+        OutputPort: OutputPort
+        ValueProposition: ValueProposition
     CapabilityHeatmap:
       guide: Capability Heatmap
       base: Logical
+      size_keys:
+        Pool: Pool
+        Store: Store
+        BoundaryPort: InputPort
+        InputPort: InputPort
+        OutputPort: OutputPort
+        ValueProposition: ValueProposition
     CapabilityLibrary:
       guide: CapabilityLibrary
       base: Logical
+      size_keys:
+        Pool: Pool
+        Store: Store
+        BoundaryPort: InputPort
+        InputPort: InputPort
+        OutputPort: OutputPort
+        ValueProposition: ValueProposition
     CapabilityManagement:
       guide: Capability Management
       base: Logical
+      size_keys:
+        Pool: Pool
+        Store: Store
+        BoundaryPort: InputPort
+        InputPort: InputPort
+        OutputPort: OutputPort
+        ValueProposition: ValueProposition
     CollaborationStructure:
       guide: Collaboration Structure
       base: Logical
+      size_keys:
+        Pool: Pool
+        Store: Store
+        BoundaryPort: InputPort
+        InputPort: InputPort
+        OutputPort: OutputPort
+        ValueProposition: ValueProposition
     MeasurementDependency:
       guide: Measurement Dependency
       base: Logical
+      size_keys:
+        Pool: Pool
+        Store: Store
+        BoundaryPort: InputPort
+        InputPort: InputPort
+        OutputPort: OutputPort
+        ValueProposition: ValueProposition
     RoleCollaboration:
       guide: Role Collaboration
       base: Logical
+      size_keys:
+        Pool: Pool
+        Store: Store
+        BoundaryPort: InputPort
+        InputPort: InputPort
+        OutputPort: OutputPort
+        ValueProposition: ValueProposition
     ValuePropositionExchange:
       guide: ValueProposition Exchange
       base: Logical
+      size_keys:
+        Pool: Pool
+        Store: Store
+        BoundaryPort: InputPort
+        InputPort: InputPort
+        OutputPort: OutputPort
+        ValueProposition: ValueProposition
