@@ -2411,7 +2411,7 @@ quick_links:
   default_uml_links: hidden on shapes
 drawing: 'A small script on every shape and line shows CSDM''s words, not the stored name. Fill colors come from the stereotype''s
   default. The script''s default size follows the shared layout standard: a box is 100 by 70, and Request Catalog, a container,
-  is 150 by 90.'
+  is 150 by 90. Nothing nests in a Request Catalog in this pack: its Catalog Items are joined to it by Member lines.'
 layout_map:
   technology: CSDM5
   extends: UML
