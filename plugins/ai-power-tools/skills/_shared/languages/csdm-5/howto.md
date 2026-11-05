@@ -168,7 +168,7 @@ The CSDM 5 ruleset, `rulesets/csdm-5/csdm-5_rules.yaml`, has 14 rules. They chec
 - A Business Application's Uses or Consumes reaches only an Application Service or an Information Object.
 - Life cycle values belong to the shape's process.
 
-**Five of these 14 rules read lines, and they need server 3.6.5 or later.** On 3.6.4 and earlier those five report nothing, with no error, so a clean result there says nothing about what they check.
+5 of 14 rules in this ruleset use formats newer than 3.6.4, and on that server they report nothing or don't run as written. Use server 3.6.5 or later, because a clean result on 3.6.4 doesn't mean the model passes.
 
 **The grading is ours.** CSDM is guidance and rarely says "must". The ruleset makes a finding an error only where CSDM states a flat limit, and a warning where CSDM recommends something or a line falls outside its list.
 
