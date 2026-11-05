@@ -111,6 +111,8 @@ An element also holds **sub-records** in their own tables: an *internal requirem
 
 The requirements ruleset (`rulesets/requirements/requirements_rules.yaml`, 14 rules) checks: that a `deriveReqt`, `satisfy`, `verify`, `copy` or `allocate` joins the kinds of element the language allows; that only requirements are nested in a requirement; that a business requirement is not derived from a stakeholder one; that every requirement traces to a source and has a priority on EA's scale; that every business and stakeholder requirement has a verify, every system level requirement has a verify, a satisfy and a `deriveReqt` to a parent. It does not check statuses, versions, owners, identifiers, names, wording, or anything held in a sub-record; those need a person or a tool that reads the element's fields and text. The ruleset's header says why: the grammar reads tagged values, not an element's own fields or text.
 
+This ruleset needs server 3.6.5 or later. On 3.6.4 and earlier some of its rules report nothing, with no error, so a clean result there doesn't mean the model passes.
+
 **How firm the checks are.** The requirements standard, ISO/IEC/IEEE 29148, is sold by ISO and IEEE and was not read for
 this guide: what it says is taken from published summaries of it. Because the summaries do not show which rules the
 standard states as "shall" and which as "should", every check drawn from 29148 is a warning (should), never an error.

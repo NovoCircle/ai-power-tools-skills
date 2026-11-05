@@ -608,3 +608,29 @@ harvest:
   toolbox_quick_links_model_templates: 'ui, EA 17.1 build 1716, 2026-11-04: one diagram''s toolbox pages and one quick-link source were read; model templates
     were not read'
   ea_build: 17.1 build 1716
+
+# EA's names for this language's layout. tools/gen_conventions.py reads layout_map.
+layout_map:
+  technology: EAExtended:Requirements
+  display_name: EA Requirements
+  extends: UML
+  stereotype_prefix: ''
+  notes: |
+    The standard defines no diagram type, so this one is EA's own. Its arrangement and route are the shared defaults, not measurements.
+  diagram_types:
+    Requirements:
+      token_reason: EA stores this diagram as Extended::Requirements. Another language uses the same Extended id, and one id can have only one file, so this map keeps ea.yaml's technology. Whether EA's helpers reach it by another route is not measured.
+      base: Custom
+      arrangement: graph
+      title: frame-header
+      route: straight
+      channels:
+        fill: null
+        free:
+        - fill
+        - border
+        - border_width
+        - line_color
+        - font_color
+        - opacity
+        - icon
