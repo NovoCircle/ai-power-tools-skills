@@ -96,6 +96,10 @@ KNOWN_IDS = {
     # Realization connectors, so a skill citing what `t_xref` actually holds
     # was flagged as naming a customer technology.
     "StandardProfileL2",
+    # EA Requirements language (requirements guide). All four are Sparx-shipped technology or profile ids, read from
+    # the Resources tab of EA 17.1 build 1716 and from stored stereotype names: EAREQ is the requirements profile of
+    # Core Extensions, EAExtended and EAUI are Core Extensions' own ids, MARTE is the UML profile EA ships.
+    "EAREQ", "EAExtended", "EAUI", "MARTE",
     "MDG", "EA", "XMI", "SQL", "COM", "API", "XML", "YAML", "JSON", "HTML",
     "PNG", "SVG", "CSV", "UTF", "BOM", "URL", "ID", "OK", "NOT", "AND", "OR",
     # EA's strategic-modeling and mind-mapping MDGs, read from the reference
@@ -167,6 +171,8 @@ SHELF_NAMESPACES = {
 # against the line instead and the bare word stays unknown.
 KNOWN_SPACED_IDS = (
     "TOGAF Diagrams",
+    # Sparx-shipped group on the Resources tab (`EA Requirements`), whose stored token is `Extended::Requirements`.
+    "EA Requirements",
     # Sparx-shipped, and the technology behind the corpus row whose
     # diagram type is TechnicalReferenceModel -- which was being counted
     # under TOGAF until it was measured.
