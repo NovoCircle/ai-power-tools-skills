@@ -76,7 +76,7 @@ from bindings import (  # noqa: E402
 #: quietly start asking about a different spelling.
 SYSPHS = "SysPhS"
 
-_BINDINGS = _HERE.parent / "bindings"
+_BINDINGS = _HERE.parent.parent / "_shared" / "languages"
 
 MODEL = mb.resolve_model_path(None)
 
@@ -211,7 +211,8 @@ def test_a_second_binding_on_sysmls_diagram_type_names_makes_them_ambiguous(
     a diagram that states `MDGDgm=SysML1.4::BlockDefinition` still resolves, so
     the regression hides on the untagged majority.
     """
-    for name in ("sysml1.4.yaml", "uml.yaml"):
+    for name in ("sysml-1/conventions.yaml", "uml-2/conventions.yaml"):
+        (tmp_path / name).parent.mkdir()
         (tmp_path / name).write_text(
             (_BINDINGS / name).read_text(encoding="utf-8"), encoding="utf-8")
     (tmp_path / "overlay.yaml").write_text("""

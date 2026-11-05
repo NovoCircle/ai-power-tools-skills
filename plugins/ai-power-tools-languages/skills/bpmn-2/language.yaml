@@ -1,0 +1,83 @@
+# Stub: holds only the layout block until the guide arrives.
+# The guide replaces this file and keeps the `layout` block.
+id: bpmn-2
+name: Business Process Model and Notation (BPMN)
+stub: true
+layout:
+  basis: Our conventions, not this standard's.  Sizes and spacing come from the shared layout standard.
+  element_types:
+    StartEvent: event-circle
+    EndEvent: event-circle
+    IntermediateCatchEvent: event-circle
+    IntermediateThrowEvent: event-circle
+    BoundaryEvent: event-circle
+    Gateway: decision-diamond
+    ExclusiveGateway: decision-diamond
+    InclusiveGateway: decision-diamond
+    ParallelGateway: decision-diamond
+    ComplexGateway: decision-diamond
+    EventBasedGateway: decision-diamond
+    DataObject: data-item
+    DataObjectReference: data-item
+    DataInput: data-item
+    DataOutput: data-item
+    DataStore: data-item
+    DataStoreReference: data-item
+    TextAnnotation: note
+    SubProcess: large-box
+  exceptions: {}
+  diagram_types:
+    Process:
+      arrangement: lanes
+      title: frame-header
+      route: orthogonal
+      channels:
+        fill: 'Node kind. Events, activities, gateways, and data each read differently. Conventional rather
+          than normative: the standard fixes the shape, not the color.'
+        claimed:
+          position: 'Two things at once, which is what makes a BPMN diagram readable: which lane an element
+            is in says WHO, and how far along the flow it sits says WHEN. Neither is available for anything
+            else.'
+          size: Node kind. An event is a small circle because it is an event. Size is not a free channel
+            in this notation.
+        free:
+        - border
+        - border_width
+        - line_color
+        - font_color
+        - opacity
+        - icon
+    Collaboration:
+      arrangement: lanes
+      title: frame-header
+      route: orthogonal
+      channels:
+        fill: Node kind. Conventional rather than normative.
+        claimed:
+          position: Pool says which participant; flow position says when.
+          size: Node kind.
+        free:
+        - border
+        - border_width
+        - line_color
+        - font_color
+        - opacity
+        - icon
+    Choreography:
+      arrangement: lanes
+      title: frame-header
+      route: orthogonal
+      channels:
+        fill: Initiator. In a choreography the shaded participant band says who starts the exchange, which
+          is the whole point of the notation, so fill is emphatically claimed here.
+        claimed:
+          position: Order of the exchange.
+          size: Node kind.
+        free:
+        - border
+        - border_width
+        - line_color
+        - font_color
+        - opacity
+        - icon
+  viewpoints: {}

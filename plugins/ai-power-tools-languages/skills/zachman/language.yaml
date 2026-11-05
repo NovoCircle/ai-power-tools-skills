@@ -620,5 +620,7 @@ notes: 'The Zachman Framework is a classification schema, not a notation or a me
 layout:
   basis: Our conventions, not this standard's. Sizes and spacing come from the shared layout standard.
   element_types:
-    Cell: large-box                # a rectangle at the crossing of a row and a column; every other concept is a box
+    Cell: large-box
   exceptions: {}
+  diagram_types: {}
+  viewpoints: {}
