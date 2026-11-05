@@ -1,0 +1,1911 @@
+# TOGAF 9.1 language file (schema_version 1).
+# Written from the standard only (Part IV, content framework and content metamodel). Concept names are the standard's own entity names without spaces.
+# Tool-neutral: no tool facts live here. Links marked `inferred`, `specializes_inferred` or `abstract_inferred` are our reading, not a sentence of the standard.
+schema_version: 1
+id: togaf-9
+name: TOGAF content framework and content metamodel
+owner: {name: The Open Group, kind: standards-body}
+standard: {name: 'TOGAF (The Open Group Architecture Framework), Part IV Architecture Content Framework', version: '9.1', status: published, reference: 'The Open Group, TOGAF Version 9.1 (document G116, December 2011), Part IV chapters 33 to 37 (content framework, content metamodel, architectural artifacts, architecture deliverables, building blocks), online edition https://pubs.opengroup.org/architecture/togaf91-doc/arch/, read from archived copies of its pages. A framework and body of guidance published as an Open Group Standard; the content metamodel is informal (prose, tables, figures) and no machine-readable form was found. Superseded by TOGAF 9.2 (16 April 2018) and the TOGAF Standard 10th Edition (25 April 2022), neither compared.'}
+data_types:
+  coverage: partial
+  section: '34.6'
+  note: "The standard names no primitive types (no string, number, date or Boolean); it gives value sets for six attributes and describes every other attribute only in words."
+  types:
+    - {name: StandardsClass, kind: enumeration, values: [Non-Standard, Proposed Standard, Provisional Standard, Standard, Phasing-Out Standard, Retired Standard], section: '34.6', used_by: "Standards class on Application Component, Business Service, Function, Information System Service, Logical and Physical Application Component, Logical and Physical Data Component, Logical and Physical Technology Component, Platform Service, Process, Service and Technology Component"}
+    - {name: LifecycleStatus, kind: enumeration, values: [Proposed, In Development, Live, Phasing Out, Retired], section: '34.6 (Physical Application Component entry)'}
+    - {name: PrincipleCategory, kind: enumeration, values: [Guiding Principle, Business Principle, Data Principle, Application Principle, Integration Principle, Technology Principle], section: '34.6 (Principle entry)'}
+    - {name: DataEntityCategory, kind: enumeration, values: [Message, Internally Stored Entity], section: '34.6 (Data Entity entry)'}
+    - {name: WorkPackageCategory, kind: enumeration, values: [Work Package, Work Stream, Project, Program, Portfolio], section: '34.6 (Work Package entry)'}
+    - {name: LocationCategory, kind: enumeration, values: [Region, Country, Building, Specific Location], open: true, section: '34.6 (Location entry)', note: The standard says the nature of the business may add other kinds, so the set is open.}
+  attributes:
+    coverage: some_concepts
+    where: concepts
+    section: '34.6'
+    note: "The 35 content metamodel entities carry typical attributes; the 20 content framework and architecture description concepts carry none. Six common attributes (ID, Name, Description, Category, Source, Owner) apply to every content metamodel entity and are listed once in concepts.common_attributes. Each entity's own list holds only what it adds. An empty list means the entity adds none: Constraint, Control, Driver, Event, Gap, Goal, Measure, Objective, Product and Service Quality have only the common six, and Assumption has no row at all in the standard's attribute table. The standard gives no type or multiplicity for any attribute. An attribute carries a `type` here only where the standard names its value set. Attributes named as dates (such as Retire date) or counts (such as Headcount) are described as such in words, but the standard names no date or number type. Common Category is a user-definable taxonomy; the Category of a Logical Technology Component, Physical Technology Component and Platform Service comes from the TOGAF Technical Reference Model, which may be extended, so neither has a fixed value set."
+notation:
+  coverage: none
+  section: '35.6; 35.1.1'
+  note: "The standard defines no symbols, shapes or line styles for any concept or relationship; it says what kind of artifact each one is (a list, a table or a graphic) and, for a few, names a drawing technique."
+  not_specified: all
+  not_specified_note: "'all' means all 55 concepts and all 143 relationships: the standard gives none of them a drawing. Every artifact not listed under artifact_drawing has a kind (catalog, matrix or diagram) and no drawing beyond that."
+  artifact_forms:
+    catalog: {form: a list of building blocks, section: '35.6'}
+    matrix: {form: a table that shows the relationships between building blocks of specific types, section: '35.6'}
+    diagram: {form: "a graphic that presents building blocks plus their relationships and interconnections; the standard gives no symbols for it", section: '35.6'}
+  artifact_drawing:
+    Application/Data Matrix: {form: two-dimensional table, axes: Logical Application Component on one axis and Data Entity on the other, section: '35.6.4'}
+    Application/Organization Matrix: {form: two-dimensional table, axes: Logical or Physical Application Component on one axis and Organization Unit on the other, section: '35.6.5'}
+    Role/Application Matrix: {form: two-dimensional table, axes: Logical Application Component on one axis and Role on the other, section: '35.6.5'}
+    Application/Function Matrix: {form: two-dimensional table, axes: Logical Application Component on one axis and Function on the other, section: '35.6.5'}
+    Application Interaction Matrix: {form: two-dimensional table, axes: Application Service, Logical Application Component and Physical Application Component on both the rows and the columns, section: '35.6.5'}
+    Conceptual Data Diagram: {technique: entity relationship models or simplified UML class diagrams, section: '35.6.4'}
+    Process Flow Diagram: {technique: "swim-lanes may show who owns each process step and what realizes it; for example the application that supports a step can be a lane", section: '35.6.3'}
+    Functional Decomposition Diagram: {technique: "one page of capabilities; heat-maps may be layered over it to show scope and decisions", section: '35.6.3'}
+    Data Security Diagram: {technique: "access of actors to data shown as a matrix between two object types or as a mapping", section: '35.6.4'}
+    Platform Decomposition Diagram: {technique: "either product-level detail (such as versions and CPU counts) or an informal overview of the technical environment", section: '35.6.6'}
+  example_viewpoint:
+    name: Business domains (the standard's worked example, from The Open Group itself)
+    technique: "nested boxes: outer boxes are locations, inner boxes are business functions, and nesting means the functions are performed in those locations"
+    section: '35.1.1'
+  figure_note: "The standard says its own Figure 35-1 (the architecture description concepts) uses UML notation (35.1). That is how the standard illustrates its model; it does not tell a modeler how to draw."
+concepts:
+  source: 'TOGAF 9.1 Part IV: the 35 content metamodel entities of 34.5, the content-framework terms of 33.1 and 37, and the architecture-description terms of 35.1 and Figure 35-1. 55 concepts in all (35 + 8 + 12). The standard declares none abstract; abstract flags and the parents marked inferred are our reading. Attributes are the "typical attributes" of 34.6 and none is mandatory.'
+  groups:
+    Content metamodel: {defined_by: 34.5; 34.6, notes: 'The 35 entities. Each carries a module: core or one of six extensions (Figure 34-7).'}
+    Content framework: {defined_by: 33.1; 35.6; 37, notes: 'Deliverable, artifact (catalog, matrix, diagram) and building block (architecture, solution).'}
+    Architecture description: {defined_by: 35.1; Figure 35-1, notes: 'Stakeholder, concern, view and viewpoint vocabulary adapted from ISO/IEC 42010:2007 and IEEE 1471.'}
+  common_attributes:
+    applies_to: all content metamodel entities
+    status: typical, none mandatory
+    section: '34.6'
+    attributes:
+    - {name: ID, description: Unique identifier of the entity.}
+    - {name: Name, description: Brief name.}
+    - {name: Description, description: Textual description.}
+    - {name: Category, description: User-definable categorization taxonomy for the entity type.}
+    - {name: Source, description: Where the information was collected.}
+    - {name: Owner, description: Owner of the entity.}
+  elements:
+    Actor:
+      display: Actor
+      category: Content metamodel
+      module: core
+      section: 34.2.1; 34.5
+      attributes:
+      - {name: '# FTEs', description: Estimated number of FTEs that operate as this actor.}
+      - {name: Actor goal, description: The actor's objectives in general terms.}
+      - {name: Actor tasks, description: Tasks the actor performs in general terms.}
+    ApplicationComponent:
+      display: Application Component
+      category: Content metamodel
+      module: core
+      abstract: true
+      abstract_inferred: true
+      section: 34.2.1; 34.4.5; 34.5
+      attributes:
+      - {name: Standards class, type: StandardsClass, description: 'One of: Non-Standard, Proposed Standard, Provisional Standard, Standard, Phasing-Out Standard, Retired Standard.'}
+      - {name: Standard creation date, description: 'When the standard was created, if the item is a standard.'}
+      - {name: Last standard review date, description: Last date the standard was reviewed.}
+      - {name: Next standard review date, description: Next date the standard is to be reviewed.}
+      - {name: Retire date, description: Date the standard was or will be retired.}
+    Assumption: {display: Assumption, category: Content metamodel, module: core, section: '34.5', attributes: []}
+    BusinessService:
+      display: Business Service
+      category: Content metamodel
+      module: core
+      specializes: Service
+      specializes_inferred: true
+      section: 34.2.1; 34.5
+      attributes:
+      - {name: Standards class, type: StandardsClass, description: 'One of: Non-Standard, Proposed Standard, Provisional Standard, Standard, Phasing-Out Standard, Retired Standard.'}
+      - {name: Standard creation date, description: 'When the standard was created, if the item is a standard.'}
+      - {name: Last standard review date, description: Last date the standard was reviewed.}
+      - {name: Next standard review date, description: Next date the standard is to be reviewed.}
+      - {name: Retire date, description: Date the standard was or will be retired.}
+    Capability:
+      display: Capability
+      category: Content metamodel
+      module: core
+      section: '34.5'
+      attributes:
+      - {name: Business value, description: How the capability provides value to the enterprise.}
+      - {name: Increments, description: Possible maturity or quality levels of the capability.}
+    Constraint: {display: Constraint, category: Content metamodel, module: core, section: '34.5', attributes: []}
+    Contract:
+      display: Contract
+      category: Content metamodel
+      module: governance
+      section: 34.4.1; 34.5
+      attributes:
+      - {name: Behavior characteristics, description: Functional behavior supported within the contract.}
+      - {name: Service name "caller", description: The consuming service.}
+      - {name: Service name "called", description: The providing service.}
+      - {name: Service quality characteristics, description: Non-functional behavior supported within the contract.}
+      - {name: Availability characteristics, description: How far the item can be relied on to be in use when wanted.}
+      - {name: Service times, description: The hours when the service or application has to be up.}
+      - {name: Manageability characteristics, description: How well its state can be observed and controlled.}
+      - {name: Serviceability characteristics, description: 'How readily faults can be found and fixed, or parts repaired or upgraded while running.'}
+      - {name: Performance characteristics, description: Whether it completes its tasks in suitable time.}
+      - {name: Response requirements, description: Response times the provider must meet for particular operations.}
+      - {name: Reliability characteristics, description: How well it withstands failure.}
+      - {name: Quality of information required, description: Contracted requirements on accuracy and completeness of information.}
+      - {name: Contract control requirements, description: Level of governance and enforcement applied to the contractual parameters.}
+      - {name: Result control requirements, description: Measures that ensure each request meets contracted criteria.}
+      - {name: Recoverability characteristics, description: How well it can return to a working state after an interruption.}
+      - {name: Locatability characteristics, description: How easily it can be found when needed.}
+      - {name: Security characteristics, description: How well it keeps unauthorized parties from its functions and data.}
+      - {name: Privacy characteristics, description: How well data is shielded from unauthorized access.}
+      - {name: Integrity characteristics, description: How well it keeps data from being corrupted.}
+      - {name: Credibility characteristics, description: How well it confirms that a request comes from an authorized source.}
+      - {name: Localization characteristics, description: Support for variants suited to different consumer groups.}
+      - {name: Internationalization characteristics, description: 'Support for international differences in business logic and data representation, such as character sets.'}
+      - {name: Interoperability characteristics, description: 'How well it works with other technical environments, inside and outside the organization.'}
+      - {name: Scalability characteristics, description: How well capacity or performance can be grown or shrunk to match demand.}
+      - {name: Portability characteristics, description: 'How easily data, people, applications and components can be moved.'}
+      - {name: Extensibility characteristics, description: How readily it takes on new functionality.}
+      - {name: Capacity characteristics, description: The capacity the provider is contracted to offer for requests.}
+      - {name: Throughput, description: The throughput capacity required.}
+      - {name: Throughput period, description: The period over which that throughput must be delivered.}
+      - {name: Growth, description: The rate of growth expected in requests.}
+      - {name: Growth period, description: The period over which that growth is expected.}
+      - {name: Peak profile short term, description: The shape of peak traffic over the short term.}
+      - {name: Peak profile long term, description: The shape of peak traffic over the long term.}
+    Control: {display: Control, category: Content metamodel, module: process-modeling, section: 34.4.3; 34.5, attributes: []}
+    DataEntity:
+      display: Data Entity
+      category: Content metamodel
+      module: core
+      section: 34.2.1; 34.5
+      attributes:
+      - {name: Category, type: DataEntityCategory, description: Message or Internally Stored Entity.}
+      - {name: Privacy classification, description: Level of restriction on access to the data.}
+      - {name: Retention classification, description: Level of retention for the data.}
+    Driver: {display: Driver, category: Content metamodel, module: motivation, section: 34.4.6; 34.5, attributes: []}
+    Event: {display: Event, category: Content metamodel, module: process-modeling, section: 34.4.3; 34.5, attributes: []}
+    Function:
+      display: Function
+      category: Content metamodel
+      module: core
+      section: 34.2.1; 34.5
+      attributes:
+      - {name: Standards class, type: StandardsClass, description: 'One of: Non-Standard, Proposed Standard, Provisional Standard, Standard, Phasing-Out Standard, Retired Standard.'}
+      - {name: Standard creation date, description: 'When the standard was created, if the item is a standard.'}
+      - {name: Last standard review date, description: Last date the standard was reviewed.}
+      - {name: Next standard review date, description: Next date the standard is to be reviewed.}
+      - {name: Retire date, description: Date the standard was or will be retired.}
+    Gap: {display: Gap, category: Content metamodel, module: core, section: '34.5', attributes: []}
+    Goal: {display: Goal, category: Content metamodel, module: motivation, section: 34.4.6; 34.5, attributes: []}
+    InformationSystemService:
+      display: Information System Service
+      category: Content metamodel
+      module: services
+      specializes: BusinessService
+      section: 34.2.1; 34.4.2; 34.5
+      attributes:
+      - {name: Standards class, type: StandardsClass, description: 'One of: Non-Standard, Proposed Standard, Provisional Standard, Standard, Phasing-Out Standard, Retired Standard.'}
+      - {name: Standard creation date, description: 'When the standard was created, if the item is a standard.'}
+      - {name: Last standard review date, description: Last date the standard was reviewed.}
+      - {name: Next standard review date, description: Next date the standard is to be reviewed.}
+      - {name: Retire date, description: Date the standard was or will be retired.}
+    Location:
+      display: Location
+      category: Content metamodel
+      module: infrastructure-consolidation
+      section: 34.4.5; 34.5
+      attributes:
+      - {name: Category, type: LocationCategory, description: 'Region, Country, Building or Specific Location. The nature of the business may introduce others (for example Ship, Port, Mine, Car, Hotel).'}
+    LogicalApplicationComponent:
+      display: Logical Application Component
+      category: Content metamodel
+      module: core
+      specializes: ApplicationComponent
+      section: 34.4.5; 34.5
+      attributes:
+      - {name: Standards class, type: StandardsClass, description: 'One of: Non-Standard, Proposed Standard, Provisional Standard, Standard, Phasing-Out Standard, Retired Standard.'}
+      - {name: Standard creation date, description: 'When the standard was created, if the item is a standard.'}
+      - {name: Last standard review date, description: Last date the standard was reviewed.}
+      - {name: Next standard review date, description: Next date the standard is to be reviewed.}
+      - {name: Retire date, description: Date the standard was or will be retired.}
+    LogicalDataComponent:
+      display: Logical Data Component
+      category: Content metamodel
+      module: data
+      section: 34.4.4; 34.5
+      attributes:
+      - {name: Standards class, type: StandardsClass, description: 'One of: Non-Standard, Proposed Standard, Provisional Standard, Standard, Phasing-Out Standard, Retired Standard.'}
+      - {name: Standard creation date, description: 'When the standard was created, if the item is a standard.'}
+      - {name: Last standard review date, description: Last date the standard was reviewed.}
+      - {name: Next standard review date, description: Next date the standard is to be reviewed.}
+      - {name: Retire date, description: Date the standard was or will be retired.}
+    LogicalTechnologyComponent:
+      display: Logical Technology Component
+      category: Content metamodel
+      module: infrastructure-consolidation
+      specializes: TechnologyComponent
+      section: 34.4.5; 34.5
+      attributes:
+      - {name: Standards class, type: StandardsClass, description: 'One of: Non-Standard, Proposed Standard, Provisional Standard, Standard, Phasing-Out Standard, Retired Standard.'}
+      - {name: Standard creation date, description: 'When the standard was created, if the item is a standard.'}
+      - {name: Last standard review date, description: Last date the standard was reviewed.}
+      - {name: Next standard review date, description: Next date the standard is to be reviewed.}
+      - {name: Retire date, description: Date the standard was or will be retired.}
+      - {name: Category, description: 'Classified by the TOGAF Technical Reference Model, which may be extended.'}
+    Measure: {display: Measure, category: Content metamodel, module: governance, section: 34.4.1; 34.5, attributes: []}
+    Objective: {display: Objective, category: Content metamodel, module: motivation, section: 34.4.6; 34.5, attributes: []}
+    OrganizationUnit:
+      display: Organization Unit
+      category: Content metamodel
+      module: core
+      section: 34.2.1; 34.5
+      attributes:
+      - {name: Headcount, description: Number of FTEs working in the organization unit.}
+    PhysicalApplicationComponent:
+      display: Physical Application Component
+      category: Content metamodel
+      module: infrastructure-consolidation
+      specializes: ApplicationComponent
+      section: 34.4.5; 34.5
+      attributes:
+      - {name: Lifecycle status, type: LifecycleStatus, description: 'Proposed, In Development, Live, Phasing Out or Retired.'}
+      - {name: Standards class, type: StandardsClass, description: 'One of: Non-Standard, Proposed Standard, Provisional Standard, Standard, Phasing-Out Standard, Retired Standard.'}
+      - {name: Standard creation date, description: 'When the standard was created, if the item is a standard.'}
+      - {name: Last standard review date, description: Last date the standard was reviewed.}
+      - {name: Next standard review date, description: Next date the standard is to be reviewed.}
+      - {name: Retire date, description: Date the standard was or will be retired.}
+      - {name: Initial live date, description: When the first release went or will go into production.}
+      - {name: Date of last release, description: When the last release went into production.}
+      - {name: Date of next release, description: When the next release will go into production.}
+      - {name: Retirement date, description: When the application was or will be retired.}
+      - {name: Availability characteristics, description: How far the item can be relied on to be in use when wanted.}
+      - {name: Service times, description: The hours when the service or application has to be up.}
+      - {name: Manageability characteristics, description: How well its state can be observed and controlled.}
+      - {name: Serviceability characteristics, description: 'How readily faults can be found and fixed, or parts repaired or upgraded while running.'}
+      - {name: Performance characteristics, description: Whether it completes its tasks in suitable time.}
+      - {name: Reliability characteristics, description: How well it withstands failure.}
+      - {name: Recoverability characteristics, description: How well it can return to a working state after an interruption.}
+      - {name: Locatability characteristics, description: How easily it can be found when needed.}
+      - {name: Security characteristics, description: How well it keeps unauthorized parties from its functions and data.}
+      - {name: Privacy characteristics, description: How well data is shielded from unauthorized access.}
+      - {name: Integrity characteristics, description: How well it keeps data from being corrupted.}
+      - {name: Credibility characteristics, description: How well it confirms that a request comes from an authorized source.}
+      - {name: Localization characteristics, description: Support for variants suited to different consumer groups.}
+      - {name: Internationalization characteristics, description: 'Support for international differences in business logic and data representation, such as character sets.'}
+      - {name: Interoperability characteristics, description: 'How well it works with other technical environments, inside and outside the organization.'}
+      - {name: Scalability characteristics, description: How well capacity or performance can be grown or shrunk to match demand.}
+      - {name: Portability characteristics, description: 'How easily data, people, applications and components can be moved.'}
+      - {name: Extensibility characteristics, description: How readily it takes on new functionality.}
+      - {name: Capacity characteristics, description: The capacity the provider is contracted to offer for requests.}
+      - {name: Throughput, description: The throughput capacity required.}
+      - {name: Throughput period, description: The period over which that throughput must be delivered.}
+      - {name: Growth, description: The rate of growth expected in requests.}
+      - {name: Growth period, description: The period over which that growth is expected.}
+      - {name: Peak profile short term, description: The shape of peak traffic over the short term.}
+      - {name: Peak profile long term, description: The shape of peak traffic over the long term.}
+    PhysicalDataComponent:
+      display: Physical Data Component
+      category: Content metamodel
+      module: data
+      section: 34.4.4; 34.5
+      attributes:
+      - {name: Standards class, type: StandardsClass, description: 'One of: Non-Standard, Proposed Standard, Provisional Standard, Standard, Phasing-Out Standard, Retired Standard.'}
+      - {name: Standard creation date, description: 'When the standard was created, if the item is a standard.'}
+      - {name: Last standard review date, description: Last date the standard was reviewed.}
+      - {name: Next standard review date, description: Next date the standard is to be reviewed.}
+      - {name: Retire date, description: Date the standard was or will be retired.}
+    PhysicalTechnologyComponent:
+      display: Physical Technology Component
+      category: Content metamodel
+      module: core
+      specializes: TechnologyComponent
+      section: 34.4.5; 34.5
+      attributes:
+      - {name: Standards class, type: StandardsClass, description: 'One of: Non-Standard, Proposed Standard, Provisional Standard, Standard, Phasing-Out Standard, Retired Standard.'}
+      - {name: Standard creation date, description: 'When the standard was created, if the item is a standard.'}
+      - {name: Last standard review date, description: Last date the standard was reviewed.}
+      - {name: Next standard review date, description: Next date the standard is to be reviewed.}
+      - {name: Retire date, description: Date the standard was or will be retired.}
+      - {name: Category, description: 'Classified by the TOGAF Technical Reference Model, which may be extended.'}
+      - {name: Product name, description: Name of the product making up the component.}
+      - {name: Module name, description: Module or sub-product making up the component.}
+      - {name: Vendor, description: Vendor providing the component.}
+      - {name: Version, description: Version of the product.}
+    PlatformService:
+      display: Platform Service
+      category: Content metamodel
+      module: core
+      specializes: Service
+      specializes_inferred: true
+      section: 34.2.1; 34.5
+      attributes:
+      - {name: Standards class, type: StandardsClass, description: 'One of: Non-Standard, Proposed Standard, Provisional Standard, Standard, Phasing-Out Standard, Retired Standard.'}
+      - {name: Category, description: 'Classified by the TOGAF Technical Reference Model, which may be extended.'}
+    Principle:
+      display: Principle
+      category: Content metamodel
+      module: core
+      section: '34.5'
+      attributes:
+      - {name: Category, type: PrincipleCategory, description: 'Guiding Principle, Business Principle, Data Principle, Application Principle, Integration Principle or Technology Principle.'}
+      - {name: Priority, description: Priority relative to other principles.}
+      - {name: Statement of principle, description: What the principle is.}
+      - {name: Rationale, description: Why the principle is needed and the outcome to reach.}
+      - {name: Implication, description: What the principle means in practice.}
+      - {name: Metric, description: Mechanisms to measure whether the principle is met.}
+    Process:
+      display: Process
+      category: Content metamodel
+      module: core
+      section: 34.2.1; 34.5
+      attributes:
+      - {name: Standards class, type: StandardsClass, description: 'One of: Non-Standard, Proposed Standard, Provisional Standard, Standard, Phasing-Out Standard, Retired Standard.'}
+      - {name: Standard creation date, description: 'When the standard was created, if the item is a standard.'}
+      - {name: Last standard review date, description: Last date the standard was reviewed.}
+      - {name: Next standard review date, description: Next date the standard is to be reviewed.}
+      - {name: Retire date, description: Date the standard was or will be retired.}
+      - {name: Process criticality, description: How critical the process is to business operations.}
+      - {name: Manual or automated, description: Whether IT supports the process or it is manual.}
+      - {name: Process volumetrics, description: Data on how often the process runs.}
+    Product: {display: Product, category: Content metamodel, module: process-modeling, section: 34.4.3; 34.5, attributes: []}
+    Requirement:
+      display: Requirement
+      category: Content metamodel
+      module: core
+      section: '34.5'
+      attributes:
+      - {name: Statement of requirement, description: 'What the requirement is, including whether it shall, should or may be met.'}
+      - {name: Rationale, description: Why the requirement exists.}
+      - {name: Acceptance criteria, description: Tests that will show the requirement is met.}
+    Role:
+      display: Role
+      category: Content metamodel
+      module: core
+      section: 34.2.1; 34.5
+      attributes:
+      - {name: '# FTEs (name not shown in the archived text)', description: Estimated number of FTEs that operate in this role.}
+    Service:
+      display: Service
+      category: Content metamodel
+      module: core
+      abstract: true
+      abstract_inferred: true
+      section: '34.5'
+      attributes:
+      - {name: Standards class, type: StandardsClass, description: 'One of: Non-Standard, Proposed Standard, Provisional Standard, Standard, Phasing-Out Standard, Retired Standard.'}
+      - {name: Standard creation date, description: 'When the standard was created, if the item is a standard.'}
+      - {name: Last standard review date, description: Last date the standard was reviewed.}
+      - {name: Next standard review date, description: Next date the standard is to be reviewed.}
+      - {name: Retire date, description: Date the standard was or will be retired.}
+    ServiceQuality: {display: Service Quality, category: Content metamodel, module: governance, section: 34.4.1; 34.5, attributes: []}
+    TechnologyComponent:
+      display: Technology Component
+      category: Content metamodel
+      module: core
+      abstract: true
+      abstract_inferred: true
+      section: 34.2.1; 34.4.5; 34.5
+      attributes:
+      - {name: Standards class, type: StandardsClass, description: 'One of: Non-Standard, Proposed Standard, Provisional Standard, Standard, Phasing-Out Standard, Retired Standard.'}
+    WorkPackage:
+      display: Work Package
+      category: Content metamodel
+      module: core
+      section: '34.5'
+      attributes:
+      - {name: Category, type: WorkPackageCategory, description: 'Work Package, Work Stream, Project, Program or Portfolio.'}
+      - {name: Capability delivered, description: The contribution the work package makes to delivering capability.}
+    Deliverable: {display: Deliverable, category: Content framework, section: '33.1'}
+    Artifact: {display: Artifact, category: Content framework, section: 33.1; 35.6}
+    Catalog: {display: Catalog, category: Content framework, specializes: Artifact, section: 33.1; 34.2.1; 35.6}
+    Matrix: {display: Matrix, category: Content framework, specializes: Artifact, section: 33.1; 34.2.1; 35.6}
+    Diagram: {display: Diagram, category: Content framework, specializes: Artifact, section: 33.1; 34.2.1; 35.6}
+    BuildingBlock: {display: Building Block, category: Content framework, section: 33.1; 37.2.2}
+    ArchitectureBuildingBlock: {display: Architecture Building Block, category: Content framework, specializes: BuildingBlock, section: 33.1; 37.2.3}
+    SolutionBuildingBlock: {display: Solution Building Block, category: Content framework, specializes: BuildingBlock, section: 33.1; 37.2.4}
+    System: {display: System, category: Architecture description, section: '35.1'}
+    Architecture: {display: Architecture, category: Architecture description, section: '35.1'}
+    ArchitectureDescription: {display: Architecture Description, category: Architecture description, section: '35.1'}
+    Stakeholder: {display: Stakeholder, category: Architecture description, section: '35.1'}
+    Concern: {display: Concern, category: Architecture description, section: '35.1'}
+    View: {display: View, category: Architecture description, section: '35.1'}
+    Viewpoint: {display: Viewpoint, category: Architecture description, section: '35.1'}
+    LibraryViewpoint: {display: Library Viewpoint, category: Architecture description, specializes: Viewpoint, section: Figure 35-1, inferred: true}
+    Model: {display: Model, category: Architecture description, section: Figure 35-1; 35.1, inferred: true}
+    Mission: {display: Mission, category: Architecture description, section: Figure 35-1, inferred: true}
+    Environment: {display: Environment, category: Architecture description, section: Figure 35-1, inferred: true}
+    Rationale: {display: Rationale, category: Architecture description, section: Figure 35-1, inferred: true}
+relationships:
+  note: The relationship table of 34.7 lists 121 relationships with source, target, name and extension module; it states no multiplicity and no role names. `listed_in_reverse` names the rows that run the other way between the same pair, which the standard lists as separate rows. Rows outside the table follow the same shape with their source marked.
+  multiplicity: 'not-stated-by-the-standard for table rows; Figure 35-1 rows carry the multiplicity read from the figure. Keys follow the other language files: targets_per_source is how many targets one source may link to.'
+  allowed_rule: 'See constraint TOGAF-REL-001: the table is read as the list of possible relationships, outside it is a warning.'
+  list:
+  - name: ActorGeneratesEvent
+    source: Actor
+    target: Event
+    label: Generates
+    module: process-modeling
+    module_as_printed: Process
+    section: '34.7'
+    listed_in_reverse: [Is resolved by, Is generated by]
+  - name: ActorResolvesEvent
+    source: Actor
+    target: Event
+    label: Resolves
+    module: process-modeling
+    module_as_printed: Process
+    section: '34.7'
+    listed_in_reverse: [Is resolved by, Is generated by]
+  - name: ActorInteractsWithFunction
+    source: Actor
+    target: Function
+    label: Interacts with
+    module: core
+    module_as_printed: Core
+    section: '34.7'
+    listed_in_reverse: [Supports, Is performed by]
+  - name: ActorPerformsFunction
+    source: Actor
+    target: Function
+    label: Performs
+    module: core
+    module_as_printed: Core
+    section: '34.7'
+    listed_in_reverse: [Supports, Is performed by]
+  - name: ActorOperatesInLocation
+    source: Actor
+    target: Location
+    label: Operates in
+    module: infrastructure-consolidation
+    module_as_printed: Infrastructure Consolidation
+    section: '34.7'
+    listed_in_reverse: [Contains]
+  - name: ActorBelongsToOrganizationUnit
+    source: Actor
+    target: OrganizationUnit
+    label: Belongs to
+    module: core
+    module_as_printed: Core
+    section: '34.7'
+    listed_in_reverse: [Contains]
+  - name: ActorParticipatesInProcess
+    source: Actor
+    target: Process
+    label: Participates in
+    module: core
+    module_as_printed: Core
+    section: '34.7'
+    listed_in_reverse: [Involves]
+  - name: ActorPerformsTaskInRole
+    source: Actor
+    target: Role
+    label: Performs task in
+    module: core
+    module_as_printed: Core
+    section: '34.7'
+    listed_in_reverse: [Is performed by]
+  - name: ActorConsumesService
+    source: Actor
+    target: Service
+    label: Consumes
+    module: core
+    module_as_printed: Core
+    section: '34.7'
+    listed_in_reverse: [Is provided to]
+  - {name: ActorDecomposesActor, source: Actor, target: Actor, label: Decomposes, module: core, module_as_printed: Core, section: '34.7'}
+  - {name: ActorSuppliesConsumesDataEntity, source: Actor, target: DataEntity, label: Supplies/Consumes, module: core, module_as_printed: Core, section: '34.7'}
+  - name: CapabilityIsDeliveredByWorkPackage
+    source: Capability
+    target: WorkPackage
+    label: Is delivered by
+    module: core
+    module_as_printed: Core
+    section: '34.7'
+    listed_in_reverse: [Delivers]
+  - name: ContractGovernsAndMeasuresService
+    source: Contract
+    target: Service
+    label: Governs and Measures
+    module: governance
+    module_as_printed: Governance
+    section: '34.7'
+    listed_in_reverse: [Is governed and measured by]
+  - name: ContractMeetsServiceQuality
+    source: Contract
+    target: ServiceQuality
+    label: Meets
+    module: governance
+    module_as_printed: Governance
+    section: '34.7'
+    listed_in_reverse: [Applies to]
+  - name: ControlEnsuresCorrectOperationOfProcess
+    source: Control
+    target: Process
+    label: Ensures correct operation of
+    module: process-modeling
+    module_as_printed: Process
+    section: '34.7'
+    listed_in_reverse: [Is guided by]
+  - name: DataEntityIsProcessedByLogicalApplicationComponent
+    source: DataEntity
+    target: LogicalApplicationComponent
+    label: Is processed by
+    module: core
+    module_as_printed: Core
+    section: '34.7'
+    listed_in_reverse: [Operates on]
+  - name: DataEntityResidesWithinLogicalDataComponent
+    source: DataEntity
+    target: LogicalDataComponent
+    label: Resides within
+    module: data
+    module_as_printed: Data
+    section: '34.7'
+    listed_in_reverse: [Encapsulates]
+  - name: DataEntityIsAccessedAndUpdatedThroughService
+    source: DataEntity
+    target: Service
+    label: Is accessed and updated through
+    module: core
+    module_as_printed: Core
+    section: '34.7'
+    listed_in_reverse: [Provides, Consumes]
+  - {name: DataEntityDecomposesDataEntity, source: DataEntity, target: DataEntity, label: Decomposes, module: core, module_as_printed: Core, section: '34.7'}
+  - {name: DataEntityRelatesToDataEntity, source: DataEntity, target: DataEntity, label: Relates to, module: core, module_as_printed: Core, section: '34.7'}
+  - name: DriverCreatesGoal
+    source: Driver
+    target: Goal
+    label: Creates
+    module: motivation
+    module_as_printed: Motivation
+    section: '34.7'
+    listed_in_reverse: [Addresses]
+  - name: DriverMotivatesOrganizationUnit
+    source: Driver
+    target: OrganizationUnit
+    label: Motivates
+    module: motivation
+    module_as_printed: Motivation
+    section: '34.7'
+    listed_in_reverse: [Is motivated by]
+  - {name: DriverDecomposesDriver, source: Driver, target: Driver, label: Decomposes, module: motivation, module_as_printed: Motivation, section: '34.7'}
+  - name: EventIsResolvedByActor
+    source: Event
+    target: Actor
+    label: Is resolved by
+    module: process-modeling
+    module_as_printed: Process
+    section: '34.7'
+    listed_in_reverse: [Generates, Resolves]
+  - name: EventIsGeneratedByActor
+    source: Event
+    target: Actor
+    label: Is generated by
+    module: process-modeling
+    module_as_printed: Process
+    section: '34.7'
+    listed_in_reverse: [Generates, Resolves]
+  - name: EventIsResolvedByProcess
+    source: Event
+    target: Process
+    label: Is resolved by
+    module: process-modeling
+    module_as_printed: Process
+    section: '34.7'
+    listed_in_reverse: [Generates, Resolves]
+  - name: EventIsGeneratedByProcess
+    source: Event
+    target: Process
+    label: Is generated by
+    module: process-modeling
+    module_as_printed: Process
+    section: '34.7'
+    listed_in_reverse: [Generates, Resolves]
+  - name: EventIsResolvedByService
+    source: Event
+    target: Service
+    label: Is resolved by
+    module: process-modeling
+    module_as_printed: Process
+    section: '34.7'
+    listed_in_reverse: [Resolves]
+  - name: FunctionSupportsActor
+    source: Function
+    target: Actor
+    label: Supports
+    module: core
+    module_as_printed: Core
+    section: '34.7'
+    listed_in_reverse: [Interacts with, Performs]
+  - name: FunctionIsPerformedByActor
+    source: Function
+    target: Actor
+    label: Is performed by
+    module: core
+    module_as_printed: Core
+    section: '34.7'
+    listed_in_reverse: [Interacts with, Performs]
+  - name: FunctionIsOwnedByOrganizationUnit
+    source: Function
+    target: OrganizationUnit
+    label: Is owned by
+    module: core
+    module_as_printed: Core
+    section: '34.7'
+    listed_in_reverse: [Owns]
+  - name: FunctionSupportsProcess
+    source: Function
+    target: Process
+    label: Supports
+    module: core
+    module_as_printed: Core
+    section: '34.7'
+    listed_in_reverse: [Orchestrates, Decomposes]
+  - name: FunctionIsRealizedByProcess
+    source: Function
+    target: Process
+    label: Is realized by
+    module: core
+    module_as_printed: Core
+    section: '34.7'
+    listed_in_reverse: [Orchestrates, Decomposes]
+  - name: FunctionCanBeAccessedByRole
+    source: Function
+    target: Role
+    label: Can be accessed by
+    module: core
+    module_as_printed: Core
+    section: '34.7'
+    listed_in_reverse: [Accesses]
+  - name: FunctionIsBoundedByService
+    source: Function
+    target: Service
+    label: Is bounded by
+    module: core
+    module_as_printed: Core
+    section: '34.7'
+    listed_in_reverse: [Provides governed interface to access]
+  - {name: FunctionDecomposesFunction, source: Function, target: Function, label: Decomposes, module: core, module_as_printed: Core, section: '34.7'}
+  - {name: FunctionCommunicatesWithFunction, source: Function, target: Function, label: Communicates with, module: core, module_as_printed: Core, section: '34.7'}
+  - name: GoalAddressesDriver
+    source: Goal
+    target: Driver
+    label: Addresses
+    module: motivation
+    module_as_printed: Motivation
+    section: '34.7'
+    listed_in_reverse: [Creates]
+  - name: GoalIsRealizedThroughObjective
+    source: Goal
+    target: Objective
+    label: Is realized through
+    module: motivation
+    module_as_printed: Motivation
+    section: '34.7'
+    listed_in_reverse: [Realizes]
+  - {name: GoalDecomposesGoal, source: Goal, target: Goal, label: Decomposes, module: motivation, module_as_printed: Motivation, section: '34.7'}
+  - name: LocationContainsActor
+    source: Location
+    target: Actor
+    label: Contains
+    module: infrastructure-consolidation
+    module_as_printed: Infrastructure Consolidation
+    section: '34.7'
+    listed_in_reverse: [Operates in]
+  - name: LocationContainsOrganizationUnit
+    source: Location
+    target: OrganizationUnit
+    label: Contains
+    module: infrastructure-consolidation
+    module_as_printed: Infrastructure Consolidation
+    section: '34.7'
+    listed_in_reverse: [Operates in]
+  - name: LocationContainsPhysicalApplicationComponent
+    source: Location
+    target: PhysicalApplicationComponent
+    label: Contains
+    module: infrastructure-consolidation
+    module_as_printed: Infrastructure Consolidation
+    section: '34.7'
+    listed_in_reverse: [Is hosted in]
+  - name: LocationContainsPhysicalDataComponent
+    source: Location
+    target: PhysicalDataComponent
+    label: Contains
+    module: infrastructure-consolidation
+    module_as_printed: Infrastructure Consolidation
+    section: '34.7'
+    listed_in_reverse: [Is hosted in]
+  - name: LocationContainsPhysicalTechnologyComponent
+    source: Location
+    target: PhysicalTechnologyComponent
+    label: Contains
+    module: infrastructure-consolidation
+    module_as_printed: Infrastructure Consolidation
+    section: '34.7'
+    listed_in_reverse: [Is hosted in]
+  - {name: LocationDecomposesLocation, source: Location, target: Location, label: Decomposes, module: infrastructure-consolidation, module_as_printed: Infrastructure Consolidation, section: '34.7'}
+  - name: LogicalApplicationComponentOperatesOnDataEntity
+    source: LogicalApplicationComponent
+    target: DataEntity
+    label: Operates on
+    module: core
+    module_as_printed: Core
+    section: '34.7'
+    listed_in_reverse: [Is processed by]
+  - name: LogicalApplicationComponentIsExtendedByPhysicalApplicationComponent
+    source: LogicalApplicationComponent
+    target: PhysicalApplicationComponent
+    label: Is extended by
+    module: infrastructure-consolidation
+    module_as_printed: Infrastructure Consolidation
+    section: '34.7'
+    listed_in_reverse: [Extends]
+  - name: LogicalApplicationComponentImplementsService
+    source: LogicalApplicationComponent
+    target: Service
+    label: Implements
+    module: core
+    module_as_printed: Core
+    section: '34.7'
+    listed_in_reverse: [Is realized through]
+  - {name: LogicalApplicationComponentDecomposesLogicalApplicationComponent, source: LogicalApplicationComponent, target: LogicalApplicationComponent, label: Decomposes, module: core, module_as_printed: Core, section: '34.7'}
+  - {name: LogicalApplicationComponentCommunicatesWithLogicalApplicationComponent, source: LogicalApplicationComponent, target: LogicalApplicationComponent, label: Communicates with, module: core, module_as_printed: Core, section: '34.7'}
+  - name: LogicalDataComponentEncapsulatesDataEntity
+    source: LogicalDataComponent
+    target: DataEntity
+    label: Encapsulates
+    module: data
+    module_as_printed: Data
+    section: '34.7'
+    listed_in_reverse: [Resides within]
+  - name: LogicalDataComponentIsExtendedByPhysicalDataComponent
+    source: LogicalDataComponent
+    target: PhysicalDataComponent
+    label: Is extended by
+    module: data
+    module_as_printed: Data
+    section: '34.7'
+    listed_in_reverse: [Extends]
+  - name: LogicalTechnologyComponentIsExtendedByPhysicalTechnologyComponent
+    source: LogicalTechnologyComponent
+    target: PhysicalTechnologyComponent
+    label: Is extended by
+    module: infrastructure-consolidation
+    module_as_printed: Infrastructure Consolidation
+    section: '34.7'
+    listed_in_reverse: [Extends]
+  - name: LogicalTechnologyComponentSuppliesPlatformService
+    source: LogicalTechnologyComponent
+    target: PlatformService
+    label: Supplies
+    module: core
+    module_as_printed: Core
+    section: '34.7'
+    listed_in_reverse: [Is supplied by]
+  - name: LogicalTechnologyComponentProvidesPlatformForService
+    source: LogicalTechnologyComponent
+    target: Service
+    label: Provides platform for
+    module: core
+    module_as_printed: Core
+    section: '34.7'
+    listed_in_reverse: [Is implemented on]
+  - {name: LogicalTechnologyComponentDecomposesLogicalTechnologyComponent, source: LogicalTechnologyComponent, target: LogicalTechnologyComponent, label: Decomposes, module: core, module_as_printed: Core, section: '34.7'}
+  - {name: LogicalTechnologyComponentIsDependentOnLogicalTechnologyComponent, source: LogicalTechnologyComponent, target: LogicalTechnologyComponent, label: Is dependent on, module: core, module_as_printed: Core, section: '34.7'}
+  - name: MeasureSetsPerformanceCriteriaForObjective
+    source: Measure
+    target: Objective
+    label: Sets performance criteria for
+    module: governance
+    module_as_printed: Governance
+    section: '34.7'
+    listed_in_reverse: [Is tracked against]
+  - name: MeasureSetsPerformanceCriteriaForService
+    source: Measure
+    target: Service
+    label: Sets performance criteria for
+    module: governance
+    module_as_printed: Governance
+    section: '34.7'
+    listed_in_reverse: [Is tracked against]
+  - {name: MeasureDecomposesMeasure, source: Measure, target: Measure, label: Decomposes, module: governance, module_as_printed: Governance, section: '34.7'}
+  - name: ObjectiveRealizesGoal
+    source: Objective
+    target: Goal
+    label: Realizes
+    module: motivation
+    module_as_printed: Motivation
+    section: '34.7'
+    listed_in_reverse: [Is realized through]
+  - name: ObjectiveIsTrackedAgainstMeasure
+    source: Objective
+    target: Measure
+    label: Is tracked against
+    module: governance
+    module_as_printed: Governance
+    section: '34.7'
+    listed_in_reverse: [Sets performance criteria for]
+  - {name: ObjectiveDecomposesObjective, source: Objective, target: Objective, label: Decomposes, module: motivation, module_as_printed: Motivation, section: '34.7'}
+  - name: OrganizationUnitContainsActor
+    source: OrganizationUnit
+    target: Actor
+    label: Contains
+    module: core
+    module_as_printed: Core
+    section: '34.7'
+    listed_in_reverse: [Belongs to]
+  - name: OrganizationUnitIsMotivatedByDriver
+    source: OrganizationUnit
+    target: Driver
+    label: Is motivated by
+    module: core
+    module_as_printed: Core
+    section: '34.7'
+    listed_in_reverse: [Motivates]
+  - name: OrganizationUnitOwnsFunction
+    source: OrganizationUnit
+    target: Function
+    label: Owns
+    module: core
+    module_as_printed: Core
+    section: '34.7'
+    listed_in_reverse: [Is owned by]
+  - name: OrganizationUnitOperatesInLocation
+    source: OrganizationUnit
+    target: Location
+    label: Operates in
+    module: core
+    module_as_printed: Core
+    section: '34.7'
+    listed_in_reverse: [Contains]
+  - name: OrganizationUnitProducesProduct
+    source: OrganizationUnit
+    target: Product
+    label: Produces
+    module: core
+    module_as_printed: Core
+    section: '34.7'
+    listed_in_reverse: [Is produced by]
+  - name: OrganizationUnitOwnsAndGovernsService
+    source: OrganizationUnit
+    target: Service
+    label: Owns and Governs
+    module: core
+    module_as_printed: Core
+    section: '34.7'
+    listed_in_reverse: [Is owned and governed by]
+  - {name: OrganizationUnitDecomposesOrganizationUnit, source: OrganizationUnit, target: OrganizationUnit, label: Decomposes, module: core, module_as_printed: Core, section: '34.7'}
+  - name: PhysicalApplicationComponentIsHostedInLocation
+    source: PhysicalApplicationComponent
+    target: Location
+    label: Is hosted in
+    module: infrastructure-consolidation
+    module_as_printed: Infrastructure Consolidation
+    section: '34.7'
+    listed_in_reverse: [Contains]
+  - name: PhysicalApplicationComponentExtendsLogicalApplicationComponent
+    source: PhysicalApplicationComponent
+    target: LogicalApplicationComponent
+    label: Extends
+    module: infrastructure-consolidation
+    module_as_printed: Infrastructure Consolidation
+    section: '34.7'
+    listed_in_reverse: [Is extended by]
+  - name: PhysicalApplicationComponentEncapsulatesPhysicalDataComponent
+    source: PhysicalApplicationComponent
+    target: PhysicalDataComponent
+    label: Encapsulates
+    module: data
+    module_as_printed: Data Modeling
+    section: '34.7'
+    listed_in_reverse: [Encapsulates]
+  - name: PhysicalApplicationComponentIsRealizedByPhysicalTechnologyComponent
+    source: PhysicalApplicationComponent
+    target: PhysicalTechnologyComponent
+    label: Is realized by
+    module: core
+    module_as_printed: Core
+    section: '34.7'
+    listed_in_reverse: [Realizes]
+  - {name: PhysicalApplicationComponentDecomposesPhysicalApplicationComponent, source: PhysicalApplicationComponent, target: PhysicalApplicationComponent, label: Decomposes, module: core, module_as_printed: Core, section: '34.7'}
+  - {name: PhysicalApplicationComponentCommunicatesWithPhysicalApplicationComponent, source: PhysicalApplicationComponent, target: PhysicalApplicationComponent, label: Communicates with, module: core, module_as_printed: Core, section: '34.7'}
+  - name: PhysicalDataComponentIsHostedInLocation
+    source: PhysicalDataComponent
+    target: Location
+    label: Is hosted in
+    module: infrastructure-consolidation
+    module_as_printed: Infrastructure Consolidation
+    section: '34.7'
+    listed_in_reverse: [Contains]
+  - name: PhysicalDataComponentExtendsLogicalDataComponent
+    source: PhysicalDataComponent
+    target: LogicalDataComponent
+    label: Extends
+    module: data
+    module_as_printed: Data
+    section: '34.7'
+    listed_in_reverse: [Is extended by]
+  - {name: PhysicalDataComponentDecomposesPhysicalDataComponent, source: PhysicalDataComponent, target: PhysicalDataComponent, label: Decomposes, module: core, module_as_printed: Core, section: '34.7'}
+  - name: PhysicalDataComponentEncapsulatesPhysicalApplicationComponent
+    source: PhysicalDataComponent
+    target: PhysicalApplicationComponent
+    label: Encapsulates
+    module: data
+    module_as_printed: Data Modeling
+    section: '34.7'
+    listed_in_reverse: [Encapsulates]
+  - name: PhysicalTechnologyComponentIsHostedInLocation
+    source: PhysicalTechnologyComponent
+    target: Location
+    label: Is hosted in
+    module: infrastructure-consolidation
+    module_as_printed: Infrastructure Consolidation
+    section: '34.7'
+    listed_in_reverse: [Contains]
+  - name: PhysicalTechnologyComponentRealizesPhysicalApplicationComponent
+    source: PhysicalTechnologyComponent
+    target: PhysicalApplicationComponent
+    label: Realizes
+    module: core
+    module_as_printed: Core
+    section: '34.7'
+    listed_in_reverse: [Is realized by]
+  - name: PhysicalTechnologyComponentExtendsLogicalTechnologyComponent
+    source: PhysicalTechnologyComponent
+    target: LogicalTechnologyComponent
+    label: Extends
+    module: infrastructure-consolidation
+    module_as_printed: Infrastructure Consolidation
+    section: '34.7'
+    listed_in_reverse: [Is extended by]
+  - {name: PhysicalTechnologyComponentDecomposesPhysicalTechnologyComponent, source: PhysicalTechnologyComponent, target: PhysicalTechnologyComponent, label: Decomposes, module: core, module_as_printed: Core, section: '34.7'}
+  - {name: PhysicalTechnologyComponentIsDependentOnPhysicalTechnologyComponent, source: PhysicalTechnologyComponent, target: PhysicalTechnologyComponent, label: Is dependent on, module: core, module_as_printed: Core, section: '34.7'}
+  - name: PlatformServiceIsSuppliedByLogicalTechnologyComponent
+    source: PlatformService
+    target: LogicalTechnologyComponent
+    label: Is supplied by
+    module: core
+    module_as_printed: Core
+    section: '34.7'
+    listed_in_reverse: [Supplies]
+  - name: ProcessInvolvesActor
+    source: Process
+    target: Actor
+    label: Involves
+    module: core
+    module_as_printed: Core
+    section: '34.7'
+    listed_in_reverse: [Participates in]
+  - name: ProcessIsGuidedByControl
+    source: Process
+    target: Control
+    label: Is guided by
+    module: process-modeling
+    module_as_printed: Process
+    section: '34.7'
+    listed_in_reverse: [Ensures correct operation of]
+  - name: ProcessGeneratesEvent
+    source: Process
+    target: Event
+    label: Generates
+    module: process-modeling
+    module_as_printed: Process
+    section: '34.7'
+    listed_in_reverse: [Is resolved by, Is generated by]
+  - name: ProcessResolvesEvent
+    source: Process
+    target: Event
+    label: Resolves
+    module: process-modeling
+    module_as_printed: Process
+    section: '34.7'
+    listed_in_reverse: [Is resolved by, Is generated by]
+  - name: ProcessOrchestratesFunction
+    source: Process
+    target: Function
+    label: Orchestrates
+    module: core
+    module_as_printed: Core
+    section: '34.7'
+    listed_in_reverse: [Supports, Is realized by]
+  - name: ProcessDecomposesFunction
+    source: Process
+    target: Function
+    label: Decomposes
+    module: core
+    module_as_printed: Core
+    section: '34.7'
+    listed_in_reverse: [Supports, Is realized by]
+  - name: ProcessProducesProduct
+    source: Process
+    target: Product
+    label: Produces
+    module: process-modeling
+    module_as_printed: Process
+    section: '34.7'
+    listed_in_reverse: [Is produced by]
+  - name: ProcessOrchestratesService
+    source: Process
+    target: Service
+    label: Orchestrates
+    module: core
+    module_as_printed: Core
+    section: '34.7'
+    listed_in_reverse: [Supports, Is realized by]
+  - name: ProcessDecomposesService
+    source: Process
+    target: Service
+    label: Decomposes
+    module: core
+    module_as_printed: Core
+    section: '34.7'
+    listed_in_reverse: [Supports, Is realized by]
+  - {name: ProcessDecomposesProcess, source: Process, target: Process, label: Decomposes, module: core, module_as_printed: Core, section: '34.7'}
+  - {name: ProcessPrecedesFollowsProcess, source: Process, target: Process, label: Precedes/Follows, module: core, module_as_printed: Core, section: '34.7'}
+  - name: ProductIsProducedByOrganizationUnit
+    source: Product
+    target: OrganizationUnit
+    label: Is produced by
+    module: process-modeling
+    module_as_printed: Process
+    section: '34.7'
+    listed_in_reverse: [Produces]
+  - name: ProductIsProducedByProcess
+    source: Product
+    target: Process
+    label: Is produced by
+    module: process-modeling
+    module_as_printed: Process
+    section: '34.7'
+    listed_in_reverse: [Produces]
+  - name: RoleIsPerformedByActor
+    source: Role
+    target: Actor
+    label: Is performed by
+    module: core
+    module_as_printed: Core
+    section: '34.7'
+    listed_in_reverse: [Performs task in]
+  - name: RoleAccessesFunction
+    source: Role
+    target: Function
+    label: Accesses
+    module: core
+    module_as_printed: Core
+    section: '34.7'
+    listed_in_reverse: [Can be accessed by]
+  - {name: RoleDecomposesRole, source: Role, target: Role, label: Decomposes, module: core, module_as_printed: Core, section: '34.7'}
+  - name: ServiceIsProvidedToActor
+    source: Service
+    target: Actor
+    label: Is provided to
+    module: core
+    module_as_printed: Core
+    section: '34.7'
+    listed_in_reverse: [Consumes]
+  - name: ServiceIsGovernedAndMeasuredByContract
+    source: Service
+    target: Contract
+    label: Is governed and measured by
+    module: governance
+    module_as_printed: Governance
+    section: '34.7'
+    listed_in_reverse: [Governs and Measures]
+  - name: ServiceProvidesDataEntity
+    source: Service
+    target: DataEntity
+    label: Provides
+    module: core
+    module_as_printed: Core
+    section: '34.7'
+    listed_in_reverse: [Is accessed and updated through]
+  - name: ServiceConsumesDataEntity
+    source: Service
+    target: DataEntity
+    label: Consumes
+    module: core
+    module_as_printed: Core
+    section: '34.7'
+    listed_in_reverse: [Is accessed and updated through]
+  - name: ServiceResolvesEvent
+    source: Service
+    target: Event
+    label: Resolves
+    module: process-modeling
+    module_as_printed: Process
+    section: '34.7'
+    listed_in_reverse: [Is resolved by]
+  - name: ServiceProvidesGovernedInterfaceToAccessFunction
+    source: Service
+    target: Function
+    label: Provides governed interface to access
+    module: core
+    module_as_printed: Core
+    section: '34.7'
+    listed_in_reverse: [Is bounded by]
+  - name: ServiceIsRealizedThroughLogicalApplicationComponent
+    source: Service
+    target: LogicalApplicationComponent
+    label: Is realized through
+    module: core
+    module_as_printed: Core
+    section: '34.7'
+    listed_in_reverse: [Implements]
+  - name: ServiceIsImplementedOnLogicalTechnologyComponent
+    source: Service
+    target: LogicalTechnologyComponent
+    label: Is implemented on
+    module: core
+    module_as_printed: Core
+    section: '34.7'
+    listed_in_reverse: [Provides platform for]
+  - name: ServiceIsTrackedAgainstMeasure
+    source: Service
+    target: Measure
+    label: Is tracked against
+    module: governance
+    module_as_printed: Governance
+    section: '34.7'
+    listed_in_reverse: [Sets performance criteria for]
+  - name: ServiceIsOwnedAndGovernedByOrganizationUnit
+    source: Service
+    target: OrganizationUnit
+    label: Is owned and governed by
+    module: core
+    module_as_printed: Core
+    section: '34.7'
+    listed_in_reverse: [Owns and Governs]
+  - name: ServiceSupportsProcess
+    source: Service
+    target: Process
+    label: Supports
+    module: core
+    module_as_printed: Core
+    section: '34.7'
+    listed_in_reverse: [Orchestrates, Decomposes]
+  - name: ServiceIsRealizedByProcess
+    source: Service
+    target: Process
+    label: Is realized by
+    module: core
+    module_as_printed: Core
+    section: '34.7'
+    listed_in_reverse: [Orchestrates, Decomposes]
+  - name: ServiceMeetsServiceQuality
+    source: Service
+    target: ServiceQuality
+    label: Meets
+    module: governance
+    module_as_printed: Governance
+    section: '34.7'
+    listed_in_reverse: [Applies to]
+  - {name: ServiceConsumesService, source: Service, target: Service, label: Consumes, module: core, module_as_printed: Core, section: '34.7'}
+  - {name: ServiceDecomposesService, source: Service, target: Service, label: Decomposes, module: core, module_as_printed: Core, section: '34.7'}
+  - name: ServiceQualityAppliesToContract
+    source: ServiceQuality
+    target: Contract
+    label: Applies to
+    module: governance
+    module_as_printed: Governance
+    section: '34.7'
+    listed_in_reverse: [Meets]
+  - name: ServiceQualityAppliesToService
+    source: ServiceQuality
+    target: Service
+    label: Applies to
+    module: governance
+    module_as_printed: Governance
+    section: '34.7'
+    listed_in_reverse: [Meets]
+  - name: WorkPackageDeliversCapability
+    source: WorkPackage
+    target: Capability
+    label: Delivers
+    module: core
+    module_as_printed: Core
+    section: '34.7'
+    listed_in_reverse: [Is delivered by]
+  - {name: InformationSystemServiceAutomatesBusinessService, source: InformationSystemService, target: BusinessService, label: Automates some or all of, module: services, section: Figure 34-8 label; 34.4.2 ("a new relationship is created linking an IS service to a business service"); 34.5 Information System Service entry}
+  - name: SystemFulfillsMission
+    source: System
+    target: Mission
+    label: Fulfills
+    section: Figure 35-1
+    multiplicity: {targets_per_source: 1..*, sources_per_target: '*'}
+    multiplicity_basis: read from Figure 35-1 labels; the opposite end is not read as a bound
+  - {name: EnvironmentInfluencesSystem, source: Environment, target: System, label: Influences, section: Figure 35-1 (the figure also labels the reverse end Inhabits)}
+  - {name: SystemHasArchitecture, source: System, target: Architecture, label: Has an, section: Figure 35-1}
+  - name: ArchitectureIsDescribedByArchitectureDescription
+    source: Architecture
+    target: ArchitectureDescription
+    label: Described by
+    section: Figure 35-1
+    multiplicity: {targets_per_source: '1', sources_per_target: '*'}
+    multiplicity_basis: read from Figure 35-1 labels; the opposite end is not read as a bound
+  - name: SystemHasStakeholder
+    source: System
+    target: Stakeholder
+    label: Has
+    section: Figure 35-1
+    multiplicity: {targets_per_source: 1..*, sources_per_target: '*'}
+    multiplicity_basis: read from Figure 35-1 labels; the opposite end is not read as a bound
+  - name: StakeholderHasConcern
+    source: Stakeholder
+    target: Concern
+    label: Has
+    section: Figure 35-1 (the figure labels the concern end "Is important to 1..*")
+    multiplicity: {targets_per_source: 1..*, sources_per_target: '*'}
+    multiplicity_basis: read from Figure 35-1 labels; the opposite end is not read as a bound
+  - name: ArchitectureDescriptionIdentifiesStakeholder
+    source: ArchitectureDescription
+    target: Stakeholder
+    label: Identifies
+    section: Figure 35-1
+    multiplicity: {targets_per_source: 1..*, sources_per_target: '*'}
+    multiplicity_basis: read from Figure 35-1 labels; the opposite end is not read as a bound
+  - name: ArchitectureDescriptionIdentifiesConcern
+    source: ArchitectureDescription
+    target: Concern
+    label: Identifies
+    section: Figure 35-1
+    multiplicity: {targets_per_source: 1..*, sources_per_target: '*'}
+    multiplicity_basis: read from Figure 35-1 labels; the opposite end is not read as a bound
+  - name: ViewpointIsAddressedToStakeholder
+    source: Viewpoint
+    target: Stakeholder
+    label: Is addressed to
+    section: Figure 35-1
+    multiplicity: {targets_per_source: 1..*, sources_per_target: '*'}
+    multiplicity_basis: read from Figure 35-1 labels; the opposite end is not read as a bound
+  - name: ViewpointCoversConcern
+    source: Viewpoint
+    target: Concern
+    label: Used to cover
+    section: Figure 35-1
+    multiplicity: {targets_per_source: 1..*, sources_per_target: '*'}
+    multiplicity_basis: read from Figure 35-1 labels; the opposite end is not read as a bound
+  - name: ArchitectureDescriptionSelectsViewpoint
+    source: ArchitectureDescription
+    target: Viewpoint
+    label: Selects
+    section: Figure 35-1
+    multiplicity: {targets_per_source: 1..*, sources_per_target: '*'}
+    multiplicity_basis: read from Figure 35-1 labels; the opposite end is not read as a bound
+  - {name: ViewConformsToViewpoint, source: View, target: Viewpoint, label: Conforms to, section: Figure 35-1; 35.1 ("every view has an associated viewpoint")}
+  - name: ArchitectureDescriptionIsOrganizedByView
+    source: ArchitectureDescription
+    target: View
+    label: Organized by
+    section: Figure 35-1 (aggregation)
+    multiplicity: {targets_per_source: 1..*, sources_per_target: '*'}
+    multiplicity_basis: read from Figure 35-1 labels; the opposite end is not read as a bound
+  - name: ViewConsistsOfModel
+    source: View
+    target: Model
+    label: Consists of
+    section: Figure 35-1 (the figure labels the model end "Participates in 1..*")
+    multiplicity: {targets_per_source: 1..*, sources_per_target: '*'}
+    multiplicity_basis: read from Figure 35-1 labels; the opposite end is not read as a bound
+  - name: ArchitectureDescriptionAggregatesModel
+    source: ArchitectureDescription
+    target: Model
+    label: Aggregates
+    section: Figure 35-1 (aggregation)
+    multiplicity: {targets_per_source: 1..*, sources_per_target: '*'}
+    multiplicity_basis: read from Figure 35-1 labels; the opposite end is not read as a bound
+  - {name: ArchitectureDescriptionProvidesRationale, source: ArchitectureDescription, target: Rationale, label: Provides, section: Figure 35-1}
+  - name: ViewpointEstablishesMethodsForModel
+    source: Viewpoint
+    target: Model
+    label: Establishes methods for
+    section: Figure 35-1
+    multiplicity: {targets_per_source: 1..*, sources_per_target: '*'}
+    multiplicity_basis: read from Figure 35-1 labels; the opposite end is not read as a bound
+  - name: ViewpointHasSourceLibraryViewpoint
+    source: Viewpoint
+    target: LibraryViewpoint
+    label: Has source
+    section: Figure 35-1
+    multiplicity: {targets_per_source: 0..1, sources_per_target: '*'}
+    multiplicity_basis: read from Figure 35-1 labels; the opposite end is not read as a bound
+  - {name: DeliverableContainsArtifact, source: Deliverable, target: Artifact, label: Contains, section: 33.1; 36.2.3 (the Architecture Definition Document is the container for the core artifacts)}
+  - {name: ArtifactDescribesBuildingBlock, source: Artifact, target: BuildingBlock, label: Describes, section: '33.1 (Figure 33-1; text: an artifact describes aspects of building blocks)'}
+  - {name: ArchitectureBuildingBlockGuidesSolutionBuildingBlock, source: ArchitectureBuildingBlock, target: SolutionBuildingBlock, label: Directs and guides development of, section: 37.2.3.1}
+extension_modules:
+  source: 34.4 (text), Figure 34-7 (membership), Figure 35-3 (artifact membership). All optional; the grouping is a suggestion (34.2.1).
+  modules:
+    core: {name: Core, purpose: Minimum content for traceability across artifacts (34.2.1; Figures 34-6 and 34-7).}
+    governance:
+      name: Governance
+      section: 34.4.1
+      adds_entities: [Measure, ServiceQuality, Contract]
+      adds_diagram_types: [Contract/Measure Catalog, Enterprise Manageability Diagram]
+      purpose: 'Structured data on objectives and business services for operational governance: measures, service contracts, reusable service-quality profiles.'
+    services:
+      name: Services
+      section: 34.4.2
+      adds_entities: [InformationSystemService]
+      adds_diagram_types: [Business Use-Case Diagram, Organization Decomposition Diagram]
+      purpose: Information system services as a kind of business service, so business and technical views of services can differ.
+    process-modeling:
+      name: Process Modeling
+      section: 34.4.3
+      adds_entities: [Event, Control, Product]
+      adds_diagram_types: [Process/Event/Control/Product Catalog, Process Flow Diagram, Event Diagram]
+      purpose: Detailed process flow with events, controls and products.
+    data:
+      name: Data
+      section: 34.4.4
+      adds_entities: [LogicalDataComponent, PhysicalDataComponent]
+      adds_diagram_types: [Data Security Diagram, Data Migration Diagram, Data Lifecycle Diagram]
+      purpose: Logical and physical encapsulation of data entities into governable, deployable components.
+    infrastructure-consolidation:
+      name: Infrastructure Consolidation
+      section: 34.4.5
+      adds_entities: [Location, PhysicalApplicationComponent, LogicalTechnologyComponent]
+      adds_entities_note: Per Figure 34-7. The text of 34.4.5 names all four logical and physical application and technology components.
+      adds_diagram_types: [Location Catalog, Process/Application Realization Diagram, Software Engineering Diagram, Application Migration Diagram, Software Distribution Diagram, Processing Diagram, Networked Computing/Hardware Diagram, Communications Engineering Diagram]
+      purpose: Consolidating fragmented application and technology portfolios; location as an entity; logical and physical application and technology components.
+    motivation:
+      name: Motivation
+      section: 34.4.6
+      adds_entities: [Driver, Goal, Objective]
+      adds_diagram_types: [Driver/Goal/Objective Catalog, Goal/Objective/Service Diagram]
+      purpose: Drivers, goals and objectives that motivate the organization to provide business services.
+diagram_types:
+  note: TOGAF defines no notation. These are the 56 named catalogs, matrices and diagrams of 35.6 (14 catalogs, 10 matrices, 32 diagrams), keyed by the standard's own names. `admits` lists entity types; for catalogs and matrices the standard gives the list, for diagrams it is read from the prose and is not exhaustive. Module membership follows Figure 35-3.
+  types:
+    Principles Catalog:
+      kind: catalog
+      defined_by: 35.6.1 (Preliminary)
+      phase: Preliminary
+      module: core
+      admits: [Principle]
+      admits_basis: stated-list-in-35.6
+      shows: Business and architecture principles that describe what a good solution or architecture looks like; used to evaluate decision points and to govern change.
+      conventions: not-measured
+    Stakeholder Map Matrix: {kind: matrix, defined_by: 35.6.2 (A Architecture Vision), phase: A Architecture Vision, module: core, admits: none-stated, shows: 'Stakeholders of the engagement, their influence, and the key questions or concerns the architecture must address.', notes: 'The standard says no specific metamodel entities are used, because the phase is informal and the data sensitive.', conventions: not-measured}
+    Value Chain Diagram: {kind: diagram, defined_by: 35.6.2 (A Architecture Vision), phase: A Architecture Vision, module: core, admits: none-stated, shows: 'A high-level orientation of the enterprise and how it interacts with the outside world, aimed at presentational impact; a quick way to align stakeholders.', notes: No entities listed by the standard. Contrasted with the formal Functional Decomposition Diagram., conventions: not-measured}
+    Solution Concept Diagram: {kind: diagram, defined_by: 35.6.2 (A Architecture Vision), phase: A Architecture Vision, module: core, admits: none-stated, shows: 'A pencil-sketch of the solution envisaged at the start; may carry key objectives, requirements and constraints and flag areas for formal modeling.', notes: No entities listed by the standard., conventions: not-measured}
+    Organization/Actor Catalog:
+      kind: catalog
+      defined_by: 35.6.3 (B Business Architecture)
+      phase: B Business Architecture
+      module: core
+      admits: [OrganizationUnit, Actor, Location]
+      admits_basis: stated-list-in-35.6
+      shows: A definitive list of all participants that interact with IT, including users and owners of IT systems; used to test requirements for completeness.
+      notes: Location may be included if no independent Location Catalog is kept.
+      conventions: not-measured
+    Driver/Goal/Objective Catalog:
+      kind: catalog
+      defined_by: 35.6.3 (B Business Architecture)
+      phase: B Business Architecture
+      module: motivation
+      admits: [OrganizationUnit, Driver, Goal, Objective, Measure]
+      admits_basis: stated-list-in-35.6
+      shows: A cross-organization reference of how drivers are met through goals, objectives and, optionally, measures; used to find synergies.
+      notes: Measure is optional.
+      conventions: not-measured
+    Role Catalog:
+      kind: catalog
+      defined_by: 35.6.3 (B Business Architecture)
+      phase: B Business Architecture
+      module: core
+      admits: [Role]
+      admits_basis: stated-list-in-35.6
+      shows: All authorization levels or zones in the enterprise; input to security definition, change impact, job functions and training.
+      conventions: not-measured
+    Business Service/Function Catalog:
+      kind: catalog
+      defined_by: 35.6.3 (B Business Architecture)
+      phase: B Business Architecture
+      module: core
+      admits: [OrganizationUnit, Function, BusinessService, InformationSystemService]
+      admits_basis: stated-list-in-35.6
+      shows: A functional decomposition in filterable, queryable form; identifies capabilities and the level at which governance applies.
+      notes: Information System Service may optionally be included.
+      conventions: not-measured
+    Location Catalog:
+      kind: catalog
+      defined_by: 35.6.3 (B Business Architecture)
+      phase: B Business Architecture
+      module: infrastructure-consolidation
+      admits: [Location]
+      admits_basis: stated-list-in-35.6
+      shows: All locations where the enterprise operates or houses architecturally relevant assets such as data centers.
+      conventions: not-measured
+    Process/Event/Control/Product Catalog:
+      kind: catalog
+      defined_by: 35.6.3 (B Business Architecture)
+      phase: B Business Architecture
+      module: process-modeling
+      admits: [Process, Event, Control, Product]
+      admits_basis: stated-list-in-35.6
+      shows: A hierarchy of processes, the events that trigger them, their outputs and the controls on them; supports impact analysis across process chains.
+      conventions: not-measured
+    Contract/Measure Catalog:
+      kind: catalog
+      defined_by: 35.6.3 (B Business Architecture)
+      phase: B Business Architecture
+      module: governance
+      admits: [BusinessService, InformationSystemService, Contract, Measure]
+      admits_basis: stated-list-in-35.6
+      shows: 'All agreed service contracts and, optionally, their measures: the master list of agreed service levels.'
+      notes: Information System Service is optional; Measure is optional per the text ("and (optionally) the measures").
+      conventions: not-measured
+    Business Interaction Matrix:
+      kind: matrix
+      defined_by: 35.6.3 (B Business Architecture)
+      phase: B Business Architecture
+      module: core
+      admits: [OrganizationUnit, Function, BusinessService]
+      admits_basis: stated-list-in-35.6
+      axes: not stated
+      shows: Interactions between organizations and business functions; highlights value chain and dependencies.
+      notes: Text also names the relationships Business Service communicates with Business Service and Business Service is dependent on Business Service, which the relationship table does not list.
+      conventions: not-measured
+    Actor/Role Matrix:
+      kind: matrix
+      defined_by: 35.6.3 (B Business Architecture)
+      phase: B Business Architecture
+      module: core
+      admits: [Actor, Role]
+      admits_basis: stated-list-in-35.6
+      axes: Actor by Role
+      shows: Which actors perform which roles; supports security, skills and change-management definition.
+      notes: Relationship named Actor performs Role; the table calls it Actor performs task in Role.
+      conventions: not-measured
+    Business Footprint Diagram: {kind: diagram, defined_by: 35.6.3 (B Business Architecture), phase: B Business Architecture, module: core, admits: none-stated, shows: 'Links between business goals, organizational units, business functions and services, and maps functions to the technical components delivering them; traces a technical component to the goal it satisfies and shows service ownership. Senior-stakeholder communication.', notes: 'Entities are named in prose (goals, organizational units, functions, services, technical components), not as a list.', conventions: not-measured}
+    Business Service/Information Diagram:
+      kind: diagram
+      defined_by: 35.6.3 (B Business Architecture)
+      phase: B Business Architecture
+      module: core
+      admits: [BusinessService, DataEntity]
+      admits_basis: prose-in-35.6; not a closed list
+      shows: 'The information needed to support one or more business services: data consumed or produced, and possibly the source. A first view of information, elaborated in Phase C.'
+      conventions: not-measured
+    Functional Decomposition Diagram:
+      kind: diagram
+      defined_by: 35.6.3 (B Business Architecture)
+      phase: B Business Architecture
+      module: core
+      admits: [Function]
+      admits_basis: prose-in-35.6; not a closed list
+      shows: The capabilities of an organization relevant to the architecture, on one page; a base for heat-maps of scope and decisions.
+      conventions: not-measured
+    Product Lifecycle Diagram: {kind: diagram, defined_by: 35.6.3 (B Business Architecture), phase: B Business Architecture, module: core, admits: none-stated, shows: 'Lifecycles of key entities in the enterprise, for example products tracked from manufacture to disposal.', notes: No entities listed by the standard., conventions: not-measured}
+    Goal/Objective/Service Diagram:
+      kind: diagram
+      defined_by: 35.6.3 (B Business Architecture)
+      phase: B Business Architecture
+      module: motivation
+      admits: [Driver, Goal, Objective, Measure, BusinessService]
+      admits_basis: prose-in-35.6; not a closed list
+      shows: 'How a service contributes to the business vision or strategy: services tied to the drivers, goals, objectives and measures they support.'
+      conventions: not-measured
+    Business Use-Case Diagram:
+      kind: diagram
+      defined_by: 35.6.3 (B Business Architecture)
+      phase: B Business Architecture
+      module: services
+      admits: [Actor, Role, BusinessService, Process, Function]
+      admits_basis: prose-in-35.6; not a closed list
+      shows: Consumers and providers of business services, showing how and when a capability is used; helps validate the interaction of actors and roles with processes and functions.
+      notes: Entities are named in prose.
+      conventions: not-measured
+    Organization Decomposition Diagram:
+      kind: diagram
+      defined_by: 35.6.3 (B Business Architecture)
+      phase: B Business Architecture
+      module: services
+      admits: [Actor, Role, Location]
+      admits_basis: prose-in-35.6; not a closed list
+      shows: Links between actors, roles and locations in an organization tree; a chain of command of owners and decision-makers.
+      conventions: not-measured
+    Process Flow Diagram:
+      kind: diagram
+      defined_by: 35.6.3 (B Business Architecture)
+      phase: B Business Architecture
+      module: process-modeling
+      admits: [Process, Function, Event, Control, Product]
+      admits_basis: prose-in-35.6; not a closed list
+      shows: 'All models and mappings for the process entity: sequential flow of control between activities, with swim-lanes for ownership, plus the controls, events and products around them.'
+      notes: Entities are named in prose.
+      conventions: not-measured
+    Event Diagram:
+      kind: diagram
+      defined_by: 35.6.3 (B Business Architecture)
+      phase: B Business Architecture
+      module: process-modeling
+      admits: [Event, Process]
+      admits_basis: prose-in-35.6; not a closed list
+      shows: 'The relationship between events and processes: events as triggers, where they come from, what they trigger.'
+      conventions: not-measured
+    Data Entity/Data Component Catalog:
+      kind: catalog
+      defined_by: 35.6.4 (C Data Architecture)
+      phase: C Data Architecture
+      module: core
+      admits: [DataEntity, LogicalDataComponent, PhysicalDataComponent]
+      admits_basis: stated-list-in-35.6
+      shows: All data used across the enterprise, with the components where data entities are stored; supports data governance and re-use.
+      notes: Colored core in Figure 35-3 although two of its entities belong to the Data extension.
+      conventions: not-measured
+    Data Entity/Business Function Matrix:
+      kind: matrix
+      defined_by: 35.6.4 (C Data Architecture)
+      phase: C Data Architecture
+      module: core
+      admits: [DataEntity, Function, OrganizationUnit]
+      admits_basis: stated-list-in-35.6
+      axes: Data Entity by Function
+      shows: Which business functions use which data entities; assigns ownership of data to organizations and supports gap analysis and data governance.
+      notes: Text also names the relationship of a data entity to its owning Organization Unit, which the relationship table does not list.
+      conventions: not-measured
+    Application/Data Matrix:
+      kind: matrix
+      defined_by: 35.6.4 (C Data Architecture)
+      phase: C Data Architecture
+      module: core
+      admits: [LogicalApplicationComponent, DataEntity]
+      admits_basis: stated-list-in-35.6
+      axes: Logical Application Component by Data Entity
+      shows: Which applications create, read, update and delete which data entities; supports access assignment, duplication analysis and gap analysis.
+      conventions: not-measured
+    Conceptual Data Diagram:
+      kind: diagram
+      defined_by: 35.6.4 (C Data Architecture)
+      phase: C Data Architecture
+      module: core
+      admits: [DataEntity]
+      admits_basis: prose-in-35.6; not a closed list
+      shows: 'Relationships between critical data entities, for business stakeholders. Techniques: entity relationship models, simplified UML class diagrams.'
+      conventions: not-measured
+    Logical Data Diagram:
+      kind: diagram
+      defined_by: 35.6.4 (C Data Architecture)
+      phase: C Data Architecture
+      module: core
+      admits: [DataEntity]
+      admits_basis: prose-in-35.6; not a closed list
+      shows: Logical views of relationships between critical data entities, for application developers and database designers.
+      conventions: not-measured
+    Data Dissemination Diagram:
+      kind: diagram
+      defined_by: 35.6.4 (C Data Architecture)
+      phase: C Data Architecture
+      module: core
+      admits: [DataEntity, BusinessService, ApplicationComponent]
+      admits_basis: prose-in-35.6; not a closed list
+      shows: How logical data entities are physically realized by application components; supports sizing and shows replication and master-copy ownership.
+      notes: The text says application components; the metamodel splits them into logical and physical.
+      conventions: not-measured
+    Data Security Diagram:
+      kind: diagram
+      defined_by: 35.6.4 (C Data Architecture)
+      phase: C Data Architecture
+      module: data
+      admits: [Actor, DataEntity]
+      admits_basis: prose-in-35.6; not a closed list
+      shows: Which actor can access which enterprise data; shows compliance with privacy law and trust implications for partners. May be a matrix or a mapping.
+      conventions: not-measured
+    Data Migration Diagram: {kind: diagram, defined_by: 35.6.4 (C Data Architecture), phase: C Data Architecture, module: data, admits: none-stated, shows: 'The flow of data from source to target applications: extraction, profiling, transformation, mapping and loading; a tool for auditing and traceability.', notes: No entities listed by the standard; data and applications are implied., conventions: not-measured}
+    Data Lifecycle Diagram:
+      kind: diagram
+      defined_by: 35.6.4 (C Data Architecture)
+      phase: C Data Architecture
+      module: data
+      admits: [DataEntity]
+      admits_basis: prose-in-35.6; not a closed list
+      shows: Data entities across their lifecycle from conception to disposal, each state change with the event or rule that triggers it; decoupled from business process.
+      conventions: not-measured
+    Application Portfolio Catalog:
+      kind: catalog
+      defined_by: 35.6.5 (C Application Architecture)
+      phase: C Application Architecture
+      module: core
+      admits: [InformationSystemService, LogicalApplicationComponent, PhysicalApplicationComponent]
+      admits_basis: stated-list-in-35.6
+      shows: All applications in the enterprise; defines the horizontal scope of change and is the usual start of the Application Architecture phase.
+      notes: Colored core in Figure 35-3 although Information System Service and Physical Application Component belong to extensions.
+      conventions: not-measured
+    Interface Catalog:
+      kind: catalog
+      defined_by: 35.6.5 (C Application Architecture)
+      phase: C Application Architecture
+      module: core
+      admits: [LogicalApplicationComponent, PhysicalApplicationComponent]
+      admits_basis: stated-list-in-35.6
+      shows: The interfaces between applications (batch file, direct database connection, API or web service); scopes dependencies early. Uses the relationship Application communicates with application.
+      conventions: not-measured
+    Application/Organization Matrix:
+      kind: matrix
+      defined_by: 35.6.5 (C Application Architecture)
+      phase: C Application Architecture
+      module: core
+      admits: [LogicalApplicationComponent, PhysicalApplicationComponent, OrganizationUnit]
+      admits_basis: stated-list-in-35.6
+      axes: Logical or Physical Application Component by Organization Unit
+      shows: Which organization units use which applications.
+      notes: 'The text calls the relationship a composite to be validated: Organization Units own Services; Actors belonging to them use Services; Services are realized by application components.'
+      conventions: not-measured
+    Role/Application Matrix:
+      kind: matrix
+      defined_by: 35.6.5 (C Application Architecture)
+      phase: C Application Architecture
+      module: core
+      admits: [LogicalApplicationComponent, Role]
+      admits_basis: stated-list-in-35.6
+      axes: Logical Application Component by Role
+      shows: Which business roles use which applications; supports role-based computing and security checks.
+      notes: 'Composite to be validated: Role accesses Function; Function is bounded by Service; Services are realized by application components.'
+      conventions: not-measured
+    Application/Function Matrix:
+      kind: matrix
+      defined_by: 35.6.5 (C Application Architecture)
+      phase: C Application Architecture
+      module: core
+      admits: [LogicalApplicationComponent, Function]
+      admits_basis: stated-list-in-35.6
+      axes: Logical Application Component by Function
+      shows: Which applications support which business functions.
+      notes: 'Composite to be validated: Function is bounded by Service; Services are realized by application components.'
+      conventions: not-measured
+    Application Interaction Matrix:
+      kind: matrix
+      defined_by: 35.6.5 (C Application Architecture)
+      phase: C Application Architecture
+      module: core
+      admits: [Service, LogicalApplicationComponent, PhysicalApplicationComponent]
+      admits_basis: stated-list-in-35.6
+      axes: Application Service, Logical and Physical Application Component on both rows and columns
+      shows: 'Communication relationships between applications: the matrix equivalent of the Interface Catalog or Application Communication Diagram.'
+      notes: 'Relationships named: Application Service consumes Application Service; Logical (or Physical) Application Component communicates with Logical (or Physical) Application Component.'
+      conventions: not-measured
+    Application Communication Diagram:
+      kind: diagram
+      defined_by: 35.6.5 (C Application Architecture)
+      phase: C Application Architecture
+      module: core
+      admits: [ApplicationComponent, DataEntity, BusinessService]
+      admits_basis: prose-in-35.6; not a closed list
+      shows: 'Communication between applications: components and their interfaces, interfaces tied to data entities, applications tied to business services. Logical; shows intermediary technology only where relevant.'
+      conventions: not-measured
+    Application and User Location Diagram:
+      kind: diagram
+      defined_by: 35.6.5 (C Application Architecture)
+      phase: C Application Architecture
+      module: core
+      admits: [Location, ApplicationComponent]
+      admits_basis: prose-in-35.6; not a closed list
+      shows: 'The geographical distribution of applications: where users use them, where hosts run, where they are built and tested. Shows rationalization opportunities, license and support estimates.'
+      notes: Entities named in prose.
+      conventions: not-measured
+    Application Use-Case Diagram:
+      kind: diagram
+      defined_by: 35.6.5 (C Application Architecture)
+      phase: C Application Architecture
+      module: core
+      admits: [Actor, Role, Service]
+      admits_basis: prose-in-35.6; not a closed list
+      shows: Consumers and providers of application services, showing how and when functionality is used; can be re-used in systems design.
+      notes: Entities named in prose (actors, application services).
+      conventions: not-measured
+    Enterprise Manageability Diagram:
+      kind: diagram
+      defined_by: 35.6.5 (C Application Architecture)
+      phase: C Application Architecture
+      module: governance
+      admits: [ApplicationComponent, TechnologyComponent]
+      admits_basis: prose-in-35.6; not a closed list
+      shows: How applications interact with application and technology components that support operational management; a filter on the Application Communication Diagram for management software.
+      notes: Listed under the Governance extension in 34.4.1 and Figure 35-3, and under Application Architecture in 35.6.5.
+      conventions: not-measured
+    Process/Application Realization Diagram:
+      kind: diagram
+      defined_by: 35.6.5 (C Application Architecture)
+      phase: C Application Architecture
+      module: infrastructure-consolidation
+      admits: [Process, ApplicationComponent]
+      admits_basis: prose-in-35.6; not a closed list
+      shows: The sequence of events when several applications execute a business process, adding sequencing and batch/real-time hand-offs to the Application Communication Diagram.
+      notes: Entities named in prose.
+      conventions: not-measured
+    Software Engineering Diagram:
+      kind: diagram
+      defined_by: 35.6.5 (C Application Architecture)
+      phase: C Application Architecture
+      module: infrastructure-consolidation
+      admits: [ApplicationComponent]
+      admits_basis: prose-in-35.6; not a closed list
+      shows: Applications broken into packages, modules, services and operations from a development view; supports impact analysis for migration.
+      notes: Entities named in prose.
+      conventions: not-measured
+    Application Migration Diagram:
+      kind: diagram
+      defined_by: 35.6.5 (C Application Architecture)
+      phase: C Application Architecture
+      module: infrastructure-consolidation
+      admits: [ApplicationComponent]
+      admits_basis: prose-in-35.6; not a closed list
+      shows: 'Migration from baseline to target application components: which applications and interfaces map between stages, temporary applications and staging areas.'
+      notes: Entities named in prose.
+      conventions: not-measured
+    Software Distribution Diagram:
+      kind: diagram
+      defined_by: 35.6.5 (C Application Architecture)
+      phase: C Application Architecture
+      module: infrastructure-consolidation
+      admits: [PhysicalApplicationComponent, PhysicalTechnologyComponent, Location]
+      admits_basis: prose-in-35.6; not a closed list
+      shows: 'How application software is structured and distributed across the estate: physical applications on physical technology and the location of that technology.'
+      conventions: not-measured
+    Technology Standards Catalog:
+      kind: catalog
+      defined_by: 35.6.6 (D Technology Architecture)
+      phase: D Technology Architecture
+      module: core
+      admits: [PlatformService, LogicalTechnologyComponent, PhysicalTechnologyComponent]
+      admits_basis: stated-list-in-35.6
+      shows: 'The agreed technology standards: technologies, versions, lifecycles and refresh cycles; may carry location- or domain-specific standards.'
+      notes: The entity list the text gives sits under the Technology Portfolio Catalog wording and repeats it; see gaps.
+      conventions: not-measured
+    Technology Portfolio Catalog:
+      kind: catalog
+      defined_by: 35.6.6 (D Technology Architecture)
+      phase: D Technology Architecture
+      module: core
+      admits: [PlatformService, LogicalTechnologyComponent, PhysicalTechnologyComponent]
+      admits_basis: stated-list-in-35.6
+      shows: All technology in use (hardware, infrastructure software, application software), classified against the Technical Reference Model; the start of the Technology Architecture phase.
+      conventions: not-measured
+    Application/Technology Matrix:
+      kind: matrix
+      defined_by: 35.6.6 (D Technology Architecture)
+      phase: D Technology Architecture
+      module: core
+      admits: [LogicalApplicationComponent, PhysicalApplicationComponent, Service, LogicalTechnologyComponent, PhysicalTechnologyComponent]
+      admits_basis: stated-list-in-35.6
+      axes: Application Component by Technology Component (with Services)
+      shows: The mapping of applications to technology platform; aligned with platform decomposition diagrams. Uses the relationship Physical Technology Component realizes Physical Application Component.
+      conventions: not-measured
+    Environments and Locations Diagram:
+      kind: diagram
+      defined_by: 35.6.6 (D Technology Architecture)
+      phase: D Technology Architecture
+      module: core
+      admits: [Location, ApplicationComponent, TechnologyComponent]
+      admits_basis: prose-in-35.6; not a closed list
+      shows: Which locations host which applications and technologies, where users interact, and where the deployment environments (including non-production) exist.
+      notes: Entities named in prose.
+      conventions: not-measured
+    Platform Decomposition Diagram:
+      kind: diagram
+      defined_by: 35.6.6 (D Technology Architecture)
+      phase: D Technology Architecture
+      module: core
+      admits: [LogicalTechnologyComponent, PhysicalTechnologyComponent]
+      admits_basis: prose-in-35.6; not a closed list
+      shows: 'The technology platform supporting the information systems architecture: hardware and software, logical and physical technology components with attributes; may be mapped to application components.'
+      conventions: not-measured
+    Processing Diagram:
+      kind: diagram
+      defined_by: 35.6.6 (D Technology Architecture)
+      phase: D Technology Architecture
+      module: infrastructure-consolidation
+      admits: [ApplicationComponent, TechnologyComponent]
+      admits_basis: prose-in-35.6; not a closed list
+      shows: 'Deployable units of code and configuration and how they are deployed onto technology: grouping into deployment units, interactions between units, load and capacity.'
+      notes: Entities named in prose.
+      conventions: not-measured
+    Networked Computing/Hardware Diagram:
+      kind: diagram
+      defined_by: 35.6.6 (D Technology Architecture)
+      phase: D Technology Architecture
+      module: infrastructure-consolidation
+      admits: [LogicalApplicationComponent, TechnologyComponent]
+      admits_basis: prose-in-35.6; not a closed list
+      shows: The as-deployed logical view of logical application components in a distributed network environment, mapped to technology components such as servers.
+      notes: Entities named in prose.
+      conventions: not-measured
+    Communications Engineering Diagram: {kind: diagram, defined_by: 35.6.6 (D Technology Architecture), phase: D Technology Architecture, module: infrastructure-consolidation, admits: none-stated, shows: 'The means of communication between assets in the technology architecture: logical client-server connections, network boundaries and infrastructure; protocol and capacity, not content.', notes: No entities listed by the standard., conventions: not-measured}
+    Project Context Diagram:
+      kind: diagram
+      defined_by: 35.6.7 (E Opportunities and Solutions)
+      phase: E Opportunities and Solutions
+      module: core
+      admits: [WorkPackage]
+      admits_basis: prose-in-35.6; not a closed list
+      shows: The scope of a work package within the transformation roadmap, linked to the organizations, functions, services, processes, applications, data and technology it adds, removes or affects.
+      notes: Linked entity types named in prose.
+      conventions: not-measured
+    Benefits Diagram: {kind: diagram, defined_by: 35.6.7 (E Opportunities and Solutions), phase: E Opportunities and Solutions, module: core, admits: none-stated, shows: 'Opportunities in an architecture definition, classified by relative size, benefit and complexity; used to select, prioritize and sequence opportunities.', notes: No entities listed by the standard., conventions: not-measured}
+    Requirements Catalog:
+      kind: catalog
+      defined_by: 35.6.8 (Requirements Management)
+      phase: Requirements Management
+      module: core
+      admits: [Requirement, Assumption, Constraint, Gap]
+      admits_basis: stated-list-in-35.6
+      shows: Things the enterprise needs to do to meet its objectives; usually implemented through Phase E change initiatives; used as a quality check on fitness for purpose.
+      conventions: not-measured
+viewpoints:
+  note: Eight recommended views (35.7). The standard says they are a starting point, not a full viewpoint definition. Not a closed set.
+  views:
+    Business Architecture View: {status: recommended-guidance, section: 35.7.1, stakeholders: users of the system, concerns: 'People, process, function, business information, usability, performance.'}
+    Enterprise Security View: {status: recommended-guidance, section: 35.7.2, stakeholders: security engineers, concerns: 'That only permitted parties can reach the system and that it is protected from tampering; which information is held and processed, its value, threats and responses.'}
+    Software Engineering View: {status: recommended-guidance, section: 35.7.3, stakeholders: software engineers who will develop the system, concerns: 'Development approach, software modularity and re-use, portability, migration and interoperability.'}
+    System Engineering View: {status: recommended-guidance, section: 35.7.4, stakeholders: systems engineering personnel, concerns: 'Location, modifiability, re-usability and availability of all components; how software and hardware assemble into a working system.'}
+    Communications Engineering View: {status: recommended-guidance, section: 35.7.5, stakeholders: communications engineering personnel, concerns: 'Location, modifiability, re-usability and availability of communications and networking services; network and communications requirements.'}
+    Data Flow View: {status: recommended-guidance, section: 35.7.6, stakeholders: database engineers, concerns: 'Storage, retrieval, processing, archiving and security of data; providing data to the right people and applications at the right time.'}
+    Enterprise Manageability View: {status: recommended-guidance, section: 35.7.7, stakeholders: 'operations, administration and management personnel', concerns: 'How the system is managed as a whole; managing change and predicting preventive maintenance; availability under change; security, data, software, hardware and networking assets.'}
+    Acquirer View: {status: recommended-guidance, section: 35.7.8, stakeholders: personnel who acquire components, concerns: Which building blocks can be bought and what constraints or standards apply; purchasing decisions that fit the architecture.}
+conventions:
+- {subject: Conceptual Data Diagram, text: Techniques used include entity relationship models and simplified UML class diagrams., section: 35.6.4}
+- {subject: Process Flow Diagram, text: 'Swim-lane technique may show ownership and realization of process steps, for example the application that supports a step as a lane.', section: 35.6.3}
+- {subject: Functional Decomposition Diagram, text: 'Heat-maps may be layered over the diagram to show scope and decisions, for example capabilities delivered in different phases.', section: 35.6.3}
+- {subject: Data Security Diagram, text: The access of actors to data may be shown as a matrix between two object types or as a mapping., section: 35.6.4}
+- {subject: Business domains example viewpoint, text: 'Nested boxes: outer boxes are locations, inner boxes are business functions, and nesting means the functions are performed in those locations.', section: 35.1.1}
+- {subject: Platform Decomposition Diagram, text: 'May give product-level detail (versions, CPUs) or be an informal overview of the technical environment.', section: 35.6.6}
+conventions_note: The standard names techniques but defines no notation, shapes or styles. Nothing here is measured.
+deliverables:
+  section: '36'
+  note: Deliverables are the contractual work products of the ADM; they contain artifacts. Phase input and output relationships are in the 36.1 table, not reproduced.
+  list: [Architecture Building Blocks, Architecture Contract, Architecture Definition Document, Architecture Principles, Architecture Repository, Architecture Requirements Specification, Architecture Roadmap, Architecture Vision, 'Business Principles, Business Goals, and Business Drivers', Capability Assessment, Change Request, Communications Plan, Compliance Assessment, Implementation and Migration Plan, Implementation Governance Model, Organizational Model for Enterprise Architecture, Request for Architecture Work, Requirements Impact Assessment, Solution Building Blocks, Statement of Architecture Work, Tailored Architecture Framework]
+constraints:
+- {id: TOGAF-REL-001, statement: 'A relationship between two entities should be one the content metamodel lists for that source entity, target entity and relationship name. The list is the table in 34.7. The standard presents the metamodel as the possible relationships and invites tailoring, so a link outside the table is a warning, not an error.', strength: should, section: 33.2; 34.2.1; 34.7, checkable: static}
+- {id: TOGAF-REL-002, statement: A relationship the table assigns to an extension module is available only when that module is part of the engagement. Relationships labeled Core are always available., strength: should, section: 34.4; 34.7, applies_when: the engagement has chosen its extension modules, checkable: partial}
+- {id: TOGAF-DEF-001, statement: A Process describes flow of control. It is not itself deployed. An application component implements the Function (through the services that bound it) that a process supports; an application does not implement a process., strength: should, section: 34.2.1, applies_when: a model links an application or technology component directly to a Process, checkable: partial}
+- {id: TOGAF-DEF-002, statement: 'Function is the single entity for a bounded unit of business capability at any granularity (value chain, process area, capability, business function). Such units should be modeled as Functions.', strength: should, section: 34.2.1, checkable: none}
+- {id: TOGAF-DEF-003, statement: 'A Business Service is explicitly governed by an organization and has an explicitly defined interface. It should be owned and governed by an Organization Unit, and be defined at a granularity that matches the governance applied to it.', strength: should, section: 34.2.1; 34.5, checkable: partial}
+- {id: TOGAF-DEF-004, statement: A Business Service operates as the boundary of one or more Functions., strength: should, section: 34.2.1, checkable: partial}
+- {id: TOGAF-DEF-005, statement: 'A Business Service that is supported by IT is deployed onto application components, and an application component is implemented on a suite of technology components.', strength: note, section: 34.2.1, checkable: none}
+- {id: TOGAF-DEF-006, statement: A Business Service supported by several application components is possible but problematic for governance. It is a sign that the service is too coarse or the components too fine., strength: note, section: 34.2.1, checkable: partial}
+- {id: TOGAF-DEF-007, statement: 'A service in the service-oriented-architecture sense (a deployable unit of application functionality) corresponds to an application service, application component or technology component that implements or supports a Business Service, not to a Business Service.', strength: note, section: 34.2.1, checkable: none}
+- {id: TOGAF-DEF-008, statement: A Principle has at least a supporting rationale and a measure of importance (priority)., strength: should, section: 34.5; 34.6, checkable: static}
+- {id: TOGAF-DEF-009, statement: 'A Requirement states whether it shall be met, should be met or may be met.', strength: should, section: 34.6 (Requirement entry), checkable: partial}
+- {id: TOGAF-DEF-010, statement: 'Requirements should be specific and measurable (SMART). Concerns and requirements are different things: a concern is an area of interest and is decomposed into requirements.', strength: note, section: '35.1', checkable: none}
+- {id: TOGAF-DEF-011, statement: An Objective is a time-bounded milestone toward a Goal., strength: note, section: 34.5; 34.4.6, checkable: partial}
+- {id: TOGAF-EXT-001, statement: The core metamodel is the minimum content for traceability. Extension modules are optional and are chosen to meet the needs of the engagement; the grouping of entities into modules is a suggestion that the architects may tailor., strength: note, section: 34.2.1; 34.4, checkable: static}
+- {id: TOGAF-EXT-002, statement: 'The extension modules to use should be selected when the engagement is scoped: the Preliminary Phase in 34.2.1, the Architecture Vision phase in 34.4. The standard names both.', strength: should, section: 34.2.1; 34.4, checkable: runtime}
+- {id: TOGAF-EXT-003, statement: 'An entity, relationship or artifact that belongs to an extension module should appear in a model only when that module has been selected. Core content is always available.', strength: should, section: '34.2.1; 34.4; Figures 34-7, 35-3', applies_when: the engagement has chosen its extension modules, checkable: partial}
+- {id: TOGAF-EXT-004, statement: 'Governance extension: Measure, Service Quality and Contract are added. A Measure links an Objective to a Business Service. A Service Quality is a reusable service-level profile applied to a Business Service or a Contract. A Contract formalizes a service interaction.', strength: note, section: 34.4.1, checkable: static}
+- {id: TOGAF-EXT-005, statement: 'Services extension: Information System Service is a kind of Business Service. It inherits every relationship a Business Service has, and one new relationship links it to a Business Service.', strength: should, section: 34.4.2; Figure 34-12, applies_when: the Services extension is selected, checkable: static}
+- {id: TOGAF-EXT-006, statement: 'Process Modeling extension: Event sits between Actor, Process and Service; Control relates to a Process; Product links Organization Unit and Process.', strength: note, section: 34.4.3, checkable: static}
+- {id: TOGAF-EXT-007, statement: 'Data extension: a Logical Data Component encapsulates Data Entities and a Physical Data Component extends it. A Physical Data Component is related to an Application Component. When the Infrastructure Consolidation extension is also used, that component is a Physical Application Component, and the Physical Data Component is also related to a Location.', strength: should, section: 34.4.4; 34.4.5, applies_when: the Data extension is selected, checkable: partial}
+- {id: TOGAF-EXT-008, statement: 'Infrastructure Consolidation extension: location becomes an entity. The location attribute on Organization, Actor, Application Component, Data Component and Technology Component is removed and replaced by a relationship to a Location. Application and Technology Components each gain a logical and a physical kind.', strength: should, section: 34.4.5, applies_when: the Infrastructure Consolidation extension is selected, checkable: partial}
+- {id: TOGAF-EXT-009, statement: 'Motivation extension: Driver, Goal and Objective are added and link an Organization Unit to a Business Service. Drivers motivate Organization Units and create Goals; Goals are realized through Objectives.', strength: note, section: 34.4.6, checkable: static}
+- {id: TOGAF-ATTR-001, statement: 'The attributes in 34.6 are typical, not mandatory. Every entity typically carries ID, Name and Description, and optionally Category, Source and Owner. Beyond these, the standard lists further typical attributes for particular entities.', strength: note, section: '34.6', checkable: static}
+- {id: TOGAF-ATTR-002, statement: 'Standards class takes one of six values: Non-Standard, Proposed Standard, Provisional Standard, Standard, Phasing-Out Standard, Retired Standard. It is typical for Business Service, Function, Process, Service, Application Component, Information System Service, Logical and Physical Application Component, Logical and Physical Data Component, Logical and Physical Technology Component, Platform Service and Technology Component.', strength: should, section: '34.6', checkable: static}
+- {id: TOGAF-ATTR-003, statement: 'Lifecycle status of a Physical Application Component takes one of five values: Proposed, In Development, Live, Phasing Out, Retired.', strength: should, section: 34.6 (Physical Application Component entry), checkable: static}
+- {id: TOGAF-ATTR-004, statement: 'Principle category takes one of six values: Guiding, Business, Data, Application, Integration, Technology.', strength: should, section: 34.6 (Principle entry), checkable: static}
+- {id: TOGAF-ATTR-005, statement: 'Data Entity category takes one of two values: Message, Internally Stored Entity.', strength: should, section: 34.6 (Data Entity entry), checkable: static}
+- {id: TOGAF-ATTR-006, statement: 'Work Package category takes one of five values: Work Package, Work Stream, Project, Program, Portfolio.', strength: should, section: 34.6 (Work Package entry), checkable: static}
+- {id: TOGAF-ATTR-007, statement: 'Location category is Region, Country, Building or Specific Location. The nature of the business may introduce other kinds of location, so the set is open.', strength: note, section: 34.6 (Location entry), checkable: static}
+- {id: TOGAF-ATTR-008, statement: 'The category of a Logical Technology Component, Physical Technology Component and Platform Service comes from the TOGAF Technical Reference Model, which may be extended.', strength: note, section: '34.6', checkable: none}
+- {id: TOGAF-ART-001, statement: A catalog lists only building blocks of the entity types the standard assigns to that catalog. A matrix relates the entity types the standard names for its axes. See each artifact in language.yaml., strength: should, section: '35.6', checkable: partial}
+- {id: TOGAF-ART-002, statement: 'The relationship behind the Application/Organization matrix is a composite and needs validating: Organization Units own Services; Actors belonging to those Organization Units use Services; Services are realized by Logical or Physical Application Components. A cell is supported only if that path exists.', strength: should, section: 35.6.5 (Application/Organization Matrix), checkable: partial}
+- {id: TOGAF-ART-003, statement: 'The relationship behind the Role/Application matrix is a composite and needs validating: a Role accesses a Function; the Function is bounded by a Service; the Service is realized by a Logical or Physical Application Component.', strength: should, section: 35.6.5 (Role/Application Matrix), checkable: partial}
+- {id: TOGAF-ART-004, statement: 'The relationship behind the Application/Function matrix is a composite and needs validating: a Function is bounded by a Service; the Service is realized by a Logical or Physical Application Component.', strength: should, section: 35.6.5 (Application/Function Matrix), checkable: partial}
+- {id: TOGAF-ART-005, statement: 'A deliverable may contain many artifacts and artifacts form the content of the repository. The Architecture Definition Document is the container for the core artifacts across business, data, application and technology, for each state (baseline, transition, target).', strength: note, section: 33.1; 36.2.3, checkable: none}
+- {id: TOGAF-ART-006, statement: 'Each artifact is recommended for production in the ADM phase 35.6 lists it under. The standard says the artifacts "may be created" there; the phase is a recommendation, not a requirement.', strength: note, section: '35.6', checkable: none}
+- {id: TOGAF-ART-007, statement: 'The Stakeholder Map matrix uses no specific metamodel entities, because stakeholder mapping is sensitive and the Architecture Vision phase is informal.', strength: note, section: 35.6.2 (Stakeholder Map Matrix), checkable: none}
+- {id: TOGAF-ART-008, statement: 'Catalogs, matrices and diagrams can also be generated on demand by querying the repository. Such ad hoc artifacts are not restricted or defined by the content metamodel.', strength: note, section: 34.2.1, checkable: none}
+- {id: TOGAF-VIEW-001, statement: 'Every view has an associated viewpoint, at least implicitly. A viewpoint is generic and re-usable; a view is specific to the architecture it was made for.', strength: note, section: '35.1', checkable: none}
+- {id: TOGAF-VIEW-002, statement: 'A viewpoint defines how to construct and use a view, the information that appears in it, the modeling techniques for expressing and analyzing that information, and the rationale (purpose and audience).', strength: should, section: '35.1', checkable: partial}
+- {id: TOGAF-VIEW-003, statement: 'An architecture description identifies at least one stakeholder and at least one concern, selects at least one viewpoint, is organized by at least one view and aggregates at least one model. Each stakeholder has at least one concern. A view conforms to a viewpoint.', strength: should, section: Figure 35-1; 35.1, checkable: partial}
+- {id: TOGAF-VIEW-004, statement: 'The architect must develop pertinent views of both the Baseline Architecture and the Target Architecture, which gives the context for gap analysis at the end of Phases B, C and D.', strength: must, section: 35.2.1, checkable: none}
+- {id: TOGAF-VIEW-005, statement: 'The architect is responsible for completeness (all pertinent stakeholder concerns addressed) and integrity (the views connected, conflicting concerns reconciled, trade-offs shown), within the limit of fitness for purpose.', strength: note, section: 35.2.1, checkable: none}
+- {id: TOGAF-BB-001, statement: 'A building block has a type that corresponds to a content metamodel entity, a defined boundary generally recognizable as a thing by domain experts, and may interoperate with other building blocks.', strength: should, section: 37.2.2, checkable: partial}
+- {id: TOGAF-BB-002, statement: 'A building block specification should be loosely coupled to its implementation, so it can be realized several ways without changing its boundary or specification.', strength: note, section: 37.2.2, checkable: none}
+- {id: TOGAF-BB-003, statement: An architecture need only contain the building blocks relevant to the business problem it addresses., strength: note, section: 37.3.1.1, checkable: none}
+- {id: TOGAF-BB-004, statement: 'An Architecture Building Block specification includes at least: fundamental functionality and attributes (including security capability and manageability); interfaces (chosen set, supplied); interoperability and relationship with other building blocks; dependent building blocks with required functionality and named interfaces; a map to business and organizational entities and policies.', strength: should, section: 37.2.3.2, checkable: none}
+- {id: TOGAF-BB-005, statement: 'A Solution Building Block specification includes at least: specific functionality and attributes; interfaces (the implemented set); required building blocks and the interfaces used; a mapping to the IT topology and operational policies; shared attributes such as security, manageability, localizability and scalability; performance and configurability; design drivers and constraints, including the physical architecture; the relationships between solution and architecture building blocks.', strength: should, section: 37.2.4.2, checkable: none}
+- {id: TOGAF-BB-006, statement: Architecture Building Blocks capture architecture requirements and direct and guide the development of Solution Building Blocks., strength: note, section: 37.2.3.1, checkable: none}
+notes: 'Version 9.1 (December 2011). TOGAF 9.2 (16 April 2018, document C182) and the TOGAF Standard 10th Edition (25 April 2022, document C220) are newer; this guide does not describe them. The standard is informal: nothing in Part IV is stated as a requirement except that the architect must develop views of both baseline and target (35.2.1), so one constraint is `must` and the rest are `should` or `note`. The metamodel defines no mandatory attributes and no multiplicities for its relationships. Core membership differs between the text of 34.2.1, Figure 34-6 and Figure 34-7; this file follows Figure 34-7.'
+
+layout:
+  basis: Our conventions, not this standard's. Sizes and spacing come from the shared layout standard.
+  element_types: {}                # the standard defines no notation, so every concept is a box
+  exceptions: {}
