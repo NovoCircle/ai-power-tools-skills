@@ -45,14 +45,14 @@ if res.resolved:
 `installed` is the technology ids EA reports for the repository, or a mapping keyed by them.
 `style_ex` and `diagram_type` are the diagram's stored `StyleEx` and `Diagram_Type`. Pass both: about
 half of real diagrams carry no MDG type in `StyleEx` and identify themselves by `Diagram_Type` alone.
-For a diagram you are about to create, state what you create it as:
-`style_ex="MDGDgm=<Technology>::<DiagramType>;"`.
+For a diagram you are about to create, state the token EA stores: `style_ex="MDGDgm=<token>;"`, where
+the token is `dt.mdg_diagram_type` ([`references/bindings.md`](references/bindings.md) §2.1).
 
 Every answer carries a `path`, a `confidence` and a `reason`:
 
 | `res.path` | Confidence | Means |
 |---|---|---|
-| `qualified` | exact | the diagram states its own `<Technology>::<DiagramType>` and it is bound |
+| `qualified` | exact | the diagram states its own token and an installed binding claims it |
 | `diagram-type` | inferred | `Diagram_Type` names exactly one installed, bound diagram type |
 | `base-type` | weak | only the EA base type matched, and base types are shared between siblings |
 | `ambiguous` | none | several installed diagram types claim it; none is chosen (`res.candidates`) |
