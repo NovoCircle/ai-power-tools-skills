@@ -1,0 +1,391 @@
+# Stub: holds only the layout block until the guide arrives.
+# The guide replaces this file and keeps the `layout` block.
+id: archimate-3
+name: ArchiMate
+stub: true
+layout:
+  basis: Our conventions, not this standard's.  Sizes and spacing come from the shared layout standard.
+  element_types: {}
+  exceptions: {}
+  diagram_types:
+    Business Layer:
+      arrangement: layered-bands
+      title: drawn
+      route: orthogonal
+      trunk:
+        route: orthogonal
+        for:
+        - Realization
+        - Aggregation
+        - Composition
+        - Specialization
+      channels:
+        fill: 'ArchiMate layer and aspect. Normative: the standard palette is the notation, and recoloring
+          it by lifecycle or ownership destroys the reader''s ability to tell a business service from
+          an application one.'
+        claimed:
+          position: Abstraction level. Y position says which layer an element belongs to, so moving an
+            element between bands changes what the diagram asserts.
+          size: Role. Uniform to the pixel within a band; varying it reads as varying importance.
+        free:
+        - border
+        - border_width
+        - line_color
+        - font_color
+        - opacity
+        - icon
+    Application Layer:
+      arrangement: layered-bands
+      title: drawn
+      route: orthogonal
+      trunk:
+        route: orthogonal
+        for:
+        - Realization
+        - Aggregation
+        - Composition
+        - Specialization
+      channels:
+        fill: ArchiMate layer and aspect. Normative.
+        claimed:
+          position: 'Abstraction level: which layer band an element sits in.'
+          size: Role. Uniform within a band.
+        free:
+        - border
+        - border_width
+        - line_color
+        - font_color
+        - opacity
+        - icon
+    Technology Layer:
+      arrangement: layered-bands
+      title: drawn
+      route: orthogonal
+      trunk:
+        route: orthogonal
+        for:
+        - Realization
+        - Aggregation
+        - Composition
+        - Specialization
+      channels:
+        fill: ArchiMate layer and aspect. Normative.
+        claimed:
+          position: 'Abstraction level: which layer band an element sits in.'
+          size: Role. Uniform within a band.
+        free:
+        - border
+        - border_width
+        - line_color
+        - font_color
+        - opacity
+        - icon
+    Motivation:
+      arrangement: layered-bands
+      title: drawn
+      route: orthogonal
+      trunk:
+        route: orthogonal
+        for:
+        - Realization
+        - Influence
+        - Specialization
+      channels:
+        fill: ArchiMate aspect. The motivation elements share one layer, so fill distinguishes stakeholder
+          from driver from goal. Still normative.
+        claimed:
+          position: 'Level of intent: driver, goal, requirement, principle.'
+          size: Role. Uniform within a band.
+        free:
+        - border
+        - border_width
+        - line_color
+        - font_color
+        - opacity
+        - icon
+    Implementation and Migration:
+      arrangement: layered-bands
+      title: drawn
+      route: orthogonal
+      trunk:
+        route: orthogonal
+        for:
+        - Realization
+        - Aggregation
+        - Composition
+      channels:
+        fill: 'ArchiMate aspect: work package, deliverable, plateau, gap.'
+        claimed:
+          position: Migration sequence. Plateaus read left to right or top to bottom as successive states,
+            so position carries time here.
+          size: Role. Uniform within a band.
+        free:
+        - border
+        - border_width
+        - line_color
+        - font_color
+        - opacity
+        - icon
+  viewpoints:
+    Application Cooperation:
+      intent:
+      - how applications interact
+      - application landscape
+      - integration
+      - which systems talk to which
+      admits:
+      - ApplicationComponent
+      - ApplicationService
+      - ApplicationInterface
+      - ApplicationCollaboration
+      - DataObject
+      - Location
+      - Grouping
+    Application Usage:
+      intent:
+      - which business processes use which applications
+      - application support for the business
+      admits:
+      - ApplicationComponent
+      - ApplicationService
+      - BusinessProcess
+      - BusinessFunction
+      - BusinessRole
+      - DataObject
+      - BusinessObject
+    Application Structure:
+      intent:
+      - internal structure of an application
+      - application composition
+      admits:
+      - ApplicationComponent
+      - ApplicationCollaboration
+      - ApplicationInterface
+      - DataObject
+    Information Structure:
+      intent:
+      - what information the organization holds
+      - data model
+      - business objects and their representations
+      admits:
+      - BusinessObject
+      - DataObject
+      - Representation
+      - Artifact
+      - Meaning
+    Business Process Cooperation:
+      intent:
+      - how processes depend on each other
+      - end-to-end process
+      - process handoffs
+      admits:
+      - BusinessProcess
+      - BusinessFunction
+      - BusinessInteraction
+      - BusinessEvent
+      - BusinessService
+      - BusinessRole
+      - BusinessActor
+      - ApplicationService
+      - Grouping
+    Organization:
+      arrangement: nested-grid
+      intent:
+      - org chart
+      - who reports to whom
+      - organizational structure
+      - departments
+      admits:
+      - BusinessActor
+      - BusinessRole
+      - BusinessCollaboration
+      - BusinessInterface
+      - Location
+      notes: 'Drawn as a nested grid rather than bands: containment is the structure, and it needs no
+        connectors.'
+    Service Realization:
+      intent:
+      - how services are realized
+      - what delivers this service
+      - service to process to application
+      admits:
+      - BusinessService
+      - BusinessProcess
+      - BusinessFunction
+      - BusinessInteraction
+      - BusinessObject
+      - ApplicationService
+      - ApplicationComponent
+      - BusinessActor
+      - BusinessRole
+    Product:
+      intent:
+      - what the organization sells
+      - products and the services in them
+      - contracts
+      admits:
+      - Product
+      - Contract
+      - BusinessService
+      - BusinessInterface
+      - BusinessActor
+      - BusinessRole
+      - Value
+      - ApplicationService
+    Capability Map:
+      arrangement: nested-grid
+      intent:
+      - capability map
+      - what the organization can do
+      - business capabilities
+      admits:
+      - Capability
+      - Resource
+      - ValueStream
+      - CourseOfAction
+      - Grouping
+      notes: A capability map is a nested grid, and its fill encodes nesting depth rather than layer,
+        so a heat-map overlay wants a different channel.
+    Strategy:
+      intent:
+      - strategy
+      - how capabilities and resources support goals
+      - courses of action
+      admits:
+      - Resource
+      - Capability
+      - CourseOfAction
+      - ValueStream
+      - Goal
+      - Outcome
+    Technology:
+      intent:
+      - infrastructure
+      - what runs where
+      - nodes and networks
+      admits:
+      - Node
+      - Device
+      - SystemSoftware
+      - TechnologyService
+      - TechnologyInterface
+      - CommunicationNetwork
+      - Path
+      - Artifact
+      - TechnologyCollaboration
+    Technology Usage:
+      intent:
+      - how applications use infrastructure
+      - which technology supports which application
+      admits:
+      - Node
+      - Device
+      - SystemSoftware
+      - TechnologyService
+      - ApplicationComponent
+      - ApplicationService
+      - Artifact
+    Layered:
+      intent:
+      - the whole architecture
+      - business to application to technology
+      - cross-layer view
+      - end to end
+      admits:
+      - BusinessActor
+      - BusinessRole
+      - BusinessProcess
+      - BusinessService
+      - BusinessObject
+      - ApplicationComponent
+      - ApplicationService
+      - DataObject
+      - Node
+      - Device
+      - SystemSoftware
+      - TechnologyService
+      - Artifact
+      - Grouping
+      notes: 'The widest viewpoint, so it wins on coverage almost always. Rank it last when a narrower
+        one admits everything the content holds: a layered view of three applications is a layered view
+        with two empty layers.'
+    Motivation:
+      intent:
+      - why
+      - drivers and goals
+      - what the architecture is for
+      - stakeholder concerns
+      admits:
+      - Stakeholder
+      - Driver
+      - Assessment
+      - Goal
+      - Outcome
+      - Principle
+      - Requirement
+      - Constraint
+      - Meaning
+      - Value
+    Requirements Realization:
+      intent:
+      - how requirements are met
+      - what satisfies this requirement
+      - traceability from requirement to design
+      admits:
+      - Requirement
+      - Constraint
+      - Goal
+      - Principle
+      - BusinessProcess
+      - BusinessService
+      - ApplicationComponent
+      - ApplicationService
+      - Node
+    Principles:
+      intent:
+      - architecture principles
+      - what the principles are
+      - principles and the goals behind them
+      admits:
+      - Principle
+      - Goal
+      - Driver
+      - Requirement
+      - Constraint
+      - Meaning
+    Implementation and Migration:
+      intent:
+      - roadmap
+      - migration plan
+      - what is delivered when
+      - program of work
+      admits:
+      - WorkPackage
+      - Deliverable
+      - ImplementationEvent
+      - Plateau
+      - Gap
+      - BusinessRole
+      - BusinessActor
+      - Requirement
+      - Goal
+    Migration:
+      intent:
+      - transition states
+      - from current to target
+      - where the architecture is going
+      admits:
+      - Plateau
+      - Gap
+    Implementation and Deployment:
+      intent:
+      - how the work lands on the estate
+      - which deliverable produces which component
+      admits:
+      - WorkPackage
+      - Deliverable
+      - ApplicationComponent
+      - Artifact
+      - Node
+      - SystemSoftware
+      - Device

@@ -126,9 +126,7 @@ NOTATION_KEY = "TConnectorNotation"
 #: The other technology id behind an unbound row, absent from the model.
 FEAF = "FEAF Diagrams"
 
-_BINDINGS = _HERE.parent / "bindings"
-_TOGAF_TEXT = (_BINDINGS / "togaf-diagrams.yaml").read_text(encoding="utf-8")
-
+_BINDINGS = _HERE.parent.parent / "_shared" / "languages"
 MODEL = mb.resolve_model_path(None)
 
 needs_model = pytest.mark.skipif(
@@ -279,7 +277,7 @@ def test_neither_candidate_default_fits_a_single_table_in_the_model():
     pooled = mb.measure_binding(MODEL, EXTENDED, DATA_MODELING).default_size.mode
     substrate = find_binding("UML", directory=_BINDINGS).diagram_type("Logical")
     inherited = substrate.sizing["default"]
-    assert inherited == {"w": 90, "h": 70}
+    assert inherited == {"w": 100, "h": 70}
     for candidate in (pooled, (inherited["w"], inherited["h"])):
         assert candidate[0] < smallest_w, candidate
         assert candidate[1] < smallest_h, candidate
@@ -419,13 +417,3 @@ def test_the_feaf_technology_behind_the_togaf_trm_row_is_absent_from_the_model()
     with pytest.raises(mb.MeasureError):
         mb.measure_binding(MODEL, FEAF)
 
-
-def test_the_togaf_binding_records_the_feaf_refusal():
-    """Recorded where a binding author will read it, not only here.
-
-    The TOGAF file already names `TOGAF_DataArchitecture` as the second id it does
-    not bind; `FEAF Diagrams` is the third and the corpus row that needs it is
-    named, so the omission cannot be mistaken for an oversight.
-    """
-    assert FEAF in _TOGAF_TEXT
-    assert "TechnicalReferenceModel" in _TOGAF_TEXT

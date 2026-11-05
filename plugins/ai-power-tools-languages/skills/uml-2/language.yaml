@@ -7207,9 +7207,9 @@ notation:
     - WriteVariableAction
 
 layout:
-  basis: Our conventions, not this standard's. Sizes and spacing come from the shared layout standard; this block says only which size class each concept takes and how each diagram type is arranged.
-  element_types:   # concept -> size class, for every concept the notation draws as a symbol
-    # box: rectangles, rounded rectangles, and rectangle-like outlines such as the pentagon and the pill
+  basis: Our conventions, not this standard's. Sizes and spacing come from the shared layout standard;
+    this block says only which size class each concept takes and how each diagram type is arranged.
+  element_types:
     AcceptCallAction: box
     AcceptEventAction: box
     Action: box
@@ -7272,14 +7272,12 @@ layout:
     TestIdentityAction: box
     UnmarshallAction: box
     ValueSpecificationAction: box
-    # large-box: ellipses and cubes: they hold a name and often further text
     Collaboration: large-box
     CollaborationUse: large-box
     Device: large-box
     ExecutionEnvironment: large-box
     Node: large-box
     UseCase: large-box
-    # container: packages, frames, regions, partitions and fragments: they hold other symbols
     Activity: container
     ActivityPartition: container
     CombinedFragment: container
@@ -7297,15 +7295,11 @@ layout:
     Region: container
     StateMachine: container
     StructuredActivityNode: container
-    # note: note symbols
     Comment: note
     Constraint: note
-    # actor: the stick figure
     Actor: actor
-    # decision-diamond: hollow diamonds
     DecisionNode: decision-diamond
     MergeNode: decision-diamond
-    # small-node: dots, circles with a mark, and the bar of a fork or join
     ActivityFinalNode: small-node
     DestructionOccurrenceSpecification: small-node
     FinalState: small-node
@@ -7314,7 +7308,6 @@ layout:
     InitialNode: small-node
     JoinNode: small-node
     Pseudostate: small-node
-    # attached-item: small symbols that sit on the border of their parent, or a thin bar on a lifeline
     ActionExecutionSpecification: attached-item
     ActionInputPin: attached-item
     ActivityParameterNode: attached-item
@@ -7332,20 +7325,321 @@ layout:
     TemplateSignature: attached-item
     TemplateableElement: attached-item
     ValuePin: attached-item
-  no_element_type:   # concepts that take no size class, each group with its reason
+  no_element_type:
     drawn_as_text:
-      reason: Shown as text inside or beside another symbol (a compartment line, a label, an expression), so there is no symbol to size.
-      concepts: [AnyReceiveEvent, CallEvent, ChangeEvent, ClassifierTemplateParameter, ConnectableElementTemplateParameter, Duration, DurationInterval, EnumerationLiteral, Expression, ExtensionPoint, InstanceValue, InteractionConstraint, Interval, LiteralBoolean, LiteralInteger, LiteralNull, LiteralReal, LiteralSpecification, LiteralString, LiteralUnlimitedNatural, MultiplicityElement, OpaqueExpression, Operation, OperationTemplateParameter, Parameter, PartDecomposition, Property, Reception, RedefinableElement, SignalEvent, Slot, StringExpression, StructuralFeature, TemplateParameterSubstitution, TimeEvent, TimeExpression, TimeInterval, Trigger]
+      reason: Shown as text inside or beside another symbol (a compartment line, a label, an expression),
+        so there is no symbol to size.
+      concepts:
+      - AnyReceiveEvent
+      - CallEvent
+      - ChangeEvent
+      - ClassifierTemplateParameter
+      - ConnectableElementTemplateParameter
+      - Duration
+      - DurationInterval
+      - EnumerationLiteral
+      - Expression
+      - ExtensionPoint
+      - InstanceValue
+      - InteractionConstraint
+      - Interval
+      - LiteralBoolean
+      - LiteralInteger
+      - LiteralNull
+      - LiteralReal
+      - LiteralSpecification
+      - LiteralString
+      - LiteralUnlimitedNatural
+      - MultiplicityElement
+      - OpaqueExpression
+      - Operation
+      - OperationTemplateParameter
+      - Parameter
+      - PartDecomposition
+      - Property
+      - Reception
+      - RedefinableElement
+      - SignalEvent
+      - Slot
+      - StringExpression
+      - StructuralFeature
+      - TemplateParameterSubstitution
+      - TimeEvent
+      - TimeExpression
+      - TimeInterval
+      - Trigger
     drawn_as_line_or_line_end:
-      reason: Shown as a line, an arrow or the end of a line, so there is no symbol to size. The relationship kinds under `notation.relationships` are lines too.
-      concepts: [Abstraction, ActivityEdge, Association, CommunicationPath, ComponentRealization, Connector, ConnectorEnd, ControlFlow, Dependency, Deployment, DurationConstraint, DurationObservation, ElementImport, ExceptionHandler, Extend, Extension, ExtensionEnd, GeneralOrdering, Generalization, GeneralizationSet, Include, InformationFlow, InterfaceRealization, IntervalConstraint, Manifestation, Message, ObjectFlow, Observation, PackageImport, PackageMerge, ProfileApplication, ProtocolTransition, Realization, Substitution, TemplateBinding, TimeConstraint, TimeObservation, Transition, Usage]
+      reason: Shown as a line, an arrow or the end of a line, so there is no symbol to size. The relationship
+        kinds under `notation.relationships` are lines too.
+      concepts:
+      - Abstraction
+      - ActivityEdge
+      - Association
+      - CommunicationPath
+      - ComponentRealization
+      - Connector
+      - ConnectorEnd
+      - ControlFlow
+      - Dependency
+      - Deployment
+      - DurationConstraint
+      - DurationObservation
+      - ElementImport
+      - ExceptionHandler
+      - Extend
+      - Extension
+      - ExtensionEnd
+      - GeneralOrdering
+      - Generalization
+      - GeneralizationSet
+      - Include
+      - InformationFlow
+      - InterfaceRealization
+      - IntervalConstraint
+      - Manifestation
+      - Message
+      - ObjectFlow
+      - Observation
+      - PackageImport
+      - PackageMerge
+      - ProfileApplication
+      - ProtocolTransition
+      - Realization
+      - Substitution
+      - TemplateBinding
+      - TimeConstraint
+      - TimeObservation
+      - Transition
+      - Usage
     drawn_as_marker:
-      reason: Shown as a mark where a line meets another symbol, or as an icon in place of a symbol, so there is no symbol to size.
-      concepts: [ExecutionOccurrenceSpecification, Image, MessageOccurrenceSpecification, OccurrenceSpecification]
+      reason: Shown as a mark where a line meets another symbol, or as an icon in place of a symbol, so
+        there is no symbol to size.
+      concepts:
+      - ExecutionOccurrenceSpecification
+      - Image
+      - MessageOccurrenceSpecification
+      - OccurrenceSpecification
     not_drawn:
-      reason: The standard gives these no drawing of their own (abstract, or shown only through their subclasses).
+      reason: The standard gives these no drawing of their own (abstract, or shown only through their
+        subclasses).
       concepts: see `notation.not_specified`
   exceptions: {}
-  diagram_types:   # only the departures from the defaults (graph, frame-header); the other twelve take the defaults
-    Sequence diagram: {arrangement: type-fixed}   # order of lifelines and messages is the layout
-    Timing diagram: {arrangement: type-fixed}   # timelines on a time axis
+  diagram_types:
+    Sequence diagram:
+      arrangement: type-fixed
+    Timing diagram:
+      arrangement: type-fixed
+      title: frame-header
+      route: straight
+      channels:
+        fill: null
+        claimed:
+          position: 'Entirely: the horizontal axis is time, and the vertical position says which timeline
+            and which state. This is what makes the arrangement type-fixed.'
+          size: Width is duration. A timeline drawn wider covers a longer span, so resizing one restates
+            the measurement.
+          line_style: 'Normative in UML: dashed against solid separates a dependency or a realization
+            from an association. Overwriting it changes what a connector means.'
+        free:
+        - fill
+        - border
+        - border_width
+        - line_color
+        - font_color
+        - opacity
+        - icon
+    Class diagram:
+      arrangement: graph
+      title: frame-header
+      route: straight
+      trunk:
+        route: tree-vertical
+        for:
+        - Generalization
+      channels:
+        fill: null
+        claimed:
+          position: Set by automatic layout rather than by the notation. UML gives position no meaning
+            on this diagram, and a layout pass overwrites anything set beforehand, so it can't carry a
+            second variable.
+          size: Compartment content. A class box is sized by the attributes and operations it shows, so
+            using size to encode something else fights the content.
+          line_style: 'Normative in UML: dashed against solid separates a dependency or a realization
+            from an association. Overwriting it changes what a connector means.'
+        free:
+        - fill
+        - border
+        - border_width
+        - line_color
+        - font_color
+        - opacity
+        - icon
+    State machine diagram:
+      arrangement: graph
+      title: frame-header
+      route: straight
+      channels:
+        fill: null
+        claimed:
+          position: Set by automatic layout rather than by the notation. UML gives position no meaning
+            on this diagram, and a layout pass overwrites anything set beforehand, so it can't carry a
+            second variable.
+          size: Node kind. A pseudostate is a small node because it is a pseudostate, and a state is sized
+            by its name and its internal compartments.
+          line_style: 'Normative in UML: dashed against solid separates a dependency or a realization
+            from an association. Overwriting it changes what a connector means.'
+        free:
+        - fill
+        - border
+        - border_width
+        - line_color
+        - font_color
+        - opacity
+        - icon
+    Activity diagram:
+      arrangement: graph
+      title: frame-header
+      route: straight
+      channels:
+        fill: null
+        claimed:
+          position: Set by automatic layout rather than by the notation. UML gives position no meaning
+            on this diagram, and a layout pass overwrites anything set beforehand, so it can't carry a
+            second variable.
+          size: 'Node kind: a pin is small and a decision is a diamond.'
+          line_style: 'Normative in UML: dashed against solid separates a dependency or a realization
+            from an association. Overwriting it changes what a connector means.'
+        free:
+        - fill
+        - border
+        - border_width
+        - line_color
+        - font_color
+        - opacity
+        - icon
+    Package diagram:
+      arrangement: graph
+      title: frame-header
+      route: straight
+      channels:
+        fill: null
+        claimed:
+          position: Set by automatic layout rather than by the notation. UML gives position no meaning
+            on this diagram, and a layout pass overwrites anything set beforehand, so it can't carry a
+            second variable.
+          size: Set by the package name, which is usually the longest thing on it.
+          line_style: 'Normative in UML: dashed against solid separates a dependency or a realization
+            from an association. Overwriting it changes what a connector means.'
+        free:
+        - fill
+        - border
+        - border_width
+        - line_color
+        - font_color
+        - opacity
+        - icon
+    Deployment diagram:
+      arrangement: graph
+      title: frame-header
+      route: straight
+      channels:
+        fill: null
+        claimed:
+          position: Set by automatic layout rather than by the notation. UML gives position no meaning
+            on this diagram, and a layout pass overwrites anything set beforehand, so it can't carry a
+            second variable.
+          size: Set by what is deployed inside. A node stretched to hold three artifacts is wider because
+            of them.
+          line_style: 'Normative in UML: dashed against solid separates a dependency or a realization
+            from an association. Overwriting it changes what a connector means.'
+        free:
+        - fill
+        - border
+        - border_width
+        - line_color
+        - font_color
+        - opacity
+        - icon
+    Use case diagram:
+      arrangement: graph
+      title: frame-header
+      route: straight
+      channels:
+        fill: null
+        claimed:
+          position: Set by automatic layout rather than by the notation. UML gives position no meaning
+            on this diagram, and a layout pass overwrites anything set beforehand, so it can't carry a
+            second variable.
+          size: 'Node kind: an actor is a stick figure.'
+          line_style: 'Normative in UML: dashed against solid separates a dependency or a realization
+            from an association. Overwriting it changes what a connector means.'
+        free:
+        - fill
+        - border
+        - border_width
+        - line_color
+        - font_color
+        - opacity
+        - icon
+    Component diagram:
+      arrangement: graph
+      title: frame-header
+      route: straight
+      channels:
+        fill: null
+        claimed:
+          position: 'Spoken for twice over: automatic layout places the components, and a port or an interface
+            sits on its parent''s border, which is containment rather than layout.'
+          size: 'Node kind: a port and an interface lollipop are small.'
+          line_style: 'Normative in UML: dashed against solid separates a dependency or a realization
+            from an association. Overwriting it changes what a connector means.'
+        free:
+        - fill
+        - border
+        - border_width
+        - line_color
+        - font_color
+        - opacity
+        - icon
+    Composite structure diagram:
+      arrangement: graph
+      title: frame-header
+      route: straight
+      channels:
+        fill: null
+        claimed:
+          position: A part sits inside its classifier and a port on its border, so position carries containment
+            here.
+          size: Set by the parts a classifier holds.
+          line_style: 'Normative in UML: dashed against solid separates a dependency or a realization
+            from an association. Overwriting it changes what a connector means.'
+        free:
+        - fill
+        - border
+        - border_width
+        - line_color
+        - font_color
+        - opacity
+        - icon
+    Object diagram:
+      arrangement: graph
+      title: frame-header
+      route: straight
+      channels:
+        fill: null
+        claimed:
+          position: Set by automatic layout rather than by the notation. UML gives position no meaning
+            on this diagram, and a layout pass overwrites anything set beforehand, so it can't carry a
+            second variable.
+          size: Set by the slots an instance shows.
+          line_style: 'Normative in UML: dashed against solid separates a dependency or a realization
+            from an association. Overwriting it changes what a connector means.'
+        free:
+        - fill
+        - border
+        - border_width
+        - line_color
+        - font_color
+        - opacity
+        - icon
+  viewpoints: {}

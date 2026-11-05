@@ -1,0 +1,11 @@
+# Stub: holds only the layout block until the guide arrives.
+# The guide replaces this file and keeps the `layout` block.
+id: uaf-1
+name: Unified Architecture Framework (UAF)
+stub: true
+layout:
+  basis: Our conventions, not this standard's.  Sizes and spacing come from the shared layout standard.
+  element_types: {}
+  exceptions: {}
+  diagram_types: {}
+  viewpoints: {}
