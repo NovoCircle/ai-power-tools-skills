@@ -16,7 +16,8 @@ Inputs:
 
 A folder whose `ea.yaml` has no `layout_map` gets no file, so a language can arrive
 before its map does. A folder with a `layout_map` and no `language.yaml` is one of EA's
-own diagram families, and takes everything from the map.
+own diagram families, and takes everything from the map. No map anywhere is an error,
+because a check over nothing would pass.
 """
 from __future__ import annotations
 
@@ -69,6 +70,13 @@ def _lookup(table: Mapping[str, Any], key: Any, where: str, what: str) -> Any:
     if key not in table:
         known = ", ".join(sorted(str(k) for k in table))
         raise GenerationError(f"{where}: {key!r} is not {what}. Known: {known}")
+    return table[key]
+
+
+def _need(table: Mapping[str, Any], key: str, where: str) -> Any:
+    """A key the source must state."""
+    if key not in table:
+        raise GenerationError(f"{where}: missing `{key}`")
     return table[key]
 
 
@@ -126,6 +134,26 @@ def _channels(block: Mapping[str, Any] | None) -> dict[str, Any]:
     return out
 
 
+def _size_difference(key: str, element_type: str, layout: Mapping[str, Any],
+                     entry: Mapping[str, Any]) -> str | None:
+    """Why a size key can't name this size class, or None if it can.
+
+    When a size key is also a concept in the guide's `element_types`, the two must agree,
+    or a shape takes one size in EA and another in every other tool. A difference stands
+    only if `layout.exceptions` records it for every tool, or the diagram type states
+    `size_reason: {<key>: why EA alone differs}`.
+    """
+    guide_type = (layout.get("element_types") or {}).get(key)
+    if guide_type in (None, element_type) or key in (layout.get("exceptions") or {}):
+        return None
+    reasons = entry.get("size_reason")
+    if isinstance(reasons, Mapping) and reasons.get(key):
+        return None
+    return (f"names {element_type!r}, and the guide's `element_types` says {guide_type!r}. "
+            f"Agree with the guide, record it in `layout.exceptions`, or state "
+            f"`size_reason: {{{key}: <why>}}` on this diagram type")
+
+
 def _sizing(sources: Sources, layout: Mapping[str, Any], entry: Mapping[str, Any],
             where: str) -> dict[str, dict[str, int]]:
     """`default`, then the diagram type's size keys, in a stable order.
@@ -140,13 +168,17 @@ def _sizing(sources: Sources, layout: Mapping[str, Any], entry: Mapping[str, Any
     for key, target in (entry.get("size_keys") or {}).items():
         path = f"{where}.size_keys.{key}"
         if target in types:
-            named[key] = sources.size(target, path)
+            element_type = target
         elif target in element_types:
-            named[key] = sources.size(element_types[target], path)
+            element_type = element_types[target]
         else:
             raise GenerationError(
                 f"{path}: {target!r} is neither an element type nor a concept in this "
                 f"language's `layout.element_types`")
+        difference = _size_difference(key, element_type, layout, entry)
+        if difference:
+            raise GenerationError(f"{path}: {difference}")
+        named[key] = sources.size(element_type, path)
     out = {"default": sources.size(entry.get("default_type", "box"), f"{where}.default_type")}
     out.update(sorted(named.items()))
     return out
@@ -159,7 +191,8 @@ def _diagram_type(sources: Sources, name: str, entry: Mapping[str, Any],
     guide_name = guide[0] if isinstance(guide, list) else guide
     source: Mapping[str, Any]
     if guide_name:
-        source = (layout.get("diagram_types") or {}).get(guide_name) or {}
+        source = _lookup(layout.get("diagram_types") or {}, guide_name, f"{where}.{name}.guide",
+                         "a diagram type in `layout.diagram_types`") or {}
     else:
         source = entry
 
@@ -198,8 +231,14 @@ def _viewpoints(sources: Sources, layout: Mapping[str, Any],
     guide_views = layout.get("viewpoints") or {}
     for name, entry in (layout_map.get("viewpoints") or {}).items():
         path = f"{where}.layout_map.viewpoints.{name}"
-        view = _lookup(guide_views, entry["guide"], path, "a viewpoint in `layout.viewpoints`")
-        row: dict[str, Any] = {"diagram_type": entry["diagram_type"]}
+        row: dict[str, Any] = {"diagram_type": _need(entry, "diagram_type", path)}
+        if entry.get("reason") and entry.get("guide") not in guide_views:
+            # An exception with a reason. The guide has no viewpoint to read, so EA's name
+            # and its diagram type are all there is to say.
+            out[name] = row
+            continue
+        view = _lookup(guide_views, _need(entry, "guide", path), path,
+                       "a viewpoint in `layout.viewpoints`")
         if view.get("intent"):
             row["intent"] = list(view["intent"])
         if view.get("admits"):
@@ -212,7 +251,7 @@ def _viewpoints(sources: Sources, layout: Mapping[str, Any],
     return out
 
 
-def _profiles(sources: Sources, layout_map: Mapping[str, Any]) -> dict[str, Any] | None:
+def _profiles(sources: Sources, layout_map: Mapping[str, Any], where: str) -> dict[str, Any] | None:
     """EA's display settings, for a technology that states its own."""
     stated = layout_map.get("presentation_profiles")
     if not stated:
@@ -221,7 +260,8 @@ def _profiles(sources: Sources, layout_map: Mapping[str, Any]) -> dict[str, Any]
            for name, body in sources.translation["presentation_profiles"].items()}
     if isinstance(stated, Mapping):
         for name, overrides in stated.items():
-            out[name].update(overrides)
+            _lookup(out, name, f"{where}.layout_map.presentation_profiles",
+                    "a presentation profile in the translation").update(overrides)
     return out
 
 
@@ -243,7 +283,7 @@ def generate_language(sources: Sources, language_id: str) -> str | None:
                 f"{language_path}: no `layout` block, and {ea_path.name} has a `layout_map`. "
                 f"Guides keep the block their stub held.")
 
-    doc: dict[str, Any] = {"technology": layout_map["technology"]}
+    doc: dict[str, Any] = {"technology": _need(layout_map, "technology", f"{ea_path}: layout_map")}
     if layout_map.get("display_name"):
         doc["display_name"] = layout_map["display_name"]
     if layout_map.get("extends"):
@@ -254,12 +294,12 @@ def generate_language(sources: Sources, language_id: str) -> str | None:
         doc["notes"] = layout_map["notes"]
     doc["diagram_types"] = {
         name: _diagram_type(sources, name, entry, layout, f"{where}.diagram_types")
-        for name, entry in layout_map["diagram_types"].items()
+        for name, entry in _need(layout_map, "diagram_types", f"{ea_path}: layout_map").items()
     }
     viewpoints = _viewpoints(sources, layout, layout_map, where)
     if viewpoints:
         doc["viewpoints"] = viewpoints
-    profiles = _profiles(sources, layout_map)
+    profiles = _profiles(sources, layout_map, where)
     if profiles:
         doc["presentation_profiles"] = profiles
     body = yaml.dump(doc, Dumper=_Dumper, sort_keys=False, allow_unicode=True, width=100,
@@ -268,15 +308,30 @@ def generate_language(sources: Sources, language_id: str) -> str | None:
 
 
 def expected_files(root: Path = ROOT) -> dict[Path, str]:
-    """`{path: text}` for every generated file the sources call for."""
-    sources = Sources(root)
+    """`{path: text}` for every generated file the sources call for.
+
+    Every failure comes back as a `GenerationError`, so the command line and the plugin
+    build can both name the source. Most are raised where the key is read. A shape nobody
+    guarded still names its language here, in place of a traceback.
+    """
+    try:
+        sources = Sources(root)
+    except (KeyError, TypeError, AttributeError) as exc:
+        raise GenerationError(f"{STANDARD_REL} or {TRANSLATION_REL} is malformed: {exc!r}") from None
     out: dict[Path, str] = {}
-    for folder in sorted(p for p in (root / EA_REL).iterdir() if p.is_dir()):
+    folders = sorted(p for p in (root / EA_REL).iterdir() if p.is_dir()) if (root / EA_REL).is_dir() else []
+    for folder in folders:
         if not (folder / "ea.yaml").is_file():
             continue
-        text = generate_language(sources, folder.name)
+        try:
+            text = generate_language(sources, folder.name)
+        except (KeyError, TypeError, AttributeError) as exc:
+            raise GenerationError(f"{folder.name}: a source is malformed: {exc!r}") from None
         if text is not None:
             out[folder / GENERATED_NAME] = text
+    if not out:
+        raise GenerationError(f"{root / EA_REL}: no `ea.yaml` has a `layout_map`, so there is "
+                              f"nothing to generate or check")
     return out
 
 
@@ -325,9 +380,29 @@ def _names(block: Any) -> set[str]:
 
 def _stated_none(layout: Mapping[str, Any]) -> set[str]:
     """Concepts a guide says take no element type: `no_element_type` groups, each with a reason."""
-    groups = layout.get("no_element_type") or {}
+    groups = layout.get("no_element_type")
+    if not isinstance(groups, Mapping):
+        return set()
     return {str(concept) for group in groups.values() if isinstance(group, Mapping)
-            for concept in group.get("concepts") or ()}
+            and isinstance(group.get("concepts"), list) for concept in group["concepts"]}
+
+
+def _stated_none_problems(layout: Mapping[str, Any], where: str) -> list[str]:
+    """A `no_element_type` block the checks can't read. Its names would clear nothing."""
+    groups = layout.get("no_element_type")
+    if groups is None:
+        return []
+    if not isinstance(groups, Mapping):
+        return [f"{where}: `no_element_type` must be a mapping of named groups"]
+    problems: list[str] = []
+    for name, group in groups.items():
+        if not isinstance(group, Mapping):
+            problems.append(f"{where}: `no_element_type` group `{name}` must be a mapping with "
+                            f"a reason and a `concepts` list")
+        elif not isinstance(group.get("concepts"), list):
+            problems.append(f"{where}: `no_element_type` group `{name}` must list its `concepts` "
+                            f"by name, not {group.get('concepts')!r}")
+    return problems
 
 
 def layout_problems(language: Mapping[str, Any], standard: Mapping[str, Any]) -> list[str]:
@@ -349,6 +424,7 @@ def layout_problems(language: Mapping[str, Any], standard: Mapping[str, Any]) ->
         if element_type not in types:
             problems.append(f"{where}: `{concept}` maps to {element_type!r}, which is not an "
                             f"element type in the standard")
+    problems.extend(_stated_none_problems(layout, where))
     for name, exception in (layout.get("exceptions") or {}).items():
         if not (isinstance(exception, Mapping) and exception.get("reason") and exception.get("source")):
             problems.append(f"{where}: exception `{name}` needs a reason and a source")
@@ -381,7 +457,7 @@ def layout_problems(language: Mapping[str, Any], standard: Mapping[str, Any]) ->
                             f"in this guide")
     guide_types = _names(language.get("diagram_types"))
     for name in layout.get("diagram_types") or {}:
-        if guide_types and name not in guide_types:
+        if name not in guide_types:
             problems.append(f"{where}: `layout.diagram_types` names `{name}`, which is not a "
                             f"diagram type in this guide")
 
@@ -428,6 +504,9 @@ def map_problems(ea: Mapping[str, Any], language: Mapping[str, Any] | None,
     for name, entry in (layout_map.get("diagram_types") or {}).items():
         guide = entry.get("guide")
         first = guide[0] if isinstance(guide, list) else guide
+        if first and first not in guide_types:
+            problems.append(f"{where}: `{name}` has guide {first!r}, which is not in "
+                            f"`layout.diagram_types`")
         source = (guide_types.get(first) or {}) if first else entry
         arrangement = source.get("arrangement") or defaults["arrangement"]
         recorded = grammars.get(f"{technology}::{name}")
@@ -440,6 +519,11 @@ def map_problems(ea: Mapping[str, Any], language: Mapping[str, Any] | None,
         if entry.get("default_type", "box") not in types:
             problems.append(f"{where}: `{name}` default_type {entry['default_type']!r} is not an "
                             f"element type")
+        for key, target in (entry.get("size_keys") or {}).items():
+            element_type = target if target in types else (layout.get("element_types") or {}).get(target)
+            difference = _size_difference(key, element_type, layout, entry) if element_type else None
+            if difference:
+                problems.append(f"{where}: `{name}` size key `{key}` {difference}")
 
     views = layout.get("viewpoints") or {}
     for name, entry in (layout_map.get("viewpoints") or {}).items():

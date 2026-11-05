@@ -177,8 +177,8 @@ DEFAULT_CHEVRON_SPEC: dict[str, Any] = {
     # Stage size. Uniform across the whole row, and NOT overridable per stage -
     # see the module docstring for why that is geometry rather than taste. The
     # width is also the pitch.
-    "item_width": 140,
-    "item_height": 60,
+    "item_width": 100,
+    "item_height": 70,
 
     # How deep the renderer cuts the notch and how far it throws the point, as a
     # PERCENT of `item_width`. Percent rather than a fraction because that is

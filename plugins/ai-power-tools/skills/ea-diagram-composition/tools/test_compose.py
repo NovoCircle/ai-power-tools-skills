@@ -123,7 +123,8 @@ def _center_y2(r):
     return r["top"] + r["bottom"]
 
 
-def _own_content_width(count, wrap=None, item_width=140, gap=20):
+def _own_content_width(count, wrap=None, item_width=DEFAULT_SPEC["item_width"],
+                       gap=DEFAULT_SPEC["item_gap_x"]):
     """What a band of `count` items demands for ITSELF, ignoring the other bands.
 
     The width the engine used to draw each band at, before APT-2026-0152: the
@@ -275,7 +276,8 @@ def test_items_are_uniformly_sized_within_a_band_and_may_differ_between_bands():
     first = [it for it in result["items"] if it["band_index"] == 0]
     second = [it for it in result["items"] if it["band_index"] == 1]
 
-    assert {(rect_width(i), rect_height(i)) for i in first} == {(140, 60)}
+    assert {(rect_width(i), rect_height(i)) for i in first} == {
+        (DEFAULT_SPEC["item_width"], DEFAULT_SPEC["item_height"])}
     assert {(rect_width(i), rect_height(i)) for i in second} == {(200, 90)}
     assert_result_sane(result, "mixed sizes")
 
@@ -313,7 +315,7 @@ def test_band_pitch_acts_as_a_floor_not_a_cap():
 
 
 def test_a_wide_band_wraps_instead_of_running_off_the_canvas():
-    spec = {"wrap_width": 500}          # 140 wide, pitch 160 -> 3 per row
+    spec = {"wrap_width": 500}          # 100 wide, pitch 180 -> 3 per row
     result = compose_layered_bands(
         [{"name": "Capabilities", "items": _items(*"abcdefg")}], spec
     )
@@ -328,7 +330,9 @@ def test_a_wide_band_wraps_instead_of_running_off_the_canvas():
         widest = max(i["right"] for i in row_items) - min(i["left"] for i in row_items)
         assert widest <= spec["wrap_width"]
     assert rows[1][0]["top"] < rows[0][0]["bottom"], "row 2 sits below row 1"
-    assert rect_height(result["containers"][0]) == 28 + (2 * 80 + 60) + 12
+    row_pitch = DEFAULT_SPEC["item_height"] + DEFAULT_SPEC["item_gap_y"]
+    assert rect_height(result["containers"][0]) == (
+        28 + (2 * row_pitch + DEFAULT_SPEC["item_height"]) + 12)
     assert_result_sane(result, "wrapped band")
 
 
@@ -405,7 +409,7 @@ def test_an_empty_band_keeps_its_label_row():
     ])
     empty = result["containers"][1]
     assert rect_height(empty) == 28 + 12, "label row plus its padding"
-    assert rect_width(empty) >= 140, "an empty band is still a visible strip"
+    assert rect_width(empty) >= DEFAULT_SPEC["item_width"], "an empty band is still a visible strip"
     assert rect_height(empty["label"]) == 28
     assert result["containers"][2]["top"] < empty["bottom"]
     assert [it["band_index"] for it in result["items"]] == [0, 2]
@@ -415,7 +419,8 @@ def test_an_empty_band_keeps_its_label_row():
 #: The width two bands of one and five items demand between them: the five-item
 #: band's row, plus the band's own padding either side. Written out so every test
 #: below argues about the same number.
-_STACK_CONTENT_WIDTH = 5 * 140 + 4 * 20 + 2 * 12               # 804
+_STACK_CONTENT_WIDTH = (5 * DEFAULT_SPEC["item_width"] + 4 * DEFAULT_SPEC["item_gap_x"]
+                        + 2 * DEFAULT_SPEC["band_pad_x"])
 
 
 def _misfit_stack():
@@ -565,7 +570,7 @@ def test_the_stack_that_scored_clean_and_looked_wrong_has_a_straight_edge():
     # bands all demanded the same width would pass this test against the old
     # engine too, and prove nothing.
     demands = [_own_content_width(c) for c in counts]
-    assert demands == [460, 460, 300], demands
+    assert demands == [460, 460, 280], demands
     assert len(set(demands)) > 1, "this input does not discriminate"
 
     result = compose_layered_bands(_band_stack(counts))
@@ -593,7 +598,8 @@ def test_the_slack_in_a_sparse_band_is_real_whitespace_on_the_right():
     lone = next(i for i in result["items"] if i["band_index"] == 1)
     slack = sparse_band["right"] - lone["right"]
     # Three h_pitches the sparse band did not use, plus its own right padding.
-    assert slack == 3 * 160 + DEFAULT_SPEC["band_pad_x"], slack
+    pitch = DEFAULT_SPEC["item_width"] + DEFAULT_SPEC["item_gap_x"]
+    assert slack == 3 * pitch + DEFAULT_SPEC["band_pad_x"], slack
     assert slack > 0, "no whitespace: the item is flush against the band edge"
     assert_contains(sparse_band, lone, "sparse band")
 
@@ -649,7 +655,7 @@ def test_the_shared_width_grows_monotonically_with_the_widest_band():
     monotone sweep cannot: the width has to be non-decreasing in the widest
     band's count, and has to stop growing exactly where wrapping starts.
     """
-    wrap = 500                              # 140 wide, pitch 160 -> 3 per row
+    wrap = 500                              # 100 wide, pitch 180 -> 3 per row
     pad = 2 * DEFAULT_SPEC["band_pad_x"]
     seen = []
     for widest in range(1, 13):
@@ -710,7 +716,8 @@ def test_single_band_single_item():
     assert len(result["items"]) == 1
     assert len(result["containers"]) == 1
     item = result["items"][0]
-    assert (rect_width(item), rect_height(item)) == (140, 60)
+    assert (rect_width(item), rect_height(item)) == (
+        DEFAULT_SPEC["item_width"], DEFAULT_SPEC["item_height"])
     assert item["row"] == 0 and item["column"] == 0
     assert_result_sane(result, "single item")
 
@@ -831,7 +838,7 @@ def test_slot_length_is_the_longest_item_in_any_lane_not_the_first_lane():
             if rect_width(item) == 240:
                 assert item["left"] == item["slot_start"]
             else:
-                assert item["left"] == item["slot_start"] + 50   # (240 - 140) // 2
+                assert item["left"] == item["slot_start"] + (240 - DEFAULT_SPEC["item_width"]) // 2
         assert_result_sane(result, "wide lane not first")
 
 
@@ -883,7 +890,7 @@ def test_lane_thickness_follows_the_largest_item_in_that_lane():
         {"name": "Operations", "items": _items("o1"), "item_height": 160},
     ])
     thin, thick = result["containers"]
-    assert rect_height(thin) == 60 + 2 * DEFAULT_SPEC["lane_pad"]
+    assert rect_height(thin) == DEFAULT_SPEC["item_height"] + 2 * DEFAULT_SPEC["lane_pad"]
     assert rect_height(thick) == 160 + 2 * DEFAULT_SPEC["lane_pad"]
     assert rect_height(thick) > rect_height(thin)
     assert_result_sane(result, "adaptive thickness")
@@ -972,7 +979,7 @@ def test_single_lane_single_item():
     assert len(result["items"]) == 1
     item = result["items"][0]
     assert item["index"] == 0
-    assert item["slot_extent"] == 140
+    assert item["slot_extent"] == DEFAULT_SPEC["item_width"]
     assert_result_sane(result, "single lane")
 
 
@@ -983,7 +990,7 @@ def test_flow_pitch_acts_as_a_floor_on_slot_spacing():
     )
     tight_step = tight["items"][1]["left"] - tight["items"][0]["left"]
     loose_step = loose["items"][1]["left"] - loose["items"][0]["left"]
-    assert tight_step == 140 + DEFAULT_SPEC["item_gap_flow"]
+    assert tight_step == DEFAULT_SPEC["item_width"] + DEFAULT_SPEC["item_gap_flow"]
     assert loose_step == 400
     assert_result_sane(loose, "flow_pitch")
 
@@ -1067,7 +1074,7 @@ def test_zero_pitch_is_rejected():
 def test_a_pitch_smaller_than_the_item_is_rejected_rather_than_overlapped():
     with pytest.raises(LayoutError, match="h_pitch.*smaller than item_width"):
         compose_layered_bands([{"name": "A", "items": _items("a", "b")}],
-                              {"h_pitch": 100})
+                              {"h_pitch": DEFAULT_SPEC["item_width"] - 1})
     with pytest.raises(LayoutError, match="row_pitch.*smaller than item_height"):
         compose_layered_bands([{"name": "A", "items": _items("a", "b")}],
                               {"row_pitch": 40})
@@ -1076,7 +1083,7 @@ def test_a_pitch_smaller_than_the_item_is_rejected_rather_than_overlapped():
 def test_a_wrap_width_narrower_than_one_item_is_rejected():
     with pytest.raises(LayoutError, match="wrap_width.*smaller than item_width"):
         compose_layered_bands([{"name": "A", "items": _items("a")}],
-                              {"wrap_width": 100})
+                              {"wrap_width": DEFAULT_SPEC["item_width"] - 1})
 
 
 def test_an_item_with_no_id_names_its_own_position():
@@ -2026,6 +2033,12 @@ def test_a_single_item_sits_at_the_start_angle():
 # ---------------------------------------------------------------------------
 # Equal spokes
 # ---------------------------------------------------------------------------
+#: The box and gap the ring figures below were measured with. The engine's defaults
+#: supplied these until they moved to the layout standard, so the measured inputs are
+#: stated now. A ring is planned from its gap, and these tests argue about those figures.
+_MEASURED_RING = {"item_width": 140, "item_height": 60, "item_gap_x": 20}
+
+
 def test_a_ring_of_flat_boxes_has_equal_spokes():
     """The failing render: a ring of 140x60 boxes around a hub.
 
@@ -2036,7 +2049,8 @@ def test_a_ring_of_flat_boxes_has_equal_spokes():
     twelve o'clock as at three o'clock, on a ring where every item was exactly
     on the circle.
     """
-    result = compose_radial(_spokes(8), hub={"id": 99}, spec={"radius": 220})
+    result = compose_radial(_spokes(8), hub={"id": 99},
+                            spec={**_MEASURED_RING, "radius": 220})
 
     # The guard: under the old rule this very input spread by 80 units.
     would_have = _spread_if_every_center_sat_on_one_circle(result)
@@ -2083,7 +2097,8 @@ def test_item_centers_are_not_all_the_same_distance_out_and_should_not_be():
     on one circle would be reintroducing the defect, and this is the test that
     says so.
     """
-    result = compose_radial(_spokes(8), hub={"id": 99}, spec={"radius": 220})
+    result = compose_radial(_spokes(8), hub={"id": 99},
+                            spec={**_MEASURED_RING, "radius": 220})
     cx, cy = result["center"]["x"], result["center"]["y"]
     distances = {}
     for item in result["items"]:
@@ -2340,7 +2355,7 @@ def test_widening_clears_a_nearly_square_item_too(n, sweep):
 # The bound is `spec.max_radius`, and going past it is a REFUSAL rather than a
 # clamp: a clamp would draw the overlap the widening exists to prevent and say
 # nothing. See `compose._plan_ring` for why a refusal rather than a second ring.
-_NEAR_SQUARE_FAN = {"item_width": 90, "item_height": 88, "sweep": 60}
+_NEAR_SQUARE_FAN = {"item_width": 90, "item_height": 88, "item_gap_x": 20, "sweep": 60}
 
 
 @pytest.mark.parametrize("n,radius", [(3, 238), (4, 377), (5, 515), (6, 654)])
@@ -2421,7 +2436,7 @@ def test_an_inner_rings_widening_is_bounded_too():
     nodes = [{"id": i, "items": _spokes(3, first=100 + 10 * i)}
              for i in range(1, 13)]
     with pytest.raises(LayoutError) as caught:
-        compose_radial(nodes, hub={"id": 99}, spec={"sweep": 180})
+        compose_radial(nodes, hub={"id": 99}, spec={**_MEASURED_RING, "sweep": 180})
     message = str(caught.value)
     assert "nodes[0].items" in message, message
     assert "1178" in message, message
@@ -3371,7 +3386,7 @@ def test_a_ring_of_square_items_bulges_by_twice_the_reach_spread():
     """
     out = compose.compose_radial([{"id": i} for i in range(8)],
                                  {"item_width": 150, "item_height": 150,
-                                  "radius": 229},
+                                  "item_gap_x": 20, "radius": 229},
                                  hub={"id": 99})
     center = out["center"]
     distance = {}

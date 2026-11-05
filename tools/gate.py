@@ -178,6 +178,9 @@ KNOWN_SPACED_IDS = (
     # names, which the how-tos quote as prefixes.
     "ZF Functioning", "Business Modeling", "Data Modeling",
 )
+# Anchored on a word boundary, so `AcmeData Modeling::` isn't taken for `Data Modeling::`.
+SPACED_ID_AT_END = re.compile(
+    r"(?<![\w-])(?:" + "|".join(map(re.escape, KNOWN_SPACED_IDS)) + r")$")
 QEA_FILE = re.compile(r"\b([A-Za-z][A-Za-z0-9_-]*)\.(?:qea|eapx|eap|feap)\b")
 MDG_NS = re.compile(r"\b([A-Z][A-Za-z0-9_]{1,30})::")
 
@@ -404,7 +407,7 @@ def check_file(path: Path) -> list[str]:
                 continue
             # A known id with a space in it: the capture is only its last word,
             # so the check is whether the text ending there IS the whole id.
-            if any(line[:m.end(1)].endswith(full) for full in KNOWN_SPACED_IDS):
+            if SPACED_ID_AT_END.search(line[:m.end(1)]):
                 continue
             if language and _shelf_names_it(language, ident):
                 continue
