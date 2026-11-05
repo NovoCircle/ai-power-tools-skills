@@ -7,27 +7,13 @@ technology: UML
 display_name: UML 2.5 (EA base notation)
 stereotype_prefix: ''
 notes: |
-  Twelve diagram types are bound and three are classified and deliberately not. Eleven of the twelve are `graph`: UML is overwhelmingly a graph notation, and the composed grammars have nothing to say about a class diagram. Each of the eleven fails the composed grammars' own tests: nested-grid asks whether an arrow between two boxes would add anything and here it always would; layered-bands asks whether you can name what moving an item between bands would mean, and outside a grouping the caller supplies, you cannot. `graph` is the honest and producible answer: EA's own layout places them, we tidy afterwards, and the sizes, spacing, routing, title convention and channels below all still earn their place.
+  Each EA diagram type here draws the guide diagram type named on its `guide` line. This map has no entry for EA's Sequence, Collaboration (the guide's communication diagram), InteractionOverview, or Profile.
 
-  NOT BOUND, EA-SEMANTIC (c): Sequence. The type dictates the arrangement and a caller must NOT write coordinates. Lifeline order across the page and message order down it are EA's, derived from the message sequence, and the measurement says so: across 14 diagrams the horizontal gap is 50 in 11 of n=46 with a median of 49, an even pitch no modeler produces by hand, while NO element type has a unique modal size at all because a lifeline's height is set by how many messages it carries (Object n=21 over 16 distinct sizes, median 90x413). It is classified rather than keyed for two reasons that reinforce each other: there is no supportable `sizing.default` to give it, and `sizing` is mandatory even for a type whose elements we never size or place. Its quality is lifeline order and message sequence, and neither is a coordinate we compute.
+  Analysis and Custom are EA's own diagram types. The guide has no such types, so they are kept from the earlier conventions, and this file didn't measure them.
 
-  NOT BOUND, BELOW THRESHOLD (b): Collaboration and InteractionOverview. Both are ordinary graphs and both would be `graph`, but neither has a single figure that survives rule 1, so neither has a `sizing.default` that could be stated honestly. Collaboration has 3 plain diagrams and 11 elements; InteractionOverview has 2 diagrams and 15. They are recorded here so that an omission is not mistaken for an oversight, and they need data rather than design. InteractionOverview is structurally an activity diagram whose nodes are interaction occurrences, so it will take Activity's figures once there are enough of it to check that.
+  Two sizes differ from the guide on purpose. On a class diagram an Activity is a box, where the guide says container, because it's drawn there as a classifier and holds no nodes. On a package diagram the default is a large box, where the guide's Package is a container, because a package there is drawn as a tile.
 
-  A DISAGREEMENT WORTH RESOLVING. Statechart is bound `graph`, not `ea-semantic`, though the vocabulary's own commentary lists "states and transitions" under the latter. EA does not impose a state machine's arrangement: 43 plain statecharts place 62 states at freely chosen positions in 20 distinct sizes, and their gap populations (n=132 horizontal, n=107 vertical, no single diagram supplying more than a tenth) look like Logical's and Activity's rather than Sequence's even pitch. Communication diagrams are the same case: the sequence lives in the message numbering, not in coordinates. Sequence and Timing are the two UML types whose geometry is genuinely not ours, and they are the two where the measurement shows it.
-
-  TIMING IS `ea-semantic`, NOT `computed-geometry`, and this contradicts grammars.md §7, which names the timing diagram as part of what remains under computed-geometry alongside the treemap. The vocabulary's own commentary contradicts it too, listing "a waveform against a clock" under ea-semantic. The tie-breaker is the landmine that commentary warns about: a type parked under an unbuilt composed grammar starts reporting itself composable the day that composer ships, so recording Timing as computed-geometry would have a treemap composer claim it can compose a timing diagram. Whoever settles this should strike the timing diagram from computed-geometry's remainder.
-
-  ROUTING IS CONVENTIONAL HERE, NOT MEASURED, and that is a gap rather than a choice. `t_diagramlinks.Style` does carry a route per connector and plain UML is strikingly consistent - `Mode=3` on 346 of 347 connectors on Logical diagrams, 281 of 282 on Activity, 66 of 66 on Use Case - so a single default is certainly right for this notation. But nothing in this skill maps EA's `Mode=` integer to one of the ten route names the schema validates against; that mapping lives in the server's `_ROUTE_STYLES`. So every route NAME below is conventional and flagged as such, while the evidence that one default is correct is measured. Confirming the mapping would settle it in one step. Deployment is the exception to the consistency, at `Mode=3` on 153 and `Mode=8` on 98 of 268.
-
-  TITLES ARE `frame-header` THROUGHOUT, and this is reasoned rather than measured. EA's diagram frame renders the diagram name for every diagram, and UML publishes no drawn-title convention the way an ArchiMate view does. A Text element is present on 25% to 85% of these diagrams depending on the type, but a Text element is a caption, a legend or an annotation, and its presence does not establish that it is a title - so it is not treated as evidence for `drawn`. Declaring `frame-header` avoids the two-title diagram, which is the worse of the two mistakes.
-
-  NO VIEWPOINT CATALOG. UML publishes none - a class diagram is chosen because you are modeling structure, not selected from a list of named views. The `viewpoints` block is therefore absent rather than invented, so view selection cannot recommend a UML view that does not exist.
-
-  WHAT A BINDING BUILT ON THIS ONE INHERITS. Every MDG technology is a stereotype layer applied to UML, not a notation beside it, so every other shipped binding declares `extends: UML` and each of its diagram types names in `base` which entry below it is drawn on. TOGAF-UML, DataModel-UML and Zachman-ERD belong here for the same reason the four shipped MDGs do, and not a different one.
-
-  WHAT CARRIES OVER IS THE UNSTATED SLOT, AND ONLY THAT. Sizes and gaps merge per key: a concept a child sizes for itself keeps its own size, `sizing.default` is always the child's because the schema requires it to state one, and what a child is silent about takes the figure measured here. That silence used to reach the engine's own 20-unit gap instead, which is the whole reason for the arrangement. Nothing else merges. `grammar`, `title`, `routing` and `channels` are each mandatory or a statement in their own right, and a child's `layered-bands` or `lanes` must never be flattened to this file's `graph` - adding structure UML lacks is exactly what an MDG is for. Nor does a child acquire the diagram types below as entries in its own catalog: they are its substrate, and a technology's diagram types are the ones its MDG declares.
-
-  THE `stereotype_prefix` TRAP, WHICH IS LIVE. A child that omits the key inherits this file's `""`. That is right for a family drawn in plain UML and WRONG for one whose MDG stereotypes its elements, so a derived family with a real prefix must state it: ArchiMate3's is `ArchiMate_` and it says so. The loader distinguishes an absent key from a declared `""`, which is what makes the second form a statement rather than an absence; do not "simplify" that check away.
+  The route names are conventions, not measurements: nothing here maps EA's stored route numbers to them.
 diagram_types:
   Logical:
     base: Logical
@@ -466,8 +452,6 @@ diagram_types:
           and which state. This is what makes the arrangement type-fixed.'
         size: Width is duration. A timeline drawn wider covers a longer span, so resizing one restates
           the measurement.
-        line_style: 'Normative in UML: dashed against solid separates a dependency or a realization from
-          an association. Overwriting it changes what a connector means.'
       free:
       - fill
       - border
@@ -504,8 +488,8 @@ diagram_types:
       fill: null
       claimed:
         position: Spoken for by EA's layout; see the Logical diagram type.
-        size: Content. An object on one of these diagrams is sized by the text it carries - 14 distinct
-          sizes across 21 objects - so using size to encode something else fights the content.
+        size: Content. An object on one of these diagrams is sized by the text it carries, with 14 distinct
+          sizes across 21 objects, so using size to encode something else fights the content.
         line_style: Normative in UML; see the Logical diagram type.
       free:
       - fill

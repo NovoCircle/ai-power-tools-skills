@@ -6931,9 +6931,9 @@ data_types:
     - {name: MessageKind, kind: enumeration, values: ["complete", "lost", "found", "unknown"], section: "17.12.20"}
     - {name: MessageSort, kind: enumeration, values: ["synchCall", "asynchCall", "asynchSignal", "createMessage", "deleteMessage", "reply"], section: "17.12.22"}
   attributes:
-    coverage: every_concept
+    coverage: some_concepts
     where: concepts
-    note: Each concept entry lists its own attributes under `attributes` (name, type, multiplicity, and default, derived, ordered or unique where the standard gives them). Properties that are association ends are not repeated there; they are in relationships.metamodel_associations (49 pin associations of clause 16 are not listed).
+    note: A concept entry that has attributes lists them under `attributes` (name, type, multiplicity, and default, derived, ordered or unique where the standard gives them). Properties that are association ends are not repeated there; they are in relationships.metamodel_associations (49 pin associations of clause 16 are not listed).
 notation:
   coverage: normative
   section: "Annex A; the Notation subclauses (x.4) of clauses 7 to 20; 21.3"
@@ -7289,7 +7289,6 @@ layout:
     InterruptibleActivityRegion: container
     Model: container
     Package: container
-    ParameterSet: container
     Profile: container
     ProtocolStateMachine: container
     Region: container
@@ -7321,7 +7320,6 @@ layout:
     Pin: attached-item
     Port: attached-item
     RedefinableTemplateSignature: attached-item
-    TemplateParameter: attached-item
     TemplateSignature: attached-item
     TemplateableElement: attached-item
     ValuePin: attached-item
@@ -7363,6 +7361,7 @@ layout:
       - Slot
       - StringExpression
       - StructuralFeature
+      - TemplateParameter
       - TemplateParameterSubstitution
       - TimeEvent
       - TimeExpression
@@ -7419,10 +7418,61 @@ layout:
       - Image
       - MessageOccurrenceSpecification
       - OccurrenceSpecification
+    drawn_around_pins:
+      reason: A rectangle drawn around the pins of an action, so the pins it holds set its size.
+      concepts:
+      - ParameterSet
     not_drawn:
       reason: The standard gives these no drawing of their own (abstract, or shown only through their
         subclasses).
-      concepts: see `notation.not_specified`
+      concepts:
+      - ActivityGroup
+      - ActivityNode
+      - Behavior
+      - BehavioralFeature
+      - BehavioredClassifier
+      - CallAction
+      - Clause
+      - ConditionalNode
+      - ConnectableElement
+      - ControlNode
+      - DeployedArtifact
+      - DeploymentTarget
+      - DirectedRelationship
+      - Element
+      - EncapsulatedClassifier
+      - Event
+      - Feature
+      - FinalNode
+      - FunctionBehavior
+      - InteractionFragment
+      - LinkAction
+      - LinkEndCreationData
+      - LinkEndData
+      - LinkEndDestructionData
+      - LoopNode
+      - MessageEnd
+      - MessageEvent
+      - NamedElement
+      - Namespace
+      - OpaqueBehavior
+      - PackageableElement
+      - ParameterableElement
+      - Protocol conformance
+      - ProtocolConformance
+      - QualifierValue
+      - Relationship
+      - SequenceNode
+      - StructuralFeatureAction
+      - Type
+      - TypedElement
+      - ValueSpecification
+      - Variable
+      - VariableAction
+      - Vertex
+      - WriteLinkAction
+      - WriteStructuralFeatureAction
+      - WriteVariableAction
   exceptions: {}
   diagram_types:
     Sequence diagram:
@@ -7438,8 +7488,6 @@ layout:
             and which state. This is what makes the arrangement type-fixed.'
           size: Width is duration. A timeline drawn wider covers a longer span, so resizing one restates
             the measurement.
-          line_style: 'Normative in UML: dashed against solid separates a dependency or a realization
-            from an association. Overwriting it changes what a connector means.'
         free:
         - fill
         - border

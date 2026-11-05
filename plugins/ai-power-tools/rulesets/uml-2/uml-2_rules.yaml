@@ -16,7 +16,7 @@
 # WHAT THE VALIDATOR CANNOT SEE. It reads an element's type, stereotype, tags, connector counts and containers, and a connector's type,
 # stereotype and two ends. It cannot read attributes, operations, parameters, multiplicities, the kind of a pseudostate or action (a stored
 # number), the operator of a combined fragment, generalization chains, what a part or port is typed by, names, or numeric values. Most of
-# UML's rules are about those, so only 23 of the language skill's rules are in this file; the
+# UML's rules are about those, so only 24 of the language skill's rules are in this file; the
 # others are review guidance.
 #
 # ENDPOINT LISTS. The engine's endpoint condition takes a list for each end. A rule that bans a few types lists every other EA element type

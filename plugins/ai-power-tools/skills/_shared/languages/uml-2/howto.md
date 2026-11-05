@@ -103,7 +103,9 @@ Concepts with no EA type found: the values and expressions (held as text), time 
 
 ## Checking a model
 
-The ruleset, `uml-2_rules.yaml`, checks 23 of the language skill's rules with the engine's rules by EA type and where-it-sits rules: what a generalization, a use case connector, an extension, an information flow, a communication path and a connector may join; what the keyword usages (`call`, `send`, `create`, `instantiate`) and the stereotyped package and use case relationships (`include`, `extend`, `import`, `access`, `merge`, `substitute`) may join; that control flows and object flows keep to control and object nodes; the edges of a decision and a merge node; where a port and a region may sit; and what a node may nest. It cannot read attributes and operations, multiplicities, typing, generalization chains, the kind of a pseudostate or action, or an element's own name or text, so most of the 530 checkable rules are review guidance, not machine checks.
+The ruleset, `rulesets/uml-2/uml-2_rules.yaml`, checks 24 of the language skill's rules with the engine's rules by EA type and where-it-sits rules: what a generalization, a use case connector, an extension, an information flow, a communication path and a connector may join; what the keyword usages (`call`, `send`, `create`, `instantiate`) and the stereotyped package and use case relationships (`include`, `extend`, `import`, `access`, `merge`, `substitute`) may join; that control flows and object flows keep to control and object nodes; the edges of a decision and a merge node; where a port and a region may sit; and what a node may nest. It cannot read attributes and operations, multiplicities, typing, generalization chains, the kind of a pseudostate or action, or an element's own name or text, so most of the 530 checkable rules are review guidance, not machine checks.
+
+This ruleset needs server 3.6.5 or later. On 3.6.4 and earlier its rules report nothing, with no error, so a clean result there means nothing.
 
 ## An illustration (Westbrook Bank, fictitious)
 
