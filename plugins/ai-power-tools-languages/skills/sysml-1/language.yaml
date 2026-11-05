@@ -1,0 +1,983 @@
+# OMG Systems Modeling Language (SysML) 1.5: language file (schema_version 1).
+# Written from the standard only. Concept names are the standard's own names (no spaces).
+# Keys beyond the base language-file layout: extends, newer_versions, uml_subset, concepts.groups,
+#   concepts.elements[].group / .uml_base / .basis / .external / .definition, relationships.items[].uml_base / .ends_per_relationship / .note,
+#   diagram_types[].frame / .admits_note / .excludes / .relation_to_uml, constraints[].category / .checkable / .applies_when.
+#   constraints[].checkable : static = a validator that sees only the saved model can check it; partial = structure or simple cases only;
+#                              runtime = needs instances or an executing model; none = not a property of a model.
+#   constraints[].applies_when : omitted = always; otherwise the condition under which the rule applies.
+#   concepts.elements[].basis : classification = a classification the standard names in prose, not an element of its profile;
+#                              xmi = a generalization or abstractness the text does not state, read from SysML.xmi or SysMLDI.xmi.
+#   Strength policy: must = error, should = warning, note = advice only.
+schema_version: 1
+id: sysml-1
+name: OMG Systems Modeling Language (SysML)
+owner: {name: Object Management Group, kind: standards-body}
+standard: {name: OMG Systems Modeling Language (SysML), version: '1.5', status: published, reference: 'OMG formal/17-05-01 (specification, May 2017); changebar edition formal/17-05-02; normative machine-readable model SysML.xmi (ptc/16-12-10). https://www.omg.org/spec/SysML/1.5/', supersedes: 1.4 (August 2015), kind: 'profile of UML 2.5 (the language reuses a subset of UML, called UML4SysML, and extends it with profile elements, diagram extensions and model libraries)'}
+newer_versions:
+- {version: '1.6', date: December 2019, url: 'https://www.omg.org/spec/SysML/1.6'}
+- {version: '1.7', date: June 2024, url: 'https://www.omg.org/spec/SysML/1.7'}
+- {version: '2.0', date: September 2025, url: 'https://www.omg.org/spec/SysML/2.0', note: 'SysML v2: a new language with its own abstract syntax, not researched here.'}
+extends: {language: uml, version: '2.5', note: SysML is a UML profile. UML concepts are defined by the UML language skill; this file names the ones SysML reuses and states the SysML additions. The id of the UML language is to be set when that skill exists.}
+concepts:
+  source: 'OMG SysML 1.5: the profile definitions in each clause''s UML Extensions sub clause (7.3.2, 8.3.2, 9.3.2, 10.3.2, 11.3.2, 15.3.2, 16.3.2), the model libraries (8.3.3, 11.3.3), Annex B (informative) and Annex C (deprecated). Generalizations and abstractness that the text does not state were read from the normative machine-readable models (SysML.xmi, and SysMLDI.xmi for Annex B) and are marked basis: xmi.'
+  count_defined_here: 86
+  count_reused_uml: 93
+  groups:
+    Model management: {defined_by: Clause 7, notes: 'Views, viewpoints, stakeholders, element groups, rationale and problems; the package diagram organizes the model.'}
+    Blocks and properties: {defined_by: Clause 8, notes: 'Blocks, the kinds of property, connectors and property paths.'}
+    Value types and units: {defined_by: 'Clauses 8.3.2.15, 8.3.3', notes: 'Value types, units, quantity kinds and the primitive value type library.'}
+    Ports and flows: {defined_by: Clause 9, notes: 'Ports, interface blocks, flow properties, item flows, provided and required features.'}
+    Constraint blocks: {defined_by: Clause 10, notes: Reusable constraints and their usages for parametric models.}
+    Activity extensions: {defined_by: Clause 11, notes: 'Extensions to UML activities: control as data, rates, probabilities, buffering.'}
+    Allocation: {defined_by: Clause 15, notes: The cross-mapping relationship and its partition notation.}
+    Requirements: {defined_by: Clause 16, notes: 'Requirements, test cases and the requirement relationships.'}
+    Diagram interchange: {defined_by: Annex B (informative), notes: Elements that describe SysML diagrams for interchange.}
+    Deprecated: {defined_by: Annex C (normative), notes: 'Flow ports and flow specifications, kept for compatibility; not part of conformance.'}
+    Reused from UML: {defined_by: Clause 4 (Table 4.2), notes: 'UML concepts SysML reuses that appear in its diagram and relationship tables. They are defined by UML, not here; see the UML language skill.'}
+  elements:
+    Rationale: {display: Rationale, group: Model management, uml_base: Comment, section: 7.3.2.5, definition: 'A comment that records the justification for a decision, a requirement or a design choice; it can be attached to any element, including a relationship, and can point to a trade study or analysis report.'}
+    Problem: {display: Problem, group: Model management, uml_base: Comment, section: 7.3.2.4, definition: 'A comment that records a deficiency, limitation or failure of one or more elements to satisfy a requirement or need, and attaches that problem to the elements concerned.'}
+    ElementGroup: {display: Element Group, group: Model management, uml_base: Comment, section: 7.3.2.2, definition: 'A lightweight, modeler-defined grouping of possibly unlike elements: the comment text states the membership criterion and the annotated elements are the members. A group owns nothing, so an element can be in many groups.', attributes: [{name: name}, {name: criterion}, {name: size}, {name: member}, {name: orderedMember}]}
+    Stakeholder: {display: Stakeholder, group: Model management, uml_base: Classifier, section: 7.3.2.6, definition: 'A role, group or individual whose concerns a view is meant to address; it lists those concerns.', attributes: [{name: concernList}, {name: concern}]}
+    Viewpoint: {display: Viewpoint, group: Model management, uml_base: Class, section: 7.3.2.8, definition: 'The conventions and rules for building and using a view to address a set of stakeholder concerns: its stakeholders, purpose, concerns, languages, method and presentation rules.', attributes: [{name: stakeholder}, {name: purpose}, {name: concernList}, {name: concern}, {name: language}, {name: method}, {name: presentation}]}
+    View: {display: View, group: Model management, uml_base: Class, section: 7.3.2.7, definition: 'A model element that stands for an artifact presented to stakeholders, produced by querying the model by a viewpoint method; it conforms to exactly one viewpoint.', attributes: [{name: viewpoint}, {name: stakeholder}]}
+    Conform: {display: Conform, group: Model management, uml_base: Generalization, section: 7.3.2.1, definition: 'The relationship from a view to the viewpoint it conforms to, a generalization with the view as specific and the viewpoint as general.'}
+    Expose: {display: Expose, group: Model management, uml_base: Dependency, section: 7.3.2.3, definition: The relationship from a view to each model element that is an access point from which the view method starts its query.}
+    Block: {display: Block, group: Blocks and properties, uml_base: Class, section: 8.3.2.4, definition: 'A modular unit that describes the structure of a system or any element of interest, owning properties, operations and connectors. It is the basic unit of system decomposition and can be used at any level of any kind of system.', attributes: [{name: isEncapsulated, type: Boolean, multiplicity: "0..1"}]}
+    PartProperty: {display: Part Property, group: Blocks and properties, uml_base: Property, section: 8.3.2.4, definition: 'A property typed by a block and having composite aggregation (other than a constraint property): it holds instances that belong to a larger whole.', basis: classification}
+    ReferenceProperty: {display: Reference Property, group: Blocks and properties, uml_base: Property, section: 8.3.2.4, definition: 'A property typed by a block and not having composite aggregation: it refers to instances owned elsewhere.', basis: classification}
+    ValueProperty: {display: Value Property, group: Blocks and properties, uml_base: Property, section: 8.3.2.4, definition: A property typed by a value type; it always has composite aggregation., basis: classification}
+    AssociationBlock: {display: Association Block, group: Blocks and properties, uml_base: AssociationClass, section: 8.3.2.13, definition: A block applied to an association class (the standard names it informally); each instance links instances at the association ends and can own properties and connectors., basis: classification}
+    BindingConnector: {display: Binding Connector, group: Blocks and properties, uml_base: Connector, section: 8.3.2.3, definition: A connector that says the properties at its two ends hold equal values (value-typed ends) or refer to the same block instance (block-typed ends).}
+    ConnectorProperty: {display: Connector Property, group: Blocks and properties, uml_base: Property, section: 8.3.2.7, definition: A composite property whose values are the instances of the association block that types a connector of the owning block., attributes: [{name: connector}]}
+    ParticipantProperty: {display: Participant Property, group: Blocks and properties, uml_base: Property, section: 8.3.2.13, definition: A property of an association block that identifies the value or object at one end of a link of that association block., attributes: [{name: end}]}
+    AdjunctProperty: {display: Adjunct Property, group: Blocks and properties, uml_base: Property, section: 8.3.2.2, definition: 'A property whose values are constrained to those of a principal element: a connector, call action, object node, variable, parameter, interaction use or submachine state.', attributes: [{name: principal}]}
+    ClassifierBehaviorProperty: {display: Classifier Behavior Property, group: Blocks and properties, uml_base: Property, section: 8.3.2.6, definition: A composite property whose values are the executions of the classifier behavior of its owning block.}
+    EndPathMultiplicity: {display: End Path Multiplicity, group: Blocks and properties, uml_base: Property, section: 8.3.2.11, definition: 'Gives the minimum and maximum number of values at the end of the binding path of a bound reference, for each object reached along the path; applied to a property that redefines a bound reference.', attributes: [{name: lower, default: "0"}, {name: upper, default: "unlimited"}]}
+    BoundReference: {display: Bound Reference, group: Blocks and properties, uml_base: Property, specializes: EndPathMultiplicity, section: 8.3.2.5, definition: Highlights a property that is bound by a binding connector so that it constrains other (possibly deeply nested) properties; its type and multiplicity constrain the values reached along the binding path. The text calls bound references end path multiplicities., attributes: [{name: boundEnd}, {name: bindingPath, derived: true, ordered: true, unique: false}]}
+    ElementPropertyPath: {display: Element Property Path, group: Blocks and properties, uml_base: Element, abstract: true, section: 8.3.2.10, definition: Lets an element identify another element through a multi-level path of properties from a context block. Specializations say what the context is., basis: xmi, attributes: [{name: propertyPath}]}
+    DirectedRelationshipPropertyPath: {display: Directed Relationship Property Path, group: Blocks and properties, uml_base: DirectedRelationship, abstract: true, section: 8.3.2.8, definition: Lets a directed relationship identify its source and target by multi-level property paths from context blocks., basis: xmi, attributes: [{name: sourceContext}, {name: sourcePropertyPath}, {name: targetContext}, {name: targetPropertyPath}]}
+    NestedConnectorEnd: {display: Nested Connector End, group: Blocks and properties, uml_base: ConnectorEnd, specializes: ElementPropertyPath, section: 8.3.2.12, definition: Lets a connector end attach to a property reached by a multi-level path of properties from the block that owns the connector; applied automatically to ends nested more than one level deep.}
+    PropertySpecificType: {display: Property Specific Type, group: Blocks and properties, uml_base: Classifier, section: 8.3.2.14, definition: 'An unnamed classifier owned by a block and used as the type of exactly one property, to hold local additions or redefinitions of the type written in square brackets.'}
+    DistributedProperty: {display: Distributed Property, group: Blocks and properties, uml_base: Property, section: 8.3.2.9, definition: Applies a probability distribution to the values of a property of a block or value type; specific distributions are specializations.}
+    ValueType: {display: Value Type, group: Value types and units, uml_base: DataType, section: 8.3.2.15, definition: A type of value that cannot be the target of a reference and may carry a unit and quantity kind; used to type properties and parameters., attributes: [{name: unit, type: InstanceSpecification, multiplicity: "0..1"}, {name: quantityKind, type: InstanceSpecification, multiplicity: "0..1"}]}
+    Unit: {display: Unit, group: Value types and units, uml_base: (model library block), specializes: Block, section: 8.3.3.2.2, definition: A quantity in terms of which other quantities of the same quantity kind are stated. A non-abstract block in the UnitAndQuantityKind library; an instance specification classified by it (or a specialization) defines one measurement unit., attributes: [{name: symbol, type: String, multiplicity: "0..1"}, {name: description, type: String, multiplicity: "0..1"}, {name: definitionURI, type: String, multiplicity: "0..1"}, {name: quantityKind, type: QuantityKind, multiplicity: "0..*"}]}
+    QuantityKind: {display: Quantity Kind, group: Value types and units, uml_base: (model library block), specializes: Block, section: 8.3.3.2.1, definition: A kind of quantity that may be stated by means of defined units. A non-abstract block in the UnitAndQuantityKind library; an instance specification classified by it defines one kind of quantity., attributes: [{name: symbol, type: String, multiplicity: "0..1"}, {name: description, type: String, multiplicity: "0..1"}, {name: definitionURI, type: String, multiplicity: "0..1"}]}
+    Boolean: {display: Boolean, group: Value types and units, uml_base: (model library value type), specializes: ValueType, section: 8.3.3.1.1, definition: The value type with the values true and false.}
+    Number: {display: Number, group: Value types and units, uml_base: (model library value type), specializes: ValueType, abstract: true, section: 8.3.3.1.4, definition: The abstract value type from which the numeric value types are specialized.}
+    Integer: {display: Integer, group: Value types and units, uml_base: (model library value type), specializes: Number, section: 8.3.3.1.3, definition: 'The mathematical integers, without committing to a representation.', basis: xmi}
+    Real: {display: Real, group: Value types and units, uml_base: (model library value type), specializes: Number, section: 8.3.3.1.5, definition: 'The mathematical reals (continuous quantities), without committing to precision or scale.', basis: xmi}
+    Complex: {display: Complex, group: Value types and units, uml_base: (model library value type), specializes: Number, section: 8.3.3.1.2, definition: 'A complex number with a real part and an imaginary part, each of type Real.', basis: xmi, attributes: [{name: realPart, type: Real}, {name: imaginaryPart, type: Real}]}
+    String: {display: String, group: Value types and units, uml_base: (model library value type), specializes: ValueType, section: 8.3.3.1.6, definition: A sequence of characters in a suitable character set.}
+    InterfaceBlock: {display: Interface Block, group: Ports and flows, uml_base: Class, specializes: Block, section: 9.3.2.9, definition: 'A block with no behaviors and no internal parts, used to type proxy ports; its ports can only be typed by interface blocks.'}
+    ProxyPort: {display: Proxy Port, group: Ports and flows, uml_base: Port, section: 9.3.2.12, definition: A port that exposes features of its owning block or of its internal parts to external connectors without being a separate element; typed by an interface block.}
+    FullPort: {display: Full Port, group: Ports and flows, uml_base: Port, section: 9.3.2.8, definition: 'A port that is a separate element of the system with its own features, parts and behaviors; not behavioral and not conjugated.'}
+    FlowDirection: {display: Flow Direction, group: Ports and flows, uml_base: (enumeration), section: 9.3.2.6, definition: 'Enumeration with the literals in, out and inout (the text and the model agree) giving the direction items can flow to or from the owning block.'}
+    FlowProperty: {display: Flow Property, group: Ports and flows, uml_base: Property, section: 9.3.2.7, definition: 'A property signifying one kind of item (data, material, energy) that can flow into or out of a block, with a direction.', attributes: [{name: direction, type: FlowDirection}]}
+    FeatureDirection: {display: Feature Direction, group: Ports and flows, uml_base: (enumeration), section: 9.3.2.5, definition: 'Enumeration with the literals provided, required and providedRequired (the text writes the last one providedrequired).'}
+    DirectedFeature: {display: Directed Feature, group: Ports and flows, uml_base: Feature, section: 9.3.2.4, definition: 'Says whether a non-flow property or behavioral feature is provided by the owning block, required from other blocks, or both.', attributes: [{name: featureDirection, type: FeatureDirection}]}
+    ItemFlow: {display: Item Flow, group: Ports and flows, uml_base: InformationFlow, section: 9.3.2.11, definition: 'The items that do flow across a connector or association in a particular context, optionally with an item property that holds the flowing values.', attributes: [{name: itemProperty, type: Property, multiplicity: "0..1"}]}
+    InvocationOnNestedPortAction: {display: Invocation On Nested Port Action, group: Ports and flows, uml_base: InvocationAction, specializes: ElementPropertyPath, section: 9.3.2.10, definition: Extends an invocation action so it can send to a port reached by a multi-level path of nested ports.}
+    TriggerOnNestedPort: {display: Trigger On Nested Port, group: Ports and flows, uml_base: Trigger, specializes: ElementPropertyPath, section: 9.3.2.13, definition: Extends a trigger so it can receive on a port reached by a multi-level path of nested ports; not applicable to full ports.}
+    ChangeStructuralFeatureEvent: {display: Change Structural Feature Event, group: Ports and flows, uml_base: ChangeEvent, section: 9.3.2.3, definition: An event that models changes in the values of a structural feature., attributes: [{name: structuralFeature}]}
+    AcceptChangeStructuralFeatureEventAction: {display: Accept Change Structural Feature Event Action, group: Ports and flows, uml_base: AcceptEventAction, section: 9.3.2.1, definition: 'An accept-event action for change structural feature events with two output pins: the values just after and just before the change.'}
+    ConstraintBlock: {display: Constraint Block, group: Constraint blocks, uml_base: Class, specializes: Block, section: 10.3.2.1, definition: 'A block that packages a constraint so it can be reused to constrain properties of other blocks; its properties are the constraint parameters, plus nested constraint properties.'}
+    ConstraintProperty: {display: Constraint Property, group: Constraint blocks, uml_base: Property, section: 10.3.2.1, definition: 'A property of any block that is typed by a constraint block: a local usage of the constraint, with composite aggregation.', basis: classification}
+    ConstraintParameter: {display: Constraint Parameter, group: Constraint blocks, uml_base: Property, section: 10.3.2.1, definition: A property of a constraint block that stands for one variable of its constraint (other than constraint properties holding nested usages); bound by binding connectors., basis: classification}
+    ControlOperator: {display: Control Operator, group: Activity extensions, uml_base: 'Behavior, Operation', section: 11.3.2.2, definition: 'A behavior or operation that takes or returns control values as data, so it can enable and disable other actions.'}
+    ControlValue: {display: Control Value, group: Activity extensions, uml_base: (model library enumeration), section: 11.3.3.1.1, definition: 'Enumeration, in the ControlValues library, that treats control as data; its literals are enable and disable and modelers may add more.'}
+    Rate: {display: Rate, group: Activity extensions, uml_base: 'ActivityEdge, ObjectNode, Parameter', section: 11.3.2.8, definition: The expected number of objects or values per time interval that traverse an edge or flow through a streaming parameter., attributes: [{name: rate, type: InstanceSpecification}]}
+    Continuous: {display: Continuous, group: Activity extensions, uml_base: 'ActivityEdge, ObjectNode, Parameter (through Rate)', specializes: Rate, section: 11.3.2.1, definition: 'A rate where the time between items approaches zero, for continuous flows.'}
+    Discrete: {display: Discrete, group: Activity extensions, uml_base: 'ActivityEdge, ObjectNode, Parameter (through Rate)', specializes: Rate, section: 11.3.2.3, definition: 'A rate where the time between items is non-zero, for discrete flows.'}
+    Probability: {display: Probability, group: Activity extensions, uml_base: 'ActivityEdge, ParameterSet', section: 11.3.2.7, definition: 'The probability that an edge leaving a decision node or object node is traversed, or that an output parameter set receives values.', attributes: [{name: probability, type: ValueSpecification}]}
+    NoBuffer: {display: No Buffer, group: Activity extensions, uml_base: ObjectNode, section: 11.3.2.4, definition: 'On an object node, tokens refused by outgoing edges (or by the action, for input pins) are discarded instead of held.'}
+    Overwrite: {display: Overwrite, group: Activity extensions, uml_base: ObjectNode, section: 11.3.2.5, definition: 'On an object node, a token arriving at a full node removes the one that has been there longest before being added.'}
+    Optional: {display: Optional, group: Activity extensions, uml_base: Parameter, section: 11.3.2.6, definition: 'On a parameter, says its lower multiplicity is zero, so it need not have a value for the behavior to start or end.'}
+    Allocate: {display: Allocate, group: Allocation, uml_base: Abstraction, specializes: DirectedRelationshipPropertyPath, section: 15.3.2.1, definition: 'A directed relationship that maps an element of one kind or hierarchy onto an element of another at an abstract level (behavior to structure, flow to flow, structure to structure); a precursor to concrete relationships.'}
+    AllocateActivityPartition: {display: Allocate Activity Partition, group: Allocation, uml_base: ActivityPartition, section: 15.3.2.2, definition: 'An activity partition that depicts an allocation: its actions are the clients, and the element the partition represents is the supplier, of allocate dependencies.'}
+    AbstractRequirement: {display: Abstract Requirement, group: Requirements, uml_base: NamedElement, abstract: true, section: 16.3.2.1, definition: 'Establishes the attributes (text, id) and derived relationships common to every kind of requirement; the base for every requirement kind.', basis: xmi, attributes: [{name: text, type: String}, {name: id, type: String}, {name: satisfiedBy, derived: true}, {name: verifiedBy, derived: true}, {name: tracedTo, derived: true}, {name: derived, derived: true}, {name: derivedFrom, derived: true}, {name: refinedBy, derived: true}, {name: master, derived: true}]}
+    Requirement: {display: Requirement, group: Requirements, uml_base: Class, specializes: AbstractRequirement, section: 16.3.2.5, definition: 'A capability or condition that must (or should) be satisfied: a contract between stakeholders and the designers. Compound requirements nest sub-requirements.'}
+    TestCase: {display: Test Case, group: Requirements, uml_base: 'Behavior, Operation', section: 16.3.2.6, definition: A method for verifying that a requirement is satisfied; its return parameter is a verdict.}
+    VerdictKind: {display: Verdict Kind, group: Requirements, uml_base: (enumeration), section: 16.3.2.6, definition: 'The enumeration, borrowed from the UML testing profile, that types the return parameter of a test case; its literals in the machine-readable model are pass, fail, inconclusive and error.'}
+    Satisfy: {display: Satisfy, group: Requirements, uml_base: Abstraction, specializes: Trace, section: 16.3.2.7, definition: A dependency from a model element that fulfills a requirement (client) to the requirement (supplier)., basis: xmi}
+    Verify: {display: Verify, group: Requirements, uml_base: Abstraction, specializes: Trace, section: 16.3.2.9, definition: A dependency from a test case or other element that can determine whether the system fulfills a requirement (client) to the requirement (supplier)., basis: xmi}
+    DeriveReqt: {display: Derive Requirement, group: Requirements, uml_base: Abstraction, specializes: Trace, section: 16.3.2.3, definition: A dependency between two requirements in which the client is derived from the supplier., basis: xmi}
+    Refine: {display: Refine, group: Requirements, uml_base: Abstraction, specializes: DirectedRelationshipPropertyPath, section: 16.3.2.4, definition: 'A dependency saying an element, or set of elements, refines a requirement (or a requirement refines a model element); with exactly one client and one supplier.'}
+    Trace: {display: Trace, group: Requirements, uml_base: Abstraction, specializes: DirectedRelationshipPropertyPath, section: 16.3.2.8, definition: 'A general-purpose, weak relationship between a requirement and any other model element; with exactly one client and one supplier.'}
+    Copy: {display: Copy, group: Requirements, uml_base: Abstraction, specializes: Trace, section: 16.3.2.2, definition: 'A dependency making the client (slave) requirement text a read-only copy of the supplier (master) requirement text, for reuse across hierarchies.', basis: xmi}
+    SysMLDiagramElement: {display: SysML Diagram Element, group: Diagram interchange, uml_base: UML diagram element, abstract: true, section: B.2.5, definition: Abstract base for all SysML diagram-interchange elements; records whether a decomposition symbol is shown., basis: xmi}
+    SysMLDiagram: {display: SysML Diagram, group: Diagram interchange, uml_base: UML diagram element, specializes: SysMLDiagramElement, abstract: true, section: B.2.4, definition: 'Abstract base for all SysML diagrams: requires a frame and a heading, and records the default namespace.', basis: xmi}
+    SysMLDiagramWithAssociations: {display: SysML Diagram With Associations, group: Diagram interchange, uml_base: UML diagram element, specializes: SysMLDiagram, abstract: true, section: B.2.6, definition: 'Abstract base for diagrams that show associations: no association dot, one-way navigability notation, no non-navigability notation.', basis: xmi}
+    SysMLStructureDiagram: {display: SysML Structure Diagram, group: Diagram interchange, uml_base: UML diagram element, specializes: SysMLDiagramWithAssociations, abstract: true, section: B.2 (Figure B.3), definition: Abstract grouping for the structure diagram kinds., basis: xmi}
+    SysMLBlockDefinitionDiagram: {display: SysML Block Definition Diagram, group: Diagram interchange, uml_base: UML diagram element, specializes: SysMLStructureDiagram, section: B.2.3, definition: Interchange form of a block definition diagram; default namespace is a block or a package., basis: xmi}
+    SysMLInternalBlockDiagram: {display: SysML Internal Block Diagram, group: Diagram interchange, uml_base: UML diagram element, specializes: SysMLStructureDiagram, section: B.2.8, definition: Interchange form of an internal block diagram; default namespace is a block., basis: xmi}
+    SysMLParametricDiagram: {display: SysML Parametric Diagram, group: Diagram interchange, uml_base: UML diagram element, specializes: SysMLInternalBlockDiagram, section: B.2.10, definition: Interchange form of a parametric diagram; default namespace is a block; records whether constraint properties are drawn with rounded corners., basis: xmi}
+    SysMLRequirementDiagram: {display: SysML Requirement Diagram, group: Diagram interchange, uml_base: UML diagram element, specializes: SysMLStructureDiagram, section: B.2.11, definition: Interchange form of a requirement diagram; default namespace is a package or a requirement., basis: xmi}
+    SysMLPackageDiagram: {display: SysML Package Diagram, group: Diagram interchange, uml_base: UML diagram element, specializes: SysMLStructureDiagram, section: B.2.9, definition: Interchange form of a package diagram; default namespace is a package., basis: xmi}
+    SysMLBehaviorDiagram: {display: SysML Behavior Diagram, group: Diagram interchange, uml_base: UML diagram element, specializes: SysMLDiagram, abstract: true, section: B.2.2, definition: Abstract base for the behavior diagram kinds., basis: xmi}
+    SysMLActivityDiagram: {display: SysML Activity Diagram, group: Diagram interchange, uml_base: UML diagram element, specializes: SysMLBehaviorDiagram, section: B.2.1, definition: Interchange form of an activity diagram; default namespace is an activity; records whether control flows are dashed., basis: xmi}
+    SysMLInteractionDiagram: {display: SysML Interaction Diagram, group: Diagram interchange, uml_base: UML diagram element, specializes: SysMLBehaviorDiagram, section: B.2.7, definition: Interchange form of a sequence diagram; default namespace is an interaction; only the sequence kind., basis: xmi}
+    SysMLStateMachineDiagram: {display: SysML State Machine Diagram, group: Diagram interchange, uml_base: UML diagram element, specializes: SysMLBehaviorDiagram, section: B.2.12, definition: Interchange form of a state machine diagram; default namespace is a state machine., basis: xmi}
+    SysMLUseCaseDiagram: {display: SysML Use Case Diagram, group: Diagram interchange, uml_base: UML diagram element, specializes: SysMLBehaviorDiagram, section: B.2.13, definition: Interchange form of a use case diagram; default namespace is a package. In the machine-readable model it also specializes the diagram with associations kind., basis: xmi}
+    FlowPort: {display: Flow Port, group: Deprecated, uml_base: Port, section: C.3.2.2, definition: 'Deprecated. A port through which items flow into or out of the owning block; atomic (typed by one block, value type or signal) or non-atomic (typed by a flow specification).', attributes: [{name: isAtomic, type: Boolean, derived: true}, {name: direction, type: FlowDirection}]}
+    FlowSpecification: {display: Flow Specification, group: Deprecated, uml_base: Interface, section: C.3.2.4, definition: Deprecated. An interface that lists flow properties only; types non-atomic flow ports.}
+    Package: {display: Package, group: Reused from UML, external: UML 2.5}
+    Model: {display: Model, group: Reused from UML, external: UML 2.5}
+    Comment: {display: Comment, group: Reused from UML, external: UML 2.5}
+    Constraint: {display: Constraint, group: Reused from UML, external: UML 2.5}
+    Dependency: {display: Dependency, group: Reused from UML, external: UML 2.5}
+    Abstraction: {display: Abstraction, group: Reused from UML, external: UML 2.5}
+    Realization: {display: Realization, group: Reused from UML, external: UML 2.5}
+    PackageImport: {display: PackageImport, group: Reused from UML, external: UML 2.5}
+    ElementImport: {display: ElementImport, group: Reused from UML, external: UML 2.5}
+    Generalization: {display: Generalization, group: Reused from UML, external: UML 2.5}
+    GeneralizationSet: {display: GeneralizationSet, group: Reused from UML, external: UML 2.5}
+    Association: {display: Association, group: Reused from UML, external: UML 2.5}
+    Class: {display: Class, group: Reused from UML, external: UML 2.5}
+    Classifier: {display: Classifier, group: Reused from UML, external: UML 2.5}
+    Property: {display: Property, group: Reused from UML, external: UML 2.5}
+    Port: {display: Port, group: Reused from UML, external: UML 2.5}
+    Connector: {display: Connector, group: Reused from UML, external: UML 2.5}
+    ConnectorEnd: {display: ConnectorEnd, group: Reused from UML, external: UML 2.5}
+    Operation: {display: Operation, group: Reused from UML, external: UML 2.5}
+    Reception: {display: Reception, group: Reused from UML, external: UML 2.5}
+    Signal: {display: Signal, group: Reused from UML, external: UML 2.5}
+    Enumeration: {display: Enumeration, group: Reused from UML, external: UML 2.5}
+    Actor: {display: Actor, group: Reused from UML, external: UML 2.5}
+    InstanceSpecification: {display: InstanceSpecification, group: Reused from UML, external: UML 2.5}
+    Interface: {display: Interface, group: Reused from UML, external: UML 2.5}
+    InterfaceRealization: {display: InterfaceRealization, group: Reused from UML, external: UML 2.5}
+    NamedElement: {display: NamedElement, group: Reused from UML, external: UML 2.5}
+    Element: {display: Element, group: Reused from UML, external: UML 2.5}
+    DirectedRelationship: {display: DirectedRelationship, group: Reused from UML, external: UML 2.5}
+    DataType: {display: DataType, group: Reused from UML, external: UML 2.5}
+    Behavior: {display: Behavior, group: Reused from UML, external: UML 2.5}
+    Feature: {display: Feature, group: Reused from UML, external: UML 2.5}
+    Event: {display: Event, group: Reused from UML, external: UML 2.5}
+    ChangeEvent: {display: ChangeEvent, group: Reused from UML, external: UML 2.5}
+    Trigger: {display: Trigger, group: Reused from UML, external: UML 2.5}
+    InformationFlow: {display: InformationFlow, group: Reused from UML, external: UML 2.5}
+    Activity: {display: Activity, group: Reused from UML, external: UML 2.5}
+    Action: {display: Action, group: Reused from UML, external: UML 2.5}
+    CallBehaviorAction: {display: CallBehaviorAction, group: Reused from UML, external: UML 2.5}
+    AcceptEventAction: {display: AcceptEventAction, group: Reused from UML, external: UML 2.5}
+    SendSignalAction: {display: SendSignalAction, group: Reused from UML, external: UML 2.5}
+    ActivityFinalNode: {display: ActivityFinalNode, group: Reused from UML, external: UML 2.5}
+    FlowFinalNode: {display: FlowFinalNode, group: Reused from UML, external: UML 2.5}
+    InitialNode: {display: InitialNode, group: Reused from UML, external: UML 2.5}
+    DecisionNode: {display: DecisionNode, group: Reused from UML, external: UML 2.5}
+    MergeNode: {display: MergeNode, group: Reused from UML, external: UML 2.5}
+    ForkNode: {display: ForkNode, group: Reused from UML, external: UML 2.5}
+    JoinNode: {display: JoinNode, group: Reused from UML, external: UML 2.5}
+    ActivityParameterNode: {display: ActivityParameterNode, group: Reused from UML, external: UML 2.5}
+    ObjectNode: {display: ObjectNode, group: Reused from UML, external: UML 2.5}
+    Pin: {display: Pin, group: Reused from UML, external: UML 2.5}
+    ParameterSet: {display: ParameterSet, group: Reused from UML, external: UML 2.5}
+    Parameter: {display: Parameter, group: Reused from UML, external: UML 2.5}
+    ControlFlow: {display: ControlFlow, group: Reused from UML, external: UML 2.5}
+    ObjectFlow: {display: ObjectFlow, group: Reused from UML, external: UML 2.5}
+    ActivityPartition: {display: ActivityPartition, group: Reused from UML, external: UML 2.5}
+    InterruptibleActivityRegion: {display: InterruptibleActivityRegion, group: Reused from UML, external: UML 2.5}
+    StructuredActivityNode: {display: StructuredActivityNode, group: Reused from UML, external: UML 2.5}
+    Interaction: {display: Interaction, group: Reused from UML, external: UML 2.5}
+    Lifeline: {display: Lifeline, group: Reused from UML, external: UML 2.5}
+    ExecutionSpecification: {display: ExecutionSpecification, group: Reused from UML, external: UML 2.5}
+    InteractionUse: {display: InteractionUse, group: Reused from UML, external: UML 2.5}
+    CombinedFragment: {display: CombinedFragment, group: Reused from UML, external: UML 2.5}
+    StateInvariant: {display: StateInvariant, group: Reused from UML, external: UML 2.5}
+    Continuation: {display: Continuation, group: Reused from UML, external: UML 2.5}
+    CreationEvent: {display: CreationEvent, group: Reused from UML, external: UML 2.5}
+    DestructionEvent: {display: DestructionEvent, group: Reused from UML, external: UML 2.5}
+    DurationConstraint: {display: DurationConstraint, group: Reused from UML, external: UML 2.5}
+    DurationObservation: {display: DurationObservation, group: Reused from UML, external: UML 2.5}
+    TimeConstraint: {display: TimeConstraint, group: Reused from UML, external: UML 2.5}
+    TimeObservation: {display: TimeObservation, group: Reused from UML, external: UML 2.5}
+    Message: {display: Message, group: Reused from UML, external: UML 2.5}
+    GeneralOrdering: {display: GeneralOrdering, group: Reused from UML, external: UML 2.5}
+    StateMachine: {display: StateMachine, group: Reused from UML, external: UML 2.5}
+    State: {display: State, group: Reused from UML, external: UML 2.5}
+    Region: {display: Region, group: Reused from UML, external: UML 2.5}
+    Pseudostate: {display: Pseudostate, group: Reused from UML, external: UML 2.5}
+    FinalState: {display: FinalState, group: Reused from UML, external: UML 2.5}
+    Transition: {display: Transition, group: Reused from UML, external: UML 2.5}
+    ConnectionPointReference: {display: ConnectionPointReference, group: Reused from UML, external: UML 2.5}
+    UseCase: {display: UseCase, group: Reused from UML, external: UML 2.5}
+    Subject: {display: Subject, group: Reused from UML, external: UML 2.5}
+    ExtensionPoint: {display: ExtensionPoint, group: Reused from UML, external: UML 2.5}
+    Include: {display: Include, group: Reused from UML, external: UML 2.5}
+    Extend: {display: Extend, group: Reused from UML, external: UML 2.5}
+    ConnectableElement: {display: ConnectableElement, group: Reused from UML, external: UML 2.5}
+    ActivityNode: {display: ActivityNode, group: Reused from UML, external: UML 2.5}
+    Vertex: {display: Vertex, group: Reused from UML, external: UML 2.5}
+    Usage: {display: Usage, group: Reused from UML, external: UML 2.5}
+    Profile: {display: Profile, group: Reused from UML, external: UML 2.5}
+    Extension: {display: Extension, group: Reused from UML, external: UML 2.5}
+    ProfileApplication: {display: ProfileApplication, group: Reused from UML, external: UML 2.5}
+    ModelLibrary: {display: ModelLibrary, group: Reused from UML, external: UML 2.5}
+relationships:
+  note: SysML gives endpoint rules per relationship in the constraints of each profile element; it gives no table of allowed pairs. Dependencies run from client (source, tail) to supplier (target, arrowhead). ends_per_relationship is stated only where the standard states it; multiplicity keys are targets_per_source and sources_per_target.
+  count: 35
+  items:
+  - name: Satisfy
+    display: Element satisfies Requirement
+    source: NamedElement
+    target: Requirement
+    section: 16.3.2.7; 16.1
+    uml_base: Abstraction
+    roles: {source: client (satisfying element), target: supplier (satisfied requirement)}
+    note: 'The supplier is a requirement or a specialization of it. The client is any named element (typically a block, part or behavior). Derived views: satisfiedBy on the requirement.'
+  - name: Verify
+    display: Element verifies Requirement
+    source: NamedElement
+    target: Requirement
+    section: 16.3.2.9; 16.1
+    uml_base: Abstraction
+    roles: {source: 'client (verifying element, typically a test case)', target: supplier (verified requirement)}
+    note: 'The supplier is a requirement or a specialization of it. Derived view: verifiedBy on the requirement.'
+  - name: DeriveReqt
+    display: Requirement is derived from Requirement
+    source: AbstractRequirement
+    target: AbstractRequirement
+    section: 16.3.2.3
+    uml_base: Abstraction
+    roles: {source: client (derived requirement), target: supplier (source requirement)}
+    note: 'Both ends are requirement kinds. Derived views: derived and derivedFrom.'
+  - name: Refine
+    display: Element refines Element
+    source: NamedElement
+    target: NamedElement
+    section: 16.3.2.4; 16.1
+    uml_base: Refine (UML)
+    roles: {source: client (refining element), target: supplier (refined element)}
+    ends_per_relationship: {source: '1', target: '1'}
+    note: 'Typically a model element refining a requirement, but the standard also allows a requirement to refine a model element. Derived view: refinedBy on the requirement.'
+  - name: Trace
+    display: Element traces to Element
+    source: NamedElement
+    target: NamedElement
+    section: 16.3.2.8; 16.1
+    uml_base: Trace (UML)
+    roles: {source: client, target: supplier}
+    ends_per_relationship: {source: '1', target: '1'}
+    note: 'General-purpose and weak; the standard recommends not mixing it with the other requirement relationships. Derived view: tracedTo on the requirement.'
+  - name: Copy
+    display: Requirement is a copy of Requirement
+    source: AbstractRequirement
+    target: AbstractRequirement
+    section: 16.3.2.2
+    uml_base: Abstraction
+    roles: {source: client (slave), target: supplier (master)}
+    note: 'The slave text is a read-only copy of the master text, recursively for sub-requirements. Derived view: master.'
+  - name: RequirementContainment
+    display: Requirement contains Requirement
+    source: Requirement
+    target: Requirement
+    section: 16.3.2.5; 16.2.1
+    uml_base: Class::nestedClassifier
+    roles: {source: container (compound requirement), target: nested requirement}
+    note: Containment is the only way to build a requirement hierarchy; deleting the container deletes the nested requirements.
+  - name: Allocate
+    display: Element is allocated to Element
+    source: NamedElement
+    target: NamedElement
+    section: 15.3.2.1
+    uml_base: Abstraction
+    roles: {source: client / from (allocated element), target: supplier / to (allocation target)}
+    ends_per_relationship: {source: '1', target: '1'}
+    note: Permissible between any two named elements; typical uses are behavior to structure, flow to flow, structure to structure.
+  - name: Conform
+    display: View conforms to Viewpoint
+    source: View
+    target: Viewpoint
+    section: 7.3.2.1
+    uml_base: Generalization
+    roles: {source: specific (view), target: general (viewpoint)}
+    multiplicity: {targets_per_source: '1', sources_per_target: '*'}
+    note: A view conforms to only one viewpoint.
+  - name: Expose
+    display: View exposes Element
+    source: View
+    target: Element
+    section: 7.3.2.3
+    uml_base: Dependency
+    roles: {source: client (view), target: supplier (access point)}
+  - name: PartAssociation
+    display: Block has part Block
+    source: Block
+    target: Block
+    section: 8.2.1 (Table 8.2); 8.3.2.4
+    uml_base: Association with composite aggregation
+    roles: {source: whole, target: part property}
+    multiplicity: {targets_per_source: '*', sources_per_target: 0..1}
+    note: Default multiplicity on the whole end is 0..1 when not shown. An instance of a block is part of at most one whole at a time.
+  - name: ReferenceAssociation
+    display: Block refers to Block
+    source: Block
+    target: Block
+    section: 8.2.1 (Table 8.2); 8.3.2.4
+    uml_base: Association with no aggregation
+    roles: {source: owner, target: reference property}
+    note: A unidirectional association has a default multiplicity of 1 on its target end when not shown. The only association end an association may own is an unnamed end that carries an inverse multiplicity.
+  - name: SharedAssociation
+    display: Block shares Block
+    source: Block
+    target: Block
+    section: 8.2.1 (Table 8.2); 8.3.2.4
+    uml_base: Association with shared aggregation
+    roles: {source: aggregate, target: shared property}
+    multiplicity: {targets_per_source: '*', sources_per_target: 0..1}
+    note: SysML defines no specific semantics for shared aggregation. Default multiplicity on the white diamond end is 0..1.
+  - name: Generalization
+    display: Classifier specializes Classifier
+    source: Classifier
+    target: Classifier
+    section: 8.2.1 (Table 8.2); 8.3.2.4; 8.3.2.15; 10.3.2.1
+    uml_base: Generalization
+    roles: {source: specific, target: general}
+    note: A specialization of a block, value type or constraint block carries the same extension as its general classifier. Requirements do not take part in generalization.
+  - {name: GeneralizationSet, display: Generalizations form a Generalization Set, source: Generalization, target: GeneralizationSet, section: 8.2.1 (Table 8.2), uml_base: GeneralizationSet, note: Shown with disjoint or overlapping.}
+  - name: BlockNamespaceContainment
+    display: Block owns nested Classifier
+    source: Block
+    target: Classifier
+    section: 8.2.1 (Table 8.2); 8.3.1.1.6
+    uml_base: Class::nestedClassifier
+    roles: {source: owning block, target: nested classifier}
+  - name: Connector
+    display: Property is connected to Property
+    source: ConnectableElement
+    target: ConnectableElement
+    section: 8.2.2 (Table 8.4); 8.3.2.4; 8.3.1.2.9
+    uml_base: Connector
+    ends_per_relationship: {source: '1', target: '1'}
+    multiplicity: {targets_per_source: '1', sources_per_target: '1'}
+    note: A connector owned by a block has exactly two ends; default multiplicity 1 on each end. May be typed by an association or association block. ConnectableElement here covers a part, reference, value, constraint or other property and a port.
+  - name: BindingConnector
+    display: Property is bound to Property
+    source: ConnectableElement
+    target: ConnectableElement
+    section: 8.3.2.3; 10.3.1.2
+    uml_base: Connector
+    ends_per_relationship: {source: '1', target: '1'}
+    note: The only connector that may appear on a parametric diagram. Ends have the same or compatible types.
+  - name: ItemFlow
+    display: Item flows from element to element
+    source: NamedElement
+    target: NamedElement
+    section: 9.3.2.11; 9.3.1.5
+    uml_base: InformationFlow
+    roles: {source: source (flows from), target: target (flows to)}
+    note: Realized by a connector, an association or an inherited association that exists between source and target. Conveys classifiers of items, with an optional item property.
+  - {name: ProvidedInterface, display: Port or block provides Interface, source: ConnectableElement, target: Interface, section: '9.2 (Tables 9.1, 9.2); 9.4.1', uml_base: InterfaceRealization}
+  - {name: RequiredInterface, display: Port or block requires Interface, source: ConnectableElement, target: Interface, section: '9.2 (Tables 9.1, 9.2); 9.4.1', uml_base: Usage}
+  - name: Dependency
+    display: Element depends on Element
+    source: NamedElement
+    target: NamedElement
+    section: 7.2 (Table 7.2)
+    uml_base: Dependency
+    roles: {source: client, target: supplier}
+    note: May be shown on every diagram kind, as may Conform, Realization and Refine.
+  - {name: Realization, display: Element realizes Element, source: NamedElement, target: NamedElement, section: 7.2 (Table 7.2), uml_base: Realization}
+  - {name: PackageContainment, display: Package contains Element, source: Package, target: NamedElement, section: 7.2 (Table 7.2), uml_base: 'Package::ownedElement'}
+  - {name: PackageImport, display: Package imports or accesses Element, source: Package, target: Package, section: 7.2 (Table 7.2), uml_base: PackageImport / ElementImport, note: 'Public import is the import keyword, private import is the access keyword. Package merge is not supported.'}
+  - {name: CommunicationPath, display: Actor communicates with Use Case, source: Actor, target: UseCase, section: 14.1; 14.2.1, uml_base: Association}
+  - name: Include
+    display: Use Case includes Use Case
+    source: UseCase
+    target: UseCase
+    section: 14.1; 14.2.1; 14.4
+    uml_base: Include
+    roles: {source: including (base) use case, target: included use case}
+    note: The behavior of the included use case is inserted into the including use case; the including use case may depend only on its result.
+  - name: Extend
+    display: Use Case extends Use Case
+    source: UseCase
+    target: UseCase
+    section: 14.1; 14.2.1; 14.4
+    uml_base: Extend
+    roles: {source: extending use case, target: extended (base) use case}
+    note: Optional behavior inserted at a named extension point under a condition; the extended use case is meaningful by itself.
+  - {name: UseCaseGeneralization, display: Use Case or Actor specializes, source: Classifier, target: Classifier, section: 14.1; 14.2.1, uml_base: Generalization, note: Specialization of a use case (a variant) or of an actor (a user-type taxonomy).}
+  - {name: Transition, display: State is followed by State, source: Vertex, target: Vertex, section: 13.2.1, uml_base: Transition, note: 'Vertex is a state, pseudostate or final state; a trigger, guard and effect label the transition.'}
+  - {name: Message, display: Lifeline sends Message to Lifeline, source: Lifeline, target: Lifeline, section: 12.2.1, uml_base: Message, note: 'Synchronous, asynchronous, create, reply, lost and found messages.'}
+  - {name: ControlFlow, display: Activity node is followed by Activity node, source: ActivityNode, target: ActivityNode, section: 11.2.1; 11.3.1.3, uml_base: ControlFlow}
+  - {name: ObjectFlow, display: Object flows between Activity nodes, source: ActivityNode, target: ActivityNode, section: 11.2.1, uml_base: ObjectFlow}
+  - {name: ProfileApplication, display: Package applies Profile, source: Package, target: Profile, section: 17.2.1; 17.4.5, uml_base: ProfileApplication, note: 'Applied strict, so only the metaclasses the profile references can be used.'}
+  - {name: MetamodelReference, display: Profile references metamodel, source: Profile, target: Package, section: 17.2.1, uml_base: PackageImport / ElementImport}
+uml_subset:
+  source: Tables 4.1 and 4.2
+  note: 'The UML4SysML subset: the UML metaclasses SysML reuses (included) and those it does not (excluded). Two entries whose names contain the UML profile-extension term are omitted from these lists.'
+  included_count: 228
+  excluded_count: 64
+  excluded: [Artifact, ClassifierTemplateParameter, Collaboration, CollaborationUse, CommunicationPath, Component, ComponentRealization, ConnectableElementTemplateParameter, Deployment, DeploymentSpecification, Device, ExceptionHandler, ExecutionEnvironment, ExpansionNode, ExpansionRegion, Manifestation, Node, OperationTemplateParameter, ProtocolConformance, ProtocolStateMachine, ProtocolTransition, QualifierValue, ReadLinkObjectEndQualifierAction, RedefinableTemplateSignature, StringExpression, TemplateBinding, TemplateParameter, TemplateParameterSubstitution, TemplateSignature, UMLActivityDiagram, UMLAssociationEndLabel, UMLAssociationOrConnectorOrLinkShape, UMLAssociationOrConnectorOrLinkShapeKind, UMLBehaviorDiagram, UMLClassDiagram, UMLClassifierShape, UMLCompartment, UMLCompartmentableShape, UMLComponentDiagram, UMLCompositeStructureDiagram, UMLDeploymentDiagram, UMLDiagram, UMLDiagramElement, UMLDiagramWithAssociations, UMLEdge, UMLInteractionDiagram, UMLInteractionDiagramKind, UMLInteractionTableLabel, UMLKeywordLabel, UMLLabel, UMLMultiplicityLabel, UMLNameLabel, UMLNavigabilityNotationKind, UMLObjectDiagram, UMLPackageDiagram, UMLProfileDiagram, UMLRedefinesLabel, UMLShape, UMLStateMachineDiagram, UMLStateShape, UMLStructureDiagram, UMLStyle, UMLTypedElementLabel, UMLUseCaseDiagram]
+  included: [Abstraction, AcceptCallAction, AcceptEventAction, Action, ActionExecutionSpecification, ActionInputPin, Activity, ActivityEdge, ActivityFinalNode, ActivityGroup, ActivityNode, ActivityParameterNode, ActivityPartition, Actor, AddStructuralFeatureValueAction, AddVariableValueAction, AggregationKind, AnyReceiveEvent, Association, AssociationClass, Behavior, BehaviorExecutionSpecification, BehavioralFeature, BehavioredClassifier, BroadcastSignalAction, CallAction, CallBehaviorAction, CallConcurrencyKind, CallEvent, CallOperationAction, CentralBufferNode, ChangeEvent, Class, Classifier, Clause, ClearAssociationAction, ClearStructuralFeatureAction, ClearVariableAction, CombinedFragment, Comment, ConditionalNode, ConnectableElement, ConnectionPointReference, Connector, ConnectorEnd, ConnectorKind, ConsiderIgnoreFragment, Constraint, Continuation, ControlFlow, ControlNode, CreateLinkAction, CreateLinkObjectAction, CreateObjectAction, DataStoreNode, DataType, DecisionNode, Dependency, DeployedArtifact, DeploymentTarget, DestroyLinkAction, DestroyObjectAction, DestructionOccurrenceSpecification, DirectedRelationship, Duration, DurationConstraint, DurationInterval, DurationObservation, Element, ElementImport, EncapsulatedClassifier, Enumeration, EnumerationLiteral, Event, ExecutableNode, ExecutionOccurrenceSpecification, ExecutionSpecification, Expression, Extend, Extension, ExtensionEnd, ExtensionPoint, Feature, FinalNode, FinalState, FlowFinalNode, ForkNode, FunctionBehavior, Gate, GeneralOrdering, Generalization, GeneralizationSet, Image, Include, InformationFlow, InformationItem, InitialNode, InputPin, InstanceSpecification, InstanceValue, Interaction, InteractionConstraint, InteractionFragment, InteractionOperand, InteractionOperatorKind, InteractionUse, Interface, InterfaceRealization, InterruptibleActivityRegion, Interval, IntervalConstraint, InvocationAction, JoinNode, Lifeline, LinkAction, LinkEndCreationData, LinkEndData, LinkEndDestructionData, LiteralBoolean, LiteralInteger, LiteralNull, LiteralReal, LiteralSpecification, LiteralString, LiteralUnlimitedNatural, LoopNode, MergeNode, Message, MessageEnd, MessageEvent, MessageKind, MessageOccurrenceSpecification, MessageSort, Model, MultiplicityElement, NamedElement, Namespace, ObjectFlow, ObjectNode, ObjectNodeOrderingKind, Observation, OccurrenceSpecification, OpaqueAction, OpaqueBehavior, OpaqueExpression, Operation, OutputPin, Package, PackageImport, PackageMerge, PackageableElement, Parameter, ParameterDirectionKind, ParameterEffectKind, ParameterSet, ParameterableElement, PartDecomposition, Pin, Port, PrimitiveType, 'PrimitiveTypes::Boolean', 'PrimitiveTypes::Integer', 'PrimitiveTypes::Real', 'PrimitiveTypes::String', 'PrimitiveTypes::UnlimitedNatural', 'PrimitiveValueTypes::Boolean', Profile, ProfileApplication, Property, Pseudostate, PseudostateKind, RaiseExceptionAction, ReadExtentAction, ReadIsClassifiedObjectAction, ReadLinkAction, ReadLinkObjectEndAction, ReadSelfAction, ReadStructuralFeatureAction, ReadVariableAction, Realization, Reception, ReclassifyObjectAction, RedefinableElement, ReduceAction, Region, Relationship, RemoveStructuralFeatureValueAction, RemoveVariableValueAction, ReplyAction, SendObjectAction, SendSignalAction, SequenceNode, Signal, SignalEvent, Slot, StartClassifierBehaviorAction, StartObjectBehaviorAction, State, StateInvariant, StateMachine, StructuralFeature, StructuralFeatureAction, StructuredActivityNode, StructuredClassifier, Substitution, TestIdentityAction, TimeConstraint, TimeEvent, TimeExpression, TimeInterval, TimeObservation, Transition, TransitionKind, Type, TypedElement, UnmarshallAction, Usage, UseCase, ValuePin, ValueSpecification, ValueSpecificationAction, Variable, VariableAction, Vertex, VisibilityKind, WriteLinkAction, WriteStructuralFeatureAction, WriteVariableAction]
+diagram_types:
+  activity:
+    display: Activity diagram (act)
+    abbreviation: act
+    relation_to_uml: modified from the UML activity diagram
+    defined_by: Clause 11 (11.2.1, Tables 11.1 to 11.3); Annex A
+    frame: Activity
+    admits: [Activity, Action, CallBehaviorAction, AcceptEventAction, SendSignalAction, ActivityFinalNode, FlowFinalNode, InitialNode, DecisionNode, MergeNode, ForkNode, JoinNode, ActivityParameterNode, ObjectNode, Pin, ParameterSet, Parameter, ControlOperator, ControlValue, StructuredActivityNode, ActivityPartition, AllocateActivityPartition, InterruptibleActivityRegion, Rate, Continuous, Discrete, Probability, NoBuffer, Overwrite, Optional, ControlFlow, ObjectFlow, Allocate, Comment, Constraint, Rationale, Problem]
+    admits_note: Activity nodes and edges reused from UML, plus the SysML extensions for control as data, rates, probabilities, buffering and optional parameters. Local pre- and postconditions are shown as constraints on actions. Allocation is shown with allocate partitions or callouts.
+    excludes: Expansion regions and expansion nodes (excluded UML metaclasses).
+    conventions: conventions.diagrams.activity
+  block definition:
+    display: Block definition diagram (bdd)
+    abbreviation: bdd
+    relation_to_uml: modified from the UML class diagram
+    defined_by: Clause 8 (8.2.1, Tables 8.1 and 8.2); clauses 9, 10, 11, 12, 13; Annex A
+    frame: Block, ConstraintBlock or Package
+    admits: [Block, InterfaceBlock, ConstraintBlock, ValueType, Enumeration, Actor, Signal, Unit, QuantityKind, InstanceSpecification, Package, Port, ProxyPort, FullPort, FlowProperty, DirectedFeature, Operation, Reception, Interface, BoundReference, EndPathMultiplicity, ParticipantProperty, ConnectorProperty, AdjunctProperty, PartAssociation, ReferenceAssociation, SharedAssociation, Generalization, GeneralizationSet, BlockNamespaceContainment, ItemFlow, ProvidedInterface, RequiredInterface, Dependency, Activity, Interaction, StateMachine, Comment, Constraint, Rationale, Problem, Allocate, Requirement]
+    admits_note: Blocks with the compartments for parts, references, values, constraints, operations, receptions, ports, flow properties, structure, namespace, bound references and behaviors; value types, enumerations and actors; associations in their reference, part and shared forms; generalization; dependencies. Activities, interactions and state machines appear as blocks (with their own keyword). Requirements appear only as compartments or callouts of other elements.
+    excludes: N-ary and qualified associations; the primitive keyword on a value type; arrowheads on both ends of an association; a cross on a non-navigable end; an ownership dot.
+    conventions: conventions.diagrams.block definition
+  internal block:
+    display: Internal block diagram (ibd)
+    abbreviation: ibd
+    relation_to_uml: modified from the UML composite structure diagram
+    defined_by: Clause 8 (8.2.2, Tables 8.3 and 8.4); clause 9 (Table 9.2); Annex A
+    frame: Block or ConstraintBlock
+    admits: [PartProperty, ReferenceProperty, ValueProperty, ConstraintProperty, Property, Actor, Port, ProxyPort, FullPort, FlowProperty, PropertySpecificType, BoundReference, EndPathMultiplicity, NestedConnectorEnd, Connector, BindingConnector, ItemFlow, ConnectorProperty, ParticipantProperty, ProvidedInterface, RequiredInterface, Dependency, Allocate, Comment, Constraint, Rationale, Problem, Requirement]
+    admits_note: Properties of the framed block and its nested properties, shown as boxes (solid for part and value, dashed for reference); ports on their boundaries; connectors, binding connectors and item flows; an initial values compartment; the property path name; allocation and requirement callouts and compartments.
+    excludes: Collaboration and collaboration use; component; port notations other than those of clause 9.
+    conventions: conventions.diagrams.internal block
+  package:
+    display: Package diagram (pkg)
+    abbreviation: pkg
+    relation_to_uml: same as the UML package diagram
+    defined_by: Clause 7 (7.2, Tables 7.1 and 7.2); clause 17 (profile definition); Annex A
+    frame: Package or Model
+    admits: [Package, Model, Profile, Extension, ProfileApplication, ModelLibrary, Comment, Constraint, ElementGroup, Problem, Rationale, Stakeholder, View, Viewpoint, Block, ConstraintBlock, Requirement, PackageContainment, PackageImport, MetamodelReference, Dependency, Realization, Refine, Conform, Expose]
+    admits_note: Packages and models with containment, import and access; dependencies; the model management elements (views, viewpoints, stakeholders, element groups, rationale, problems). A package diagram can hold a wide array of packageable elements. Profile definitions use the profile notations of clause 17 here, because SysML has no profile diagram. Constraint blocks may be defined here.
+    excludes: Package merge.
+    conventions: conventions.diagrams.package
+  parametric:
+    display: Parametric diagram (par)
+    abbreviation: par
+    relation_to_uml: new SysML diagram kind; a restricted internal block diagram
+    defined_by: Clause 10 (10.2.2, Table 10.2; 10.3.1.2); Annex A
+    frame: Block or ConstraintBlock
+    admits: [ConstraintProperty, ConstraintParameter, ValueProperty, PartProperty, ReferenceProperty, BindingConnector, Comment, Constraint, Rationale, Problem]
+    admits_note: Constraint properties with their parameters, and the properties of the context block that are bound to them (directly, or through a containing property), joined by binding connectors only. A constraint property is drawn as a rounded rectangle or with the constraint keyword; a value property may be a small square with a text label. The context block is specified in the frame.
+    excludes: Connectors other than binding connectors.
+    conventions: conventions.diagrams.parametric
+  requirement:
+    display: Requirement diagram (req)
+    abbreviation: req
+    relation_to_uml: new SysML diagram kind; based on the UML class diagram
+    defined_by: Clause 16 (16.2.1, Tables 16.1 and 16.2; 16.3.1.1); Annex A
+    frame: Package or Requirement
+    admits: [Requirement, Package, Classifier, TestCase, Rationale, RequirementContainment, DeriveReqt, Satisfy, Verify, Refine, Copy, Trace, Model, ModelLibrary]
+    admits_note: Only requirements, packages, other classifiers, test cases and rationale, with the containment, derive, satisfy, verify, refine, copy and trace relationships. Callouts show the relationship of other elements to a requirement. Requirements may also appear on other diagram kinds as a compartment or callout, and in tables.
+    excludes: Anything outside the list above.
+    conventions: conventions.diagrams.requirement
+  sequence:
+    display: Sequence diagram (sd)
+    abbreviation: sd
+    relation_to_uml: same as the UML sequence diagram
+    defined_by: Clause 12 (12.2.1, Tables 12.1 to 12.3); Annex A
+    frame: Interaction
+    admits: [Interaction, Lifeline, ExecutionSpecification, InteractionUse, CombinedFragment, StateInvariant, Continuation, CreationEvent, DestructionEvent, DurationConstraint, DurationObservation, TimeConstraint, TimeObservation, Message, GeneralOrdering, Comment, Constraint]
+    admits_note: Lifelines and messages (synchronous, asynchronous, create, reply, lost, found), execution specifications, interaction uses with arguments and return values, combined fragments with the interaction operators seq, alt, opt, break, par, strict, loop, critical, neg, assert, ignore and consider, coregions, state invariants, continuations, and time and duration constraints and observations. Interactions appear as blocks on block definition diagrams.
+    excludes: Communication diagram, interaction overview diagram, timing diagram.
+    conventions: reused from UML; the standard states no drawing rules beyond Annex A and the global conventions
+  state machine:
+    display: State machine diagram (stm)
+    abbreviation: stm
+    relation_to_uml: same as the UML state machine diagram
+    defined_by: Clause 13 (13.2.1, Tables 13.1 to 13.3); Annex A
+    frame: StateMachine
+    admits: [StateMachine, State, Region, Pseudostate, FinalState, Transition, ConnectionPointReference, Comment, Constraint]
+    admits_note: Simple, composite (sequential or concurrent) and submachine states with entry, do and exit activities; initial, choice, junction, deep and shallow history, entry point, exit point and terminate pseudostates; final states; transitions with trigger, guard and effect, including send-signal and receive-signal actions; alternative entry and exit point references. State machines appear as blocks on block definition diagrams.
+    excludes: Protocol state machines and protocol transitions.
+    conventions: reused from UML; the standard states no drawing rules beyond Annex A and the global conventions
+  use case:
+    display: Use case diagram (uc)
+    abbreviation: uc
+    relation_to_uml: same as the UML use case diagram
+    defined_by: Clause 14 (14.2.1, Tables 14.1 and 14.2); Annex A
+    frame: Package
+    admits: [UseCase, Actor, Subject, ExtensionPoint, Package, CommunicationPath, Include, Extend, UseCaseGeneralization, Comment, Constraint]
+    admits_note: Use cases (with extension points), actors, the subject drawn as a system boundary, communication paths, include, extend (with condition) and generalization. A frame can represent the package holding the lower-level use cases.
+    excludes: Nothing is added to UML; a use case is realized by activity, sequence and state machine diagrams.
+    conventions: reused from UML; the standard states no drawing rules beyond Annex A and the global conventions
+data_types:
+  coverage: partial
+  section: "8.3.2.15, 8.3.3, 9.3.2, 11.3.3, 16.3.2.6"
+  note: SysML adds value types, which carry an optional unit and quantity kind, and three small libraries (primitive value types, units and quantity kinds, control values); it fixes no number representation, no literal forms and no concrete units, and everything else about types comes from UML.
+  inherits_from: uml-2
+  types:
+    - {name: ValueType, kind: other, section: "8.3.2.15", note: "A type whose values cannot be the target of a reference; it may carry a unit and a quantity kind, may own properties and operations, and types value properties and parameters. Unqualified Boolean, Integer, Real and String mean the UML primitive types when a SysML extension is defined and these library value types everywhere else (4.3)."}
+    - {name: Boolean, kind: primitive, section: "8.3.3.1.1", note: "The predefined values true and false. Library value type."}
+    - {name: Integer, kind: primitive, section: "8.3.3.1.3", note: "The mathematical integers, with no fixed representation such as precision or scale. Specializes Number (Figure 8.10)."}
+    - {name: Real, kind: primitive, section: "8.3.3.1.5", note: "The mathematical reals, for continuous quantities, with no fixed precision or scale. Specializes Number (Figure 8.10)."}
+    - {name: String, kind: primitive, section: "8.3.3.1.6", note: "A sequence of characters in some suitable character set, which may include non-Roman alphabets."}
+    - {name: Number, kind: primitive, section: "8.3.3.1.4", note: "Abstract. The value type from which the other numeric value types specialize (shown in italics in Figure 8.10)."}
+    - {name: Complex, kind: structured, section: "8.3.3.1.2", note: "A complex number: a real part and an imaginary part, each a Real. Specializes Number (Figure 8.10).", attributes: [{name: realPart, type: Real}, {name: imaginaryPart, type: Real}]}
+    - {name: Unit, kind: unit, section: "8.3.3.2.2", note: "A library block. An instance specification classified by Unit (or a specialization) defines one measurement unit. Its attributes are symbol, description and definitionURI (String, 0..1 each) and quantityKind (QuantityKind, 0..*).", attributes: [{name: symbol, type: String, multiplicity: "0..1"}, {name: description, type: String, multiplicity: "0..1"}, {name: definitionURI, type: String, multiplicity: "0..1"}, {name: quantityKind, type: QuantityKind, multiplicity: "0..*"}]}
+    - {name: QuantityKind, kind: unit, section: "8.3.3.2.1", note: "A library block. An instance specification classified by QuantityKind (or a specialization) defines one kind of quantity, such as length. Its attributes are symbol, description and definitionURI (String, 0..1 each).", attributes: [{name: symbol, type: String, multiplicity: "0..1"}, {name: description, type: String, multiplicity: "0..1"}, {name: definitionURI, type: String, multiplicity: "0..1"}]}
+    - {name: ControlValue, kind: enumeration, values: ["disable", "enable"], section: "11.3.3.1.1", note: "Treats control as data. Modelers may add literals such as suspend and resume with their own meaning."}
+    - {name: FlowDirection, kind: enumeration, values: ["in", "out", "inout"], section: "9.3.2.6"}
+    - {name: FeatureDirection, kind: enumeration, values: ["provided", "required", "providedRequired"], section: "9.3.2.5", note: "The text writes the last literal providedrequired; the machine-readable model writes providedRequired."}
+    - {name: VerdictKind, kind: enumeration, values: ["pass", "fail", "inconclusive", "error"], section: "16.3.2.6", note: "Borrowed from the UML testing profile; types the return parameter of a test case. The literals are read from the machine-readable model; the text lists none."}
+  attributes:
+    coverage: some_concepts
+    where: concepts
+    note: Concept entries that the standard gives attributes list them under `attributes` (name, and type and multiplicity where the standard states them). Attributes of the diagram interchange elements in Annex B are not listed, and the attributes of reused UML concepts are in the uml-2 guide.
+notation:
+  coverage: normative
+  section: "7.2, 8.2, 9.2, 10.2, 11.2, 15.2, 16.2 (Diagram Elements tables); 8.3.1, 9.3.1, 10.3.1, 11.3.1, 15.3.1, 16.3.1 (Diagram Extensions); Annex A.1, A.2; Annex C.3.1"
+  note: The Diagram Elements tables give a symbol for each SysML element and the standard counts that notation in its concrete syntax conformance; block definition, internal block and activity diagrams are drawn as UML class, composite structure and activity diagrams with the changes below, requirement and parametric diagrams are new, and package, sequence, state machine and use case diagrams are UML's own. The standard states no sizes or colors, except that a deprecated flow port square is filled white.
+  inherits_from: uml-2
+  default: {shape: "the symbol the uml-2 guide gives for that UML concept, unchanged", line: "the line the uml-2 guide gives for that UML relationship, unchanged", section: "Annex A.1"}
+  frame:
+    shape: "a rectangle that encloses the diagram contents; a name tag (a small rectangle with one cut-off corner) sits at the upper left corner on the frame border"
+    label: "inside the tag: the diagram kind in bold, then the model element type in square brackets (optional), then the model element name, then a diagram name in square brackets (optional); one space between entries. A diagram usage word such as a context diagram may be written in guillemets above the heading. The frame is required in SysML and names the element that is the default namespace of its contents; an element from another namespace carries a qualified name."
+    marker: "an optional note symbol (diagram description, with fields such as version, description, completion status and reference) joined by a dashed line to the frame header. Border elements of the designated element, such as ports of a block, sit on the frame border."
+    section: "Annex A.1 (Figure A.2)"
+  keywords:
+    - {keyword: "block", used_on: "a block; implied when a definition box on a block definition diagram has no keyword", section: "8.2.1 (Table 8.1), 8.3.1.1.2"}
+    - {keyword: "valueType", used_on: "a value type, and the unit compartment of a value type box", section: "8.2.1 (Table 8.1)"}
+    - {keyword: "enumeration", used_on: "an enumeration", section: "8.2.1 (Table 8.1)"}
+    - {keyword: "actor", used_on: "an actor drawn as a box instead of a stick figure", section: "8.2.1 (Table 8.1)"}
+    - {keyword: "signal", used_on: "a reception line in the receptions compartment", section: "8.2.1 (Table 8.1)"}
+    - {keyword: "connector", used_on: "a connector property line", section: "8.2.1 (Table 8.2)"}
+    - {keyword: "participant", used_on: "a participant property line or box, with {end=...}", section: "8.2.1 (Table 8.2)"}
+    - {keyword: "equal", used_on: "the label of a binding connector", section: "8.2.2 (Tables 8.3, 8.4)"}
+    - {keyword: "boundReference", used_on: "a bound reference box", section: "8.2.2 (Table 8.3)"}
+    - {keyword: "endPathMultiplicity", used_on: "an end path multiplicity line", section: "8.2.1 (Table 8.1)"}
+    - {keyword: "interfaceBlock", used_on: "an interface block", section: "9.2.1 (Table 9.1)"}
+    - {keyword: "interface", used_on: "a UML interface box", section: "9.2.1 (Table 9.1)"}
+    - {keyword: "proxy", used_on: "a proxy port, written beside the port name", section: "9.2.1 (Table 9.1); 9.3.1.7"}
+    - {keyword: "full", used_on: "a full port, written beside the port name", section: "9.2.1 (Table 9.1); 9.3.1.3"}
+    - {keyword: "constraint", used_on: "a constraint block, and a constraint property drawn as a plain box", section: "10.2.1, 10.2.2 (Tables 10.1, 10.2)"}
+    - {keyword: "controlOperator", used_on: "an action that calls a control operator, and the activity heading", section: "11.2.1 (Table 11.1)"}
+    - {keyword: "noBuffer", used_on: "a pin or object node", section: "11.2.1 (Table 11.1)"}
+    - {keyword: "overwrite", used_on: "a pin or object node", section: "11.2.1 (Table 11.1)"}
+    - {keyword: "optional", used_on: "a pin or activity parameter", section: "11.2.1 (Table 11.1)"}
+    - {keyword: "continuous", used_on: "an object node, pin, activity parameter or edge", section: "11.2.1 (Tables 11.1, 11.2)"}
+    - {keyword: "discrete", used_on: "an object node, pin, activity parameter or edge", section: "11.2.1 (Tables 11.1, 11.2)"}
+    - {keyword: "rate", used_on: "a rate compartment on an object node", section: "11.2.1 (Table 11.1)"}
+    - {keyword: "activity", used_on: "an activity drawn as a block", section: "11.2.1 (Table 11.3)"}
+    - {keyword: "adjunct", used_on: "the label of an adjunct property on an association", section: "11.2.1 (Table 11.3)"}
+    - {keyword: "structured", used_on: "a structured activity node", section: "11.2.1 (Table 11.3)"}
+    - {keyword: "allocate", used_on: "an allocate dependency, and the heading of an allocate activity partition", section: "15.2.1 (Table 15.1); 15.3.1.5"}
+    - {keyword: "requirement", used_on: "a requirement, and the type shown in a callout", section: "16.2.1 (Tables 16.1, 16.2)"}
+    - {keyword: "namedElement", used_on: "a requirement-related compartment entry for an element that is not a requirement", section: "16.2.1 (Table 16.1)"}
+    - {keyword: "copy, deriveReqt, satisfy, verify, refine, trace", used_on: "the label of the matching dependency", section: "16.2.1 (Table 16.2)"}
+    - {keyword: "testCase", used_on: "the heading of a diagram whose frame is a test case", section: "16.4 (Figure 16.7)"}
+    - {keyword: "problem, rationale, elementGroup, stakeholder, view, viewpoint, create", used_on: "the matching model management element; create marks the View operation of a viewpoint", section: "7.2 (Table 7.1)"}
+    - {keyword: "conform, expose, import, access, refine", used_on: "the label of the matching dependency", section: "7.2 (Table 7.2)"}
+    - {keyword: "prov, reqd, provreqd; in, out, inout", used_on: "text prefixes (not guillemets) for a directed feature and a flow property", section: "9.3.1.1, 9.3.1.2"}
+  elements:
+    Rationale: {shape: "note symbol: a rectangle with a folded upper right corner", marker: "attached to the element it justifies by a dashed line, as a comment is; it may be attached to a relationship", label: "the keyword «rationale» on the first line, then the rationale text", section: "7.2 (Table 7.1)"}
+    Problem: {shape: "note symbol: a rectangle with a folded upper right corner", marker: "attached to the elements concerned by dashed lines, as a comment is", label: "the keyword «problem» on the first line, then the text of the problem", section: "7.2 (Table 7.1)"}
+    ElementGroup: {shape: "note symbol: a rectangle with a folded upper right corner", marker: "a dashed line to each member, whatever kind of symbol the member has (a box, an ellipse, a stick figure)", label: "first line «elementGroup»; second line {name=MyGroup, size=3}; then the text of the membership criterion", section: "7.2 (Table 7.1)"}
+    Stakeholder: {shape: "a rectangle with two compartments", marker: "none", label: "top compartment: «stakeholder» above the bold name; second compartment headed «stakeholder», holding concernList=,,, and /concern=\"...\",\"...\",\"...\"", section: "7.2 (Table 7.1)"}
+    Viewpoint: {shape: "a rectangle with three compartments", marker: "none", label: "top: «viewpoint» above the bold name; second, headed «viewpoint»: stakeholder=Name, purpose=\"...\", concernList=,,, /concern=..., language=\"...\", /method=Name, presentation=\"...\"; third: the operation «create»View()", section: "7.2 (Table 7.1)"}
+    View: {shape: "a rectangle with three compartments", marker: "none", label: "top: «view» above the bold name; second, headed «view»: /viewpoint=Name and /stakeholder=Name1,Name2; third: its properties such as property1:View1", section: "7.2 (Table 7.1)"}
+    Block: {shape: "a rectangle; the top compartment holds the keyword «block», an optional {encapsulated} line and the bold name; further compartments may follow in any order, each optionally headed by its name in small italics", marker: "none", label: "compartments the standard lists: constraints (constraints in braces), operations, receptions (each line starts with «signal»), parts, references, values, properties, ports, proxy ports, full ports, flow properties, namespace, structure, bound references, classifier behavior, owned behaviors. A box with no keyword on a block definition diagram is a block. An inherited feature starts with ^.", section: "8.2.1 (Table 8.1); 8.3.1.1.2 to 8.3.1.1.4"}
+    PartProperty: {shape: "on a block definition diagram, a line of text in the parts compartment: name: Type, with an optional multiplicity in square brackets and modifiers in braces such as {subsets x} or {redefines x}. On an internal block diagram, a rectangle with a solid outline holding name: Type, with its multiplicity at the upper right corner.", marker: "a part nested in another part is drawn inside that part's rectangle", label: "name: Type [multiplicity]", section: "8.2.1 (Table 8.1); 8.2.2 (Table 8.3)"}
+    ReferenceProperty: {shape: "on a block definition diagram, a line of text in the references compartment: name: Type [multiplicity] {modifiers}, with a leading slash for a derived property. On an internal block diagram, a rectangle with a dashed outline holding name: Type.", marker: "none", label: "name: Type [multiplicity] {ordered, unique, union, subsets x}", section: "8.2.1 (Table 8.1); 8.2.2 (Table 8.3)"}
+    ValueProperty: {shape: "on a block definition diagram, a line of text in the values compartment: name: Type = default {readOnly}. On an internal block diagram, a rectangle with a solid outline. On a parametric diagram it may be a small square with its text label beside it.", marker: "none", label: "name: Type = value; a unit may follow in parentheses", section: "8.2.1 (Table 8.1); 8.2.2 (Table 8.3); 10.3.1.2"}
+    AssociationBlock: {shape: "a block box (keyword «block», bold name) that may show its participant property lines and a structure compartment", marker: "joined to its association by a dashed line from the box to the middle of the association line; a small filled triangle beside the association name shows the reading direction", label: "«participant»{end=property 1} p1:Block1 lines list the ends", section: "8.2.1 (Table 8.2)"}
+    ConnectorProperty: {shape: "a line in a compartment of the owning block: «connector» c1: Association1; on an internal block diagram the connector is labeled c1: Association1, or a small rectangle c2: Association2 is joined to the connector by a dashed line", marker: "none", label: "«connector» name: association block", section: "8.2.2 (Table 8.2)"}
+    ParticipantProperty: {shape: "a line of text in an association block: «participant»{end=property 1} p1:Block1; or a rectangle with a dashed outline inside the structure compartment holding «participant», {end=property 2} and p2:Block2 in bold", marker: "none", label: "{end=...} names the association end it stands for", section: "8.2.1 (Table 8.2)"}
+    AdjunctProperty: {shape: "on a block definition diagram, a plain line between an activity box and a block box, labeled «adjunct» and the kind of principal and its name (call action, object node, variable or parameter)", marker: "for a call action principal the activity end carries a black (filled) diamond", label: "«adjunct» call action name; the kind and name stack under the keyword", section: "11.2.1 (Table 11.3)"}
+    ClassifierBehaviorProperty: {shape: "a line of text in a compartment headed classifier behavior (on an internal block diagram the heading has a leading colon): «stateMachine» MySM1 ()", marker: "owned behaviors sit in a separate compartment headed owned behaviors", label: "«kind» name (parameters)", section: "8.2.1 (Table 8.1); 8.3.1.1.4"}
+    EndPathMultiplicity: {shape: "a line of text in a properties compartment: «endPathMultiplicity» { lower = 6 ; upper = 8 } property11 [*] { redefines property11 }", marker: "none", label: "the keyword, then lower and upper in braces, then the property", section: "8.2.1 (Table 8.1)"}
+    BoundReference: {shape: "on a block definition diagram, a line in a compartment headed bound references: { /bindingPath = p1, p2 } property9 : Block1 [*], with optional lower and upper after the path. On an internal block diagram, a rectangle with a dashed outline holding «boundReference» and name : Type, with its multiplicity at the upper right corner", marker: "on the internal block diagram a line labeled «equal» joins it to the nested property it is bound to", label: "bold keyword «boundReference» above the name and type", section: "8.2.1 (Table 8.1); 8.2.2 (Table 8.3)"}
+    NestedConnectorEnd: {shape: "no symbol of its own", marker: "a connector line ends on the nested property's box, and the property's name is written as a path of names joined by dots", label: "name.name.name", section: "8.3.1.2.5"}
+    PropertySpecificType: {shape: "a property box whose type name is in square brackets, as in p1: [Type1]; its added or redefined features sit in compartments headed values or properties", marker: "none", label: "name: [Type]", section: "8.2.2 (Table 8.3)"}
+    DistributedProperty: {shape: "a line of text in a values compartment: a distribution keyword in guillemets, the distribution parameters in braces, then the property: «normal»{mean=2,stdDeviation=0.1} x: Real", marker: "none", label: "keyword, braces, name: type", section: "8.2.2 (Table 8.3)"}
+    ValueType: {shape: "a rectangle: the keyword «valueType» above the bold name, then compartments for operations and properties, then a last compartment headed «valueType» holding unit = UnitName", marker: "none", label: "the last compartment line has the form unit = name", section: "8.2.1 (Table 8.1)"}
+    Unit: {shape: "an instance box: an underlined title unit1: Unit above a compartment of text lines", marker: "none", label: "symbol=\"..\", description=\"...\", definitionURI=\"....\", quantityKind=qk1,qk2", section: "8.2.1 (Table 8.1)"}
+    QuantityKind: {shape: "an instance box: an underlined title qk1: QuantityKind above a compartment of text lines", marker: "none", label: "symbol=\"..\", description=\"...\", definitionURI=\"....\"", section: "8.2.1 (Table 8.1)"}
+    Boolean: {shape: "a rectangle with the keyword «valueType» above the bold name Boolean", marker: "none", section: "8.3.3.1 (Figure 8.10)"}
+    String: {shape: "a rectangle with the keyword «valueType» above the bold name String", marker: "none", section: "8.3.3.1 (Figure 8.10)"}
+    Number: {shape: "a rectangle with the keyword «valueType» above the name Number in bold italics (abstract)", marker: "Integer, Real and Complex join it by lines that share one hollow triangle arrowhead at the Number end", section: "8.3.3.1 (Figure 8.10)"}
+    Integer: {shape: "a rectangle with the keyword «valueType» above the bold name Integer", marker: "joined to Number by the shared generalization arrowhead", section: "8.3.3.1 (Figure 8.10)"}
+    Real: {shape: "a rectangle with the keyword «valueType» above the bold name Real", marker: "joined to Number by the shared generalization arrowhead", section: "8.3.3.1 (Figure 8.10)"}
+    Complex: {shape: "a rectangle with the keyword «valueType» above the bold name Complex and a compartment with realPart: Real and imaginaryPart: Real", marker: "joined to Number by the shared generalization arrowhead", section: "8.3.3.1 (Figure 8.10)"}
+    InterfaceBlock: {shape: "a rectangle: the keyword «interfaceBlock» above the bold name, then a compartment headed operations", marker: "none", section: "9.2.1 (Table 9.1)"}
+    ProxyPort: {shape: "a small square straddling the boundary of the owning block or part; the keyword «proxy» and the port name sit beside it. In compartment form, a line p1: IType in a compartment headed proxy ports.", marker: "when the port has its own behavior, a small rounded rectangle inside the owner is joined to the square by a short line", label: "«proxy» name", section: "9.2.1 (Table 9.1); 9.2.2 (Table 9.2); 9.3.1.7"}
+    FullPort: {shape: "a small square straddling the boundary of the owning block or part; the keyword «full» and the port name sit beside it. In compartment form, a line p1: IType in a compartment headed full ports.", marker: "none", label: "«full» name", section: "9.2.1 (Table 9.1); 9.2.2 (Table 9.2); 9.3.1.3"}
+    FlowDirection: {shape: "no symbol of its own; on a port it is an arrow inside the port square, and on a flow property the text prefix in, out or inout", marker: "the arrow is perpendicular to the boundary line it overlaps and points the direction of the flow with respect to the owner; a conjugated port reverses it; two open arrowheads facing away from each other (<>) show properties that flow in different directions or in both", label: "in | out | inout", section: "9.3.1.2; 9.3.1.6"}
+    FlowProperty: {shape: "a line of text in a compartment headed flow properties: in gearSelect: Gear", marker: "none", label: "direction prefix, name, colon, type", section: "9.2.1 (Table 9.1); 9.3.1.2"}
+    FeatureDirection: {shape: "no symbol of its own; a text prefix before a feature", marker: "none", label: "prov | reqd | provreqd", section: "9.3.1.1"}
+    DirectedFeature: {shape: "a line of text in an operations or properties compartment, in the usual form, with a prefix: prov Boolean selectGear(g : Gear), reqd Torque getTorque(), prov temperature : Integer", marker: "none", label: "prefix prov, reqd or provreqd", section: "9.2.1 (Table 9.1); 9.3.1.1"}
+    InvocationOnNestedPortAction: {shape: "the ordinary action symbol, with the path written in the action's name", marker: "none", label: "via port-name, port-name (the nested ports in order, the final port last)", section: "9.3.1.4"}
+    TriggerOnNestedPort: {shape: "the ordinary trigger symbol, with the path written after the trigger signature in the name", marker: "none", label: "«from» (port-name, port-name)", section: "9.3.1.8"}
+    ConstraintBlock: {shape: "a rectangle: the keyword «constraint» above the bold name, then a compartment headed constraints and a compartment headed parameters", marker: "none", label: "constraints compartment: {{L1} x > y} and nested usages such as nested: ConstraintBlock2; parameters compartment: x: Real, y: Real", section: "10.2.1 (Table 10.1)"}
+    ConstraintProperty: {shape: "a rectangle with rounded corners holding the name C1: Constraint1 in the middle, with a small square for each parameter against the left side; or an ordinary rectangle with «constraint» above the name and the parameter squares inside", marker: "none", label: "name: ConstraintBlock; each parameter square has its x: Real label", section: "10.2.2 (Table 10.2)"}
+    ConstraintParameter: {shape: "a small square on or against the edge of its constraint property, with its label x: Real beside it", marker: "a binding connector joins it to a bound property", label: "name: Type", section: "10.2.2 (Table 10.2)"}
+    ControlOperator: {shape: "a call behavior action symbol (rounded rectangle) with the keyword «controlOperator» above the action name; on an activity frame, the heading reads act [controlOperator]", marker: "none", section: "11.2.1 (Table 11.1)"}
+    ControlValue: {shape: "a rectangle with a keyword above the bold name ControlValue and a compartment listing disable and enable; the standard's figure writes the keyword «valueType»", marker: "none", section: "11.3.3.1 (Figure 11.9)"}
+    Rate: {shape: "text beside the symbol it applies to: { rate = constant } or { rate = distribution } on an edge, pin, activity parameter or object node; an object node may instead show a compartment headed «rate» holding rate = constant", marker: "none", label: "{ rate = value }", section: "11.2.1 (Tables 11.1, 11.2)"}
+    Continuous: {shape: "the keyword «continuous» beside an edge, pin or activity parameter, or above the name of an object node", marker: "none", section: "11.2.1 (Tables 11.1, 11.2)"}
+    Discrete: {shape: "the keyword «discrete» beside an edge, pin or activity parameter, or above the name of an object node", marker: "none", section: "11.2.1 (Tables 11.1, 11.2)"}
+    Probability: {shape: "text { probability = valueSpecification } beside each edge that leaves a decision node, a pin or an object node, or beside the group of pins that stands for an output parameter set", marker: "none", label: "{ probability = value }", section: "11.2.1 (Tables 11.1, 11.2)"}
+    NoBuffer: {shape: "the keyword «noBuffer» beside a pin or an object node", marker: "none", section: "11.2.1 (Table 11.1)"}
+    Overwrite: {shape: "the keyword «overwrite» beside a pin or an object node", marker: "none", section: "11.2.1 (Table 11.1)"}
+    Optional: {shape: "the keyword «optional» beside a pin, or beside an activity parameter square on the activity frame", marker: "none", section: "11.2.1 (Table 11.1)"}
+    AllocateActivityPartition: {shape: "a partition (a rectangle) whose heading holds the keyword «allocate» above :ElementName; the actions allocated to the element are drawn inside", marker: "none", label: "«allocate» :ElementName", section: "15.2.1 (Table 15.1); 15.3.1.5"}
+    Requirement: {shape: "a rectangle with the keyword «requirement» above the bold name, then compartments, each headed in small italics: derived, derivedFrom, master, refinedBy, satisfiedBy, tracedTo and verifiedBy, followed by a last compartment holding the id and text", marker: "none", label: "each related-element compartment lists lines such as «requirement» Derived Reqt Name or «namedElement» Element Name; the last compartment reads Id = \"62j32\" and Text = \"The system shall do...\". The «requirement» heading of the id and text compartment may be left out.", section: "16.2.1 (Table 16.1); 16.3.1.2"}
+    TestCase: {shape: "no table entry; in the standard's example the keyword «testCase» appears in the heading of the diagram that defines it, between the diagram kind and the name: stm «testCase» BurnishTest", marker: "joined to the requirement by a Verify callout", section: "16.4 (Figure 16.7)"}
+    SysMLDiagram: {shape: "the frame: a rectangle with a name tag at the upper left (see `frame` above)", marker: "none", label: "diagramKind [modelElementType] modelElementName [diagramName]", section: "Annex A.1 (Figure A.2)"}
+    SysMLActivityDiagram: {shape: "a frame whose tag begins with the bold abbreviation act", marker: "an activity's parameter nodes sit on the frame border", label: "act ActivityName", section: "Annex A.1; 11.2.1 (Table 11.1)"}
+    SysMLBlockDefinitionDiagram: {shape: "a frame whose tag begins with the bold abbreviation bdd", marker: "none", label: "bdd Namespace1", section: "Annex A.1; 8.2.1 (Table 8.1)"}
+    SysMLInternalBlockDiagram: {shape: "a frame whose tag begins with the bold abbreviation ibd", marker: "none", label: "ibd Block1", section: "Annex A.1; 8.2.2 (Table 8.3)"}
+    SysMLParametricDiagram: {shape: "a frame whose tag begins with the bold abbreviation par", marker: "constraint properties are drawn with rounded corners", label: "par Block1", section: "Annex A.1; 10.2.2 (Table 10.2)"}
+    SysMLPackageDiagram: {shape: "a frame whose tag begins with the bold abbreviation pkg", marker: "none", label: "pkg Name", section: "Annex A.1; 7.2 (Table 7.1)"}
+    SysMLRequirementDiagram: {shape: "a frame whose tag begins with the bold abbreviation req", marker: "none", label: "req ReqDiagram", section: "Annex A.1; 16.2.1 (Table 16.1)"}
+    SysMLInteractionDiagram: {shape: "a frame whose tag begins with the bold abbreviation sd; contents as in the UML sequence diagram", marker: "none", section: "Annex A.1"}
+    SysMLStateMachineDiagram: {shape: "a frame whose tag begins with the bold abbreviation stm; contents as in the UML state machine diagram", marker: "none", section: "Annex A.1; 16.4 (Figure 16.7)"}
+    SysMLUseCaseDiagram: {shape: "a frame whose tag begins with the bold abbreviation uc; contents as in the UML use case diagram", marker: "none", section: "Annex A.1"}
+    FlowPort: {shape: "deprecated: a square on the boundary of the owning block or its usage, filled white, with black line and text; the label reads portName: portType", marker: "an atomic flow port has an arrow inside the square showing its direction; a non-atomic one has two open arrowheads facing away from each other (<>)", label: "in | out | inout portName:portType [{conjugated}] in a compartment headed flow ports", section: "C.3.1.1"}
+    FlowSpecification: {shape: "deprecated: an interface-like rectangle with a compartment headed flowProperties that lists the flow properties", marker: "none", section: "C.3.1.2"}
+  relationships:
+    Satisfy: {line: "dashed", target_end: "open (stick) arrowhead at the requirement", source_end: "none", label: "«satisfy» on the line; a callout alternative is a note symbol headed Satisfies (on the element) or SatisfiedBy (on the requirement), joined to the box by a dashed line", section: "16.2.1 (Table 16.2)"}
+    Verify: {line: "dashed", target_end: "open (stick) arrowhead at the requirement", source_end: "none", label: "«verify» on the line; callouts headed Verifies or VerifiedBy", section: "16.2.1 (Table 16.2)"}
+    DeriveReqt: {line: "dashed", target_end: "open (stick) arrowhead at the supplier requirement", source_end: "none", label: "«deriveReqt» on the line; callouts headed Derived or DerivedFrom", section: "16.2.1 (Table 16.2)"}
+    Refine: {line: "dashed", target_end: "open (stick) arrowhead at the refined element", source_end: "none", label: "«refine» on the line; callouts headed Refines or RefinedBy", section: "16.2.1 (Table 16.2); 7.2 (Table 7.2)"}
+    Trace: {line: "dashed", target_end: "open (stick) arrowhead at the supplier", source_end: "none", label: "«trace» on the line; callouts headed TracedTo or TracedFrom", section: "16.2.1 (Table 16.2)"}
+    Copy: {line: "dashed", target_end: "open (stick) arrowhead at the master requirement", source_end: "none", label: "«copy» on the line; a callout is a note symbol headed Master joined by a dashed line to the slave", section: "16.2.1 (Table 16.2)"}
+    RequirementContainment: {line: "solid; lines from the children run to a shared horizontal bar that joins one line to the parent", target_end: "none", source_end: "a circle holding a plus sign at the parent (container) end", label: "none", section: "16.2.1 (Table 16.2)"}
+    Allocate: {line: "dashed", target_end: "open (stick) arrowhead at the supplier (the allocation target)", source_end: "none", label: "«allocate» below the line. Other forms: compartments headed allocatedFrom and allocatedTo whose lines read «elementType» ElementName; a note symbol (callout) with the same two headings in bold; a table with a row per dependency", section: "15.2.1 (Table 15.1); 15.3.1.1 to 15.3.1.4"}
+    Conform: {line: "solid", target_end: "hollow triangle at the viewpoint", source_end: "none", label: "«conform» above the line", section: "7.2 (Table 7.2)"}
+    Expose: {line: "dashed", target_end: "open (stick) arrowhead at the exposed element", source_end: "none", label: "«expose» above the line", section: "7.2 (Table 7.2)"}
+    PartAssociation: {line: "solid", target_end: "none, or an open (stick) arrowhead when navigable one way; property name and multiplicity with modifiers in braces such as {ordered}, {subsets x}, {redefines x}", source_end: "black (filled) diamond at the whole end", label: "association name, with a small filled triangle for reading direction; property names and multiplicities near the ends; a multibranch form draws one diamond with a branching line to several parts", section: "8.2.1 (Table 8.2)"}
+    ReferenceAssociation: {line: "solid", target_end: "none, or an open (stick) arrowhead when navigable one way", source_end: "none", label: "association name, with a small filled triangle for reading direction; property names, multiplicities and modifiers such as {ordered}, {union} near the ends", section: "8.2.1 (Table 8.2)"}
+    SharedAssociation: {line: "solid", target_end: "none, or an open (stick) arrowhead when navigable one way", source_end: "white (hollow) diamond at the aggregate end", label: "as for a part association; a multibranch form draws one hollow diamond with a branching line", section: "8.2.1 (Table 8.2)"}
+    Generalization: {line: "solid", target_end: "hollow triangle at the general classifier", source_end: "none", label: "lines from several specific classifiers may join into one branch with a single arrowhead (multibranch)", section: "8.2.1 (Table 8.2)"}
+    GeneralizationSet: {line: "the generalization lines of the set; for an overlapping set they are drawn as separate arrows joined by a dashed horizontal line", target_end: "hollow triangles as for generalization", source_end: "none", label: "{disjoint} or {overlapping} in braces beside the shared arrowhead or the dashed line", section: "8.2.1 (Table 8.2)"}
+    BlockNamespaceContainment: {line: "solid; lines from the nested classifiers run to a shared bar", target_end: "none", source_end: "a circle holding a plus sign at the containing block", label: "none", section: "8.2.1 (Table 8.2)"}
+    Connector: {line: "solid, between two property boxes or ports", target_end: "none (bidirectional), or an open (stick) arrowhead at the target (unidirectional)", source_end: "none", label: "c1: association1 above the line; end names such as p1 and p2 and multiplicities such as 0..1 and 0..* below the ends", section: "8.2.2 (Table 8.4)"}
+    BindingConnector: {line: "solid, between the two bound properties", target_end: "none", source_end: "none", label: "«equal» in the middle of the line; end multiplicities optional", section: "8.2.2 (Table 8.4); 10.2.2"}
+    ItemFlow: {line: "the connector or association it travels on (no line of its own)", target_end: "a black (filled) triangle on the line, pointing toward the target", source_end: "none", label: "the name of the conveyed classifier below the triangle; with an item property, name: type; several item flows in the same direction share one triangle and a comma-separated list. On an association the triangle sits beside the association name.", section: "9.2.1 (Table 9.1); 9.2.2 (Table 9.2); 9.3.1.5"}
+    ProvidedInterface: {line: "a short solid line from the port square or block to a ball (small circle)", target_end: "ball at the interface end", source_end: "none", label: "the interface name beside the ball", section: "9.2.1 (Table 9.1); 9.2.2 (Table 9.2)"}
+    RequiredInterface: {line: "a short solid line from the port square or block to a socket (half circle)", target_end: "socket at the interface end", source_end: "none", label: "the interface name beside the socket", section: "9.2.1 (Table 9.1); 9.2.2 (Table 9.2)"}
+    Dependency: {line: "dashed", target_end: "open (stick) arrowhead at the supplier", source_end: "none", label: "an optional keyword in guillemets and the dependency name above the line", section: "7.2 (Table 7.2); 8.2.1 (Table 8.2)"}
+    Realization: {line: "dashed", target_end: "hollow triangle at the realized element", source_end: "none", label: "none", section: "7.2 (Table 7.2)"}
+    PackageContainment: {line: "solid", target_end: "none", source_end: "a circle holding a plus sign at the containing package", label: "none", section: "7.2 (Table 7.2)"}
+    PackageImport: {line: "dashed", target_end: "open (stick) arrowhead at the imported package", source_end: "none", label: "«import» for a public import, «access» for a private import", section: "7.2 (Table 7.2)"}
+    ControlFlow: {line: "solid, or dashed (Annex B records whether control flows are dashed)", target_end: "open (stick) arrowhead", source_end: "none", label: "none", section: "11.2.1 (Table 11.2); 11.3.1.3.1"}
+    ObjectFlow: {line: "solid, between actions through an object node rectangle or directly between pins (small squares)", target_end: "open (stick) arrowhead", source_end: "none", label: "none", section: "11.2.1 (Table 11.2)"}
+  not_specified: [ElementPropertyPath, DirectedRelationshipPropertyPath, ChangeStructuralFeatureEvent, AcceptChangeStructuralFeatureEventAction, AbstractRequirement, VerdictKind, SysMLDiagramElement, SysMLDiagramWithAssociations, SysMLStructureDiagram, SysMLBehaviorDiagram]
+constraints:
+- {id: SYSML-MOD-001, statement: The general classifier of a conform relationship is a viewpoint., strength: must, section: '7.3.2.1 [1]', checkable: static, category: MOD}
+- {id: SYSML-MOD-002, statement: The specific classifier of a conform relationship is a view., strength: must, section: '7.3.2.1 [2]', checkable: static, category: MOD}
+- {id: SYSML-MOD-003, statement: The client of an expose relationship is a view., strength: must, section: '7.3.2.3 [1]', checkable: static, category: MOD}
+- {id: SYSML-MOD-004, statement: A view conforms to a single viewpoint., strength: must, section: '7.3.2.7 [1]', checkable: static, category: MOD}
+- {id: SYSML-MOD-005, statement: 'A view''s viewpoint, and its stakeholders, are derived from the general classifier of the conform generalization for which the view is the specific classifier.', strength: must, section: '7.3.2.7 [2], [3]', checkable: partial, category: MOD}
+- {id: SYSML-MOD-006, statement: The methods of a viewpoint are the methods of the operations on the viewpoint that carry the create marking., strength: must, section: '7.3.2.8 [1]', checkable: partial, category: MOD}
+- {id: SYSML-MOD-007, statement: A viewpoint owns at least one operation named "View" that carries the create marking., strength: must, section: '7.3.2.8 [2]', checkable: static, category: MOD}
+- {id: SYSML-MOD-008, statement: 'An element group owns nothing: its members are the annotated elements of its comment, an element can be in any number of groups, and being a member of a group that is a member of another group does not make the element a member of the other group.', strength: note, section: 7.3.2.2, checkable: none, category: MOD}
+- {id: SYSML-MOD-009, statement: 'A group asserts that its criterion applies to each member as a model element; it says nothing about instances or values of that element, or about related elements, unless the criterion text says so.', strength: note, section: 7.3.2.2, checkable: none, category: MOD}
+- {id: SYSML-MOD-010, statement: 'A rationale or problem is attached to any other model element in the way a comment is, including to a relationship.', strength: note, section: 7.3.2.4; 7.3.2.5, checkable: none, category: MOD}
+- {id: SYSML-MOD-011, statement: 'Views and viewpoints follow ISO 42010: a viewpoint frames stakeholder concerns and gives the method; a view is the model element standing for the artifact, which itself may live outside the model.', strength: note, section: 7.1.1, checkable: none, category: MOD}
+- {id: SYSML-BLK-001, statement: An association whose two ends are both typed by blocks has exactly two ends., strength: must, section: '8.3.2.4 [1]', checkable: static, category: BLK}
+- {id: SYSML-BLK-002, statement: 'A connector owned by a block has exactly two ends. This covers binding connectors, which are not typed by an association.', strength: must, section: '8.3.2.4 [2]', checkable: static, category: BLK}
+- {id: SYSML-BLK-003, statement: A property typed by a block and owned by an association has no name and is not a navigable end owned by the association., strength: must, section: '8.3.2.4 [3]', checkable: static, category: BLK}
+- {id: SYSML-BLK-004, statement: 'A property typed by a block is an end of an association. An inverse end, owned by another block or by the association, always exists so the inverse multiplicity can be recorded.', strength: must, section: '8.3.2.4 [4]', checkable: static, category: BLK}
+- {id: SYSML-BLK-005, statement: A property owned by a block or value type and typed by a value type has composite aggregation., strength: must, section: '8.3.2.4 [6]', checkable: static, category: BLK}
+- {id: SYSML-BLK-006, statement: 'Within an instance of a block, the values of properties with composite aggregation form an acyclic graph: an instance never contains itself through a chain of composite properties.', strength: must, section: '8.3.2.4 [7]', checkable: runtime, category: BLK}
+- {id: SYSML-BLK-007, statement: Every classifier that specializes a block is itself a block (or a specialization of a block)., strength: must, section: '8.3.2.4 [8]', checkable: static, category: BLK}
+- {id: SYSML-BLK-008, statement: 'SysML removes two UML rules about connectors: that the elements attached to connector ends are roles of the owning classifier or ports of such roles, and that the part with a port is not itself a port. Connector ends may therefore reach nested properties.', strength: note, section: '8.3.2.4 [5], [9]', checkable: none, category: BLK}
+- {id: SYSML-BLK-009, statement: 'The principal of an adjunct property is a connector, call action, object node, variable, parameter, submachine state or interaction use.', strength: must, section: '8.3.2.2 [1]', checkable: static, category: BLK}
+- {id: SYSML-BLK-010, statement: An adjunct property has the same name as its principal., strength: must, section: '8.3.2.2 [2]', checkable: static, category: BLK}
+- {id: SYSML-BLK-011, statement: An adjunct property whose principal is a connector or a call action is composite., strength: must, section: '8.3.2.2 [3]', checkable: static, category: BLK}
+- {id: SYSML-BLK-012, statement: 'An adjunct property is owned, at least indirectly, by an element that owns its principal, or by a specialization of that element.', strength: must, section: '8.3.2.2 [4]', checkable: static, category: BLK}
+- {id: SYSML-BLK-013, statement: 'An adjunct property whose principal is a connector, object node, variable or parameter has the same type as the principal or one of the principal''s generalizations.', strength: must, section: '8.3.2.2 [5]', checkable: static, category: BLK}
+- {id: SYSML-BLK-014, statement: A connector that is the principal of an adjunct property is typed by an association block., strength: must, section: '8.3.2.2 [6]', checkable: static, category: BLK}
+- {id: SYSML-BLK-015, statement: 'When both adjunct property and connector property apply to a property, they have the same principal and connector.', strength: must, section: '8.3.2.2 [7]', checkable: static, category: BLK}
+- {id: SYSML-BLK-016, statement: 'An adjunct property whose principal is a call action is composite, is typed by the invoked behavior or a generalization of it (for an operation call, one that generalizes every behavior that might be dispatched), and has upper multiplicity one when the invoked behavior is not reentrant.', strength: must, section: '8.3.2.2 [8]', checkable: static, category: BLK}
+- {id: SYSML-BLK-017, statement: An adjunct property whose principal is an object node has lower multiplicity zero and an upper multiplicity at least that of the node's upper bound., strength: must, section: '8.3.2.2 [9]', checkable: static, category: BLK}
+- {id: SYSML-BLK-018, statement: 'An adjunct property whose principal is a variable or parameter has a lower multiplicity no greater than, and an upper multiplicity no less than, that of the principal.', strength: must, section: '8.3.2.2 [10]', checkable: static, category: BLK}
+- {id: SYSML-BLK-019, statement: 'An adjunct property whose principal is an interaction use or submachine state is composite and typed by the invoked interaction or state machine, or a generalization of it.', strength: must, section: '8.3.2.2 [11]', checkable: static, category: BLK}
+- {id: SYSML-BLK-020, statement: 'The two ends of a binding connector have the same type or compatible types, so that equality of their values can be defined.', strength: must, section: '8.3.2.3 [1]', checkable: partial, category: BLK}
+- {id: SYSML-BLK-021, statement: 'A property with a bound reference is the role of an end of at least one binding connector, or is generalized by such a property through redefinition.', strength: must, section: '8.3.2.5 [1]', checkable: static, category: BLK}
+- {id: SYSML-BLK-022, statement: The bound end of a bound reference is the end of that binding connector opposite the property., strength: must, section: '8.3.2.5 [2]', checkable: static, category: BLK}
+- {id: SYSML-BLK-023, statement: 'The role of the bound end is reachable by navigation from instances of the owning block, and is neither the bound reference itself nor a property related to it by redefinition.', strength: must, section: '8.3.2.5 [3]', checkable: partial, category: BLK}
+- {id: SYSML-BLK-024, statement: 'The last element of a bound reference''s binding path is the role of its bound end; the earlier elements are the property path of the nested connector end, if any.', strength: must, section: '8.3.2.5 [4]', checkable: static, category: BLK}
+- {id: SYSML-BLK-025, statement: A bound reference is a reference property or a value property., strength: must, section: '8.3.2.5 [5]', checkable: static, category: BLK}
+- {id: SYSML-BLK-026, statement: A bound reference with upper multiplicity greater than one is ordered and non-unique., strength: must, section: '8.3.2.5 [6]', checkable: static, category: BLK}
+- {id: SYSML-BLK-027, statement: A bound reference is not applied to a property that is related by redefinition to another property with a bound reference., strength: must, section: '8.3.2.5 [7]', checkable: static, category: BLK}
+- {id: SYSML-BLK-028, statement: 'The binding connector of a bound reference does not have the same property, or properties related by redefinition, at both ends.', strength: must, section: '8.3.2.5 [8]', checkable: static, category: BLK}
+- {id: SYSML-BLK-029, statement: A classifier behavior property is applied only to properties owned (not inherited) by blocks that have a classifier behavior., strength: must, section: '8.3.2.6 [1]', checkable: static, category: BLK}
+- {id: SYSML-BLK-030, statement: A classifier behavior property is composite., strength: must, section: '8.3.2.6 [2]', checkable: static, category: BLK}
+- {id: SYSML-BLK-031, statement: A classifier behavior property is typed by the classifier behavior of its owning block or a generalization of it., strength: must, section: '8.3.2.6 [3]', checkable: static, category: BLK}
+- {id: SYSML-BLK-032, statement: A connector property is applied only to properties of blocks., strength: must, section: '8.3.2.7 [1]', checkable: static, category: BLK}
+- {id: SYSML-BLK-033, statement: The connector of a connector property is owned or inherited by a block that owns the property., strength: must, section: '8.3.2.7 [2]', checkable: static, category: BLK}
+- {id: SYSML-BLK-034, statement: A connector property is composite., strength: must, section: '8.3.2.7 [3]', checkable: static, category: BLK}
+- {id: SYSML-BLK-035, statement: The type of the connector of a connector property is an association block., strength: must, section: '8.3.2.7 [4]', checkable: static, category: BLK}
+- {id: SYSML-BLK-036, statement: A connector property has the same name and type as its connector., strength: must, section: '8.3.2.7 [5]', checkable: static, category: BLK}
+- {id: SYSML-BLK-037, statement: A directed relationship with a property path has a source context when its source is a property and has none otherwise; likewise for the target context., strength: must, section: '8.3.2.8 [1], [2]', checkable: static, category: BLK}
+- {id: SYSML-BLK-038, statement: A directed relationship's source (target) is a property when its source (target) property path has a value., strength: must, section: '8.3.2.8 [3], [4]', checkable: static, category: BLK}
+- {id: SYSML-BLK-039, statement: The first property of a source or target property path is owned by the corresponding context or one of its generalizations., strength: must, section: '8.3.2.8 [5], [6]', checkable: static, category: BLK}
+- {id: SYSML-BLK-040, statement: 'Each later property of a property path is owned by the block or value type that types the preceding property, or a generalization of it.', strength: must, section: '8.3.2.8 [7]; 8.3.2.10 [1]', checkable: static, category: BLK}
+- {id: SYSML-BLK-041, statement: The type of the last property of a source (target) property path owns or inherits the source (target) of the relationship., strength: must, section: '8.3.2.8 [8], [9]', checkable: static, category: BLK}
+- {id: SYSML-BLK-042, statement: A distributed property is applied only to properties of blocks or value types., strength: must, section: '8.3.2.9 [1]', checkable: static, category: BLK}
+- {id: SYSML-BLK-043, statement: An end path multiplicity is applied only to properties related by redefinition to a property that has a bound reference., strength: must, section: '8.3.2.11 [1]', checkable: static, category: BLK}
+- {id: SYSML-BLK-044, statement: The lower value of an end path multiplicity is not negative., strength: must, section: '8.3.2.11 [2]', checkable: static, category: BLK}
+- {id: SYSML-BLK-045, statement: 'The first property of a nested connector end''s path is owned by the block that owns the connector, or one of its generalizations.', strength: must, section: '8.3.2.12 [1]', checkable: static, category: BLK}
+- {id: SYSML-BLK-046, statement: The type of the last property of a nested connector end's path owns or inherits the property that is the role of the connector end., strength: must, section: '8.3.2.12 [2]', checkable: static, category: BLK}
+- {id: SYSML-BLK-047, statement: A nested connector end is applied only to connector ends., strength: must, section: '8.3.2.12 [3]', checkable: static, category: BLK}
+- {id: SYSML-BLK-048, statement: A participant property is applied only to properties of association blocks., strength: must, section: '8.3.2.13 [1]', checkable: static, category: BLK}
+- {id: SYSML-BLK-049, statement: A participant property is not a member end of an association., strength: must, section: '8.3.2.13 [2]', checkable: static, category: BLK}
+- {id: SYSML-BLK-050, statement: A participant property has aggregation none., strength: must, section: '8.3.2.13 [3]', checkable: static, category: BLK}
+- {id: SYSML-BLK-051, statement: The end of a participant property is a member end of the association block that owns the property., strength: must, section: '8.3.2.13 [4]', checkable: static, category: BLK}
+- {id: SYSML-BLK-052, statement: A participant property has the same type as the end it refers to., strength: must, section: '8.3.2.13 [5]', checkable: static, category: BLK}
+- {id: SYSML-BLK-053, statement: A participant property has multiplicity 1., strength: must, section: '8.3.2.13 [6]', checkable: static, category: BLK}
+- {id: SYSML-BLK-054, statement: A property-specific type is the type of one and only one property., strength: must, section: '8.3.2.14 [1]', checkable: static, category: BLK}
+- {id: SYSML-BLK-055, statement: A property-specific type has no name., strength: must, section: '8.3.2.14 [2]', checkable: static, category: BLK}
+- {id: SYSML-BLK-056, statement: A property-specific type specializes at most the single classifier that was named as its starting type; with no starting type it specializes nothing., strength: must, section: 8.3.2.14, checkable: static, category: BLK}
+- {id: SYSML-BLK-057, statement: 'Four kinds of property are recognized: part (typed by a block, composite), reference (typed by a block, not composite), value (typed by a value type, always composite) and constraint (typed by a constraint block). Ports are a further category of property.', strength: note, section: 8.3.2.4; 8.3.1.2.1, checkable: none, category: BLK}
+- {id: SYSML-BLK-058, statement: 'A block''s internal connectors are always available. An encapsulated block (isEncapsulated true) is a black box: a part typed by it connects only through its ports or to its outer boundary; otherwise connections may reach its internal structure through nested connector ends.', strength: note, section: 8.3.2.4, checkable: partial, category: BLK}
+- {id: SYSML-BLK-059, statement: Nested connector ends do not follow strict encapsulation; they are for cases where adding intermediate properties at each level is not feasible. The connector is owned by the nearest block that owns both ends., strength: note, section: 8.3.1.2.6, checkable: none, category: BLK}
+- {id: SYSML-BLK-060, statement: 'If a property of a block has initial values for properties of its type, its default value is an instance value that refers to an unnamed instance specification owned by the package that owns the outermost containing block.', strength: must, section: 8.3.2.4 (initial values), checkable: partial, category: BLK}
+- {id: SYSML-VAL-001, statement: Every classifier that specializes a value type is itself a value type., strength: must, section: '8.3.2.15 [1]', checkable: static, category: VAL}
+- {id: SYSML-VAL-002, statement: The unit of a value type is an instance specification classified by Unit (from the unit and quantity kind library) or a specialization of it., strength: must, section: '8.3.2.15 [2]', checkable: static, category: VAL}
+- {id: SYSML-VAL-003, statement: The quantity kind of a value type is an instance specification classified by QuantityKind or a specialization of it., strength: must, section: '8.3.2.15 [3]', checkable: static, category: VAL}
+- {id: SYSML-VAL-004, statement: The only valid use of a quantity kind instance is to be referenced by the quantity kind of a value type or of a unit; the only valid use of a unit instance is to be referenced by the unit of a value type., strength: must, section: 8.3.3.2.1; 8.3.3.2.2, checkable: static, category: VAL}
+- {id: SYSML-VAL-005, statement: Two instance specifications represent the same unit (or quantity kind) if and only if both have a definition URI and the two are equal., strength: note, section: 8.3.3.2.1; 8.3.3.2.2, checkable: partial, category: VAL}
+- {id: SYSML-VAL-006, statement: 'A value type may state a quantity kind without a unit, to type a value in a form independent of any unit.', strength: note, section: 8.3.2.15, checkable: none, category: VAL}
+- {id: SYSML-VAL-007, statement: 'Unqualified Boolean, Integer, Real and String mean the UML primitive types when defining a SysML extension, and the value types of the primitive value type library everywhere else.', strength: note, section: '4.3', checkable: none, category: VAL}
+- {id: SYSML-VAL-008, statement: 'A value type may carry its own properties and operations, as a UML data type can, and may be structured.', strength: note, section: 8.3.2.15, checkable: none, category: VAL}
+- {id: SYSML-PORT-001, statement: 'A port is not both a proxy port and a full port, even when one of the two markings is on a subsetted or redefined port.', strength: must, section: '9.3.2.8 [1]; 9.3.2.12 [1]', checkable: static, category: PORT}
+- {id: SYSML-PORT-002, statement: A proxy port is typed only by an interface block., strength: must, section: '9.3.2.12 [2]', checkable: static, category: PORT}
+- {id: SYSML-PORT-003, statement: Ports owned by the type of a proxy port are proxy ports., strength: must, section: '9.3.2.12 [3]', checkable: static, category: PORT}
+- {id: SYSML-PORT-004, statement: 'A completely specified proxy port is connected to internal parts or is behavioral. A block may declare a non-behavioral proxy port without internal connectors, to be completed in a specialization.', strength: should, section: 9.3.2.12, checkable: partial, category: PORT}
+- {id: SYSML-PORT-005, statement: 'When a proxy port is connected to a single internal part, the connector is a binding connector or has the same semantics as one.', strength: must, section: 9.3.2.12, checkable: partial, category: PORT}
+- {id: SYSML-PORT-006, statement: A full port is not behavioral., strength: must, section: '9.3.2.8 [3]', checkable: static, category: PORT}
+- {id: SYSML-PORT-007, statement: A full port is not conjugated., strength: must, section: '9.3.2.8 [4]', checkable: static, category: PORT}
+- {id: SYSML-PORT-008, statement: 'A binding connector does not link a full port, directly or through other binding connectors, to another composite property of the block that owns the full port (or of that block''s generalizations or specializations), unless that property is a non-full port.', strength: must, section: '9.3.2.8 [2]', checkable: static, category: PORT}
+- {id: SYSML-PORT-009, statement: 'An interface block does not own or inherit behaviors, does not have classifier behaviors, and has no methods for its behavioral features.', strength: must, section: '9.3.2.9 [1]', checkable: static, category: PORT}
+- {id: SYSML-PORT-010, statement: An interface block has no composite properties other than ports., strength: must, section: '9.3.2.9 [2]', checkable: static, category: PORT}
+- {id: SYSML-PORT-011, statement: Ports owned by an interface block are typed only by interface blocks., strength: must, section: '9.3.2.9 [3]', checkable: static, category: PORT}
+- {id: SYSML-PORT-012, statement: 'A trigger on a nested port has exactly one port, and that port is not a full port; the ports in its nested port path are not full ports.', strength: must, section: '9.3.2.13 [1], [2]', checkable: static, category: PORT}
+- {id: SYSML-PORT-013, statement: 'The first port in a trigger''s nested port path is owned by a block in which the trigger is used, or a generalization of it; each later port is owned by the type of the preceding one; the type of the last port owns or inherits the trigger''s port.', strength: must, section: '9.3.2.13 [3], [4], [5]', checkable: static, category: PORT}
+- {id: SYSML-PORT-014, statement: The nested-port trigger extension is applied only to triggers., strength: must, section: '9.3.2.13 [6]', checkable: static, category: PORT}
+- {id: SYSML-PORT-015, statement: An invocation on a nested port has a value for its port property., strength: must, section: '9.3.2.10 [1]', checkable: static, category: PORT}
+- {id: SYSML-PORT-016, statement: 'The first port in an invocation''s nested port path is owned by a block that types the target pin, or a generalization of it; each later port is owned by the type of the preceding one; the type of the last port owns or inherits the invocation''s port.', strength: must, section: '9.3.2.10 [2], [3], [4]', checkable: static, category: PORT}
+- {id: SYSML-PORT-017, statement: The nested-port invocation extension is applied only to invocation actions., strength: must, section: '9.3.2.10 [5]', checkable: static, category: PORT}
+- {id: SYSML-PORT-018, statement: Invocations intended to leave the executing object are sent to it on a proxy port; invocations intended for a target object are sent to a port of that object., strength: note, section: 9.3.2.10, checkable: none, category: PORT}
+- {id: SYSML-PORT-019, statement: 'A port with a type that has ports nests those ports; a conjugated port reverses the direction of flow properties and the meaning of provided and required, but its nested ports behave as if not conjugated.', strength: note, section: 9.1.2; 9.3.2.2, checkable: none, category: PORT}
+- {id: SYSML-PORT-020, statement: Items going to or from a behavioral port go to or from the owning block; items going to a non-behavioral port go to the port itself (full port) or to the internal parts it is connected to (proxy port)., strength: note, section: 9.3.2.7, checkable: none, category: PORT}
+- {id: SYSML-FLOW-001, statement: 'A flow property is typed by a value type, block or signal.', strength: must, section: '9.3.2.7 [1]', checkable: static, category: FLOW}
+- {id: SYSML-FLOW-002, statement: 'Flow between ends of a connector occurs only between matching flow properties: the directions match and the target type is the same as, or a generalization of, the source type. If several flow properties match by direction and type, their names must also match; if several still match, no flow occurs.', strength: must, section: 9.3.2.7, checkable: partial, category: FLOW}
+- {id: SYSML-FLOW-003, statement: An "in" flow property is not modified by the owning or realizing block or blocks it contains; an "out" flow property is modified only by them; "inout" can be used either way., strength: must, section: 9.3.2.7, checkable: runtime, category: FLOW}
+- {id: SYSML-FLOW-004, statement: 'For items to flow through a proxy port, flow property directions are the same on the proxy port and on the owning block or internal part it stands in for.', strength: must, section: 9.3.2.7, checkable: partial, category: FLOW}
+- {id: SYSML-FLOW-005, statement: 'A directed feature is applied only to behavioral features, or to properties that are not flow properties.', strength: must, section: '9.3.2.4 [1]', checkable: static, category: FLOW}
+- {id: SYSML-FLOW-006, statement: An operation that is not provided is not associated with a behavior as its method., strength: must, section: '9.3.2.4 [2]', checkable: static, category: FLOW}
+- {id: SYSML-FLOW-007, statement: 'A single provided behavioral feature matches each required one: same kind (operation or reception), same names including parameter names in order, same parameter directions in order, provided in-parameter types the same or more general, provided out and return types the same or more specialized, inout types the same, and corresponding multiplicity, order and uniqueness conditions, with provided preconditions the same or more general and provided body conditions and postconditions the same or more specialized.', strength: must, section: 9.3.2.4, checkable: partial, applies_when: required features are used across a connector, category: FLOW}
+- {id: SYSML-FLOW-008, statement: 'A provided non-flow property matches a required one when they have the same name; for reading, types, multiplicities, uniqueness and ordering match as out parameters do; for writing, as in parameters do; for both, they are the same.', strength: must, section: 9.3.2.4, checkable: partial, applies_when: required features are used across a connector, category: FLOW}
+- {id: SYSML-FLOW-009, statement: 'Meanings of "provided" and "required", and of "in" and "out", are swapped for conjugated ports.', strength: note, section: 9.3.2.4; 9.3.2.5; 9.3.2.6, checkable: none, category: FLOW}
+- {id: SYSML-FLOW-010, statement: A connector or association (possibly inherited) exists between the source and the target of an item flow., strength: must, section: '9.3.2.11 [1]', checkable: static, category: FLOW}
+- {id: SYSML-FLOW-011, statement: 'An item property is typed by a value type, block or signal.', strength: must, section: '9.3.2.11 [2]', checkable: static, category: FLOW}
+- {id: SYSML-FLOW-012, statement: An item property is a property of the common (possibly indirect) owner of the item flow's source and target., strength: must, section: '9.3.2.11 [3]', checkable: static, category: FLOW}
+- {id: SYSML-FLOW-013, statement: An item property has no value when the item flow is realized by an association., strength: must, section: '9.3.2.11 [4]', checkable: static, category: FLOW}
+- {id: SYSML-FLOW-014, statement: 'When an item flow has an item property, one of its conveyed classifiers is the type of that property.', strength: must, section: '9.3.2.11 [5]', checkable: static, category: FLOW}
+- {id: SYSML-FLOW-015, statement: 'When an item flow has an item property, the item flow has the same name as that property.', strength: must, section: '9.3.2.11 [6]', checkable: static, category: FLOW}
+- {id: SYSML-FLOW-016, statement: 'An item flow on a connector is compatible with the flow properties of the usages at each end: its direction fits their directions, each conveyed classifier is the same as, a specialization of, or a generalization of at least one flow property type at each end, and the target flow property type is the same as or a generalization of the more specialized of the item flow classifier and the source flow property type.', strength: must, section: 9.3.2.11, checkable: partial, applies_when: the connector ends have flow properties, category: FLOW}
+- {id: SYSML-FLOW-017, statement: Flow properties say what can flow in or out of a block; item flows say what does flow between particular usages. This lets one block be connected in different ways in different contexts., strength: note, section: 9.1.4, checkable: none, category: FLOW}
+- {id: SYSML-FLOW-018, statement: The structural feature of a change structural feature event is not static., strength: must, section: '9.3.2.3 [1]', checkable: static, category: FLOW}
+- {id: SYSML-FLOW-019, statement: The structural feature of a change structural feature event has exactly one featuring classifier., strength: must, section: '9.3.2.3 [2]', checkable: static, category: FLOW}
+- {id: SYSML-FLOW-020, statement: 'An accept change structural feature event action has exactly one trigger, and its event is a change structural feature event.', strength: must, section: '9.3.2.1 [1]', checkable: static, category: FLOW}
+- {id: SYSML-FLOW-021, statement: Such an action has two result pins with the type and ordering of the structural feature and a compatible multiplicity., strength: must, section: '9.3.2.1 [2]', checkable: static, category: FLOW}
+- {id: SYSML-FLOW-022, statement: 'The structural feature of the trigger event is owned or inherited by the context of the behavior that contains the action, and its visibility allows the object performing the action to access it.', strength: must, section: '9.3.2.1 [3], [4]', checkable: static, category: FLOW}
+- {id: SYSML-FLOW-023, statement: 'SysML removes the UML rule that an accept event action has no output pins when its triggers are only change events, for actions that carry the change structural feature extension.', strength: note, section: '9.3.2.1 [5]', checkable: none, category: FLOW}
+- {id: SYSML-CNS-001, statement: 'A constraint block owns only: properties that define its constraint parameters, constraint properties holding nested usages of constraint blocks, binding connectors between internally nested parameters, constraint expressions that interpret it, and general-purpose model management and crosscutting elements.', strength: must, section: '10.3.2.1 [1]', checkable: static, category: CNS}
+- {id: SYSML-CNS-002, statement: Every classifier that specializes a constraint block is itself a constraint block., strength: must, section: '10.3.2.1 [2]', checkable: static, category: CNS}
+- {id: SYSML-CNS-003, statement: Every property of a block that is typed by a constraint block has composite aggregation., strength: must, section: '10.3.2.1 [3]', checkable: static, category: CNS}
+- {id: SYSML-CNS-004, statement: 'All properties of a constraint block are constraint parameters, except constraint properties that hold nested usages of constraint blocks.', strength: must, section: 10.1; 10.3.2.1, checkable: static, category: CNS}
+- {id: SYSML-CNS-005, statement: 'On a parametric diagram, every property other than the constraint properties is either bound directly to a constraint parameter or contains a property that is, through any number of levels of containment.', strength: must, section: 10.3.1.2, checkable: partial, category: CNS}
+- {id: SYSML-CNS-006, statement: 'SysML names and structures constraints but specifies no machine-interpretable language for them; the interpretation of a constraint block must be supplied, and constraint blocks are non-causal (they do not choose dependent and independent variables).', strength: note, section: '10.1', checkable: none, category: CNS}
+- {id: SYSML-CNS-007, statement: The context block for the usages of constraint blocks is specified on a parametric diagram so nested property names resolve in the right namespace., strength: must, section: '10.1', checkable: partial, category: CNS}
+- {id: SYSML-ACT-001, statement: A behavior or operation with the control operator marking has at least one parameter typed by ControlValue; one without the marking has none., strength: must, section: '11.3.2.2 [1]', checkable: static, category: ACT}
+- {id: SYSML-ACT-002, statement: A behavior is a control operator if it is the method of an operation that is a control operator., strength: must, section: '11.3.2.2 [2]', checkable: static, category: ACT}
+- {id: SYSML-ACT-003, statement: The discrete and continuous markings are not applied to the same element., strength: must, section: '11.3.2.3 [1]', checkable: static, category: ACT}
+- {id: SYSML-ACT-004, statement: The no-buffer and overwrite markings are not applied to the same element., strength: must, section: '11.3.2.4 [1]; 11.3.2.5 [1]', checkable: static, category: ACT}
+- {id: SYSML-ACT-005, statement: A parameter with the optional marking has lower multiplicity zero; any other parameter in an activity has lower multiplicity greater than zero ("required")., strength: must, section: '11.3.2.6 [1]', checkable: static, category: ACT}
+- {id: SYSML-ACT-006, statement: 'A probability applies only to activity edges whose source is a decision node or object node, or to output parameter sets.', strength: must, section: '11.3.2.7 [1]', checkable: static, category: ACT}
+- {id: SYSML-ACT-007, statement: 'If a probability is applied to an edge, it is applied to all edges leaving the same source.', strength: must, section: '11.3.2.7 [2]', checkable: static, category: ACT}
+- {id: SYSML-ACT-008, statement: 'If a probability is applied to an output parameter set, it is applied to all parameter sets of the owning behavior or operation.', strength: must, section: '11.3.2.7 [3]', checkable: static, category: ACT}
+- {id: SYSML-ACT-009, statement: 'When a probability is applied to output parameter sets, every output parameter is in some parameter set.', strength: must, section: '11.3.2.7 [4]', checkable: static, category: ACT}
+- {id: SYSML-ACT-010, statement: Probabilities are between zero and one inclusive and sum to one over the edges that leave the same source (or the output parameter sets of one behavior) when they are used., strength: must, section: 11.3.2.7, checkable: runtime, category: ACT}
+- {id: SYSML-ACT-011, statement: A parameter with a rate is streaming., strength: must, section: '11.3.2.8 [1]', checkable: static, category: ACT}
+- {id: SYSML-ACT-012, statement: The rate of a parameter is no greater than the rates of edges that enter or leave the pins and parameter nodes corresponding to it., strength: must, section: '11.3.2.8 [2]', checkable: partial, category: ACT}
+- {id: SYSML-ACT-013, statement: 'The value of a rate is an instance of a classifier that is a value type or a distribution definition, and the denominator of its unit is a time unit.', strength: must, section: 11.3.2.8, checkable: partial, category: ACT}
+- {id: SYSML-ACT-014, statement: An object node of type ControlValue has the control-type setting true., strength: must, section: '11.3.3.1.1 [1]', checkable: static, category: ACT}
+- {id: SYSML-ACT-015, statement: 'A control value is an input or output of a control operator, which is how control acts as data; its enable literal starts a new execution and its disable literal ends an executing behavior, which can only be restarted from the beginning.', strength: note, section: 11.1.1; 11.3.3.1.1, checkable: none, category: ACT}
+- {id: SYSML-ACT-016, statement: 'Activities appear on block definition diagrams as blocks. A composition association between activities means that ending the whole ends the executions of the parts, and the upper multiplicity on the part end limits concurrent synchronous executions of the invoked behavior.', strength: note, section: 11.3.1.1.1, checkable: none, category: ACT}
+- {id: SYSML-ACT-017, statement: 'For object nodes that are the target of continuous flows, the no-buffer and overwrite markings have the same effect.', strength: note, section: 11.3.2.4; 11.3.2.5, checkable: none, category: ACT}
+- {id: SYSML-ACT-018, statement: Rate says how many items cross an edge or parameter per time interval; it does not describe how a value changes over time. Continuous and discrete rates are independent of UML streaming., strength: note, section: 11.3.2.1; 11.3.2.8, checkable: none, category: ACT}
+- {id: SYSML-BEH-001, statement: 'Of the UML interaction diagrams SysML includes only the sequence diagram; communication, interaction overview and timing diagrams are excluded.', strength: must, section: 12.1; 12.3.1.1, checkable: static, category: BEH}
+- {id: SYSML-BEH-002, statement: 'Protocol state machines are excluded; the standard (behavior) state machines are used, and are sufficient to express protocols.', strength: must, section: '13.1', checkable: static, category: BEH}
+- {id: SYSML-BEH-003, statement: 'Interactions, state machines and activities are classes whose instances are executions; they appear on block definition diagrams as blocks, with the activity, interaction or state machine keyword, and are associated with the behaviors they invoke and with the types of their parameters.', strength: note, section: 11.3.1.1.1; 12.3.1.2.1; 13.3.1.1.1, checkable: none, category: BEH}
+- {id: SYSML-BEH-004, statement: 'The use case relationships are communication (an association between actor and use case), include, extend and generalization. A use case diagram describes how a subject is used by actors to reach a goal; the subject may be drawn as a system boundary.', strength: note, section: '14.1', checkable: none, category: BEH}
+- {id: SYSML-BEH-005, statement: 'An included use case is part of the normal execution of the including use case and required for the base use case''s goals; an extending use case is optional, acts at a named extension point under a condition, and typically is not meaningful alone, while the extended use case is.', strength: note, section: 14.1; 14.4, checkable: none, category: BEH}
+- {id: SYSML-BEH-006, statement: Include and extend are often subjective and may be reversed according to the modeler's approach., strength: note, section: '14.4', checkable: none, category: BEH}
+- {id: SYSML-BEH-007, statement: 'A use case is realized by behaviors (activity, sequence and state machine diagrams); a package named for its top-level use case can hold the lower-level use cases as an implicit trace that complements explicit trace relationships.', strength: note, section: 14.1; 14.4, checkable: none, category: BEH}
+- {id: SYSML-ALLOC-001, statement: The allocate extension is applied only to abstractions., strength: must, section: '15.3.2.1 [1]', checkable: static, category: ALLOC}
+- {id: SYSML-ALLOC-002, statement: A single allocate dependency has exactly one client (from) and one supplier (to)., strength: must, section: '15.3.2.1 [2]', checkable: static, category: ALLOC}
+- {id: SYSML-ALLOC-003, statement: Any more specialized form of allocation has constraints on its supplier and client as appropriate., strength: must, section: '15.3.2.1 [3]', checkable: none, category: ALLOC}
+- {id: SYSML-ALLOC-004, statement: An action in an allocate activity partition is the client (from end) of an allocate dependency whose supplier (to end) is the element that the partition represents., strength: must, section: '15.3.2.2 [1]', checkable: static, category: ALLOC}
+- {id: SYSML-ALLOC-005, statement: 'An allocate activity partition keeps the constraints, but not the semantics, of a UML activity partition: the represented classifier or property has no direct responsibility for invoking the behavior in the partition.', strength: must, section: '15.3.2.2 [2]', checkable: none, category: ALLOC}
+- {id: SYSML-ALLOC-006, statement: 'Allocation is permitted between any two named elements and is a precursor to a more concrete relationship between them, their properties, operations or specializations.', strength: note, section: 15.3.2.1, checkable: none, category: ALLOC}
+- {id: SYSML-ALLOC-007, statement: Allocation of an object flow to a connector is an allocation of usage; it implies nothing about the defining blocks of the flow or the defining associations of the connector. Allocation of control flow and of pins to ports is not specifically addressed., strength: note, section: 15.3.2.1, checkable: none, category: ALLOC}
+- {id: SYSML-ALLOC-008, statement: 'In a partition name, a property is designated by a fully qualified name (with a colon) and a classifier by a simple name (no colon).', strength: should, section: '15.3.2.2 [1]', checkable: none, category: ALLOC}
+- {id: SYSML-REQ-001, statement: A requirement owns no operations., strength: must, section: '16.3.2.5 [1]', checkable: static, category: REQ}
+- {id: SYSML-REQ-002, statement: A requirement owns no attributes., strength: must, section: '16.3.2.5 [2]', checkable: static, category: REQ}
+- {id: SYSML-REQ-003, statement: A requirement does not take part in associations., strength: must, section: '16.3.2.5 [3]', checkable: static, category: REQ}
+- {id: SYSML-REQ-004, statement: A requirement does not take part in generalizations., strength: must, section: '16.3.2.5 [4]', checkable: static, category: REQ}
+- {id: SYSML-REQ-005, statement: A classifier nested in a requirement is also a requirement., strength: must, section: '16.3.2.5 [5]', checkable: static, category: REQ}
+- {id: SYSML-REQ-006, statement: A requirement is not used to type any other model element., strength: must, section: '16.3.2.5 [6]', checkable: static, category: REQ}
+- {id: SYSML-REQ-007, statement: Every requirement has a text and a unique id., strength: must, section: 16.3.2.1 (attributes), checkable: static, category: REQ}
+- {id: SYSML-REQ-008, statement: By default a compound requirement is satisfied only if all its sub-requirements are; the compound requirement may say otherwise., strength: note, section: 16.3.2.5, checkable: none, category: REQ}
+- {id: SYSML-REQ-009, statement: A copy dependency is created only between two named elements that carry a requirement kind., strength: must, section: '16.3.2.2 [1]', checkable: static, category: REQ}
+- {id: SYSML-REQ-010, statement: The text of the client of a copy dependency is a read-only copy of the text of its supplier., strength: must, section: '16.3.2.2 [2]', checkable: static, category: REQ}
+- {id: SYSML-REQ-011, statement: The copy rule applies recursively to all sub-requirements., strength: must, section: '16.3.2.2 [3]', checkable: static, category: REQ}
+- {id: SYSML-REQ-012, statement: The supplier of a derive-requirement dependency is a requirement kind., strength: must, section: '16.3.2.3 [1]', checkable: static, category: REQ}
+- {id: SYSML-REQ-013, statement: The client of a derive-requirement dependency is a requirement kind., strength: must, section: '16.3.2.3 [2]', checkable: static, category: REQ}
+- {id: SYSML-REQ-014, statement: A refine dependency has exactly one client and one supplier., strength: must, section: '16.3.2.4 [2]', checkable: static, category: REQ}
+- {id: SYSML-REQ-015, statement: A refine marking is applied only to dependencies., strength: must, section: '16.3.2.4 [1]', checkable: static, category: REQ}
+- {id: SYSML-REQ-016, statement: The supplier of a satisfy dependency is a requirement or a specialization of one., strength: must, section: '16.3.2.7 [1]', checkable: static, category: REQ}
+- {id: SYSML-REQ-017, statement: A trace marking is applied only to dependencies., strength: must, section: '16.3.2.8 [1]', checkable: static, category: REQ}
+- {id: SYSML-REQ-018, statement: A trace dependency has exactly one client and one supplier., strength: must, section: '16.3.2.8 [2]', checkable: static, category: REQ}
+- {id: SYSML-REQ-019, statement: The supplier of a verify dependency is a requirement or a specialization of one., strength: must, section: '16.3.2.9 [1]', checkable: static, category: REQ}
+- {id: SYSML-REQ-020, statement: The type of the return parameter of a test case is VerdictKind., strength: must, section: '16.3.2.6 [1]', checkable: static, category: REQ}
+- {id: SYSML-REQ-021, statement: The trace relationship has weak semantics and is not recommended in combination with the other requirement relationships., strength: should, section: '16.1', checkable: none, category: REQ}
+- {id: SYSML-REQ-022, statement: 'A rationale can be attached to a requirement or to any requirement relationship, for example to a satisfy relationship to point to a trade study, or as an alternative way to record a verify relationship.', strength: note, section: '16.1', checkable: none, category: REQ}
+- {id: SYSML-REQ-023, statement: 'Taxonomies of requirement kinds are created by defining specializations of the requirement; the standard gives functional, interface, performance, physical and design constraint kinds only as a non-normative example.', strength: note, section: 16.1; E.3, checkable: none, category: REQ}
+- {id: SYSML-DIAG-001, statement: 'Every SysML diagram has a frame, a heading and a contents area (the frame is optional in UML, required in SysML).', strength: must, section: 'Annex A.1; B.2.4 [1], [2]', checkable: partial, category: DIAG}
+- {id: SYSML-DIAG-002, statement: The frame of a diagram designates a model element that is the default namespace of the elements inside it; an element from another namespace is shown with a qualified name., strength: must, section: 'Annex A.1; B.2.4 [3]', checkable: partial, category: DIAG}
+- {id: SYSML-DIAG-003, statement: An activity diagram is framed by an activity., strength: must, section: 'Annex A.1; B.2.1 [1]', checkable: static, category: DIAG}
+- {id: SYSML-DIAG-004, statement: A block definition diagram is framed by a block (including a constraint block) or a package., strength: must, section: 'Annex A.1; B.2.3 [1]', checkable: static, category: DIAG}
+- {id: SYSML-DIAG-005, statement: An internal block diagram is framed by a block (including a constraint block); the heading names that block and every property and connector shown belongs to it., strength: must, section: 'Annex A.1; B.2.8 [1]; 8.3.1.2.2', checkable: static, category: DIAG}
+- {id: SYSML-DIAG-006, statement: A package diagram is framed by a package or model., strength: must, section: 'Annex A.1; B.2.9 [1]', checkable: static, category: DIAG}
+- {id: SYSML-DIAG-007, statement: A parametric diagram is framed by a block (including a constraint block)., strength: must, section: 'Annex A.1; B.2.10 [1]', checkable: static, category: DIAG}
+- {id: SYSML-DIAG-008, statement: A requirement diagram is framed by a package or a requirement., strength: must, section: 'Annex A.1; B.2.11 [1]', checkable: static, category: DIAG}
+- {id: SYSML-DIAG-009, statement: A sequence diagram is framed by an interaction., strength: must, section: 'Annex A.1; B.2.7 [1]', checkable: static, category: DIAG}
+- {id: SYSML-DIAG-010, statement: A state machine diagram is framed by a state machine., strength: must, section: 'Annex A.1; B.2.12 [1]', checkable: static, category: DIAG}
+- {id: SYSML-DIAG-011, statement: A use case diagram is framed by a package., strength: must, section: 'Annex A.1; B.2.13 [1]', checkable: static, category: DIAG}
+- {id: SYSML-DIAG-012, statement: 'The diagram kinds are activity, block definition, internal block, package, parametric, requirement, sequence, state machine and use case (nine).', strength: note, section: Annex A.1, checkable: none, category: DIAG}
+- {id: SYSML-DIAG-013, statement: 'A requirement diagram shows only requirements, packages, other classifiers, test cases and rationale, with the containment, derive, satisfy, verify, refine, copy and trace relationships; callouts may show the relationships of other elements to a requirement.', strength: must, section: 16.3.1.1, checkable: partial, category: DIAG}
+- {id: SYSML-DIAG-014, statement: 'Constraint blocks are defined only on block definition diagrams or package diagrams, where they are marked with the constraint keyword.', strength: must, section: 10.4.1, checkable: partial, category: DIAG}
+- {id: SYSML-DIAG-015, statement: On a parametric diagram the only connectors that may be shown are binding connectors., strength: must, section: 10.4.2, checkable: partial, category: DIAG}
+- {id: SYSML-DIAG-016, statement: A definition box with no keyword on a block definition diagram is a block., strength: must, section: 8.3.1.1.2, checkable: none, category: DIAG}
+- {id: SYSML-DIAG-017, statement: 'An element type that is not shown in a SysML diagram elements table, or in a normative usage example, is not part of the UML subset SysML includes, even if the UML packages SysML imports support it.', strength: must, section: 6.2.2, checkable: none, category: DIAG}
+- {id: SYSML-DIAG-018, statement: 'Any combination of SysML diagram elements is allowed only if it keeps the kinds of element on a diagram kind constrained and well specified; the diagram elements tables list the symbols that can appear, not the combinations.', strength: note, section: Annex A.1, checkable: none, category: DIAG}
+- {id: SYSML-DIAG-019, statement: 'Package diagrams and the callout notation are the two flexible mechanisms: a package diagram can hold a wide array of packageable elements, and callouts show relationships between elements that appear on different diagram kinds.', strength: note, section: Annex A.1, checkable: none, category: DIAG}
+- {id: SYSML-DIAG-020, statement: 'Tables and matrices, graphs and trees are optional alternative notations that are consistent with the metamodel; they are not part of the diagram taxonomy and are not standardized.', strength: note, section: Annex A.2, checkable: none, category: DIAG}
+- {id: SYSML-DIAG-021, statement: A diagram usage (such as a context diagram or a block hierarchy) is a constrained use of one diagram kind and may be captured by an extension of the diagram kind., strength: note, section: Annex A.1, checkable: none, category: DIAG}
+- {id: SYSML-CONF-001, statement: 'A SysML model uses only the UML metaclasses in the UML4SysML subset; the metaclasses of the excluded list (for example component, node, deployment, collaboration, template, protocol state machine) are not used.', strength: must, section: '4.1 (Tables 4.1, 4.2); 6.2.2', checkable: static, category: CONF}
+- {id: SYSML-CONF-002, statement: Package merge between packages is not supported in user models., strength: must, section: 7.3.1.1, checkable: static, category: CONF}
+- {id: SYSML-CONF-003, statement: 'N-ary associations and qualified associations are excluded; an association is never shown with navigation arrowheads on both ends, with a cross on a non-navigable end, or with an ownership dot.', strength: must, section: 8.3.1.3, checkable: partial, category: CONF}
+- {id: SYSML-CONF-004, statement: A value type is never given the primitive keyword., strength: must, section: 8.3.1.3, checkable: none, category: CONF}
+- {id: SYSML-CONF-005, statement: 'The deployment diagram, object diagram, communication, interaction overview, timing and profile diagrams are not SysML diagram kinds; deployment can be shown on an internal block diagram and a profile definition on a package diagram.', strength: must, section: Annex A.1, checkable: none, category: CONF}
+- {id: SYSML-CONF-006, statement: 'Where a constraint of a profile extension element is given both in text and in OCL and the two disagree, the OCL controls.', strength: note, section: 6.2.3, checkable: none, category: CONF}
+- {id: SYSML-CONF-007, statement: 'A tool conforms to SysML only by supporting abstract syntax, concrete syntax and model interchange conformance together; conformance does not include the deprecated elements.', strength: note, section: 5.1; 5.2, checkable: none, category: CONF}
+- {id: SYSML-CONF-008, statement: A model that applies the SysML profile strictly may use only the UML metaclasses the profile references., strength: note, section: 17.4.5, checkable: partial, category: CONF}
+- {id: SYSML-CONF-009, statement: 'The three SysML model libraries are PrimitiveValueTypes, UnitAndQuantityKind and ControlValues; the QUDV and ISO 80000 libraries are non-normative.', strength: note, section: 4.2; Annex E, checkable: none, category: CONF}
+- {id: SYSML-CONF-010, statement: 'A profile extension element is appropriate (rather than a subclass) when the extended concept is not class-based, when the extension''s properties reference other model elements, or when they describe modeling data rather than system data; a subclass is appropriate when each instance has its own values that subclasses inherit.', strength: note, section: 17.4.4, checkable: none, category: CONF}
+- {id: SYSML-CONF-011, statement: 'A user-defined extension of a SysML element extends the same metaclasses as its parent, inherits its properties, and does not display the parent''s marking on typed elements unless a diagram extension says so.', strength: note, section: 17.4.2, checkable: none, category: CONF}
+- {id: SYSML-DEP-001, statement: 'A flow port is typed by a flow specification, block, signal or value type.', strength: must, section: 'C.3.2.3 [1]', checkable: static, applies_when: deprecated flow ports are used, category: DEP}
+- {id: SYSML-DEP-002, statement: An atomic flow port has a direction and no conjugation setting., strength: must, section: 'C.3.2.3 [2]', checkable: static, applies_when: deprecated flow ports are used, category: DEP}
+- {id: SYSML-DEP-003, statement: The direction of a non-atomic flow port follows the directions of the flow properties of its flow specification (reversed if conjugated); mixed directions give inout., strength: must, section: 'C.3.2.3 [3]', checkable: static, applies_when: deprecated flow ports are used, category: DEP}
+- {id: SYSML-DEP-004, statement: 'Flow ports connect to flow ports with matching flow properties by type (sent type the same or a subtype of received type), direction (opposite across an external connector unless one end is inout; the same across an internal connector) and, if still ambiguous, name; if the match is still ambiguous the connection is ill formed.', strength: must, section: 'C.3.2.3 [4]', checkable: partial, applies_when: deprecated flow ports are used, category: DEP}
+- {id: SYSML-DEP-005, statement: A flow port that is not connected to an internal part is behavioral., strength: must, section: 'C.3.2.3 [5]', checkable: static, applies_when: deprecated flow ports are used, category: DEP}
+- {id: SYSML-DEP-006, statement: A flow specification owns no operations or receptions., strength: must, section: 'C.3.2.4 [1]', checkable: static, applies_when: deprecated flow specifications are used, category: DEP}
+- {id: SYSML-DEP-007, statement: Every owned attribute of a flow specification is a flow property., strength: must, section: 'C.3.2.4 [2]', checkable: static, applies_when: deprecated flow specifications are used, category: DEP}
+- {id: SYSML-DEP-008, statement: 'Item flows are not deprecated, but with atomic flow ports they follow a deprecated compatibility rule that treats the types of the source and target ports as if they were the types of flow properties on those ports.', strength: note, section: C.3.2.5, checkable: none, applies_when: deprecated flow ports are used, category: DEP}
+conventions:
+  provenance: {status: standard, note: 'Drawing rules the standard states (clauses 8 to 17, Annexes A and B). They are conventions for a renderer or an author, not validation. Layout numbers are not part of the standard. Where the standard words a drawing rule as a requirement on a model element (for example the frame), it is also a constraint.'}
+  global: ['A diagram has a frame (a rectangle), a heading in a name tag at the upper left, and a contents area. A diagram description comment may carry version, description, completion status, reference and user fields. (Annex A.1)', 'Heading syntax: diagram kind (bold), then the model element type (optional, in brackets), the model element name, and an optional diagram name in brackets. The kind and element name are always present; the type and name are added where needed to remove ambiguity. The model element type starts with a lower-case letter and, for a keyword, is shown without the angle quotes. (Annex A.1)', 'Diagram kind abbreviations: act, bdd, ibd, pkg, par, req, sd, stm, uc. (Annex A.1)', A diagram usage may be shown as a keyword above the heading (for example a context diagram). (Annex A.1), 'The rake symbol marks a model element that is decomposed on another diagram: a call behavior action, a part, a package, a constraint property, a requirement, an interaction fragment, a state, or a use case realized by behavior diagrams. (Annex A.2)', 'A text label is linked to its symbol by proximity (ports, item flows, pins). Page connectors should be used sparingly. A small jog may show that crossing lines do not meet. Overlays such as a map are allowed. (Annex A.2)', 'Tables and matrices, graphs and trees are optional alternative notations, headed by table, matrix, graph or tree in bold, consistent with the metamodel. A document is represented by a document artifact traced to the elements it covers. (Annex A.2)', 'Default multiplicities may be left out: 0..1 on the whole end of a part or shared association; 1 on the target end of a unidirectional association; 1 on each end of a connector. Any other multiplicity should always be shown. (8.3.1.1.9, 8.3.1.2.9)', Associations are drawn without navigation arrowheads on both ends and have no ownership dot or non-navigability cross. (8.3.1.3; B.2.6)]
+  diagrams:
+    block definition: ['A box with no keyword is a block. A block shows compartments in any order, each optionally labeled: parts, references, values, constraints, operations, receptions, properties, ports, proxy ports, full ports, flow properties, structure, namespace, bound references, and a behavior compartment (classifier behavior or owned behaviors). (8.3.1.1.2 to 8.3.1.1.8; 9.3.1)', 'A part association has a black diamond, a shared association a white diamond, a reference association no diamond. A multibranch association joins several targets from one diamond. (Table 8.2)', 'A constraints compartment holds constraints in braces and declarations of constraint properties. A constraint block is shown with its keyword, a constraints compartment and a parameters compartment. (8.3.1.1.5; 10.3.1.1)', 'A property-specific type is written in square brackets; units are written in parentheses after a value type name on a value property, and after a value. (8.3.1.1.10, 8.3.1.1.11)', 'Provided and required features are prefixed prov, reqd or provreqd; flow properties are prefixed in, out or inout. (9.3.1.1, 9.3.1.2)', A bound reference is shown without its keyword in a bound references compartment with its binding path. (8.3.1.1.8)]
+    internal block: ['A part or value property is a solid-outline box; a reference property is a dashed-outline box. A multi-level property name is joined by dots. (8.3.1.2.1, 8.3.1.2.5)', 'Compartments on a property box are labeled with a leading colon when they show contents belonging to the property''s type; an unlabeled compartment is a structure compartment. An initial values compartment shows values as name equals value. (8.3.1.2.3, 8.3.1.2.8)', A binding connector carries a keyword and is drawn between the two bound properties; a connector property is shown as a rectangle joined by a dotted line to the connector. (Table 8.4; 8.3.2.7), A port is a small rectangle overlapping the boundary of its owner; proxy and full ports carry a keyword. An arrow inside the port shows direction when all its flow properties agree; two facing open arrowheads when they differ. A conjugated port's type is prefixed with a tilde. (9.3.1.6), 'An item flow is a black arrowhead on the connector or association, toward the target, labeled with the conveyed classifier (or item property name and type). (9.3.1.5)']
+    parametric: ['A constraint property is a rounded rectangle, or an ordinary property box with the constraint keyword. A value property may be a small square with a text label beside it, flush or not with the boundary of a containing property. (10.3.1.2.1 to 10.3.1.2.3)']
+    activity: [A control flow may be a dashed line with a stick arrowhead. (11.3.1.3.1), An activity on a block definition diagram uses the activity keyword and is joined to its call actions by composition associations whose part ends are adjunct properties. (11.3.1.1.1), 'Rate, probability and the buffering and optional markings are shown as keywords or in braces on edges, object nodes, pins and parameters. A streaming parameter is marked stream and a control pin control. (Table 11.1)', An allocate activity partition carries the allocate keyword instead of its full name. (15.3.1.5)]
+    requirement: ['A requirement shows its keyword, name and an optional compartment with id and text; the compartment label may be left out. (16.3.1.2)', 'Callout notation shows the relationship of another element to a requirement (derive, satisfy, verify, refine, copy, trace) in a compartment or callout; the element type keyword may be left out. (16.3.1.3, 16.3.1.4)', 'A requirements table has a column for each property, one for the supplier of each dependency, one for the satisfying elements, and one for rationale; a sparse matrix style is also allowed. (16.3.1.5)']
+    allocation: ['The allocate relationship is a dashed line with an open arrowhead pointing from the allocated element to the target. Allocation can be shown in an allocated from / allocated to compartment, as a callout, in a table or in a matrix. The element type keyword is one of activity, action, objectFlow, controlFlow, objectNode, operation, block, property, itemFlow, connector, port or value. (15.2, 15.3.1)']
+    package: ['An import is a dashed arrow with the import keyword (public) or access keyword (private). A package may show its name in a tab or inside. Package containment is shown by nesting or the containment line. (Tables 7.1, 7.2)']
+notes: 'SysML 1.5 is a profile of UML 2.5. Concepts defined here are the profile''s own; UML concepts are named in the Reused from UML group and defined by UML. Nine diagram kinds: activity, block definition, internal block, package, parametric, requirement, sequence, state machine, use case. Three are new (parametric, requirement) or modified (block definition, internal block, activity); package, sequence, state machine and use case are UML diagrams reused unchanged. The constraint ids are SYSML-<CAT>-nnn; the categories are listed in references/rules.md. Strength policy: must is an error, should a warning, note advice only. Tool-specific encodings belong in the tool''s own file, not here.'
+
+layout:
+  basis: Our conventions, not this standard's. Sizes and spacing come from the shared layout standard; this block only says which element type each concept takes.
+  element_types:        # concept -> element type; a concept left out is drawn as a rectangle (box)
+    AcceptEventAction: box
+    SendSignalAction: box
+    UseCase: large-box
+    InitialNode: small-node
+    ActivityFinalNode: small-node
+    FlowFinalNode: small-node
+    ForkNode: small-node
+    JoinNode: small-node
+    Pseudostate: small-node
+    FinalState: small-node
+    DecisionNode: decision-diamond
+    MergeNode: decision-diamond
+    Actor: actor
+    Port: attached-item
+    ProxyPort: attached-item
+    FullPort: attached-item
+    FlowPort: attached-item
+    ConstraintParameter: attached-item
+    Pin: attached-item
+    ConnectionPointReference: attached-item
+    Rationale: note
+    Problem: note
+    ElementGroup: note
+    Comment: note
+    Constraint: note
+    Package: container
+    Model: container
+    Profile: container
+    Activity: container
+    ActivityPartition: container
+    AllocateActivityPartition: container
+    InterruptibleActivityRegion: container
+    StructuredActivityNode: container
+    Interaction: container
+    InteractionUse: container
+    CombinedFragment: container
+    StateMachine: container
+    Region: container
+    Subject: container
+    SysMLBlockDefinitionDiagram: container
+    SysMLInternalBlockDiagram: container
+    SysMLParametricDiagram: container
+    SysMLRequirementDiagram: container
+    SysMLPackageDiagram: container
+    SysMLActivityDiagram: container
+    SysMLInteractionDiagram: container
+    SysMLStateMachineDiagram: container
+    SysMLUseCaseDiagram: container
+  exceptions: {}        # none: no standard states a size
+  no_element_type:      # concepts with no element of their own, and why
+    line:
+      reason: 'A relationship or a connector kind: it is a line between elements and takes no element size.'
+      concepts: [Conform, Expose, BindingConnector, Allocate, Satisfy, Verify, DeriveReqt, Refine, Trace, Copy, Dependency,
+        Abstraction, Realization, PackageImport, ElementImport, Generalization, GeneralizationSet, Association,
+        Connector, ConnectorEnd, InterfaceRealization, ItemFlow, InformationFlow, ControlFlow, ObjectFlow, Message,
+        GeneralOrdering, Transition, Include, Extend, Usage, Extension, ProfileApplication, AdjunctProperty,
+        DurationConstraint, DurationObservation, TimeConstraint, TimeObservation, RequirementContainment,
+        PartAssociation, ReferenceAssociation, SharedAssociation, BlockNamespaceContainment, ProvidedInterface,
+        RequiredInterface, PackageContainment, CommunicationPath, UseCaseGeneralization, MetamodelReference]
+    text-inside:
+      reason: Written as a line of text inside the box that owns it, or as a keyword or value beside a symbol; it has no box of its own.
+      concepts: [ClassifierBehaviorProperty, EndPathMultiplicity, DistributedProperty, FlowProperty, DirectedFeature,
+        Operation, Reception, Property, Parameter, ParameterSet, ExtensionPoint, Rate, Continuous, Discrete,
+        Probability, NoBuffer, Overwrite, Optional, TriggerOnNestedPort, Trigger, ChangeEvent, FlowDirection,
+        FeatureDirection, TestCase, NestedConnectorEnd]
+    not-drawn:
+      reason: Abstract, or a metaclass with no symbol of its own, so nothing is drawn for it.
+      concepts: [ElementPropertyPath, DirectedRelationshipPropertyPath, ChangeStructuralFeatureEvent,
+        AcceptChangeStructuralFeatureEventAction, AbstractRequirement, VerdictKind, SysMLDiagramElement, SysMLDiagram,
+        SysMLDiagramWithAssociations, SysMLStructureDiagram, SysMLBehaviorDiagram, NamedElement, Element,
+        DirectedRelationship, Behavior, Feature, Event, ConnectableElement, ActivityNode, Vertex, CreationEvent,
+        DestructionEvent, ModelLibrary]
