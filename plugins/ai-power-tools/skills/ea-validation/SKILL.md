@@ -140,6 +140,34 @@ result = ea_validate(operation="audit", params={
 })
 ```
 
+### Shipped rulesets
+
+These rulesets need server 3.6.5 or later. On 3.6.4 and earlier their rules report nothing, with no error, so a clean result there means nothing.
+
+Rulesets ship in this plugin, one folder per language. Each path below is from the plugin root.
+
+| Language id | Path | Rules | Standard version |
+|-------------|------|-------|------------------|
+| `archimate-3` | `rulesets/archimate-3/archimate-3_rules.yaml` | 4 | ArchiMate 3.1 |
+| `bpmn-2` | `rulesets/bpmn-2/bpmn-2_rules.yaml` | 44 | BPMN 2.0.2 |
+| `bmm-1` | `rulesets/bmm-1/bmm-1_rules.yaml` | 13 | BMM 1.3 |
+| `dmn-1` | `rulesets/dmn-1/dmn-1_rules.yaml` | 6 | DMN 1.2 |
+| `cmmn-1` | `rulesets/cmmn-1/cmmn-1_rules.yaml` | 11 | CMMN 1.1 |
+| `soaml-1` | `rulesets/soaml-1/soaml-1_rules.yaml` | 3 | SoaML 1.0.1 |
+| `vdml-1` | `rulesets/vdml-1/vdml-1_rules.yaml` | 17 | VDML 1.0 |
+| `uml-2` | `rulesets/uml-2/uml-2_rules.yaml` | 25 | UML 2.5.1 |
+| `sysml-1` | `rulesets/sysml-1/sysml-1_rules.yaml` | 21 | SysML 1.5 |
+| `uaf-1` | `rulesets/uaf-1/uaf-1_rules.yaml` | 84 | UAF 1.0 |
+| `updm-2` | `rulesets/updm-2/updm-2_rules.yaml` | 88 | UPDM 2.1 |
+| `raaml-1` | `rulesets/raaml-1/raaml-1_rules.yaml` | 27 | RAAML 1.0 |
+| `togaf-9` | `rulesets/togaf-9/togaf-9_rules.yaml` | 8 | TOGAF 9.1 |
+| `data-modeling-er` | `rulesets/data-modeling-er/data-modeling-er_rules.yaml` | 6 | None: a composite of public sources |
+| `requirements` | `rulesets/requirements/requirements_rules.yaml` | 14 | ISO/IEC/IEEE 29148:2018 |
+| `business-modeling` | `rulesets/business-modeling/business-modeling_rules.yaml` | 3 | OMG UML 1.3 to 1.5 business modeling profile |
+| `zachman` | `rulesets/zachman/zachman_rules.yaml` | 7 | Not versioned: rules as stated in 1992 |
+| `csdm-5` | `rulesets/csdm-5/csdm-5_rules.yaml` | 14 | CSDM 5 |
+| `it4it` | `rulesets/it4it/it4it_rules.yaml` | 72 | IT4IT 3.0, read from the public draft |
+
 ### Using hosted rulesets (v1.2.0+)
 
 `rules_path_or_content` accepts an `https://` URL — the server fetches the YAML at call time. No local file needed.
