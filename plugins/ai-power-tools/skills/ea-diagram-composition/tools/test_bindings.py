@@ -32,7 +32,7 @@ Three different things, and it is worth knowing which is which:
 from __future__ import annotations
 
 # Backlog items this module pins (checked by tools/test_suite_conventions.py).
-PINS = ("APT-2026-0161", "APT-2026-0176", "APT-2026-0187", "APT-2026-0193")
+PINS = ("APT-2026-0161", "APT-2026-0176", "APT-2026-0187", "APT-2026-0193", "APT-2026-0823")
 
 import ast
 import sys
@@ -4235,6 +4235,21 @@ def test_a_group_token_resolves_with_the_id_ea_reports(tmp_path):
     assert resolution.binding.diagram_type_for_mdgdgm("UPDM2_SV/SvcV::SV-1").name == "SV-1"
     # The group id is not installed, and it isn't a stated technology either.
     assert resolution.binding.diagram_type_for_mdgdgm("UPDM2::OV-2") is None
+
+
+@pytest.mark.parametrize("stored", ["Node", "NodePort"], ids=["element", "port"])
+def test_the_updm_binding_round_trips_the_names_ea_yaml_records_as_stored(stored):
+    """APT-2026-0823. `UPDM2` is the id and the qualifier. EA stores the bare name."""
+    import yaml
+    document = yaml.safe_load(
+        (_BINDINGS_DIR / "updm-2" / "ea.yaml").read_text(encoding="utf-8"))
+    assert stored in document["stereotypes"]
+    binding = find_binding("UPDM2")
+    assert binding.stereotype_for(stored) == stored
+    assert binding.concept_for(stored) == stored
+    for name, dt in binding.diagram_types.items():
+        assert dt.stereotype_for(stored) == stored, name
+        assert dt.concept_for(stored) == stored, name
 
 
 def test_each_language_claims_its_own_extended_token(tmp_path):
