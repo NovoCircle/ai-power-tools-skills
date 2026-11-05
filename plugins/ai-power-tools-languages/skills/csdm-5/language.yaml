@@ -485,6 +485,10 @@ layout:
     Location: box
     RequestCatalog: container
   exceptions: {}
-  diagram_types: {}
+  diagram_types:
+    Configuration Item Relationships:
+      channels:
+        fill: 'The domain''s color, following the paper''s figures. The paper states no color values and doesn''t say color carries formal meaning.'
+        free: [border, border_width, font_color, opacity, icon]
   viewpoints: {}
 notes: 'CSDM defines no diagram notation. Its diagram types are the views the paper draws (figures); where a figure was read from its image the entry says so. Domains are groups of entities, not diagrams. Counts: see references/rules.md.'

@@ -2199,7 +2199,8 @@ def test_the_translation_file_beside_the_folders_is_not_a_binding():
 def test_the_default_catalog_is_the_shared_languages_folder():
     assert _BINDINGS_DIR.parts[-2:] == ("_shared", "languages")
     assert available_bindings()["BPMN2.0"] == "bpmn-2/conventions.yaml"
-    assert len(available_bindings()) == 11
+    # Counted from the folder, so adding a language can't break this.
+    assert len(available_bindings()) == len(list(_BINDINGS_DIR.glob("*/conventions.yaml")))
 
 
 def test_a_changed_file_is_read_again_rather_than_served_from_the_parse_cache(tmp_path):

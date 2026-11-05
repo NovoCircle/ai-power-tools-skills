@@ -4,17 +4,18 @@
 # change the source and run `python tools/gen_conventions.py`.
 
 technology: CSDM5
+extends: UML
 stereotype_prefix: CSDM
 diagram_types:
   CSDMDiagram:
-    base: Diagram_Logical
+    base: Logical
     grammar: graph
     title: frame-header
     sizing:
       default:
         w: 100
         h: 70
-      CSDMRequestCatalog:
+      RequestCatalog:
         w: 150
         h: 90
     spacing:
@@ -34,4 +35,11 @@ diagram_types:
     routing:
       default: Direct
     channels:
-      fill: null
+      fill: The domain's color, following the paper's figures. The paper states no color values and doesn't
+        say color carries formal meaning.
+      free:
+      - border
+      - border_width
+      - font_color
+      - opacity
+      - icon

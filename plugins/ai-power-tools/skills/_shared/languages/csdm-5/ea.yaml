@@ -2414,6 +2414,7 @@ drawing: 'A small script on every shape and line shows CSDM''s words, not the st
   is 150 by 90.'
 layout_map:
   technology: CSDM5
+  extends: UML
   stereotype_prefix: CSDM
   diagram_types:
     CSDMDiagram:
@@ -2423,6 +2424,6 @@ layout_map:
       - Digital System Model
       - Value Stream Mapping
       - Product Model Classes
-      base: Diagram_Logical
+      base: Logical
       size_keys:
-        CSDMRequestCatalog: RequestCatalog
+        RequestCatalog: RequestCatalog
