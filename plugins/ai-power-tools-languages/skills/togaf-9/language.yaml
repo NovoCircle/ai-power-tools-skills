@@ -1907,5 +1907,7 @@ notes: 'Version 9.1 (December 2011). TOGAF 9.2 (16 April 2018, document C182) an
 
 layout:
   basis: Our conventions, not this standard's. Sizes and spacing come from the shared layout standard.
-  element_types: {}                # the standard defines no notation, so every concept is a box
+  element_types: {}
   exceptions: {}
+  diagram_types: {}
+  viewpoints: {}

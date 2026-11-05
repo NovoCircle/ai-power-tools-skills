@@ -1603,3 +1603,56 @@ harvest:
   - the other 15 toolboxes' pages
   - quick links from sources other than one BusinessFunction
   - FEAF
+
+# EA's names for this language's layout. tools/gen_conventions.py reads layout_map.
+layout_map:
+  technology: TOGAF Diagrams
+  display_name: TOGAF 9 (TOGAF Diagrams MDG)
+  extends: UML
+  stereotype_prefix: ''
+  notes: |
+    WHY `radial` FOR TOGAF_Interface, MEASURED RATHER THAN RECOGNIZED. The ADM wheel is the one arrangement in this technology that a composed grammar describes, and the geometry says so without being asked. Taking the `ADM_RequirementsManagement` element as the center: it is the largest element on the diagram, 146x147 against the 114x116 of the rest: eight of the nine remaining elements sit on a ring of radius 207.5 to 221.6 (median 215.4) at bearings of 90, 44, 0.1, -43.2, -90, -136.4, 178.6 and 133.4 degrees: eight spokes at 45-degree intervals over a full 360. The ninth, `ADM_Preliminary`, sits on the same bearing as `ADM_ArchitectureVision` at radius 381.5: outside the cycle, which is where TOGAF draws the preliminary phase: and is what `compose_radial`'s node-carrying-items form expresses as an outer ring of one. None of this is EA's layout: a hub, a ring and a bearing per phase are coordinates a caller computes, and `radial` is built.
+
+    `radial`, NOT `radial-tree`, and the measurement decides that too. The weighted variant exists because `radial` splits its sweep evenly and a branch of eight children then gets the arc of a branch of one. Here an even split is exactly right: the eight phases are eight equal steps of 45 degrees, measured, and the one element outside the ring is a single outer node rather than a subtree with a weight. A weighted sweep would have nothing to weigh.
+
+    WHAT IS NOT STATED, AND THE OMISSION THAT WILL SURPRISE A READER. `radius` is a layout spec key and this diagram type's ring radius is NOT recorded, though it was measured. Eight spokes is below the ten-observation threshold, and all eight come from the single TOGAF_Interface diagram in the model, so one diagram would be supplying 100% of the population: refused twice over. `start_angle` and `sweep` are refused on the same population for the same reasons, though the measured ring starts at 90 degrees and sweeps 360. The engine's own default radius of 220 happens to sit just above the measured range; that is a coincidence a reader should know about and not a reason to write a figure down. State all three the day a second ADM diagram exists.
+
+    ROUTING IS CONVENTIONAL, AND HERE THE MEASUREMENT SAYS THE CONVENTION IS WRONG WITHOUT BEING ABLE TO NAME A REPLACEMENT. All 17 connectors on the TOGAF_Interface diagram are Dependencies and all 17 carry `Mode=8` in `t_diagramlinks.Style`: unanimous, and NOT the `Mode=3` that 346 of 347 connectors on plain `Logical` diagrams carry. So this diagram type demonstrably routes differently from the canvas it is drawn on. Nothing in this skill maps EA's `Mode=` integer to one of the ten route names the schema validates against: that mapping lives in the server's `_ROUTE_STYLES`: so the name cannot be resolved here. The corpus row for this diagram records curved arcs around the ring, which points at `Bezier`; that is an inference and it is deliberately NOT promoted to data. `Direct` is stated because `routing.default` is mandatory and it is this library's convention. Confirming the `Mode=` mapping would settle it in one step, and would probably change this value.
+
+    NOT BOUND, BELOW THRESHOLD (b): TOGAF_EnterpriseContinuum. The nearest miss in this file and the one to revisit first. Its tile size is 110x128 in 8 of 8 elements, unanimous, on the one of its nine diagrams that is not empty: one observation short of the ten the rules require, which is exactly the case the UML binding refuses for a 45x90 actor at n=9. `sizing.default` is mandatory, so a diagram type with no supportable default cannot be keyed at all. It would be `graph` when it is bound: 8 elements, zero nested, 14 Dependencies all at `Mode=3`, and the corpus row records a 2x4 grid of nodes joined by paired labeled arrows: a graph whose arrows are the content rather than a grid whose cells are.
+
+    NOT BOUND, BELOW THRESHOLD (b): TOGAF_ADM, TOGAF_ACM, TOGAF_OrganizationStructure and IEEE1471_ConceptualFramework. None has a figure that clears the threshold and none is a design question; they need data. TOGAF_ADM has 10 diagrams and 7 stereotyped elements between them, 4 of the 10 empty, and every concept on it is n=1: the tool reports no unique modal size at all. TOGAF_ACM is one diagram of 6 `ModelView` frames, n=6. TOGAF_OrganizationStructure is one diagram of 3 `OrganizationUnit` boxes. IEEE1471_ConceptualFramework is one diagram of 2 elements, a Stakeholder and a Concern. All four would be `graph` on the evidence available: zero containment anywhere among them, and what content there is sits as boxes joined by dependencies: but a grammar is not enough to key a diagram type when the mandatory slots have nothing to put in them.
+
+    NO VIEWPOINT CATALOG, THOUGH TOGAF PUBLISHES ONE. TOGAF's deliverables and viewpoints are a real published catalog and this binding does not record it, because a `Viewpoint` carries an `admits` list of the concepts it accepts and nothing in the reference model establishes those lists. Inventing them would put a fabricated catalog behind view selection, which would then recommend TOGAF views on evidence nobody gathered. The block is absent rather than guessed; it is a documentation exercise against the TOGAF specification, not a measurement.
+  diagram_types:
+    TOGAF_Interface:
+      base: Logical
+      stereotype_prefix: ADM_
+      default_type: large-box
+      arrangement: radial
+      title: frame-header
+      route: straight
+      channels:
+        fill: 'The phase circle''s own paint. Each ADM phase is drawn by its stereotype''s shape script
+          as a gradient-filled circle, and 10 of 10 elements carry no fill override at all: `Backcolor`
+          is -1 and no `BCol` appears in `ObjectStyle`: so EA paints every one of them. The corpus row
+          records no color encoding either: the gradient is decoration, not a variable. Whether a written
+          fill would be honored was not tested, which is a second reason not to offer it.'
+        claimed:
+          position: 'The bearing on the ring IS the phase, and the ADM is a cycle: moving Phase C to Phase
+            F''s bearing says the architecture work happens in a different order. Measured as eight spokes
+            at 45-degree intervals around the Requirements Management hub.'
+          size: Hub against spoke. The one 146x147 element is the hub of the cycle and the eight 114x116
+            ones are its phases, so resizing an element restates which of the two it is.
+          icon: 'The circle is the shape script''s, and 0 of 10 elements carries an alternate image: no
+            `ImageID` in `ObjectStyle`. Setting one would replace the phase circle with a picture, which
+            is why this is claimed rather than free.'
+          line_style: Normative in UML, and all 17 connectors on the measured diagram are Dependencies,
+            whose dashed line is what separates them from an association. Channels do not inherit, so
+            this restates the base notation's claim rather than relying on it.
+        free:
+        - border
+        - border_width
+        - line_color
+        - font_color
+        - opacity
