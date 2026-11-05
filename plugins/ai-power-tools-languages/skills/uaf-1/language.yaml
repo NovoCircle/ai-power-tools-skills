@@ -3646,6 +3646,7 @@ layout:
     SecurityConstraint: note
     DataModel: container
     ArchitecturalDescription: container
+    Rule: note
   exceptions: {}
   no_element_type:
     line:

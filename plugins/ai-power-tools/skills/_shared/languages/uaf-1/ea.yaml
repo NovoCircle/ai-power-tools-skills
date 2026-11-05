@@ -2718,6 +2718,7 @@ harvest:
 # EA's names for this language's layout. tools/gen_conventions.py reads layout_map.
 layout_map:
   technology: UAFP_Framework
+  technology_reason: The UPDM Framework diagram belongs to EA's UAFP_Framework profile, separate from the UAF views.
   display_name: UAF / UPDM Framework
   extends: UML
   stereotype_prefix: ''
@@ -2731,6 +2732,7 @@ layout_map:
     NOT BOUND, EA-SEMANTIC (c). UAFP_OV::OV-6b, UAFP_SOV::SOV-4b and UAFP_SV/SvcV::SV-10b are state machines: transition topology with states nested in composite states (7 of 8, 9 of 10 and 21 of 22 elements contained), which EA owns as containment. UAFP_OV::OV-6c is a sequence diagram: lifeline order and message order, with 7 lifeline parts and no drawn connectors on the model diagram. Each needs a separate design and no grammar is invented for them here.
   diagram_types:
     UPDM Framework:
+      token_reason: A composed framework diagram from EA's UAFP_Framework profile, which is not one of the UAF views ea.yaml lists.
       base: Logical
       default_type: large-box
       arrangement: layered-bands
