@@ -1829,6 +1829,8 @@ layout_map:
     UNBOUND, GRAPH (b). InternalBlock and UseCase are free graphs. Parametric is constraint blocks nested two deep with binding connectors, so the arrows are the point and a nested grid would contradict it. Package mixes a grid of package tabs, nested containers with dependencies, and a generalization tree across its three corpus rows. Activity is lanes in 2 of its 6 corpus rows (allocation partitions) and fork-join or free graph in the other 4. No single grammar represents every row of any of these five types, and the schema requires a grammar, so recording one would be a lie stored as data.
 
     UNBOUND, EA-SEMANTIC (c). Sequence and StateMachine. A sequence diagram is lifeline order and message order, and a state machine is transition topology with composite states and orthogonal regions that EA owns as containment. Neither is coordinates we compute. Each needs a separate design, and no grammar is invented for them here.
+
+    `SysML1.4` is the id EA reports, measured on EA 17.1 build 1716.
   diagram_types:
     BlockDefinition:
       guide: block definition
