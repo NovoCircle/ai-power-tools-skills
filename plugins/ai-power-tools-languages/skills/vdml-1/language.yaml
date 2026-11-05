@@ -1,0 +1,3019 @@
+# Value Delivery Modeling Language (VDML) 1.0: language file (schema_version 1).
+# Written from the standard only. Concept names are the standard's own UML class names (no spaces).
+# Tool-neutral: no tool facts live here.
+schema_version: 1
+id: vdml-1
+name: Value Delivery Modeling Language (VDML)
+owner:
+  name: Object Management Group
+  kind: standards-body
+standard:
+  name: Value Delivery Modeling Language (the 1.0 document is titled Value Delivery Metamodel)
+  version: '1.0'
+  status: published
+  reference: OMG formal/2015-10-05 (specification, October 2015); normative machine-readable model file id dtc/15-02-04 (vdml.xmi, dated 20150201); https://www.omg.org/spec/VDML/1.0/
+  conformance:
+  - Full VDML conformance (2.1)
+  - VDML Metamodel conformance (2.2)
+  - VDML Collaboration Modeling conformance (2.3)
+  newer_versions:
+  - version: '1.1'
+    published: March 2018
+    reference: OMG formal/18-09-03; https://www.omg.org/spec/VDML/1.1/
+    note: Not researched. A separate language file would be needed.
+data_types:
+  coverage: partial
+  section: "7.2 and 8.9"
+  note: "VDML has no data-type clause; its property tables use the names Boolean and String without defining them, it defines one enumeration (Influence), and it takes measured values such as durations and quantities from SMM."
+  types:
+    - {name: String, kind: primitive, section: "7.2.4.1.1", note: "Used by name (name, description, tag, value, text, strategy, location, type, channel, body, alias, represents); VDML does not define it."}
+    - {name: Boolean, kind: primitive, section: "7.2.1.1.5", note: "Used by name (isLead, isCommon, isTangible, isIntermediate and others), with defaults; VDML does not define it."}
+    - {name: Influence, kind: enumeration, values: [positive, negative], section: "8.9", note: "Property influence added to the SMM relationship between two measurements: positive means the other measurement rises when the base rises, negative means it falls."}
+    - {name: percent, kind: unit, section: "7.2.1.3.2", note: "The unit of the measure behind a percentageWeight (7.2.1.3.2) and behind a planningPercentage (7.2.1.2.2, 7.2.4.3.1)."}
+    - {name: Measurement, kind: other, section: "7.2.4.1.5", note: "Values such as duration, quantity, offset, batch size, inventory level, pool size, heat index, heat threshold, horizon, satisfaction level and weight are Measurements of a MeasuredCharacteristic, defined by SMM (7.2.6.2), not VDML data types."}
+  attributes:
+    coverage: some_concepts
+    where: concepts
+notation:
+  coverage: normative
+  section: "8"
+  note: "Clause 8 gives a limited normative set of shapes for eight diagram kinds; colors in its examples carry no meaning (8.1), and a diagram is a view, so one concept can look different in different diagrams."
+  elements:
+    Role:
+      shape: "oval with the role name inside (Role Collaboration, ValueProposition Exchange, Collaboration Structure); in an Activity Network a wide rectangle (a swim-lane) with a narrow strip on its left edge that holds the role name written bottom to top"
+      marker: "expand button: a small square holding a plus sign, drawn on the lower edge of the oval; present when the Role is assigned to a Collaboration, absent when it is unassigned or assigned to an Actor or another Role"
+      label: inside the oval, or in the strip of the swim-lane
+      section: "8.2 (Figures 8.1, 8.2), 8.4 (Figure 8.11)"
+    Position:
+      shape: "oval with the role name inside, like a Role; in a Capability Management diagram it sits inside the boundary of an expanded OrgUnit and may carry the expand button"
+      label: inside
+      section: "8.8 (Figure 8.57)"
+    Actor:
+      shape: none
+      marker: none
+      label: "the actor name alone, as plain text, at the tail of the assignment connector"
+      section: "8.5 (Figure 8.46)"
+    Collaboration:
+      shape: "rectangle with square corners, name inside"
+      marker: none
+      label: inside
+      section: "8.5 (Figure 8.38)"
+    BusinessNetwork:
+      shape: "the Collaboration rectangle"
+      marker: "small glyph in the top-left corner: three arrowheads radiating from one point, one pointing up and two pointing down and outward"
+      label: inside
+      section: "8.5 (Figure 8.39)"
+    OrgUnit:
+      shape: "the Collaboration rectangle; in a Capability Management diagram the name sits in a small rounded label on the top boundary instead of inside, and CapabilityOffers sit on the boundary"
+      marker: "small glyph in the top-left corner: a short horizontal bar with a short stem rising from its middle and a short drop at each end, like a miniature organization chart"
+      label: "inside, or in the rounded label on the top boundary (Capability Management)"
+      section: "8.5 (Figures 8.40, 8.44), 8.8 (Figure 8.56)"
+    CapabilityMethod:
+      shape: "the Collaboration rectangle"
+      marker: "small glyph in the top-left corner: two small rectangles side by side joined by a short horizontal line"
+      label: inside
+      section: "8.5 (Figure 8.41), 8.8"
+    Community:
+      shape: "the Collaboration rectangle"
+      marker: "small glyph in the top-left corner: three small open circles, one above and two below"
+      label: inside
+      section: "8.5 (Figure 8.42)"
+    Activity:
+      shape: "rectangle with rounded corners, name inside"
+      marker: "expand button: a small square holding a plus sign on the bottom edge; present when the Activity delegates its work to a Collaboration"
+      label: inside
+      section: "8.4 (Figures 8.12, 8.13)"
+    Store:
+      shape: "triangle with a flat top and the point downward, outline only"
+      marker: none
+      label: "name outside the shape, above it"
+      section: "8.4 (Figure 8.14)"
+    Pool:
+      shape: "the Store triangle"
+      marker: "re-use marker inside the triangle: a small circle with an arrowhead on its rim (a circular arrow)"
+      label: "name outside the shape, above it"
+      section: "8.4 (Figure 8.15)"
+    InputPort:
+      shape: "small square on the boundary of an Activity or Store, where the incoming flow connector ends; on a Collaboration, a free-floating triangle pointing right, outline only, in the Collaboration's own Activity Network diagram"
+      marker: "variants of the square: a bar across it (splitter) when the port has a condition or planningPercentage; a thick border when it receives the roleResource for the performing Role (Activity only); both together when both apply"
+      label: "name of the deliverable beside the incoming connector; for a Collaboration port, the library element name beside the triangle"
+      section: "8.4 (table, Figures 8.22 to 8.25, 8.30, 8.31, 8.32)"
+    OutputPort:
+      shape: "small square on the boundary of an Activity or Store, where the outgoing flow connector starts; on a Collaboration, a free-floating triangle pointing right"
+      marker: "variants of the square: filled solid when the port carries a ValueAdd; a bar across it (splitter) when the port has a condition or planningPercentage; filled with a bar when both apply. A Collaboration port is an outline triangle, or a solid triangle when it carries a ValueAdd"
+      label: "name of the deliverable beside the outgoing connector; for a Collaboration port, the library element name beside the triangle"
+      section: "8.4 (table, Figures 8.18 to 8.21, 8.26 to 8.29, 8.33, 8.34)"
+    ValueAdd:
+      shape: none
+      marker: "no shape of its own: it is shown by filling the square of the OutputPort it belongs to (or the triangle of a Collaboration port)"
+      label: none
+      section: "8.4 (table)"
+    ValueProposition:
+      shape: "small square, outline only"
+      marker: none
+      label: "name outside the square, above it"
+      section: "8.3 (Figure 8.7)"
+    BusinessItem:
+      shape: none
+      marker: none
+      label: "no shape of its own: its name is the label of the DeliverableFlow connector that carries it"
+      section: "8.2, 8.4"
+    Capability:
+      shape: "rectangle with square corners, name inside"
+      marker: "expand button: a small square on the bottom edge holding a plus sign when collapsed or a minus sign when expanded; a child Capability is drawn inside its parent's boundary"
+      label: "inside; a parent's name sits at the top of its larger rectangle"
+      section: "8.6 (Figures 8.48 to 8.51)"
+    CapabilityDefinition:
+      shape: "the Capability rectangle"
+      marker: "as Capability"
+      label: inside
+      section: "8.6"
+    CapabilityCategory:
+      shape: "the Capability rectangle"
+      marker: "as Capability"
+      label: inside
+      section: "8.6"
+    CapabilityOffer:
+      shape: "stretched hexagon: a wide six-sided shape with a point at the left and right ends"
+      marker: none
+      label: inside
+      section: "8.8 (Figure 8.54)"
+    MeasuredCharacteristic:
+      shape: "rectangle with a thin border, name inside"
+      marker: none
+      label: inside
+      section: "8.9 (Figure 8.63)"
+  relationships:
+    DeliverableFlow:
+      line: "role view: solid line when isTangible is true, dashed line when it is false; activity view: solid line, with no tangible or intangible difference"
+      target_end: "filled arrowhead at the recipient end"
+      source_end: none
+      label: "name of the deliverable (the BusinessItem); in the role view it may be followed by a colon and a sequence number, which is a convenience of the diagram and not of the model; in the role view it joins two role ovals and may be straight or curved; in the activity view it joins two ports or a port and a Store"
+      section: "8.2 (Figures 8.3 to 8.5), 8.4 (Figure 8.16)"
+    CollaborationInternalPortDelegation:
+      line: "dotted line, joining a Collaboration port (triangle) to a port of one of its Activities"
+      target_end: "small filled arrowhead pointing in the direction of the flow"
+      source_end: none
+      label: "name of the deliverable"
+      section: "8.4 (Figures 8.17, 8.32, 8.33)"
+    InputDelegation:
+      line: "the dotted delegation line described under CollaborationInternalPortDelegation (drawn for a Collaboration's own internal delegations)"
+      target_end: "small filled arrowhead"
+      source_end: none
+      label: "name of the deliverable"
+      section: "8.4 (Figure 8.32)"
+    OutputDelegation:
+      line: "the dotted delegation line described under CollaborationInternalPortDelegation (drawn for a Collaboration's own internal delegations)"
+      target_end: "small filled arrowhead"
+      source_end: none
+      label: "name of the deliverable"
+      section: "8.4 (Figure 8.33)"
+    ProviderProvidedProposition:
+      line: "solid line from the providing Role oval to the ValueProposition square"
+      target_end: "filled arrowhead at the square"
+      source_end: none
+      label: none
+      section: "8.3 (Figure 8.8)"
+    RecipientReceivedProposition:
+      line: "solid line from the ValueProposition square to the receiving Role oval"
+      target_end: "filled arrowhead at the Role"
+      source_end: none
+      label: none
+      section: "8.3 (Figure 8.9)"
+    CollaborationRole:
+      line: "solid line, straight or with right-angle bends, from the Collaboration rectangle to the Role; the Role is a full oval at the end of the line, or, when the Role is assigned to another Collaboration, a small oval on the boundary of that Participant"
+      target_end: none
+      source_end: none
+      label: "role name outside the oval"
+      section: "8.5 (Figures 8.43, 8.44, 8.47)"
+    Assignment:
+      line: "dashed line, straight or with right-angle bends, from the Actor or the assigned-to Role to the assigned Role; a Role assigned to a Collaboration is shown by the containment line ending in a small oval on that Collaboration instead"
+      target_end: "open arrowhead at the assigned Role"
+      source_end: none
+      label: none
+      section: "8.5 (Figures 8.45, 8.46, 8.47)"
+    ParticipantAssignment:
+      line: "see Assignment: the same dashed directed line, or the small oval on the boundary of a Collaboration"
+      target_end: "open arrowhead at the assigned Role"
+      source_end: none
+      label: none
+      section: "8.5"
+    RoleAssignment:
+      line: "see Assignment: the same dashed directed line"
+      target_end: "open arrowhead at the assigned Role"
+      source_end: none
+      label: none
+      section: "8.5"
+    ParentChildCapability:
+      line: "no line: the child Capability rectangle is drawn inside the boundary of its parent's rectangle, or on a separate diagram"
+      target_end: none
+      source_end: none
+      label: none
+      section: "8.6 (Figures 8.49, 8.51)"
+    CapabilityOfferCapability:
+      line: "no line: in a Capability Heatmap a thick boundary on the Capability rectangle (and on its parents) means at least one CapabilityOffer for it has a heatIndex at or above the Scenario's heatThreshold; a normal boundary means below"
+      target_end: none
+      source_end: none
+      label: none
+      section: "8.7 (Figure 8.53)"
+    CapabilityHeatIndex:
+      line: "no line: see CapabilityOfferCapability, the thick boundary"
+      target_end: none
+      source_end: none
+      label: none
+      section: "8.7"
+    ScenarioHeatThreshold:
+      line: "no line: the threshold the heat index is compared with; see CapabilityOfferCapability"
+      target_end: none
+      source_end: none
+      label: none
+      section: "8.7"
+    CapabilityProviderCapabilityOffer:
+      line: "no line: the CapabilityOffer hexagon sits on the boundary of the OrgUnit that provides it"
+      target_end: none
+      source_end: none
+      label: none
+      section: "8.8 (Figure 8.56)"
+    SupportedCapabilityMethod:
+      line: "dashed line, straight or with right-angle bends, from the CapabilityOffer hexagon to the CapabilityMethod rectangle"
+      target_end: none
+      source_end: none
+      label: none
+      section: "8.8 (Figure 8.55)"
+    CapabilityResource:
+      line: "dashed line, straight or with right-angle bends, from the CapabilityOffer hexagon to the Store or Pool triangle"
+      target_end: none
+      source_end: none
+      label: none
+      section: "8.8 (Figure 8.55)"
+    MethodOwnerMethod:
+      line: "no line: when an OrgUnit is expanded its owned CapabilityMethods are drawn inside its boundary; a method of another OrgUnit may be drawn outside, joined by the dashed support line"
+      target_end: none
+      source_end: none
+      label: none
+      section: "8.8 (Figures 8.57 to 8.59)"
+    StoreOwnerStore:
+      line: "no line: when an OrgUnit is expanded its owned Stores and Pools are drawn inside its boundary; one of another OrgUnit may be drawn outside, joined by the dashed support line"
+      target_end: none
+      source_end: none
+      label: none
+      section: "8.8 (Figures 8.57 to 8.59)"
+    ActivityAppliedCapabilityOffer:
+      line: "dotted line, optional, from a CapabilityMethod rectangle to each CapabilityOffer that its Activities apply, drawn straight or curved"
+      target_end: none
+      source_end: none
+      label: none
+      section: "8.8 (Figures 8.60, 8.61)"
+    PortContainerPort:
+      line: "no line: a port square is drawn on the boundary of its Activity or Store; a Collaboration port is a free-floating triangle in the Collaboration's own Activity Network diagram"
+      target_end: none
+      source_end: none
+      label: none
+      section: "8.4 (table)"
+    PortCondition:
+      line: "no line: a bar (splitter) across the port square marks a port that has a condition or a planningPercentage"
+      target_end: none
+      source_end: none
+      label: none
+      section: "8.4 (table)"
+    PortPlanningPercentage:
+      line: "no line: a bar (splitter) across the port square marks a port that has a condition or a planningPercentage"
+      target_end: none
+      source_end: none
+      label: none
+      section: "8.4 (table)"
+    ValuePortValueAdd:
+      line: "no line: a ValueAdd on an OutputPort is shown by filling the port square (or the Collaboration port triangle)"
+      target_end: none
+      source_end: none
+      label: none
+      section: "8.4 (table)"
+    RoleResourceAssignment:
+      line: "no line: an InputPort that supplies the resource a Role is assigned to has a thick border"
+      target_end: none
+      source_end: none
+      label: none
+      section: "8.4 (table, Figure 8.24)"
+    performedWorkPerformingRole:
+      line: "no line: an Activity is drawn inside the swim-lane of the Role that performs it"
+      target_end: none
+      source_end: none
+      label: none
+      section: "8.4 (Figures 8.35 to 8.37)"
+    MeasurementRelationship:
+      line: "thin solid line between two MeasuredCharacteristic rectangles, bearing a small circle on the line that holds a plus sign for positive influence or a minus sign for negative influence; an SMM class, so it is not among the associations above"
+      target_end: "arrowhead at the influenced measurement"
+      source_end: none
+      label: none
+      section: "8.9 (Figures 8.64, 8.65)"
+  not_specified: [
+    ActivityCapabilityRequirement,
+    ActivityDuration,
+    ActivityImplementedPractice,
+    ActivityRecurrenceInterval,
+    ActivityResourceUse,
+    AnalysisContext,
+    AnanlysisContextAssignment,
+    Annotation,
+    Attribute,
+    BusinessItemBusinessItemDefinition,
+    BusinessItemCategory,
+    BusinessItemCharacteristicDefinition,
+    BusinessItemDefinition,
+    BusinessItemLibrary,
+    BusinessItemLibraryElement,
+    BusinessNetworkParty,
+    CalendarService,
+    CapabilityCharacteristicDefinition,
+    CapabilityDependency,
+    CapabilityDependencyDeliverableDefinition,
+    CapabilityDependencySource,
+    CapabilityDependencyTarget,
+    CapabilityLibrary,
+    CapabilityMethodCapability,
+    CapabilityOfferReleaseControl,
+    CapabilityPracticeDefinition,
+    CapabilityResourceDefinition,
+    CategoryItemCategory,
+    CategoryPracticeCategory,
+    CategoryRoleCategory,
+    CategoryValueCategory,
+    CharacteristicDefinition,
+    CharacteristicMeasurement,
+    CollaborationActivity,
+    CollaborationBusinessItem,
+    CollaborationFlow,
+    CollaborationOwnedAssignment,
+    CommunityMember,
+    ContextObservation,
+    DelegatedActivityDelegationContext,
+    DelegationContext,
+    DelegationContextCollaboration,
+    DelegationContextPortDelegation,
+    DependentResourceUseDeliverable,
+    ElementAnnotation,
+    ElementAttribute,
+    Expression,
+    ExpressionOperand,
+    FlowDeliverable,
+    FlowDuration,
+    FlowSource,
+    FlowTarget,
+    InputCorrelationExpression,
+    InputDefinition,
+    InputDelegationSource,
+    InputDelegationTarget,
+    LibraryBusinessItemLibraryElement,
+    LibraryCapability,
+    LibraryCapabilityDependency,
+    LibraryPracticeCategory,
+    LibraryPracticeDefinition,
+    LibraryRoleCategory,
+    LibraryRoleDefinition,
+    LibraryValueCategory,
+    LibraryValueDefinition,
+    MeasurableElement,
+    MeasureableElementCharacteristic,
+    Member,
+    MethodImplementedPractice,
+    MethodPerformer,
+    MethodResource,
+    ModelActor,
+    ModelBusinessItemLibrary,
+    ModelCapabilityLibrary,
+    ModelCollaboration,
+    ModelMetricsModel,
+    ModelPracticeLibrary,
+    ModelRoleLibrary,
+    ModelScenario,
+    ModelValueLibrary,
+    Operand,
+    OperandMeasuredCharacteristic,
+    OrgUnitPosition,
+    OutputDefinition,
+    OutputDelegationSource,
+    OutputDelegationTarget,
+    ParentChildBusinessItemCategory,
+    ParentChildPracticeCategory,
+    ParentChildValueCategory,
+    ParentContextDelegationContext,
+    Participant,
+    ParticipantCalendar,
+    Party,
+    Performer,
+    Person,
+    PoolPosition,
+    PoolSize,
+    Port,
+    PortBatchSize,
+    PortContainer,
+    PortDelegation,
+    PortHandler,
+    PortOffset,
+    PracticeCategory,
+    PracticeDefinition,
+    PracticeLibrary,
+    PracticeResource,
+    PropositionComponent,
+    PropositionOverallSatisfaction,
+    ReleaseControl,
+    ResourceResourceUse,
+    ResourceUse,
+    ResourceUseCondition,
+    ResourceUseDuration,
+    ResourceUsePlanningPercentage,
+    ResourceUseQuantity,
+    RoleCategory,
+    RoleCharacteristicDefinition,
+    RoleDefinition,
+    RoleLibrary,
+    RoleRoleDefinition,
+    Scenario,
+    ScenarioActor,
+    ScenarioCollaboration,
+    ScenarioHorizon,
+    ScenarioReleaseControlContext,
+    StoreCalendar,
+    StoreContext,
+    StoreDuration,
+    StoreInventoryLevel,
+    StoreResource,
+    ValueAggregation,
+    ValueCategory,
+    ValueCharacteristicDefinition,
+    ValueDefinition,
+    ValueDeliveryModel,
+    ValueElement,
+    ValueElementBenchmark,
+    ValueElementValueDefinition,
+    ValueElementValueMeasurement,
+    ValueLibrary,
+    ValuePropositionComponent,
+    ValuePropositionComponentSatisfactionLevel,
+    ValueWeight,
+    VdmlElement
+  ]
+concepts:
+  source: 'OMG VDML 1.0: clause 7.2 (class definitions), with generalizations, abstractness and multiplicities from the normative machine-readable model. 63 classes: 53 concrete and 10 abstract. Concept names are the standard''s own class names without spaces. Properties that are plain values (booleans, strings) are under attributes; properties that link two classes are under relationships.'
+  elements:
+    ValueDeliveryModel:
+      display: Value Delivery Model
+      category: Model and contexts
+      specializes: VdmlElement
+      section: 7.2.3.1.1, p. 53
+    AnalysisContext:
+      display: Analysis Context
+      category: Model and contexts
+      specializes: VdmlElement
+      abstract: true
+      section: 7.2.3.2.1, p. 55
+    Scenario:
+      display: Scenario
+      category: Model and contexts
+      specializes: AnalysisContext
+      attributes:
+      - name: type
+        type: String
+        multiplicity: '1'
+      - name: isCommon
+        type: Boolean
+        multiplicity: '1'
+        default: false
+      section: 7.2.3.2.2, p. 57
+    DelegationContext:
+      display: Delegation Context
+      category: Model and contexts
+      specializes: AnalysisContext
+      section: 7.2.3.2.3, p. 58
+    Collaboration:
+      display: Collaboration
+      category: Collaborations and roles
+      specializes:
+      - Participant
+      - PortContainer
+      section: 7.2.1.1.3, p. 30
+    Participant:
+      display: Participant
+      category: Collaborations and roles
+      specializes: MeasurableElement
+      abstract: true
+      section: 7.2.1.1.4, p. 30
+    Actor:
+      display: Actor
+      category: Collaborations and roles
+      specializes: Participant
+      section: 7.2.1.1.1, p. 29
+    Person:
+      display: Person
+      category: Collaborations and roles
+      specializes: Actor
+      section: 7.2.1.1.2, p. 29
+    Role:
+      display: Role
+      category: Collaborations and roles
+      specializes: Participant
+      attributes:
+      - name: isLead
+        type: Boolean
+        multiplicity: '1'
+        default: false
+      section: 7.2.1.1.5, p. 31
+    CalendarService:
+      display: Calendar Service
+      category: Collaborations and roles
+      specializes: VdmlElement
+      section: 7.2.1.1.6, p. 32
+    Assignment:
+      display: Assignment
+      category: Collaborations and roles
+      specializes: VdmlElement
+      section: 7.2.1.2.3, p. 36
+    BusinessNetwork:
+      display: Business Network
+      category: Collaboration subtypes
+      specializes: Collaboration
+      section: 7.2.2.1.1, p. 47
+    Party:
+      display: Party
+      category: Collaboration subtypes
+      specializes: Role
+      section: 7.2.2.1.2, p. 47
+    Community:
+      display: Community
+      category: Collaboration subtypes
+      specializes: Collaboration
+      section: 7.2.2.2.1, p. 47
+    Member:
+      display: Member
+      category: Collaboration subtypes
+      specializes: Role
+      section: 7.2.2.2.2, p. 48
+    OrgUnit:
+      display: Organization Unit
+      category: Collaboration subtypes
+      specializes: Collaboration
+      attributes:
+      - name: location
+        type: String
+        multiplicity: '0..1'
+      section: 7.2.2.3.1, p. 49
+    Position:
+      display: Position
+      category: Collaboration subtypes
+      specializes: Role
+      section: 7.2.2.3.2, p. 49
+    CapabilityMethod:
+      display: Capability Method
+      category: Collaboration subtypes
+      specializes: Collaboration
+      attributes:
+      - name: strategy
+        type: String
+        multiplicity: '1'
+      section: 7.2.2.4.1, p. 51
+    Performer:
+      display: Performer
+      category: Collaboration subtypes
+      specializes: Role
+      section: 7.2.2.4.1, p. 52 (property performer); machine-readable model
+    Activity:
+      display: Activity
+      category: Activity networks
+      specializes: PortContainer
+      section: 7.2.1.2.1, p. 33
+    ResourceUse:
+      display: Resource Use
+      category: Activity networks
+      specializes: MeasurableElement
+      attributes:
+      - name: resourceIsConsumed
+        type: Boolean
+        multiplicity: '1'
+        default: true
+      - name: isExclusive
+        type: Boolean
+        multiplicity: '1'
+        default: false
+      - name: inputDriven
+        type: Boolean
+        multiplicity: '1'
+        default: false
+      section: 7.2.1.2.2, p. 35
+    DeliverableFlow:
+      display: Deliverable Flow
+      category: Activity networks
+      specializes: MeasurableElement
+      attributes:
+      - name: isTangible
+        type: Boolean
+        multiplicity: '1'
+        default: true
+      - name: channel
+        type: String
+        multiplicity: '0..1'
+      section: 7.2.1.2.4, p. 38
+    BusinessItem:
+      display: Business Item
+      category: Activity networks
+      specializes: MeasurableElement
+      attributes:
+      - name: isFungible
+        type: Boolean
+        multiplicity: '1'
+        default: true
+      - name: isShareable
+        type: Boolean
+        multiplicity: '1'
+        default: false
+      section: 7.2.1.2.5, p. 39
+    Store:
+      display: Store
+      category: Activity networks
+      specializes: PortContainer
+      section: 7.2.1.2.6, p. 40
+    Pool:
+      display: Pool
+      category: Activity networks
+      specializes: Store
+      section: 7.2.1.2.7, p. 41
+    PortContainer:
+      display: Port Container
+      category: Ports and delegations
+      specializes: MeasurableElement
+      abstract: true
+      section: 7.2.4.3.4, p. 65
+    Port:
+      display: Port
+      category: Ports and delegations
+      specializes: MeasurableElement
+      abstract: true
+      attributes:
+      - name: isIntermediate
+        type: Boolean
+        multiplicity: '1'
+        default: false
+      section: 7.2.4.3.1, p. 63
+    InputPort:
+      display: Input Port
+      category: Ports and delegations
+      specializes: Port
+      section: 7.2.4.3.3, p. 65
+    OutputPort:
+      display: Output Port
+      category: Ports and delegations
+      specializes: Port
+      section: 7.2.4.3.2, p. 64
+    PortDelegation:
+      display: Port Delegation
+      category: Ports and delegations
+      specializes: VdmlElement
+      abstract: true
+      section: 7.2.4.4.1, p. 66
+    InputDelegation:
+      display: Input Delegation
+      category: Ports and delegations
+      specializes: PortDelegation
+      section: 7.2.4.4.2, p. 66
+    OutputDelegation:
+      display: Output Delegation
+      category: Ports and delegations
+      specializes: PortDelegation
+      section: 7.2.4.4.3, p. 67
+    ValueProposition:
+      display: Value Proposition
+      category: Value
+      specializes: MeasurableElement
+      section: 7.2.1.3.1, p. 43
+    ValuePropositionComponent:
+      display: Value Proposition Component
+      category: Value
+      specializes: ValueElement
+      section: 7.2.1.3.2, p. 44
+    ValueAdd:
+      display: Value Add
+      category: Value
+      specializes: ValueElement
+      section: 7.2.1.3.3, p. 44
+    ValueElement:
+      display: Value Element
+      category: Value
+      specializes: MeasurableElement
+      abstract: true
+      attributes:
+      - name: isAtomic
+        type: Boolean
+        multiplicity: '0..1'
+        default: true
+      section: 7.2.1.3.4, p. 45
+    CapabilityOffer:
+      display: Capability Offer
+      category: Capabilities
+      specializes: MeasurableElement
+      attributes:
+      - name: location
+        type: String
+        multiplicity: '0..1'
+      section: 7.2.2.3.3, p. 49
+    ReleaseControl:
+      display: Release Control
+      category: Capabilities
+      specializes: VdmlElement
+      attributes:
+      - name: strategy
+        type: String
+        multiplicity: '1'
+      section: 7.2.2.3.4, p. 50
+    Capability:
+      display: Capability
+      category: Capabilities
+      specializes: VdmlElement
+      abstract: true
+      section: 7.2.5.3.4, p. 75
+    CapabilityDefinition:
+      display: Capability Definition
+      category: Capabilities
+      specializes: Capability
+      section: 7.2.5.3.2, p. 74
+    CapabilityCategory:
+      display: Capability Category
+      category: Capabilities
+      specializes: Capability
+      section: 7.2.5.3.3, p. 75
+    CapabilityDependency:
+      display: Capability Dependency
+      category: Capabilities
+      specializes: VdmlElement
+      attributes:
+      - name: isTangible
+        type: Boolean
+        multiplicity: '1'
+        default: true
+      - name: isFromExternalSource
+        type: Boolean
+        multiplicity: '1'
+        default: true
+      - name: isForExternalTarget
+        type: Boolean
+        multiplicity: '1'
+        default: true
+      section: 7.2.5.3.5, p. 76
+    BusinessItemLibrary:
+      display: Business Item Library
+      category: Libraries
+      specializes: VdmlElement
+      section: 7.2.5.1.1, p. 68
+    BusinessItemLibraryElement:
+      display: Business Item Library Element
+      category: Libraries
+      specializes: VdmlElement
+      abstract: true
+      section: 7.2.5.1.4, p. 70
+    BusinessItemDefinition:
+      display: Business Item Definition
+      category: Libraries
+      specializes: BusinessItemLibraryElement
+      attributes:
+      - name: isFungible
+        type: Boolean
+        multiplicity: '1'
+        default: true
+      - name: isShareable
+        type: Boolean
+        multiplicity: '1'
+        default: false
+      section: 7.2.5.1.2, p. 68
+    BusinessItemCategory:
+      display: Business Item Category
+      category: Libraries
+      specializes: BusinessItemLibraryElement
+      section: 7.2.5.1.3, p. 69
+    ValueLibrary:
+      display: Value Library
+      category: Libraries
+      specializes: VdmlElement
+      section: 7.2.5.2.1, p. 71
+    ValueDefinition:
+      display: Value Definition
+      category: Libraries
+      specializes: VdmlElement
+      section: 7.2.5.2.2, p. 71
+    ValueCategory:
+      display: Value Category
+      category: Libraries
+      specializes: VdmlElement
+      section: 7.2.5.2.3, p. 71
+    CapabilityLibrary:
+      display: Capability Library
+      category: Libraries
+      specializes: VdmlElement
+      section: 7.2.5.3.1, p. 73
+    PracticeLibrary:
+      display: Practice Library
+      category: Libraries
+      specializes: VdmlElement
+      section: 7.2.5.4.1, p. 78
+    PracticeDefinition:
+      display: Practice Definition
+      category: Libraries
+      specializes: VdmlElement
+      section: 7.2.5.4.2, p. 78
+    PracticeCategory:
+      display: Practice Category
+      category: Libraries
+      specializes: VdmlElement
+      section: 7.2.5.4.3, p. 78
+    RoleLibrary:
+      display: Role Library
+      category: Libraries
+      specializes: VdmlElement
+      section: 7.2.5.5.1, p. 79
+    RoleDefinition:
+      display: Role Definition
+      category: Libraries
+      specializes: VdmlElement
+      section: 7.2.5.5.2, p. 80
+    RoleCategory:
+      display: Role Category
+      category: Libraries
+      specializes: VdmlElement
+      section: 7.2.5.5.3, p. 80
+    VdmlElement:
+      display: VDML Element
+      category: Core elements
+      abstract: true
+      attributes:
+      - name: name
+        type: String
+        multiplicity: '1'
+      - name: description
+        type: String
+        multiplicity: '1'
+      - name: represents
+        type: String
+        multiplicity: '0..1'
+      section: 7.2.4.1.1, p. 59
+    MeasurableElement:
+      display: Measurable Element
+      category: Core elements
+      specializes: VdmlElement
+      abstract: true
+      section: 7.2.4.1.4, p. 60
+    MeasuredCharacteristic:
+      display: Measured Characteristic
+      category: Core elements
+      specializes: VdmlElement
+      section: 7.2.4.1.5, p. 60
+    Attribute:
+      display: Attribute
+      category: Core elements
+      specializes: VdmlElement
+      attributes:
+      - name: tag
+        type: String
+        multiplicity: '1'
+      - name: value
+        type: String
+        multiplicity: '1'
+      section: 7.2.4.1.2, p. 60
+    Annotation:
+      display: Annotation
+      category: Core elements
+      specializes: VdmlElement
+      attributes:
+      - name: text
+        type: String
+        multiplicity: '1'
+      section: 7.2.4.1.3, p. 60
+    Expression:
+      display: Expression
+      category: Core elements
+      specializes: VdmlElement
+      attributes:
+      - name: body
+        type: String
+        multiplicity: '0..1'
+      section: 7.2.4.2.1, p. 61
+    Operand:
+      display: Operand
+      category: Core elements
+      specializes: VdmlElement
+      attributes:
+      - name: alias
+        type: String
+        multiplicity: '0..1'
+      section: 7.2.4.2.2, p. 62
+  external:
+    SmmModel:
+      defined_by: SMM 1.1 (formal/15-10-03), referenced by VDML
+      note: An SMM model contained in and specific to a ValueDeliveryModel (type of metricsModel).
+    MeasureLibrary:
+      defined_by: SMM 1.1 (formal/15-10-03), referenced by VDML
+      note: 'SMM: library of measures and characteristics.'
+    Measure:
+      defined_by: SMM 1.1 (formal/15-10-03), referenced by VDML
+      note: 'SMM: a method that quantifies or qualifies a characteristic.'
+    Characteristic:
+      defined_by: SMM 1.1 (formal/15-10-03), referenced by VDML
+      note: 'SMM: a distinguishing feature that a measure can quantify or qualify.'
+    Measurement:
+      defined_by: SMM 1.1 (formal/15-10-03), referenced by VDML
+      note: 'SMM: the result of applying a measure.'
+    Observation:
+      defined_by: SMM 1.1 (formal/15-10-03), referenced by VDML
+      note: 'SMM: groups measurements; in VDML each analysis context has its own.'
+    MeasureRelationship:
+      defined_by: SMM 1.1 (formal/15-10-03), referenced by VDML
+      note: 'SMM: the class that types MeasurementRelationships; VDML adds an influence property (positive or negative).'
+    MeasurementRelationship:
+      defined_by: SMM 1.1 (formal/15-10-03), referenced by VDML
+      note: 'SMM: a relationship between two measurements; shown on the Measurement Dependency diagram.'
+relationships_note: 129 associations from the normative machine-readable model, each stated once, from the class that owns the navigable property (source) to the type of that property (target). roles.target is the property name at the target end; roles.source is the name of the opposite end. multiplicity.targets_per_source is how many target instances one source instance links to; sources_per_target is how many source instances link to one target instance. composite means the source contains the target. source_end_navigable false means the opposite end is not a property of the target class. Names are the machine-readable model's own, including its spelling slips.
+relationships:
+- name: PropositionComponent
+  source: ValueProposition
+  target: ValuePropositionComponent
+  roles:
+    source: containingProposition
+    target: component
+  multiplicity:
+    targets_per_source: 0..*
+    sources_per_target: '1'
+  composite: true
+  section: 7.2.1.3.1
+- name: ModelMetricsModel
+  source: ValueDeliveryModel
+  target: SmmModel
+  roles:
+    source: containingModel
+    target: metricsModel
+  multiplicity:
+    targets_per_source: 0..*
+    sources_per_target: 0..1
+  composite: true
+  section: 7.2.3.1.1
+- name: ModelValueLibrary
+  source: ValueDeliveryModel
+  target: ValueLibrary
+  roles:
+    source: containingModel
+    target: valueLibrary
+  multiplicity:
+    targets_per_source: 0..*
+    sources_per_target: '1'
+  composite: true
+  section: 7.2.3.1.1
+- name: ModelCapabilityLibrary
+  source: ValueDeliveryModel
+  target: CapabilityLibrary
+  roles:
+    source: containingModel
+    target: capabilitylibrary
+  multiplicity:
+    targets_per_source: 0..*
+    sources_per_target: '1'
+  composite: true
+  section: 7.2.3.1.1
+- name: ModelBusinessItemLibrary
+  source: ValueDeliveryModel
+  target: BusinessItemLibrary
+  roles:
+    source: containingModel
+    target: businessItemLibrary
+  multiplicity:
+    targets_per_source: 0..*
+    sources_per_target: '1'
+  composite: true
+  section: 7.2.3.1.1
+- name: ModelActor
+  source: ValueDeliveryModel
+  target: Actor
+  roles:
+    source: containingModel
+    target: actor
+  multiplicity:
+    targets_per_source: 0..*
+    sources_per_target: '1'
+  composite: true
+  section: 7.2.3.1.1
+- name: ModelPracticeLibrary
+  source: ValueDeliveryModel
+  target: PracticeLibrary
+  roles:
+    source: containingModel
+    target: practiceLibrary
+  multiplicity:
+    targets_per_source: 0..*
+    sources_per_target: '1'
+  composite: true
+  section: 7.2.3.1.1
+- name: ValueElementValueMeasurement
+  source: ValueElement
+  target: MeasuredCharacteristic
+  roles:
+    source: measuredValue
+    target: valueMeasurement
+  multiplicity:
+    targets_per_source: 0..1
+    sources_per_target: 0..1
+  composite: true
+  section: 7.2.1.3.4
+- name: ValueElementValueDefinition
+  source: ValueElement
+  target: ValueDefinition
+  roles:
+    source: valueAdd
+    target: valueDefinition
+  multiplicity:
+    targets_per_source: 0..1
+    sources_per_target: 0..*
+  section: 7.2.1.3.4
+- name: ActivityDuration
+  source: Activity
+  target: MeasuredCharacteristic
+  roles:
+    source: activity
+    target: duration
+  multiplicity:
+    targets_per_source: '1'
+    sources_per_target: 0..1
+  composite: true
+  section: 7.2.1.2.1
+- name: ActivityCapabilityRequirement
+  source: Activity
+  target: Capability
+  roles:
+    source: activity
+    target: capabilityRequirement
+  multiplicity:
+    targets_per_source: 0..1
+    sources_per_target: 0..*
+  section: 7.2.1.2.1
+- name: ActivityResourceUse
+  source: Activity
+  target: ResourceUse
+  roles:
+    source: activity
+    target: resourceUse
+  multiplicity:
+    targets_per_source: 0..*
+    sources_per_target: '1'
+  composite: true
+  section: 7.2.1.2.1
+- name: RoleAssignment
+  source: Assignment
+  target: Role
+  roles:
+    source: roleAssignment
+    target: assignedRole
+  multiplicity:
+    targets_per_source: '1'
+    sources_per_target: 0..*
+  section: 7.2.1.2.3
+- name: BusinessNetworkParty
+  source: BusinessNetwork
+  target: Party
+  roles:
+    source: businessNetwork
+    target: party
+  multiplicity:
+    targets_per_source: 0..*
+    sources_per_target: '1'
+  composite: true
+  section: 7.2.2.1.1
+- name: MethodPerformer
+  source: CapabilityMethod
+  target: Performer
+  roles:
+    source: method
+    target: performer
+  multiplicity:
+    targets_per_source: 0..*
+    sources_per_target: '1'
+  composite: true
+  section: 7.2.2.4.1
+- name: CapabilityOfferCapability
+  source: CapabilityOffer
+  target: Capability
+  roles:
+    source: capabilityOffer
+    target: capability
+  multiplicity:
+    targets_per_source: 0..1
+    sources_per_target: 0..*
+  section: 7.2.2.3.3
+- name: SupportedCapabilityMethod
+  source: CapabilityOffer
+  target: CapabilityMethod
+  roles:
+    source: supportedCapability
+    target: method
+  multiplicity:
+    targets_per_source: 0..*
+    sources_per_target: 0..*
+  section: 7.2.2.3.3
+- name: CapabilityResource
+  source: CapabilityOffer
+  target: Store
+  roles:
+    source: supportedCapability
+    target: capabilityResource
+  multiplicity:
+    targets_per_source: 0..*
+    sources_per_target: 0..*
+  section: 7.2.2.3.3
+- name: CollaborationRole
+  source: Collaboration
+  target: Role
+  roles:
+    source: collaboration
+    target: collaborationRole
+  multiplicity:
+    targets_per_source: 0..*
+    sources_per_target: '1'
+  composite: true
+  section: 7.2.1.1.3
+- name: CollaborationInternalPortDelegation
+  source: Collaboration
+  target: PortDelegation
+  roles:
+    source: collaboration
+    target: internalPortDelegation
+  multiplicity:
+    targets_per_source: 0..*
+    sources_per_target: 0..1
+  composite: true
+  section: 7.2.1.1.3
+- name: CollaborationActivity
+  source: Collaboration
+  target: Activity
+  roles:
+    source: collaboration
+    target: activity
+  multiplicity:
+    targets_per_source: 0..*
+    sources_per_target: '1'
+  composite: true
+  section: 7.2.1.1.3
+- name: CollaborationBusinessItem
+  source: Collaboration
+  target: BusinessItem
+  roles:
+    source: collaboration
+    target: businessItem
+  multiplicity:
+    targets_per_source: 0..*
+    sources_per_target: '1'
+  composite: true
+  section: 7.2.1.1.3
+- name: CollaborationFlow
+  source: Collaboration
+  target: DeliverableFlow
+  roles:
+    source: collaboration
+    target: flow
+  multiplicity:
+    targets_per_source: 0..*
+    sources_per_target: '1'
+  composite: true
+  section: 7.2.1.1.3
+- name: CommunityMember
+  source: Community
+  target: Member
+  roles:
+    source: community
+    target: member
+  multiplicity:
+    targets_per_source: 0..*
+    sources_per_target: '1'
+  composite: true
+  section: 7.2.2.2.1
+- name: FlowTarget
+  source: DeliverableFlow
+  target: InputPort
+  roles:
+    source: input
+    target: recipient
+  multiplicity:
+    targets_per_source: '1'
+    sources_per_target: 0..1
+  section: 7.2.1.2.4
+- name: FlowSource
+  source: DeliverableFlow
+  target: OutputPort
+  roles:
+    source: output
+    target: provider
+  multiplicity:
+    targets_per_source: '1'
+    sources_per_target: 0..1
+  section: 7.2.1.2.4
+- name: FlowDeliverable
+  source: DeliverableFlow
+  target: BusinessItem
+  roles:
+    source: flow
+    target: deliverable
+  multiplicity:
+    targets_per_source: '1'
+    sources_per_target: 0..*
+  section: 7.2.1.2.4
+- name: InputDelegationTarget
+  source: InputDelegation
+  target: InputPort
+  roles:
+    source: delegatedInput
+    target: target
+  multiplicity:
+    targets_per_source: '1'
+    sources_per_target: 0..*
+  section: 7.2.4.4.2
+- name: InputDelegationSource
+  source: InputDelegation
+  target: InputPort
+  roles:
+    source: inputDelegation
+    target: source
+  multiplicity:
+    targets_per_source: '1'
+    sources_per_target: 0..*
+  section: 7.2.4.4.2
+- name: StoreOwnerStore
+  source: OrgUnit
+  target: Store
+  roles:
+    source: storeOwner
+    target: ownedStore
+  multiplicity:
+    targets_per_source: 0..*
+    sources_per_target: '1'
+  composite: true
+  section: 7.2.2.3.1
+- name: CapabilityProviderCapabilityOffer
+  source: OrgUnit
+  target: CapabilityOffer
+  roles:
+    source: capabilityProvider
+    target: capabilityOffer
+  multiplicity:
+    targets_per_source: 0..*
+    sources_per_target: '1'
+  composite: true
+  section: 7.2.2.3.1
+- name: MethodOwnerMethod
+  source: OrgUnit
+  target: CapabilityMethod
+  roles:
+    source: methodOwner
+    target: ownedMethod
+  multiplicity:
+    targets_per_source: 0..*
+    sources_per_target: '1'
+  composite: true
+  section: 7.2.2.3.1
+- name: OrgUnitPosition
+  source: OrgUnit
+  target: Position
+  roles:
+    source: orgUnit
+    target: position
+  multiplicity:
+    targets_per_source: 0..*
+    sources_per_target: '1'
+  composite: true
+  section: 7.2.2.3.1
+- name: ParticipantCalendar
+  source: Participant
+  target: CalendarService
+  roles:
+    source: participant
+    target: participantCalendar
+  multiplicity:
+    targets_per_source: 0..1
+    sources_per_target: 0..1
+  composite: true
+  section: 7.2.1.1.4
+- name: PoolPosition
+  source: Pool
+  target: Position
+  roles:
+    source: actorPool
+    target: position
+  multiplicity:
+    targets_per_source: 0..*
+    sources_per_target: 0..*
+  section: 7.2.1.2.7
+- name: PortPlanningPercentage
+  source: Port
+  target: MeasuredCharacteristic
+  roles:
+    source: plannedPort
+    target: planningPercentage
+  multiplicity:
+    targets_per_source: 0..1
+    sources_per_target: 0..1
+  composite: true
+  section: 7.2.4.3.1
+- name: PortContainerPort
+  source: PortContainer
+  target: Port
+  roles:
+    source: portContainer
+    target: containedPort
+  multiplicity:
+    targets_per_source: 0..*
+    sources_per_target: '1'
+  composite: true
+  section: 7.2.4.3.4
+- name: ResourceUsePlanningPercentage
+  source: ResourceUse
+  target: MeasuredCharacteristic
+  roles:
+    source: plannedResourceUse
+    target: planningPercentage
+  multiplicity:
+    targets_per_source: 0..1
+    sources_per_target: 0..1
+  composite: true
+  section: 7.2.1.2.2
+- name: ResourceUseQuantity
+  source: ResourceUse
+  target: MeasuredCharacteristic
+  roles:
+    source: quantifiedResourceUse
+    target: quantity
+  multiplicity:
+    targets_per_source: '1'
+    sources_per_target: 0..1
+  composite: true
+  section: 7.2.1.2.2
+- name: DependentResourceUseDeliverable
+  source: ResourceUse
+  target: OutputPort
+  roles:
+    source: resourceUse
+    target: deliverable
+  multiplicity:
+    targets_per_source: 0..1
+    sources_per_target: 0..*
+  section: 7.2.1.2.2
+- name: ResourceResourceUse
+  source: ResourceUse
+  target: InputPort
+  roles:
+    source: resourceUse
+    target: resource
+  multiplicity:
+    targets_per_source: 0..*
+    sources_per_target: 0..*
+  section: 7.2.1.2.2
+- name: performedWorkPerformingRole
+  source: Role
+  target: Activity
+  roles:
+    source: performingRole
+    target: performedWork
+  multiplicity:
+    targets_per_source: 0..*
+    sources_per_target: 0..1
+  section: 7.2.1.1.5
+- name: RecipientReceivedProposition
+  source: Role
+  target: ValueProposition
+  roles:
+    source: recipient
+    target: receivedProposition
+  multiplicity:
+    targets_per_source: 0..*
+    sources_per_target: 0..1
+  section: 7.2.1.1.5
+- name: ProviderProvidedProposition
+  source: Role
+  target: ValueProposition
+  roles:
+    source: provider
+    target: providedProposition
+  multiplicity:
+    targets_per_source: 0..*
+    sources_per_target: 0..1
+  composite: true
+  section: 7.2.1.1.5
+- name: MeasureableElementCharacteristic
+  source: MeasurableElement
+  target: MeasuredCharacteristic
+  roles:
+    source: measurableElement
+    target: measuredCharacteristic
+  multiplicity:
+    targets_per_source: 0..*
+    sources_per_target: 0..1
+  composite: true
+  section: 7.2.4.1.4
+- name: CharacteristicDefinition
+  source: MeasuredCharacteristic
+  target: Characteristic
+  roles:
+    source: measuredCharacteristic
+    target: characteristicDefinition
+  multiplicity:
+    targets_per_source: 0..1
+    sources_per_target: 0..*
+  section: 7.2.4.1.5
+- name: ElementAttribute
+  source: VdmlElement
+  target: Attribute
+  roles:
+    source: element
+    target: attribute
+  multiplicity:
+    targets_per_source: 0..*
+    sources_per_target: '1'
+  composite: true
+  section: 7.2.4.1.1
+- name: StoreDuration
+  source: Store
+  target: MeasuredCharacteristic
+  roles:
+    source: store
+    target: duration
+  multiplicity:
+    targets_per_source: '1'
+    sources_per_target: 0..1
+  composite: true
+  section: 7.2.1.2.6
+- name: ParentChildBusinessItemCategory
+  source: BusinessItemCategory
+  target: BusinessItemCategory
+  roles:
+    source: childCategory
+    target: parentCategory
+  multiplicity:
+    targets_per_source: 0..*
+    sources_per_target: 0..*
+  section: 7.2.5.1.3
+- name: BusinessItemCharacteristicDefinition
+  source: BusinessItemLibraryElement
+  target: Characteristic
+  roles:
+    source: businessItem
+    target: characteristicDefinition
+  multiplicity:
+    targets_per_source: 0..*
+    sources_per_target: 0..*
+  section: 7.2.5.1.4
+- name: CategoryItemCategory
+  source: BusinessItemDefinition
+  target: BusinessItemCategory
+  roles:
+    source: categoryItem
+    target: category
+  multiplicity:
+    targets_per_source: 0..*
+    sources_per_target: 0..*
+  section: 7.2.5.1.2
+- name: CapabilityDependencyTarget
+  source: CapabilityDefinition
+  target: CapabilityDependency
+  roles:
+    source: target
+    target: input
+  multiplicity:
+    targets_per_source: 0..*
+    sources_per_target: 0..1
+  section: 7.2.5.3.2
+- name: CapabilityPracticeDefinition
+  source: CapabilityDefinition
+  target: PracticeDefinition
+  roles:
+    source: capability
+    target: practiceDefinition
+  multiplicity:
+    targets_per_source: 0..*
+    sources_per_target: 0..*
+  section: 7.2.5.3.2
+- name: CapabilityDependencySource
+  source: CapabilityDefinition
+  target: CapabilityDependency
+  roles:
+    source: source
+    target: output
+  multiplicity:
+    targets_per_source: 0..*
+    sources_per_target: 0..1
+  section: 7.2.5.3.2
+- name: CapabilityDependencyDeliverableDefinition
+  source: CapabilityDependency
+  target: BusinessItemDefinition
+  roles:
+    source: capabilityDependency
+    target: deliverableDefinition
+  multiplicity:
+    targets_per_source: '1'
+    sources_per_target: 0..*
+  section: 7.2.5.3.5
+- name: LibraryCapability
+  source: CapabilityLibrary
+  target: Capability
+  roles:
+    source: library
+    target: capability
+  multiplicity:
+    targets_per_source: 0..*
+    sources_per_target: '1'
+  composite: true
+  section: 7.2.5.3.1
+- name: LibraryCapabilityDependency
+  source: CapabilityLibrary
+  target: CapabilityDependency
+  roles:
+    source: library
+    target: capabilityDependency
+  multiplicity:
+    targets_per_source: 0..*
+    sources_per_target: '1'
+  composite: true
+  section: 7.2.5.3.1
+- name: CapabilityCharacteristicDefinition
+  source: Capability
+  target: Characteristic
+  roles:
+    source: capability
+    target: characteristicDefinition
+  multiplicity:
+    targets_per_source: 0..*
+    sources_per_target: 0..*
+  section: 7.2.5.3.4
+- name: ParentChildCapability
+  source: Capability
+  target: Capability
+  roles:
+    source: childCapability
+    target: parentCabability
+  multiplicity:
+    targets_per_source: 0..*
+    sources_per_target: 0..*
+  section: 7.2.5.3.4
+- name: ParentChildPracticeCategory
+  source: PracticeCategory
+  target: PracticeCategory
+  roles:
+    source: childCategory
+    target: parentCategory
+  multiplicity:
+    targets_per_source: 0..*
+    sources_per_target: 0..*
+  section: 7.2.5.4.3
+- name: PracticeResource
+  source: PracticeDefinition
+  target: BusinessItemDefinition
+  roles:
+    source: practiceDefinition
+    target: resourceDefinition
+  multiplicity:
+    targets_per_source: 0..*
+    sources_per_target: 0..*
+  section: 7.2.5.4.2
+- name: CategoryPracticeCategory
+  source: PracticeDefinition
+  target: PracticeCategory
+  roles:
+    source: categoryPractice
+    target: category
+  multiplicity:
+    targets_per_source: 0..*
+    sources_per_target: 0..*
+  section: 7.2.5.4.2
+- name: ActivityImplementedPractice
+  source: Activity
+  target: PracticeDefinition
+  roles:
+    source: activity
+    target: implementedPractice
+  multiplicity:
+    targets_per_source: 0..*
+    sources_per_target: 0..*
+  section: 7.2.1.2.1
+- name: LibraryPracticeDefinition
+  source: PracticeLibrary
+  target: PracticeDefinition
+  roles:
+    source: library
+    target: practiceDefinition
+  multiplicity:
+    targets_per_source: 0..*
+    sources_per_target: '1'
+  composite: true
+  section: 7.2.5.4.1
+- name: LibraryPracticeCategory
+  source: PracticeLibrary
+  target: PracticeCategory
+  roles:
+    source: library
+    target: practiceCategory
+  multiplicity:
+    targets_per_source: 0..*
+    sources_per_target: '1'
+  composite: true
+  section: 7.2.5.4.1
+- name: ParentChildValueCategory
+  source: ValueCategory
+  target: ValueCategory
+  roles:
+    source: childCategory
+    target: parentCategory
+  multiplicity:
+    targets_per_source: 0..*
+    sources_per_target: 0..*
+  section: 7.2.5.2.3
+- name: CategoryValueCategory
+  source: ValueDefinition
+  target: ValueCategory
+  roles:
+    source: categoryValue
+    target: category
+  multiplicity:
+    targets_per_source: 0..*
+    sources_per_target: 0..*
+  section: 7.2.5.2.2
+- name: ValueCharacteristicDefinition
+  source: ValueDefinition
+  target: Characteristic
+  roles:
+    source: valueDefinition
+    target: characteristicDefinition
+  multiplicity:
+    targets_per_source: 0..*
+    sources_per_target: 0..*
+  section: 7.2.5.2.2
+- name: LibraryValueCategory
+  source: ValueLibrary
+  target: ValueCategory
+  roles:
+    source: library
+    target: valueCategory
+  multiplicity:
+    targets_per_source: 0..*
+    sources_per_target: '1'
+  composite: true
+  section: 7.2.5.2.1
+- name: LibraryValueDefinition
+  source: ValueLibrary
+  target: ValueDefinition
+  roles:
+    source: library
+    target: valueDefinition
+  multiplicity:
+    targets_per_source: 0..*
+    sources_per_target: '1'
+  composite: true
+  section: 7.2.5.2.1
+- name: InputDefinition
+  source: InputPort
+  target: BusinessItemLibraryElement
+  roles:
+    source: input
+    target: inputDefinition
+  multiplicity:
+    targets_per_source: 0..1
+    sources_per_target: 0..*
+  section: 7.2.4.3.3
+- name: OutputDefinition
+  source: OutputPort
+  target: BusinessItemLibraryElement
+  roles:
+    source: output
+    target: outputDefinition
+  multiplicity:
+    targets_per_source: 0..1
+    sources_per_target: 0..*
+  section: 7.2.4.3.2
+- name: ParentContextDelegationContext
+  source: AnalysisContext
+  target: DelegationContext
+  roles:
+    source: parentContext
+    target: delegationtContext
+  multiplicity:
+    targets_per_source: 0..*
+    sources_per_target: '1'
+  composite: true
+  section: 7.2.3.2.1
+- name: ContextObservation
+  source: AnalysisContext
+  target: Observation
+  roles:
+    source: observationContext
+    target: contextObservation
+  multiplicity:
+    targets_per_source: 0..*
+    sources_per_target: 0..1
+  section: 7.2.3.2.1
+- name: DelegationContextCollaboration
+  source: DelegationContext
+  target: Collaboration
+  roles:
+    source: delegationContext
+    target: contextCollaboration
+  multiplicity:
+    targets_per_source: '1'
+    sources_per_target: 0..*
+  section: 7.2.3.2.3
+- name: ScenarioCollaboration
+  source: Collaboration
+  target: Scenario
+  roles:
+    source: contextCollaboration
+    target: scenario
+  multiplicity:
+    targets_per_source: 0..*
+    sources_per_target: 0..*
+  section: 7.2.1.1.3
+- name: DelegationContextPortDelegation
+  source: DelegationContext
+  target: PortDelegation
+  roles:
+    source: portDelegationContext
+    target: contextBasedPortDelegation
+  multiplicity:
+    targets_per_source: 0..*
+    sources_per_target: 0..1
+  composite: true
+  section: 7.2.3.2.3
+- name: AnanlysisContextAssignment
+  source: AnalysisContext
+  target: Assignment
+  roles:
+    source: assignmentContext
+    target: contextBasedAssignment
+  multiplicity:
+    targets_per_source: 0..*
+    sources_per_target: 0..1
+  composite: true
+  section: 7.2.3.2.1
+- name: StoreInventoryLevel
+  source: Store
+  target: MeasuredCharacteristic
+  roles:
+    source: inventoryContainer
+    target: inventoryLevel
+  multiplicity:
+    targets_per_source: 0..1
+    sources_per_target: 0..1
+  composite: true
+  section: 7.2.1.2.6
+- name: PortBatchSize
+  source: Port
+  target: MeasuredCharacteristic
+  roles:
+    source: port
+    target: batchSize
+  multiplicity:
+    targets_per_source: 0..1
+    sources_per_target: 0..1
+  composite: true
+  section: 7.2.4.3.1
+- name: PortOffset
+  source: Port
+  target: MeasuredCharacteristic
+  roles:
+    source: positionedPort
+    target: offset
+  multiplicity:
+    targets_per_source: 0..1
+    sources_per_target: 0..1
+  composite: true
+  section: 7.2.4.3.1
+- name: StoreContext
+  source: Store
+  target: AnalysisContext
+  roles:
+    source: contextStore
+    target: storeContext
+  multiplicity:
+    targets_per_source: 0..*
+    sources_per_target: 0..*
+  section: 7.2.1.2.6
+- name: DelegatedActivityDelegationContext
+  source: Activity
+  target: DelegationContext
+  roles:
+    source: delegatedActivity
+    target: delegationContext
+  multiplicity:
+    targets_per_source: 0..*
+    sources_per_target: '1'
+  section: 7.2.1.2.1
+- name: CollaborationOwnedAssignment
+  source: Collaboration
+  target: Assignment
+  roles:
+    source: collaboration
+    target: ownedAssignment
+  multiplicity:
+    targets_per_source: 0..*
+    sources_per_target: 0..1
+  composite: true
+  section: 7.2.1.1.3
+- name: ResourceUseCondition
+  source: ResourceUse
+  target: Expression
+  roles:
+    source: conditionalResourceUse
+    target: condition
+  multiplicity:
+    targets_per_source: 0..1
+    sources_per_target: 0..1
+  composite: true
+  section: 7.2.1.2.2
+- name: PortCondition
+  source: Port
+  target: Expression
+  roles:
+    source: port
+    target: condition
+  multiplicity:
+    targets_per_source: 0..1
+    sources_per_target: 0..1
+  composite: true
+  section: 7.2.4.3.1
+- name: ExpressionOperand
+  source: Expression
+  target: Operand
+  roles:
+    source: expression
+    target: operand
+  multiplicity:
+    targets_per_source: 0..*
+    sources_per_target: '1'
+  composite: true
+  section: 7.2.4.2.1
+- name: OperandMeasuredCharacteristic
+  source: Operand
+  target: MeasuredCharacteristic
+  roles:
+    source: operand
+    target: measuredCharacteristic
+  multiplicity:
+    targets_per_source: '1'
+    sources_per_target: 0..*
+  section: 7.2.4.2.2
+- name: ValueWeight
+  source: ValuePropositionComponent
+  target: MeasuredCharacteristic
+  roles:
+    source: weightedValue
+    target: percentageWeight
+  multiplicity:
+    targets_per_source: 0..1
+    sources_per_target: 0..1
+  composite: true
+  section: 7.2.1.3.2
+- name: ValuePortValueAdd
+  source: OutputPort
+  target: ValueAdd
+  roles:
+    source: valuePort
+    target: valueAdd
+  multiplicity:
+    targets_per_source: 0..*
+    sources_per_target: '1'
+  composite: true
+  section: 7.2.4.3.2
+- name: ResourceUseDuration
+  source: ResourceUse
+  target: MeasuredCharacteristic
+  roles:
+    source: resourceUse
+    target: duration
+  multiplicity:
+    targets_per_source: 0..1
+    sources_per_target: 0..1
+  composite: true
+  section: 7.2.1.2.2
+- name: ParticipantAssignment
+  source: Participant
+  target: Assignment
+  roles:
+    source: participant
+    target: assignment
+  multiplicity:
+    targets_per_source: 0..*
+    sources_per_target: 0..1
+  section: 7.2.1.1.4
+- name: BusinessItemBusinessItemDefinition
+  source: BusinessItem
+  target: BusinessItemDefinition
+  roles:
+    source: businessItem
+    target: definition
+  multiplicity:
+    targets_per_source: 0..1
+    sources_per_target: 0..*
+  section: 7.2.1.2.5
+- name: CharacteristicMeasurement
+  source: MeasuredCharacteristic
+  target: Measurement
+  roles:
+    source: measuredCharacteristic
+    target: measurement
+  multiplicity:
+    targets_per_source: 0..*
+    sources_per_target: '1'
+  section: 7.2.4.1.5
+- name: OutputDelegationTarget
+  source: OutputDelegation
+  target: OutputPort
+  roles:
+    source: delegatedOutput
+    target: target
+  multiplicity:
+    targets_per_source: '1'
+    sources_per_target: 0..*
+  section: 7.2.4.4.3
+- name: OutputDelegationSource
+  source: OutputDelegation
+  target: OutputPort
+  roles:
+    source: outputDelegation
+    target: source
+  multiplicity:
+    targets_per_source: '1'
+    sources_per_target: 0..*
+  section: 7.2.4.4.3
+- name: MethodImplementedPractice
+  source: CapabilityMethod
+  target: PracticeDefinition
+  roles:
+    source: method
+    target: implementedPractice
+  multiplicity:
+    targets_per_source: 0..*
+    sources_per_target: 0..*
+  section: 7.2.2.4.1
+- name: CapabilityResourceDefinition
+  source: CapabilityDefinition
+  target: BusinessItemDefinition
+  roles:
+    source: supportedCapability
+    target: capabilityResourceDefinition
+  multiplicity:
+    targets_per_source: 0..*
+    sources_per_target: 0..*
+  section: 7.2.5.3.2
+- name: StoreCalendar
+  source: Pool
+  target: CalendarService
+  roles:
+    source: pool
+    target: poolCalendar
+  multiplicity:
+    targets_per_source: 0..1
+    sources_per_target: 0..1
+  composite: true
+  section: 7.2.1.2.7
+- name: ScenarioHorizon
+  source: Scenario
+  target: MeasuredCharacteristic
+  roles:
+    source: scenario
+    target: horizon
+  multiplicity:
+    targets_per_source: 0..1
+    sources_per_target: 0..1
+  composite: true
+  section: 7.2.3.2.2
+- name: ModelScenario
+  source: ValueDeliveryModel
+  target: Scenario
+  roles:
+    source: containingModel
+    target: scenario
+  multiplicity:
+    targets_per_source: 1..*
+    sources_per_target: '1'
+  composite: true
+  section: 7.2.3.1.1
+- name: ActivityRecurrenceInterval
+  source: Activity
+  target: MeasuredCharacteristic
+  roles:
+    source: scheduledActivity
+    target: recurrenceInterval
+  multiplicity:
+    targets_per_source: 0..1
+    sources_per_target: 0..1
+  composite: true
+  section: 7.2.1.2.1
+- name: PoolSize
+  source: Pool
+  target: MeasuredCharacteristic
+  roles:
+    source: pool
+    target: poolSize
+  multiplicity:
+    targets_per_source: 0..1
+    sources_per_target: 0..1
+  composite: true
+  section: 7.2.1.2.7
+- name: CapabilityOfferReleaseControl
+  source: CapabilityOffer
+  target: ReleaseControl
+  roles:
+    source: capabilityOffer
+    target: releaseControl
+  multiplicity:
+    targets_per_source: 0..*
+    sources_per_target: '1'
+  composite: true
+  section: 7.2.2.3.3
+- name: InputCorrelationExpression
+  source: InputPort
+  target: Expression
+  roles:
+    source: inputPort
+    target: correlationExpression
+  multiplicity:
+    targets_per_source: 0..1
+    sources_per_target: 0..1
+  composite: true
+  section: 7.2.4.3.3
+- name: FlowDuration
+  source: DeliverableFlow
+  target: MeasuredCharacteristic
+  roles:
+    source: flow
+    target: duration
+  multiplicity:
+    targets_per_source: 0..1
+    sources_per_target: 0..1
+  composite: true
+  section: 7.2.1.2.4
+- name: ActivityAppliedCapabilityOffer
+  source: Activity
+  target: CapabilityOffer
+  roles:
+    source: applyingActivity
+    target: appliedCapabilityOffer
+  multiplicity:
+    targets_per_source: 0..1
+    sources_per_target: 0..*
+  section: 7.2.1.2.1
+- name: ScenarioReleaseControlContext
+  source: Scenario
+  target: ReleaseControl
+  roles:
+    source: scenario
+    target: releaseControl
+  multiplicity:
+    targets_per_source: 0..*
+    sources_per_target: 0..*
+  section: 7.2.3.2.2
+- name: StoreResource
+  source: Store
+  target: BusinessItem
+  roles:
+    source: store
+    target: resource
+  multiplicity:
+    targets_per_source: '1'
+    sources_per_target: 0..*
+  section: 7.2.1.2.6
+- name: MethodResource
+  source: CapabilityMethod
+  target: BusinessItem
+  roles:
+    source: method
+    target: methodResource
+  multiplicity:
+    targets_per_source: 0..*
+    sources_per_target: 0..*
+  section: 7.2.2.4.1
+- name: ModelCollaboration
+  source: ValueDeliveryModel
+  target: Collaboration
+  roles:
+    source: containingModel
+    target: collaboration
+  multiplicity:
+    targets_per_source: 0..*
+    sources_per_target: 0..1
+  composite: true
+  section: 7.2.3.1.1
+- name: ValuePropositionComponentSatisfactionLevel
+  source: ValuePropositionComponent
+  target: MeasuredCharacteristic
+  roles:
+    source: value
+    target: satisfactionLevel
+  multiplicity:
+    targets_per_source: 0..1
+    sources_per_target: 0..1
+  composite: true
+  section: 7.2.1.3.2
+- name: ValueElementBenchmark
+  source: ValueElement
+  target: MeasuredCharacteristic
+  roles:
+    source: benchmarkedValue
+    target: benchmark
+  multiplicity:
+    targets_per_source: 0..*
+    sources_per_target: 0..1
+  composite: true
+  section: 7.2.1.3.4
+- name: ValueAggregation
+  source: ValueElement
+  target: ValueElement
+  roles:
+    source: aggregatedTo
+    target: aggregatedFrom
+  multiplicity:
+    targets_per_source: 0..*
+    sources_per_target: 0..*
+  section: 7.2.1.3.4
+- name: CapabilityHeatIndex
+  source: CapabilityOffer
+  target: MeasuredCharacteristic
+  roles:
+    source: capability
+    target: heatIndex
+  multiplicity:
+    targets_per_source: 0..1
+    sources_per_target: '1'
+  composite: true
+  section: 7.2.2.3.3
+- name: ScenarioHeatThreshold
+  source: Scenario
+  target: MeasuredCharacteristic
+  roles:
+    source: context
+    target: heatThreshold
+  multiplicity:
+    targets_per_source: 0..1
+    sources_per_target: 0..1
+  composite: true
+  section: 7.2.3.2.2
+- name: ElementAnnotation
+  source: VdmlElement
+  target: Annotation
+  roles:
+    source: element
+    target: annotation
+  multiplicity:
+    targets_per_source: 0..*
+    sources_per_target: '1'
+  composite: true
+  section: 7.2.4.1.1
+- name: PortHandler
+  source: Role
+  target: Port
+  roles:
+    source: handler
+    target: port
+  multiplicity:
+    targets_per_source: 0..*
+    sources_per_target: 0..1
+  section: 7.2.1.1.5
+- name: LibraryBusinessItemLibraryElement
+  source: BusinessItemLibrary
+  target: BusinessItemLibraryElement
+  roles:
+    source: library
+    target: businessItemLibraryElement
+  multiplicity:
+    targets_per_source: 0..*
+    sources_per_target: '1'
+  composite: true
+  section: 7.2.5.1.1
+- name: CapabilityMethodCapability
+  source: CapabilityMethod
+  target: Capability
+  roles:
+    source: method
+    target: capability
+  multiplicity:
+    targets_per_source: 0..1
+    sources_per_target: 0..*
+  section: 7.2.2.4.1
+- name: RoleResourceAssignment
+  source: Assignment
+  target: InputPort
+  roles:
+    source: assignment
+    target: roleResource
+  multiplicity:
+    targets_per_source: 0..*
+    sources_per_target: 0..*
+  section: 7.2.1.2.3
+- name: LibraryRoleDefinition
+  source: RoleLibrary
+  target: RoleDefinition
+  roles:
+    source: library
+    target: roleDefinition
+  multiplicity:
+    targets_per_source: 0..*
+    sources_per_target: '1'
+  composite: true
+  section: 7.2.5.5.1
+- name: LibraryRoleCategory
+  source: RoleLibrary
+  target: RoleCategory
+  roles:
+    source: library
+    target: roleCategory
+  multiplicity:
+    targets_per_source: 0..*
+    sources_per_target: '1'
+  composite: true
+  section: 7.2.5.5.1
+- name: CategoryRoleCategory
+  source: RoleDefinition
+  target: RoleCategory
+  roles:
+    source: categoryRole
+    target: category
+  multiplicity:
+    targets_per_source: 0..*
+    sources_per_target: 0..*
+  section: 7.2.5.5.2
+- name: RoleCharacteristicDefinition
+  source: RoleDefinition
+  target: Characteristic
+  roles:
+    source: roleDefinition
+    target: characteristicDefinition
+  multiplicity:
+    targets_per_source: 0..*
+    sources_per_target: 0..*
+  section: 7.2.5.5.2
+- name: ModelRoleLibrary
+  source: ValueDeliveryModel
+  target: RoleLibrary
+  roles:
+    source: containingModel
+    target: roleLibrary
+  multiplicity:
+    targets_per_source: 0..*
+    sources_per_target: '1'
+  composite: true
+  section: 7.2.3.1.1
+- name: RoleRoleDefinition
+  source: Role
+  target: RoleDefinition
+  roles:
+    source: role
+    target: roleDefinition
+  multiplicity:
+    targets_per_source: 0..1
+    sources_per_target: 0..*
+  section: 7.2.1.1.5
+- name: ScenarioActor
+  source: Scenario
+  target: Actor
+  roles:
+    source: scenario
+    target: contextActor
+  multiplicity:
+    targets_per_source: 0..*
+    sources_per_target: 0..*
+  section: 7.2.3.2.2
+- name: PropositionOverallSatisfaction
+  source: ValueProposition
+  target: ValuePropositionComponent
+  roles:
+    source: proposition
+    target: overallSatisfaction
+  multiplicity:
+    targets_per_source: 0..1
+    sources_per_target: '1'
+  section: 7.2.1.3.1
+diagram_types:
+  Role Collaboration:
+    defined_by: 8.2, pp. 83-85
+    purpose: Shows which Roles of one Collaboration exchange deliverables, with the activity detail left out.
+    admits:
+      concepts:
+      - Role
+      - Party
+      - Member
+      - Position
+      - Performer
+      relationships:
+      - DeliverableFlow
+    notation:
+    - 'Role: oval. An expand button on the oval means the Role is assigned to a Collaboration, which may contain its own Roles; no expand button means it is unassigned or assigned to an Actor or another Role.'
+    - 'DeliverableFlow between two Roles: a labeled connector. Solid means tangible (isTangible true); dashed means intangible. The label is the name of the deliverable (the BusinessItem). A sequence number may follow a double colon, as a convenience of the diagram, not of the model.'
+    - A DeliverableFlow is drawn only when it carries a deliverable between different Roles.
+    conventions: not-measured
+  ValueProposition Exchange:
+    defined_by: 8.3, pp. 85-87
+    purpose: 'A more abstract view than Role Collaboration: which Role provides and which Role receives which ValueProposition.'
+    admits:
+      concepts:
+      - ValueProposition
+      - Role
+      relationships:
+      - ProviderProvidedProposition
+      - RecipientReceivedProposition
+    notation:
+    - 'ValueProposition: a square, with its name outside the square.'
+    - A connector joins a Role to a ValueProposition it provides (provider and providedProposition ends) or receives (recipient and receivedProposition ends).
+    - One Role may provide and receive several ValuePropositions.
+    conventions: not-measured
+  Activity Network:
+    defined_by: 8.4, pp. 87-94
+    purpose: Shows the Activities of each Role, the Stores and Pools they draw from and fill, and the DeliverableFlows between them, with ports, value contributions and delegation.
+    admits:
+      concepts:
+      - Role
+      - Activity
+      - Store
+      - Pool
+      - InputPort
+      - OutputPort
+      - ValueAdd
+      - BusinessItem
+      - Collaboration
+      - Expression
+      relationships:
+      - DeliverableFlow
+      - CollaborationInternalPortDelegation
+      - InputDelegation
+      - OutputDelegation
+    notation:
+    - 'Role: a swim-lane.'
+    - 'Activity: a rectangle with rounded corners; an expand button means the Activity delegates its work to a Collaboration.'
+    - 'Store: a pyramid pointing down, name outside. Pool: the same with a re-use marker.'
+    - 'DeliverableFlow: a solid connector labeled with the deliverable''s name. This diagram shows no tangible/intangible distinction and no sequence number.'
+    - 'Internal port delegation: a dotted connector labeled with the deliverable''s name.'
+    - 'Port on an Activity or Store boundary: a small square. Open is the base. A splitter marks a condition or planningPercentage. Filled marks an output that carries a ValueAdd. A thick boundary marks an InputPort that receives the roleResource for the performing Role.'
+    - 'Collaboration port: a free-floating pyramid in the Collaboration''s own diagram, open for input or output, filled for an output carrying a ValueAdd.'
+    - Text beside a Collaboration port names the BusinessItemLibraryElement defined for it, or in a DelegationContext the BusinessItem of the connected flow.
+    conventions: not-measured
+  Collaboration Structure:
+    defined_by: 8.5, pp. 94-97
+    purpose: Shows Collaborations, the Roles they contain, and what fills those Roles. Can show an organization structure but is not limited to one.
+    admits:
+      concepts:
+      - Collaboration
+      - BusinessNetwork
+      - OrgUnit
+      - CapabilityMethod
+      - Community
+      - Role
+      - Position
+      - Party
+      - Member
+      - Performer
+      - Actor
+      - Person
+      relationships:
+      - CollaborationRole
+      - RoleAssignment
+      - ParticipantAssignment
+    notation:
+    - 'Collaboration: a square-cornered rectangle. BusinessNetwork, OrgUnit, CapabilityMethod and Community each use that rectangle with their own marker.'
+    - 'Role not assigned to a Collaboration: an oval.'
+    - 'Role containment: a solid connector from the Collaboration to the Role. When the contained Role is assigned to another Collaboration, the connector ends at a small oval on the boundary of that Participant, with the Role name outside.'
+    - 'Role assignment (to a Role or an Actor): a dashed, directed connector. An Actor is shown by its name only.'
+    conventions: not-measured
+  CapabilityLibrary:
+    defined_by: 8.6, pp. 97-99
+    purpose: 'A capability map: the capability hierarchy from a CapabilityLibrary.'
+    admits:
+      concepts:
+      - Capability
+      - CapabilityDefinition
+      - CapabilityCategory
+      relationships:
+      - ParentChildCapability
+    notation:
+    - 'Capability: a square-cornered rectangle.'
+    - 'Parent and child: the child is drawn inside the parent''s boundary. An expand button with a plus shows a collapsed parent; a minus shows an expanded one. Children may instead be shown on a separate CapabilityLibrary diagram.'
+    conventions: not-measured
+  Capability Heatmap:
+    defined_by: 8.7, p. 99
+    purpose: The CapabilityLibrary notation refined to show which capabilities need improvement attention.
+    admits:
+      concepts:
+      - Capability
+      - CapabilityOffer
+      relationships:
+      - ParentChildCapability
+      - CapabilityOfferCapability
+    notation:
+    - Same shapes as CapabilityLibrary.
+    - A thick boundary on a Capability means at least one corresponding CapabilityOffer has a heatIndex at or above the Scenario's heatThreshold. A normal boundary means the heat index is below it.
+    conventions: not-measured
+  Capability Management:
+    defined_by: 8.8, pp. 100-103
+    purpose: Shows what each OrgUnit offers and what supports each offer (methods, stores, pools, positions).
+    admits:
+      concepts:
+      - CapabilityOffer
+      - OrgUnit
+      - CapabilityMethod
+      - Store
+      - Pool
+      - Position
+      relationships:
+      - CapabilityProviderCapabilityOffer
+      - SupportedCapabilityMethod
+      - CapabilityResource
+      - MethodOwnerMethod
+      - StoreOwnerStore
+      - ActivityAppliedCapabilityOffer
+    notation:
+    - 'CapabilityOffer: a stretched hexagon with the name inside.'
+    - 'OrgUnit: a square-cornered rectangle with its name on the boundary; its CapabilityOffers sit on the boundary too. An expand button (plus when collapsed) opens it.'
+    - 'Expanded OrgUnit: the CapabilityMethods and Stores or Pools that support its offers are inside the boundary, with Position Roles assigned to sub-OrgUnits.'
+    - 'Offer to supporting CapabilityMethod, Store or Pool: a dashed connector.'
+    - 'A CapabilityMethod that depends on other CapabilityOffers (through Activities that apply them): an optional dotted connector.'
+    - Methods and resources that belong to a different OrgUnit may be shown with that OrgUnit, or without it.
+    conventions: not-measured
+  Measurement Dependency:
+    defined_by: 8.9, pp. 104-105
+    purpose: Shows how measurements influence each other within one AnalysisContext or Scenario, to find the root causes of weak value contribution or satisfaction.
+    admits:
+      concepts:
+      - MeasuredCharacteristic
+      - MeasurementRelationship
+      relationships:
+      - MeasurementRelationship
+    notation:
+    - 'MeasuredCharacteristic: a thin-bordered rectangle.'
+    - 'MeasurementRelationship (an SMM class): a thin solid connector. A marker with a plus means positive influence (the other measurement rises when the base rises); a minus means negative influence (it falls).'
+    conventions: not-measured
+constraints:
+- id: VDML-CONT-001
+  statement: The Role that performs an Activity must be contained in the same Collaboration that contains the Activity.
+  strength: must
+  section: 7.2.1.2.1, p. 34
+  checkable: static
+- id: VDML-CONT-002
+  statement: Every Activity performed by a Role must be contained in the same Collaboration that contains the Role.
+  strength: must
+  section: 7.2.1.1.5, p. 31
+  checkable: static
+- id: VDML-CONT-003
+  statement: If an Assignment of a Role to a participant is contained in a Collaboration, that Collaboration must also contain the assigned Role.
+  strength: must
+  section: 7.2.1.1.5, p. 31
+  checkable: static
+- id: VDML-CONT-004
+  statement: A PortDelegation owned by a Collaboration must delegate a Port of that Collaboration to a Port of an Activity contained in that Collaboration.
+  strength: must
+  section: 7.2.1.1.3, p. 30
+  checkable: static
+- id: VDML-CONT-005
+  statement: An InputPort that provides the roleResource to which a Role is assigned must be contained by an Activity performed by that Role.
+  strength: must
+  section: 7.2.1.1.5, p. 32
+  checkable: static
+- id: VDML-CONT-006
+  statement: The Ports a Role refers to as ports it handles must be Ports of Stores.
+  strength: must
+  section: 7.2.1.1.5, p. 32
+  checkable: static
+- id: VDML-CONT-007
+  statement: A DeliverableFlow must not connect Ports of Activities that are contained in different Collaborations.
+  strength: must
+  section: 7.2.1.2.4, p. 39
+  checkable: static
+- id: VDML-CONT-008
+  statement: Only an OrgUnit owns Stores and Pools and provides CapabilityOffers. No other kind of Collaboration owns resources; a CapabilityMethod receives its resources from other sources while it performs its Activities.
+  strength: must
+  section: 7.1.7, p. 16; 7.2.2.4.1, p. 51
+  checkable: static
+- id: VDML-ROLE-001
+  statement: An Assignment must not assign a Role to both a Participant and a roleResource.
+  strength: must
+  section: 7.2.1.2.3, p. 37
+  checkable: static
+- id: VDML-ROLE-002
+  statement: A Role must not be assigned to more than one Participant that is a Collaboration, unless the additional Assignments are context-based (contained by a DelegationContext).
+  strength: must
+  section: 7.2.1.2.3, p. 37
+  checkable: static
+- id: VDML-ROLE-003
+  statement: A Role must not be assigned to itself, directly or through other Assignments.
+  strength: must
+  section: 7.2.1.2.3, p. 37
+  checkable: static
+- id: VDML-ROLE-004
+  statement: A Role must not be assigned to the Collaboration that contains it.
+  strength: must
+  section: 7.2.1.2.3, p. 38
+  checkable: static
+- id: VDML-ROLE-005
+  statement: A BusinessNetwork or a CapabilityMethod must not be a Participant in a Position (a Role in an OrgUnit) or in a Member (a Role in a Community).
+  strength: must
+  section: 7.2.1.2.3, p. 38
+  checkable: static
+- id: VDML-ROLE-006
+  statement: A BusinessNetwork must not be a Participant in a Performer (a Role in a CapabilityMethod).
+  strength: must
+  section: 7.2.1.2.3, p. 38
+  checkable: static
+- id: VDML-ROLE-007
+  statement: A BusinessNetwork has only Party roles (it may also contain nested BusinessNetworks).
+  strength: must
+  section: 7.2.2.1.1, p. 47
+  checkable: static
+- id: VDML-ROLE-008
+  statement: A Community has only Member roles.
+  strength: must
+  section: 7.2.2.2, p. 47
+  checkable: static
+- id: VDML-ROLE-009
+  statement: The roles of an OrgUnit are Positions, and the roles of a CapabilityMethod are Performers. The standard says an OrgUnit has Position roles and a CapabilityMethod has Performer roles but does not state that no other kind may occur.
+  strength: should
+  section: 7.1.7, p. 16; 7.2.2.3, p. 49; 7.2.2.4.1, p. 52
+  checkable: static
+- id: VDML-ROLE-010
+  statement: A Position associated with a Pool must not be assigned, directly or through other Roles, to a Collaboration.
+  strength: must
+  section: 7.2.1.2.7, p. 42
+  checkable: static
+- id: VDML-ROLE-011
+  statement: When an Activity has more than one InputPort that receives the roleResource for its performing Role, either the Activity has a ResourceUse relating to that set of InputPorts (making them alternatives), or every DelegationContext in which the containing Collaboration is used gives a contextBasedAssignment that assigns the Role to the resource received on one of them.
+  strength: must
+  section: 7.2.1.2.1, p. 35
+  checkable: partial
+- id: VDML-ROLE-012
+  statement: Individual assignments of people to roles are not required in a VDML model; they would be modeled to support simulation.
+  strength: note
+  section: 7.1.7, p. 16
+  checkable: none
+- id: VDML-FLOW-001
+  statement: A DeliverableFlow must connect Ports of two Activities, or a Port of an Activity with a Port of a Store. A flow between two Stores is not allowed.
+  strength: must
+  section: 7.2.1.2.4, p. 39; 7.1.9, p. 20
+  checkable: static
+- id: VDML-FLOW-002
+  statement: A DeliverableFlow that connects to a Port of a Store must not have a duration.
+  strength: must
+  section: 7.2.1.2.4, p. 39
+  checkable: static
+- id: VDML-FLOW-003
+  statement: The BusinessItem that a Store receives or provides through DeliverableFlows must be the same BusinessItem the Store holds as its resource.
+  strength: must
+  section: 7.2.1.2.6, p. 41
+  checkable: static
+- id: VDML-FLOW-004
+  statement: A PortContainer other than an Activity or a Collaboration that is a CapabilityMethod must not contain a Port with isIntermediate false. (Stores and Pools, and Collaborations that are not CapabilityMethods, use only intermediate ports.)
+  strength: must
+  section: 7.2.4.3.1, p. 64
+  checkable: static
+- id: VDML-FLOW-005
+  statement: A Port of a Collaboration must not have a planningPercentage.
+  strength: must
+  section: 7.2.4.3.1, p. 64
+  checkable: static
+- id: VDML-FLOW-006
+  statement: A Port of a Collaboration must not have a condition.
+  strength: must
+  section: 7.2.4.3.1, p. 64
+  checkable: static
+- id: VDML-FLOW-007
+  statement: A Port of a Collaboration must not have a batchSize.
+  strength: must
+  section: 7.2.4.3.1, p. 64
+  checkable: static
+- id: VDML-FLOW-008
+  statement: A Port of a Collaboration or of a Store must not have an offset.
+  strength: must
+  section: 7.2.4.3.1, p. 64
+  checkable: static
+- id: VDML-FLOW-009
+  statement: A Port that has an offset must be an intermediate Port (isIntermediate true).
+  strength: must
+  section: 7.2.4.3.1, p. 64
+  checkable: static
+- id: VDML-FLOW-010
+  statement: An intermediate Port of an Activity must have an offset.
+  strength: must
+  section: 7.2.4.3.1, p. 64
+  checkable: static
+- id: VDML-FLOW-011
+  statement: An InputDelegation must map an InputPort of an Activity to an InputPort of a Collaboration, or an InputPort of a Collaboration to an InputPort of an Activity contained in that Collaboration.
+  strength: must
+  section: 7.2.4.4.2, p. 67
+  checkable: static
+- id: VDML-FLOW-012
+  statement: An OutputDelegation must map an OutputPort of an Activity to an OutputPort of a Collaboration, or an OutputPort of a Collaboration to an OutputPort of an Activity contained in that Collaboration.
+  strength: must
+  section: 7.2.4.4.3, p. 67
+  checkable: static
+- id: VDML-FLOW-013
+  statement: An InputPort of an Activity contained in a Collaboration must not be mapped by InputDelegations to more than one InputPort of that containing Collaboration.
+  strength: must
+  section: 7.2.4.4.2, p. 67
+  checkable: static
+- id: VDML-FLOW-014
+  statement: An OutputPort of an Activity contained in a Collaboration must not be mapped by OutputDelegations to more than one OutputPort of that containing Collaboration.
+  strength: must
+  section: 7.2.4.4.3, p. 67
+  checkable: static
+- id: VDML-FLOW-015
+  statement: A Port that is not an InputPort of an Activity, and is not the recipient of a non-fungible BusinessItem from a Store, must not have a correlationExpression.
+  strength: must
+  section: 7.2.4.3.3, p. 65
+  checkable: static
+- id: VDML-FLOW-016
+  statement: A ResourceUse of an Activity must relate only to Ports of that Activity.
+  strength: must
+  section: 7.2.1.2.1, p. 34
+  checkable: static
+- id: VDML-FLOW-017
+  statement: A ResourceUse must not be defined for resources that are not received from Stores.
+  strength: must
+  section: 7.2.1.2.2, p. 36
+  checkable: static
+- id: VDML-FLOW-018
+  statement: An Activity must not have a recurrenceInterval when it receives inputs from anything other than Stores.
+  strength: must
+  section: 7.2.1.2.1, p. 34
+  checkable: static
+- id: VDML-FLOW-019
+  statement: A ResourceUse must not have a duration when its resource is consumed (resourceIsConsumed true), unless the ResourceUse also names its deliverable.
+  strength: must
+  section: 7.2.1.2.2, p. 36
+  checkable: static
+- id: VDML-FLOW-020
+  statement: A flow from one Activity to another means the receiving Activity needs that BusinessItem as input. Flows in an activity network always point toward completion of the result.
+  strength: note
+  section: 7.1.9, p. 20
+  checkable: none
+- id: VDML-FLOW-021
+  statement: 'Model only the resources that matter to a high-level analysis: parts of high value and machines that must be scheduled. Facilities, small parts, supplies and utilities are usually folded into capability overhead or activity cost.'
+  strength: note
+  section: 7.1.11, p. 21
+  checkable: none
+- id: VDML-MEAS-001
+  statement: The duration of each ResourceUse of an Activity must not be longer than the duration of the Activity.
+  strength: must
+  section: 7.2.1.2.1, p. 34
+  checkable: partial
+- id: VDML-MEAS-002
+  statement: The offset of a Port of an Activity must not be longer than the duration of the Activity.
+  strength: must
+  section: 7.2.1.2.1, p. 34
+  checkable: partial
+- id: VDML-MEAS-003
+  statement: For each Port of an Activity, its offset plus the longest duration of a ResourceUse that relates to it must not be longer than the duration of the Activity.
+  strength: must
+  section: 7.2.1.2.1, p. 34
+  checkable: partial
+- id: VDML-MEAS-004
+  statement: The unit of the Measure behind a planningPercentage (on a ResourceUse or a Port) must be percent.
+  strength: must
+  section: 7.2.1.2.2, p. 36; 7.2.4.3.1, p. 64
+  checkable: partial
+- id: VDML-MEAS-005
+  statement: When a MeasuredCharacteristic has more than one Measurement, each Measurement must be in a separate Observation tied to a separate AnalysisContext.
+  strength: must
+  section: 7.2.4.1.5, p. 61
+  checkable: partial
+- id: VDML-MEAS-006
+  statement: The inventoryLevel of a Pool must not be larger than the poolSize of that Pool.
+  strength: must
+  section: 7.2.1.2.7, p. 42
+  checkable: partial
+- id: VDML-MEAS-007
+  statement: Measurements attach to VDML elements only through MeasuredCharacteristics; VDML narrows the SMM link between element and measurement to MeasuredCharacteristic.
+  strength: must
+  section: 7.2.4.1, p. 59
+  checkable: static
+- id: VDML-MEAS-008
+  statement: Measurements are statistical figures for a typical unit of production over a period (averages, possibly with variance), not measurements of one specific unit. Different units of production in related collaborations must be reconciled when combined.
+  strength: note
+  section: 7.1.9, p. 20; 7.1.12, p. 22
+  checkable: none
+- id: VDML-MEAS-009
+  statement: VDML defines no specific measures. Industry or professional measure libraries (SMM) are expected to supply them.
+  strength: note
+  section: 1.1, p. 3; 7.1.12, p. 22
+  checkable: none
+- id: VDML-VALUE-001
+  statement: The overallSatisfaction of a ValueProposition must be one of that ValueProposition's own components.
+  strength: must
+  section: 7.2.1.3.1, p. 43
+  checkable: static
+- id: VDML-VALUE-002
+  statement: The overallSatisfaction component of a ValueProposition must not itself have a percentageWeight.
+  strength: must
+  section: 7.2.1.3.1, p. 43
+  checkable: static
+- id: VDML-VALUE-003
+  statement: The provider of a ValueProposition must not be its recipient.
+  strength: must
+  section: 7.2.1.3.1, p. 43
+  checkable: static
+- id: VDML-VALUE-004
+  statement: The unit of the Measure behind the percentageWeight of a ValuePropositionComponent must be percent.
+  strength: must
+  section: 7.2.1.3.2, p. 44
+  checkable: partial
+- id: VDML-VALUE-005
+  statement: When a ValueElement has no valueDefinition, its isAtomic must be empty.
+  strength: must
+  section: 7.2.1.3.4, p. 46
+  checkable: static
+- id: VDML-VALUE-006
+  statement: The valueDefinition of an atomic ValueElement (isAtomic true) must differ from the valueDefinition of each ValueElement it is aggregatedFrom.
+  strength: must
+  section: 7.2.1.3.4, p. 46
+  checkable: static
+- id: VDML-VALUE-007
+  statement: At least one of the aggregatedFrom ValueElements, among those that have a valueDefinition, of a non-atomic ValueElement (isAtomic false) must refer to the same ValueDefinition as that ValueElement.
+  strength: must
+  section: 7.2.1.3.4, p. 46
+  checkable: static
+- id: VDML-VALUE-008
+  statement: A ValueAdd belongs to an OutputPort. A ValueProposition represents the recipient's view and may be the modeling business's estimate of that view. A contribution may be positive or negative.
+  strength: note
+  section: 7.1.2, p. 13; 7.2.1.3, p. 42
+  checkable: none
+- id: VDML-CAP-001
+  statement: When a CapabilityMethod supports more than one CapabilityOffer, possibly provided by different OrgUnits, those offers must be for the same Capability.
+  strength: must
+  section: 7.2.2.4.1, p. 52
+  checkable: static
+- id: VDML-CAP-002
+  statement: When a CapabilityMethod supports a CapabilityOffer and both refer to a Capability, they must refer to the same Capability.
+  strength: must
+  section: 7.2.2.4.1, p. 52
+  checkable: static
+- id: VDML-CAP-003
+  statement: A CapabilityDependency with an external source (isFromExternalSource true) must not have a source CapabilityDefinition connected.
+  strength: must
+  section: 7.2.5.3.5, p. 77
+  checkable: static
+- id: VDML-CAP-004
+  statement: A CapabilityDependency with an external target (isForExternalTarget true) must not have a target CapabilityDefinition connected.
+  strength: must
+  section: 7.2.5.3.5, p. 77
+  checkable: static
+- id: VDML-CAP-005
+  statement: The CapabilityOffer an Activity applies (appliedCapabilityOffer) should match the Capability the Activity requires (capabilityRequirement).
+  strength: should
+  section: 7.2.1.2.1, p. 34
+  checkable: static
+- id: VDML-CAP-006
+  statement: An Activity should not delegate directly to a CapabilityMethod. It engages the method through its OrgUnit, using a CapabilityOffer.
+  strength: should
+  section: Annex A, Capability Method, p. 109
+  checkable: partial
+- id: VDML-CAP-007
+  statement: When a CapabilityOffer has no ReleaseControl, the assumed work-release strategy is first come, first served.
+  strength: note
+  section: 7.2.2.3.4, p. 50
+  checkable: none
+- id: VDML-CAP-008
+  statement: When an OrgUnit fills the Role that performs several Activities, the OrgUnit must have CapabilityOffers that support the Capability each of those Activities requires.
+  strength: must
+  section: 7.1.8, p. 19
+  checkable: partial
+- id: VDML-CAP-009
+  statement: When a Role performs several Activities that require different Capabilities, the Participant that fills the Role must be able to provide each of those Capabilities.
+  strength: must
+  section: 7.1.9, p. 19
+  checkable: partial
+- id: VDML-CTX-001
+  statement: A ValueDeliveryModel must not have more than one common Scenario (isCommon true).
+  strength: must
+  section: 7.2.3.1.1, p. 54
+  checkable: static
+- id: VDML-CTX-002
+  statement: The common Scenario must not contain DelegationContexts and must not have contextStores, contextCollaborations or releaseControls.
+  strength: must
+  section: 7.2.3.2.2, p. 58
+  checkable: static
+- id: VDML-CTX-003
+  statement: A Scenario must not have more than one ReleaseControl for the same CapabilityOffer.
+  strength: must
+  section: 7.2.3.2.2, p. 58
+  checkable: static
+- id: VDML-CTX-004
+  statement: The DelegationContext in which an Activity delegates its work to a Collaboration must be owned by a DelegationContext in which the Activity's own Collaboration is used, or by a Scenario when that Collaboration is directly related to the Scenario.
+  strength: must
+  section: 7.2.3.2.1, p. 57
+  checkable: static
+- id: VDML-CTX-005
+  statement: When an Activity delegates its work in more than one DelegationContext, those DelegationContexts must be owned by different AnalysisContexts in which the Activity's own Collaboration is used.
+  strength: must
+  section: 7.2.3.2.1, p. 57
+  checkable: static
+- id: VDML-CTX-006
+  statement: A PortDelegation held by a DelegationContext must map Ports of that context's delegatedActivity to Ports of its contextCollaboration.
+  strength: must
+  section: 7.2.3.2.3, p. 58
+  checkable: static
+- id: VDML-LIB-001
+  statement: If a BusinessItemDefinition belongs to a BusinessItemCategory, the category must be contained in the same BusinessItemLibrary as the definition.
+  strength: must
+  section: 7.2.5.1.2, p. 69
+  checkable: static
+- id: VDML-LIB-002
+  statement: A BusinessItemCategory must be contained in the same BusinessItemLibrary as its parent and child categories.
+  strength: must
+  section: 7.2.5.1.3, p. 70
+  checkable: static
+- id: VDML-LIB-003
+  statement: If a ValueDefinition belongs to a ValueCategory, the category must belong to the same ValueLibrary as the definition.
+  strength: must
+  section: 7.2.5.2.2, p. 71
+  checkable: static
+- id: VDML-LIB-004
+  statement: A ValueCategory must be contained in the same ValueLibrary as its parent and child categories.
+  strength: must
+  section: 7.2.5.2.3, p. 72
+  checkable: static
+- id: VDML-LIB-005
+  statement: If a PracticeDefinition belongs to a PracticeCategory, the category must belong to the same PracticeLibrary as the definition.
+  strength: must
+  section: 7.2.5.4.2, p. 78
+  checkable: static
+- id: VDML-LIB-006
+  statement: A PracticeCategory must be contained in the same PracticeLibrary as its parent and child categories.
+  strength: must
+  section: 7.2.5.4.3, p. 79
+  checkable: static
+- id: VDML-LIB-007
+  statement: If a RoleDefinition belongs to a RoleCategory, the category must belong to the same RoleLibrary as the definition.
+  strength: must
+  section: 7.2.5.5.2, p. 80
+  checkable: static
+- id: VDML-LIB-008
+  statement: A RoleCategory must be contained in the same RoleLibrary as its parent and child categories.
+  strength: must
+  section: 7.2.5.5.3, p. 81
+  checkable: static
+- id: VDML-LIB-009
+  statement: Libraries keep names and definitions consistent across a model. Elements that refer to the same definition are treated as similar. Shared industry libraries with local extensions are expected.
+  strength: note
+  section: 7.2.5, p. 67
+  checkable: none
+- id: VDML-CARD-001
+  statement: 'Each contained element has exactly one container: a Role, Activity, DeliverableFlow, BusinessItem is in one Collaboration; a Position in one OrgUnit; a Party in one BusinessNetwork; a Member in one Community; a Performer in one CapabilityMethod; a Port in one PortContainer; a library entry in one library; a ValueAdd in one OutputPort; a ResourceUse in one Activity; a ValueProposition component in one ValueProposition; every library and Actor in one ValueDeliveryModel.'
+  strength: must
+  section: 7.2.1 to 7.2.5 (composition ends); machine-readable model
+  checkable: static
+- id: VDML-CARD-002
+  statement: An Activity and a Store each have exactly one duration, and a ResourceUse has exactly one quantity.
+  strength: must
+  section: 7.2.1.2.1, p. 34; 7.2.1.2.7, p. 41; 7.2.1.2.2, p. 35
+  checkable: static
+- id: VDML-CARD-003
+  statement: A DeliverableFlow has exactly one deliverable BusinessItem, one provider OutputPort and one recipient InputPort. An OutputPort provides at most one flow and an InputPort receives at most one flow.
+  strength: must
+  section: 7.2.1.2.4, p. 38; 7.2.4.3.2, p. 64; 7.2.4.3.3, p. 65
+  checkable: static
+- id: VDML-CARD-004
+  statement: An Assignment assigns exactly one Role and names at most one Participant.
+  strength: must
+  section: 7.2.1.2.3, p. 37
+  checkable: static
+- id: VDML-CARD-005
+  statement: A Store holds exactly one BusinessItem as its resource and has exactly one owning OrgUnit.
+  strength: must
+  section: 7.2.1.2.7, p. 41
+  checkable: static
+- id: VDML-CARD-006
+  statement: A CapabilityOffer has exactly one providing OrgUnit and a CapabilityMethod has exactly one owning OrgUnit.
+  strength: must
+  section: 7.2.2.3.3, p. 50; 7.2.2.4.1, p. 52
+  checkable: static
+- id: VDML-CARD-007
+  statement: A DelegationContext has exactly one parentContext, one contextCollaboration and one delegatedActivity.
+  strength: must
+  section: 7.2.3.2.3, p. 58
+  checkable: static
+- id: VDML-CARD-008
+  statement: A PortDelegation (InputDelegation or OutputDelegation) has exactly one source port and one target port.
+  strength: must
+  section: 7.2.4.4.2, p. 67; 7.2.4.4.3, p. 67
+  checkable: static
+- id: VDML-CARD-009
+  statement: A CapabilityDependency has exactly one deliverableDefinition (a BusinessItemDefinition).
+  strength: must
+  section: 7.2.5.3.5, p. 76
+  checkable: static
+- id: VDML-CARD-010
+  statement: A ValueDeliveryModel contains at least one Scenario.
+  strength: must
+  section: 7.2.3.1.1, p. 54
+  checkable: static
+- id: VDML-CARD-011
+  statement: 'These properties are required: the name and description of every element; the type of a Scenario; the strategy of a ReleaseControl; the tag and value of an Attribute; the text of an Annotation; the measuredCharacteristic of an Operand. The text of the standard does not state a multiplicity for name and description; the machine-readable model makes both required.'
+  strength: must
+  section: 7.2.4.1; machine-readable model
+  checkable: static
+- id: VDML-CARD-012
+  statement: An Activity has at most one performing Role, at most one capabilityRequirement and at most one appliedCapabilityOffer. A Port has at most one handler Role. A ValueProposition has at most one provider and one recipient. A Role has at most one RoleDefinition. A BusinessItem has at most one BusinessItemDefinition.
+  strength: must
+  section: 7.2.1.2.1, p. 34; 7.2.4.3.1, p. 64; 7.2.1.3.1, p. 43; 7.2.1.1.5, p. 31; 7.2.1.2.5, p. 40
+  checkable: static
+- id: VDML-DIAG-001
+  statement: A Role Collaboration diagram must not show, as a connector, a DeliverableFlow that connects Activities performed by the same Role.
+  strength: must
+  section: 8.2, p. 85
+  checkable: static
+- id: VDML-DIAG-002
+  statement: A Role Collaboration diagram must not show, as a connector, a DeliverableFlow between an Activity performed by a Role and a Store port for which the same Role is the handler. Only transfers between different Roles are drawn.
+  strength: must
+  section: 8.2, p. 85
+  checkable: static
+- id: VDML-DIAG-003
+  statement: A Capability Management diagram should not show Positions that are associated with Pools inside the boundary of the OrgUnit; there may be many of them.
+  strength: should
+  section: 8.8, p. 100
+  checkable: static
+- id: VDML-DIAG-004
+  statement: A Capability Management diagram may show Positions that are not yet assigned to Participants inside the OrgUnit boundary.
+  strength: note
+  section: 8.8, p. 100
+  checkable: none
+- id: VDML-DIAG-005
+  statement: The Role Collaboration diagram and the Activity Network diagram can be synchronized views of the same Collaboration.
+  strength: note
+  section: 8.4, p. 94
+  checkable: none
+- id: VDML-DIAG-006
+  statement: Colors in the standard's example diagrams carry no meaning. The notation is limited and normative, and tabular displays are expected to complement the graphical ones.
+  strength: note
+  section: 8.1, p. 83; 1.1, p. 3
+  checkable: none
+- id: VDML-CONF-001
+  statement: Full VDML conformance means supporting the normative graphical notation and importing and exporting models that follow the VDML metamodel and SMM.
+  strength: note
+  section: 2.1, p. 3
+  checkable: none
+- id: VDML-CONF-002
+  statement: VDML Metamodel conformance means importing and exporting XMI consistent with the VDML metamodel and SMM without implementing the notation. It is a subset of full conformance.
+  strength: note
+  section: 2.2, p. 4
+  checkable: none
+- id: VDML-CONF-003
+  statement: VDML Collaboration Modeling conformance covers 22 classes (ValueDeliveryModel, VdmlElement, MeasurableElement, Attribute, Annotation, MeasuredCharacteristic, PortContainer, Collaboration, Role, RoleDefinition, RoleLibrary, RoleCategory, Participant, Actor, Person, Assignment, OrgUnit, Position, Community, Member, BusinessNetwork, Party). Associations to other classes allow multiplicity zero and may be ignored.
+  strength: note
+  section: 2.3, pp. 4-5
+  checkable: none
+- id: VDML-CONF-004
+  statement: Simulation is not part of VDML 1.0. Optional simulation extensions (CalendarService, Pool and BusinessItem attributes, ReleaseControl, offsets, recurrence interval) are normative but not required for compliance.
+  strength: note
+  section: 7.1, p. 12
+  checkable: none
+- id: VDML-CONF-005
+  statement: VDML models the work of transformation and compares current and future state as scenarios, but it cannot model the transition itself.
+  strength: note
+  section: 7.1.14, p. 26
+  checkable: none
+- id: VDML-CONF-006
+  statement: When models are integrated, each library (capability, business item, value, role) of the result must be a superset of the corresponding libraries of the models being integrated, the organization structure must be reconciled so overlapping OrgUnits are merged, and delegated flows, business items and value adds must be reconciled.
+  strength: note
+  section: 7.1.15, p. 27
+  checkable: none
+notes: 'VDML 1.0, October 2015. VDML 1.1 (March 2018) exists and is not covered. The standard defines a limited normative graphical notation of eight diagram types (clause 8) and no viewpoint catalogue as such; Annex B (informative) maps VDML to other techniques. Measurement is delegated to SMM: VDML elements carry MeasuredCharacteristics, SMM supplies measures, characteristics, measurements and observations. Multiplicity keys: ''*'' means zero or more.'
+
+layout:
+  basis: Our conventions, not this standard's. Sizes and spacing come from the shared layout standard; this block says only which size class each concept takes and how each diagram type is arranged.
+  element_types:   # concept -> size class, for every concept the notation draws as a symbol
+    # box: ovals, rectangles, rounded rectangles and the stretched hexagon that hold their name
+    Activity: box
+    BusinessNetwork: box
+    Capability: box
+    CapabilityCategory: box
+    CapabilityDefinition: box
+    CapabilityMethod: box
+    CapabilityOffer: box
+    Collaboration: box
+    Community: box
+    MeasuredCharacteristic: box
+    OrgUnit: box
+    Position: box
+    Role: box
+    # data-item: the downward triangle, name outside
+    Pool: data-item
+    Store: data-item
+    # attached-item: the small square on the border of an Activity or Store
+    InputPort: attached-item
+    OutputPort: attached-item
+    # small-node: a small square, name outside
+    ValueProposition: small-node
+  no_element_type:   # concepts that take no size class, each group with its reason
+    no_shape_of_its_own:
+      reason: The standard gives these no shape. A value add is shown by filling a port, a business item by the label of a flow, and an actor by its name as plain text at the end of a connector.
+      concepts: [Actor, BusinessItem, ValueAdd]
+    drawn_as_line:
+      reason: These concepts are lines (and the relationships under `notation.relationships` are lines too), so there is no symbol to size.
+      concepts: [Assignment, DeliverableFlow, InputDelegation, OutputDelegation]
+    not_drawn:
+      reason: The standard gives these no drawing of their own.
+      concepts: see `notation.not_specified`
+  exceptions: {}
+  diagram_types:   # only the departures from the defaults (graph, frame-header); the other diagram types take the defaults
+    Activity Network: {arrangement: lanes}   # each Role is a swim-lane
+    CapabilityLibrary: {arrangement: nested-grid}   # a child capability is drawn inside its parent
+    Capability Heatmap: {arrangement: nested-grid}   # same shapes as CapabilityLibrary
