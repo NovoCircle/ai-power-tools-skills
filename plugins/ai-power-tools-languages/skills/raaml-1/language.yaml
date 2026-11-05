@@ -1,0 +1,1826 @@
+# Risk Analysis and Assessment Modeling Language (RAAML) 1.0: language file (schema_version 1).
+# Written from the standard only. Concept names are the standard's own names (no spaces), except four guideword classes that share a name across packages: STPAEarly, STPALate, ISO26262Early and ISO26262Late (each is Early or Late in the standard).
+# Keys beyond the base language-file layout, in the same sense as the SysML language file: extends, newer_versions, concepts.groups, concepts.elements[].group / .kind / .layer / .marker / .uml_base / .specializes_external / .attributes / .basis,
+#   relationships.items[].kind / .generalizes, diagram_types[].form / .reused_from / .admits_note, viewpoints, constraints[].category / .checkable / .applies_when.
+#   constraints[].checkable : static = a validator that sees only the saved model can check it; partial = structure or simple cases only; runtime = needs instances or an executing model; none = not a property of a model.
+#   constraints[].applies_when : omitted = always; otherwise the condition under which the rule applies.
+#   Strength policy: must = error, should = warning, note = advice only.
+schema_version: 1
+id: raaml-1
+name: Risk Analysis and Assessment Modeling Language (RAAML)
+owner: {name: Object Management Group, kind: standards-body}
+standard: {name: Risk Analysis and Assessment Modeling Language (RAAML), version: '1.0', status: published, reference: 'OMG formal/22-12-06 (specification PDF; the About page gives April 2023, the cover December 2022); normative machine-readable models ptc/21-12-05 to ptc/21-12-17 under RAAML/20211101; informative examples ptc/21-11-22. https://www.omg.org/spec/RAAML/1.0/', kind: 'profile of UML 2.5.1 and SysML 1.6 together with model libraries; the language reuses SysML and adds situations, causality and method packages for safety and reliability analysis'}
+newer_versions:
+- {version: '1.1', date: December 2025, url: 'https://www.omg.org/spec/RAAML/1.1'}
+- {version: 1.2 beta, date: September 2026, url: 'https://www.omg.org/spec/RAAML/1.2/Beta1', note: 'Beta status. The About page names security, reliability block diagram and functional hazard assessment content. Not researched here.'}
+extends: {language: sysml-1, version: '1.5', note: 'RAAML is built on SysML. RAAML 1.0 cites SysML 1.6; the SysML language skill describes 1.5. This file names the SysML concepts RAAML reuses (under specializes_external and in relationship endpoints written sysml-1:Name) and does not re-describe them: Block, ConstraintBlock, Requirement, AbstractRequirement, DeriveReqt, Satisfy, Rationale, DirectedRelationshipPropertyPath, plus ValueType, value properties, part properties and the block definition, internal block, parametric and requirement diagrams. UML metaclasses named under uml_base are defined by UML.'}
+concepts:
+  source: 'OMG RAAML 1.0: the catalog of clause 9 (9.1 Core, 9.2 General, 9.3 FMEA, 9.4 FTA, 9.5 STPA, 9.6 GSN, 9.7 ISO 26262), with generalizations, abstractness and multiplicities checked against the thirteen normative machine-readable models. Where the text and the models disagree this file follows the models.'
+  count: 153
+  layer_note: 'layer says where a concept is defined: library (a class users specialize), profile (a marker element that extends a UML metaclass) or both under one name. A library class that carries a marker names it under marker. A name that is both a library class and a profile element is one concept here.'
+  groups:
+    Core: {defined_by: 'Clauses 9.1.1, 9.1.2', notes: 'The situation marker, the root of all situations, the identifier carrier, and the profile relationships relevant to, violates and controlling measure. The causality link is a relationship (see relationships).'}
+    General: {defined_by: 'Clauses 9.2.1, 9.2.2', notes: 'Events, causes, effects, failure modes, hazards, scenarios and risks shared by all methods; errors, faults and the kinds of controlling measure.'}
+    FMEA: {defined_by: 'Clauses 9.3.1, 9.3.2', notes: 'The FMEA item, the RPN formula and seven classes of failure mode.'}
+    FTA events: {defined_by: 'Clauses 9.4.1, 9.4.2', notes: 'The fault tree, its elements and its events.'}
+    FTA gates: {defined_by: 'Clauses 9.4.1, 9.4.2', notes: The seven gates.}
+    FTA constraint blocks: {defined_by: Clause 9.4.1 (ConstraintBlocks), notes: Reference probability formulas for the gates.}
+    FTA markers: {defined_by: Clause 9.4.2, notes: 'Tree, transfer-in and transfer-out.'}
+    STPA: {defined_by: 'Clauses 9.5.1, 9.5.2', notes: 'Unsafe control actions and their guidewords, process models, factors, losses, loss scenarios, and the control structure elements.'}
+    GSN: {defined_by: Clause 9.6.1, notes: 'The core notation of the Goal Structuring Notation, version 2.'}
+    ISO 26262 operational situations: {defined_by: Clause 9.7.1, notes: Operational conditions and situations.}
+    ISO 26262 value types: {defined_by: 'Clauses 9.7.1, 9.7.2', notes: 'Exposure, severity, controllability and ASIL.'}
+    ISO 26262 malfunctions and hazards: {defined_by: Clause 9.7.1, notes: 'Malfunction classes, effects, accident scenarios, hazardous events and the safety requirement template.'}
+    ISO 26262 profile: {defined_by: Clause 9.7.2, notes: 'Markers for operational situations, malfunctions, verification, assignment and rationale.'}
+    ISO 26262 requirements: {defined_by: Clause 9.7.2 (RequirementManagement), notes: Safety requirement kinds and the relations between requirements and states.}
+  elements:
+    AnySituation:
+      display: Any Situation
+      group: Core
+      kind: situation
+      layer: library
+      abstract: true
+      marker: Situation
+      section: 9.1.1 p. 20
+      definition: The universal root of all situations. A situation stands for a set of occurrences of some type, where the system, place, time and state are given by classifiers rather than by individual descriptions.
+      attributes:
+      - {name: from, type: AnySituation, multiplicity: 0..*, note: a situation that precedes the one at the other end of Causality}
+      - {name: to, type: AnySituation, multiplicity: 0..*, note: a situation that follows}
+    Situation:
+      display: Situation
+      group: Core
+      kind: profile element
+      layer: profile
+      specializes_external:
+      - {language: sysml-1, concept: Block}
+      abstract: false
+      uml_base: Class
+      section: 9.1.2 p. 22
+      definition: The profile element that marks a block as a situation. It adds nothing but the distinction between situations and other blocks; a situation keeps the block features of generalization, parts, value properties and parametrics.
+    ControllingMeasure:
+      display: Controlling Measure
+      group: Core
+      kind: relationship profile element
+      layer: profile
+      specializes_external:
+      - {language: sysml-1, concept: DirectedRelationshipPropertyPath}
+      abstract: true
+      uml_base: Dependency
+      section: 9.1.2 p. 23
+      definition: 'A measure taken against an actual or possible adverse situation: it lowers severity, lowers the probability of occurrence, or raises the probability of detection. Modeled as a dependency whose supplier is the situation addressed.'
+      attributes:
+      - {name: affects, type: Property, multiplicity: 0..*, note: 'a quantitative attribute of the situation that this measure influences, typically improves'}
+    IDCarrier:
+      display: ID Carrier
+      group: Core
+      kind: profile element
+      layer: profile
+      abstract: false
+      uml_base: Element
+      section: 9.1.2 p. 24
+      definition: A profile element that carries a human-readable identifier for any element.
+      attributes:
+      - {name: Id, type: String, multiplicity: '1', note: human-readable identifier}
+      note: The text lists IDCarrier under the ISO 26262 profile package; the machine-readable model places it in the Core profile.
+    AbstractEvent:
+      display: Abstract Event
+      group: General
+      kind: situation
+      layer: library
+      specializes: AnySituation
+      abstract: true
+      marker: Situation
+      section: 9.2.1 p. 25
+      definition: Anything that causes a change in the system under analysis or its environment, with an identifiable starting point in time.
+      attributes:
+      - {name: likelihood, type: (untyped), multiplicity: '1', note: placeholder for likelihood of occurrence; deliberately left untyped for method developers to specialize}
+    AbstractCause:
+      display: Abstract Cause
+      group: General
+      kind: situation
+      layer: library
+      specializes: AbstractEvent
+      abstract: true
+      marker: Situation
+      section: 9.2.1 p. 25
+      definition: A precursor event that activates other events; the root of all causes. Methods derive typed kinds of cause.
+      attributes:
+      - {name: occurrence, type: (untyped), multiplicity: '1', note: how often the situation occurs; redefines likelihood}
+      - {name: premitigationOccurrences, type: (untyped), multiplicity: 0..*, note: how often it occurred before mitigation}
+    Cause:
+      display: Cause
+      group: General
+      kind: situation
+      layer: library
+      specializes: AbstractCause
+      abstract: true
+      marker: Situation
+      section: 9.2.1 p. 26
+      definition: The concrete cause whose occurrence is a Real number.
+      attributes:
+      - {name: occurrence, type: Real, multiplicity: '1', note: redefines occurrence}
+      - {name: premitigationOccurrences, type: Real, multiplicity: 0..*, note: redefines premitigationOccurrences}
+    DysfunctionalEvent: {display: Dysfunctional Event, group: General, kind: situation, layer: library, specializes: AbstractEvent, abstract: true, marker: Situation, section: 9.2.1 p. 27, definition: 'An event whose occurrence can cause dysfunctional behavior of a system or part of it. Generalizes failure, feared event and similar terms of domain safety standards.'}
+    UndesiredState: {display: Undesired State, group: General, kind: situation, layer: library, specializes: DysfunctionalEvent, abstract: true, marker: Situation, section: 9.2.1 p. 34, definition: An element's condition at a specific time that represents an unintended situation.}
+    AbstractFailureMode:
+      display: Abstract Failure Mode
+      group: General
+      kind: situation
+      layer: library
+      specializes: UndesiredState
+      abstract: true
+      marker: FailureMode
+      section: 9.2.1 p. 27
+      definition: The manner in which a system or a part of one can fail; the root of all failure modes. Methods derive typed kinds.
+      attributes:
+      - {name: detectability, type: (untyped), multiplicity: '1', note: how easy it is to detect this failure mode}
+      - {name: premitigationDetectabilities, type: (untyped), multiplicity: 0..*, note: detectability under the previous design iteration}
+    FailureMode:
+      display: Failure Mode
+      group: General
+      kind: situation
+      layer: library and profile
+      specializes: AbstractFailureMode
+      abstract: true
+      uml_base: Class
+      marker: FailureMode
+      section: 9.2.1 p. 28; 9.2.2 p. 34
+      definition: The concrete failure mode whose detectability is a Real number. A failure is an instance of a failure mode. Also available as a profile element that marks a situation as a failure mode.
+      attributes:
+      - {name: detectability, type: Real, multiplicity: '1', note: redefines detectability}
+      - {name: premitigationDetectabilities, type: Real, multiplicity: 0..*, note: redefines premitigationDetectabilities}
+      note: The library class is abstract; the profile element generalizes Situation and is not abstract.
+    AbstractEffect:
+      display: Abstract Effect
+      group: General
+      kind: situation
+      layer: library
+      specializes: DysfunctionalEvent
+      abstract: true
+      marker: Situation
+      section: 9.2.1 p. 28
+      definition: A dysfunctional event that is the result or consequence of another situation; the root of all effects. Methods derive typed kinds.
+      attributes:
+      - {name: severity, type: (untyped), multiplicity: '1', note: estimate of the extent of harm}
+      - {name: premitigationSeverities, type: (untyped), multiplicity: 0..*, note: extent of harm under previous design iterations}
+    Effect:
+      display: Effect
+      group: General
+      kind: situation
+      layer: library
+      specializes: AbstractEffect
+      abstract: true
+      marker: Situation
+      section: 9.2.1 p. 29
+      definition: The concrete effect whose severity is a Real number.
+      attributes:
+      - {name: severity, type: Real, multiplicity: '1', note: redefines severity}
+      - {name: premitigationSeverities, type: Real, multiplicity: 0..*, note: redefines premitigationSeverities}
+    HarmPotential: {display: Harm Potential, group: General, kind: situation, layer: library, specializes: AnySituation, abstract: true, marker: Situation, section: 9.2.1 p. 32, definition: 'A state in which harm is possible, from malicious or non-malicious causes.'}
+    Hazard: {display: Hazard, group: General, kind: situation, layer: library, specializes: HarmPotential, abstract: true, marker: Situation, section: 9.2.1 p. 32, definition: 'A potential source of harm (non-malicious). Covers danger to persons within a short time, such as fire, and long-term health effects, such as release of a toxic substance.'}
+    Scenario:
+      display: Scenario
+      group: General
+      kind: situation
+      layer: library
+      specializes: AnySituation
+      abstract: true
+      marker: Situation
+      section: 9.2.1 p. 32
+      definition: A composite situation made of several steps that are themselves situations. Steps should be ordered by Causality or a specialization of it.
+      attributes:
+      - {name: scenarioStep, type: AnySituation, multiplicity: 0..*, note: a situation that is part of the scenario (composite)}
+    AbstractRisk:
+      display: Abstract Risk
+      group: General
+      kind: situation
+      layer: library
+      specializes: Scenario
+      abstract: true
+      marker: Situation
+      section: 9.2.1 p. 33
+      definition: A scenario that combines a harm potential (a hazard or vulnerability), a triggering event and the resulting harm. A placeholder for method-specific kinds of risk.
+      attributes:
+      - {name: score, type: (untyped), multiplicity: '1', note: combination of probability and severity of harm; for example a risk priority number}
+      - {name: trigger, type: AbstractEvent, multiplicity: 0..*, note: triggering event that makes harm materialize; subsets scenarioStep}
+      - {name: harm, type: AbstractEffect, multiplicity: 0..*, note: resulting harm; subsets scenarioStep}
+      - {name: harmPotential, type: HarmPotential, multiplicity: 0..*, note: pre-existing risk; subsets scenarioStep}
+    Error: {display: Error, group: General, kind: profile element, layer: profile, specializes: Situation, abstract: false, uml_base: Class, section: 9.2.2 p. 34, definition: 'The discrepancy between a computed, observed or measured value or condition and the true, specified or correct one. Marks a situation as an error.'}
+    Fault: {display: Fault, group: General, kind: profile element, layer: profile, specializes: Situation, abstract: false, uml_base: Class, section: 9.2.2 p. 35, definition: 'An abnormal condition that can reduce or remove the ability of a functional unit to do its job, or cause an element or system to fail. Marks a situation as a fault.'}
+    Detection: {display: Detection, group: General, kind: relationship profile element, layer: profile, specializes: ControllingMeasure, abstract: false, uml_base: Dependency, section: 9.2.2 p. 35, definition: 'A controlling measure taken to raise the probability of detecting the situation under analysis; in hardware, for example built-in diagnostic tests or physical inspection.'}
+    Prevention: {display: Prevention, group: General, kind: relationship profile element, layer: profile, specializes: ControllingMeasure, abstract: false, uml_base: Dependency, section: 9.2.2 p. 36, definition: A controlling measure taken to lower the probability that the situation under analysis occurs.}
+    Mitigation: {display: Mitigation, group: General, kind: relationship profile element, layer: profile, specializes: ControllingMeasure, abstract: false, uml_base: Dependency, section: 9.2.2 p. 36, definition: A controlling measure taken to lower the severity of the situation under analysis.}
+    Recommendation: {display: Recommendation, group: General, kind: relationship profile element, layer: profile, specializes: ControllingMeasure, abstract: false, uml_base: Dependency, section: 9.2.2 p. 37, definition: 'A controlling measure that connects a situation to an action item, normally a requirement but possibly weaker advice such as a comment or rationale.'}
+    FailureState: {display: Failure State, group: General, kind: profile element, layer: profile, abstract: false, uml_base: State, section: 9.2.2 p. 37, definition: A state the system or a part of it enters after a failure mode occurs. Useful in methods based on state machines; can be tied to failure modes by RelevantTo.}
+    Undeveloped: {display: Undeveloped, group: General, kind: profile element, layer: profile, abstract: false, uml_base: Element, section: 9.2.2 p. 38, definition: 'Marks an incomplete concept: a goal or strategy that is not fully developed, or a basic event in a fault tree.'}
+    AbstractFMEAItem:
+      display: Abstract FMEA Item
+      group: FMEA
+      kind: situation
+      layer: library
+      specializes: AbstractRisk
+      abstract: true
+      marker: FMEAItem
+      section: 9.3.1 p. 38
+      definition: A risk scenario made of one failure mode, one or more causes and one or more final effects. It stores the assessed risk priority number and earlier values.
+      attributes:
+      - {name: RPN, type: (untyped), multiplicity: '1', note: risk priority number; redefines score}
+      - {name: failureMode, type: AbstractFailureMode, multiplicity: '1', note: the failure mode reached when an element fails; subsets scenarioStep}
+      - {name: cause, type: AbstractCause, multiplicity: 1..*, note: cause of the failure; subsets scenarioStep}
+      - {name: finalEffect, type: AbstractEffect, multiplicity: 1..*, note: effect at the system boundary; redefines harm}
+      - {name: previousRPNValues, type: (untyped), multiplicity: 0..*, note: risk priority numbers assessed before mitigation}
+      - {name: harmPotential, type: HarmPotential, multiplicity: '0', note: 'redefined to multiplicity zero: not used in FMEA'}
+    FMEAItem:
+      display: FMEA Item
+      group: FMEA
+      kind: situation
+      layer: library and profile
+      specializes: AbstractFMEAItem
+      specializes_external:
+      - {language: sysml-1, concept: Block}
+      abstract: true
+      uml_base: Class
+      marker: FMEAItem
+      section: 9.3.1 p. 39; 9.3.2 p. 43
+      definition: The concrete FMEA item with Real-valued attributes, linked to an RPN formula. Also a profile element that marks a block as an FMEA item.
+      attributes:
+      - {name: finalEffect, type: Effect, multiplicity: 1..*, note: redefines finalEffect}
+      - {name: cause, type: Cause, multiplicity: 1..*, note: redefines cause}
+      - {name: RPN, type: Real, multiplicity: '1', note: redefines RPN}
+      - {name: failureMode, type: FailureMode, multiplicity: '1', note: redefines failureMode}
+      - {name: calculation, type: RPNCalculation, multiplicity: '1', note: link to the RPN formula}
+      - {name: previousRPNValues, type: Real, multiplicity: 0..*, note: redefines previousRPNValues}
+      note: The library class is abstract; the profile element generalizes Block and is not abstract.
+    RPNCalculation:
+      display: RPN Calculation
+      group: FMEA
+      kind: constraint block
+      layer: library
+      specializes_external:
+      - {language: sysml-1, concept: ConstraintBlock}
+      abstract: false
+      marker: ConstraintBlock
+      section: 9.3.1 p. 40
+      definition: 'A constraint block holding the RPN formula: occurrence times detectability times severity.'
+      attributes:
+      - {name: RPN, type: Real, multiplicity: '1', note: risk priority number}
+      - {name: SEV, type: Real, multiplicity: '1', note: severity}
+      - {name: OCC, type: Real, multiplicity: '1', note: occurrence}
+      - {name: DET, type: Real, multiplicity: '1', note: detectability}
+    LossOfFunction: {display: Loss Of Function, group: FMEA, kind: situation, layer: library, specializes: FailureMode, abstract: true, marker: FailureMode, section: 9.3.1 p. 41, definition: 'A failure mode of lost function: the function is inoperable or suddenly fails.'}
+    DegradationOfFunction: {display: Degradation Of Function, group: FMEA, kind: situation, layer: library, specializes: FailureMode, abstract: true, marker: FailureMode, section: 9.3.1 p. 41, definition: A failure mode of function that degrades or is lost over time.}
+    IntermittentFunction: {display: Intermittent Function, group: FMEA, kind: situation, layer: library, specializes: FailureMode, abstract: true, marker: FailureMode, section: 9.3.1 p. 42, definition: 'A failure mode of function that works intermittently, with random stops and starts.'}
+    PartialFunction: {display: Partial Function, group: FMEA, kind: situation, layer: library, specializes: FailureMode, abstract: true, marker: FailureMode, section: 9.3.1 p. 42, definition: A failure mode of partial function or loss of performance.}
+    UnintendedFunction: {display: Unintended Function, group: FMEA, kind: situation, layer: library, specializes: FailureMode, abstract: true, marker: FailureMode, section: 9.3.1 p. 42, definition: 'A failure mode of unintended function: wrong time, unintended direction or unequal performance.'}
+    ExceedingFunction: {display: Exceeding Function, group: FMEA, kind: situation, layer: library, specializes: FailureMode, abstract: true, marker: FailureMode, section: 9.3.1 p. 43, definition: A failure mode in which a function exceeds acceptable operational performance.}
+    DelayedFunction: {display: Delayed Function, group: FMEA, kind: situation, layer: library, specializes: FailureMode, abstract: true, marker: FailureMode, section: 9.3.1 p. 43, definition: 'A failure mode of function that runs late, after an unintended time interval.'}
+    FTAElement:
+      display: FTA Element
+      group: FTA events
+      kind: situation
+      layer: library
+      specializes: DysfunctionalEvent
+      abstract: true
+      marker: Situation
+      section: 9.4.1 p. 44
+      definition: Any event or gate needed to evaluate the probability of the top event.
+      attributes:
+      - {name: probability, type: Real, multiplicity: '1', note: 'probability that the event represented by the element occurs, a value from 0 to 1; redefines likelihood'}
+    FTATree:
+      display: FTA Tree
+      group: FTA events
+      kind: situation
+      layer: library
+      specializes: [FTAElement, Scenario]
+      abstract: false
+      marker: Tree
+      section: 9.4.1 p. 45
+      definition: A collection of fault tree elements and their interrelationships for evaluating the probability of a top event.
+      attributes:
+      - {name: topEvent, type: Event, multiplicity: '1', note: the undesired event that leads to failure of the system (composite)}
+    Event:
+      display: Event
+      group: FTA events
+      kind: situation
+      layer: library and profile
+      specializes: FTAElement
+      abstract: true
+      uml_base: [Class, Property]
+      marker: Situation
+      section: 9.4.1 p. 45; 9.4.2 p. 57
+      definition: Base kind of all fault tree events; a kind of dysfunctional event. Also available as an abstract profile element for classes and properties.
+      attributes:
+      - {name: priority, type: Integer, multiplicity: 0..1, note: order of this event among the inputs of a priority-AND (SEQ) gate}
+      - {name: target Gate, type: Gate, multiplicity: '1', note: the gate the event feeds (output association)}
+    BasicEvent:
+      display: Basic Event
+      group: FTA events
+      kind: situation
+      layer: library and profile
+      specializes: Event
+      abstract: false
+      uml_base: [Class, Property]
+      marker: BasicEvent
+      section: 9.4.1 p. 46; 9.4.2 p. 58
+      definition: A basic initiating failure that needs no further development.
+    IntermediateEvent:
+      display: Intermediate Event
+      group: FTA events
+      kind: situation
+      layer: library and profile
+      specializes: Event
+      abstract: false
+      uml_base: [Class, Property]
+      marker: IntermediateEvent
+      section: 9.4.1 p. 46; 9.4.2 p. 67
+      definition: A failure that occurs because of one or more antecedent events acting through gates. Its probability is derived by the gate.
+      attributes:
+      - {name: probability, type: Real, multiplicity: '1', note: derived by the gate; redefines probability}
+    TopEvent:
+      display: Top Event
+      group: FTA events
+      kind: situation
+      layer: library and profile
+      specializes: Event
+      abstract: false
+      uml_base: [Class, Property]
+      marker: TopEvent
+      section: 9.4.1 p. 47; 9.4.2 p. 68
+      definition: The undesired event (a failure or an effect) at the top of the fault tree. Its probability is the derived result of the tree calculation.
+      attributes:
+      - {name: probability, type: Real, multiplicity: '1', note: derived result; redefines probability}
+    ConditionalEvent:
+      display: Conditional Event
+      group: FTA events
+      kind: situation
+      layer: library and profile
+      specializes: Event
+      abstract: false
+      uml_base: [Class, Property]
+      marker: ConditionalEvent
+      section: 9.4.1 p. 47; 9.4.2 p. 59
+      definition: A condition or restriction attached to a gate, used mainly with priority-AND and INHIBIT gates.
+    DormantEvent:
+      display: Dormant Event
+      group: FTA events
+      kind: situation
+      layer: library and profile
+      specializes: Event
+      abstract: false
+      uml_base: [Class, Property]
+      marker: DormantEvent
+      section: 9.4.1 p. 48; 9.4.2 p. 57
+      definition: Like a basic event but a latent failure, found by periodic tests.
+    UndevelopedEvent: {display: Undeveloped Event, group: FTA events, kind: situation, layer: library, specializes: Event, abstract: false, marker: BasicEvent together with Undeveloped, section: 9.4.1 p. 48, definition: An event not developed further because its consequence is small or information is missing.}
+    HouseEvent:
+      display: House Event
+      group: FTA events
+      kind: situation
+      layer: library and profile
+      specializes: Event
+      abstract: false
+      uml_base: [Class, Property]
+      marker: HouseEvent
+      section: 9.4.1 p. 48; 9.4.2 p. 61
+      definition: An event that can be switched to occur or not occur; its probability is 0 or 1 and is set before evaluation.
+      attributes:
+      - {name: probability, type: HouseEventProbability, multiplicity: '1', note: 0 or 1; redefines probability}
+    ZeroEvent:
+      display: Zero Event
+      group: FTA events
+      kind: situation
+      layer: library and profile
+      specializes: Event
+      abstract: false
+      uml_base: [Class, Property]
+      marker: ZeroEvent
+      section: 9.4.1 p. 49; 9.4.2 p. 60
+      definition: An event or condition that never occurs; its probability is always 0.
+      attributes:
+      - {name: probability, type: Real, multiplicity: '1', note: always 0; redefines probability}
+    HouseEventProbability: {display: House Event Probability, group: FTA events, kind: value type, layer: library, abstract: false, section: 9.4.1 p. 49, definition: The value type that restricts a house event probability to 0 or 1., basis: xmi, note: Named in the machine-readable model; the text gives only the attribute type.}
+    Gate:
+      display: Gate
+      group: FTA gates
+      kind: situation
+      layer: library and profile
+      abstract: true
+      uml_base: [Class, Property]
+      marker: Situation
+      section: 9.4.1 p. 49; 9.4.2 p. 57
+      definition: A fault tree element that combines input event probabilities in a prescribed way to give the output event probability. Subtypes say which combination. Also an abstract profile element.
+      attributes:
+      - {name: source Event, type: Event, multiplicity: 0..*, note: input events (input association)}
+      - {name: target Event, type: Event, multiplicity: '1', note: the output event (output association)}
+      note: The text says a gate is a fault tree element, but the machine-readable model gives it no parent.
+    AND:
+      display: AND
+      group: FTA gates
+      kind: situation
+      layer: library and profile
+      specializes: Gate
+      abstract: false
+      uml_base: [Class, Property]
+      marker: Block together with AND
+      section: 9.4.1 p. 50; 9.4.2 p. 62
+      definition: The output event occurs only if all input events occur.
+    OR:
+      display: OR
+      group: FTA gates
+      kind: situation
+      layer: library and profile
+      specializes: Gate
+      abstract: false
+      uml_base: [Class, Property]
+      marker: Block together with OR
+      section: 9.4.1 p. 50; 9.4.2 p. 62
+      definition: The output event occurs if at least one input event occurs.
+    NOT:
+      display: NOT
+      group: FTA gates
+      kind: situation
+      layer: library and profile
+      specializes: Gate
+      abstract: false
+      uml_base: [Class, Property]
+      marker: Block together with NOT
+      section: 9.4.1 p. 51; 9.4.2 p. 66
+      definition: The output event occurs if the input event does not occur.
+    XOR:
+      display: XOR
+      group: FTA gates
+      kind: situation
+      layer: library and profile
+      specializes: Gate
+      abstract: false
+      uml_base: [Class, Property]
+      marker: Block together with XOR
+      section: 9.4.1 p. 51; 9.4.2 p. 64
+      definition: The output event occurs if exactly one input event occurs.
+    SEQ:
+      display: SEQ
+      group: FTA gates
+      kind: situation
+      layer: library and profile
+      specializes: Gate
+      abstract: false
+      uml_base: [Class, Property]
+      marker: Block together with SEQ
+      section: 9.4.1 p. 52; 9.4.2 p. 63
+      definition: 'Priority AND: the output event occurs if all input events occur in a specific sequence.'
+    INHIBIT:
+      display: INHIBIT
+      group: FTA gates
+      kind: situation
+      layer: library and profile
+      specializes: Gate
+      abstract: false
+      uml_base: [Class, Property]
+      marker: Block together with INHIBIT
+      section: 9.4.1 p. 52; 9.4.2 p. 65
+      definition: The output event occurs if the single input event occurs while an enabling condition is present.
+      attributes:
+      - {name: condition, type: Event, multiplicity: 0..*, note: enabling condition events}
+    MAJORITY_VOTE:
+      display: MAJORITY_VOTE
+      group: FTA gates
+      kind: situation
+      layer: library and profile
+      specializes: Gate
+      abstract: false
+      uml_base: [Class, Property]
+      marker: Block together with MAJORITY_VOTE
+      section: 9.4.1 p. 53; 9.4.2 p. 65
+      definition: The output event occurs if a majority of the input events occurs. The majority threshold m is a parameter and need not be half the inputs.
+      attributes:
+      - {name: m, type: Integer, multiplicity: '1', note: number of input events that form a majority}
+    ANDConstraintBlock:
+      display: AND Constraint Block
+      group: FTA constraint blocks
+      kind: constraint block
+      layer: library
+      specializes_external:
+      - {language: sysml-1, concept: ConstraintBlock}
+      abstract: false
+      marker: ConstraintBlock
+      section: 9.4.1 (ConstraintBlocks) p. 53
+      definition: 'Reference implementation of the AND gate: the product of the input probabilities, assuming independence.'
+      attributes:
+      - {name: output, type: Real, multiplicity: '1'}
+      - {name: input, type: Real, multiplicity: 0..*, note: exactly 1 for NOT}
+    ORConstraintBlock:
+      display: OR Constraint Block
+      group: FTA constraint blocks
+      kind: constraint block
+      layer: library
+      specializes_external:
+      - {language: sysml-1, concept: ConstraintBlock}
+      abstract: false
+      marker: ConstraintBlock
+      section: 9.4.1 (ConstraintBlocks) p. 54
+      definition: 'Reference implementation of the OR gate: one minus the probability that no input occurs, assuming independence (De Morgan).'
+      attributes:
+      - {name: output, type: Real, multiplicity: '1'}
+      - {name: input, type: Real, multiplicity: 0..*, note: exactly 1 for NOT}
+    SEQConstraintBlock:
+      display: SEQ Constraint Block
+      group: FTA constraint blocks
+      kind: constraint block
+      layer: library
+      specializes_external:
+      - {language: sysml-1, concept: ConstraintBlock}
+      abstract: false
+      marker: ConstraintBlock
+      section: 9.4.1 (ConstraintBlocks) p. 54
+      definition: 'Reference implementation of the SEQ gate: the product of the input probabilities; it cannot capture time dependence.'
+      attributes:
+      - {name: output, type: Real, multiplicity: '1'}
+      - {name: input, type: Real, multiplicity: 0..*, note: exactly 1 for NOT}
+    XORConstraintBlock:
+      display: XOR Constraint Block
+      group: FTA constraint blocks
+      kind: constraint block
+      layer: library
+      specializes_external:
+      - {language: sysml-1, concept: ConstraintBlock}
+      abstract: false
+      marker: ConstraintBlock
+      section: 9.4.1 (ConstraintBlocks) p. 55
+      definition: 'Reference implementation of the XOR gate: for two inputs a + b - 2ab, applied repeatedly for more.'
+      attributes:
+      - {name: output, type: Real, multiplicity: '1'}
+      - {name: input, type: Real, multiplicity: 0..*, note: exactly 1 for NOT}
+    INHIBITConstraintBlock:
+      display: INHIBIT Constraint Block
+      group: FTA constraint blocks
+      kind: constraint block
+      layer: library
+      specializes_external:
+      - {language: sysml-1, concept: ConstraintBlock}
+      abstract: false
+      marker: ConstraintBlock
+      section: 9.4.1 (ConstraintBlocks) p. 55
+      definition: 'Reference implementation of the INHIBIT gate: the product of the input and condition probabilities.'
+      attributes:
+      - {name: output, type: Real, multiplicity: '1'}
+      - {name: input, type: Real, multiplicity: 0..*, note: exactly 1 for NOT}
+    MAJORITY_VOTEConstraintBlock:
+      display: MAJORITY_VOTE Constraint Block
+      group: FTA constraint blocks
+      kind: constraint block
+      layer: library
+      specializes_external:
+      - {language: sysml-1, concept: ConstraintBlock}
+      abstract: false
+      marker: ConstraintBlock
+      section: 9.4.1 (ConstraintBlocks) p. 56
+      definition: 'Reference implementation of the MAJORITY_VOTE gate: the combined probability of all input combinations in which at least m inputs occur.'
+      attributes:
+      - {name: output, type: Real, multiplicity: '1'}
+      - {name: input, type: Real, multiplicity: 0..*, note: exactly 1 for NOT}
+    NOTConstraintBlock:
+      display: NOT Constraint Block
+      group: FTA constraint blocks
+      kind: constraint block
+      layer: library
+      specializes_external:
+      - {language: sysml-1, concept: ConstraintBlock}
+      abstract: false
+      marker: ConstraintBlock
+      section: 9.4.1 (ConstraintBlocks) p. 56
+      definition: 'Reference implementation of the NOT gate: one minus the input probability.'
+      attributes:
+      - {name: output, type: Real, multiplicity: '1'}
+      - {name: input, type: Real, multiplicity: 0..*, note: exactly 1 for NOT}
+    Tree: {display: Tree, group: FTA markers, kind: profile element, layer: profile, specializes: Situation, abstract: false, uml_base: Class, section: 9.4.2 p. 56, definition: A profile element that marks a class as a fault tree. It may be applied only to a class that specializes FTATree.}
+    TransferIn: {display: Transfer In, group: FTA markers, kind: profile element, layer: profile, abstract: false, uml_base: Property, section: 9.4.2 p. 68, definition: 'A node in the current fault tree that says the tree continues in a separate fault tree, the TransferOut. Its type must be a TransferOut tree.'}
+    TransferOut: {display: Transfer Out, group: FTA markers, kind: profile element, layer: profile, specializes: Tree, abstract: false, uml_base: Class, section: 9.4.2 p. 69, definition: A partial fault tree used as part of another fault tree through TransferIn. The computed top event probability of this tree is used as the probability of the TransferIn node.}
+    UnsafeControlAction:
+      display: Unsafe Control Action
+      group: STPA
+      kind: situation
+      layer: library and profile
+      specializes: UndesiredState
+      abstract: true
+      uml_base: Class
+      marker: UnsafeControlAction
+      section: 9.5.1 p. 74; 9.5.2 p. 79
+      definition: A control action that, in a given context, may lead to an undesired result (a UCA). It has a controller (inferred from the model), a guideword (given by generalization), a control action (linked by RelevantTo) and a context (a sub-situation). Also a profile element that marks UCAs.
+      attributes:
+      - {name: Context, type: AbstractOperationalSituation, multiplicity: '1', note: context in which the control action leads to the undesired outcome}
+      - {name: processModel, type: ProcessModel, multiplicity: 0..*, note: process models that lead to this UCA}
+      - {name: harmPotential, type: HarmPotential, multiplicity: 0..*, note: harm potentials this UCA leads to}
+      note: The library class generalizes UndesiredState and is abstract; the profile element generalizes Situation and is not abstract.
+    OutOfSequence: {display: Out Of Sequence, group: STPA, kind: situation, layer: library, specializes: UnsafeControlAction, abstract: true, marker: UnsafeControlAction, section: 9.5.1 p. 69, definition: A guideword that classifies the kind of unsafe control action.}
+    STPALate: {display: Late (STPA guideword), group: STPA, kind: situation, layer: library, specializes: UnsafeControlAction, abstract: true, marker: UnsafeControlAction, section: 9.5.1 p. 70, definition: A guideword that classifies the kind of unsafe control action., note: The standard names this class Late.}
+    STPAEarly: {display: Early (STPA guideword), group: STPA, kind: situation, layer: library, specializes: UnsafeControlAction, abstract: true, marker: UnsafeControlAction, section: 9.5.1 p. 70, definition: A guideword that classifies the kind of unsafe control action., note: The standard names this class Early.}
+    TooLong: {display: Too Long, group: STPA, kind: situation, layer: library, specializes: UnsafeControlAction, abstract: true, marker: UnsafeControlAction, section: 9.5.1 p. 70, definition: A guideword that classifies the kind of unsafe control action.}
+    TooShort: {display: Too Short, group: STPA, kind: situation, layer: library, specializes: UnsafeControlAction, abstract: true, marker: UnsafeControlAction, section: 9.5.1 p. 71, definition: A guideword that classifies the kind of unsafe control action.}
+    Provided: {display: Provided, group: STPA, kind: situation, layer: library, specializes: UnsafeControlAction, abstract: true, marker: UnsafeControlAction, section: 9.5.1 p. 71, definition: A guideword that classifies the kind of unsafe control action.}
+    NotProvided: {display: Not Provided, group: STPA, kind: situation, layer: library, specializes: UnsafeControlAction, abstract: true, marker: UnsafeControlAction, section: 9.5.1 p. 71, definition: A guideword that classifies the kind of unsafe control action.}
+    LossScenario:
+      display: Loss Scenario
+      group: STPA
+      kind: situation
+      layer: library and profile
+      specializes: Scenario
+      abstract: true
+      uml_base: Class
+      marker: LossScenario
+      section: 9.5.1 p. 72; 9.5.2 p. 81
+      definition: A sequence of situations that starts from factors, passes through process model deficiencies, and leads to an unsafe control action (and on to risks and possibly losses). Also a profile element that marks loss scenarios.
+      attributes:
+      - {name: Factor, type: Factor, multiplicity: 0..*, note: steps; subsets scenarioStep (composite)}
+      - {name: unsafeControlAction, type: UnsafeControlAction, multiplicity: 0..*, note: steps; subsets scenarioStep}
+      - {name: processModel, type: ProcessModel, multiplicity: 0..*, note: steps; subsets scenarioStep (composite)}
+      note: The library class is abstract; the profile element generalizes Situation and is not abstract.
+    ProcessModel:
+      display: Process Model
+      group: STPA
+      kind: situation
+      layer: library
+      abstract: false
+      marker: Situation
+      section: 9.5.1 p. 72
+      definition: A process or control loop model that may lead to an unsafe control action. Its four kinds name the section of the control loop at fault. Often called a (high-level) scenario in STPA theory.
+      attributes:
+      - {name: Factor, type: Factor, multiplicity: 0..*}
+      - {name: unsafeControlAction, type: UnsafeControlAction, multiplicity: 0..*}
+      note: The text gives ProcessModel no parent; the machine-readable model also gives none, although its kinds are said to be situations.
+    InadequateControllerDecisions: {display: Inadequate Controller Decisions, group: STPA, kind: situation, layer: library, specializes: ProcessModel, abstract: true, marker: Situation, section: 9.5.1 p. 73, definition: A kind of process flaw (process model deficiency).}
+    InadequateControlExecution: {display: Inadequate Control Execution, group: STPA, kind: situation, layer: library, specializes: ProcessModel, abstract: true, marker: Situation, section: 9.5.1 p. 73, definition: A kind of process flaw (process model deficiency).}
+    InadequateProcessBehavior: {display: Inadequate Process Behavior, group: STPA, kind: situation, layer: library, specializes: ProcessModel, abstract: true, marker: Situation, section: 9.5.1 p. 73, definition: A kind of process flaw (process model deficiency).}
+    InadequateFeedbackAndInputs: {display: Inadequate Feedback And Inputs, group: STPA, kind: situation, layer: library, specializes: ProcessModel, abstract: true, marker: Situation, section: 9.5.1 p. 74, definition: A kind of process flaw (process model deficiency).}
+    Factor:
+      display: Factor
+      group: STPA
+      kind: situation
+      layer: library
+      specializes: AbstractCause
+      abstract: false
+      marker: Situation
+      section: 9.5.1 p. 75
+      definition: A cause or contributing factor that further refines a process model inadequacy.
+      attributes:
+      - {name: processModel, type: ProcessModel, multiplicity: 0..*}
+    Loss: {display: Loss, group: STPA, kind: situation, layer: library, specializes: AbstractEffect, abstract: true, marker: Situation, section: 9.5.1 p. 75, definition: 'An effect that is unacceptable and should be prevented, such as loss of life or injury, property damage, mission loss, financial loss, loss of public image or environmental pollution.'}
+    ControlAction:
+      display: Control Action
+      group: STPA
+      kind: profile element
+      layer: profile
+      abstract: false
+      uml_base: [Signal, Class, DataType]
+      section: 9.5.2 p. 78
+      definition: An output signal from a functional or logical controller to a controlled process, through an actuator, that determines the behavior of the receiving process.
+    Feedback:
+      display: Feedback
+      group: STPA
+      kind: profile element
+      layer: profile
+      abstract: false
+      uml_base: [Signal, Class, DataType]
+      section: 9.5.2 p. 78
+      definition: An input signal to a controller from a controlled process, through a sensor, that characterizes the current behavior of the process or the environment.
+    ControlledProcess:
+      display: Controlled Process
+      group: STPA
+      kind: profile element
+      layer: profile
+      abstract: false
+      uml_base: [Property, Class]
+      section: 9.5.2 p. 79
+      definition: An abstract representation of the system and its behaviors that need to be supervised and governed. A controller controls it through control actions via an actuator.
+    Actuator:
+      display: Actuator
+      group: STPA
+      kind: profile element
+      layer: profile
+      abstract: false
+      uml_base: [Property, Class]
+      section: 9.5.2 p. 79
+      definition: Receives control actions from the controller and influences the controlled process.
+    Sensor:
+      display: Sensor
+      group: STPA
+      kind: profile element
+      layer: profile
+      abstract: false
+      uml_base: [Property, Class]
+      section: 9.5.2 p. 80
+      definition: Assesses the controlled process (or the environment or other controllers) and gives feedback to the controller.
+    Controller:
+      display: Controller
+      group: STPA
+      kind: profile element
+      layer: profile
+      abstract: false
+      uml_base: [Property, Class]
+      section: 9.5.2 p. 80
+      definition: Sends control actions and receives feedback.
+    ControlStructure:
+      display: Control Structure
+      group: STPA
+      kind: profile element
+      layer: profile
+      specializes_external:
+      - {language: sysml-1, concept: Block}
+      abstract: false
+      uml_base: Class
+      section: 9.5.2 p. 80
+      definition: A system of systems made of controlled processes and controllers and their functional relationships (control actions and feedback), describing feedback control loops.
+    GSNNode:
+      display: GSN Node
+      group: GSN
+      kind: profile element
+      layer: profile
+      abstract: true
+      uml_base: Element
+      section: 9.6.1 p. 82
+      definition: Root type of all kinds of node in a Goal Structuring Notation argument. The short phrase is the element name; the human-readable identifier is kept separately.
+      attributes:
+      - {name: id, type: String, multiplicity: 0..1, note: human-readable identifier}
+    GSNArgumentNode: {display: GSN Argument Node, group: GSN, kind: profile element, layer: profile, specializes: GSNNode, abstract: true, uml_base: Element, section: 9.6.1 p. 83, definition: A goal or a strategy.}
+    Goal: {display: Goal, group: GSN, kind: profile element, layer: profile, specializes: GSNArgumentNode, abstract: false, uml_base: Class, section: 9.6.1 p. 84, definition: A claim that forms part of the argument.}
+    Strategy: {display: Strategy, group: GSN, kind: profile element, layer: profile, specializes: GSNArgumentNode, abstract: false, uml_base: Class, section: 9.6.1 p. 84, definition: The nature of the inference between a goal and its supporting goals.}
+    Solution: {display: Solution, group: GSN, kind: profile element, layer: profile, specializes: GSNNode, abstract: false, uml_base: Class, section: 9.6.1 p. 84, definition: A reference to one or more items of evidence.}
+    ContextualInformation:
+      display: Contextual Information
+      group: GSN
+      kind: profile element
+      layer: profile
+      abstract: true
+      uml_base: Element
+      section: 9.6.1 p. 85
+      definition: A context, an assumption or a justification.
+      attributes:
+      - {name: id, type: String, multiplicity: 0..1, note: human-readable identifier}
+    Context: {display: Context, group: GSN, kind: profile element, layer: profile, specializes: ContextualInformation, abstract: false, uml_base: Class, section: 9.6.1 p. 85, definition: 'A contextual artifact: a reference to contextual information, or a statement.'}
+    Assumption: {display: Assumption, group: GSN, kind: profile element, layer: profile, specializes: ContextualInformation, abstract: false, uml_base: Class, section: 9.6.1 p. 86, definition: An intentionally unsubstantiated statement., note: 'The text names the parent as SupportingInformation, which does not exist; the machine-readable model gives ContextualInformation.'}
+    Justification: {display: Justification, group: GSN, kind: profile element, layer: profile, specializes: ContextualInformation, abstract: false, uml_base: Class, section: 9.6.1 p. 86, definition: A statement of rationale.}
+    OperationalCondition: {display: Operational Condition, group: ISO 26262 operational situations, kind: situation, layer: library, specializes: AbstractEvent, abstract: true, marker: OperationalSituation, section: 9.7.1 p. 91, definition: A component or part of an operational situation.}
+    TrafficAndPeople: {display: Traffic And People, group: ISO 26262 operational situations, kind: situation, layer: library, specializes: OperationalCondition, abstract: true, marker: OperationalSituation, section: 9.7.1 p. 89, definition: Presence and behavior of motorists or non-motorists considered in a hazardous event.}
+    VehicleUsage: {display: Vehicle Usage, group: ISO 26262 operational situations, kind: situation, layer: library, specializes: OperationalCondition, abstract: true, marker: OperationalSituation, section: 9.7.1 p. 89, definition: How the vehicle is used during a hazardous event.}
+    RoadCondition: {display: Road Condition, group: ISO 26262 operational situations, kind: situation, layer: library, specializes: OperationalCondition, abstract: true, marker: OperationalSituation, section: 9.7.1 p. 90, definition: 'The state of the surface the vehicle drives on, such as low traction or slope, during a hazardous event.'}
+    Location: {display: Location, group: ISO 26262 operational situations, kind: situation, layer: library, specializes: OperationalCondition, abstract: true, marker: OperationalSituation, section: 9.7.1 p. 90, definition: 'The physical location of the vehicle, such as a high-speed road, intersection or parking lot, during a hazardous event.'}
+    EnvironmentalCondition: {display: Environmental Condition, group: ISO 26262 operational situations, kind: situation, layer: library, specializes: OperationalCondition, abstract: true, marker: OperationalSituation, section: 9.7.1 p. 90, definition: The environmental conditions at the time of vehicle operation in a hazardous event.}
+    AbstractOperationalSituation:
+      display: Abstract Operational Situation
+      group: ISO 26262 operational situations
+      kind: situation
+      layer: library
+      specializes: OperationalCondition
+      abstract: true
+      marker: OperationalSituation
+      section: 9.7.1 p. 91
+      definition: A scenario that can occur in a vehicle's life, made of operational conditions. Its exposure must have a rationale attached.
+      attributes:
+      - {name: conditions, type: OperationalCondition, multiplicity: 0..*, note: part conditions (composite)}
+      - {name: Exposure, type: Exposure, multiplicity: '1', note: likelihood of being in the situation; redefines likelihood; a rationale must be attached}
+    TypicalAutomotiveSituation:
+      display: Typical Automotive Situation
+      group: ISO 26262 operational situations
+      kind: situation
+      layer: library
+      specializes: AbstractOperationalSituation
+      abstract: true
+      marker: OperationalSituation
+      section: 9.7.1 p. 92
+      definition: 'A grouping of operational conditions: traffic and people, vehicle usage, road conditions, location and environmental conditions.'
+      attributes:
+      - {name: trafficAndPeople, type: TrafficAndPeople, multiplicity: 0..*}
+      - {name: vehicleUsage, type: VehicleUsage, multiplicity: 0..*}
+      - {name: roadCondition, type: RoadCondition, multiplicity: 0..*}
+      - {name: location, type: Location, multiplicity: 0..*}
+      - {name: environmentalCondition, type: EnvironmentalCondition, multiplicity: 0..*}
+    AnyTrafficAndPeople:
+      display: Any Traffic And People
+      group: ISO 26262 operational situations
+      kind: situation
+      layer: library
+      specializes: [OperationalCondition, TrafficAndPeople]
+      abstract: false
+      marker: OperationalSituation
+      section: 9.7.1 p. 101
+      definition: The all-encompassing (widest) concrete condition of its kind, from which narrower conditions are specialized.
+      note: The text of the entry repeats the description of TrafficAndPeople.
+    AnyVehicleUse:
+      display: Any Vehicle Use
+      group: ISO 26262 operational situations
+      kind: situation
+      layer: library
+      specializes: [OperationalCondition, VehicleUsage]
+      abstract: false
+      marker: OperationalSituation
+      section: 9.7.1 p. 101
+      definition: The all-encompassing (widest) concrete condition of its kind, from which narrower conditions are specialized.
+      note: The text of the entry repeats the description of TrafficAndPeople.
+    AnyRoadCondition:
+      display: Any Road Condition
+      group: ISO 26262 operational situations
+      kind: situation
+      layer: library
+      specializes: [OperationalCondition, RoadCondition]
+      abstract: false
+      marker: OperationalSituation
+      section: 9.7.1 p. 101
+      definition: The all-encompassing (widest) concrete condition of its kind, from which narrower conditions are specialized.
+      note: The text of the entry repeats the description of TrafficAndPeople.
+    AnyLocation:
+      display: Any Location
+      group: ISO 26262 operational situations
+      kind: situation
+      layer: library
+      specializes: [OperationalCondition, Location]
+      abstract: false
+      marker: OperationalSituation
+      section: 9.7.1 p. 102
+      definition: The all-encompassing (widest) concrete condition of its kind, from which narrower conditions are specialized.
+      note: The text of the entry repeats the description of TrafficAndPeople.
+    AnyEnvironmentalCondition:
+      display: Any Environmental Condition
+      group: ISO 26262 operational situations
+      kind: situation
+      layer: library
+      specializes: [OperationalCondition, EnvironmentalCondition]
+      abstract: false
+      marker: OperationalSituation
+      section: 9.7.1 p. 102
+      definition: The all-encompassing (widest) concrete condition of its kind, from which narrower conditions are specialized.
+      note: The text of the entry repeats the description of TrafficAndPeople.
+    Exposure: {display: Exposure, group: ISO 26262 value types, kind: enumeration, layer: library, abstract: false, marker: ValueType, section: 9.7.1 p. 93, definition: Possible values of exposure., note: 'Values: E0, E1, E2, E3, E4.'}
+    Severity: {display: Severity, group: ISO 26262 value types, kind: enumeration, layer: library, abstract: false, marker: ValueType, section: 9.7.1 p. 93, definition: Possible values of severity., note: 'Values: S0, S1, S2, S3.'}
+    Controllability: {display: Controllability, group: ISO 26262 value types, kind: enumeration, layer: library, abstract: false, marker: ValueType, section: 9.7.1 p. 94, definition: Possible values of controllability., note: 'Values: C0, C1, C2, C3.'}
+    ASIL: {display: ASIL, group: ISO 26262 value types, kind: enumeration, layer: library, abstract: false, marker: ValueType, section: 9.7.1; 9.7.2 p. 94, definition: Possible automotive safety integrity levels., note: 'Values: no assignment, QM, A, B, C, D, plus decomposed forms such as A(B), B(D) and QM(A) to QM(D); 20 literals in all.'}
+    AnyMalfunction: {display: Any Malfunction, group: ISO 26262 malfunctions and hazards, kind: situation, layer: library, specializes: UndesiredState, abstract: true, marker: MalfunctioningBehavior, section: 9.7.1 p. 98, definition: The root of all malfunctioning behaviors.}
+    Less: {display: Less, group: ISO 26262 malfunctions and hazards, kind: situation, layer: library, specializes: AnyMalfunction, abstract: true, marker: MalfunctioningBehavior, section: 9.7.1 p. 94, definition: 'A malfunction class, used for classification, for a failure resulting from providing less output or behavior than required. Must be connected to a behavioral element (a use case or function).'}
+    More: {display: More, group: ISO 26262 malfunctions and hazards, kind: situation, layer: library, specializes: AnyMalfunction, abstract: true, marker: MalfunctioningBehavior, section: 9.7.1 p. 95, definition: 'A malfunction class, used for classification, for a failure resulting from providing more output or behavior than required. Must be connected to a behavioral element (a use case or function).'}
+    'No': {display: 'No', group: ISO 26262 malfunctions and hazards, kind: situation, layer: library, specializes: AnyMalfunction, abstract: true, marker: MalfunctioningBehavior, section: 9.7.1 p. 95, definition: 'A malfunction class, used for classification, for a failure resulting from the behavior not being performed when required. Must be connected to a behavioral element (a use case or function).'}
+    Intermittent: {display: Intermittent, group: ISO 26262 malfunctions and hazards, kind: situation, layer: library, specializes: AnyMalfunction, abstract: true, marker: MalfunctioningBehavior, section: 9.7.1 p. 96, definition: 'A malfunction class, used for classification, for a failure resulting from the behavior being performed intermittently. Must be connected to a behavioral element (a use case or function).'}
+    Unintended: {display: Unintended, group: ISO 26262 malfunctions and hazards, kind: situation, layer: library, specializes: AnyMalfunction, abstract: true, marker: MalfunctioningBehavior, section: 9.7.1 p. 96, definition: 'A malfunction class, used for classification, for a failure resulting from the behavior being provided when not required. Must be connected to a behavioral element (a use case or function).'}
+    ISO26262Early: {display: Early (malfunction guideword), group: ISO 26262 malfunctions and hazards, kind: situation, layer: library, specializes: AnyMalfunction, abstract: true, marker: MalfunctioningBehavior, section: 9.7.1 p. 96, definition: 'A malfunction class, used for classification, for a failure resulting from the behavior being performed earlier than required. Must be connected to a behavioral element (a use case or function).', note: The standard names this class Early.}
+    ISO26262Late: {display: Late (malfunction guideword), group: ISO 26262 malfunctions and hazards, kind: situation, layer: library, specializes: AnyMalfunction, abstract: true, marker: MalfunctioningBehavior, section: 9.7.1 p. 97, definition: 'A malfunction class, used for classification, for a failure resulting from the behavior being performed later than required. Must be connected to a behavioral element (a use case or function).', note: The standard names this class Late.}
+    Inverted: {display: Inverted, group: ISO 26262 malfunctions and hazards, kind: situation, layer: library, specializes: AnyMalfunction, abstract: true, marker: MalfunctioningBehavior, section: 9.7.1 p. 97, definition: 'A malfunction class, used for classification, for a failure resulting from the behavior providing an inverted output. Must be connected to a behavioral element (a use case or function).'}
+    AutomotiveEffect:
+      display: Automotive Effect
+      group: ISO 26262 malfunctions and hazards
+      kind: situation
+      layer: library
+      specializes: AbstractEffect
+      abstract: true
+      marker: Situation
+      section: 9.7.1 p. 99
+      definition: A system-level or vehicle-level effect that is or could result in harm. Its severity must have a rationale attached.
+      attributes:
+      - {name: Severity, type: Severity, multiplicity: '1', note: estimate of the extent of harm; redefines severity; a rationale must be attached}
+    SystemLevelEffect: {display: System Level Effect, group: ISO 26262 malfunctions and hazards, kind: situation, layer: library, specializes: AutomotiveEffect, abstract: true, marker: Situation, section: 9.7.1 p. 102, definition: An automotive effect at system level.}
+    VehicleLevelEffect: {display: Vehicle Level Effect, group: ISO 26262 malfunctions and hazards, kind: situation, layer: library, specializes: AutomotiveEffect, abstract: true, marker: Situation, section: 9.7.1 p. 103, definition: An automotive effect at vehicle level.}
+    AccidentScenario:
+      display: Accident Scenario
+      group: ISO 26262 malfunctions and hazards
+      kind: situation
+      layer: library
+      specializes: [DysfunctionalEvent, Scenario]
+      abstract: true
+      marker: Situation
+      section: 9.7.1 p. 100
+      definition: A combination of one or more operational situations and a malfunctioning behavior. Its controllability must have a rationale attached.
+      attributes:
+      - {name: situation, type: AbstractOperationalSituation, multiplicity: 1..*, note: subsets scenarioStep}
+      - {name: Controllability, type: Controllability, multiplicity: '1', note: ability to avoid harm through timely reactions; a rationale must be attached}
+      - {name: malfunctioningBehavior, type: AnyMalfunction, multiplicity: '1', note: subsets scenarioStep}
+    HazardousEvent:
+      display: Hazardous Event
+      group: ISO 26262 malfunctions and hazards
+      kind: situation
+      layer: library
+      specializes: AbstractRisk
+      abstract: true
+      marker: Situation
+      section: 9.7.1 p. 98
+      definition: The combination of a hazard and an operational situation, used to determine the ASIL. It holds the accident scenario, hazards, system-level and vehicle-level effects, and the ASIL as its score.
+      attributes:
+      - {name: scenario, type: AccidentScenario, multiplicity: '1', note: redefines trigger}
+      - {name: hazard, type: Hazard, multiplicity: 0..*, note: redefines harmPotential}
+      - {name: systemLevelEffect, type: SystemLevelEffect, multiplicity: 0..*}
+      - {name: vehicleLevelEffect, type: VehicleLevelEffect, multiplicity: 0..*, note: redefines harm}
+      - {name: ASIL, type: ASIL, multiplicity: 0..*, note: redefines score}
+    ISO26262SafetyRequirementTemplate:
+      display: ISO 26262 Safety Requirement Template
+      group: ISO 26262 malfunctions and hazards
+      kind: situation
+      layer: library
+      abstract: false
+      marker: DependabilityRequirement
+      section: 9.7.1 p. 99
+      definition: A template for dependability requirements, carrying an ASIL and a fault tolerant time interval.
+      attributes:
+      - {name: ASIL, type: ASIL, multiplicity: '1', note: ASIL of the requirement}
+      - {name: FTTI, type: time, multiplicity: '1', note: fault tolerant time interval}
+    OperationalSituation: {display: Operational Situation, group: ISO 26262 profile, kind: profile element, layer: profile, specializes: Situation, abstract: false, uml_base: Class, section: 9.7.2 p. 103, definition: 'Marks a situation that describes the operational or driving scenario considered in a hazardous event, as part of hazard analysis and risk assessment.'}
+    MalfunctioningBehavior: {display: Malfunctioning Behavior, group: ISO 26262 profile, kind: profile element, layer: profile, specializes: FailureMode, abstract: false, uml_base: Class, section: 9.7.2 p. 104, definition: Marks a failure or unintended behavior of an item with respect to its design intent. A subtype of failure mode.}
+    Verified:
+      display: Verified
+      group: ISO 26262 profile
+      kind: profile element
+      layer: profile
+      abstract: false
+      uml_base: Class
+      section: 9.7.2 p. 110
+      definition: A marker that a hazardous event has been verified; carries the verification result.
+      attributes:
+      - {name: result, type: String, multiplicity: '1', note: verification result}
+    Confirmed:
+      display: Confirmed
+      group: ISO 26262 profile
+      kind: profile element
+      layer: profile
+      abstract: false
+      uml_base: Class
+      section: 9.7.2 p. 110
+      definition: A marker that a hazardous event has been confirmed; carries the confirmation result.
+      attributes:
+      - {name: result, type: String, multiplicity: '1', note: confirmation result}
+    HazardAndRiskAssessment: {display: Hazard And Risk Assessment, group: ISO 26262 profile, kind: profile element, layer: profile, abstract: false, uml_base: Package, section: 9.7.2 p. 110, definition: A grouping package for hazardous events.}
+    LessonLearned: {display: Lesson Learned, group: ISO 26262 profile, kind: profile element, layer: profile, abstract: false, uml_base: Comment, section: 9.7.2 p. 111, definition: A comment about lessons learned from hazard and risk assessment.}
+    ASILAssignment:
+      display: ASIL Assignment
+      group: ISO 26262 profile
+      kind: profile element
+      layer: profile
+      abstract: false
+      uml_base: Element
+      section: 9.7.2 p. 111
+      definition: Assigns an ASIL to a system design element, with an optional exceptional override that needs a rationale.
+      attributes:
+      - {name: ASIL, type: ASIL, multiplicity: '1', note: ASIL of the design element}
+      - {name: ASILOverride, type: ASIL, multiplicity: 0..1, note: exceptional value that does not follow the normal derivation rules}
+    ASILOverrideRationale:
+      display: ASIL Override Rationale
+      group: ISO 26262 profile
+      kind: profile element
+      layer: profile
+      specializes_external:
+      - {language: sysml-1, concept: Rationale}
+      abstract: false
+      uml_base: Comment
+      section: 9.7.2 p. 112
+      definition: A rationale that justifies an ASIL override value.
+    DependabilityRequirement:
+      display: Dependability Requirement
+      group: ISO 26262 requirements
+      kind: profile element
+      layer: profile
+      specializes_external:
+      - {language: sysml-1, concept: AbstractRequirement}
+      - {language: sysml-1, concept: Block}
+      abstract: true
+      uml_base: Class
+      section: 9.7.2 p. 109
+      definition: Parent type of all safety requirement kinds.
+    FunctionalSafetyRequirement:
+      display: Functional Safety Requirement
+      group: ISO 26262 requirements
+      kind: profile element
+      layer: profile
+      specializes: DependabilityRequirement
+      specializes_external:
+      - {language: sysml-1, concept: Requirement}
+      abstract: false
+      uml_base: Class
+      section: 9.7.2 p. 107
+      definition: An implementation-independent safety behavior or safety measure needed to achieve the safety goal it derives from.
+    TechnicalSafetyRequirement:
+      display: Technical Safety Requirement
+      group: ISO 26262 requirements
+      kind: profile element
+      layer: profile
+      specializes: DependabilityRequirement
+      specializes_external:
+      - {language: sysml-1, concept: Requirement}
+      abstract: false
+      uml_base: Class
+      section: 9.7.2 p. 108
+      definition: The implementation, at system level, of the functional safety requirements it derives from; details below system level go to hardware or software safety requirements.
+    SoftwareSafetyRequirement:
+      display: Software Safety Requirement
+      group: ISO 26262 requirements
+      kind: profile element
+      layer: profile
+      specializes: DependabilityRequirement
+      specializes_external:
+      - {language: sysml-1, concept: Requirement}
+      abstract: false
+      uml_base: Class
+      section: 9.7.2 p. 107
+      definition: 'Implementation details for software: behaviors or mechanisms that realize the technical safety requirements it derives from.'
+    HardwareSafetyRequirement:
+      display: Hardware Safety Requirement
+      group: ISO 26262 requirements
+      kind: profile element
+      layer: profile
+      specializes: DependabilityRequirement
+      specializes_external:
+      - {language: sysml-1, concept: Requirement}
+      abstract: false
+      uml_base: Class
+      section: 9.7.2 p. 108
+      definition: Hardware behaviors or details needed to implement the safety concept; implementation specific and assigned to components.
+    SafetyGoal:
+      display: Safety Goal
+      group: ISO 26262 requirements
+      kind: profile element
+      layer: profile
+      specializes: DependabilityRequirement
+      specializes_external:
+      - {language: sysml-1, concept: Requirement}
+      abstract: false
+      uml_base: Class
+      section: 9.7.2 p. 109
+      definition: A top-level safety requirement defined as a result of hazard analysis and risk assessment.
+    RelevantTo:
+      display: Relevant To
+      group: Core
+      kind: relationship profile element
+      layer: profile
+      specializes_external:
+      - {language: sysml-1, concept: DirectedRelationshipPropertyPath}
+      abstract: false
+      uml_base: Dependency
+      section: 9.1.2 p. 22
+      definition: Links a situation to the system-model element that gives it context and relevance, for example an insulin-pump situation "cannot be charged" to the main battery. Reuses the target context and target property path of its parent.
+    Violates: {display: Violates, group: Core, kind: relationship profile element, layer: profile, abstract: false, uml_base: Dependency, section: 9.1.2 p. 23, definition: 'Says that a situation is a case of the system violating a prescription (a requirement, design constraint or other element that prescribes a characteristic of the system).'}
+    InContextOf: {display: In Context Of, group: GSN, kind: relationship profile element, layer: profile, abstract: false, uml_base: Dependency, section: 9.6.1 p. 86, definition: 'Declares a contextual relationship: a goal or strategy is stated in the context of a context, assumption or justification.'}
+    SupportedBy: {display: Supported By, group: GSN, kind: relationship profile element, layer: profile, abstract: false, uml_base: Dependency, section: 9.6.1 p. 87, definition: Documents an inferential relationship (an inference between goals) or an evidential relationship (a goal and the evidence that substantiates it).}
+    IndependenceRequirement:
+      display: Independence Requirement
+      group: ISO 26262 requirements
+      kind: relationship profile element
+      layer: profile
+      specializes_external:
+      - {language: sysml-1, concept: DeriveReqt}
+      abstract: false
+      uml_base: Abstraction
+      section: 9.7.2 p. 104
+      definition: A relationship from a child requirement that states an independence criterion that must hold for an ASIL decomposition (between a parent requirement and two other children) to be valid.
+    ASILDecompose:
+      display: ASIL Decompose
+      group: ISO 26262 requirements
+      kind: relationship profile element
+      layer: profile
+      specializes_external:
+      - {language: sysml-1, concept: DeriveReqt}
+      abstract: false
+      uml_base: Abstraction
+      section: 9.7.2 p. 105
+      definition: Connects two safety requirements for ASIL decomposition. The target (supplier) is at a higher abstraction than the source (client); the relation is applied in pairs.
+    SafeState: {display: Safe State, group: ISO 26262 requirements, kind: relationship profile element, layer: profile, abstract: false, uml_base: Dependency, section: 9.7.2 p. 105, definition: 'A state of a function realized by one or more architectural components, tied to safety behaviors and typically entered after a failure mode occurs.', note: The text describes SafeState as a state although it extends a dependency.}
+    UserInfoRequirement:
+      display: User Info Requirement
+      group: ISO 26262 requirements
+      kind: relationship profile element
+      layer: profile
+      specializes_external:
+      - {language: sysml-1, concept: Satisfy}
+      abstract: false
+      uml_base: Abstraction
+      section: 9.7.2 p. 106
+      definition: Links a state (client) to a functional or technical safety requirement (supplier) that specifies information to present to vehicle occupants when the vehicle enters a safe state.
+    RecoveryRequirement:
+      display: Recovery Requirement
+      group: ISO 26262 requirements
+      kind: relationship profile element
+      layer: profile
+      specializes_external:
+      - {language: sysml-1, concept: Satisfy}
+      abstract: false
+      uml_base: Abstraction
+      section: 9.7.2 p. 106
+      definition: Links a safe state to a requirement that gives the criteria for recovering from the safe state to another operational mode.
+    OperatingMode: {display: Operating Mode, group: ISO 26262 requirements, kind: relationship profile element, layer: profile, abstract: false, uml_base: Dependency, section: 9.7.2 p. 107, definition: 'A state of a function realized by one or more architectural components, associated with specific behaviors.', note: Described as a state although it extends a dependency.}
+relationships:
+  note: RAAML gives no table of allowed endpoint pairs. Endpoint rules are the numbered constraints of each profile relationship (see constraints, categories REL, GSN and STPA) and the multiplicities of the part properties. Dependencies run from client (source) to supplier (target). Multiplicity keys are targets_per_source and sources_per_target. Part (composition) relationships belong to a library class; sources_per_target is 1. Endpoints written sysml-1:Name or uml:Name are defined in those languages; any model element means the standard does not restrict the kind.
+  count: 51
+  items:
+  - name: Causality
+    kind: association
+    source: AnySituation
+    target: AnySituation
+    roles: {source: from, target: to}
+    multiplicity: {targets_per_source: 0..*, sources_per_target: 0..*}
+    section: 9.1.1 p. 21
+    note: 'The universal root relationship between situations: direct, conditional, probabilistic or user-defined cause and effect. Several situations can cause one and one can cause several.'
+  - name: Activation
+    kind: association
+    source: AbstractCause
+    target: DysfunctionalEvent
+    roles: {source: fault, target: error}
+    multiplicity: {targets_per_source: 0..*, sources_per_target: 0..*}
+    generalizes: Causality
+    section: 9.2.1 p. 30
+    note: Propagation of an initial cause to a dysfunctional event in the system.
+  - name: ErrorPropagation
+    kind: association
+    source: DysfunctionalEvent
+    target: DysfunctionalEvent
+    roles: {source: fromError, target: toError}
+    multiplicity: {targets_per_source: 0..*, sources_per_target: 0..*}
+    generalizes: Causality
+    section: 9.2.1 p. 30
+    note: One error leading to another through the system.
+  - name: ErrorRealization
+    kind: association
+    source: DysfunctionalEvent
+    target: DysfunctionalEvent
+    roles: {source: error, target: failure}
+    multiplicity: {targets_per_source: 0..*, sources_per_target: 0..*}
+    generalizes: Causality
+    section: 9.2.1 p. 31
+    note: An error propagating to a failure.
+  - name: ProcessModelFactor
+    kind: association
+    source: Factor
+    target: ProcessModel
+    roles: {source: Factor, target: processModel}
+    multiplicity: {targets_per_source: 0..*, sources_per_target: 0..*}
+    generalizes: Causality
+    section: 9.5.1 p. 77
+    note: Causal relationship between a causal factor and a process flaw.
+  - name: ProcessModelConsequence
+    kind: association
+    source: ProcessModel
+    target: UnsafeControlAction
+    roles: {source: processModel, target: unsafeControlAction}
+    multiplicity: {targets_per_source: 0..*, sources_per_target: 0..*}
+    generalizes: Causality
+    section: 9.5.1 p. 77
+    note: Causal relationship between a process flaw and an unsafe control action.
+  - name: UnsafeControlActionHarmPotential
+    kind: association
+    source: UnsafeControlAction
+    target: HarmPotential
+    roles: {source: unsafeControlAction, target: harmPotential}
+    multiplicity: {targets_per_source: 0..*, sources_per_target: 0..*}
+    generalizes: Causality
+    section: 9.5.1 p. 77
+    note: Causal relationship between an unsafe control action and a source of risk.
+  - {name: RiskRealization, kind: association class, source: Loss, target: Hazard, generalizes: AbstractRisk and Causality, section: 9.5.1 p. 76, note: Association between a loss and a hazard (potential harm). The text names the two ends but gives no direction or role names; source and target here follow the order of the text only.}
+  - {name: RelevantTo, kind: dependency, source: Situation, target: any model element, section: 9.1.2 p. 22, note: 'Client must be a Situation. Supplier is the system-model element that gives context. Used in STPA to connect an unsafe control action to its control action, and to tie failure states to failure modes.'}
+  - {name: ControllingMeasure, kind: dependency, source: any model element, target: Situation, section: 9.1.2 p. 23, note: Abstract. Supplier must be a Situation. The client is the measure or action item (for example a requirement).}
+  - {name: Detection, kind: dependency, source: any model element, target: Situation, generalizes: ControllingMeasure, section: 9.2.2 p. 35, note: A measure that raises the probability of detecting the situation.}
+  - {name: Prevention, kind: dependency, source: any model element, target: Situation, generalizes: ControllingMeasure, section: 9.2.2 p. 36, note: A measure that lowers the probability of the situation occurring.}
+  - {name: Mitigation, kind: dependency, source: any model element, target: Situation, generalizes: ControllingMeasure, section: 9.2.2 p. 36, note: A measure that lowers the severity of the situation.}
+  - {name: Recommendation, kind: dependency, source: any model element, target: Situation, generalizes: ControllingMeasure, section: 9.2.2 p. 37, note: 'Connects the situation to an action item, normally a requirement.'}
+  - {name: Violates, kind: dependency, source: Situation, target: any model element, section: 9.1.2 p. 23, note: 'Client must be a Situation. Supplier is a requirement, design constraint or other element that prescribes a characteristic.'}
+  - {name: InContextOf, kind: dependency, source: GSNArgumentNode, target: ContextualInformation, section: 9.6.1 p. 86, note: 'Client must be a goal or strategy. Supplier may be contextual information or a non-GSN element, never another GSN node kind. Permitted: goal or strategy to context, assumption or justification.'}
+  - {name: SupportedBy, kind: dependency, source: GSNArgumentNode, target: GSNNode, section: 9.6.1 p. 87, note: 'Client must be a goal or strategy that is not marked undeveloped. Supplier may be a GSN node or a non-GSN element, never contextual information. If the client is a strategy the supplier is a goal. Permitted: goal to goal, strategy or solution; strategy to goal.'}
+  - {name: IndependenceRequirement, kind: dependency, source: 'sysml-1:Requirement', target: 'sysml-1:Requirement', generalizes: DeriveReqt, section: 9.7.2 p. 104, note: From the child requirement that states the independence criterion to its parent. Endpoint kinds are not otherwise constrained by the text.}
+  - {name: ASILDecompose, kind: dependency, source: 'sysml-1:Requirement', target: 'sysml-1:Requirement', generalizes: DeriveReqt, section: 9.7.2 p. 105, note: Applied in pairs. The supplier should be at a higher abstraction than the client.}
+  - {name: SafeState, kind: dependency, source: not stated, target: not stated, section: 9.7.2 p. 105, note: Endpoints are not stated.}
+  - {name: UserInfoRequirement, kind: dependency, source: 'uml:State', target: FunctionalSafetyRequirement or TechnicalSafetyRequirement, generalizes: Satisfy, section: 9.7.2 p. 106, note: Arrow from a state (client) to the requirement (supplier).}
+  - {name: RecoveryRequirement, kind: dependency, source: SafeState, target: 'sysml-1:Requirement', generalizes: Satisfy, section: 9.7.2 p. 106, note: Between a safe state and a requirement that gives recovery criteria.}
+  - {name: OperatingMode, kind: dependency, source: not stated, target: not stated, section: 9.7.2 p. 107, note: Endpoints are not stated.}
+  - name: Scenario.scenarioStep
+    kind: composition
+    source: Scenario
+    target: AnySituation
+    roles: {source: scenario, target: scenarioStep}
+    multiplicity: {targets_per_source: 0..*, sources_per_target: '1'}
+    section: 9.2.1 p. 32
+    note: A situation that is a step of the scenario. Steps are composite parts.
+  - name: AbstractRisk.trigger
+    kind: composition
+    source: AbstractRisk
+    target: AbstractEvent
+    roles: {source: abstractRisk, target: trigger}
+    multiplicity: {targets_per_source: 0..*, sources_per_target: '1'}
+    section: 9.2.1 p. 33
+    note: Subsets scenarioStep.
+  - name: AbstractRisk.harm
+    kind: composition
+    source: AbstractRisk
+    target: AbstractEffect
+    roles: {source: abstractRisk, target: harm}
+    multiplicity: {targets_per_source: 0..*, sources_per_target: '1'}
+    section: 9.2.1 p. 33
+    note: Subsets scenarioStep.
+  - name: AbstractRisk.harmPotential
+    kind: composition
+    source: AbstractRisk
+    target: HarmPotential
+    roles: {source: abstractRisk, target: harmPotential}
+    multiplicity: {targets_per_source: 0..*, sources_per_target: '1'}
+    section: 9.2.1 p. 34
+    note: Subsets scenarioStep.
+  - name: AbstractFMEAItem.failureMode
+    kind: composition
+    source: AbstractFMEAItem
+    target: AbstractFailureMode
+    roles: {source: abstractFMEAItem, target: failureMode}
+    multiplicity: {targets_per_source: '1', sources_per_target: '1'}
+    section: 9.3.1 p. 39
+    note: Subsets scenarioStep. FMEAItem narrows the type to FailureMode.
+  - name: AbstractFMEAItem.cause
+    kind: composition
+    source: AbstractFMEAItem
+    target: AbstractCause
+    roles: {source: abstractFMEAItem, target: cause}
+    multiplicity: {targets_per_source: 1..*, sources_per_target: '1'}
+    section: 9.3.1 p. 39
+    note: Subsets scenarioStep. FMEAItem narrows the type to Cause.
+  - name: AbstractFMEAItem.finalEffect
+    kind: composition
+    source: AbstractFMEAItem
+    target: AbstractEffect
+    roles: {source: abstractFMEAItem, target: finalEffect}
+    multiplicity: {targets_per_source: 1..*, sources_per_target: '1'}
+    section: 9.3.1 p. 39
+    note: Redefines harm. FMEAItem narrows the type to Effect.
+  - name: AbstractFMEAItem.harmPotential
+    kind: composition
+    source: AbstractFMEAItem
+    target: HarmPotential
+    roles: {source: abstractFMEAItem, target: harmPotential}
+    multiplicity: {targets_per_source: '0', sources_per_target: '1'}
+    section: 9.3.1 p. 39
+    note: 'Redefined to multiplicity zero: not used in FMEA.'
+  - name: FTATree.topEvent
+    kind: composition
+    source: FTATree
+    target: Event
+    roles: {source: fTATree, target: topEvent}
+    multiplicity: {targets_per_source: '1', sources_per_target: '1'}
+    section: 9.4.1 p. 45
+  - name: Gate.input
+    kind: composition
+    source: Gate
+    target: FTAElement
+    roles: {source: gate, target: input}
+    multiplicity: {targets_per_source: 0..*, sources_per_target: '1'}
+    section: 9.4.1 p. 50
+    note: Input events of the gate (the standard names the end source Event).
+  - name: Gate.output
+    kind: composition
+    source: Gate
+    target: Event
+    roles: {source: gate, target: output}
+    multiplicity: {targets_per_source: '1', sources_per_target: '1'}
+    section: 9.4.1 p. 50
+    note: The single output event of the gate (the standard names the end target Event).
+  - name: INHIBIT.condition
+    kind: composition
+    source: INHIBIT
+    target: Event
+    roles: {source: iNHIBIT, target: condition}
+    multiplicity: {targets_per_source: 0..*, sources_per_target: '1'}
+    section: 9.4.1 p. 53
+    note: Enabling conditions.
+  - name: LossScenario.Factor
+    kind: composition
+    source: LossScenario
+    target: Factor
+    roles: {source: lossScenario, target: Factor}
+    multiplicity: {targets_per_source: 0..*, sources_per_target: '1'}
+    section: 9.5.1 p. 72
+    note: Subsets scenarioStep.
+  - name: LossScenario.unsafeControlAction
+    kind: composition
+    source: LossScenario
+    target: UnsafeControlAction
+    roles: {source: lossScenario, target: unsafeControlAction}
+    multiplicity: {targets_per_source: 0..*, sources_per_target: '1'}
+    section: 9.5.1 p. 72
+    note: Subsets scenarioStep.
+  - name: LossScenario.processModel
+    kind: composition
+    source: LossScenario
+    target: ProcessModel
+    roles: {source: lossScenario, target: processModel}
+    multiplicity: {targets_per_source: 0..*, sources_per_target: '1'}
+    section: 9.5.1 p. 72
+    note: Subsets scenarioStep.
+  - name: UnsafeControlAction.Context
+    kind: composition
+    source: UnsafeControlAction
+    target: AbstractOperationalSituation
+    roles: {source: unsafeControlAction, target: Context}
+    multiplicity: {targets_per_source: '1', sources_per_target: '1'}
+    section: 9.5.1 p. 75
+    note: The context in which the control action leads to the undesired outcome.
+  - name: AbstractOperationalSituation.conditions
+    kind: composition
+    source: AbstractOperationalSituation
+    target: OperationalCondition
+    roles: {source: abstractOperationalSituation, target: conditions}
+    multiplicity: {targets_per_source: 0..*, sources_per_target: '1'}
+    section: 9.7.1 p. 92
+  - name: TypicalAutomotiveSituation.trafficAndPeople
+    kind: composition
+    source: TypicalAutomotiveSituation
+    target: TrafficAndPeople
+    roles: {source: typicalAutomotiveSituation, target: trafficAndPeople}
+    multiplicity: {targets_per_source: 0..*, sources_per_target: '1'}
+    section: 9.7.1 p. 93
+    note: Subsets conditions.
+  - name: TypicalAutomotiveSituation.vehicleUsage
+    kind: composition
+    source: TypicalAutomotiveSituation
+    target: VehicleUsage
+    roles: {source: typicalAutomotiveSituation, target: vehicleUsage}
+    multiplicity: {targets_per_source: 0..*, sources_per_target: '1'}
+    section: 9.7.1 p. 93
+    note: Subsets conditions.
+  - name: TypicalAutomotiveSituation.roadCondition
+    kind: composition
+    source: TypicalAutomotiveSituation
+    target: RoadCondition
+    roles: {source: typicalAutomotiveSituation, target: roadCondition}
+    multiplicity: {targets_per_source: 0..*, sources_per_target: '1'}
+    section: 9.7.1 p. 93
+    note: Subsets conditions.
+  - name: TypicalAutomotiveSituation.location
+    kind: composition
+    source: TypicalAutomotiveSituation
+    target: Location
+    roles: {source: typicalAutomotiveSituation, target: location}
+    multiplicity: {targets_per_source: 0..*, sources_per_target: '1'}
+    section: 9.7.1 p. 93
+    note: Subsets conditions.
+  - name: TypicalAutomotiveSituation.environmentalCondition
+    kind: composition
+    source: TypicalAutomotiveSituation
+    target: EnvironmentalCondition
+    roles: {source: typicalAutomotiveSituation, target: environmentalCondition}
+    multiplicity: {targets_per_source: 0..*, sources_per_target: '1'}
+    section: 9.7.1 p. 93
+    note: Subsets conditions.
+  - name: AccidentScenario.situation
+    kind: composition
+    source: AccidentScenario
+    target: AbstractOperationalSituation
+    roles: {source: accidentScenario, target: situation}
+    multiplicity: {targets_per_source: 1..*, sources_per_target: '1'}
+    section: 9.7.1 p. 100
+    note: Subsets scenarioStep.
+  - name: AccidentScenario.malfunctioningBehavior
+    kind: composition
+    source: AccidentScenario
+    target: AnyMalfunction
+    roles: {source: accidentScenario, target: malfunctioningBehavior}
+    multiplicity: {targets_per_source: '1', sources_per_target: '1'}
+    section: 9.7.1 p. 101
+    note: Subsets scenarioStep.
+  - name: HazardousEvent.scenario
+    kind: composition
+    source: HazardousEvent
+    target: AccidentScenario
+    roles: {source: hazardousEvent, target: scenario}
+    multiplicity: {targets_per_source: '1', sources_per_target: '1'}
+    section: 9.7.1 p. 98
+    note: Redefines trigger.
+  - name: HazardousEvent.hazard
+    kind: composition
+    source: HazardousEvent
+    target: Hazard
+    roles: {source: hazardousEvent, target: hazard}
+    multiplicity: {targets_per_source: 0..*, sources_per_target: '1'}
+    section: 9.7.1 p. 98
+    note: Redefines harmPotential.
+  - name: HazardousEvent.systemLevelEffect
+    kind: composition
+    source: HazardousEvent
+    target: SystemLevelEffect
+    roles: {source: hazardousEvent, target: systemLevelEffect}
+    multiplicity: {targets_per_source: 0..*, sources_per_target: '1'}
+    section: 9.7.1 p. 98
+  - name: HazardousEvent.vehicleLevelEffect
+    kind: composition
+    source: HazardousEvent
+    target: VehicleLevelEffect
+    roles: {source: hazardousEvent, target: vehicleLevelEffect}
+    multiplicity: {targets_per_source: 0..*, sources_per_target: '1'}
+    section: 9.7.1 p. 98
+    note: Redefines harm.
+diagram_types:
+  block definition:
+    display: SysML block definition diagram
+    form: diagram
+    defined_by: 7.3 (p. 12); Examples 2.1, 2.5 (informative)
+    reused_from: sysml-1
+    admits: [AnySituation, Situation, Scenario, AbstractRisk, AbstractFMEAItem, FMEAItem, FTATree, HazardousEvent, AccidentScenario, TypicalAutomotiveSituation, OperationalCondition, AnyMalfunction, Hazard, AutomotiveEffect, Exposure, Severity, Controllability, ASIL, DependabilityRequirement, SafetyGoal, Violates, RelevantTo, Causality]
+    admits_note: The main diagram for defining situations, scenarios, library classes and their specializations, and for showing FMEA items, operational conditions, accident scenarios, hazardous events and safety goal decomposition. The standard names it as one of the diagrams in which situation and scenario models are created and shown.
+  internal block:
+    display: SysML internal block diagram
+    form: diagram
+    defined_by: 7.3 (p. 12); Examples 2.1, 2.3 (informative)
+    reused_from: sysml-1
+    admits: [Situation, Scenario, FMEAItem, Cause, FailureMode, Effect, ControlStructure, Controller, ControlledProcess, Actuator, Sensor, ControlAction, Feedback, Loss, Hazard]
+    admits_note: Used for the composition of scenarios, for chaining causes, failure modes and effects across levels of a system in an FMEA, for the STPA control structure, and for mapping losses to hazards.
+  parametric:
+    display: SysML parametric diagram
+    form: diagram
+    defined_by: 9.1, Table 9.1 (p. 20); Examples 2.1 (informative)
+    reused_from: sysml-1
+    admits: [RPNCalculation, ANDConstraintBlock, ORConstraintBlock, SEQConstraintBlock, XORConstraintBlock, INHIBITConstraintBlock, MAJORITY_VOTEConstraintBlock, NOTConstraintBlock]
+    admits_note: Used for the RPN formula, the gate probability formulas, and any formula relating quantitative attributes of situations.
+  requirement:
+    display: SysML requirement diagram
+    form: diagram
+    defined_by: Examples 2.5 (informative)
+    reused_from: sysml-1
+    admits: [SafetyGoal, FunctionalSafetyRequirement, TechnicalSafetyRequirement, SoftwareSafetyRequirement, HardwareSafetyRequirement, DependabilityRequirement, ASILDecompose, IndependenceRequirement, Violates]
+    admits_note: Used for safety goal decomposition and for requirements that result from an analysis.
+  fault tree:
+    display: Fault tree diagram
+    form: diagram
+    defined_by: 9.4 (pp. 44-69); Examples 2.2 (informative)
+    admits: [FTATree, Tree, TopEvent, IntermediateEvent, BasicEvent, UndevelopedEvent, ConditionalEvent, DormantEvent, HouseEvent, ZeroEvent, Event, Gate, AND, OR, NOT, XOR, SEQ, INHIBIT, MAJORITY_VOTE, TransferIn, TransferOut, Undeveloped]
+    admits_note: A top-down tree of events combined by gates. The standard gives no frame or notation of its own beyond saying the event and gate markers carry icons; trees can be split and linked with transfer-in and transfer-out nodes.
+  GSN argument:
+    display: Goal Structuring Notation argument diagram
+    form: diagram
+    defined_by: 9.6 (pp. 81-88); Examples 2.4 (informative)
+    admits: [Goal, Strategy, Solution, Context, Assumption, Justification, InContextOf, SupportedBy, Undeveloped, IDCarrier]
+    admits_note: An argument of goals, strategies and solutions with contextual information. Drawn as a class-style diagram, with the notation described under conventions. The profile covers the core notation of the second version of the Goal Structuring Notation only.
+  control structure:
+    display: STPA control structure diagram
+    form: diagram
+    defined_by: 9.5.2 (pp. 78-81); Examples 2.3 (informative)
+    reused_from: sysml-1
+    admits: [ControlStructure, Controller, ControlledProcess, Actuator, Sensor, ControlAction, Feedback]
+    admits_note: A feedback control loop of controllers and controlled processes with control actions and feedback. It can stand alone or be built into the system model; control actions and feedback may be shown or hidden.
+  situation table:
+    display: Situation table
+    form: table
+    defined_by: 7.3.2 (pp. 13-16, Tables 7.1 and 7.2); Examples 2.5 (informative)
+    admits: [Situation, AbstractOperationalSituation, TypicalAutomotiveSituation, AccidentScenario, HazardousEvent, OperationalCondition, AutomotiveEffect, Hazard, AnyMalfunction]
+    admits_note: A table with a name column and one column per attribute of the situation type. Rows are situations; indented rows are specializations; a composite sub-situation becomes a group of columns, so one table can cover several levels (for example a hazardous event with its accident scenario and operational situation). Examples show tables of operational conditions, operational situations, accident scenarios, effects, hazards and hazardous events.
+  FMEA table:
+    display: FMEA table
+    form: table
+    defined_by: Examples 2.1 (informative)
+    admits: [FMEAItem, FailureMode, Cause, Effect]
+    admits_note: 'A classical FMEA table: each row is an FMEA item, with the item (reached through RelevantTo), failure mode, cause, local effect, final effect, and the severity, detectability, occurrence and RPN columns. Tool vendors may color the RPN by priority.'
+  unsafe control action table:
+    display: Unsafe control action table
+    form: table
+    defined_by: Examples 2.3, Table 2.1 (informative)
+    admits: [ControlAction, UnsafeControlAction, Provided, NotProvided, STPAEarly, STPALate, OutOfSequence, TooLong, TooShort, AbstractOperationalSituation, Hazard]
+    admits_note: Rows are control actions; guideword columns hold the unsafe control actions with references to context and hazard elements.
+  HAZOP table:
+    display: HAZOP table
+    form: table
+    defined_by: Examples 2.5, Figure 2.22 (informative)
+    admits: [AnyMalfunction, Less, More, 'No', Intermittent, Unintended, ISO26262Early, ISO26262Late, Inverted, RelevantTo]
+    admits_note: Rows are behavioral elements (activities); columns are the guidewords; cells hold the malfunctioning behaviors related by RelevantTo.
+viewpoints:
+  source: Clause 10 (Views), Figures 10.1 to 10.16. Each is a figure of the specification's own model, one per package; they are the views Type 2 conformance refers to. admits names concepts, and in a few cases relationships (Causality and its kinds).
+  Core Library:
+    figure: '10.1'
+    package: Core::Core Library
+    admits: [AnySituation, Causality]
+  CoreProfile:
+    figure: '10.2'
+    package: Core::Core Profile
+    admits: [ControllingMeasure, RelevantTo, Situation, Violates]
+  General Concepts Library:
+    figure: '10.3'
+    package: General::General Concepts Library
+    admits: [AbstractCause, AbstractEffect, AbstractEvent, AbstractFailureMode, AbstractRisk, Activation, AnySituation, Causality, Cause, DysfunctionalEvent, Effect, ErrorPropagation, ErrorRealization, FailureMode, HarmPotential, Hazard, Scenario, UndesiredState]
+  General Concepts Profile:
+    figure: '10.4'
+    package: General::General Concepts Profile
+    admits: [ControllingMeasure, Detection, Error, FailureMode, FailureState, Fault, Mitigation, Prevention, Recommendation, Situation, Undeveloped]
+  FMEA Library:
+    figure: '10.5'
+    package: Methods::FMEA::FMEA Library
+    admits: [AbstractCause, AbstractEffect, AbstractFailureMode, AbstractFMEAItem, AbstractRisk, Cause, DegradationOfFunction, DelayedFunction, Effect, ExceedingFunction, FailureMode, FMEAItem, IntermittentFunction, LossOfFunction, PartialFunction, UnintendedFunction]
+  FMEA Profile:
+    figure: '10.6'
+    package: Methods::FMEA::FMEA Profile
+    admits: [FMEAItem]
+  FTA Events:
+    figure: '10.7'
+    package: Methods::FTA::FTALibrary::Events
+    admits: [BasicEvent, ConditionalEvent, DormantEvent, Event, HouseEvent, IntermediateEvent, TopEvent, UndevelopedEvent, ZeroEvent]
+  FTA Library:
+    figure: '10.8'
+    package: Methods::FTA::FTALibrary
+    admits: [AbstractEvent, AND, AnySituation, Causality, DysfunctionalEvent, Event, FTAElement, FTATree, Gate, INHIBIT, MAJORITY_VOTE, NOT, OR, Scenario, SEQ, XOR]
+  FTA Profile:
+    figure: '10.9'
+    package: Methods::FTA::FTAProfile
+    admits: [AND, BasicEvent, ConditionalEvent, DormantEvent, Event, Gate, HouseEvent, INHIBIT, IntermediateEvent, MAJORITY_VOTE, NOT, OR, SEQ, Situation, TopEvent, TransferIn, TransferOut, Tree, Undeveloped, XOR, ZeroEvent]
+  STPA Library:
+    figure: '10.10'
+    package: Methods::STPA::STPA Library
+    admits: [AbstractCause, AbstractEffect, AbstractEvent, AbstractOperationalSituation, AbstractRisk, AnySituation, Causality, STPAEarly, Factor, HarmPotential, Hazard, InadequateControlExecution, InadequateControllerDecisions, InadequateFeedbackAndInputs, InadequateProcessBehavior, STPALate, Loss, LossScenario, NotProvided, OperationalCondition, OutOfSequence, ProcessModel, ProcessModelConsequence, ProcessModelFactor, Provided, RiskRealization, Scenario, TooLong, TooShort, UndesiredState, UnsafeControlAction, UnsafeControlActionHarmPotential]
+  STPA Profile:
+    figure: '10.11'
+    package: Methods::STPA::STPA Profile
+    admits: [Actuator, ControlAction, ControlledProcess, Controller, ControlStructure, FailureMode, Feedback, Sensor, UnsafeControlAction]
+  GSN Profile:
+    figure: '10.12'
+    package: GSN::GSN Profile
+    admits: [Assumption, Context, Goal, GSNArgumentNode, GSNNode, InContextOf, Justification, Solution, Strategy, SupportedBy, ContextualInformation, Undeveloped]
+  ISO 26262 Library:
+    figure: '10.13'
+    package: Methods::ISO 26262::ISO 26262 Library
+    admits: [AbstractEffect, AbstractEvent, AbstractOperationalSituation, AbstractRisk, AccidentScenario, AnyMalfunction, AnySituation, ASIL, AutomotiveEffect, Causality, Controllability, DysfunctionalEvent, ISO26262Early, EnvironmentalCondition, Exposure, HarmPotential, Hazard, HazardousEvent, Intermittent, Inverted, ISO26262SafetyRequirementTemplate, ISO26262Late, Less, Location, More, 'No', OperationalCondition, RoadCondition, Scenario, Severity, SystemLevelEffect, TrafficAndPeople, TypicalAutomotiveSituation, UndesiredState, Unintended, VehicleLevelEffect, VehicleUsage]
+  All-Encompassing Operational Situations:
+    figure: '10.14'
+    package: Methods::ISO 26262::ISO 26262 Library
+    admits: [AnyEnvironmentalCondition, AnyLocation, AnyRoadCondition, AnyTrafficAndPeople, AnyVehicleUse, EnvironmentalCondition, Location, RoadCondition, TrafficAndPeople, VehicleUsage]
+  RequirementManagement:
+    figure: '10.15'
+    package: Methods::ISO 26262::ISO 26262 Profile::RequirementManagement
+    admits: [ASILDecompose, DependabilityRequirement, FunctionalSafetyRequirement, HardwareSafetyRequirement, IndependenceRequirement, OperatingMode, RecoveryRequirement, SafeState, SafetyGoal, SoftwareSafetyRequirement, TechnicalSafetyRequirement, UserInfoRequirement]
+  ISO 26262 Profile:
+    figure: '10.16'
+    package: Methods::ISO 26262::ISO 26262 Profile
+    admits: [ASILAssignment, ASILOverrideRationale, Confirmed, ControllingMeasure, FailureMode, HazardAndRiskAssessment, IDCarrier, LessonLearned, MalfunctioningBehavior, Mitigation, OperationalSituation, Situation, Verified]
+data_types:
+  coverage: partial
+  section: "9.7.1 pp. 93-94; 9.4.1 p. 49; 9.1.2 p. 24"
+  note: "RAAML defines four small value types for ISO 26262 (exposure, severity, controllability, ASIL) and one restricted real for house events; every other attribute is typed with Real, Integer or String from the SysML libraries, and the standard leaves some attributes untyped on purpose so each method can type them."
+  inherits_from: sysml-1
+  types:
+    - {name: Exposure, kind: enumeration, values: [E0, E1, E2, E3, E4], section: "9.7.1 p. 93", note: "Likelihood of being in an operational situation. A rationale must be attached to the exposure of an operational situation (rule RAAML-ISO-001)."}
+    - {name: Severity, kind: enumeration, values: [S0, S1, S2, S3], section: "9.7.1 p. 93", note: "Extent of harm of an automotive effect. A rationale must be attached (RAAML-ISO-002)."}
+    - {name: Controllability, kind: enumeration, values: [C0, C1, C2, C3], section: "9.7.1 p. 94", note: "Ability to avoid harm through timely reactions, held by an accident scenario. A rationale must be attached (RAAML-ISO-003)."}
+    - {name: ASIL, kind: enumeration, values: [no assignment, QM, A, B, C, D, A(B), A(C), A(D), B(C), B(D), C(D), A(A), B(B), C(C), D(D), QM(A), QM(B), QM(C), QM(D)], section: "9.7.1 p. 94 (Figure 9.129)", note: "Twenty literals: no assignment, the plain levels QM and A to D, and the decomposed forms written level(level). Used for the hazardous event score, the safety requirement template and the ASIL assignment."}
+    - {name: HouseEventProbability, kind: other, section: "9.4.1 p. 49", note: "A restriction of Real for the probability of a house event, which is 0 or 1 (rule RAAML-VAL-002). The standard lists no literals for it."}
+    - {name: time, kind: other, section: "9.7.1 pp. 99-100", note: "The type the standard names for the fault tolerant time interval (FTTI) of a safety requirement template. The standard does not define it in this clause."}
+  attributes:
+    coverage: some_concepts
+    where: concepts
+    note: "Concept entries whose attributes the standard lists carry them under `attributes` as name, type, multiplicity and a note. Probabilities of fault tree elements are Real values from 0 to 1 (9.4.1 p. 45). The abstract classes of clause 9.2.1 declare untyped placeholder attributes that method classes type."
+notation:
+  coverage: normative
+  section: "9.4.2 pp. 56-69; 9.6.1 pp. 81-88; 7.3 pp. 11-16; 9.3.1 p. 39 (Figure 9.34)"
+  note: "The standard gives its own symbols only to the fault tree events and gates (9.4.2) and to the goal structuring nodes (9.6.1); every other concept is a block drawn with its marker shown as a keyword, and relationships between situations are drawn as associations or dependencies. The symbols below were read from the standard's figures; the standard states no sizes or colors."
+  inherits_from: sysml-1
+  default:
+    shape: "a SysML block box as the sysml-1 guide draws it: a rectangle whose top compartment holds the marker name in guillemets, for example «FailureMode» or «Situation», above the bold class name (the name is also shown in italics for the abstract classes in the standard's figures); further compartments, each headed in small italics (parts, values, constraints), list the attributes as name : Type [multiplicity] with a {subsets x} or {redefines x} note"
+    line: "a solid line for an association or part relationship, with the role name and the multiplicity at each end and any {subsets x} or {redefines x} note beside the line; a part (composition) relationship, named Owner.role in this file, has a filled diamond at the owning end; a generalization is a line with a hollow triangle at the general class"
+    section: "7.3 pp. 11-16; 9.3.1 p. 39 (Figure 9.34); 9.2.1 pp. 30-31 (Figures 9.18, 9.19)"
+  display_forms: "A marker that carries an icon may be shown as the icon with the element name below it, or as a box with the icon at its upper left (the UML icon presentation); the preferred form uses the icon as the resizable outline of the box, with the usual compartments inside. The standard describes these forms under the goal structuring notation (9.6.1 p. 82, Figure 9.105) and says the fault tree event and gate markers carry icons (9.4.2); it does not repeat the forms for the fault tree."
+  elements:
+    Tree: {shape: "the block box with the keyword «Tree» above the bold name", marker: "no icon; the standard shows only a stereotype box", label: "keyword, then name", section: "9.4.2 p. 56 (Figure 9.62)"}
+    Event: {shape: "the block box with the keyword «Event» above the italic name; the abstract marker has no icon of its own", marker: "none", label: "keyword, then name", section: "9.4.2 p. 57 (Figure 9.64)"}
+    Gate: {shape: "the block box with the keyword «Gate» above the italic name; the abstract marker has no icon of its own", marker: "none", label: "keyword, then name", section: "9.4.2 p. 57 (Figure 9.63)"}
+    BasicEvent: {shape: "a circle with a plain outline and nothing inside", marker: "none", label: "the keyword «BasicEvent» and the name below the circle", section: "9.4.2 p. 59 (Figure 9.66)"}
+    ConditionalEvent: {shape: "an ellipse, wider than it is tall, with a plain outline and nothing inside", marker: "none", label: "the keyword «ConditionalEvent» and the name below the ellipse", section: "9.4.2 p. 60 (Figure 9.67)"}
+    DormantEvent: {shape: "a diamond (a square turned on its corner) drawn twice, one outline inside the other, so the symbol has a double outline", marker: "none", label: "the keyword «DormantEvent» and the name below the diamond", section: "9.4.2 p. 58 (Figure 9.65)"}
+    HouseEvent: {shape: "a house outline: a square lower part with a pointed roof, a plain outline and nothing inside", marker: "none", label: "the keyword «HouseEvent» and the name below the symbol", section: "9.4.2 p. 61 (Figure 9.69)"}
+    ZeroEvent: {shape: "the house outline of the house event with one straight diagonal line across the square part, from the upper left corner (where the roof meets the wall) down to the lower right corner", marker: "none", label: "the keyword «ZeroEvent» and the name below the symbol", section: "9.4.2 p. 60 (Figure 9.68)"}
+    IntermediateEvent: {shape: "the block box with the keyword «IntermediateEvent» above the bold name", marker: "no icon; the standard shows only a stereotype box", label: "keyword, then name", section: "9.4.2 p. 67 (Figure 9.77)"}
+    TopEvent: {shape: "the block box with the keyword «TopEvent» above the bold name", marker: "no icon; the standard shows only a stereotype box", label: "keyword, then name", section: "9.4.2 p. 68 (Figure 9.78)"}
+    UndevelopedEvent: {shape: "the circle of a basic event; the standard shows no separate figure for a basic event that also carries the Undeveloped marker", marker: "none stated for the combination", label: "keywords «BasicEvent» and «Undeveloped»", section: "9.4.2 p. 59 (BasicEvent constraint 2); 9.2.2 p. 38"}
+    AND: {shape: "a gate outline with a flat bottom edge and a rounded arch on top; two short input lines leave the bottom edge and one short output line leaves the top of the arch", marker: "none", label: "the keyword «AND» and the name below the symbol", section: "9.4.2 p. 62 (Figure 9.70)"}
+    OR: {shape: "a gate outline with a pointed top, curved sides that meet at the point and a curved (concave) bottom edge; input lines leave the bottom and one output line leaves the point", marker: "none", label: "the keyword «OR» and the name below the symbol", section: "9.4.2 p. 63 (Figure 9.71)"}
+    SEQ: {shape: "the AND gate outline with a triangle drawn inside it, its point at the top and its base on the bottom edge of the gate", marker: "none", label: "the keyword «SEQ» and the name below the symbol", section: "9.4.2 p. 63 (Figure 9.72)"}
+    XOR: {shape: "the OR gate outline with a second pointed arch drawn inside it, so the symbol shows two nested arches with their feet on the bottom edge", marker: "none", label: "the keyword «XOR» and the name below the symbol", section: "9.4.2 p. 64 (Figure 9.73)"}
+    INHIBIT: {shape: "a hexagon with one short line leaving the top, one leaving the bottom and one leaving the right side", marker: "none", label: "the keyword «INHIBIT» and the name below the symbol", section: "9.4.2 p. 65 (Figure 9.74)"}
+    MAJORITY_VOTE: {shape: "a gate outline with a rounded arch on top and a slightly curved bottom edge", marker: "the lowercase letter m inside the outline", label: "the keyword «MAJORITY_VOTE» and the name below the symbol", section: "9.4.2 p. 66 (Figure 9.75)"}
+    NOT: {shape: "two triangles that meet point to point, one above the other, so the symbol looks like an hourglass", marker: "none", label: "the keyword «NOT» and the name below the symbol", section: "9.4.2 p. 66 (Figure 9.76)"}
+    TransferIn: {shape: "a triangle with its point at the top and a plain outline, nothing inside", marker: "none", label: "the keyword «TransferIn» and the name below the triangle", section: "9.4.2 p. 68 (Figure 9.79)"}
+    TransferOut: {shape: "the block box with the keyword «TransferOut» above the bold name, joined to the Tree box by a generalization line", marker: "no icon; the standard shows only a stereotype box", label: "keyword, then name", section: "9.4.2 p. 69 (Figure 9.80)"}
+    RPNCalculation: {ref: "sysml-1 ConstraintBlock; the standard's figures give the FMEA formula block no symbol of its own", section: "9.3.1 p. 40"}
+    ANDConstraintBlock: {ref: "sysml-1 ConstraintBlock; no symbol of its own", section: "9.4.1 (ConstraintBlocks) p. 53"}
+    ORConstraintBlock: {ref: "sysml-1 ConstraintBlock; no symbol of its own", section: "9.4.1 (ConstraintBlocks) p. 54"}
+    SEQConstraintBlock: {ref: "sysml-1 ConstraintBlock; no symbol of its own", section: "9.4.1 (ConstraintBlocks) p. 54"}
+    XORConstraintBlock: {ref: "sysml-1 ConstraintBlock; no symbol of its own", section: "9.4.1 (ConstraintBlocks) p. 55"}
+    INHIBITConstraintBlock: {ref: "sysml-1 ConstraintBlock; no symbol of its own", section: "9.4.1 (ConstraintBlocks) p. 55"}
+    MAJORITY_VOTEConstraintBlock: {ref: "sysml-1 ConstraintBlock; no symbol of its own", section: "9.4.1 (ConstraintBlocks) p. 56"}
+    NOTConstraintBlock: {ref: "sysml-1 ConstraintBlock; no symbol of its own", section: "9.4.1 (ConstraintBlocks) p. 56"}
+    Controller: {shape: "the block box with the keyword «Controller» above the bold name; the marker applies to a class or a property", marker: "no icon; the standard shows only a stereotype box", label: "keyword, then name", section: "9.5.2 p. 80 (Figure 9.102)"}
+    Actuator: {shape: "the block box with the keyword «Actuator» above the bold name; the marker applies to a class or a property", marker: "no icon; the standard shows only a stereotype box", label: "keyword, then name", section: "9.5.2 p. 80 (Figure 9.100)"}
+    Sensor: {shape: "the block box with the keyword «Sensor» above the bold name; the marker applies to a class or a property", marker: "no icon; the standard shows only a stereotype box", label: "keyword, then name", section: "9.5.2 p. 80 (Figure 9.101)"}
+    ControlledProcess: {shape: "the block box with the keyword «ControlledProcess» above the bold name; the marker applies to a class or a property", marker: "no icon; the standard shows only a stereotype box", label: "keyword, then name", section: "9.5.2 p. 79 (Figure 9.99)"}
+    Feedback: {shape: "the box with the keyword «Feedback» above the bold name; the marker applies to a signal, a data type or a class", marker: "no icon; the standard shows only a stereotype box", label: "keyword, then name", section: "9.5.2 p. 79 (Figure 9.97)"}
+    UnsafeControlAction: {shape: "the block box with the keyword «UnsafeControlAction» above the bold name", marker: "no icon; the standard shows only a stereotype box", label: "keyword, then name", section: "9.5.2 p. 79 (Figure 9.98)"}
+    GSNNode: {shape: "the box with the keyword «GSNNode» above the italic name (abstract)", marker: "none", label: "keyword, then name", section: "9.6.1 p. 82"}
+    GSNArgumentNode: {shape: "the box with the keyword «GSNArgumentNode» above the italic name (abstract)", marker: "none", label: "keyword, then name", section: "9.6.1 p. 84 (Figure 9.111)"}
+    Goal: {shape: "a rectangle", marker: "in the box form, a small rectangle icon at the upper right of the box beside the keyword «Goal»", label: "the identifier (for example G1) and the name inside the rectangle", section: "9.6.1 p. 84 (Figure 9.111); p. 82 (Figures 9.105 to 9.107)"}
+    Strategy: {shape: "a parallelogram that leans to the right", marker: "in the box form, a small parallelogram icon at the upper right of the box beside the keyword «Strategy»", label: "the identifier (for example S1) above the name inside the parallelogram", section: "9.6.1 p. 82 (Figure 9.106); p. 85 (Figure 9.112)"}
+    Solution: {shape: "a circle", marker: "in the box form, a small circle icon at the upper right of the box beside the keyword «Solution»", label: "the identifier and the name inside the circle", section: "9.6.1 p. 84 (Figure 9.110)"}
+    ContextualInformation: {shape: "the box with the keyword «ContextualInformation» above the italic name (abstract)", marker: "none", label: "keyword, then name", section: "9.6.1 p. 85 (Figure 9.113)"}
+    Context: {shape: "a rectangle with rounded corners, wider than it is tall", marker: "in the box form, a small rounded-rectangle icon at the upper right of the box beside the keyword «Context»", label: "the identifier and the name inside the symbol", section: "9.6.1 p. 85 (Figure 9.114)"}
+    Assumption: {shape: "an ellipse", marker: "in the box form, a small ellipse icon with a small mark at its lower edge at the upper right of the box beside the keyword «Assumption»", label: "the identifier and the name inside the ellipse", section: "9.6.1 p. 86 (Figure 9.115)"}
+    Justification: {shape: "an ellipse", marker: "in the box form, a small ellipse icon with a small mark at its lower edge at the upper right of the box beside the keyword «Justification»", label: "the identifier and the name inside the ellipse", section: "9.6.1 p. 86 (Figure 9.116)"}
+    Undeveloped: {shape: "a small hollow diamond centered under the bottom edge of the goal or strategy symbol it is combined with", marker: "none", label: "none; the figure shows the name Undeveloped Goal inside the rectangle", section: "9.6.1 p. 82 (Figure 9.107); 9.2.2 p. 38"}
+    Exposure: {shape: "a value type box: a compartment with the keyword «valueType» above the bold name, then a compartment listing the literals one per line", marker: "none", label: "the literals E0 to E4", section: "9.7.1 p. 93"}
+    Severity: {shape: "a value type box: a compartment with the keyword «valueType» above the bold name, then a compartment listing the literals one per line", marker: "none", label: "the literals S0 to S3", section: "9.7.1 p. 93"}
+    Controllability: {shape: "a value type box: a compartment with the keyword «valueType» above the bold name, then a compartment listing the literals one per line", marker: "none", label: "the literals C0 to C3", section: "9.7.1 p. 94"}
+    ASIL: {shape: "a value type box: a compartment with the keyword «valueType» above the bold name, then a compartment listing the twenty literals one per line, in the order no assignment, QM, A, B, C, D, A(B), A(C), A(D), B(C), B(D), C(D), A(A), B(B), C(C), D(D), QM(A), QM(B), QM(C), QM(D)", marker: "none", label: "the literals", section: "9.7.1 p. 94 (Figure 9.129)"}
+  relationships:
+    Causality: {line: "a solid association line between two situation boxes, with the role names from and to and the multiplicity at the ends", target_end: "not shown in the figures read", source_end: "none", label: "the association name beside the line", section: "9.1.1 p. 21"}
+    ErrorPropagation: {line: "a solid association line whose two ends both sit on the dysfunctional event box (the figure routes the line as a rectangle out of the box and back, because both ends are that class), with the role names fromError and toError, the multiplicity 0..* and the notes {redefines from} and {redefines to}", target_end: "not shown in the figures read", source_end: "none", label: "the association name ErrorPropagation beside the line", section: "9.2.1 p. 31 (Figure 9.18)"}
+    ErrorRealization: {line: "a solid association line between dysfunctional event boxes, with the role names error and failure, the multiplicity 0..* and the notes {redefines from} and {redefines to}", target_end: "not shown in the figures read", source_end: "none", label: "the association name ErrorRealization beside the line", section: "9.2.1 p. 31 (Figure 9.19)"}
+    Activation: {line: "a solid association line between two boxes, the abstract cause box at one end and the dysfunctional event box at the other, with the association name Activation above the line; the cause end carries the role name fault, the multiplicity 0..* and the note {redefines from}, and the event end carries the role name error, the multiplicity 0..* and the note {redefines to}", target_end: "not shown in the figure", source_end: "none", label: "the association name Activation beside the line", section: "9.2.1 p. 30 (Figure 9.17)"}
+    RelevantTo: {line: "the dependency line of sysml-1 (dashed, open arrowhead at the supplier); the standard shows only the extended Dependency in its figure and gives no separate line", target_end: "open arrowhead at the supplier, as for a dependency", source_end: "none", label: "the keyword «RelevantTo» on the line", section: "9.1.2 p. 22"}
+    Violates: {line: "the dependency line of sysml-1 (dashed, open arrowhead at the supplier); the standard shows only the extended Dependency in its figure and gives no separate line", target_end: "open arrowhead at the supplier, as for a dependency", source_end: "none", label: "the keyword «Violates» on the line", section: "9.1.2 p. 24 (Figure 9.7)"}
+    ControllingMeasure: {line: "the dependency line of sysml-1 (dashed, open arrowhead at the supplier), running from the measure to the situation it addresses; no separate line is given", target_end: "open arrowhead at the situation", source_end: "none", label: "the keyword «ControllingMeasure» on the line", section: "9.1.2 p. 23"}
+    Detection: {same_as: ControllingMeasure, section: "9.1.2 p. 23"}
+    Prevention: {same_as: ControllingMeasure, section: "9.1.2 p. 23"}
+    Mitigation: {same_as: ControllingMeasure, section: "9.1.2 p. 23"}
+    Recommendation: {same_as: ControllingMeasure, section: "9.1.2 p. 23"}
+    InContextOf: {line: "the dependency line of sysml-1 (dashed, open arrowhead at the supplier), from a goal or strategy to a context, assumption or justification; the profile figure shows a small link icon in the keyword box and no separate line", target_end: "open arrowhead at the contextual element, as for a dependency", source_end: "none", label: "the keyword «InContextOf» on the line", section: "9.6.1 p. 87 (Figure 9.117)"}
+    SupportedBy: {line: "the dependency line of sysml-1 (dashed, open arrowhead at the supplier), from a goal or strategy to a goal, strategy or solution; the profile figure shows a small link icon in the keyword box and no separate line", target_end: "open arrowhead at the supporting element, as for a dependency", source_end: "none", label: "the keyword «SupportedBy» on the line", section: "9.6.1 p. 88 (Figure 9.118)"}
+    IndependenceRequirement: {ref: "sysml-1 DeriveReqt; the standard gives it no separate line", section: "9.7.2 p. 104"}
+    ASILDecompose: {ref: "sysml-1 DeriveReqt; the standard gives it no separate line", section: "9.7.2 p. 105"}
+    UserInfoRequirement: {ref: "sysml-1 Satisfy; the standard gives it no separate line", section: "9.7.2 p. 106"}
+    RecoveryRequirement: {ref: "sysml-1 Satisfy; the standard gives it no separate line", section: "9.7.2 p. 106"}
+  not_specified: [SafeState, OperatingMode, RiskRealization, ProcessModelFactor, ProcessModelConsequence, UnsafeControlActionHarmPotential, Verified, Confirmed, HazardAndRiskAssessment, LessonLearned, ASILAssignment, ASILOverrideRationale]
+constraints:
+- {id: RAAML-SIT-001, statement: 'Every situation specializes AnySituation, directly or through intermediate situations. AnySituation is the universal root of all situations.', strength: should, section: '9.1.1, p. 20; 7.3, p. 12', checkable: partial, category: SIT}
+- {id: RAAML-SIT-002, statement: A situation is modeled as a block. The steps of a scenario are composite part properties typed by sub-situations. Attribute values of a situation are value properties whose type describes the possible values and whose default value holds the value., strength: should, section: '7.3, p. 12', checkable: partial, category: SIT}
+- {id: RAAML-SIT-003, statement: A user situation that inherits from a library situation redefines or subsets the properties of the library situation., strength: should, section: '7.3, p. 12', checkable: partial, category: SIT}
+- {id: RAAML-SIT-004, statement: A redefining property has a type that is narrower than (a specialization of) the type of the property it redefines. The normal rules of property redefinition apply., strength: must, section: '7.3.1 item c, p. 13', checkable: static, category: SIT}
+- {id: RAAML-SIT-005, statement: Properties a user adds beyond those the library defines are user-specific extensions and are not part of this language., strength: note, section: '7.3, p. 12', checkable: none, category: SIT}
+- {id: RAAML-SIT-006, statement: Generalization between two situations means the occurrences of the specific situation are a subset of the occurrences of the general one., strength: note, section: '9.1, p. 19', checkable: none, category: SIT}
+- {id: RAAML-SIT-007, statement: 'The steps of a scenario have a causal ordering, shown by Causality relationships or specializations of them.', strength: should, section: '9.2.1 (Scenario), p. 32', checkable: partial, category: SIT}
+- {id: RAAML-SIT-008, statement: 'A situation may omit any parameter it need not be specific about. Whether to model a composite situation with sub-situations or a single situation is the modeler''s choice, depending on the depth of analysis.', strength: note, section: '9.1, pp. 19-20', checkable: none, category: SIT}
+- {id: RAAML-SIT-009, statement: The names of subsetting properties are not regulated. A scheme of parent property name plus a number is strongly recommended., strength: note, section: '7.3.1 item e, p. 13', checkable: none, category: SIT}
+- {id: RAAML-SIT-010, statement: 'Quantitative attributes of a situation, such as probability of occurrence, are value properties; formulas that relate attributes to each other and to system attributes are constraint blocks and may be written in any language the tool can compute.', strength: note, section: '9.1, Table 9.1, pp. 19-20', checkable: none, category: SIT}
+- {id: RAAML-REL-001, statement: The client of a RelevantTo relationship is a Situation., strength: must, section: '9.1.2 (RelevantTo) [1], p. 23', checkable: static, category: REL}
+- {id: RAAML-REL-002, statement: 'The supplier of a ControllingMeasure relationship (and of its kinds Detection, Prevention, Mitigation and Recommendation) is a Situation.', strength: must, section: '9.1.2 (ControllingMeasure) [1], p. 23', checkable: static, category: REL}
+- {id: RAAML-REL-003, statement: The client of a Violates relationship is a Situation., strength: must, section: '9.1.2 (Violates) [1], p. 24', checkable: static, category: REL}
+- {id: RAAML-REL-004, statement: 'Violates connects a situation to a requirement, design constraint or any element that prescribes a characteristic of the system. RelevantTo connects a situation to the system-model element that gives it context.', strength: note, section: '9.1.2, pp. 22-23', checkable: none, category: REL}
+- {id: RAAML-REL-005, statement: 'Every Causality relationship, and every specialization of it, joins two situations: the from end and the to end are AnySituation.', strength: must, section: '9.1.1 (Causality), p. 21', checkable: static, category: REL}
+- {id: RAAML-REL-006, statement: Activation joins an abstract cause (the fault end) to a dysfunctional event (the error end)., strength: must, section: '9.2.1 (Activation), p. 30', checkable: static, category: REL}
+- {id: RAAML-REL-007, statement: ErrorPropagation joins a dysfunctional event (the predecessor error) to a dysfunctional event (the successor error)., strength: must, section: '9.2.1 (ErrorPropagation), p. 31', checkable: static, category: REL}
+- {id: RAAML-REL-008, statement: ErrorRealization joins a dysfunctional event (the predecessor error) to a dysfunctional event (the resulting failure)., strength: must, section: '9.2.1 (ErrorRealization), p. 31', checkable: static, category: REL}
+- {id: RAAML-MARK-001, statement: The Tree marker applies only to a class that specializes FTATree., strength: must, section: '9.4.2 (Tree) [1], p. 57', checkable: static, category: MARK}
+- {id: RAAML-MARK-002, statement: 'A fault tree event marker (DormantEvent, BasicEvent, ConditionalEvent, ZeroEvent, HouseEvent, IntermediateEvent, TopEvent) applies only to a class that specializes the library event of the same name, or to a property whose type does.', strength: must, section: '9.4.2 (each marker) [1], pp. 58-68', checkable: static, category: MARK}
+- {id: RAAML-MARK-003, statement: 'A fault tree gate marker (AND, OR, SEQ, XOR, INHIBIT, MAJORITY_VOTE, NOT) applies only to a class that specializes the library gate of the same name, or to a property whose type does.', strength: must, section: '9.4.2 (each marker) [1], pp. 62-67', checkable: static, category: MARK}
+- {id: RAAML-MARK-004, statement: A class that carries both the BasicEvent and the Undeveloped markers specializes UndevelopedEvent., strength: must, section: '9.4.2 (BasicEvent) [2], p. 59', checkable: static, category: MARK}
+- {id: RAAML-MARK-005, statement: A class that carries the Event marker also carries the Situation marker or a marker that specializes it., strength: must, section: '9.4.2 (Event), p. 57', checkable: static, category: MARK}
+- {id: RAAML-MARK-006, statement: The FMEAItem marker applies only to a class that specializes AbstractFMEAItem., strength: must, section: '9.3.2 (FMEAItem) [1], p. 44', checkable: static, category: MARK}
+- {id: RAAML-MARK-007, statement: The type of a TransferIn property is a fault tree that carries the TransferOut marker., strength: must, section: '9.4.2 (TransferIn) [1], p. 69', checkable: static, category: MARK}
+- {id: RAAML-MARK-008, statement: 'The Undeveloped marker flags an incomplete concept. It combines with Goal or Strategy in an argument, or with a basic event in a fault tree.', strength: note, section: '9.2.2 (Undeveloped), p. 38; 9.6.1, p. 82', checkable: none, category: MARK}
+- {id: RAAML-CARD-001, statement: An FMEA item has exactly one failure mode., strength: must, section: '9.3.1 (AbstractFMEAItem), p. 39', checkable: static, category: CARD}
+- {id: RAAML-CARD-002, statement: An FMEA item has at least one cause., strength: must, section: '9.3.1 (AbstractFMEAItem), p. 39', checkable: static, category: CARD}
+- {id: RAAML-CARD-003, statement: An FMEA item has at least one final effect., strength: must, section: '9.3.1 (AbstractFMEAItem), p. 39', checkable: static, category: CARD}
+- {id: RAAML-CARD-004, statement: An FMEA item has no harm potential. The property is redefined to multiplicity zero because the method does not use it., strength: must, section: '9.3.1 (AbstractFMEAItem), p. 39', checkable: static, category: CARD}
+- {id: RAAML-CARD-005, statement: A fault tree has exactly one top event., strength: must, section: '9.4.1 (FTATree), p. 45', checkable: static, category: CARD}
+- {id: RAAML-CARD-006, statement: A gate has exactly one output event., strength: must, section: '9.4.1 (Gate), p. 50', checkable: static, category: CARD}
+- {id: RAAML-CARD-007, statement: An INHIBIT gate has a single input event. Its enabling conditions are zero or more events., strength: must, section: '9.4.1 (INHIBIT), pp. 52-53', checkable: static, category: CARD}
+- {id: RAAML-CARD-008, statement: A NOT gate has exactly one input event., strength: should, section: '9.4.1 (NOT; NOTConstraintBlock), pp. 51, 56', checkable: static, category: CARD}
+- {id: RAAML-CARD-009, statement: The priority of an event is used only to order the inputs of a priority-AND (SEQ) gate., strength: should, section: '9.4.1 (Event), p. 46', checkable: partial, category: CARD}
+- {id: RAAML-CARD-010, statement: A MAJORITY_VOTE gate has exactly one threshold m., strength: must, section: '9.4.1 (MAJORITY_VOTE), p. 53', checkable: static, category: CARD}
+- {id: RAAML-CARD-011, statement: 'An unsafe control action has exactly one context, which is an operational situation.', strength: must, section: '9.5.1 (UnsafeControlAction), p. 75', checkable: static, category: CARD}
+- {id: RAAML-CARD-012, statement: A hazardous event has exactly one accident scenario., strength: must, section: '9.7.1 (HazardousEvent), p. 98', checkable: static, category: CARD}
+- {id: RAAML-CARD-013, statement: 'An accident scenario has at least one operational situation, exactly one malfunctioning behavior and exactly one controllability value.', strength: must, section: '9.7.1 (AccidentScenario), pp. 100-101', checkable: static, category: CARD}
+- {id: RAAML-CARD-014, statement: An abstract operational situation has exactly one exposure value., strength: must, section: '9.7.1 (AbstractOperationalSituation), p. 92', checkable: static, category: CARD}
+- {id: RAAML-CARD-015, statement: An automotive effect has exactly one severity value., strength: must, section: '9.7.1 (AutomotiveEffect), p. 99', checkable: static, category: CARD}
+- {id: RAAML-CARD-016, statement: A safety requirement template has exactly one ASIL and one fault tolerant time interval., strength: must, section: '9.7.1 (ISO26262SafetyRequirementTemplate), p. 100', checkable: static, category: CARD}
+- {id: RAAML-CARD-017, statement: An ASIL assignment has exactly one ASIL value and at most one override value., strength: must, section: '9.7.2 (ASILAssignment), p. 112', checkable: static, category: CARD}
+- {id: RAAML-CARD-018, statement: A Verified or Confirmed marker carries exactly one result., strength: must, section: '9.7.2 (Verified; Confirmed), p. 110', checkable: static, category: CARD}
+- {id: RAAML-CARD-019, statement: An identifier carrier holds exactly one identifier string., strength: must, section: '9.1.2 (IDCarrier), p. 24', checkable: static, category: CARD}
+- {id: RAAML-VAL-001, statement: The probability of a fault tree element is a real value from 0 to 1., strength: must, section: '9.4.1 (FTAElement), p. 45', checkable: static, category: VAL}
+- {id: RAAML-VAL-002, statement: The probability of a house event is 0 or 1 and is set before the fault tree is evaluated., strength: must, section: '9.4.1 (HouseEvent), p. 49', checkable: static, category: VAL}
+- {id: RAAML-VAL-003, statement: The probability of a zero event is always 0., strength: must, section: '9.4.1 (ZeroEvent), p. 49', checkable: static, category: VAL}
+- {id: RAAML-VAL-004, statement: The probability of an intermediate event is derived by its gate from the probabilities of the events below it. The probability of the top event is the derived result of the tree calculation., strength: should, section: '9.4.1 (IntermediateEvent; TopEvent), p. 47', checkable: runtime, category: VAL, applies_when: a probability evaluation is run}
+- {id: RAAML-VAL-005, statement: 'The probability of an AND gate output is the product of the input probabilities, assuming the inputs are independent.', strength: should, section: '9.4.1 (ANDConstraintBlock), p. 54', checkable: runtime, category: VAL, applies_when: a probability evaluation is run}
+- {id: RAAML-VAL-006, statement: 'The probability of an OR gate output is one minus the probability that no input occurs, assuming independence.', strength: should, section: '9.4.1 (ORConstraintBlock), p. 54', checkable: runtime, category: VAL, applies_when: a probability evaluation is run}
+- {id: RAAML-VAL-007, statement: 'The probability of a SEQ gate output is computed as for an AND gate, the product of the input probabilities. This cannot capture time dependence.', strength: should, section: '9.4.1 (SEQConstraintBlock), pp. 54-55', checkable: runtime, category: VAL, applies_when: a probability evaluation is run}
+- {id: RAAML-VAL-008, statement: 'For two inputs the probability of an XOR gate output is a + b - 2ab, applied iteratively for more inputs, assuming independence.', strength: should, section: '9.4.1 (XORConstraintBlock), p. 55', checkable: runtime, category: VAL, applies_when: a probability evaluation is run}
+- {id: RAAML-VAL-009, statement: 'The probability of an INHIBIT gate output is the product of the input probabilities and the condition probability, assuming independence.', strength: should, section: '9.4.1 (INHIBITConstraintBlock), pp. 55-56', checkable: runtime, category: VAL, applies_when: a probability evaluation is run}
+- {id: RAAML-VAL-010, statement: 'The probability of a MAJORITY_VOTE gate output is the combined probability of all input combinations in which at least m inputs occur, assuming independence.', strength: should, section: '9.4.1 (MAJORITY_VOTEConstraintBlock), p. 56', checkable: runtime, category: VAL, applies_when: a probability evaluation is run}
+- {id: RAAML-VAL-011, statement: The probability of a NOT gate output is one minus the probability of its input., strength: should, section: '9.4.1 (NOTConstraintBlock), p. 56', checkable: runtime, category: VAL, applies_when: a probability evaluation is run}
+- {id: RAAML-VAL-012, statement: 'The risk priority number of an FMEA item is the product of occurrence, detectability and severity.', strength: should, section: '9.3.1 (RPNCalculation), p. 41', checkable: runtime, category: VAL, applies_when: the RPN calculation is used}
+- {id: RAAML-VAL-013, statement: 'The abstract event, cause, effect, failure mode and risk classes declare placeholder attributes (likelihood, occurrence, severity, detectability, score) with no type. Method-specific classes give them a type; the Real-valued Cause, Effect and FailureMode are the general implementations.', strength: note, section: '9.2.1, pp. 25-34', checkable: none, category: VAL}
+- {id: RAAML-VAL-014, statement: The majority threshold m of a MAJORITY_VOTE gate need not be half the number of inputs; for example 2 of 7 can be stipulated., strength: note, section: '9.4.1 (MAJORITY_VOTE), p. 53', checkable: none, category: VAL}
+- {id: RAAML-GSN-001, statement: The client of an InContextOf relationship is a goal or a strategy., strength: must, section: '9.6.1 (InContextOf) [1], p. 87', checkable: static, category: GSN}
+- {id: RAAML-GSN-002, statement: 'The supplier of an InContextOf relationship is contextual information (a context, assumption or justification) or a non-GSN element. It is never another kind of GSN node.', strength: must, section: '9.6.1 (InContextOf) [2], p. 87', checkable: static, category: GSN}
+- {id: RAAML-GSN-003, statement: 'Permitted InContextOf connections are goal to context, goal to assumption, goal to justification, strategy to context, strategy to assumption and strategy to justification.', strength: note, section: '9.6.1 (InContextOf), p. 87', checkable: none, category: GSN}
+- {id: RAAML-GSN-004, statement: The client of a SupportedBy relationship is a goal or a strategy., strength: must, section: '9.6.1 (SupportedBy) [1], p. 88', checkable: static, category: GSN}
+- {id: RAAML-GSN-005, statement: 'When the client of a SupportedBy relationship is a strategy, the supplier is a goal.', strength: must, section: '9.6.1 (SupportedBy) [2], p. 88', checkable: static, category: GSN}
+- {id: RAAML-GSN-006, statement: The supplier of a SupportedBy relationship is a GSN node or a non-GSN element. It is never contextual information., strength: must, section: '9.6.1 (SupportedBy) [3], p. 88', checkable: static, category: GSN}
+- {id: RAAML-GSN-007, statement: 'The client of a SupportedBy relationship is not marked Undeveloped: a goal or strategy that supports others is developed.', strength: must, section: '9.6.1 (SupportedBy) [4], p. 88', checkable: static, category: GSN}
+- {id: RAAML-GSN-008, statement: 'Permitted SupportedBy connections are goal to goal, goal to strategy, goal to solution and strategy to goal.', strength: note, section: '9.6.1 (SupportedBy), p. 87', checkable: none, category: GSN}
+- {id: RAAML-GSN-009, statement: 'The short phrase of a GSN node is the name of the element. Its human-readable identifier is stored separately, in the identifier carrier.', strength: must, section: '9.6.1 (GSNNode), p. 83', checkable: partial, category: GSN}
+- {id: RAAML-STPA-001, statement: ProcessModelFactor joins a Factor to a ProcessModel; ProcessModelConsequence joins a ProcessModel to an UnsafeControlAction; UnsafeControlActionHarmPotential joins an UnsafeControlAction to a HarmPotential., strength: must, section: '9.5.1, pp. 77-78', checkable: static, category: STPA}
+- {id: RAAML-STPA-002, statement: 'An unsafe control action has four parts: the controller that issues the control action (inferred from the control action and the system model), the guideword (given by generalization), the control action (linked by RelevantTo) and the context (a sub-situation).', strength: should, section: '9.5.1 (UnsafeControlAction), p. 74', checkable: partial, category: STPA}
+- {id: RAAML-STPA-003, statement: 'A loss scenario is a sequence of situations that starts from factors, passes through process model deficiencies and leads to an unsafe control action.', strength: should, section: '9.5.1 (LossScenario), p. 72', checkable: partial, category: STPA}
+- {id: RAAML-STPA-004, statement: RiskRealization associates a loss with a hazard., strength: note, section: '9.5.1 (RiskRealization), p. 76', checkable: none, category: STPA}
+- {id: RAAML-STPA-005, statement: 'Process model deficiencies come in four high-level kinds: inadequate controller decisions, inadequate control execution, inadequate process behavior, and inadequate feedback and inputs.', strength: note, section: '9.5.1 (ProcessModel), p. 72', checkable: none, category: STPA}
+- {id: RAAML-STPA-006, statement: A controller sends control actions to a controlled process through an actuator and receives feedback from the controlled process through a sensor., strength: note, section: '9.5.2, pp. 78-80', checkable: none, category: STPA}
+- {id: RAAML-STPA-007, statement: 'The seven unsafe control action guidewords (Provided, NotProvided, Early, Late, OutOfSequence, TooLong, TooShort) can be tailored in the library as the user wishes.', strength: note, section: '9.5.1, pp. 69-71; Examples 2.3', checkable: none, category: STPA}
+- {id: RAAML-ISO-001, statement: The exposure of an operational situation has a rationale attached., strength: must, section: '9.7.1 (AbstractOperationalSituation), p. 92', checkable: static, category: ISO}
+- {id: RAAML-ISO-002, statement: The severity of an automotive effect has a rationale attached., strength: must, section: '9.7.1 (AutomotiveEffect), p. 99', checkable: static, category: ISO}
+- {id: RAAML-ISO-003, statement: The controllability of an accident scenario has a rationale attached., strength: must, section: '9.7.1 (AccidentScenario), p. 100', checkable: static, category: ISO}
+- {id: RAAML-ISO-004, statement: An ASIL override value has an associated rationale (an ASIL override rationale)., strength: must, section: '9.7.2 (ASILAssignment), p. 112', checkable: static, category: ISO}
+- {id: RAAML-ISO-005, statement: 'ASILDecompose relations are applied in pairs: a requirement is never the supplier of a single ASILDecompose relation.', strength: must, section: '9.7.2 (ASILDecompose), p. 105', checkable: static, category: ISO}
+- {id: RAAML-ISO-006, statement: The supplier of an ASILDecompose relation is at a higher level of abstraction than its client., strength: should, section: '9.7.2 (ASILDecompose), p. 105', checkable: none, category: ISO}
+- {id: RAAML-ISO-007, statement: 'A malfunction class (Less, More, No, Intermittent, Unintended, Early, Late, Inverted) is connected to a behavioral element, a use case or a function.', strength: must, section: '9.7.1, pp. 94-97', checkable: partial, category: ISO}
+- {id: RAAML-ISO-008, statement: A UserInfoRequirement runs from a state (client) to a functional or technical safety requirement (supplier). A RecoveryRequirement links a safe state to a requirement that gives the recovery criteria., strength: should, section: '9.7.2, p. 106', checkable: partial, category: ISO}
+- {id: RAAML-ISO-009, statement: 'An IndependenceRequirement states an independence criterion that must be satisfied for an ASIL decomposition, between a parent requirement and two other children, to be valid.', strength: note, section: '9.7.2 (IndependenceRequirement), p. 104', checkable: none, category: ISO}
+- {id: RAAML-ISO-010, statement: 'Risk analysis identifies hazards that could result from a malfunctioning behavior; with an operational situation these give an accident scenario, held in a hazardous event that gives the risk level (ASIL). Safety goals derive from hazardous events; functional safety requirements from safety goals; technical safety requirements from functional ones; hardware and software safety requirements from technical ones.', strength: note, section: '9.7, p. 89; Examples 2.5 (informative)', checkable: none, category: ISO}
+- {id: RAAML-ISO-011, statement: The ASIL of a hazardous event redefines the score of the abstract risk; its values are defined in an enumeration in the ISO 26262 package., strength: note, section: 'Examples 2.5 (informative), p. 24', checkable: none, category: ISO}
+- {id: RAAML-CONF-001, statement: 'Interchange conformance (type 1): a tool can import and export conformant XMI for all valid models of the language.', strength: note, section: '2, p. 6', checkable: none, category: CONF}
+- {id: RAAML-CONF-002, statement: 'View specification conformance (type 2): a tool implements the views the specification defines.', strength: note, section: '2, p. 6', checkable: none, category: CONF}
+- {id: RAAML-CONF-003, statement: 'A tool vendor may implement one method (FMEA, FTA, STPA, GSN or ISO 26262) and claim conformance to it.', strength: note, section: '2, p. 6', checkable: none, category: CONF}
+- {id: RAAML-CONF-004, statement: 'The language library and profile import the entire SysML profile, so a RAAML model is a SysML model.', strength: note, section: '9, p. 19', checkable: none, category: CONF}
+- {id: RAAML-GUID-001, statement: 'The language relies heavily on model libraries with a light profile. Users extend the libraries by specializing library classes, because practices differ across domains and organizations.', strength: note, section: '7.2, p. 11', checkable: none, category: GUID}
+- {id: RAAML-GUID-002, statement: 'The general package gives a common base for the methods, traceability across safety and reliability artifacts, and a foundation on which new methods or domains can be built.', strength: note, section: '9.2, pp. 24-25', checkable: none, category: GUID}
+- {id: RAAML-GUID-003, statement: 'To combine FMEA and FTA, the cause of an FMEA item can be read as the event that leads to failure of a system item, so each analysis can verify the other.', strength: note, section: '9.4, p. 44', checkable: none, category: GUID}
+- {id: RAAML-GUID-004, statement: 'The fault tree package can be extended, for example for dynamic fault trees or component fault trees, while staying compatible with other modeled information.', strength: note, section: '9.4, p. 44', checkable: none, category: GUID}
+- {id: RAAML-GUID-005, statement: 'A recommendation connects a situation to an action item, normally a requirement that is managed further in requirements management (people responsible, due date, verification).', strength: note, section: '9.2.2 (Recommendation), p. 37', checkable: none, category: GUID}
+- {id: RAAML-GUID-006, statement: 'Tools are expected to offer traditional representations, tabular and tree views, over the model structure, because users of FMEA, STPA and ISO 26262 are used to tables and users of fault trees to a graphical tree.', strength: note, section: '1.2, p. 4; 7.3, p. 12; Examples 1.2, 2.1', checkable: none, category: GUID}
+conventions:
+  provenance: {status: standard, note: 'Drawing rules the standard states (9.6.1 for the argument notation, 9.4.2 for event and gate icons, 7.3.2 for tables). They are conventions for a renderer or an author, not validation. Layout numbers are not part of the standard.'}
+  diagrams:
+    GSN argument: ['A GSN element may be shown as an image with the element name below it, or as a box with the iconic image at the upper left inside the box (the UML icon presentation). (9.6.1, p. 82)', 'The preferred notation uses the icon as a resizable outline of the box, with the usual compartments (name, marker, attribute values) inside it. (9.6.1, p. 82)', 'A goal or strategy that is also undeveloped is shown with the combined notation. (9.6.1, Figure 9.107, p. 82)', 'Shapes and text placement for each node kind follow the GSN standard, version 2. (9.6.1, p. 82)']
+    fault tree: ['Each event and gate marker carries an icon for its kind (basic, dormant, conditional, house, zero, intermediate and top events; AND, OR, SEQ, XOR, INHIBIT, MAJORITY_VOTE and NOT gates). (9.4.2, pp. 56-68)']
+    situation table: ['One column per attribute of the situation type, plus a name column; column names may be made friendlier than the attribute names. (7.3.2, p. 13)', 'Generalization between situations is shown as hierarchical indented rows. (7.3.2, p. 14)', 'A composite sub-situation can be shown as a group of columns, so one table covers several composition levels. (7.3.2, p. 15)', 'A vendor may add columns, for example a description. (7.3.2, p. 14)']
+    control structure: ['Control actions and feedback may be shown explicitly or hidden, as the user prefers. (Examples 2.3, informative)']
+notes: 'RAAML 1.0 is a UML profile and set of model libraries on SysML. A situation is a SysML block; the library supplies the classes users specialize (AnySituation and the method packages) and the profile supplies markers that identify them. It defines no diagram types of its own: it reuses the SysML block definition, internal block, parametric and requirement diagrams and expects tabular views. Concept counts: 153 concepts in 14 groups; 51 relationships; 96 constraints (49 must, 19 should, 28 note); 11 diagram and table kinds; 16 views. The constraint ids are RAAML-<CAT>-nnn; the categories are listed in references/rules.md. Strength policy: must is an error, should a warning, note advice only. Tool-specific encodings belong in the tool''s own file, not here.'
+
+layout:
+  basis: Our conventions, not this standard's. Sizes and spacing come from the shared layout standard; this block only says which element type each concept takes.
+  element_types:        # concept -> element type; a concept left out is drawn as a rectangle (box). Abstract library classes are drawn as blocks and stay rectangles.
+    ConditionalEvent: box
+    Assumption: box
+    Justification: box
+    Strategy: box
+    Solution: box
+    BasicEvent: event-circle
+    UndevelopedEvent: event-circle
+    HouseEvent: event-circle
+    ZeroEvent: event-circle
+    DormantEvent: decision-diamond
+    AND: decision-diamond
+    OR: decision-diamond
+    SEQ: decision-diamond
+    XOR: decision-diamond
+    INHIBIT: decision-diamond
+    MAJORITY_VOTE: decision-diamond
+    NOT: decision-diamond
+    TransferIn: decision-diamond
+    Undeveloped: attached-item
+    LessonLearned: note
+    ASILOverrideRationale: note
+    HazardAndRiskAssessment: container
+  exceptions: {}        # none: no standard states a size
+  no_element_type:      # concepts with no element of their own, and why
+    line:
+      reason: 'A relationship: it is drawn as a line between elements and takes no element size.'
+      concepts: [ControllingMeasure, Detection, Prevention, Mitigation, Recommendation, RelevantTo, Violates, InContextOf,
+        SupportedBy, SafeState, OperatingMode, IndependenceRequirement, ASILDecompose, UserInfoRequirement,
+        RecoveryRequirement, Causality, Activation, ErrorPropagation, ErrorRealization, ProcessModelFactor,
+        ProcessModelConsequence, UnsafeControlActionHarmPotential, RiskRealization, Scenario.scenarioStep,
+        AbstractRisk.trigger, AbstractRisk.harm, AbstractRisk.harmPotential, AbstractFMEAItem.failureMode,
+        AbstractFMEAItem.cause, AbstractFMEAItem.finalEffect, AbstractFMEAItem.harmPotential, FTATree.topEvent,
+        Gate.input, Gate.output, INHIBIT.condition, LossScenario.Factor, LossScenario.unsafeControlAction,
+        LossScenario.processModel, UnsafeControlAction.Context, AbstractOperationalSituation.conditions,
+        TypicalAutomotiveSituation.trafficAndPeople, TypicalAutomotiveSituation.vehicleUsage,
+        TypicalAutomotiveSituation.roadCondition, TypicalAutomotiveSituation.location,
+        TypicalAutomotiveSituation.environmentalCondition, AccidentScenario.situation,
+        AccidentScenario.malfunctioningBehavior, HazardousEvent.scenario, HazardousEvent.hazard,
+        HazardousEvent.systemLevelEffect, HazardousEvent.vehicleLevelEffect]
+    text-inside:
+      reason: A marker applied to another element and written as a keyword on it, so it has no box of its own.
+      concepts: [IDCarrier, ASILAssignment, Verified, Confirmed]
+  diagram_types:
+    block definition:
+      arrangement: layered-bands
+      title: frame-header
+      route: orthogonal
+      channels:
+        fill: null
+        claimed:
+          position: Hierarchy level. Which band a block sits in says how deep in the generalization or composition tree it is.
+          line_style: Relationship kind. Dashed lines are dependencies, so a second variable cannot use dash pattern.
+        free: [fill, border, border_width, line_color, font_color, opacity, icon]
+    fault tree:
+      arrangement: layered-bands
+      title: frame-header
+      route: orthogonal
+      channels:
+        fill: null
+        claimed:
+          position: Level in the tree. The top event is at the top, and a gate's inputs sit in the band below it.
+          icon: The symbol of an event or a gate says which kind it is.
+        free: [fill, border, border_width, line_color, line_style, font_color, opacity]
+    GSN argument:
+      arrangement: layered-bands
+      title: frame-header
+      route: orthogonal
+      channels:
+        fill: null
+        claimed:
+          position: Level in the argument. A goal sits above the strategies and solutions that support it.
+          line_style: Relationship kind. A supported-by line and an in-context-of line differ and must stay distinct.
+        free: [fill, border, border_width, line_color, font_color, opacity, icon]
+    control structure:
+      arrangement: graph
+      title: frame-header
+      route: straight
+      channels:
+        fill: null
+        claimed:
+          line_style: Relationship kind. Control actions and feedback are different lines in the loop.
+        free: [fill, border, border_width, line_color, font_color, opacity, icon]

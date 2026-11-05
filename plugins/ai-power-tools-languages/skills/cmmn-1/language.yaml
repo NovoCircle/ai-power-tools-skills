@@ -1,0 +1,1459 @@
+# Case Management Model and Notation (CMMN) 1.1: language file (schema_version 1).
+# Written from the standard only. Concept names are the standard's own class names (no spaces).
+# Keys beyond the base guide shape: conformance_types, concepts.groups,
+# concepts.variants, concepts.enumerations, concepts.elements[].abstract_stated (false = the standard does not say whether the class
+# is abstract), relationships.items (with kind) and relationships.diagram_links, lifecycles, decorators, conventions.shapes,
+# diagram_types.CMMNDiagram.scope, and on each constraint: applies_when, checkable and note.
+#   constraints[].applies_when : omitted = always; execution = only when a case is executed (clause 8 semantics).
+#   constraints[].checkable    : static = a validator that sees only the saved model can check it; partial = only the structure,
+#                                simple cases or reading the drawing; runtime = needs a running case instance; none = not a property
+#                                of a model (a requirement on tools, drawing or explanation).
+#   constraints[].note         : how the rule was read where the standard is inconsistent, or what the schema allows instead.
+#   Strength policy: must = error, should = warning, note = advice only.
+#   relationships[].multiplicity: targets_per_source is how many target instances one source instance may link to;
+#                                sources_per_target is given only where the standard states it; '*' means zero or more.
+schema_version: 1
+id: cmmn-1
+name: Case Management Model and Notation (CMMN)
+owner: {name: Object Management Group, kind: standards-body}
+standard: {name: Case Management Model and Notation (CMMN), version: '1.1', status: published, reference: 'OMG formal/16-12-01 (PDF, December 2016); changebar edition formal/16-12-02. Normative machine-readable files: CMMN11.xsd (dtc/15-11-06), CMMN11CaseModel.xsd (dtc/15-11-20), CMMNDI11.xsd (dtc/15-11-07), DC.xsd, DI.xsd, CMMN11.xmi (dtc/15-12-05), CMMNDI11.xmi (dtc/15-12-03), under https://www.omg.org/spec/CMMN/20151109/. https://www.omg.org/spec/CMMN/1.1/', supersedes: '1.0', newer_version: none found}
+conformance_types:
+  VisualNotation:
+    section: '2.2'
+    requires: Use the standard's shapes, markers and decorators (clause 6); size, fill, line color and label position are free; extensions may add decorators, shapes and colors but not change a defined shape or conflict with CMMN or BPMN shapes and line styles. For entry-level tools.
+  CaseModeling:
+    section: '2.3'
+    requires: The full metamodel (clause 5), the full notation (clause 6), the execution semantics as Table 2.1 lists (clause 8), and the exchange format. For modeling-only tools. Should also meet Visual Notation Conformance.
+  BPMNCompatibility:
+    section: '2.4'
+    requires: The optional alternative shapes of 6.8.2.1 (case task) and 6.8.3.1 (process task) become required. For tools that support both BPMN and CMMN.
+  DMNCompatibility:
+    section: '2.5'
+    requires: The optional alternative shapes of 6.8.4.1 (decision task) become required. For tools that support both DMN and CMMN.
+  Complete:
+    section: '2.6'
+    requires: Metamodel, notation, diagram interchange, execution semantics (clause 8) and exchange format. For tools that model and execute cases.
+    rules_apply_when: execution
+concepts:
+  source: 'OMG CMMN 1.1: the metamodel of clause 5 (and the diagram interchange classes of clause 7.4) with generalizations, abstract flags and multiplicities taken from the case model schema CMMN11CaseModel.xsd where the text is silent. 65 concept classes: 58 in the case model (clause 5) and 7 diagram interchange classes (7.4). Named uses that are not classes (the case plan model, blocking and non-blocking tasks, discretionary tasks) are under variants.'
+  groups:
+    Foundation: {defined_by: 'Clauses 5.1, 5.4.7', notes: 'Base class, documentation, containers, imports, extension and external-relationship hooks, expressions.'}
+    Case model: {defined_by: Clause 5.2, notes: The case and its roles.}
+    Information model: {defined_by: 'Clauses 5.1.4, 5.3', notes: 'The case file, its items, their definitions and properties.'}
+    Plan model: {defined_by: Clause 5.4 (5.4.1 to 5.4.9), notes: 'Plan item definitions and uses, event listeners, milestones, stages, sentries and criteria, planning tables.'}
+    Tasks: {defined_by: Clause 5.4.10, notes: 'The four task kinds, their parameters, and the external processes and decisions they call.'}
+    Item control: {defined_by: Clause 5.4.11, notes: The plan item control and its three rules.}
+    Artifacts: {defined_by: Clause 5.5, notes: Association and text annotation.}
+    Diagram interchange: {defined_by: Clause 7.4, notes: Metamodel for exchanging the layout and look of a diagram.}
+  elements:
+    CMMNElement: {display: CMMN Element, category: Foundation, abstract: true, section: 5.1.1, attributes: [{name: id, type: String, section: '5.1.1, Table 5.1'}]}
+    Documentation: {display: Documentation, category: Foundation, specializes: CMMNElement, section: 5.1.1.1, attributes: [{name: text, type: String, section: '5.1.1.1, Table 5.2'}, {name: textFormat, type: String, default: 'text/plain', section: '5.1.1.1, Table 5.2'}]}
+    Definitions: {display: Definitions, category: Foundation, section: 5.1.2, note: 'Outermost container of every interchange. The schema type is not an extension of the common element type (it has its own id), although Table 5.3 gives it the extension attributes; its generalization is left unstated.', attributes: [{name: name, type: String, section: '5.1.2, Figure 5.2'}, {name: targetNamespace, type: URI, section: '5.1.2, Figure 5.2'}, {name: expressionLanguage, type: URI, section: '5.1.2, Figure 5.2'}, {name: exporter, type: String, section: '5.1.2, Figure 5.2'}, {name: exporterVersion, type: String, section: '5.1.2, Figure 5.2'}, {name: author, type: String, section: '5.1.2, Figure 5.2'}, {name: creationDate, type: DateTime, section: '5.1.2, Figure 5.2'}]}
+    Import: {display: Import, category: Foundation, section: 5.1.3, attributes: [{name: importType, type: String, section: '5.1.3, Figure 5.2'}, {name: location, type: String, section: '5.1.3, Figure 5.2'}, {name: namespace, type: URI, section: '5.1.3, Figure 5.2'}]}
+    Expression: {display: Expression, category: Foundation, specializes: CMMNElement, section: 5.4.7, note: The schema type is the mixed-content variant of the common element type., attributes: [{name: language, type: URI, section: '5.4.7, Table 5.33'}, {name: body, type: String, section: '5.4.7, Table 5.33'}]}
+    Extension: {display: Extension, category: Foundation, section: 5.1.5.1, note: Not used when the XML schema is the exchange format (extension is by any attribute and any element)., attributes: [{name: mustUnderstand, type: Boolean, multiplicity: 0..1, default: 'false', section: '5.1.5.1, Table 5.9'}]}
+    ExtensionDefinition: {display: Extension Definition, category: Foundation, section: 5.1.5.2, note: Not used when the XML schema is the exchange format., attributes: [{name: name, type: String, section: '5.1.5.2, Table 5.10'}]}
+    ExtensionAttributeDefinition: {display: Extension Attribute Definition, category: Foundation, section: 5.1.5.3, note: Not used when the XML schema is the exchange format., attributes: [{name: name, type: String, section: '5.1.5.3, Table 5.11'}, {name: type, type: String, section: '5.1.5.3, Table 5.11'}, {name: isReference, type: Boolean, multiplicity: 0..1, default: 'false', section: '5.1.5.3, Table 5.11'}]}
+    ExtensionAttributeValue: {display: Extension Attribute Value, category: Foundation, section: 5.1.5.4, note: Not used when the XML schema is the exchange format., attributes: [{name: value, type: Element, multiplicity: 0..1, section: '5.1.5.4, Table 5.12'}, {name: valueRef, type: Element, multiplicity: 0..1, section: '5.1.5.4, Table 5.12'}]}
+    Relationship: {display: Relationship, category: Foundation, specializes: CMMNElement, section: 5.1.6, attributes: [{name: type, type: String, section: '5.1.6, Table 5.13'}, {name: direction, type: RelationshipDirection, section: '5.1.6, Table 5.13'}]}
+    Case: {display: Case, category: Case model, specializes: CMMNElement, section: 5.2.1, attributes: [{name: name, type: String, section: '5.2.1, Table 5.14'}]}
+    Role: {display: Role, category: Case model, specializes: CMMNElement, section: 5.2.2, attributes: [{name: name, type: String, section: '5.2.2, Table 5.15'}]}
+    CaseFile: {display: Case File, category: Information model, specializes: CMMNElement, section: 5.3.1, note: Generalization from the schema.}
+    CaseFileItem: {display: Case File Item, category: Information model, specializes: CMMNElement, section: 5.3.2, note: Generalization from the schema., attributes: [{name: name, type: String, section: '5.3.2, Table 5.17'}, {name: multiplicity, type: MultiplicityEnum, section: '5.3.2, Table 5.17'}]}
+    CaseFileItemDefinition: {display: Case File Item Definition, category: Information model, specializes: CMMNElement, section: 5.1.4, note: Generalization from the schema., attributes: [{name: name, type: String, section: '5.1.4, Figure 5.2'}, {name: definitionType, type: URI, section: '5.1.4, Figure 5.2'}, {name: structureRef, type: QName, section: '5.1.4, Figure 5.2'}]}
+    Property: {display: Property, category: Information model, specializes: CMMNElement, section: 5.1.4.1, note: Generalization from the schema., attributes: [{name: name, type: String, section: '5.1.4.1, Figure 5.2'}, {name: type, type: URI, section: '5.1.4.1, Figure 5.2'}]}
+    PlanItemDefinition: {display: Plan Item Definition, category: Plan model, abstract: true, specializes: CMMNElement, section: 5.4.1, attributes: [{name: name, type: String, section: '5.4.1, Table 5.18'}]}
+    EventListener: {display: Event Listener, category: Plan model, specializes: PlanItemDefinition, section: 5.4.2, abstract_stated: false, note: Described as a base for the timer and user kinds; the standard does not call it abstract and the schema allows it directly.}
+    TimerEventListener: {display: Timer Event Listener, category: Plan model, specializes: EventListener, section: 5.4.2.1}
+    UserEventListener: {display: User Event Listener, category: Plan model, specializes: EventListener, section: 5.4.2.2}
+    StartTrigger: {display: Start Trigger, category: Plan model, abstract: true, specializes: CMMNElement, section: 5.4.2.1.1}
+    CaseFileItemStartTrigger: {display: Case File Item Start Trigger, category: Plan model, specializes: StartTrigger, section: 5.4.2.1.2, attributes: [{name: standardEvent, type: CaseFileItemTransition, section: '5.4.2.1.2, Table 5.20'}]}
+    PlanItemStartTrigger: {display: Plan Item Start Trigger, category: Plan model, specializes: StartTrigger, section: 5.4.2.1.3, attributes: [{name: standardEvent, type: PlanItemTransition, section: '5.4.2.1.3, Table 5.21'}]}
+    Milestone: {display: Milestone, category: Plan model, specializes: PlanItemDefinition, section: 5.4.3}
+    PlanFragment: {display: Plan Fragment, category: Plan model, specializes: PlanItemDefinition, section: 5.4.4}
+    Stage: {display: Stage, category: Plan model, specializes: PlanFragment, section: 5.4.8, attributes: [{name: autoComplete, type: Boolean, default: 'false', section: '5.4.8, Figure 5.10'}]}
+    PlanItem: {display: Plan Item, category: Plan model, specializes: CMMNElement, section: 5.4.5, attributes: [{name: name, type: String, section: '5.4.5, Figure 5.8'}]}
+    Criterion: {display: Criterion, category: Plan model, abstract: true, specializes: CMMNElement, section: 5.4.5.1, attributes: [{name: name, type: String, section: '5.4.5.1, Figure 5.8'}]}
+    EntryCriterion: {display: Entry Criterion, category: Plan model, specializes: Criterion, section: 5.4.5.2}
+    ExitCriterion: {display: Exit Criterion, category: Plan model, specializes: Criterion, section: 5.4.5.3}
+    Sentry: {display: Sentry, category: Plan model, specializes: CMMNElement, section: 5.4.6, attributes: [{name: name, type: String, section: '5.4.6, Table 5.26'}]}
+    OnPart: {display: On Part, category: Plan model, abstract: true, specializes: CMMNElement, section: 5.4.6.1, attributes: [{name: name, type: String, multiplicity: 0..1, section: '5.4.6.1, Table 5.27'}]}
+    CaseFileItemOnPart: {display: Case File Item On Part, category: Plan model, specializes: OnPart, section: 5.4.6.2, attributes: [{name: standardEvent, type: CaseFileItemTransition, section: '5.4.6.2, Table 5.28'}]}
+    PlanItemOnPart: {display: Plan Item On Part, category: Plan model, specializes: OnPart, section: 5.4.6.3, attributes: [{name: standardEvent, type: PlanItemTransition, section: '5.4.6.3, Table 5.30'}]}
+    IfPart: {display: If Part, category: Plan model, specializes: CMMNElement, section: 5.4.6.4}
+    TableItem: {display: Table Item, category: Plan model, specializes: CMMNElement, section: 5.4.9.1, abstract_stated: false, note: The text does not say abstract; the schema marks it abstract.}
+    PlanningTable: {display: Planning Table, category: Plan model, specializes: TableItem, section: 5.4.9}
+    DiscretionaryItem: {display: Discretionary Item, category: Plan model, specializes: TableItem, section: 5.4.9.2, attributes: [{name: name, type: String, section: '5.4.9.2, Table 5.37'}]}
+    ApplicabilityRule: {display: Applicability Rule, category: Plan model, specializes: CMMNElement, section: 5.4.9.3, attributes: [{name: name, type: String, section: '5.4.9.3, Table 5.38'}]}
+    Task: {display: Task, category: Tasks, specializes: PlanItemDefinition, section: 5.4.10, abstract_stated: false, note: Described as the base class of all tasks; the standard does not call it abstract and the schema allows it directly (a plain task has no kind)., attributes: [{name: isBlocking, type: Boolean, default: 'true', section: '5.4.10, Table 5.39'}]}
+    HumanTask: {display: Human Task, category: Tasks, specializes: Task, section: 5.4.10.4}
+    ProcessTask: {display: Process Task, category: Tasks, specializes: Task, section: 5.4.10.5}
+    CaseTask: {display: Case Task, category: Tasks, specializes: Task, section: 5.4.10.6}
+    DecisionTask: {display: Decision Task, category: Tasks, specializes: Task, section: 5.4.10.7}
+    Parameter: {display: Parameter, category: Tasks, abstract: true, specializes: CMMNElement, section: 5.4.10.1, attributes: [{name: name, type: String, section: '5.4.10.1, Table 5.40'}]}
+    CaseParameter: {display: Case Parameter, category: Tasks, specializes: Parameter, section: 5.4.10.3}
+    ProcessParameter: {display: Process Parameter, category: Tasks, specializes: Parameter, section: 5.4.10.1, note: Named in 5.4.10.1 and 5.4.10.5.1; no section of its own.}
+    DecisionParameter: {display: Decision Parameter, category: Tasks, specializes: Parameter, section: 5.4.10.7.1, note: Named in the attribute table of Decision; no section of its own.}
+    ParameterMapping: {display: Parameter Mapping, category: Tasks, specializes: CMMNElement, section: 5.4.10.2}
+    Process: {display: Process, category: Tasks, specializes: CMMNElement, section: 5.4.10.5.1, attributes: [{name: name, type: String, section: '5.4.10.5.1, Figure 5.12'}, {name: implementationType, type: URI, section: '5.4.10.5.1, Figure 5.12'}, {name: externalRef, type: QName, section: '5.4.10.5.1, Figure 5.12'}]}
+    Decision: {display: Decision, category: Tasks, specializes: CMMNElement, section: 5.4.10.7.1, note: 'The text says the class inherits from "CMMElement", read as a typo for the common element class.', attributes: [{name: name, type: String, section: '5.4.10.7.1, Figure 5.12'}, {name: implementationType, type: URI, section: '5.4.10.7.1, Figure 5.12'}, {name: externalRef, type: QName, section: '5.4.10.7.1, Figure 5.12'}]}
+    PlanItemControl: {display: Plan Item Control, category: Item control, specializes: CMMNElement, section: 5.4.11}
+    ManualActivationRule: {display: Manual Activation Rule, category: Item control, specializes: CMMNElement, section: 5.4.11.1, attributes: [{name: name, type: String, section: '5.4.11.1, Figure 5.13'}]}
+    RequiredRule: {display: Required Rule, category: Item control, specializes: CMMNElement, section: 5.4.11.2, attributes: [{name: name, type: String, section: '5.4.11.2, Figure 5.13'}]}
+    RepetitionRule: {display: Repetition Rule, category: Item control, specializes: CMMNElement, section: 5.4.11.3, attributes: [{name: name, type: String, section: '5.4.11.3, Table 5.54'}]}
+    Artifact: {display: Artifact, category: Artifacts, abstract: true, specializes: CMMNElement, section: '5.5', note: Abstract in the schema; the text gives common rules for all artifacts without the word.}
+    Association: {display: Association, category: Artifacts, specializes: Artifact, section: 5.5.1, attributes: [{name: associationDirection, type: AssociationDirection, default: 'None', section: '5.5.1, Figure 5.14'}]}
+    TextAnnotation: {display: Text Annotation, category: Artifacts, specializes: Artifact, section: 5.5.2, attributes: [{name: text, type: String, section: '5.5.2, Figure 5.14'}, {name: textFormat, type: String, section: '5.5.2, Figure 5.14'}]}
+    CMMNDI: {display: CMMN DI, category: Diagram interchange, section: 7.4.3}
+    CMMNDiagram: {display: CMMN Diagram, category: Diagram interchange, section: 7.4.4, note: Specializes the diagram class of the OMG Diagram Definition standard.}
+    CMMNDiagramElement: {display: CMMN Diagram Element, category: Diagram interchange, abstract: true, section: 7.4.5, note: Base of shape and edge; the text does not use the word abstract.}
+    CMMNShape: {display: CMMN Shape, category: Diagram interchange, specializes: CMMNDiagramElement, section: 7.4.6, note: Also specializes the shape class of the OMG Diagram Definition standard.}
+    CMMNEdge: {display: CMMN Edge, category: Diagram interchange, specializes: CMMNDiagramElement, section: 7.4.7, note: Also specializes the edge class of the OMG Diagram Definition standard.}
+    CMMNLabel: {display: CMMN Label, category: Diagram interchange, section: 7.4.8, note: Specializes the shape class of the OMG Diagram Definition standard.}
+    CMMNStyle: {display: CMMN Style, category: Diagram interchange, section: 7.4.9, note: Specializes the style class of the OMG Diagram Definition standard.}
+  variants:
+    CasePlanModel: {of: Stage, when: the stage a Case refers to as its casePlanModel, section: 5.2.1; 5.4.8; 6.3, note: 'The outermost stage. Never a plan item definition, no default control, no entry criteria, may have stage-level exit criteria and a planning table. Drawn as a folder shape.'}
+    BlockingTask: {of: Task, when: isBlocking = true (the default), section: 5.4.10, note: The task waits until its work is done.}
+    NonBlockingTask: {of: Task, when: isBlocking = false, section: 5.4.10, note: Completes at once when instantiated; no outputs; no exit criteria.}
+    ManualTask: {of: HumanTask, when: isBlocking = false, section: 5.4.10.4, note: 'A non-blocking human task: the system does not track its lifecycle. No planning table.'}
+    DiscretionaryTask: {of: DiscretionaryItem, when: definitionRef is a Task, section: 5.4.9, note: Convenience name. Likewise discretionary stage and discretionary plan fragment.}
+    PlanFragmentOnly: {of: PlanFragment, when: a plan fragment that is not a Stage, section: 5.4.4; 5.4.5, note: Has no run-time life; can only be discretionary; cannot be used by a plan item.}
+  enumerations:
+    CaseFileItemTransition: {section: '5.4.6.2.1, Table 5.29', values: [addChild, addReference, create, delete, removeChild, removeReference, replace, update]}
+    PlanItemTransition: {section: '5.4.6.3.1, Table 5.31', values: [close, complete, create, disable, enable, exit, fault, manualStart, occur, parentResume, parentSuspend, reactivate, reenable, resume, start, suspend, terminate]}
+    MultiplicityEnum: {section: '5.3.2, Table 5.17; schema', values: [ZeroOrOne, ZeroOrMore, ExactlyOne, OneOrMore, Unspecified, Unknown], note: The text names the type and gives no value list; the values are from the schema.}
+    RelationshipDirection: {section: '5.1.6, Table 5.13', values: [None, Forward, Backward, Both]}
+    AssociationDirection: {section: '5.5.1, Table 5.56', values: [None, One, Both], default: None}
+    DefinitionType: {section: '5.1.4, Table 5.6', values: [CMISFolder, CMISDocument, CMISRelationship, XSDElement, XSDComplexType, XSDSimpleType, Unknown, Unspecified], note: 'The schema adds WSDLMessage and UMLClass. Each value is a URI under http://www.omg.org/spec/CMMN/DefinitionType/.'}
+    PropertyType: {section: '5.1.4.1, Table 5.8', values: [string, boolean, integer, float, double, duration, dateTime, time, date, gYearMonth, gYear, gMonthDay, gDay, gMonth, hexBinary, base64Binary, anyURI, QName, decimal, Unspecified], note: 'Each value is a URI under http://www.omg.org/spec/CMMN/PropertyType/.'}
+    ProcessImplementationType: {section: '5.4.10.5.1, Table 5.46', values: [BPMN20, XPDL2, WSBPEL20, WSBPEL1], note: 'The schema adds Unknown and Unspecified. Each value is a URI under http://www.omg.org/spec/CMMN/ProcessType/.'}
+    DecisionImplementationType: {section: '5.4.10.7.1, Table 5.50', values: [DMN1], note: 'The schema adds Unknown and Unspecified. Each value is a URI under http://www.omg.org/spec/CMMN/DecisionType/.'}
+relationships:
+  note: CMMN gives no allowed-relationship table. Its relationships are the associations of the metamodel (items; kind is composition or reference) and the three kinds of link drawn between shapes (diagram_links). Strengths on cardinalities are in constraints. Where the schema allows a lower bound of zero but the text says one, both are recorded (see each note and constraint STR-001).
+  items:
+  - {name: Definitions.imports, source: Definitions, target: Import, role: imports, kind: composition, multiplicity: {targets_per_source: 0..*}, section: '5.1.2, Table 5.3'}
+  - {name: Definitions.caseFileItemDefinitions, source: Definitions, target: CaseFileItemDefinition, role: caseFileItemDefinitions, kind: composition, multiplicity: {targets_per_source: 0..*}, section: 5.1.2}
+  - {name: Definitions.cases, source: Definitions, target: Case, role: cases, kind: composition, multiplicity: {targets_per_source: 0..*}, section: 5.1.2}
+  - {name: Definitions.processes, source: Definitions, target: Process, role: processes, kind: composition, multiplicity: {targets_per_source: 0..*}, section: 5.1.2}
+  - {name: Definitions.decisions, source: Definitions, target: Decision, role: decisions, kind: composition, multiplicity: {targets_per_source: 0..*}, section: 5.1.2}
+  - {name: Definitions.relationships, source: Definitions, target: Relationship, role: relationships, kind: composition, multiplicity: {targets_per_source: 0..*}, section: 5.1.2}
+  - {name: Definitions.artifacts, source: Definitions, target: Artifact, role: artifacts, kind: composition, multiplicity: {targets_per_source: 0..*}, section: 5.1.2}
+  - {name: Definitions.cmmnDi, source: Definitions, target: CMMNDI, role: cmmnDi, kind: composition, multiplicity: {targets_per_source: 0..1}, section: 5.1.2}
+  - {name: Definitions.extensions, source: Definitions, target: Extension, role: extensions, kind: composition, multiplicity: {targets_per_source: 0..*}, section: 5.1.5.1, note: Inferred from "contained within Definitions"; not in the attribute table.}
+  - {name: CMMNElement.documentation, source: CMMNElement, target: Documentation, role: documentation, kind: composition, multiplicity: {targets_per_source: 0..*}, section: '5.1.1, Table 5.1'}
+  - {name: CMMNElement.extensionDefinitions, source: CMMNElement, target: ExtensionDefinition, role: extensionDefinitions, kind: reference, multiplicity: {targets_per_source: 0..*}, section: '5.1.1, Table 5.1', note: Not used in XML schema exchange.}
+  - {name: CMMNElement.extensionValues, source: CMMNElement, target: ExtensionAttributeValue, role: extensionValues, kind: composition, multiplicity: {targets_per_source: 0..*}, section: '5.1.1, Table 5.1', note: Not used in XML schema exchange.}
+  - {name: Extension.definition, source: Extension, target: ExtensionDefinition, role: definition, kind: reference, multiplicity: {targets_per_source: '1'}, section: '5.1.5.1, Table 5.9'}
+  - {name: ExtensionDefinition.extensionAttributeDefinitions, source: ExtensionDefinition, target: ExtensionAttributeDefinition, role: extensionAttributeDefinitions, kind: composition, multiplicity: {targets_per_source: 0..1}, section: '5.1.5.2, Table 5.10', note: The text gives 0..1 for a list-valued role; recorded as read.}
+  - {name: ExtensionAttributeValue.extensionAttributeDefinition, source: ExtensionAttributeValue, target: ExtensionAttributeDefinition, role: extensionAttributeDefinition, kind: reference, multiplicity: {targets_per_source: '1'}, section: '5.1.5.4, Table 5.12'}
+  - {name: Relationship.sources, source: Relationship, target: CMMNElement, role: sources, kind: reference, multiplicity: {targets_per_source: 1..*}, section: '5.1.6, Table 5.13', note: 'Targets any addressable element, including elements of other models.'}
+  - {name: Relationship.targets, source: Relationship, target: CMMNElement, role: targets, kind: reference, multiplicity: {targets_per_source: 1..*}, section: '5.1.6, Table 5.13', note: 'Targets any addressable element, including elements of other models.'}
+  - {name: Case.caseFileModel, source: Case, target: CaseFile, role: caseFileModel, kind: composition, multiplicity: {targets_per_source: '1', sources_per_target: '1'}, section: '5.2.1, Table 5.14', note: The schema allows 0..1 for interchange of incomplete models (9.1).}
+  - {name: Case.casePlanModel, source: Case, target: Stage, role: casePlanModel, kind: composition, multiplicity: {targets_per_source: '1', sources_per_target: '1'}, section: '5.2.1, Table 5.14', note: The schema allows 0..1 for interchange of incomplete models (9.1).}
+  - {name: Case.caseRoles, source: Case, target: Role, role: caseRoles, kind: composition, multiplicity: {targets_per_source: 0..*, sources_per_target: '1'}, section: '5.2.1, Table 5.14'}
+  - {name: Case.inputs, source: Case, target: CaseParameter, role: inputs, kind: composition, multiplicity: {targets_per_source: 0..*}, section: '5.2.1, Table 5.14'}
+  - {name: Case.outputs, source: Case, target: CaseParameter, role: outputs, kind: composition, multiplicity: {targets_per_source: 0..*}, section: '5.2.1, Table 5.14'}
+  - {name: CaseFile.caseFileItems, source: CaseFile, target: CaseFileItem, role: caseFileItems, kind: composition, multiplicity: {targets_per_source: 1..*}, section: '5.3.1, Table 5.16', note: The schema allows 0..*.}
+  - {name: CaseFileItem.children, source: CaseFileItem, target: CaseFileItem, role: children, kind: composition, multiplicity: {targets_per_source: 0..*, sources_per_target: 0..1}, section: '5.3.2, Table 5.17', note: Containment hierarchy; the inverse role is parent.}
+  - {name: CaseFileItem.targetRefs, source: CaseFileItem, target: CaseFileItem, role: targetRefs, kind: reference, multiplicity: {targets_per_source: 0..*, sources_per_target: 0..1}, section: '5.3.2, Table 5.17', note: Reference hierarchy; the inverse role is sourceRef.}
+  - {name: CaseFileItem.definitionRef, source: CaseFileItem, target: CaseFileItemDefinition, role: definitionRef, kind: reference, multiplicity: {targets_per_source: '1'}, section: '5.3.2, Table 5.17', note: A qualified name in the schema.}
+  - {name: CaseFileItemDefinition.properties, source: CaseFileItemDefinition, target: Property, role: properties, kind: composition, multiplicity: {targets_per_source: 0..*}, section: '5.1.4, Table 5.5'}
+  - {name: CaseFileItemDefinition.importRef, source: CaseFileItemDefinition, target: Import, role: importRef, kind: reference, multiplicity: {targets_per_source: 0..1}, section: '5.1.4, Table 5.5'}
+  - {name: PlanItemDefinition.defaultControl, source: PlanItemDefinition, target: PlanItemControl, role: defaultControl, kind: composition, multiplicity: {targets_per_source: 0..1}, section: '5.4.1, Table 5.18'}
+  - {name: PlanFragment.planItems, source: PlanFragment, target: PlanItem, role: planItems, kind: composition, multiplicity: {targets_per_source: 0..*}, section: '5.4.4, Table 5.23'}
+  - {name: PlanFragment.sentries, source: PlanFragment, target: Sentry, role: sentries, kind: composition, multiplicity: {targets_per_source: 0..*}, section: '5.4.4, Table 5.23'}
+  - {name: Stage.planItemDefinitions, source: Stage, target: PlanItemDefinition, role: planItemDefinitions, kind: composition, multiplicity: {targets_per_source: 0..*}, section: '5.4.8, Table 5.34'}
+  - {name: Stage.planningTable, source: Stage, target: PlanningTable, role: planningTable, kind: composition, multiplicity: {targets_per_source: 0..1}, section: '5.4.8, Table 5.34'}
+  - {name: Stage.exitCriteria, source: Stage, target: ExitCriterion, role: exitCriteria, kind: composition, multiplicity: {targets_per_source: 0..*}, section: '5.4.8, Table 5.34', note: Only the stage that is a case plan model may have these.}
+  - {name: PlanItem.definitionRef, source: PlanItem, target: PlanItemDefinition, role: definitionRef, kind: reference, multiplicity: {targets_per_source: '1'}, section: '5.4.5, Table 5.24'}
+  - {name: PlanItem.itemControl, source: PlanItem, target: PlanItemControl, role: itemControl, kind: composition, multiplicity: {targets_per_source: 0..1}, section: '5.4.5, Table 5.24', note: Overrides the default control of the definition.}
+  - {name: PlanItem.entryCriteria, source: PlanItem, target: EntryCriterion, role: entryCriteria, kind: composition, multiplicity: {targets_per_source: 0..*}, section: '5.4.5, Table 5.24'}
+  - {name: PlanItem.exitCriteria, source: PlanItem, target: ExitCriterion, role: exitCriteria, kind: composition, multiplicity: {targets_per_source: 0..*}, section: '5.4.5, Table 5.24'}
+  - {name: Criterion.sentryRef, source: Criterion, target: Sentry, role: sentryRef, kind: reference, multiplicity: {targets_per_source: 0..1}, section: '5.4.5.1, Table 5.25'}
+  - {name: Sentry.onParts, source: Sentry, target: OnPart, role: onParts, kind: composition, multiplicity: {targets_per_source: 0..*}, section: '5.4.6, Table 5.26'}
+  - {name: Sentry.ifPart, source: Sentry, target: IfPart, role: ifPart, kind: composition, multiplicity: {targets_per_source: 0..1}, section: '5.4.6, Table 5.26'}
+  - {name: IfPart.contextRef, source: IfPart, target: CaseFileItem, role: contextRef, kind: reference, multiplicity: {targets_per_source: 0..1}, section: '5.4.6.4, Table 5.32'}
+  - {name: IfPart.condition, source: IfPart, target: Expression, role: condition, kind: composition, multiplicity: {targets_per_source: '1'}, section: '5.4.6.4, Table 5.32', note: The schema allows 0..1.}
+  - {name: CaseFileItemOnPart.sourceRef, source: CaseFileItemOnPart, target: CaseFileItem, role: sourceRef, kind: reference, multiplicity: {targets_per_source: '1'}, section: '5.4.6.2, Table 5.28'}
+  - {name: PlanItemOnPart.sourceRef, source: PlanItemOnPart, target: PlanItem, role: sourceRef, kind: reference, multiplicity: {targets_per_source: 0..1}, section: '5.4.6.3, Table 5.30'}
+  - {name: PlanItemOnPart.exitCriterionRef, source: PlanItemOnPart, target: ExitCriterion, role: exitCriterionRef, kind: reference, multiplicity: {targets_per_source: 0..1}, section: '5.4.6.3, Table 5.30'}
+  - {name: TimerEventListener.timerExpression, source: TimerEventListener, target: Expression, role: timerExpression, kind: composition, multiplicity: {targets_per_source: 0..1}, section: '5.4.2.1, Table 5.19'}
+  - {name: TimerEventListener.timerStart, source: TimerEventListener, target: StartTrigger, role: timerStart, kind: composition, multiplicity: {targets_per_source: 0..1}, section: '5.4.2.1, Table 5.19'}
+  - {name: CaseFileItemStartTrigger.sourceRef, source: CaseFileItemStartTrigger, target: CaseFileItem, role: sourceRef, kind: reference, multiplicity: {targets_per_source: '1'}, section: '5.4.2.1.2, Table 5.20'}
+  - {name: PlanItemStartTrigger.sourceRef, source: PlanItemStartTrigger, target: PlanItem, role: sourceRef, kind: reference, multiplicity: {targets_per_source: 0..1}, section: '5.4.2.1.3, Table 5.21'}
+  - {name: UserEventListener.authorizedRoleRefs, source: UserEventListener, target: Role, role: authorizedRoleRefs, kind: reference, multiplicity: {targets_per_source: 0..*}, section: '5.4.2.2, Table 5.22'}
+  - {name: PlanningTable.tableItems, source: PlanningTable, target: TableItem, role: tableItems, kind: composition, multiplicity: {targets_per_source: 1..*}, section: '5.4.9, Table 5.35', note: 'Nesting: a planning table is itself a table item.'}
+  - {name: PlanningTable.applicabilityRules, source: PlanningTable, target: ApplicabilityRule, role: applicabilityRules, kind: composition, multiplicity: {targets_per_source: 0..*}, section: '5.4.9, Table 5.35'}
+  - {name: TableItem.authorizedRoleRefs, source: TableItem, target: Role, role: authorizedRoleRefs, kind: reference, multiplicity: {targets_per_source: 0..*}, section: '5.4.9.1, Table 5.36'}
+  - {name: TableItem.applicabilityRuleRefs, source: TableItem, target: ApplicabilityRule, role: applicabilityRuleRefs, kind: reference, multiplicity: {targets_per_source: 0..*}, section: '5.4.9.1, Table 5.36'}
+  - {name: DiscretionaryItem.definitionRef, source: DiscretionaryItem, target: PlanItemDefinition, role: definitionRef, kind: reference, multiplicity: {targets_per_source: '1'}, section: '5.4.9.2, Table 5.37'}
+  - {name: DiscretionaryItem.itemControl, source: DiscretionaryItem, target: PlanItemControl, role: itemControl, kind: composition, multiplicity: {targets_per_source: 0..1}, section: '5.4.9.2, Table 5.37', note: Overrides the default control of the definition.}
+  - {name: DiscretionaryItem.entryCriteria, source: DiscretionaryItem, target: EntryCriterion, role: entryCriteria, kind: composition, multiplicity: {targets_per_source: 0..*}, section: '5.4.9.2, Table 5.37'}
+  - {name: DiscretionaryItem.exitCriteria, source: DiscretionaryItem, target: ExitCriterion, role: exitCriteria, kind: composition, multiplicity: {targets_per_source: 0..*}, section: '5.4.9.2, Table 5.37'}
+  - {name: ApplicabilityRule.contextRef, source: ApplicabilityRule, target: CaseFileItem, role: contextRef, kind: reference, multiplicity: {targets_per_source: 0..1}, section: '5.4.9.3, Table 5.38'}
+  - {name: ApplicabilityRule.condition, source: ApplicabilityRule, target: Expression, role: condition, kind: composition, multiplicity: {targets_per_source: '1'}, section: '5.4.9.3, Table 5.38', note: The schema allows 0..1.}
+  - {name: Task.inputs, source: Task, target: CaseParameter, role: inputs, kind: composition, multiplicity: {targets_per_source: 0..*}, section: '5.4.10, Table 5.39'}
+  - {name: Task.outputs, source: Task, target: CaseParameter, role: outputs, kind: composition, multiplicity: {targets_per_source: 0..*}, section: '5.4.10, Table 5.39', note: None for a non-blocking task.}
+  - {name: HumanTask.planningTable, source: HumanTask, target: PlanningTable, role: planningTable, kind: composition, multiplicity: {targets_per_source: 0..1}, section: '5.4.10.4, Table 5.43', note: None for a non-blocking human task.}
+  - {name: HumanTask.performerRef, source: HumanTask, target: Role, role: performerRef, kind: reference, multiplicity: {targets_per_source: 0..1}, section: '5.4.10.4, Table 5.43'}
+  - {name: ProcessTask.processRef, source: ProcessTask, target: Process, role: processRef, kind: reference, multiplicity: {targets_per_source: 0..1}, section: '5.4.10.5, Table 5.44', note: Exactly one of processRef and processRefExpression.}
+  - {name: ProcessTask.processRefExpression, source: ProcessTask, target: Expression, role: processRefExpression, kind: composition, multiplicity: {targets_per_source: 0..1}, section: '5.4.10.5, Table 5.44', note: Exactly one of processRef and processRefExpression.}
+  - {name: ProcessTask.mappings, source: ProcessTask, target: ParameterMapping, role: mappings, kind: composition, multiplicity: {targets_per_source: 0..*}, section: '5.4.10.5, Table 5.44'}
+  - {name: CaseTask.caseRef, source: CaseTask, target: Case, role: caseRef, kind: reference, multiplicity: {targets_per_source: 0..1}, section: '5.4.10.6, Table 5.47', note: Exactly one of caseRef and caseRefExpression.}
+  - {name: CaseTask.caseRefExpression, source: CaseTask, target: Expression, role: caseRefExpression, kind: composition, multiplicity: {targets_per_source: 0..1}, section: '5.4.10.6, Table 5.47', note: Exactly one of caseRef and caseRefExpression.}
+  - {name: CaseTask.mappings, source: CaseTask, target: ParameterMapping, role: mappings, kind: composition, multiplicity: {targets_per_source: 0..*}, section: '5.4.10.6, Table 5.47'}
+  - {name: DecisionTask.decisionRef, source: DecisionTask, target: Decision, role: decisionRef, kind: reference, multiplicity: {targets_per_source: 0..1}, section: '5.4.10.7, Table 5.48', note: Exactly one of decisionRef and decisionRefExpression.}
+  - {name: DecisionTask.decisionRefExpression, source: DecisionTask, target: Expression, role: decisionRefExpression, kind: composition, multiplicity: {targets_per_source: 0..1}, section: '5.4.10.7, Table 5.48', note: Exactly one of decisionRef and decisionRefExpression.}
+  - {name: DecisionTask.mappings, source: DecisionTask, target: ParameterMapping, role: mappings, kind: composition, multiplicity: {targets_per_source: 0..*}, section: '5.4.10.7, Table 5.48'}
+  - {name: Process.inputs, source: Process, target: ProcessParameter, role: inputs, kind: composition, multiplicity: {targets_per_source: 0..*}, section: '5.4.10.5.1, Table 5.45'}
+  - {name: Process.outputs, source: Process, target: ProcessParameter, role: outputs, kind: composition, multiplicity: {targets_per_source: 0..*}, section: '5.4.10.5.1, Table 5.45'}
+  - {name: Decision.inputs, source: Decision, target: DecisionParameter, role: inputs, kind: composition, multiplicity: {targets_per_source: 0..*}, section: '5.4.10.7.1, Table 5.49'}
+  - {name: Decision.outputs, source: Decision, target: DecisionParameter, role: outputs, kind: composition, multiplicity: {targets_per_source: 0..*}, section: '5.4.10.7.1, Table 5.49'}
+  - {name: ParameterMapping.sourceRef, source: ParameterMapping, target: Parameter, role: sourceRef, kind: reference, multiplicity: {targets_per_source: '1'}, section: '5.4.10.2, Table 5.41'}
+  - {name: ParameterMapping.targetRef, source: ParameterMapping, target: Parameter, role: targetRef, kind: reference, multiplicity: {targets_per_source: '1'}, section: '5.4.10.2, Table 5.41'}
+  - {name: ParameterMapping.transformation, source: ParameterMapping, target: Expression, role: transformation, kind: composition, multiplicity: {targets_per_source: 0..1}, section: '5.4.10.2, Table 5.41'}
+  - {name: CaseParameter.bindingRef, source: CaseParameter, target: CaseFileItem, role: bindingRef, kind: reference, multiplicity: {targets_per_source: 0..1}, section: '5.4.10.3, Table 5.42'}
+  - {name: CaseParameter.bindingRefinement, source: CaseParameter, target: Expression, role: bindingRefinement, kind: composition, multiplicity: {targets_per_source: 0..1}, section: '5.4.10.3, Table 5.42'}
+  - {name: PlanItemControl.manualActivationRule, source: PlanItemControl, target: ManualActivationRule, role: manualActivationRule, kind: composition, multiplicity: {targets_per_source: 0..1}, section: '5.4.11, Table 5.51'}
+  - {name: PlanItemControl.requiredRule, source: PlanItemControl, target: RequiredRule, role: requiredRule, kind: composition, multiplicity: {targets_per_source: 0..1}, section: '5.4.11, Table 5.51'}
+  - {name: PlanItemControl.repetitionRule, source: PlanItemControl, target: RepetitionRule, role: repetitionRule, kind: composition, multiplicity: {targets_per_source: 0..1}, section: '5.4.11, Table 5.51'}
+  - {name: ManualActivationRule.contextRef, source: ManualActivationRule, target: CaseFileItem, role: contextRef, kind: reference, multiplicity: {targets_per_source: 0..1}, section: '5.4.11.1, Table 5.52'}
+  - {name: ManualActivationRule.condition, source: ManualActivationRule, target: Expression, role: condition, kind: composition, multiplicity: {targets_per_source: '1'}, section: '5.4.11.1, Table 5.52', note: The schema allows 0..1.}
+  - {name: RequiredRule.contextRef, source: RequiredRule, target: CaseFileItem, role: contextRef, kind: reference, multiplicity: {targets_per_source: 0..1}, section: '5.4.11.2, Table 5.53'}
+  - {name: RequiredRule.condition, source: RequiredRule, target: Expression, role: condition, kind: composition, multiplicity: {targets_per_source: '1'}, section: '5.4.11.2, Table 5.53', note: The schema allows 0..1.}
+  - {name: RepetitionRule.contextRef, source: RepetitionRule, target: CaseFileItem, role: contextRef, kind: reference, multiplicity: {targets_per_source: 0..1}, section: '5.4.11.3, Table 5.54'}
+  - {name: RepetitionRule.condition, source: RepetitionRule, target: Expression, role: condition, kind: composition, multiplicity: {targets_per_source: '1'}, section: '5.4.11.3, Table 5.54', note: The schema allows 0..1.}
+  - {name: Association.sourceRef, source: Association, target: CMMNElement, role: sourceRef, kind: reference, multiplicity: {targets_per_source: '1'}, section: '5.5.1, Table 5.56', note: Cardinality inferred; the schema has one reference on each end.}
+  - {name: Association.targetRef, source: Association, target: CMMNElement, role: targetRef, kind: reference, multiplicity: {targets_per_source: '1'}, section: '5.5.1, Table 5.56', note: Cardinality inferred; the schema has one reference on each end.}
+  diagram_links:
+    Connector:
+      depicts: An OnPart of the Sentry behind the target criterion
+      drawn_as: "dash-dot-dot line; the text also calls it dotted, no arrowheads"
+      source: ['PlanItem (definition is a Task, Stage, Milestone or EventListener)', ExitCriterion (when the OnPart names one), CaseFileItem (for a CaseFileItemOnPart)]
+      target: [EntryCriterion, ExitCriterion]
+      section: 6.11, 6.11.1, 7.4.7, 7.5.3.1, 7.5.3.2, Tables 7.17, 7.18
+      note: A connector may be drawn once per entry or exit criterion for the same OnPart. Connectors have no execution semantics (8.8).
+    DiscretionaryAssociation:
+      depicts: That a DiscretionaryItem belongs to the PlanningTable of a HumanTask
+      drawn_as: dashed line, no arrowheads
+      source: [PlanItem or DiscretionaryItem whose definition is a HumanTask holding the planning table]
+      target: [DiscretionaryItem]
+      section: 6.11, 7.4.7, 7.5.3.3, Table 7.19
+      note: No model element behind it; no label.
+    Association:
+      depicts: An Association artifact
+      drawn_as: dotted single line, optional arrowhead at the target or at both ends
+      source: [any CMMNElement]
+      target: [any CMMNElement]
+      section: 5.5.1, 6.14.1, 7.5.3.4, Table 7.20
+      note: Used chiefly to join a TextAnnotation to an element. A TextAnnotation or other artifact is never an end of a Connector or a DiscretionaryAssociation (5.5).
+lifecycles:
+  states:
+    section: 8.4, Table 8.4
+    values: [Active, Available, Closed, Completed, Disabled, Enabled, Failed, Suspended, Terminated]
+    terminal: [Closed, Terminated, 'Completed (except for a case, where it is semi-terminal)']
+    semi_terminal: [Disabled, Failed, Completed (for a case)]
+    note: A semi-terminal state can be left by a transition but counts as finished when judging whether the parent stage can complete.
+  case:
+    section: 8.4.1, Tables 8.5, 8.6
+    states: [Active, Suspended, Completed, Terminated, Failed, Closed]
+    transitions:
+    - {name: create, from: (none), to: Active, section: Table 8.6}
+    - {name: suspend, from: Active, to: Suspended, section: Table 8.6}
+    - {name: terminate, from: Active, to: Terminated, section: Table 8.6}
+    - {name: complete, from: Active, to: Completed, section: Table 8.6}
+    - {name: fault, from: Active, to: Failed, section: Table 8.6}
+    - {name: reactivate, from: [Completed, Terminated, Failed, Suspended], to: Active, section: Table 8.6}
+    - {name: close, from: [Completed, Terminated, Failed, Suspended], to: Closed, section: Table 8.6}
+  stage_task:
+    section: 8.4.2, Tables 8.7, 8.8, 8.9
+    states: [Available, Enabled, Disabled, Active, Suspended, Failed, Completed, Terminated]
+    transitions:
+    - {name: create, from: (none), to: Available, section: Table 8.8, note: Evaluates the repetition rule (first value discarded) and the required rule.}
+    - {name: enable, from: Available, to: Enabled, section: Table 8.8, note: Entry sentry satisfied and the manual activation rule is true.}
+    - {name: start, from: Available, to: Active, section: Table 8.8, note: Entry sentry satisfied and the manual activation rule is false.}
+    - {name: disable, from: Enabled, to: Disabled, section: Table 8.8, note: The standard names it "disabled" in the table and disable in the enumeration.}
+    - {name: reenable, from: Disabled, to: Enabled, section: Table 8.8}
+    - {name: manualStart, from: Enabled, to: Active, section: Table 8.8}
+    - {name: suspend, from: Active, to: Suspended, section: Table 8.8}
+    - {name: resume, from: Suspended, to: Active, section: Table 8.8}
+    - {name: fault, from: Active, to: Failed, section: Table 8.8, note: Does not propagate.}
+    - {name: reactivate, from: Failed, to: Active, section: Table 8.8}
+    - {name: complete, from: Active, to: Completed, section: Table 8.8}
+    - {name: terminate, from: Active, to: Terminated, section: Table 8.8}
+    - {name: exit, from: [Available, Active, Enabled, Disabled, Suspended, Failed], to: Terminated, section: Table 8.8, note: 'Exit criterion satisfied, or the parent terminates.'}
+    - {name: parentSuspend, from: [Available, Active, Enabled, Disabled], to: Suspended, section: Table 8.8}
+    - {name: parentResume, from: Suspended, to: the state before the suspension, section: Table 8.8}
+  event_listener_milestone:
+    section: 8.4.3, Tables 8.10, 8.11
+    states: [Available, Suspended, Completed, Terminated]
+    transitions:
+    - {name: create, from: (none), to: Available, section: Table 8.11, note: 'For a milestone, evaluates the repetition and required rules.'}
+    - {name: occur, from: Available, to: Completed, section: Table 8.11}
+    - {name: suspend, from: Available, to: Suspended, section: Table 8.11}
+    - {name: resume, from: Suspended, to: Available, section: Table 8.11}
+    - {name: terminate, from: Available, to: Terminated, section: Table 8.11}
+    - {name: parentTerminate, from: [Available, Suspended], to: Terminated, section: Table 8.11}
+  case_file_item:
+    section: 8.3, Tables 8.1, 8.2
+    states: [Available, Discarded]
+    transitions:
+    - {name: create, from: (none), to: Available, section: Table 8.2}
+    - {name: update, from: Available, to: Available, section: Table 8.2}
+    - {name: replace, from: Available, to: Available, section: Table 8.2}
+    - {name: addChild, from: Available, to: Available, section: Table 8.2}
+    - {name: removeChild, from: Available, to: Available, section: Table 8.2}
+    - {name: addReference, from: Available, to: Available, section: Table 8.2}
+    - {name: removeReference, from: Available, to: Available, section: Table 8.2}
+    - {name: delete, from: Available, to: Discarded, section: Table 8.2, note: Terminal.}
+  plan_item_transition_applies_to:
+    section: 5.4.6.3.1, Table 5.31
+    note: Which PlanItemTransition values belong to which lifecycle. CasePlanModel means the case lifecycle. Stage-or-task values are legal standard events for an on-part whose source is a stage or task; event-listener-or-milestone values for an event listener or milestone.
+    stage_or_task: [complete, create, disable, enable, exit, fault, manualStart, parentResume, parentSuspend, reactivate, reenable, resume, start, suspend, terminate]
+    event_listener_or_milestone: [create, occur, resume, suspend, terminate]
+    case_plan_model_only: [close]
+    case_plan_model_also: [complete, create, reactivate, suspend, terminate]
+decorators:
+  source: Clause 6.13 and Table 6.1 (Decorators Applicability Summary Table, p. 79). Table 6.1 was read as an image. A decorator is visible when the rule is defined for the PlanItem or DiscretionaryItem, or for the PlanItemDefinition it uses (7.5.2.4).
+  items:
+    AutoComplete:
+      glyph: small black square at the bottom center
+      means: autoComplete is true on the stage
+      applies_to: [Stage, CasePlanModel]
+      section: 6.13.1, 7.5.2.3
+      rule: Stage.autoComplete
+      not_on: [Task, Milestone, EventListener, CaseFileItem, PlanFragment]
+    ManualActivation:
+      glyph: small white-filled right-pointing triangle
+      means: a ManualActivationRule is defined
+      applies_to: [Stage, Task]
+      section: 6.13.2, 7.5.2.4
+      rule: ManualActivationRule
+      not_on: [CasePlanModel, Milestone, EventListener, CaseFileItem, PlanFragment]
+    Required:
+      glyph: bold black exclamation mark
+      means: a RequiredRule is defined
+      applies_to: [Stage, Task, Milestone]
+      section: 6.13.3, 7.5.2.4
+      rule: RequiredRule
+      not_on: [CasePlanModel, EventListener, CaseFileItem, PlanFragment]
+    Repetition:
+      glyph: two bold vertical bars crossed by two bold horizontal bars (a hash sign)
+      means: a RepetitionRule is defined
+      applies_to: [Stage, Task, Milestone]
+      section: 6.13.4, 7.5.2.4
+      rule: RepetitionRule
+      not_on: [CasePlanModel, EventListener, CaseFileItem, PlanFragment]
+    PlanningTable:
+      glyph: small table of six cells; plus when items are not shown, minus when shown
+      means: the shape has a planning table
+      applies_to: [CasePlanModel, Stage, HumanTask]
+      section: 6.12, 7.5.2.5
+      rule: PlanningTable
+      not_on: [Task (other than a human task), Milestone, EventListener, CaseFileItem, PlanFragment]
+    EntryCriterion:
+      glyph: open (shallow) diamond on the boundary
+      means: the item has an entry criterion
+      applies_to: [Stage, Task, Milestone]
+      section: 6.6, 7.5.2.6
+      rule: EntryCriterion
+      not_on: [CasePlanModel, EventListener, CaseFileItem, PlanFragment]
+    ExitCriterion:
+      glyph: solid diamond on the boundary
+      means: the item has an exit criterion
+      applies_to: [CasePlanModel, Stage, Task]
+      section: 6.6, 7.5.2.7
+      rule: ExitCriterion
+      not_on: [Milestone, EventListener, CaseFileItem, PlanFragment]
+  table_6_1:
+    columns: [PlanningTable, EntryCriterion, ExitCriterion, AutoComplete, ManualActivation, Required, Repetition]
+    CasePlanModel: [PlanningTable, ExitCriterion, AutoComplete]
+    Stage: [PlanningTable, EntryCriterion, ExitCriterion, AutoComplete, ManualActivation, Required, Repetition]
+    Task: [PlanningTable (HumanTask only), EntryCriterion, ExitCriterion, ManualActivation, Required, Repetition]
+    Milestone: [EntryCriterion, Required, Repetition]
+    EventListener: []
+    CaseFileItem: []
+    PlanFragment: []
+  note: 'The check marks in Table 6.1 say what a shape can carry. The metamodel narrows it: no exit criterion or planning table for a non-blocking task (CRT-005, PLN-011); no entry criterion for an event listener; no exit criterion for a milestone.'
+diagram_types:
+  CMMNDiagram:
+    defined_by: Clauses 6 and 7.4.4. The standard names one diagram kind, the CMMN diagram; it defines no further diagram types and no viewpoints.
+    conformance: [VisualNotation, CaseModeling, BPMNCompatibility, DMNCompatibility, Complete]
+    scope: A diagram refers to a Definitions, a case plan model, a Stage or a PlanFragment (7.4.4, Table 7.2). A whole case is normally shown by the diagram of its case plan model.
+    admits: [CasePlanModel, Stage, PlanFragment, Task, HumanTask, ProcessTask, CaseTask, DecisionTask, Milestone, EventListener, TimerEventListener, UserEventListener, EntryCriterion, ExitCriterion, PlanningTable, DiscretionaryItem, CaseFileItem, PlanItemOnPart, CaseFileItemOnPart, Association, TextAnnotation]
+    admits_note: Plan items are drawn solid and discretionary items dashed. A PlanFragment is drawn only as a discretionary item and never as a plan item. EventListener and Milestone items are never discretionary (Table 7.9). A discretionary item may refer to a Task, Stage or PlanFragment. Only the case file items that take part in the behavior of the case are drawn, and the information model itself is not drawn (6.2). Links between shapes are connectors (OnPart), discretionary associations and associations (relationships.diagram_links). Stage and PlanFragment are drawn collapsed or expanded; contents show only when expanded. The standard says to read no meaning into position (6.2). The decorators that go on each shape are under decorators.
+    excludes: [Case, Role, CaseFile, CaseFileItemDefinition, Property, Process, Decision, CaseParameter, ParameterMapping, Expression, PlanItemControl (drawn only as decorators), Sentry (drawn only as criteria), IfPart]
+    root_of_plane: [CasePlanModel, Stage, PlanFragment]
+    conventions: standard-text
+constraints:
+- id: CMMN-STR-001
+  statement: A Case has exactly one case file and exactly one case plan model.
+  strength: must
+  section: 5.2.1, Table 5.14, p. 20
+  checkable: static
+  note: The schema allows zero of each so that incomplete models can be exchanged (9.1). Treat the lower bound as relaxed only for exchange.
+- id: CMMN-STR-002
+  statement: The case plan model is a Stage, and it is the outermost stage of the case.
+  strength: must
+  section: 5.2.1; 5.4; 5.4.8
+  checkable: static
+- id: CMMN-STR-003
+  statement: The case plan model has no default control.
+  strength: must
+  section: 5.4.1, Table 5.18, p. 24
+  checkable: static
+- id: CMMN-STR-004
+  statement: Only the stage that is the case plan model may have stage-level exit criteria, and they refer to sentries contained in that stage.
+  strength: must
+  section: 5.4.8, Table 5.34, p. 38
+  checkable: static
+- id: CMMN-STR-005
+  statement: The case plan model has no entry criteria.
+  strength: must
+  section: 8.4.1, p. 111; Table 6.1
+  checkable: static
+- id: CMMN-STR-006
+  statement: A case file holds at least one case file item.
+  strength: must
+  section: 5.3.1, Table 5.16, p. 22
+  checkable: static
+  note: The schema allows none (interchange of incomplete models).
+- id: CMMN-STR-007
+  statement: Every case file item has exactly one case file item definition.
+  strength: must
+  section: 5.3.2, Table 5.17, p. 22
+  checkable: static
+- id: CMMN-STR-008
+  statement: The children of a case file item never include that item or any item it is nested in (no containment cycle).
+  strength: must
+  section: 5.3.2, Table 5.17, p. 23
+  checkable: static
+- id: CMMN-STR-009
+  statement: The target references of a case file item never lead back to that item or to any item that refers to it (no reference cycle).
+  strength: must
+  section: 5.3.2, Table 5.17, p. 23
+  checkable: static
+- id: CMMN-STR-010
+  statement: A Definitions that contains a Case contains the imports and the case file item definitions that the case file items of that case need.
+  strength: must
+  section: 5.1.2, Table 5.3, p. 12
+  checkable: static
+- id: CMMN-STR-011
+  statement: For a case file item definition typed as an XML Schema element, complex type or simple type, an Import brings the schema into the model.
+  strength: should
+  section: 5.1.3, p. 13
+  checkable: partial
+  note: For other definition types the use of Import is not specified.
+- id: CMMN-STR-012
+  statement: A Role is specific to its Case and is not known outside it.
+  strength: must
+  section: 5.2.1, Table 5.14, p. 20
+  checkable: partial
+- id: CMMN-STR-013
+  statement: When no extension is used, a reference to an information element means its latest version; the standard defines no versioning of case file items.
+  strength: must
+  section: 5.3.2.1, p. 23
+  checkable: none
+- id: CMMN-REF-001
+  statement: Reference associations between elements contained in a Case resolve within that Case, unless a rule says otherwise.
+  strength: must
+  section: 5.1.1, p. 10
+  checkable: static
+- id: CMMN-REF-002
+  statement: A PlanItem refers to exactly one PlanItemDefinition.
+  strength: must
+  section: 5.4.5, Table 5.24, p. 30
+  checkable: static
+- id: CMMN-REF-003
+  statement: A PlanItem never refers to the Stage that is the case plan model.
+  strength: must
+  section: 5.4.5, Table 5.24, p. 30
+  checkable: static
+- id: CMMN-REF-004
+  statement: A PlanItem never refers to a PlanFragment that is not a Stage.
+  strength: must
+  section: 5.4.5, Table 5.24, p. 30
+  checkable: static
+  note: Such a fragment can only be discretionary.
+- id: CMMN-REF-005
+  statement: A PlanItem inside a Stage never refers to that Stage or to any Stage the Stage is nested in.
+  strength: must
+  section: 5.4.5, Table 5.24, p. 30
+  checkable: static
+- id: CMMN-REF-006
+  statement: A PlanItem refers only to a PlanItemDefinition defined in its own Stage or in a Stage that encloses it, up to the case plan model. A PlanItem inside a PlanFragment uses definitions of the fragment's parent Stage or above.
+  strength: must
+  section: 5.4.1, p. 25; 5.4.5, Table 5.24, p. 30; 5.4.5.4, p. 31
+  checkable: static
+- id: CMMN-REF-007
+  statement: Two Stages contained in the same parent do not refer to each other's contained elements; each may refer to elements of the parent.
+  strength: must
+  section: 5.4.1, p. 25
+  checkable: static
+- id: CMMN-REF-008
+  statement: A ProcessTask refers to a Process, and a DecisionTask to a Decision, contained by the Definitions that also contains the Case.
+  strength: must
+  section: 5.1.2, Table 5.3, p. 13
+  checkable: static
+- id: CMMN-CRT-001
+  statement: A Sentry has an IfPart or at least one OnPart.
+  strength: must
+  section: 5.4.6, p. 33
+  checkable: static
+- id: CMMN-CRT-002
+  statement: The entry and exit criteria of a PlanItem refer to Sentries contained by the Stage or PlanFragment that contains the PlanItem.
+  strength: must
+  section: 5.4.5.1, Table 5.25, p. 31
+  checkable: static
+- id: CMMN-CRT-003
+  statement: A PlanItem defined by an EventListener has no entry criteria.
+  strength: must
+  section: 5.4.5, Table 5.24, p. 30; 7.5.2.6
+  checkable: static
+- id: CMMN-CRT-004
+  statement: A PlanItem defined by an EventListener or a Milestone has no exit criteria.
+  strength: must
+  section: 5.4.5, Table 5.24, p. 30
+  checkable: static
+- id: CMMN-CRT-005
+  statement: A PlanItem or DiscretionaryItem defined by a non-blocking Task has no exit criteria.
+  strength: must
+  section: 5.4.5, Table 5.24, p. 30; 5.4.9.2, Table 5.37, p. 41
+  checkable: static
+- id: CMMN-CRT-006
+  statement: Entry criteria belong only to items whose definition is a Task, Stage or Milestone. Exit criteria belong only to the case plan model and to items whose definition is a Task or Stage.
+  strength: must
+  section: 7.5.2.6; 7.5.2.7; Tables 7.13, 7.14, pp. 101 to 102
+  checkable: static
+- id: CMMN-CRT-007
+  statement: 'The standard event of a PlanItemOnPart or PlanItemStartTrigger is a transition of the lifecycle of the source PlanItem''s kind: the Stage and Task lifecycle for a Stage or Task, the EventListener and Milestone lifecycle for an EventListener or Milestone.'
+  strength: must
+  section: 5.4.2.1.3, Table 5.21; 5.4.6.3, Table 5.30, pp. 27, 35
+  checkable: static
+  note: Both tables point to 8.4.3 for the Stage and Task case; the Stage and Task lifecycle is in 8.4.2 (read as a typo).
+- id: CMMN-CRT-008
+  statement: When a PlanItemOnPart names an exit criterion, that criterion is contained in the PlanItem the on-part names as its source.
+  strength: must
+  section: 5.4.6.3, Table 5.30, p. 35
+  checkable: static
+- id: CMMN-CRT-009
+  statement: When a PlanItemOnPart names an exit criterion, its standard event is exit.
+  strength: must
+  section: 5.4.6.3, Table 5.30, p. 35
+  checkable: static
+  note: The table words this as "when sentryRef is specified"; read as the exit criterion reference.
+- id: CMMN-CRT-010
+  statement: A CaseFileItemOnPart and a CaseFileItemStartTrigger name exactly one source CaseFileItem and a transition from the CaseFileItem lifecycle.
+  strength: must
+  section: 5.4.2.1.2, Table 5.20; 5.4.6.2, Table 5.28, pp. 27, 34
+  checkable: static
+- id: CMMN-PLN-001
+  statement: A PlanningTable has at least one table item.
+  strength: must
+  section: 5.4.9, Table 5.35, p. 40
+  checkable: static
+- id: CMMN-PLN-002
+  statement: A PlanningTable never contains itself, directly or through nested planning tables.
+  strength: must
+  section: 5.4.9, Table 5.35, p. 40
+  checkable: static
+- id: CMMN-PLN-003
+  statement: A PlanningTable contains the ApplicabilityRules that its table items refer to.
+  strength: must
+  section: 5.4.9.1, Table 5.36, p. 40
+  checkable: static
+- id: CMMN-PLN-004
+  statement: The definition of a DiscretionaryItem is a Task, a PlanFragment or a Stage.
+  strength: must
+  section: 5.4.9.2, Table 5.37, p. 41
+  checkable: static
+- id: CMMN-PLN-005
+  statement: A DiscretionaryItem in the PlanningTable of a Stage refers to a definition in that Stage or in a Stage that encloses it.
+  strength: must
+  section: 5.4.9.2, Table 5.37, p. 41
+  checkable: static
+- id: CMMN-PLN-006
+  statement: A DiscretionaryItem in the PlanningTable of a HumanTask refers to a definition contained in the HumanTask's parent Stage or in a Stage that encloses it.
+  strength: must
+  section: 5.4.9.2, Table 5.37, p. 41; 5.4.9.2.1, p. 42
+  checkable: static
+- id: CMMN-PLN-007
+  statement: A Stage is not discretionary to itself or to any Stage nested in it.
+  strength: must
+  section: 5.4.9.2, p. 41
+  checkable: static
+- id: CMMN-PLN-008
+  statement: A Stage is not discretionary to a HumanTask that is the definition of a PlanItem contained in the Stage or its nested Stages.
+  strength: must
+  section: 5.4.9.2, p. 42
+  checkable: static
+- id: CMMN-PLN-009
+  statement: A HumanTask is not discretionary to itself.
+  strength: must
+  section: 5.4.9.2, p. 42
+  checkable: static
+- id: CMMN-PLN-010
+  statement: The entry and exit criteria of a DiscretionaryItem are contained in the Stage that holds the PlanningTable (directly or through nested tables), or in the Stage that holds the HumanTask that owns the table.
+  strength: must
+  section: 5.4.9.2, p. 42
+  checkable: static
+- id: CMMN-PLN-011
+  statement: A non-blocking HumanTask has no PlanningTable.
+  strength: must
+  section: 5.4.10.4, Table 5.43, p. 47
+  checkable: static
+- id: CMMN-PLN-012
+  statement: A PlanFragment that is not a Stage can only be used through a DiscretionaryItem, and when planned only its contained PlanItems are instantiated.
+  strength: note
+  section: 5.4.4, p. 29; 5.4.9, p. 39
+  checkable: none
+- id: CMMN-PLN-013
+  statement: A table item may list the Roles authorized to plan from it. For a HumanTask's table, the performer Role can also gate planning, or planners may need both the task role and the table item role.
+  strength: note
+  section: 5.4.9; 5.4.10.4, pp. 40, 47
+  checkable: none
+- id: CMMN-TSK-001
+  statement: The isBlocking attribute of a Task defaults to true.
+  strength: must
+  section: 5.4.10, Table 5.39, p. 45
+  checkable: static
+- id: CMMN-TSK-002
+  statement: A non-blocking Task has no outputs.
+  strength: must
+  section: 5.4.10, Table 5.39, p. 45
+  checkable: static
+- id: CMMN-TSK-003
+  statement: A ProcessTask has exactly one of a process reference and a process reference expression.
+  strength: must
+  section: 5.4.10.5, Table 5.44, p. 48
+  checkable: static
+- id: CMMN-TSK-004
+  statement: A CaseTask has exactly one of a case reference and a case reference expression.
+  strength: must
+  section: 5.4.10.6, Table 5.47, p. 49
+  checkable: static
+- id: CMMN-TSK-005
+  statement: A DecisionTask has exactly one of a decision reference and a decision reference expression.
+  strength: must
+  section: 5.4.10.7, Table 5.48, p. 50
+  checkable: static
+- id: CMMN-TSK-006
+  statement: A ParameterMapping has exactly one source Parameter and one target Parameter.
+  strength: must
+  section: 5.4.10.2, Table 5.41, p. 45
+  checkable: static
+- id: CMMN-TSK-007
+  statement: The implementation type of a Process and of a Decision is a URI.
+  strength: must
+  section: 5.4.10.5.1, Table 5.45; 5.4.10.7.1, Table 5.49, pp. 48, 51
+  checkable: static
+  note: 'Defined values: BPMN 2.0, XPDL 2.x, WS-BPEL 2.0, WS-BPEL 1.x for processes; DMN 1.x for decisions.'
+- id: CMMN-TSK-008
+  statement: 'A task whose reference expression yields no existing Process, Case or Decision, or one whose parameters do not fit the task''s mappings, fails: it moves to Failed when it becomes Active.'
+  strength: must
+  section: 5.4.10.5, 5.4.10.6, 5.4.10.7.1, pp. 47, 49, 51
+  checkable: runtime
+  applies_when: execution
+- id: CMMN-TSK-009
+  statement: 'A non-blocking HumanTask is a "manual" task: the system does not track its lifecycle.'
+  strength: note
+  section: 5.4.10.4, p. 46
+  checkable: none
+- id: CMMN-TSK-010
+  statement: A CaseTask starts another Case with its own case file (reuse); a Stage lives inside the current Case and shares its case file (composition).
+  strength: note
+  section: 5.4.10.6, p. 49
+  checkable: none
+- id: CMMN-TSK-011
+  statement: Outputs of a Task bound to a case file item show up as transitions of that item's lifecycle. Inputs of a Task and outputs of a Case only retrieve case file item instances.
+  strength: note
+  section: 5.4.10.3, Table 5.42, p. 46
+  checkable: none
+- id: CMMN-CTL-001
+  statement: A PlanItemControl is the itemControl of a PlanItem or DiscretionaryItem, or the defaultControl of a PlanItemDefinition.
+  strength: must
+  section: 5.4.11, p. 53
+  checkable: static
+- id: CMMN-CTL-002
+  statement: A PlanItemControl contains at least one of a repetition rule, a required rule and a manual activation rule.
+  strength: must
+  section: 5.4.11, p. 53
+  checkable: static
+- id: CMMN-CTL-003
+  statement: When a PlanItem or DiscretionaryItem has an item control, it overrides the default control of its definition.
+  strength: must
+  section: 5.4.5, Table 5.24, p. 30; 5.4.9.2, Table 5.37, p. 41
+  checkable: partial
+- id: CMMN-CTL-004
+  statement: A ManualActivationRule is not part of the control of an EventListener or of a Milestone.
+  strength: must
+  section: 5.4.11, Table 5.51, p. 52; Table 5.55, p. 55
+  checkable: static
+- id: CMMN-CTL-005
+  statement: A RequiredRule is not part of the control of an EventListener.
+  strength: must
+  section: 5.4.11, Table 5.51, p. 53; Table 5.55, p. 55
+  checkable: static
+- id: CMMN-CTL-006
+  statement: A RepetitionRule is not part of the control of an EventListener.
+  strength: must
+  section: 5.4.11, Table 5.51, p. 53; Table 5.55, p. 55
+  checkable: static
+  note: A timer's repetition is written inside its timer expression instead (5.4.11.3, p. 55).
+- id: CMMN-CTL-007
+  statement: A PlanItem with a repetition rule has an entry criterion whose Sentry has at least one OnPart, or has no entry criteria at all.
+  strength: must
+  section: 5.4.11, Table 5.51, p. 53
+  checkable: static
+  note: Read for several entry criteria as "at least one has an on-part, or there are none"; the standard does not say.
+- id: CMMN-CTL-008
+  statement: When no manual activation rule exists the default is true, when no required rule exists the default is false, and when no repetition rule exists the default is false.
+  strength: must
+  section: 5.4.11, Table 5.51, pp. 52 to 53
+  checkable: partial
+  note: The decorator for a rule is drawn only when the rule is defined, so an item without the manual activation decorator is by this default one that waits for a person.
+- id: CMMN-CTL-009
+  statement: Repetition and required apply to a Stage, Task and Milestone. Manual activation applies to a Stage and Task. None of the three applies to an EventListener.
+  strength: must
+  section: 5.4.11.3, Table 5.55, p. 55
+  checkable: static
+  note: Summary of the four rules above, kept for the table the standard gives.
+- id: CMMN-DEC-001
+  statement: The AutoComplete decorator, a small black square at the bottom center, appears on a Stage or on the case plan model when autoComplete is true, and on no other shape.
+  strength: must
+  section: 6.13.1, p. 75; 7.5.2.3, p. 96; Table 6.1, p. 79
+  checkable: partial
+- id: CMMN-DEC-002
+  statement: The ManualActivation decorator, a small white right-pointing triangle, appears on a Stage or Task that has a manual activation rule defined, and on no other shape.
+  strength: must
+  section: 6.13.2, p. 76; Table 6.1, p. 79
+  checkable: partial
+- id: CMMN-DEC-003
+  statement: The Required decorator, a bold exclamation mark, appears on a Stage, Task or Milestone that has a required rule defined, and on no other shape.
+  strength: must
+  section: 6.13.3, p. 77; Table 6.1, p. 79
+  checkable: partial
+- id: CMMN-DEC-004
+  statement: The Repetition decorator, two bold vertical bars crossed by two bold horizontal bars, appears on a Stage, Task or Milestone that has a repetition rule defined, and on no other shape.
+  strength: must
+  section: 6.13.4, p. 78; Table 6.1, p. 79
+  checkable: partial
+- id: CMMN-DEC-005
+  statement: The planning table decorator appears only on the case plan model, a Stage and a HumanTask, attached to the top border between the top left corner and the middle.
+  strength: must
+  section: 6.12, p. 73; 7.5.2.5, p. 100; Table 6.1, p. 79
+  checkable: partial
+- id: CMMN-DEC-006
+  statement: The entry criterion decorator, an open diamond, appears only on a Stage, Task or Milestone.
+  strength: must
+  section: 6.6, p. 61; Table 6.1, p. 79
+  checkable: partial
+- id: CMMN-DEC-007
+  statement: The exit criterion decorator, a solid diamond, appears only on the case plan model, a Stage or a Task.
+  strength: must
+  section: 6.6, p. 62; Table 6.1, p. 79
+  checkable: partial
+- id: CMMN-DEC-008
+  statement: An EventListener, a CaseFileItem and a PlanFragment carry none of the decorators of Table 6.1.
+  strength: must
+  section: Table 6.1, p. 79
+  checkable: partial
+- id: CMMN-DEC-009
+  statement: The ManualActivation, Required and Repetition decorators are drawn at the bottom center of the shape, and are shown when the rule is defined on the PlanItem, the DiscretionaryItem or the definition they use.
+  strength: must
+  section: 7.5.2.4, p. 97
+  checkable: partial
+- id: CMMN-DEC-010
+  statement: Table 6.1 lets any Task carry an exit criterion decorator; the metamodel forbids exit criteria on non-blocking Tasks. The metamodel rule governs.
+  strength: note
+  section: Table 6.1, p. 79; 5.4.5, Table 5.24, p. 30
+  checkable: none
+  note: Inferred reading; the standard does not reconcile the two.
+- id: CMMN-DEC-011
+  statement: A tool may add decorators or indicators to highlight an attribute or a new subtype, provided they do not change a defined shape.
+  strength: note
+  section: 2.2, p. 3
+  checkable: none
+- id: CMMN-EXP-001
+  statement: Every condition expression (the if-part, an applicability rule, and the manual activation, required and repetition rules) evaluates to boolean.
+  strength: must
+  section: 5.4.6.4, Table 5.32; 5.4.11, Table 5.51; 5.4.11.1 to 5.4.11.3, pp. 36, 52 to 54
+  checkable: partial
+- id: CMMN-EXP-002
+  statement: An Expression has an optional language. When absent, the expressionLanguage of the Definitions applies (default XPath); a stated language overrides it for that expression.
+  strength: must
+  section: 5.1.2, Table 5.3, p. 12; 5.4.7, Table 5.33, p. 37
+  checkable: static
+- id: CMMN-EXP-003
+  statement: The body of an Expression is valid in its language.
+  strength: must
+  section: 5.4.7, Table 5.33, p. 37
+  checkable: partial
+- id: CMMN-EXP-004
+  statement: A timer expression evaluates to an ISO 8601 date and time, duration or interval.
+  strength: must
+  section: 5.4.2.1, Table 5.19, p. 26
+  checkable: partial
+- id: CMMN-EXP-005
+  statement: Where an item with a contextRef is evaluated, evaluation starts at that case file item; when no context is given, it starts at the case file.
+  strength: note
+  section: 5.4.6.4, Table 5.32, p. 36
+  checkable: none
+- id: CMMN-NOT-001
+  statement: A tool that creates and displays CMMN models uses the standard's shapes, markers and decorators. Size, fill, line color and label position are free.
+  strength: must
+  section: 2.2, pp. 2 to 3
+  checkable: none
+- id: CMMN-NOT-002
+  statement: An extension does not change the specified shape of a defined element or decorator, does not add a shape that conflicts with any CMMN or BPMN shape, and does not use a line style that conflicts with CMMN or BPMN.
+  strength: must
+  section: 2.2, p. 3
+  checkable: none
+- id: CMMN-NOT-003
+  statement: An EventListener circle is drawn with a double line.
+  strength: must
+  section: 6.10, p. 68
+  checkable: none
+- id: CMMN-NOT-004
+  statement: "A connector is a dash-dot-dot line; the text also calls it dotted. It has no arrowheads."
+  strength: must
+  section: 6.11, p. 69
+  checkable: none
+  note: Section 6.11 says dash-dot-dot in one sentence and dotted in the next; Figures 6.33 to 6.42 show a long dash with two dots.
+- id: CMMN-NOT-005
+  statement: A discretionary association is a dashed line with no arrowheads.
+  strength: must
+  section: 6.11, p. 70
+  checkable: none
+- id: CMMN-NOT-006
+  statement: An Association is drawn with a dotted single line. An arrowhead may be added in one or both directions to show direction.
+  strength: must
+  section: 6.14.1, p. 81
+  checkable: none
+- id: CMMN-NOT-007
+  statement: A TextAnnotation is an open rectangle drawn with a solid single line.
+  strength: must
+  section: 6.14.2, p. 81
+  checkable: none
+- id: CMMN-NOT-008
+  statement: Tools that support BPMN compatibility use the alternative shapes of 6.8.2.1 and 6.8.3.1; tools that support DMN compatibility use that of 6.8.4.1.
+  strength: should
+  section: 6.8.2.1, 6.8.3.1, 6.8.4.1, pp. 65 to 68
+  checkable: none
+  note: Optional for others.
+- id: CMMN-NOT-009
+  statement: 'CMMN is declarative: the relative position of shapes carries no meaning.'
+  strength: note
+  section: 6.2, p. 60
+  checkable: none
+- id: CMMN-NOT-010
+  statement: Only the case file items that take part in the behavior of the case are drawn; the information model itself is not drawn.
+  strength: note
+  section: 6.2, p. 59
+  checkable: none
+- id: CMMN-REL-001
+  statement: An artifact is never the source or the target of a connector.
+  strength: must
+  section: 5.5, p. 56
+  checkable: static
+- id: CMMN-REL-002
+  statement: An artifact is never the source or the target of a discretionary association.
+  strength: must
+  section: 5.5, p. 56
+  checkable: static
+- id: CMMN-REL-003
+  statement: A connector depicts an OnPart. Its target is an entry criterion or exit criterion linked to the Sentry that holds the OnPart. Its source is the PlanItem the OnPart names, or the exit criterion the OnPart names when it names one, or the CaseFileItem of a CaseFileItemOnPart.
+  strength: must
+  section: 7.4.7, p. 89; 7.5.3.1, 7.5.3.2, Tables 7.17, 7.18, pp. 103 to 104
+  checkable: partial
+- id: CMMN-REL-004
+  statement: A discretionary association runs from a PlanItem or DiscretionaryItem that is a HumanTask to a DiscretionaryItem that is defined in that HumanTask's planning table.
+  strength: must
+  section: 7.4.7, pp. 88 to 89; 7.5.3.3, Table 7.19, p. 105
+  checkable: partial
+- id: CMMN-REL-005
+  statement: An Association has a direction of None (no arrowhead), One (arrowhead at the target) or Both.
+  strength: must
+  section: 5.5.1, Table 5.56, p. 57
+  checkable: static
+- id: CMMN-REL-006
+  statement: Connectors are visual only and have no execution semantics.
+  strength: note
+  section: 8.8, p. 124
+  checkable: none
+- id: CMMN-REL-007
+  statement: Links between shapes, other than associations, are drawn for dependencies shown inside an expanded Stage or PlanFragment.
+  strength: note
+  section: 6.11, p. 69
+  checkable: none
+- id: CMMN-DI-001
+  statement: Every shape and edge refers to a model element. A shape or edge with no reference, or an invalid one, is not depicted. The one exception is the edge for a discretionary association, which refers to no element.
+  strength: must
+  section: 7.5, p. 92
+  checkable: static
+- id: CMMN-DI-002
+  statement: A shape refers to a case plan model, a PlanItem, a DiscretionaryItem, an EntryCriterion, an ExitCriterion, a CaseFileItem or a TextAnnotation.
+  strength: must
+  section: 7.4.6, Table 7.4, p. 87
+  checkable: static
+- id: CMMN-DI-003
+  statement: A shape has bounds.
+  strength: must
+  section: 7.4.6, Table 7.4, p. 87
+  checkable: static
+- id: CMMN-DI-004
+  statement: An edge has at least two waypoints.
+  strength: must
+  section: 7.4.7, Table 7.5, p. 89
+  checkable: static
+- id: CMMN-DI-005
+  statement: A PlanItem is depicted at most once in one diagram, and it may be depicted in different diagrams. Connectors for OnParts may appear once per entry or exit criterion.
+  strength: must
+  section: 7.4.1, p. 84
+  checkable: static
+- id: CMMN-DI-006
+  statement: A diagram refers to a Definitions, a case plan model, a Stage or a PlanFragment.
+  strength: must
+  section: 7.4.4, Table 7.2, p. 86
+  checkable: static
+- id: CMMN-DI-007
+  statement: A diagram does not contain another diagram, and elements nested in a diagram have positive coordinates.
+  strength: must
+  section: 7.4.4, p. 85
+  checkable: static
+- id: CMMN-DI-008
+  statement: Shapes and edges are ordered so that what must be drawn on top comes after what lies beneath it.
+  strength: must
+  section: 7.4.1, p. 84
+  checkable: static
+- id: CMMN-DI-009
+  statement: The edge for an OnPart refers to that OnPart, gives no source, and gives as target the criterion linked to the Sentry that holds the OnPart. The edge for an Association refers to that Association and gives neither source nor target.
+  strength: must
+  section: 7.4.7, Table 7.5, pp. 88 to 89
+  checkable: static
+- id: CMMN-DI-010
+  statement: The edge for a discretionary association refers to no model element, gives as source the HumanTask item and as target the DiscretionaryItem, and shows no label.
+  strength: must
+  section: 7.4.7, p. 88; 7.5.3, p. 93
+  checkable: static
+- id: CMMN-DI-011
+  statement: A PlanItem is drawn with a solid border and a DiscretionaryItem with a dashed border.
+  strength: must
+  section: 7.5.2.2, p. 93
+  checkable: none
+- id: CMMN-DI-012
+  statement: When a planning table is expanded, its discretionary items are drawn inside the Stage or the case plan model, or, for a HumanTask, joined to it by discretionary associations.
+  strength: must
+  section: 7.5.2.5, Table 7.12, p. 101
+  checkable: none
+- id: CMMN-DI-013
+  statement: Entry and exit criterion shapes are attached to the border of the item they belong to.
+  strength: must
+  section: 7.5.2.6, 7.5.2.7, pp. 101 to 102
+  checkable: static
+- id: CMMN-DI-014
+  statement: The diagram interchange data does not decide whether a diagram is correct; to draw a diagram, both it and the referenced model are needed.
+  strength: note
+  section: 7.1, 7.2, p. 83
+  checkable: none
+- id: CMMN-DI-015
+  statement: Colors and fonts in styles have no CMMN meaning.
+  strength: note
+  section: 7.4.9, p. 91
+  checkable: none
+- id: CMMN-LIF-001
+  statement: When a Case instance is created, the outermost Stage instance is Active at once; it has no entry criteria and skips the Available state.
+  strength: must
+  section: 8.2, 8.4.1, Table 8.6, pp. 107, 111 to 112
+  checkable: runtime
+  applies_when: execution
+- id: CMMN-LIF-002
+  statement: A Case completes when every required Milestone, Stage and Task instance in the outermost Stage is finished and no Stage or Task instance is Active.
+  strength: must
+  section: 8.4.1, Tables 8.5, 8.6, p. 112
+  checkable: runtime
+  applies_when: execution
+- id: CMMN-LIF-003
+  statement: A Closed Case has a read-only case file and accepts no new Task or Stage instances.
+  strength: must
+  section: 8.4.1, Table 8.5, p. 112
+  checkable: runtime
+  applies_when: execution
+- id: CMMN-LIF-004
+  statement: A Stage or Task instance becomes Available when its containing Stage becomes Active, or when a Sentry with an OnPart sourced outside the enclosing Stage is satisfied (the enclosing Stages then become Active as needed). A missing entry criterion counts as satisfied.
+  strength: must
+  section: 8.4.2, Table 8.7, p. 114
+  checkable: runtime
+  applies_when: execution
+- id: CMMN-LIF-005
+  statement: 'When an entry Sentry is satisfied, the manual activation rule decides the next state: true moves the instance from Available to Enabled, false moves it to Active.'
+  strength: must
+  section: 8.4.2, Table 8.8, p. 115; 8.6.2, p. 122
+  checkable: runtime
+  applies_when: execution
+- id: CMMN-LIF-006
+  statement: Disabled, Failed and (for finishing a Stage) Completed and Terminated instances count as finished when judging whether the parent Stage can complete.
+  strength: must
+  section: 8.4, p. 111
+  checkable: runtime
+  applies_when: execution
+- id: CMMN-LIF-007
+  statement: A Stage propagates suspend, resume and terminate to all its contained EventListener, Milestone, Stage and Task instances. A fault does not propagate.
+  strength: must
+  section: 8.4.2, Tables 8.8, 8.9, pp. 115 to 119
+  checkable: runtime
+  applies_when: execution
+- id: CMMN-LIF-008
+  statement: 'A Stage completes under Table 8.12: with autoComplete true, when no child is Active and every required child is Disabled, Completed, Terminated or Failed. With autoComplete false it also needs manual completion, unless all children are finished and there are no discretionary items.'
+  strength: must
+  section: 8.6.1, Table 8.12, p. 122
+  checkable: runtime
+  applies_when: execution
+- id: CMMN-LIF-009
+  statement: A required instance is Disabled, Completed, Terminated or Failed before its parent Stage completes. The required rule is evaluated when the instance is created (and again on enabling if its value is false) and the value is kept.
+  strength: must
+  section: 8.6.3, p. 122; 8.4.2, Table 8.8, pp. 115 to 116
+  checkable: runtime
+  applies_when: execution
+- id: CMMN-LIF-010
+  statement: The repetition rule is evaluated when an instance is created and its first value is discarded. It is evaluated again whenever an entry criterion with an OnPart is satisfied and creates a new instance if true. With no entry criteria it is evaluated when an instance completes or terminates.
+  strength: must
+  section: 5.4.11.3, p. 54 to 55; 8.6.4, pp. 122 to 123
+  checkable: runtime
+  applies_when: execution
+- id: CMMN-LIF-011
+  statement: A Sentry is satisfied when all its OnParts have occurred and its IfPart, if any, is true; a Sentry with no OnPart is satisfied when its IfPart is true.
+  strength: must
+  section: 8.5, p. 121
+  checkable: runtime
+  applies_when: execution
+- id: CMMN-LIF-012
+  statement: One satisfied entry criterion is enough to leave Available; one satisfied exit criterion is enough to terminate an Active instance.
+  strength: must
+  section: 8.5, p. 121
+  checkable: runtime
+  applies_when: execution
+- id: CMMN-LIF-013
+  statement: Entry Sentries are evaluated while the item is Available; exit Sentries while the case plan model, Stage or Task is Active.
+  strength: must
+  section: 8.5, p. 121
+  checkable: runtime
+  applies_when: execution
+- id: CMMN-LIF-014
+  statement: An exit transition moves an Available, Enabled, Disabled, Active, Suspended or Failed Stage or Task instance to Terminated when an exit criterion is satisfied or when the parent terminates.
+  strength: must
+  section: 8.4.2, Table 8.8, p. 116
+  checkable: runtime
+  applies_when: execution
+- id: CMMN-LIF-015
+  statement: 'An EventListener or Milestone instance starts Available and moves to Completed on occur: the event happens, a person raises a user event, or an entry criterion of a Milestone is satisfied. It can be suspended, resumed and terminated.'
+  strength: must
+  section: 8.4.3, Tables 8.10, 8.11, pp. 120 to 121
+  checkable: runtime
+  applies_when: execution
+- id: CMMN-LIF-016
+  statement: A CaseFileItem instance is Available when created. Update, replace, add or remove child and add or remove reference keep it Available. Delete moves it to Discarded, which is terminal.
+  strength: must
+  section: 8.3, Tables 8.1, 8.2, pp. 107 to 108
+  checkable: runtime
+  applies_when: execution
+- id: CMMN-LIF-017
+  statement: Planning is allowed only in the states of Table 8.13. Planned items are instantiated at once when the Stage is Active, otherwise when it becomes Active. Planning from a HumanTask adds items to its parent Stage.
+  strength: must
+  section: 8.7, Table 8.13, p. 124
+  checkable: runtime
+  applies_when: execution
+- id: CMMN-LIF-018
+  statement: Only table items whose applicability rule is true are shown to a case worker in an authorized Role; a table item with no applicability rule is applicable.
+  strength: must
+  section: 5.4.9.1, Table 5.36, p. 40; 8.6.5, p. 124
+  checkable: runtime
+  applies_when: execution
+- id: CMMN-LIF-019
+  statement: A blocking Task waits until its work is done. A non-blocking Task completes as soon as it is instantiated (a ProcessTask or CaseTask then has already started the called Process or Case).
+  strength: must
+  section: 5.4.10, Table 5.39, p. 45; 5.4.10.5, 5.4.10.6, pp. 47, 49
+  checkable: runtime
+  applies_when: execution
+- id: CMMN-LIF-020
+  statement: A TimerEventListener with a start trigger measures its timer expression from the moment the trigger occurs.
+  strength: should
+  section: 5.4.2.1, Table 5.19, p. 26
+  checkable: runtime
+  applies_when: execution
+- id: CMMN-LIF-021
+  statement: The navigation operations over the case file return an empty instance when nothing matches.
+  strength: must
+  section: 8.3.1, Table 8.3, pp. 108 to 109
+  checkable: runtime
+  applies_when: execution
+- id: CMMN-XCH-001
+  statement: 'The root element of an interchange file is definitions. The files of a model are self-contained: everything they use is imported, directly or indirectly. Each file declares a target namespace.'
+  strength: must
+  section: 9.3.1, p. 125
+  checkable: static
+- id: CMMN-XCH-002
+  statement: References use identifiers; across files they use a qualified name whose local part is the identifier.
+  strength: must
+  section: 9.3.2, pp. 125 to 126
+  checkable: static
+- id: CMMN-XCH-003
+  statement: Importers of an incomplete model disregard missing required attributes and reduced lower bounds.
+  strength: should
+  section: 9.1, p. 125
+  checkable: none
+- id: CMMN-XCH-004
+  statement: An extension definition is bound to a Definitions by an Extension before it is used; mustUnderstand is false unless stated.
+  strength: must
+  section: 5.1.5, 5.1.5.1, Table 5.9, pp. 16 to 17
+  checkable: partial
+  note: Not used when the XML schema is the exchange format.
+- id: CMMN-XCH-005
+  statement: The value of an extension attribute conforms to the type its definition gives.
+  strength: must
+  section: 5.1.5.4, Table 5.12, p. 18
+  checkable: partial
+  note: Not used when the XML schema is the exchange format.
+- id: CMMN-XCH-006
+  statement: Extension attributes and elements may be lost in interchange; the standard elements stay intact.
+  strength: note
+  section: 5.1.5, p. 15
+  checkable: none
+- id: CMMN-XCH-007
+  statement: A Relationship has at least one source and one target and a direction of None, Forward, Backward or Both.
+  strength: must
+  section: 5.1.6, Table 5.13, p. 19
+  checkable: static
+- id: CMMN-XCH-008
+  statement: A Property type and a definition type are values of the lists in Tables 5.8 and 5.6, written as URIs.
+  strength: must
+  section: 5.1.4, 5.1.4.1, Tables 5.6, 5.8, pp. 14 to 15
+  checkable: static
+  note: The schema lists two more definition types (WSDL message, UML class).
+- id: CMMN-CONF-001
+  statement: Software may claim conformance only if it matches all applicable compliance points; otherwise it may only say it is based on the standard.
+  strength: note
+  section: 2.1, p. 1
+  checkable: none
+- id: CMMN-CONF-002
+  statement: A tool claiming Case Modeling, BPMN Compatibility or Complete conformance meets Visual Notation Conformance.
+  strength: should
+  section: 2.1, p. 1; 2.3, 2.4, 2.6, pp. 3 to 4
+  checkable: none
+  note: 2.1 says required; 2.3, 2.4 and 2.6 say "should".
+- id: CMMN-CONF-003
+  statement: A tool is not required to support an optional feature or one the standard calls non-normative; if it supports one, it supports it as specified.
+  strength: note
+  section: 2.1, pp. 1 to 2
+  checkable: none
+- id: CMMN-CONF-004
+  statement: CMMN Complete Conformance covers the metamodel, notation, diagram interchange, execution semantics and exchange format; Case Modeling Conformance does not require the execution semantics beyond what Table 2.1 lists.
+  strength: note
+  section: 2.3, 2.6, Table 2.1, pp. 2 to 4
+  checkable: none
+- id: CMMN-GUID-001
+  statement: Use a Stage for an episode of a case that is tracked as a unit, and a PlanFragment for a reusable pattern of items and sentries that needs no tracking of its own.
+  strength: note
+  section: 5.4.4, 5.4.8, pp. 28 to 29, 37
+  checkable: none
+- id: CMMN-GUID-002
+  statement: To plan from a particular task, give a HumanTask a planning table instead of adding a Stage that holds a single item.
+  strength: note
+  section: 5.4.10.4, pp. 46 to 47
+  checkable: none
+- id: CMMN-GUID-003
+  statement: Set autoComplete to false on Stages that hold discretionary items or optional work.
+  strength: note
+  section: 5.4.8, Table 5.34, p. 38
+  checkable: none
+- id: CMMN-GUID-004
+  statement: A Milestone has no work of its own; it is reached by finishing Tasks or by information becoming available in the case file.
+  strength: note
+  section: 5.4.3, p. 28
+  checkable: none
+- id: CMMN-GUID-005
+  statement: Use a UserEventListener when a person's decision should drive the case directly, and a TimerEventListener when only the passing of time matters, instead of encoding either as data in the case file.
+  strength: note
+  section: 5.4.2, p. 25
+  checkable: none
+- id: CMMN-GUID-006
+  statement: A model may start entirely at the discretion of case workers and gain repeatable patterns as experience grows.
+  strength: note
+  section: 4.2, p. 7
+  checkable: none
+- id: CMMN-GUID-007
+  statement: Assignment of Roles to people or teams is outside the standard.
+  strength: note
+  section: 5.2.2, p. 20
+  checkable: none
+data_types:
+  coverage: partial
+  section: '5.1 to 5.5 (attribute tables and class diagrams)'
+  note: The standard names no primitive type library; its class diagrams and attribute tables use String, Boolean, URI, QName and DateTime without defining them, and it defines the value lists below.
+  types:
+    - {name: String, kind: primitive, section: '5.1.1, Figure 5.1'}
+    - {name: Boolean, kind: primitive, section: '5.1.2, Figure 5.2'}
+    - {name: URI, kind: primitive, section: '5.1.2, Figure 5.2'}
+    - {name: QName, kind: primitive, section: '5.1.2, Figure 5.2'}
+    - {name: DateTime, kind: primitive, section: '5.1.2, Figure 5.2'}
+    - {name: Element, kind: other, section: '5.1.5.4, Table 5.12'}
+    - {name: ISO8601, kind: other, section: '5.4.2.1, Table 5.19'}
+    - {name: MultiplicityEnum, kind: enumeration, values: [ZeroOrOne, ZeroOrMore, ExactlyOne, OneOrMore, Unspecified, Unknown], section: '5.3.2, Figure 5.5'}
+    - {name: RelationshipDirection, kind: enumeration, values: [None, Forward, Backward, Both], section: '5.1.6, Table 5.13'}
+    - {name: AssociationDirection, kind: enumeration, values: [None, One, Both], section: '5.5.1, Figure 5.14'}
+    - {name: CaseFileItemTransition, kind: enumeration, values: [addChild, addReference, create, delete, removeChild, removeReference, replace, update], section: '5.4.6.2.1, Table 5.29'}
+    - {name: PlanItemTransition, kind: enumeration, values: [close, complete, create, disable, enable, exit, fault, manualStart, occur, parentResume, parentSuspend, reactivate, reenable, resume, start, suspend, terminate], section: '5.4.6.3.1, Table 5.31'}
+    - {name: DefinitionType, kind: enumeration, values: [CMISFolder, CMISDocument, CMISRelationship, XSDElement, XSDComplexType, XSDSimpleType, Unknown, Unspecified], section: '5.1.4, Table 5.6'}
+    - {name: PropertyType, kind: enumeration, values: [string, boolean, integer, float, double, duration, dateTime, time, date, gYearMonth, gYear, gMonthDay, gDay, gMonth, hexBinary, base64Binary, anyURI, QName, decimal, Unspecified], section: '5.1.4.1, Table 5.8'}
+    - {name: ProcessImplementationType, kind: enumeration, values: [BPMN20, XPDL2, WSBPEL20, WSBPEL1], section: '5.4.10.5.1, Table 5.46'}
+    - {name: DecisionImplementationType, kind: enumeration, values: [DMN1], section: '5.4.10.7.1, Table 5.50'}
+  attributes:
+    coverage: some_concepts
+    where: concepts
+    note: Value attributes (strings, booleans, enumerations, expressions) are listed under `attributes` on the concepts that have them; a subclass inherits those of its parent. Links to other concepts are under relationships.items. The diagram interchange classes (7.4) are not listed.
+notation:
+  coverage: normative
+  section: '6'
+  note: Clause 6 draws the case plan model, every plan item kind, criteria, the planning table, three kinds of line and four decorators; size, fill, line color and label position are free (2.2). Concepts that are not drawn (the case, roles, case file, definitions, parameters, expressions, diagram interchange classes) and the metamodel associations are listed under not_specified.
+  elements:
+    CasePlanModel: {shape: "folder shape: a rectangle with a smaller rectangle attached to its upper left; solid outline", marker: "decorators sit on the border; AutoComplete is a small black square at the bottom center; the planning table sits on the top border", label: "case name inside the small upper left rectangle; everything the plan holds is drawn inside the large rectangle", section: "6.3, Figures 6.1, 6.2, 6.55"}
+    Stage: {shape: "rectangle with angled (cut) corners and a solid outline; discretionary: the same shape with short dashed lines", marker: "small box at the bottom center holding a plus sign when collapsed and a minus sign when expanded; contents show only when expanded; decorators sit beside it at the bottom center", label: "name inside the shape", section: "6.5, Figures 6.4, 6.5, 6.8"}
+    PlanFragment: {shape: "rectangle with dashed lines and softly rounded corners", marker: "small box at the bottom center holding a plus sign when collapsed and a minus sign when expanded", label: "name inside the shape", section: "6.7, Figure 6.9"}
+    PlanItem: {shape: "drawn as the shape of the plan item definition it uses, with a solid outline", marker: "none of its own; entry and exit criteria sit on the boundary", label: "the plan item name (it overrides the definition name)", section: "6.5, 6.8, 7.5"}
+    DiscretionaryItem: {shape: "the shape of the task, stage or plan fragment it names, drawn with a dashed outline instead of a solid one", marker: "same markers as the solid shape; a human task with a planning table links to its discretionary items by dashed lines", label: "name inside the shape", section: "6.5, 6.7, 6.8, 6.12, Figures 6.5, 6.11, 6.15, 6.17, 6.21, 6.25"}
+    Task: {shape: "rectangle with rounded corners, solid outline; discretionary: dashed outline", marker: "none for a plain task", label: "name inside the shape", section: "6.8, Figures 6.10, 6.11"}
+    HumanTask: {shape: "rounded rectangle, same as a task", marker: "small hand icon in the upper left when non-blocking; small person icon (head and shoulders) in the upper left when blocking", label: "name inside the shape", section: "6.8.1, Figures 6.13, 6.14, 6.15"}
+    ProcessTask: {shape: "rounded rectangle, same as a task", marker: "small chevron (an arrow-like pentagon pointing right) in the upper left; optional alternative for tools that also draw BPMN: chevron optional, a small box with a plus sign at the bottom center, and a thick border", label: "name inside the shape", section: "6.8.3, 6.8.3.1, Figures 6.20 to 6.23"}
+    CaseTask: {shape: "rounded rectangle, same as a task", marker: "small folder icon (a rectangle with a tab) in the upper left; optional alternative for tools that also draw BPMN: add a small box with a plus sign at the bottom center and a thick border", label: "name inside the shape", section: "6.8.2, 6.8.2.1, Figures 6.16 to 6.19"}
+    DecisionTask: {shape: "rounded rectangle, same as a task", marker: "small decision table icon (a grid with a header row) in the upper left; optional alternative for tools that also draw DMN: add a small box with a plus sign at the bottom center", label: "name inside the shape", section: "6.8.4, 6.8.4.1, Figures 6.24 to 6.27"}
+    Milestone: {shape: "rectangle with half-rounded ends (a stadium shape), solid outline", marker: "none; may carry entry criteria, Required and Repetition decorators", label: "name inside the shape", section: "6.9, Figures 6.28, 6.29, 6.60, 6.63, 6.68"}
+    EventListener: {shape: "circle drawn with a double line and an open center", marker: "none; the double line is required", label: "name beside or below the circle in the standard's examples; position is free", section: "6.10, Figure 6.30"}
+    TimerEventListener: {shape: "double-line circle", marker: "clock face in the center", label: "name beside the circle; position is free", section: "6.10, Figures 6.31, 6.41"}
+    UserEventListener: {shape: "double-line circle", marker: "person icon (head and shoulders) in the center", label: "name beside the circle; position is free", section: "6.10, Figure 6.32"}
+    EntryCriterion: {shape: "narrow open (empty, unfilled) diamond placed on the boundary of a plan item or discretionary item", marker: "none", label: "none", section: "6.6, Figure 6.6"}
+    ExitCriterion: {shape: "narrow solid (filled) diamond placed on the boundary of a plan item, discretionary item or the case plan model", marker: "none", label: "none", section: "6.6, Figure 6.7"}
+    Sentry: {shape: "no shape of its own; its entry and exit criteria are drawn as diamonds on the item and its on-parts as connectors", marker: "none", label: "none", section: "6.6, 6.11"}
+    PlanItemOnPart: {shape: "no shape of its own; drawn as a connector line from the source plan item (or its exit criterion) to the criterion", marker: "none", label: "none", section: "6.11, 7.4.7"}
+    CaseFileItemOnPart: {shape: "no shape of its own; drawn as a connector line from the case file item to the criterion", marker: "none", label: "none", section: "6.11, Figure 6.42"}
+    PlanningTable: {shape: "small table of six cells in two rows of three, placed on the top border of a stage, case plan model or human task", marker: "the bottom center cell holds a plus sign when discretionary items are hidden and a minus sign when they are shown", label: "none", section: "6.12, Figures 6.43 to 6.52"}
+    PlanItemControl: {shape: "no shape of its own; shown only as the three decorators below", marker: "none", label: "none", section: "6.13"}
+    ManualActivationRule: {shape: "decorator: small white right-pointing triangle, at the bottom center of the shape", marker: "none", label: "none", section: "6.13.2, Figures 6.56, 6.57"}
+    RequiredRule: {shape: "decorator: bold black exclamation mark, at the bottom center of the shape", marker: "none", label: "none", section: "6.13.3, Figures 6.58 to 6.60"}
+    RepetitionRule: {shape: "decorator: two bold vertical bars crossed by two bold horizontal bars, like the # sign, at the bottom center of the shape", marker: "none", label: "none", section: "6.13.4, Figures 6.61 to 6.63"}
+    CaseFileItem: {shape: "document shape: a rectangle with a broken (cut) upper right corner", marker: "none", label: "name inside the shape", section: "6.4, Figure 6.3"}
+    TextAnnotation: {shape: "open rectangle drawn with a solid single line: a square bracket open on the right, with the text beside it", marker: "none", label: "the annotation text", section: "5.5.2, 6.14.2, Figures 6.71, 6.72"}
+  relationships:
+    Connector: {line: "dash-dot-dot line; the text also calls it dotted", target_end: "none", source_end: "none", label: "none in the notation; an interchange option can show the standard event", section: "6.11, Figures 6.33 to 6.42, 7.4.7"}
+    DiscretionaryAssociation: {line: "dashed line", target_end: "none", source_end: "none", label: "none", section: "6.11, Figures 6.35, 6.36, 7.4.7"}
+    Association: {line: "dotted single line", target_end: "optional open V-shaped arrowhead, in one direction or both", source_end: "none", label: "none", section: "5.5.1, 6.14.1, Figures 6.69 to 6.71"}
+  not_specified:
+    - CMMNElement
+    - Documentation
+    - Definitions
+    - Import
+    - Expression
+    - Extension
+    - ExtensionDefinition
+    - ExtensionAttributeDefinition
+    - ExtensionAttributeValue
+    - Relationship
+    - Case
+    - Role
+    - CaseFile
+    - CaseFileItemDefinition
+    - Property
+    - PlanItemDefinition
+    - StartTrigger
+    - CaseFileItemStartTrigger
+    - PlanItemStartTrigger
+    - Criterion
+    - OnPart
+    - IfPart
+    - TableItem
+    - ApplicabilityRule
+    - Parameter
+    - CaseParameter
+    - ProcessParameter
+    - DecisionParameter
+    - ParameterMapping
+    - Process
+    - Decision
+    - Artifact
+    - CMMNDI
+    - CMMNDiagram
+    - CMMNDiagramElement
+    - CMMNShape
+    - CMMNEdge
+    - CMMNLabel
+    - CMMNStyle
+    - Definitions.imports
+    - Definitions.caseFileItemDefinitions
+    - Definitions.cases
+    - Definitions.processes
+    - Definitions.decisions
+    - Definitions.relationships
+    - Definitions.artifacts
+    - Definitions.cmmnDi
+    - Definitions.extensions
+    - CMMNElement.documentation
+    - CMMNElement.extensionDefinitions
+    - CMMNElement.extensionValues
+    - Extension.definition
+    - ExtensionDefinition.extensionAttributeDefinitions
+    - ExtensionAttributeValue.extensionAttributeDefinition
+    - Relationship.sources
+    - Relationship.targets
+    - Case.caseFileModel
+    - Case.casePlanModel
+    - Case.caseRoles
+    - Case.inputs
+    - Case.outputs
+    - CaseFile.caseFileItems
+    - CaseFileItem.children
+    - CaseFileItem.targetRefs
+    - CaseFileItem.definitionRef
+    - CaseFileItemDefinition.properties
+    - CaseFileItemDefinition.importRef
+    - PlanItemDefinition.defaultControl
+    - PlanFragment.planItems
+    - PlanFragment.sentries
+    - Stage.planItemDefinitions
+    - Stage.planningTable
+    - Stage.exitCriteria
+    - PlanItem.definitionRef
+    - PlanItem.itemControl
+    - PlanItem.entryCriteria
+    - PlanItem.exitCriteria
+    - Criterion.sentryRef
+    - Sentry.onParts
+    - Sentry.ifPart
+    - IfPart.contextRef
+    - IfPart.condition
+    - CaseFileItemOnPart.sourceRef
+    - PlanItemOnPart.sourceRef
+    - PlanItemOnPart.exitCriterionRef
+    - TimerEventListener.timerExpression
+    - TimerEventListener.timerStart
+    - CaseFileItemStartTrigger.sourceRef
+    - PlanItemStartTrigger.sourceRef
+    - UserEventListener.authorizedRoleRefs
+    - PlanningTable.tableItems
+    - PlanningTable.applicabilityRules
+    - TableItem.authorizedRoleRefs
+    - TableItem.applicabilityRuleRefs
+    - DiscretionaryItem.definitionRef
+    - DiscretionaryItem.itemControl
+    - DiscretionaryItem.entryCriteria
+    - DiscretionaryItem.exitCriteria
+    - ApplicabilityRule.contextRef
+    - ApplicabilityRule.condition
+    - Task.inputs
+    - Task.outputs
+    - HumanTask.planningTable
+    - HumanTask.performerRef
+    - ProcessTask.processRef
+    - ProcessTask.processRefExpression
+    - ProcessTask.mappings
+    - CaseTask.caseRef
+    - CaseTask.caseRefExpression
+    - CaseTask.mappings
+    - DecisionTask.decisionRef
+    - DecisionTask.decisionRefExpression
+    - DecisionTask.mappings
+    - Process.inputs
+    - Process.outputs
+    - Decision.inputs
+    - Decision.outputs
+    - ParameterMapping.sourceRef
+    - ParameterMapping.targetRef
+    - ParameterMapping.transformation
+    - CaseParameter.bindingRef
+    - CaseParameter.bindingRefinement
+    - PlanItemControl.manualActivationRule
+    - PlanItemControl.requiredRule
+    - PlanItemControl.repetitionRule
+    - ManualActivationRule.contextRef
+    - ManualActivationRule.condition
+    - RequiredRule.contextRef
+    - RequiredRule.condition
+    - RepetitionRule.contextRef
+    - RepetitionRule.condition
+    - Association.sourceRef
+    - Association.targetRef
+conventions:
+  provenance: standard-text
+  measured: false
+  note: Drawing rules read from clause 6 and Table 7.9. They are conventions of the notation, not model constraints; the sentences that the standard words as requirements are also constraints in the NOT, DEC and DI categories.
+  shapes:
+    CasePlanModel: 'Folder shape: a rectangle with a smaller rectangle attached at the upper left that may hold the case name (6.3).'
+    CaseFileItem: 'Document shape: a rectangle with a broken upper right corner (6.4).'
+    Stage: 'Rectangle with angled corners and a small box at the bottom center holding plus (collapsed) or minus (expanded). Discretionary: short dashed lines (6.5).'
+    PlanFragment: Rectangle with dashed lines and softly rounded corners and a plus or minus box at the bottom center (6.7).
+    Task: 'Rectangle with rounded corners; discretionary: dashed lines (6.8).'
+    HumanTask: Rounded rectangle with a hand symbol at the upper left when non-blocking, or a user symbol when blocking (6.8.1).
+    CaseTask: 'Rounded rectangle with a folder symbol at the upper left (6.8.2). BPMN compatibility alternative: add a collapsed marker and a thick border (6.8.2.1).'
+    ProcessTask: 'Rounded rectangle with a chevron symbol at the upper left (6.8.3). BPMN compatibility alternative: optional chevron, a collapsed marker and a thick border (6.8.3.1).'
+    DecisionTask: 'Rounded rectangle with a decision table symbol at the upper left (6.8.4). DMN compatibility alternative: add a collapsed marker (6.8.4.1).'
+    Milestone: Rectangle with half-rounded ends (6.9).
+    EventListener: Double-line circle with an open center; the circle must be double-lined (6.10).
+    TimerEventListener: Double-line circle with a clock marker (6.10).
+    UserEventListener: Double-line circle with a user symbol (6.10).
+    EntryCriterion: Shallow (open) diamond on the boundary of the item (6.6).
+    ExitCriterion: Solid diamond on the boundary of the item (6.6).
+    PlanningTable: Table of six cells with a plus or minus in the bottom center cell (6.12).
+    Association: Dotted single line, optional arrowhead (6.14.1).
+    TextAnnotation: Open rectangle drawn with a solid single line (6.14.2).
+  lines:
+    Connector: "dash-dot-dot line; the text also calls it dotted, no arrowheads (6.11)"
+    DiscretionaryAssociation: dashed, no arrowheads (6.11)
+    Association: dotted, optional arrowhead (6.14.1)
+  free_choices: Size, fill, line color, label text and position may vary; colors may carry tool-defined meaning; new decorators may be added; none may change a defined shape (2.2).
+notes: CMMN 1.1 defines a metamodel, a notation, a diagram interchange model, execution semantics (clause 8) and an XML exchange format. It defines one diagram kind (the CMMN diagram) and no viewpoints. Concept names are the class names of the metamodel; the standard's own convenience names (discretionary task, blocking and non-blocking task, case plan model) are under concepts.variants. Tool-specific encodings of these concepts belong in the tool's own file, not here. Run-time rules (category LIF) apply only when a case is executed.
+
+# Our conventions for drawing this language, kept apart from `notation`, which holds only what the standard states.
+# Sizes and spacing come from the shared layout standard; this block says which size class each concept takes.
+# A concept not listed here is a plain rectangle (box) or has no shape of its own (see `notation`).
+layout:
+  basis: Our conventions, not this standard's. Sizes and spacing come from the shared layout standard.
+  element_types:
+    CasePlanModel: container
+    Stage: container
+    PlanFragment: container
+    Milestone: box
+    EventListener: event-circle
+    TimerEventListener: event-circle
+    UserEventListener: event-circle
+    EntryCriterion: attached-item
+    ExitCriterion: attached-item
+    PlanningTable: attached-item
+    ManualActivationRule: attached-item
+    RequiredRule: attached-item
+    RepetitionRule: attached-item
+    CaseFileItem: data-item
+    TextAnnotation: note
+  exceptions: {}
+  diagram_types:
+    CMMNDiagram:
+      arrangement: nested-grid
+      title: frame-header
+      route: orthogonal
+      channels:
+        fill: Free in the standard (2.2), so it carries no meaning here.
+        claimed:
+          position: Containment. An item drawn inside a case plan model, stage or plan fragment belongs to
+            it, and a criterion or planning table sits on the border of the shape it belongs to.
+          size: Enclosure. A case plan model, stage or plan fragment is sized by what it holds.
+          line_style: Dashed outlines mean discretionary, and the three kinds of line are told apart by their
+            style (clause 6).
+          icon: Kind of task or event listener, and the decorators.
+        free:
+        - border_width
+        - line_color
+        - font_color
+        - opacity
+  no_element_type:
+    drawn_as_its_definition:
+      reason: Drawn as the shape of the definition it uses, and takes that definition's element size.
+      concepts:
+      - PlanItem
+      - DiscretionaryItem
