@@ -5894,7 +5894,7 @@ rules:
   - id: UPDM2-OWN-033
     name: "Every port of a Participant is a ServicePort"
     implements: UPDM-OWN-033
-    description: "Every port owned by a Participant must be a ServicePort or a specialization of it. In Sparx's UPDM2 technology that is one of: Request, Service. The rule reports an owner that holds a child with another UPDM stereotype of the same kind (2: NodePort, ResourcePort), and names it. [OMG UPDM 2.1 (formal/13-08-04) 8.3.1.1.2.6 (Participant)]"
+    description: "Every port owned by a Participant must be a ServicePort or a specialization of it. A Node, a Performer and a SecurityDomain are left out, because the standard's more specific Node clause (8.3.1.1.4.4) allows a NodePort or a ServicePort on them, and UPDM2-OWN-003 checks that. In Sparx's UPDM2 technology that is one of: Request, Service. The rule reports an owner that holds a child with another UPDM stereotype of the same kind (2: NodePort, ResourcePort), and names it. [OMG UPDM 2.1 (formal/13-08-04) 8.3.1.1.2.6 (Participant)]"
     category: own
     severity: error
     demo_trigger: false
@@ -5903,7 +5903,7 @@ rules:
     selector:
       type: element
       stereotypes:
-        any_of: ["CapabilityConfiguration", "LogicalArchitecture", "Node", "Organization", "OrganizationType", "Performer", "PersonType", "PhysicalArchitecture", "Post", "ResourceArtifact", "Responsibility", "RoleType", "SecurityDomain", "ServiceAccess", "Software", "System"]
+        any_of: ["CapabilityConfiguration", "LogicalArchitecture", "Organization", "OrganizationType", "PersonType", "PhysicalArchitecture", "Post", "ResourceArtifact", "Responsibility", "RoleType", "ServiceAccess", "Software", "System"]
     condition:
       type: contains_count
       child:
