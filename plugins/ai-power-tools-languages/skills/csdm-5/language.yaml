@@ -1,0 +1,490 @@
+# ServiceNow Common Service Data Model (CSDM) 5 language file (schema_version 1).
+# Written from the vendor's white paper and its product documentation (Brazil release, updated 2026-09-10), read 2026-11-03.
+# CSDM is a vendor-defined data model, not a formal standard.
+# Concept ids are the paper's entity names without spaces. Platform table names and relationship types are
+# the paper's own and are exact. `inferred: true` marks a generalization or abstractness that the paper does
+# not state. Relationship names are ours (the paper does not name its relationships).
+schema_version: 1
+id: csdm-5
+name: ServiceNow Common Service Data Model (CSDM)
+owner: {name: 'ServiceNow, Inc.', kind: tool-vendor}
+standard: {name: Common Service Data Model (CSDM) white paper, version: '5', status: published, kind: 'vendor-defined data model, not a formal standard', reference: 'ServiceNow, CSDM 5 White Paper (published 6 May 2025; PDF with links refreshed 16 June 2025), 62 printed pages, hosted in the ServiceNow community knowledge base; announcement https://www.servicenow.com/community/common-service-data-model/csdm-5-finally-get-the-csdm-5-white-paper-here/ta-p/3254967. Latest ServiceNow publishes as of 2026-11-03. Second source: ServiceNow product documentation, CSDM topics, Brazil release, updated 10 September 2026 (cited as docs).'}
+concepts:
+  source: 'CSDM 5 white paper: the domain chapters (pp. 14-46) and Figure 15 (p. 47, table names and labels). The paper has no formal metamodel; a concept is an entity it names and describes. Generalizations are the paper''s statement that one table extends another, or are marked inferred. `ci` says whether the paper calls the entity a configuration item (true), says it is not one (false) or does not say (omitted). Abstractness is never stated by the paper.'
+  groups:
+    Cross-domain parents: {defined_by: 'pp. 19, 37, 42', notes: Parents the paper implies (every CMDB entity is a configuration item; service types share the Service parent). Not entities the paper defines on their own.}
+    Foundation: {defined_by: 'pp. 14-29, Foundation Domain', notes: Referential data. Not used in CMDB relationships except Business Process.}
+    Ideation and Strategy: {defined_by: 'pp. 29-30, Ideation and Strategy Domain', notes: New in CSDM 5.}
+    Design and Planning: {defined_by: 'pp. 31-33, Design and Planning Domain'}
+    Build and Integration: {defined_by: 'pp. 34-35, Build and Integration Domain'}
+    Service Delivery: {defined_by: 'pp. 36-44, Service Delivery Domain', notes: Formerly Manage Technical Services.}
+    Service Consumption: {defined_by: 'pp. 44-46, Service Consumption', notes: Formerly Sell/Consume.}
+    Manage Portfolios: {defined_by: 'pp. 10, 46, Manage Portfolios', notes: A view across parts of the other domains; not a set of tables.}
+  elements:
+    ConfigurationItem: {display: Configuration Item, category: Cross-domain parents, ci: true, inferred: true, section: 'p. 42, Infrastructure configuration items; p. 19, CSDM Life Cycle', abstract: inferred, attributes: [{name: Life Cycle Stage, type: LifeCycleStage, section: 'pp. 19-20'}, {name: Life Cycle Stage Status, type: LifeCycleStageStatus, section: 'pp. 19-20'}, {name: Model ID, type: reference to Product Model, section: 'p. 18'}]}
+    Service: {display: Service, category: Cross-domain parents, table: cmdb_ci_service, ci: true, specializes: ConfigurationItem, inferred: true, section: 'p. 37, What is Service Classification attribute?', abstract: inferred, attributes: [{name: Service Classification, type: ServiceClassification, section: 'p. 37'}]}
+    ValueStream: {display: Value Stream, category: Foundation, table: cmn_value_stream, ci: false, section: 'p. 14, Value Stream'}
+    ValueStreamCategory: {display: Value Stream Category, category: Foundation, table: cmn_value_stream_categories, table_variant: cmn_value_stream_category (Figure 7), ci: false, section: 'pp. 14-15, Value Stream'}
+    ValueStreamStage: {display: Value Stream Stage, category: Foundation, table: cmn_value_stream_stage, ci: false, section: 'p. 15, Value Stream'}
+    BusinessProcess: {display: Business Process, category: Foundation, table: cmdb_ci_business_process, ci: true, specializes: ConfigurationItem, inferred: true, section: 'p. 14, Foundation Domain; p. 16, Business Process', attributes: [{name: Declared criticality, section: 'p. 16'}, {name: Determined criticality, section: 'p. 16'}, {name: Confidentiality impact, section: 'p. 16'}, {name: Integrity impact, section: 'p. 16'}, {name: Availability impact, section: 'p. 16'}, {name: Review frequency, type: BusinessProcessReviewFrequency, section: 'p. 16'}, {name: Next review date, section: 'p. 16'}, {name: Parent, type: reference to Business Process, section: 'p. 16'}]}
+    Contract: {display: Contract, category: Foundation, table: ast_contract, ci: false, section: 'p. 16, Contract', attributes: [{name: Contract number, section: 'p. 16'}, {name: Start date, section: 'p. 16'}, {name: End date, section: 'p. 16'}, {name: Active status, section: 'p. 16'}, {name: Terms and conditions, section: 'p. 16'}, {name: Documents, section: 'p. 16'}, {name: Renewal information, section: 'p. 16'}, {name: Financial terms, section: 'p. 16'}]}
+    ProductModel: {display: Product Model, category: Foundation, table: cmdb_model, ci: false, section: 'pp. 16-18, Product (Models)'}
+    ApplicationModel: {display: Application Model, category: Foundation, table: cmdb_application_product_model, ci: false, specializes: ProductModel, section: 'pp. 17-18, Product (Models); Figure 8'}
+    SystemComponentModel: {display: System Component Model, category: Foundation, table: cmdb_sw_component_model, ci: false, specializes: ProductModel, section: 'pp. 17-18, Product (Models); Figure 8'}
+    SoftwareComponentModel: {display: Software Component Model, category: Foundation, table: cmdb_software_component_model, ci: false, specializes: SystemComponentModel, section: 'pp. 17-18, Product (Models); Figure 8'}
+    ServiceOfferingModel: {display: Service Offering Model, category: Foundation, table: cmdb_service_offering_model, ci: false, specializes: SystemComponentModel, section: 'pp. 17-18, Product (Models); Figure 8'}
+    FirmwareModel: {display: Firmware Model, category: Foundation, table: sn_ent_firmware_model, ci: false, specializes: SystemComponentModel, section: 'pp. 17-18, Product (Models); Figure 8'}
+    AISystemProductModel: {display: AI System Product Model, also_named: AI System Component Model (p. 35), category: Foundation, table: cmdb_ai_system_product_model, ci: false, specializes: SystemComponentModel, section: 'pp. 17-18, Product (Models); Figure 8'}
+    ServiceModel: {display: Service Model, category: Foundation, table: cmdb_service_product_model, ci: false, specializes: ProductModel, section: 'pp. 17-18, Product (Models); Figure 8'}
+    SoftwareModel: {display: Software Model, category: Foundation, table: cmdb_software_product_model, ci: false, specializes: ProductModel, section: 'pp. 17-18, Product (Models); Figure 8'}
+    ContentProductModel: {display: Content Product Model, category: Foundation, table: cmdb_content_product_model, ci: false, specializes: ProductModel, section: 'pp. 17-18, Product (Models); Figure 8'}
+    AIContentProductModel: {display: AI Content Product Model, category: Foundation, table: cmdb_ai_content_product_model, ci: false, specializes: ContentProductModel, section: 'p. 35; Figure 8, p. 17'}
+    ContractModel: {display: Contract Model, category: Foundation, table: cmdb_contract_product_model, ci: false, specializes: ProductModel, section: 'pp. 17-18, Product (Models); Figure 8'}
+    FacilityModel: {display: Facility Model, category: Foundation, table: cmdb_facility_product_model, ci: false, specializes: ProductModel, section: 'pp. 17-18, Product (Models); Figure 8'}
+    HardwareModel: {display: Hardware Model, category: Foundation, table: cmdb_hardware_product_model, ci: false, specializes: ProductModel, section: 'pp. 17-18, Product (Models); Figure 8'}
+    ConsumableModel: {display: Consumable Model, category: Foundation, table: cmdb_consumable_product_model, ci: false, specializes: ProductModel, section: 'pp. 17-18, Product (Models); Figure 8'}
+    EnterpriseGoodModel: {display: Enterprise Good Model, category: Foundation, table: sn_ent_model, ci: false, specializes: ProductModel, section: 'pp. 17-18, Product (Models); Figure 8'}
+    ProductFeature: {display: Product Feature, category: Foundation, section: 'p. 18, Product Feature'}
+    SoftwareBillOfMaterials: {display: Software Bill of Materials (SBOM), category: Foundation, section: 'p. 18, Software Bill of Materials (SBOM)', package: 'sn_sbom_core (store app, not a table name)'}
+    CMDBGroup: {display: CMDB Group, category: Foundation, table: cmdb_group, ci: false, section: 'pp. 18-19, CMDB Group'}
+    Company: {display: Company, category: Foundation, table: core_company, ci: false, section: 'p. 27, Common Data; p. 51, Foundation Stage', attributes: [{name: Parent, type: reference to Company, section: 'p. 51'}, {name: Customer, type: true or false flag, section: 'p. 51'}, {name: Manufacturer, type: true or false flag, section: 'p. 51'}, {name: Vendor, type: true or false flag, section: 'p. 51'}]}
+    BusinessUnit: {display: Business Unit, category: Foundation, table: business_unit, ci: false, section: 'p. 27, Common Data; p. 52'}
+    Department: {display: Department, category: Foundation, table: cmn_department, ci: false, section: 'p. 27, Common Data; p. 52'}
+    Location: {display: Location, category: Foundation, table: cmn_location, ci: false, section: 'pp. 27-28, Common Data, Location Management', attributes: [{name: Source ID, section: 'p. 28'}, {name: Location Type, type: LocationType, section: 'p. 28'}, {name: Managed by Group, type: reference to Group, section: 'p. 28'}, {name: 'Validation: Duplicate vs Primary', type: LocationValidation, section: 'p. 28'}, {name: Life Cycle Stage, type: LifeCycleStage, section: 'p. 28'}, {name: Life Cycle Stage Status, type: LifeCycleStageStatus, section: 'p. 28'}, {name: Parent, type: reference to Location, section: 'p. 52'}]}
+    Building: {display: Building, category: Foundation, table: cmn_building, ci: false, section: 'p. 27, Common Data'}
+    Group: {display: Group, category: Foundation, table: sys_user_group, ci: false, section: 'p. 27, Common Data; p. 52'}
+    User: {display: User, category: Foundation, table: sys_user, ci: false, section: 'p. 27, Common Data; p. 52'}
+    Team: {display: Team, category: Foundation, ci: false, section: 'p. 29, Teams', note: A related list on a CI that ties a group to the CI by group type; no table is named.}
+    Knowledge: {display: Knowledge, category: Foundation, ci: false, section: 'p. 29, Knowledge Management'}
+    ProductIdea: {display: Product Idea, category: Ideation and Strategy, table: sn_align_core_product_idea, section: 'p. 30, Product Idea'}
+    PlanningItem: {display: Planning Item, category: Ideation and Strategy, table: sn_align_core_planning_item, section: 'p. 30, Planning Item'}
+    StrategicPlan: {display: Strategic Plan, category: Ideation and Strategy, table: sn_gf_plan, section: 'p. 30, Strategic Plan', attributes: [{name: Mission, section: 'p. 30'}, {name: Vision, section: 'p. 30'}, {name: Value, section: 'p. 30'}]}
+    StrategicPriority: {display: Strategic Priority, category: Ideation and Strategy, table: sn_gf_strategy, section: 'p. 30, Strategic Priority'}
+    Goal: {display: Goal, category: Ideation and Strategy, table: sn_gf_goal, section: 'p. 30, Goal'}
+    Target: {display: Target, category: Ideation and Strategy, table: sn_gf_goal_target, section: 'p. 30, Target'}
+    BusinessCapability: {display: Business Capability, category: Design and Planning, table: cmdb_ci_business_capability, ci: true, specializes: ConfigurationItem, inferred: true, section: 'pp. 31-32, Business capabilities'}
+    BusinessApplication: {display: Business Application, category: Design and Planning, table: cmdb_ci_business_app, ci: true, specializes: ConfigurationItem, inferred: true, section: 'p. 32, Business applications; p. 53, Crawl Stage', attributes: [{name: Architecture type, type: ArchitectureType, section: 'p. 32'}, {name: model_id, type: reference to Product Model, section: 'p. 33'}]}
+    InformationObject: {display: Information Object, category: Design and Planning, table: cmdb_ci_information_object, ci: true, specializes: ConfigurationItem, inferred: true, section: 'p. 33, Information Object', attributes: [{name: Data sensitivity, section: 'p. 33'}, {name: Confidentiality, section: 'p. 33'}]}
+    SDLCComponent: {display: SDLC Component, also_named: Agile development component (docs), category: Build and Integration, table: cmdb_ci_sdlc_component, ci: true, specializes: ConfigurationItem, inferred: true, section: 'pp. 34-35, SDLC Component', attributes: [{name: Type, type: SDLCComponentType, section: 'p. 35'}]}
+    AISystemDigitalAsset: {display: AI System Digital Asset, category: Build and Integration, section: 'p. 35, AI System Digital Asset'}
+    AIModelDigitalAsset: {display: AI Model Digital Asset, category: Build and Integration, section: 'p. 35, AI System Digital Asset'}
+    AIDatasetDigitalAsset: {display: AI Dataset Digital Asset, category: Build and Integration, section: 'p. 35, AI System Digital Asset'}
+    AIPromptDigitalAsset: {display: AI Prompt Digital Asset, category: Build and Integration, section: 'p. 35, AI System Digital Asset'}
+    ServiceInstance: {display: Service Instance, category: Service Delivery, table: cmdb_ci_service_auto, ci: true, specializes: Service, inferred: true, section: 'p. 37, Service Instance; p. 12'}
+    ApplicationService:
+      display: Application Service
+      category: Service Delivery
+      table: cmdb_ci_service_discovered
+      ci: true
+      specializes: ServiceInstance
+      section: pp. 11, 37-39, Application Services; Figure 15, p. 47
+      tables: {service mapping and manual: cmdb_ci_service_discovered, tag based: cmdb_ci_service_by_tags (Figure 15; docs) or cmdb_ci_service_tags (p. 39; docs), calculated: cmdb_ci_service_calculated, query based: cmdb_ci_query_based_service}
+    DataServiceInstance: {display: Data Service Instance, category: Service Delivery, table: cmdb_ci_data_service_instance, ci: true, service_classification: Technical Service (Figure 15), specializes: ServiceInstance, section: 'p. 39, Data Service Instance; Figure 15, p. 47'}
+    ConnectionServiceInstance: {display: Connection Service Instance, category: Service Delivery, table: cmdb_ci_connection_service_instance, ci: true, service_classification: Technical Service (Figure 15), specializes: ServiceInstance, section: 'p. 39, Connection Service Instance; Figure 15, p. 47'}
+    NetworkServiceInstance: {display: Network Service Instance, category: Service Delivery, table: cmdb_ci_network_service_instance, ci: true, service_classification: Technical Service (Figure 15), specializes: ServiceInstance, section: 'pp. 39-40, Network Service Instance; Figure 15, p. 47'}
+    OperationalProcessServiceInstance: {display: Operational Process Service Instance, category: Service Delivery, table: cmdb_ci_operational_process_service_instance, ci: true, service_classification: Technical Service (Figure 15), specializes: ServiceInstance, section: 'p. 40, Operational Process Service Instance; Figure 15, p. 47'}
+    FacilityServiceInstance: {display: Facility Service Instance, category: Service Delivery, table: cmdb_ci_facility_service_instance, ci: true, service_classification: Technical Service (Figure 15), specializes: ServiceInstance, section: 'p. 40, Facility Service Instance; Figure 15, p. 47'}
+    NetworkFunction: {display: Network Function, category: Service Delivery, table: cmdb_ci_network_function_instance, ci: true, service_classification: Technical Service (Figure 15), specializes: ConfigurationItem, inferred: true, section: 'Figure 15, p. 47; Figure 16, p. 48'}
+    API: {display: API, category: Service Delivery, table: cmdb_ci_api, ci: true, specializes: ConfigurationItem, inferred: true, section: 'p. 41, API'}
+    Application: {display: Application, category: Service Delivery, table: cmdb_ci_appl, ci: true, specializes: ConfigurationItem, inferred: true, section: 'p. 41, Application; p. 53'}
+    NetworkFunctionApplication: {display: Network Function Application, category: Service Delivery, table: cmdb_ci_network_function_application, ci: true, specializes: Application, inferred: true, section: 'Figure 15, p. 47'}
+    AIFunction: {display: AI Function, category: Service Delivery, table: cmdb_ci_function_ai, ci: true, specializes: ConfigurationItem, inferred: true, section: 'p. 41, AI Function'}
+    AIApplication: {display: AI Application, category: Service Delivery, table: cmdb_ci_appl_ai_application, ci: true, specializes: Application, section: 'p. 41, AI Application'}
+    OperationalTechnology: {display: Operational Technology (OT) CI, category: Service Delivery, ci: true, specializes: ConfigurationItem, inferred: true, section: 'p. 42, Operational Technology (OT)'}
+    InfrastructureCI: {display: Infrastructure CI, category: Service Delivery, table: cmdb_ci_* (various extensions), ci: true, specializes: ConfigurationItem, inferred: true, section: 'p. 42, Infrastructure configuration items; Figure 15, p. 47'}
+    Asset: {display: Asset, category: Service Delivery, table: alm_asset, ci: false, section: 'pp. 9, 19; Figures 9, 11, 12; docs, CSDM terms', note: 'An item whose financial value is tracked; many but not all assets are CIs (docs). The paper places it among deployed and operational entities (Figure 3). Its domain here is our reading.'}
+    InstallBaseItem: {display: Install Base Item, category: Service Delivery, table: sn_install_base_item, ci: false, section: 'pp. 9, 20, 36; Figures 9, 11, 12; docs, CSDM life-cycle terms', note: 'Any item provided as a service or sold to a customer (docs). Its domain here is our reading.'}
+    ConnectedDevice: {display: Connected Device, category: Service Delivery, section: 'Figure 16, p. 48 (appears only there)'}
+    TechnologyManagementService: {display: Technology Management Service, category: Service Delivery, table: cmdb_ci_service_technical, ci: true, specializes: Service, inferred: true, section: 'pp. 11, 42, Technology Management Services; Figure 15, p. 47'}
+    TechnologyManagementServiceOffering: {display: Technology Management Service Offering, category: Service Delivery, table: service_offering, ci: true, specializes: ServiceOffering, section: 'pp. 42-43, Technology Management Service offering; Figure 15, p. 47', service_classification: Technical Service (Figure 15); the text on p. 43 says Technical Management Service}
+    DynamicCIGroup: {display: Dynamic CI Group, category: Service Delivery, table: cmdb_ci_query_based_service, ci: true, specializes: ServiceInstance, inferred: true, section: 'pp. 43-44, Dynamic CI Group; Figure 15, p. 47', service_classification: 'Application Service or Technical Service, by use (p. 44)', attributes: [{name: Service Classification, type: ServiceClassification, values: [Application Service, Technical Service], section: 'p. 44'}]}
+    BusinessService: {display: Business Service, category: Service Consumption, table: cmdb_ci_service_business, ci: true, specializes: Service, inferred: true, section: 'pp. 11, 45, Business Service; Figure 15, p. 47', service_classification: Business Service}
+    ServiceOffering: {display: Service Offering, category: Service Consumption, table: service_offering, ci: true, specializes: Service, inferred: true, section: 'pp. 43, 45, Business Service Offering'}
+    BusinessServiceOffering: {display: Business Service Offering, category: Service Consumption, table: service_offering, ci: true, specializes: ServiceOffering, section: 'p. 45, Business Service Offering; Figure 15, p. 47', service_classification: Business Service}
+    ServiceCommitment: {display: Service Commitment, category: Service Consumption, section: 'pp. 43, 45, Service offering'}
+    ServiceOfferingSubscription: {display: Service Offering Subscription, category: Service Consumption, section: 'p. 43; p. 56, Run Stage'}
+    RequestCatalog: {display: Request Catalog, category: Service Consumption, table: sc_catalog, ci: false, section: 'p. 45, Request Catalog; Figure 15, p. 47'}
+    CatalogItem: {display: Catalog Item, category: Service Consumption, ci: false, section: 'p. 46, Catalog item'}
+    Portfolio: {display: Portfolio, category: Manage Portfolios, ci: false, section: 'p. 46, Portfolio'}
+    ServicePortfolio: {display: Service Portfolio, also_named: Business Service Portfolio (pp. 45, 55), category: Manage Portfolios, table: service_portfolio, table_variant: spm_service_portfolio through spm_taxonomy_node (docs), ci: false, specializes: Portfolio, inferred: true, section: 'p. 46, Service Portfolio; Figure 15, p. 47'}
+relationships:
+- name: ValueStreamMapsToBusinessCapability
+  source: ValueStream
+  target: BusinessCapability
+  kind: map
+  table: cmn_value_stream_capability
+  multiplicity: {targets_per_source: '*', sources_per_target: '*'}
+  fact_source: figure
+  section: Figure 16, p. 48
+  note: Mapping table named on p. 15; Figure 7 ties it to both the value stream and its stage.
+- name: ValueStreamMapsToBusinessProcess
+  source: ValueStream
+  target: BusinessProcess
+  kind: map
+  table: cmn_value_stream_process
+  multiplicity: {targets_per_source: '*', sources_per_target: '*'}
+  fact_source: figure
+  section: Figure 16, p. 48; Figure 7, p. 15
+  note: Mapping table named on p. 15; Figure 7 ties it to both the value stream and its stage.
+- name: ValueStreamStageMapsToBusinessCapability
+  source: ValueStreamStage
+  target: BusinessCapability
+  kind: map
+  table: cmn_value_stream_capability
+  multiplicity: {targets_per_source: '*', sources_per_target: '*'}
+  fact_source: figure
+  section: Figure 16, p. 48; p. 15
+- name: ValueStreamStageMapsToBusinessProcess
+  source: ValueStreamStage
+  target: BusinessProcess
+  kind: map
+  table: cmn_value_stream_process
+  multiplicity: {targets_per_source: '*', sources_per_target: '*'}
+  fact_source: figure
+  section: Figure 16, p. 48; p. 15
+- {name: BusinessProcessOperationalizesBusinessCapability, source: BusinessProcess, target: BusinessCapability, kind: cmdb-relationship, type: 'Operationalizes::Operationalized by', multiplicity: not-stated, fact_source: figure, section: 'Figure 16, p. 48', note: 'The figure prints the type as Operrationalizes::Operationalized by (a typo).'}
+- {name: BusinessCapabilityProvidedByBusinessApplication, source: BusinessCapability, target: BusinessApplication, kind: cmdb-relationship, type: 'Provided by::Provides', multiplicity: not-stated, fact_source: figure, section: 'Figure 16, p. 48'}
+- {name: BusinessCapabilityProvidedByBusinessService, source: BusinessCapability, target: BusinessService, kind: cmdb-relationship, type: 'Provided by::Provides', multiplicity: not-stated, fact_source: figure, section: 'Figure 16, p. 48'}
+- name: BusinessApplicationReferencesBusinessProcess
+  source: BusinessApplication
+  target: BusinessProcess
+  kind: reference
+  multiplicity: {targets_per_source: 0..1, sources_per_target: '*'}
+  fact_source: figure
+  section: Figure 16, p. 48; p. 33
+  note: Legacy from CSDM 5; not recommended (p. 33).
+- {name: BusinessApplicationUsesInformationObject, source: BusinessApplication, target: InformationObject, kind: cmdb-relationship, type: 'Uses::Used by', multiplicity: not-stated, fact_source: figure, section: 'Figure 16, p. 48'}
+- {name: BusinessApplicationContainsSDLCComponent, source: BusinessApplication, target: SDLCComponent, kind: cmdb-relationship, type: 'Contains::Contained by', multiplicity: not-stated, fact_source: figure, section: 'Figure 16, p. 48'}
+- {name: SDLCComponentContainsApplicationService, source: SDLCComponent, target: ApplicationService, kind: cmdb-relationship, type: 'Contains::Contained by', multiplicity: not-stated, fact_source: figure, section: 'Figure 16, p. 48', note: A deployed Application-type SDLC Component is an Application Service (p. 35).}
+- {name: BusinessApplicationUsesApplicationService, source: BusinessApplication, target: ApplicationService, kind: cmdb-relationship, type: 'Uses::Used by', multiplicity: not-stated, fact_source: figure, section: 'Figure 16, p. 48; p. 48', note: 'The normal line in CSDM 5 (docs, CI relationships). The text on p. 48 says consumes.'}
+- {name: BusinessApplicationConsumesApplicationService, source: BusinessApplication, target: ApplicationService, kind: cmdb-relationship, type: 'Consumes::Consumed by', multiplicity: not-stated, fact_source: docs, section: 'docs, CI relationships; p. 48', note: 'The type used before CSDM 5. The docs tell Enterprise Architecture Workspace users to keep it so life cycle timelines display correctly, and two docs pages still name it. Checks accept this or Uses::Used by.'}
+- {name: BusinessApplicationConnectedToBusinessApplication, source: BusinessApplication, target: BusinessApplication, kind: cmdb-relationship, type: not-stated, multiplicity: not-stated, fact_source: text, section: 'p. 32, Business applications; docs, Design & Planning domain', note: Two or more applications can be integrated or connected at the design level.}
+- {name: ApplicationServiceDependsOnApplicationService, source: ApplicationService, target: ApplicationService, kind: cmdb-relationship, type: 'Depends on::Used by', multiplicity: not-stated, fact_source: figure, section: 'Figure 16, p. 48'}
+- {name: ApplicationServiceDependsOnApplication, source: ApplicationService, target: Application, kind: cmdb-relationship, type: 'Depends on::Used by', multiplicity: not-stated, fact_source: figure, section: 'Figure 16, p. 48'}
+- {name: ApplicationServiceDependsOnServiceInstance, source: ApplicationService, target: ServiceInstance, kind: cmdb-relationship, type: 'Depends on::Used by', multiplicity: not-stated, fact_source: figure, section: 'Figure 16, p. 48', note: Target is any Service Instance type (the figure says various).}
+- {name: DataServiceInstanceDependsOnServiceInstance, source: DataServiceInstance, target: ServiceInstance, kind: cmdb-relationship, type: 'Depends on::Used by', multiplicity: not-stated, fact_source: figure, section: 'Figure 16, p. 48'}
+- {name: NetworkServiceInstanceDependsOnServiceInstance, source: NetworkServiceInstance, target: ServiceInstance, kind: cmdb-relationship, type: 'Depends on::Used by', multiplicity: not-stated, fact_source: figure, section: 'Figure 16, p. 48'}
+- {name: OperationalProcessServiceInstanceDependsOnServiceInstance, source: OperationalProcessServiceInstance, target: ServiceInstance, kind: cmdb-relationship, type: 'Depends on::Used by', multiplicity: not-stated, fact_source: figure, section: 'Figure 16, p. 48'}
+- {name: FacilityServiceInstanceDependsOnServiceInstance, source: FacilityServiceInstance, target: ServiceInstance, kind: cmdb-relationship, type: 'Depends on::Used by', multiplicity: not-stated, fact_source: figure, section: 'Figure 16, p. 48'}
+- {name: ConnectionServiceInstanceProvidedByNetworkServiceInstance, source: ConnectionServiceInstance, target: NetworkServiceInstance, kind: cmdb-relationship, type: 'Provided by::Provides', multiplicity: not-stated, fact_source: figure, section: 'Figure 16, p. 48'}
+- {name: ServiceInstanceConnectedByConnectionServiceInstance, source: ServiceInstance, target: ConnectionServiceInstance, kind: cmdb-relationship, type: 'Connected by::Connects', multiplicity: not-stated, fact_source: figure, section: 'Figure 16, p. 48', note: Source is any Service Instance type (the figure says various).}
+- {name: ConnectedDeviceConnectedByConnectionServiceInstance, source: ConnectedDevice, target: ConnectionServiceInstance, kind: cmdb-relationship, type: 'Connected by::Connects', multiplicity: not-stated, fact_source: figure, section: 'Figure 16, p. 48'}
+- {name: NetworkFunctionDependsOnNetworkFunctionApplication, source: NetworkFunction, target: NetworkFunctionApplication, kind: cmdb-relationship, type: 'Depends on::Used by', multiplicity: not-stated, fact_source: figure, section: 'Figure 16, p. 48'}
+- {name: APIReceivesDataFromBusinessServiceOffering, source: API, target: BusinessServiceOffering, kind: cmdb-relationship, type: 'Receives data from::Sends data to', multiplicity: not-stated, fact_source: figure, section: 'Figure 16, p. 48', note: 'The drawn arrow has heads at both ends. Checks accept either direction.'}
+- {name: APIReceivesDataFromApplicationService, source: API, target: ApplicationService, kind: cmdb-relationship, type: 'Receives data from::Sends data to', multiplicity: not-stated, fact_source: figure, section: 'Figure 16, p. 48'}
+- {name: APIProvidedByApplication, source: API, target: Application, kind: cmdb-relationship, type: 'Provided by::Provides', multiplicity: not-stated, fact_source: figure, section: 'Figure 16, p. 48'}
+- {name: ApplicationRunsOnInfrastructureCI, source: Application, target: InfrastructureCI, kind: cmdb-relationship, type: 'Runs on::Runs', multiplicity: not-stated, fact_source: figure, section: 'Figure 16, p. 48', note: Target is any infrastructure CI class (the figure says various).}
+- {name: NetworkFunctionApplicationRunsOnInfrastructureCI, source: NetworkFunctionApplication, target: InfrastructureCI, kind: cmdb-relationship, type: 'Runs on::Runs', multiplicity: not-stated, fact_source: figure, section: 'Figure 16, p. 48'}
+- {name: TechnologyManagementServicePublishedAsOffering, source: TechnologyManagementService, target: TechnologyManagementServiceOffering, kind: reference, multiplicity: {targets_per_source: '1..*', sources_per_target: '1'}, fact_source: figure, section: 'Figure 16, p. 48; pp. 11, 42-43', note: Labelled Published as. Bars at both ends; read as one or more offerings, with no upper limit, because the text says so.}
+- {name: TechnologyManagementServiceOfferingContainsServiceInstance, source: TechnologyManagementServiceOffering, target: ServiceInstance, kind: cmdb-relationship, type: 'Contains::Contained by', multiplicity: not-stated, fact_source: figure, section: 'Figure 16, p. 48'}
+- {name: TechnologyManagementServiceOfferingContainsDynamicCIGroup, source: TechnologyManagementServiceOffering, target: DynamicCIGroup, kind: cmdb-relationship, type: 'Contains::Contained by', multiplicity: not-stated, fact_source: figure, section: 'Figure 16, p. 48'}
+- {name: BusinessServiceOfferingDependsOnServiceInstance, source: BusinessServiceOffering, target: ServiceInstance, kind: cmdb-relationship, type: 'Depends on::Used by', multiplicity: not-stated, fact_source: figure, section: 'Figure 16, p. 48'}
+- {name: BusinessServicePublishedAsOffering, source: BusinessService, target: BusinessServiceOffering, kind: reference, multiplicity: {targets_per_source: '1..*', sources_per_target: '1'}, fact_source: figure, section: 'Figure 16, p. 48; pp. 11, 45', note: Labelled Published as. Bars at both ends; read as one or more offerings, with no upper limit, because the text says so.}
+- name: BusinessServiceIsPartOfServicePortfolio
+  source: BusinessService
+  target: ServicePortfolio
+  kind: reference
+  multiplicity: {targets_per_source: '1', sources_per_target: '*'}
+  fact_source: figure
+  section: Figure 16, p. 48
+  note: Labelled Is part of.
+- name: TechnologyManagementServiceIsPartOfServicePortfolio
+  source: TechnologyManagementService
+  target: ServicePortfolio
+  kind: reference
+  multiplicity: {targets_per_source: '1', sources_per_target: '*'}
+  fact_source: figure
+  section: Figure 16, p. 48; p. 42
+  note: Labelled Is part of. Allowed since the Rome release (p. 42).
+- {name: ConfigurationItemReferencesProductModel, source: ConfigurationItem, target: ProductModel, kind: reference, type: model id attribute, multiplicity: not-stated, fact_source: text, section: 'pp. 18, 33, 44', note: Available on every CMDB table; for example a Service Offering CI may reference a Service Offering Model.}
+- {name: ProductModelContainsProductModel, source: ProductModel, target: ProductModel, kind: membership, type: bill of materials, multiplicity: not-stated, fact_source: text, section: 'p. 17, Product (Models)', note: A product has other products as components.}
+- {name: ContractUsesContractModel, source: Contract, target: ContractModel, kind: reference, multiplicity: not-stated, fact_source: text, section: 'p. 16, Contract'}
+- {name: DynamicCIGroupReferencesCMDBGroup, source: DynamicCIGroup, target: CMDBGroup, kind: reference, multiplicity: not-stated, fact_source: text, section: 'pp. 43-44, Dynamic CI Group; Foundational Entities'}
+- {name: DynamicCIGroupContainsConfigurationItem, source: DynamicCIGroup, target: ConfigurationItem, kind: membership, multiplicity: not-stated, fact_source: text, section: 'p. 43, Dynamic CI Group', note: Contains CIs only; a Dynamic CI Group cannot contain other groups.}
+- {name: ServiceOfferingDerivedFromService, source: ServiceOffering, target: Service, kind: reference, type: derived from, multiplicity: not-stated, fact_source: text, section: 'pp. 43, 45', note: The paper says an offering is derived from a service and refined by how the service serves a need; the attribute name is not given.}
+- {name: CatalogItemRepresentsServiceOffering, source: CatalogItem, target: ServiceOffering, kind: reference, multiplicity: not-stated, fact_source: text, section: 'pp. 45-46, 56-57'}
+- {name: RequestCatalogUsesCatalogItem, source: RequestCatalog, target: CatalogItem, kind: membership, multiplicity: not-stated, fact_source: text, section: 'p. 45, Request Catalog'}
+- {name: ServiceOfferingSubscriptionCoversServiceOffering, source: ServiceOfferingSubscription, target: ServiceOffering, kind: reference, multiplicity: not-stated, fact_source: text, section: p. 43; p. 56}
+- {name: ServiceOfferingSubscriptionIdentifiesUser, source: ServiceOfferingSubscription, target: User, kind: reference, multiplicity: not-stated, fact_source: text, section: 'p. 56, Run Stage', note: 'A subscriber can be a user, company, location, department or group.'}
+- {name: ServiceOfferingSubscriptionIdentifiesCompany, source: ServiceOfferingSubscription, target: Company, kind: reference, multiplicity: not-stated, fact_source: text, section: 'p. 56, Run Stage', note: 'A subscriber can be a user, company, location, department or group.'}
+- {name: ServiceOfferingSubscriptionIdentifiesLocation, source: ServiceOfferingSubscription, target: Location, kind: reference, multiplicity: not-stated, fact_source: text, section: 'p. 56, Run Stage', note: 'A subscriber can be a user, company, location, department or group.'}
+- {name: ServiceOfferingSubscriptionIdentifiesDepartment, source: ServiceOfferingSubscription, target: Department, kind: reference, multiplicity: not-stated, fact_source: text, section: 'p. 56, Run Stage', note: 'A subscriber can be a user, company, location, department or group.'}
+- {name: ServiceOfferingSubscriptionIdentifiesGroup, source: ServiceOfferingSubscription, target: Group, kind: reference, multiplicity: not-stated, fact_source: text, section: 'p. 56, Run Stage', note: 'A subscriber can be a user, company, location, department or group.'}
+- {name: ValueStreamStagePartOfValueStream, source: ValueStreamStage, target: ValueStream, kind: reference, multiplicity: {targets_per_source: '1', sources_per_target: '*'}, fact_source: figure, section: 'p. 15; Figure 7', note: Labelled Part of.}
+- {name: ValueStreamHasValueStreamCategory, source: ValueStream, target: ValueStreamCategory, kind: reference, multiplicity: {targets_per_source: '1', sources_per_target: '*'}, fact_source: figure, section: 'pp. 14-15; Figure 7', note: Labelled Has.}
+- {name: PlanningItemAlignedToGoal, source: PlanningItem, target: Goal, kind: reference, type: aligned to, multiplicity: not-stated, fact_source: text, section: 'p. 30, Planning Item; Target'}
+- {name: PlanningItemAlignedToTarget, source: PlanningItem, target: Target, kind: reference, type: aligned to, multiplicity: not-stated, fact_source: text, section: 'p. 30, Target'}
+- {name: TargetMeasuresGoal, source: Target, target: Goal, kind: reference, type: measure for, multiplicity: not-stated, fact_source: text, section: 'p. 30, Target'}
+- {name: GoalServesStrategicPriority, source: Goal, target: StrategicPriority, kind: reference, type: in service of, multiplicity: not-stated, fact_source: text, section: 'p. 30, Goal', note: 'Stated as often, not always.'}
+- {name: ProductIdeaRelatesToProductModel, source: ProductIdea, target: ProductModel, kind: reference, multiplicity: not-stated, fact_source: text, section: 'p. 30, Foundational Entities that contribute to Ideation and Strategy'}
+- {name: PlanningItemRelatesToProductModel, source: PlanningItem, target: ProductModel, kind: reference, multiplicity: not-stated, fact_source: text, section: 'p. 30, Foundational Entities that contribute to Ideation and Strategy'}
+- {name: SDLCComponentDescribedByInfrastructureCI, source: SDLCComponent, target: InfrastructureCI, kind: reference, type: deployed instance, multiplicity: not-stated, fact_source: text, section: 'p. 35, SDLC Component', note: 'For the Infrastructure type, the deployed instance is the infrastructure CI whose configuration the component describes.'}
+- {name: BusinessUnitPartOfCompany, source: BusinessUnit, target: Company, kind: reference, multiplicity: not-stated, fact_source: text, section: 'p. 52, Foundation Stage'}
+- {name: DepartmentPartOfBusinessUnit, source: Department, target: BusinessUnit, kind: reference, multiplicity: not-stated, fact_source: text, section: 'p. 52, Foundation Stage'}
+- {name: TeamTiesGroupToConfigurationItem, source: Team, target: ConfigurationItem, kind: reference, type: by group type, multiplicity: not-stated, fact_source: text, section: 'p. 29, Teams', note: 'Group types: Change Group, Managed by Group, Support Group.'}
+- {name: TeamIdentifiesGroup, source: Team, target: Group, kind: reference, multiplicity: not-stated, fact_source: text, section: 'p. 29, Teams'}
+- {name: ApplicationServiceUnderpinsBusinessService, source: ApplicationService, target: BusinessService, kind: cmdb-relationship, type: not-stated, multiplicity: not-stated, fact_source: text, section: 'p. 39, Application Services', note: The text says application services underpin a business or technology management service.}
+- {name: TechnologyManagementServiceUnderpinsApplicationService, source: TechnologyManagementService, target: ApplicationService, kind: cmdb-relationship, type: not-stated, multiplicity: not-stated, fact_source: text, section: 'p. 42, Technology Management Services', note: The text says technology management services typically underpin business or application services; this runs opposite to the previous row, and neither is in Figure 16. Figure 16 shows the link through offerings.}
+- {name: BusinessProcessParentOfBusinessProcess, source: BusinessProcess, target: BusinessProcess, kind: hierarchy, type: parent, multiplicity: not-stated, fact_source: text, section: 'p. 16, Business Process'}
+- {name: BusinessCapabilityParentOfBusinessCapability, source: BusinessCapability, target: BusinessCapability, kind: hierarchy, type: parent, multiplicity: not-stated, fact_source: text, section: 'pp. 31-32, Business capabilities'}
+- {name: CompanyParentOfCompany, source: Company, target: Company, kind: hierarchy, type: parent, multiplicity: not-stated, fact_source: text, section: 'p. 51, Foundation Stage'}
+- {name: BusinessUnitParentOfBusinessUnit, source: BusinessUnit, target: BusinessUnit, kind: hierarchy, type: parent, multiplicity: not-stated, fact_source: text, section: 'p. 52, Foundation Stage'}
+- {name: LocationParentOfLocation, source: Location, target: Location, kind: hierarchy, type: parent, multiplicity: not-stated, fact_source: text, section: 'pp. 28, 52'}
+- {name: ServicePortfolioParentOfServicePortfolio, source: ServicePortfolio, target: ServicePortfolio, kind: hierarchy, type: parent, multiplicity: not-stated, fact_source: text, section: 'p. 46, Service Portfolio'}
+relationship_reference: {authority: 'Figure 16 (p. 48) is the paper''s list of prescribed relationships and references; the paper does not say other relationships are forbidden. A pair absent from this list is a warning (rule CSDM-REL-001), not an error. Prose-stated relationships are marked fact_source: text.', reading: 'Source is the From (parent) end and target the To (child) end of Figure 16. A relationship whose target or source is named a (various) type applies to the types the source states: Service Instance means Application Service and the data, connection, network, operational process and facility service instances. Dynamic CI Group is separate. Infrastructure CI is one concept with a free-text kind. Only generalizations the source states may drive a check; those marked inferred explain and do not check. The relationship type is written Parent descriptor::Child descriptor.', multiplicity: 'Figure 16 draws multiplicity on four references and Figure 7 on two more; every other multiplicity is not-stated, and no count check applies where none is drawn. Keys: targets_per_source is how many target records one source record may link to; sources_per_target the reverse; ''*'' means zero or more.'}
+reference_data:
+  service_classification_values: [Business Service, Technical Service, Application Service]
+  service_classification_note: Attribute on cmdb_ci_service, inherited by every extension. The paper says customers can extend it (p. 10). The text on p. 43 also writes Technical Management Service.
+  value_stream_categories: [Customer Engagement, Order Fulfillment, Customer Service, Manufacturing, Procurement Service, Product and Design Engineering, Research, Marketing, Market Information Capture, Product Maintenance, Legal, Digital Product Development, Technology Enablement, Human Resources, Leased and Capital Asset Management, Financial Management]
+  sdlc_component_types: [Application, Infrastructure]
+  business_process_review_frequency: [Monthly, Quarterly, Semi Annual / Half Yearly, Annually, none]
+  location_types: [Region, Country, State/Province, City, Site, Building/Structure, Floor, Room]
+  team_group_types: [Change Group, Managed by Group, Support Group]
+  relationship_types: ['Provided by::Provides', 'Uses::Used by', 'Consumes::Consumed by', 'Contains::Contained by', 'Depends on::Used by', 'Connected by::Connects', 'Receives data from::Sends data to', 'Runs on::Runs', 'Operationalizes::Operationalized by']
+  relationship_kinds: {cmdb-relationship: 'A relationship record between two CIs, with a relationship type written Parent descriptor::Child descriptor (Figure 16 legend: CMDB relation).', reference: 'A reference attribute from one record to another (Figure 16 legend: entity relation).', map: 'A many-to-many mapping table (Figure 16 legend: m2m map).', hierarchy: A parent reference from an entity to its own kind., membership: A group or bill-of-materials containment stated in the text.}
+life_cycle:
+  source: 'CSDM 5 Figures 9 to 14 (figures win, decision of Ryan 2026-11-03). Stage, then each status with the kinds of record it applies to. A = Asset, BA = Business Application, CI = configuration item, Co = Contract, Doc = Document, IBI = Install Base Item, Lo = Location, PM = Product Model, SV = Service or Service Model.'
+  product:
+    applies_to: Product Model tables and the Service Model (Figure 10; p. 21).
+    Ideation: {Under Evaluation: PM+SV, Pilot: PM+SV}
+    Design: {Design: PM+SV, Chartered: PM+SV, Planning: PM+SV}
+    Build & Integrate: {Build: PM+SV, In production: PM+SV}
+    Operational: {In Use: PM+SV, Available: PM+SV, End of Support: PM+SV, Pending Retirement: PM+SV}
+    End of Life: {Obsolete: PM+SV, Retired: PM+SV, Sold: PM+SV}
+  tangible:
+    applies_to: Tangible and physical assets and CIs (Figure 11; p. 22).
+    Ideation: {Under Evaluation: PM+SV, Pilot: SV}
+    Design: {Design: A+PM+SV, Chartered: SV, Build: A+CI+PM}
+    Purchase: {On Order: A+CI, Pre-Allocated: A}
+    Inventory: {Available: A+CI, Reserved: A, Pre-Allocated: A, Pending Repair: A+CI, Legal Hold: A+CI, Quarantine: A+CI}
+    Deploy: {In Stock: A+CI, Reserved: A+CI, Pending Transfer: A+CI, In Transit: A+CI, Test: A+CI}
+    Operational: {Pending Fulfillment: A+CI+IBI, In Use: A+CI+IBI, In Maintenance: A+CI+IBI, End of Support: A+CI+IBI, Pending Retirement: A+CI+IBI}
+    End of Operation: {In Transit: A+CI+IBI, Pending Certificate: A+CI+IBI, Pending Disposal: A+CI+IBI, Pending Donation: A+CI+IBI, Pending Evaluation: A+CI+IBI, Pending Resale: A+CI+IBI, Pending Return: A+CI+IBI, On Hold: A+CI+IBI}
+    Defective: {In Stock: A+CI+IBI, In Transit: A+CI+IBI}
+    Missing: {Lost: A+CI+IBI, Stolen: A+CI+IBI}
+    End of Life: {Obsolete: A+CI+IBI, Retired: A+CI+IBI, Disposed: A+CI+IBI, Donated: A+CI+IBI, Sold: A+CI+IBI, RMA: A+CI+IBI, Vendor Credit: A+CI+IBI, Buy-out: A+CI+IBI, Lease Return: A+CI+IBI}
+  intangible:
+    applies_to: Intangible and logical assets and CIs, including service instances (Figure 12; p. 24; docs).
+    Ideation: {Under Evaluation: PM+SV, Pilot: SV}
+    Design: {Design: A+PM+SV, Chartered: SV, Build: A+CI+BA+PM}
+    Purchase: {On Order: A+CI, Pre-Allocated: A}
+    Inventory: {Available: A+CI, Pre-Allocated: A, Legal Hold: A+CI}
+    Deploy: {Test: A+CI}
+    Operational: {Pending Fulfillment: A+CI+IBI, In Use: A+CI+IBI, In Maintenance: A+CI+IBI, End of Support: A+CI+IBI, Pending Retirement: A+CI+IBI}
+    End of Operation: {On Hold: A+CI+IBI}
+    End of Life: {Obsolete: A+CI+IBI, Retired: A+CI+IBI}
+  document:
+    applies_to: Contracts and architecture artifacts such as Business Process (Figure 13; p. 26).
+    Ideation: {Draft: Co+Doc, Under Evaluation: Co+Doc}
+    Operational: {In Use: Co+Doc, Published: Co+Doc, Renewal in Process: Co, Renewed: Co, Pending Retirement: Co}
+    End of Life: {Expired: Co, Retired: Co}
+  location:
+    applies_to: The common data location table (Figure 14; p. 27).
+    Design: {Chartered: Lo, Build: Lo}
+    Operational: {Available: Lo, In Use: Lo, Pending Retirement: Lo}
+    End of Life: {Sold: Lo, Lease Return: Lo, Obsolete: Lo}
+  differences: 'Sources disagree, and the figures are what is recorded here. Product: the paper definitions omit the Build & Integrate stage, Planning, In production, In Use and Sold; the docs definitions have the stage, Planning and In Production. Location: the paper and docs definitions say Ideation where Figure 14 and the text say Design. Tangible and intangible: the definitions differ on Pending Fulfillment, the Design stage, and the End of Life lists. Pending Fulfillment is defined only in the docs (tangible). Business Application: the docs add a restricted set of stages (Ideation, Design, Operational, End of Life) and say inherited stages may also appear. Figure 11 was read at low resolution for the kinds of record on Design/Build; confirm when the file is built.'
+constraints:
+- {id: CSDM-SVC-001, statement: 'A Business Service and a Technology Management Service are each single level: neither forms a hierarchy of services of its own kind.', strength: must, section: 'p. 11, What is a Service?', applies_when: 'Business Service, Technology Management Service', checkable: static}
+- {id: CSDM-SVC-002, statement: Every operational Business Service and Technology Management Service has at least one Service Offering., strength: should, section: 'pp. 43, 45, 54-55', applies_when: Business Service or Technology Management Service is operational, checkable: static}
+- {id: CSDM-SVC-003, statement: 'A CI relates, through Dynamic CI Groups, to only one Technology Management Service and one Technology Management Service Offering. A CI may belong to several Dynamic CI Groups if only one of them is related to a Technology Management Service. Reason given: manager, support and change group data is copied down to the CIs and would be overwritten.', strength: should, section: 'pp. 43-44, Dynamic CI Group', applies_when: CI is a member of a Dynamic CI Group, checkable: partial}
+- {id: CSDM-SVC-004, statement: A Dynamic CI Group contains CIs and cannot contain other groups., strength: must, section: 'p. 43, Dynamic CI Group', applies_when: Dynamic CI Group, checkable: static}
+- {id: CSDM-SVC-005, statement: 'A Dynamic CI Group has a service classification of Application Service or Technical Service, and the classification decides whether it acts as a query-based application service or as a group managed by a Technology Management Service Offering.', strength: must, section: 'p. 44, Dynamic CI Group', applies_when: Dynamic CI Group, checkable: static}
+- {id: CSDM-SVC-006, statement: Offerings of one service that have different commitments are represented by different service level agreement definitions., strength: should, section: 'p. 45, Business Service Offering', applies_when: A service has more than one offering, checkable: none}
+- {id: CSDM-SVC-007, statement: The offering of an Application Service is exposed through the related Business Service Offering or Technology Management Service Offering., strength: should, section: 'p. 39, Application Services', applies_when: Application Service, checkable: partial}
+- {id: CSDM-SVC-008, statement: Each distinct deployment of a business application (each environment and region) is represented by its own Application Service., strength: should, section: 'pp. 11, 54, Crawl Stage', applies_when: Business Application is deployed in more than one environment or region, checkable: partial}
+- {id: CSDM-SVC-009, statement: The Service Classification attribute sits on the parent service table and is inherited by every service type; it is normally filled in from the CI's class., strength: note, section: 'p. 37, What is Service Classification attribute?', checkable: none}
+- {id: CSDM-SVC-010, statement: 'The service instance types added in CSDM 5 (data, connection, network, operational process, facility) are model only: they have no user interface, need manual creation and are not part of event impact analysis. There is no expectation of using them unless local needs require it.', strength: note, section: 'pp. 37-38, Service Instance', checkable: none}
+- {id: CSDM-SVC-011, statement: The Service Delivery Network is not an entity. It is the set of interconnected Connection Service Instances and Network Service Instances., strength: must, section: 'pp. 39-41, Service Delivery Network', checkable: static}
+- {id: CSDM-SVC-012, statement: A single installed Application can support several Application Services; there is no one-to-one relationship between the two., strength: note, section: 'p. 41, Application', checkable: none}
+- {id: CSDM-SVC-013, statement: 'The Application table is not an inventory or portfolio of applications (that is the Business Application table). It holds discoverable instances of code on one host, and manual population is not recommended.', strength: should, section: 'pp. 41, 53', applies_when: Application, checkable: partial}
+- {id: CSDM-TBL-001, statement: 'A Product Model is not a CI, and product model classes are not CMDB classes. A CI points to its Product Model through the model reference, which every CMDB table has.', strength: must, section: 'p. 18, Product (Models)', applies_when: Product Model and its classes, checkable: static}
+- {id: CSDM-TBL-002, statement: A Contract is not a CI., strength: must, section: 'p. 16, Contract', applies_when: Contract, checkable: static}
+- {id: CSDM-TBL-003, statement: 'The common data entities (Company, Business Unit, Department, Location, Building, Group, User) are not CIs.', strength: must, section: 'p. 27, Common Data', applies_when: Common data entities, checkable: static}
+- {id: CSDM-TBL-004, statement: A CMDB Group is not a CI., strength: must, section: 'pp. 18-19, CMDB Group', applies_when: CMDB Group, checkable: static}
+- {id: CSDM-TBL-005, statement: Foundation tables are referential data and are not used in CMDB relationships. Business Process is the exception because it is a CMDB table. (The paper states the first sentence flatly and then draws a CMDB relationship for Business Process; the exception is our reading.), strength: must, section: 'p. 14, Foundation Domain', applies_when: A CMDB relationship has a Foundation entity at an end, checkable: static}
+- {id: CSDM-TBL-006, statement: 'A Business Application and an SDLC Component are not operational CIs and should not be used in incident, problem or change.', strength: should, section: 'pp. 53-54, Crawl Stage', applies_when: 'Business Application, SDLC Component', checkable: runtime}
+- {id: CSDM-TBL-007, statement: 'Records in the Design and Planning and Build and Integration domains are not direct targets of incident, problem and change. Service Delivery and Service Consumption tables are operational and can be selected in them.', strength: note, section: 'pp. 31, 34, 36, 45', checkable: none}
+- {id: CSDM-TBL-008, statement: 'Each entity is stored in the table, with the service classification, that the paper''s table mapping gives. The paper says the mapping will continue to evolve.', strength: should, section: 'p. 47, CSDM 5 Table Names and Labels', applies_when: Any CSDM entity that has a table, checkable: static}
+- {id: CSDM-TBL-009, statement: The service offering table holds both Business Service Offerings and Technology Management Service Offerings; the service classification says which., strength: note, section: 'pp. 43, 45', checkable: none}
+- {id: CSDM-TBL-010, statement: A Business Application's singular reference to a Business Process is legacy from CSDM 5 and is not recommended; relationships that allow one to many exist., strength: should, section: 'p. 33, Business applications', applies_when: Business Application references a Business Process, checkable: static}
+- {id: CSDM-TBL-011, statement: 'Business Process, Business Capability and Business Application are manually maintained CIs. Application and infrastructure CIs are normally created by discovery.', strength: note, section: 'pp. 16, 32, 41, 53', checkable: none}
+- {id: CSDM-REL-001, statement: Use the prescribed relationships and references (the paper's relationship figure) as the main way to link CSDM entities., strength: should, section: 'p. 7, principle 3; p. 48', applies_when: A relationship joins two CSDM entities, checkable: static}
+- {id: CSDM-REL-002, statement: 'Use the prescribed relationships between the CIs. If they are missing (for example Business Application uses Application Service), functions such as technology portfolio risk assessment will not work.', strength: should, section: 'p. 48, Relationships in CSDM', applies_when: 'Business Application, Application Service', checkable: static}
+- {id: CSDM-REL-003, statement: 'When mapping infrastructure relationships by hand, create the relationships that discovery would create.', strength: should, section: 'p. 48, Relationships in CSDM', applies_when: Manual mapping of infrastructure CIs, checkable: none}
+- {id: CSDM-REL-004, statement: 'Create a CI relationship between each Business Capability and its Business Applications, and between Business Applications and their Application Services.', strength: should, section: 'p. 31, Business capabilities', applies_when: 'Business Capability, Business Application', checkable: static}
+- {id: CSDM-REL-005, statement: 'A Business Application is manually managed, so its relationships to deployed instances (Application Services) are created by hand.', strength: note, section: 'p. 32, Business applications', checkable: none}
+- {id: CSDM-REL-006, statement: 'Impact analysis follows relationships in the reverse direction. The relationship type is for the most part not critical, but should be followed.', strength: note, section: 'p. 48, Relationships in CSDM', checkable: none}
+- {id: CSDM-REL-007, statement: Not every CSDM object is a CMDB table and not every object has relationships., strength: note, section: 'p. 48, Relationships in CSDM', checkable: none}
+- {id: CSDM-REL-008, statement: 'A Business Application relates to Application Services, and not to any other type of Service Instance.', strength: should, section: 'docs, CI relationships', applies_when: 'Business Application uses or consumes a service instance', checkable: static}
+- {id: CSDM-HIER-001, statement: A Business Capability hierarchy has no more than six levels., strength: must, section: 'pp. 31-32, Business capabilities', applies_when: Business Capability, checkable: static}
+- {id: CSDM-HIER-002, statement: 'A capability hierarchy that seems to need more than six levels is a candidate to be split into several capabilities, the lower levels being processes and tasks rather than capabilities.', strength: should, section: 'p. 31, Business capabilities', applies_when: Business Capability hierarchy is deep, checkable: none}
+- {id: CSDM-HIER-003, statement: Only a leaf Business Capability (one with no children) can be deleted., strength: must, section: 'p. 32, Business capability update guidance', applies_when: Business Capability is deleted, checkable: partial}
+- {id: CSDM-HIER-004, statement: 'A Business Capability cannot be its own ancestor: no circular parent relationships.', strength: must, section: 'p. 32, Business capability update guidance', applies_when: Business Capability, checkable: static}
+- {id: CSDM-HIER-005, statement: A Business Capability's level is assigned from its parent and recalculated when the parent changes., strength: note, section: 'p. 32, Business capability update guidance', checkable: none}
+- {id: CSDM-HIER-006, statement: A Location flagged as a duplicate names a primary Location., strength: must, section: 'p. 28, Location Management', applies_when: Location is flagged Duplicate, checkable: static}
+- {id: CSDM-HIER-007, statement: 'Internal Company entries form a hierarchy of legal entities, not of business units.', strength: should, section: 'p. 51, Foundation Stage', applies_when: Company is internal, checkable: none}
+- {id: CSDM-HIER-008, statement: 'Registering an Application Service lets administrators define uniqueness and required fields for the first record, before choosing how it is populated.', strength: note, section: 'p. 39, Application Services', checkable: none}
+- {id: CSDM-LCY-001, statement: Life Cycle Stage and Life Cycle Stage Status are two attributes on every CI; together they uniquely specify an object's status., strength: must, section: 'pp. 19-20, CSDM Life Cycle', applies_when: CI, checkable: partial}
+- {id: CSDM-LCY-002, statement: Life cycle stages and stage statuses are provided by ServiceNow and are not editable., strength: must, section: 'p. 20, CSDM Life Cycle', checkable: none}
+- {id: CSDM-LCY-003, statement: 'An object takes only the stage and status values of its own life cycle process: product, tangible, intangible, document or location.', strength: must, section: 'pp. 20-27, Life Cycle Processes', applies_when: Object has a life cycle stage, checkable: static}
+- {id: CSDM-LCY-004, statement: 'Adopting the new life cycle fields is optional. A mapping from the legacy status attributes is available, and after the Xanadu family release there is no ongoing synchronization with them.', strength: note, section: 'p. 20, CSDM Life Cycle', checkable: none}
+- {id: CSDM-LCY-005, statement: 'Evaluate dependencies on the legacy status attributes before enabling the new life cycle fields, and test the new product-instance synchronization in non-production first, because turning it off again may lose data.', strength: should, section: 'p. 20, CSDM Life Cycle', applies_when: Life cycle fields are enabled, checkable: none}
+- {id: CSDM-ADOPT-001, statement: 'Adopt CSDM in stages (Foundation, Crawl, Walk, Run, Fly) rather than implementing every part at once.', strength: should, section: 'p. 51, How to adopt the CSDM standard', checkable: none}
+- {id: CSDM-ADOPT-002, statement: 'Foundation stage: populate Company, Business Unit, Department, Location, Group, User, CMDB Group, Product Models and Contracts first.', strength: should, section: 'pp. 51-53, Foundation Stage', checkable: partial}
+- {id: CSDM-ADOPT-003, statement: 'Crawl stage: Business Application, Application Service, Application (discoverable) and server or host (discoverable). SDLC Component is optional here and can wait for the Fly stage.', strength: should, section: 'pp. 53-54, Crawl Stage', checkable: partial}
+- {id: CSDM-ADOPT-004, statement: 'Walk stage: Technology Management Service, Technology Management Service Offering and Dynamic CI Group.', strength: should, section: 'pp. 54-55, Walk Stage', checkable: partial}
+- {id: CSDM-ADOPT-005, statement: 'Run stage: Service Portfolio (not a CMDB table), Business Service and Business Service Offering.', strength: should, section: 'pp. 55-56, Run Stage', checkable: partial}
+- {id: CSDM-ADOPT-006, statement: 'Fly stage: Request Catalog, Business Capability and Information Object. The Information Object may be needed sooner if requirements say so.', strength: should, section: 'pp. 56-57, Fly Stage', checkable: partial}
+- {id: CSDM-ADOPT-007, statement: 'Migrating from a nonconforming table: back up the data; map attributes (best practice, keep, refactor, do not need); identify every dependency on the old table in reports, rules and scripts; refactor attributes; then migrate and fix the dependencies. Moving a CI to another class can lose data held in attributes outside the new table hierarchy.', strength: should, section: 'pp. 58-59, Migrating into CSDM', applies_when: A model is migrated into CSDM, checkable: none}
+- {id: CSDM-PRIN-001, statement: 'Agreed CSDM definitions are used wherever a table, reference or attribute is used.', strength: should, section: 'p. 7, principle 5', checkable: none}
+- {id: CSDM-PRIN-002, statement: 'Ten principles guide CSDM: simplified concepts; designed for reporting and analytics; prescriptive relationships; a data model shared across products; agreed definitions; shared tables supplied by default; consistent data integrations; limited upgrade impact; data governance and process; documented product guidance.', strength: note, section: 'p. 7, CSDM Key Principles', checkable: none}
+- {id: CSDM-PRIN-003, statement: 'CSDM is not a product, an implementation guide, a set of reports, code to install or an automatic fix for past implementations. The core tables need no purchase, though plugins may be needed for some elements.', strength: note, section: 'p. 3, CSDM Introduction', checkable: none}
+- {id: CSDM-PRIN-004, statement: The model is designed to be extended; for example a customer can add a service classification value., strength: note, section: 'p. 10, CSDM Conceptual Model', checkable: none}
+diagram_types:
+  Conceptual Model:
+    defined_by: 'Figure 4, p. 10 (heading: historical view)'
+    status: specified-figure
+    read: image
+    purpose: One-page view of the seven domains, with Foundation as a band under the five life cycle domains and Manage Portfolio at the center.
+    admits: [BusinessCapability, BusinessApplication, InformationObject, SDLCComponent, PlanningItem, ProductIdea, ServiceInstance, TechnologyManagementService, TechnologyManagementServiceOffering, DynamicCIGroup, BusinessService, BusinessServiceOffering, RequestCatalog, ProductModel, ProductFeature, SoftwareBillOfMaterials, Location, Team, Group, User, Company, BusinessUnit, Department, ValueStream, BusinessProcess, Contract, CMDBGroup, Knowledge]
+    admits_also: Service Delivery System (a cloud shape standing for the Service Delivery Network, not an entity); three catalogs inside the request catalog (service, product, sales); personas.
+    conventions:
+      line_kinds: A solid arrow is a relationship; a dashed arrow is a reference.
+      domain_colors: {Foundation: grey, Ideation and Strategy: yellow, Design and Planning: blue-green, Build and Integration: red, Service Delivery: orange, Service Consumption: green, Manage Portfolio: white}
+      personas: enterprise architect, Digital Product Owner, Product Owner, Business Relationship Manager, Customer Service Manager, Service Instance Owner, Service Delivery Owner, Service Provider, Process Owner, Contract Manager, Data Steward, Chief Strategist.
+      provenance: {status: read-from-figure, note: Read from the rendered figure; not measured.}
+  End-to-End Service Life Cycle:
+    defined_by: Figures 2 and 6, pp. 8, 14
+    status: specified-figure
+    read: text-and-caption
+    purpose: The domains as stages in life cycle order, with Foundation supporting all stages and Manage Portfolio spanning them.
+    admits: domains, not concepts
+    stages_in_order: [Ideation and Strategy, Design and Planning, Build and Integration, Service Delivery, Service Consumption]
+    conventions: not-measured
+  Domain Entities: {defined_by: 'Figure 3, p. 9', status: specified-figure, read: image, purpose: 'Entity categories under each life cycle stage, with overlay bands for Business Model, Enterprise Architecture, Solution Architecture, Service Model and Sales and Support Models.', admits: 'entity categories, not concepts: Business Planning entities; Design entities and models; Dev, Build and Integration entities; Deployed and Operational entities; Offering and Support entities; Foundation core data.', conventions: not-measured}
+  Digital System Model:
+    defined_by: Figure 5, pp. 12-13
+    status: specified-figure
+    read: image
+    purpose: Four layers (process, service-logical, functional, infrastructure), each with design entities on the left and operational entities on the right.
+    admits: [BusinessProcess, InformationObject, ServiceInstance, ServiceOffering, BusinessApplication, SystemComponentModel, ProductModel]
+    admits_also: Service and CI relationships; application CIs; facility hardware; hardware CIs.
+    layers:
+      Process: [BusinessProcess]
+      Service (logical): [InformationObject, ServiceInstance, ServiceOffering]
+      Functional: [BusinessApplication, SystemComponentModel]
+      Infrastructure: [ProductModel]
+    conventions:
+      orientation: Design entities left of the dividing line, operational entities right.
+      provenance: {status: read-from-figure, note: Read from the rendered figure; not measured.}
+  Configuration Item Relationships:
+    defined_by: Figure 16, p. 48
+    status: specified-figure
+    read: image
+    purpose: 'The prescribed relationships and references: three columns, From (parent), Relationship/Reference, To (child), in two panels.'
+    admits: [ValueStream, BusinessCapability, BusinessProcess, ValueStreamStage, BusinessApplication, BusinessService, InformationObject, SDLCComponent, ApplicationService, Application, ServiceInstance, DataServiceInstance, NetworkServiceInstance, OperationalProcessServiceInstance, FacilityServiceInstance, ConnectionServiceInstance, ConnectedDevice, NetworkFunction, NetworkFunctionApplication, API, BusinessServiceOffering, InfrastructureCI, TechnologyManagementService, TechnologyManagementServiceOffering, DynamicCIGroup, ServicePortfolio]
+    conventions:
+      columns: From (parent), Relationship/Reference, To (child).
+      line_kinds: 'Entity relation: crow''s-foot and bar glyphs. CMDB relation: arrow, labelled with the relationship type. m2m map: double-headed arrow.'
+      provenance: {status: read-from-figure, note: Read from the rendered figure; not measured.}
+  Table Names and Labels:
+    defined_by: Figure 15, p. 47
+    status: specified-table
+    read: text
+    purpose: A table mapping each domain entity to its platform table, with the service classification where one applies.
+    admits: [Service, ValueStream, ValueStreamCategory, ValueStreamStage, BusinessProcess, Contract, ProductModel, CMDBGroup, Company, BusinessUnit, Department, Location, Building, Group, User, ProductIdea, PlanningItem, StrategicPlan, StrategicPriority, Goal, Target, BusinessCapability, BusinessApplication, InformationObject, SDLCComponent, ServiceInstance, ApplicationService, DataServiceInstance, ConnectionServiceInstance, NetworkServiceInstance, OperationalProcessServiceInstance, FacilityServiceInstance, NetworkFunction, API, Application, NetworkFunctionApplication, AIFunction, AIApplication, InfrastructureCI, TechnologyManagementService, TechnologyManagementServiceOffering, DynamicCIGroup, BusinessService, ServiceOffering, BusinessServiceOffering, RequestCatalog, ServicePortfolio]
+    conventions: not-applicable
+  Value Stream Mapping:
+    defined_by: Figure 7, p. 15
+    status: specified-figure
+    read: caption
+    purpose: Value stream and value stream stage mapped to business capability and business process.
+    admits: [ValueStream, ValueStreamStage, BusinessCapability, BusinessProcess]
+    conventions: not-measured
+  Product Model Classes:
+    defined_by: Figure 8, p. 17
+    status: specified-figure
+    read: caption
+    purpose: The ten base product model classes and the four beneath System Component Model.
+    admits: [ProductModel, ApplicationModel, SystemComponentModel, SoftwareComponentModel, ServiceOfferingModel, FirmwareModel, AISystemProductModel, ServiceModel, SoftwareModel, ContentProductModel, ContractModel, FacilityModel, HardwareModel, ConsumableModel, EnterpriseGoodModel]
+    conventions: not-measured
+  Life Cycle Model:
+    defined_by: Figures 9 to 14, pp. 19-27
+    status: specified-figure
+    read: caption
+    purpose: 'Stage and stage status values: one aggregate view and one each for product and service, tangible, intangible, document and architecture artifacts, and location.'
+    admits: life cycle stages and statuses (see life_cycle), not concepts
+    variants: [aggregate, product and service, tangible, intangible, document, location]
+    conventions: not-measured
+  Product Portfolio Across CSDM: {defined_by: 'Figure 17, p. 50', status: specified-figure, read: caption, purpose: Which ServiceNow products contribute to which domain. Not a data model view., admits: 'ServiceNow products, not concepts', conventions: not-measured}
+  Digital Value Network: {defined_by: 'Figure 1, p. 5', status: specified-figure, read: caption, purpose: 'Service providers, a service delivery network and consumers, as the setting for CSDM 5. Not a model view.', admits: not-modeled, conventions: not-applicable}
+data_types:
+  coverage: partial
+  section: 'pp. 16, 18-20, 28, 30, 32-33, 35, 37, 44, 51-52; Figure 16, p. 48'
+  note: 'The paper defines no data types. It names some attributes and gives fixed values for a few of them, and the product documentation sends the reader to the platform dictionary for the full table definitions. Only what the paper states is recorded here.'
+  types:
+    - {name: ServiceClassification, kind: enumeration, values: [Business Service, Technical Service, Application Service], section: 'Figure 15, p. 47; p. 37', note: 'The model can be extended with more values (p. 10).'}
+    - {name: LifeCycleStage, kind: enumeration, values_in: life_cycle, section: 'Figures 9 to 14, pp. 19-27', note: 'The values depend on the object''s life cycle process and are not editable (p. 20).'}
+    - {name: LifeCycleStageStatus, kind: enumeration, values_in: life_cycle, section: 'Figures 9 to 14, pp. 19-27'}
+    - {name: BusinessProcessReviewFrequency, kind: enumeration, values: [Monthly, Quarterly, Semi Annual / Half Yearly, Annually, none], section: 'p. 16'}
+    - {name: LocationType, kind: enumeration, values: [Region, Country, State/Province, City, Site, Building/Structure, Floor, Room], section: 'p. 28'}
+    - {name: LocationValidation, kind: enumeration, values: [Duplicate, Primary], section: 'p. 28'}
+    - {name: ArchitectureType, kind: enumeration, values: [platform app, platform host], section: 'p. 32', note: 'The two choices the paper names. It doesn''t say they are the only ones.'}
+    - {name: SDLCComponentType, kind: enumeration, values: [Application, Infrastructure], section: 'p. 35'}
+    - {name: TeamGroupType, kind: enumeration, values: [Change Group, Managed by Group, Support Group], section: 'p. 29'}
+    - {name: ValueStreamCategory, kind: enumeration, values_in: reference_data.value_stream_categories, section: 'p. 15'}
+    - {name: RelationshipType, kind: enumeration, values_in: reference_data.relationship_types, section: 'Figure 16, p. 48; docs, CI relationships'}
+  attributes:
+    coverage: some_concepts
+    where: concepts
+    note: 'Most concepts have no attribute named in the paper. It gives no type for an attribute unless it lists values, or describes a reference or a flag, and it gives no multiplicity. It describes offerings and commitments by the options they vary on (location, environment, pricing, availability, and so on) without calling them attributes, so they are not listed.'
+notation:
+  coverage: informative
+  section: 'Figure 4, p. 10; Figure 7, p. 15; Figure 8, p. 17; Figure 16, p. 48'
+  note: 'CSDM defines no notation and requires none. Its figures draw entities and lines in a consistent way, with keys, and this records what they show. Figures differ: Figure 4 draws a reference as a dashed arrow, and Figures 7 and 16 draw it as a line with crow''s-foot and bar marks.'
+  default:
+    shape: 'A box with the entity''s name centered. Figures 7, 8, and 16 draw a rounded rectangle filled with its domain''s color, and Figures 7 and 8 add the table name under the entity name. Figure 4 draws a white rectangle with a thin dark outline, inside a rounded panel in the domain''s color.'
+    line: 'A CMDB relation is a solid line with a filled arrowhead at the To (child) end, labeled with its type in square brackets, such as [Provided by::Provides]. Lines that share an end may merge. A generalization (Figure 8, class extension) is a solid line with a hollow triangle at the parent end.'
+    section: 'Figure 4, p. 10; Figure 8, p. 17; Figure 16, p. 48'
+  colors:
+    normative: false
+    section: 'Figure 4, p. 10'
+    key: {Foundation: grey, Ideation and Strategy: yellow, Design and Planning: blue-green, Build and Integration: red, Service Delivery: orange, Service Consumption: green, Manage Portfolio: white}
+    note: 'Color names read from the key of Figure 4. The paper states no color values and doesn''t say color carries formal meaning.'
+  not_entities:
+    Manage Portfolio: {shape: a white circle at the center of Figure 4, note: 'A domain and a view, not an entity.', section: 'Figure 4, p. 10'}
+    Service Delivery System: {shape: a cloud in Figure 4, note: 'Stands for the Service Delivery Network, which is not an entity (CSDM-SVC-011).', section: 'Figure 4, p. 10'}
+    Roles: {shape: a person icon beside a domain, note: 'Figure 4 labels roles this way, in the domain''s color.', section: 'Figure 4, p. 10'}
+  elements:
+    ValueStream: {shape: 'a row of right-pointing chevrons in Figure 4; the usual rounded rectangle in Figures 7 and 16', section: 'Figures 4, 7, 16'}
+    ServiceInstance: {shape: 'in Figure 4, a stack of overlapping rectangles, because there are several types; the usual rounded rectangle in Figure 16', section: 'Figures 4, 16'}
+    SDLCComponent: {shape: 'in Figure 4, a stack of overlapping rectangles inside a lighter panel labeled Subsystems; the usual rounded rectangle in Figure 16', section: 'Figures 4, 16'}
+    Location: {shape: 'in Figure 4, a stack of overlapping rectangles', section: 'Figure 4'}
+    RequestCatalog: {shape: 'in Figure 4, a lighter panel labeled Catalog that holds three rectangles: Service Catalog, Product Catalog, and Sales Catalog', section: 'Figure 4'}
+  relationships:
+    ValueStreamMapsToBusinessCapability: {line: solid, source_end: arrowhead, target_end: arrowhead, label: 'Many-to-Many map', section: 'Figure 16, p. 48'}
+    ValueStreamMapsToBusinessProcess: {line: solid, source_end: arrowhead, target_end: arrowhead, label: 'Many-to-Many map', section: 'Figure 16, p. 48'}
+    ValueStreamStageMapsToBusinessCapability: {line: solid, source_end: arrowhead, target_end: arrowhead, label: 'Many-to-Many map', section: 'Figure 16, p. 48'}
+    ValueStreamStageMapsToBusinessProcess: {line: solid, source_end: arrowhead, target_end: arrowhead, label: 'Many-to-Many map', section: 'Figure 16, p. 48'}
+    BusinessApplicationReferencesBusinessProcess: {line: solid, source_end: crow's foot, target_end: circle and bar (zero or one), label: 'Ref: Business Process', section: 'Figure 16, p. 48'}
+    APIReceivesDataFromBusinessServiceOffering: {line: solid, source_end: arrowhead, target_end: filled arrowhead, label: '[Receives data from::Sends data to]', section: 'Figure 16, p. 48'}
+    TechnologyManagementServicePublishedAsOffering: {line: solid, source_end: single bar, target_end: single bar, label: 'Ref: "Published as"', section: 'Figure 16, p. 48'}
+    BusinessServicePublishedAsOffering: {line: solid, source_end: single bar, target_end: single bar, label: 'Ref: "Published as"', section: 'Figure 16, p. 48'}
+    BusinessServiceIsPartOfServicePortfolio: {line: solid, source_end: crow's foot, target_end: single bar, label: 'Ref: "Is part of"', section: 'Figure 16, p. 48'}
+    TechnologyManagementServiceIsPartOfServicePortfolio: {line: solid, source_end: crow's foot, target_end: single bar, label: 'Ref: "Is part of"', section: 'Figure 16, p. 48'}
+    ValueStreamStagePartOfValueStream: {line: solid, source_end: crow's foot, target_end: single bar, label: 'Part of', section: 'Figure 7, p. 15'}
+    ValueStreamHasValueStreamCategory: {line: solid, source_end: crow's foot, target_end: single bar, label: Has, section: 'Figure 7, p. 15'}
+  not_specified: [AIApplication, AIDatasetDigitalAsset, AIFunction, AIModelDigitalAsset, AIPromptDigitalAsset, AISystemDigitalAsset, Asset, Building, CatalogItem, ConfigurationItem, Goal, InstallBaseItem, OperationalTechnology, Portfolio, Service, ServiceCommitment, ServiceOfferingSubscription, StrategicPlan, StrategicPriority, Target, ApplicationServiceUnderpinsBusinessService, BusinessApplicationConnectedToBusinessApplication, BusinessApplicationConsumesApplicationService, BusinessCapabilityParentOfBusinessCapability, BusinessProcessParentOfBusinessProcess, BusinessUnitParentOfBusinessUnit, BusinessUnitPartOfCompany, CatalogItemRepresentsServiceOffering, CompanyParentOfCompany, ConfigurationItemReferencesProductModel, ContractUsesContractModel, DepartmentPartOfBusinessUnit, DynamicCIGroupContainsConfigurationItem, DynamicCIGroupReferencesCMDBGroup, GoalServesStrategicPriority, LocationParentOfLocation, PlanningItemAlignedToGoal, PlanningItemAlignedToTarget, PlanningItemRelatesToProductModel, ProductIdeaRelatesToProductModel, ProductModelContainsProductModel, RequestCatalogUsesCatalogItem, SDLCComponentDescribedByInfrastructureCI, ServiceOfferingDerivedFromService, ServiceOfferingSubscriptionCoversServiceOffering, ServiceOfferingSubscriptionIdentifiesCompany, ServiceOfferingSubscriptionIdentifiesDepartment, ServiceOfferingSubscriptionIdentifiesGroup, ServiceOfferingSubscriptionIdentifiesLocation, ServiceOfferingSubscriptionIdentifiesUser, ServicePortfolioParentOfServicePortfolio, TargetMeasuresGoal, TeamIdentifiesGroup, TeamTiesGroupToConfigurationItem, TechnologyManagementServiceUnderpinsApplicationService]
+layout:
+  basis: Our conventions, not this standard's.  Sizes and spacing come from the shared layout standard.
+  element_types:
+    ValueStream: box
+    ServiceInstance: box
+    SDLCComponent: box
+    Location: box
+    RequestCatalog: container
+  exceptions: {}
+  diagram_types: {}
+  viewpoints: {}
+notes: 'CSDM defines no diagram notation. Its diagram types are the views the paper draws (figures); where a figure was read from its image the entry says so. Domains are groups of entities, not diagrams. Counts: see references/rules.md.'
