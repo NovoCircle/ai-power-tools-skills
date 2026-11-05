@@ -12,8 +12,9 @@ description: Author and run YAML sidecar conformance rules against a Sparx EA mo
 > The underlying behavior is unchanged.
 
 > **Every ruleset in this package needs server 3.6.5 or later.** Check `update.server_version`
-> from `ping` first. On an older server, don't run them: nearly every rule reports nothing,
-> and that reads like a clean model. Tell the user to update the server.
+> from `ping` first. On an older server, don't run them: between 1 of 8 and all of a ruleset's
+> rules report nothing or don't run as written, by language (each how-to gives its count), and
+> that reads like a clean model. Tell the user to update the server.
 
 > **Building a complete ruleset for a modeling language?** Use the `ea-ruleset-author`
 > skill instead — it covers the full workflow: spec research → rule-category planning →

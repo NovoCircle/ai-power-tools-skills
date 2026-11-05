@@ -194,7 +194,8 @@ def test_ea_validation_states_the_server_floor_and_the_old_rulesets_tagged_addre
     for sentence in (
         "Every ruleset in this package needs server 3.6.5 or later.",
         "Check `update.server_version` from `ping` first.",
-        "On an older server, don't run them: nearly every rule reports nothing, and that reads like a clean model.",
+        "On an older server, don't run them: between 1 of 8 and all of a ruleset's rules report nothing "
+        "or don't run as written, by language (each how-to gives its count), and that reads like a clean model.",
         "Tell the user to update the server.",
     ):
         assert sentence in flat
