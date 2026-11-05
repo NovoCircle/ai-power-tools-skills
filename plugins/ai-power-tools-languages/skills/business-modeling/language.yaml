@@ -1,0 +1,401 @@
+# Business Modeling (UML business modeling extensions): language file (schema_version 1).
+# Written from the OMG sources only (OMG UML 1.3 to 1.5, chapter 4).
+# Concept names are the OMG names with spaces removed.
+# Keys beyond the base schema: concepts.groups, concepts.enumerations, concepts.properties,
+# concepts.elements[].origin, uml_base, abstract_stated; uses_uml; standard.layers; relationships[] with uml_kind, origin;
+# relationships_allowed; constraints[].applies_when, checkable and note.
+schema_version: 1
+id: business-modeling
+name: Business Modeling (the UML business modeling extensions)
+owner:
+  name: Object Management Group (the UML Profile for Business Modeling in the OMG UML 1.x specifications).
+  kind: standards-body
+standard:
+  name: UML Profile for Business Modeling (the UML extension for business modeling)
+  version: OMG UML 1.3, 1.4 and 1.5 profile
+  status: historical. A defined profile in OMG UML 1.3; an example profile in OMG UML 1.4 and 1.5; absent from UML 2.0 and later.
+  reference: OMG UML 1.3 formal/00-03-01 (February 2000), chapter 4 part 2; OMG UML 1.4 formal/01-09-67 (September 2001), chapter 4 example 2; OMG UML 1.5 (March 2003), chapter 4 example 2; https://www.omg.org/spec/UML/.
+  layers:
+    omg: 'OMG UML 1.3 to 1.5 chapter 4: 13 kinds (11 element kinds and 2 association kinds in 1.4; 1.3 swaps the communicate kind for a use-case realization kind) and a few well-formedness rules. Thin; it is the whole of the standard.'
+  dropped_from: UML 2.0 (July 2005) and every later UML specification.
+  newer_version: none found
+uses_uml:
+  see: uml-2
+  concepts:
+  - Actor
+  - UseCase
+  - Class
+  - Collaboration
+  - Package
+  - Model
+  - Subsystem
+  - Association
+  - Generalization
+  note: 'Every concept here is a UML element carrying a business keyword. The UML elements themselves are described by the UML language skill. The profile was written against UML 1.x. Subsystem (UML 1.x) has no direct UML 2 counterpart, where it is a component, and a UML 1.x Collaboration corresponds to a UML 2 Collaboration or its realization of a use case. Those mappings are not stated by the sources. The profile has no business actor or business use case of its own: it uses the plain UML actor and use case.'
+concepts:
+  source: 'OMG UML 1.3 to 1.5 chapter 4. 12 element concepts: 11 in UML 1.4 and 1.5, plus the use-case realization kind that only UML 1.3 lists. `origin` says which versions define each concept (omg = 1.3 to 1.5; omg-1.3 = the UML 1.3 text only). `uml_base` is the UML element the concept labels.'
+  groups:
+    Use case model:
+      defined_by: OMG 4.7.1
+      notes: 'The business seen from outside: use cases and actors in use case packages.'
+    Object model:
+      defined_by: OMG 4.7.2
+      notes: 'The business seen from inside: the models and the units that group its parts.'
+    Roles and things:
+      defined_by: OMG 4.7.3
+      notes: The people and things inside the business.
+    Realization:
+      defined_by: UML 1.3 Table 4-3
+      notes: The use-case realization kind, named in the UML 1.3 table only.
+  elements:
+    UseCaseModel:
+      display: Use Case Model
+      group: Use case model
+      origin: omg
+      uml_base: Model
+      abstract_stated: false
+      definition: 'The model of the business seen from outside: the business as use cases, the outside parties as actors, and how they relate.'
+      section: OMG UML 1.4 4.7.1; UML 1.3 4.7.1.1
+    UseCaseSystem:
+      display: Use Case System
+      group: Use case model
+      origin: omg
+      uml_base: Package
+      abstract_stated: false
+      definition: The top-level package of a use case model. May hold use case packages, use cases and relationships.
+      section: OMG UML 1.4 4.7.1.2
+    UseCasePackage:
+      display: Use Case Package
+      group: Use case model
+      origin: omg
+      uml_base: Package
+      abstract_stated: false
+      definition: A package of use cases and relationships. A use case is not split across several use case packages.
+      section: OMG UML 1.4 4.7.1.3
+    ObjectModel:
+      display: Object Model
+      group: Object model
+      origin: omg
+      uml_base: Model
+      abstract_stated: false
+      definition: 'The model of the things inside the business: a model whose top-level package is an object system. The interior counterpart of the use case model.'
+      section: OMG UML 1.4 4.7.2.1; UML 1.3 4.7.1.2
+    ObjectSystem:
+      display: Object System
+      group: Object model
+      origin: omg
+      uml_base: Subsystem
+      abstract_stated: false
+      definition: The top-level subsystem of an object model. May hold organization units, work units, classes and relationships.
+      section: OMG UML 1.4 4.7.2.2
+    OrganizationUnit:
+      display: Organization Unit
+      group: Object model
+      origin: omg
+      uml_base: Subsystem
+      abstract_stated: false
+      definition: A subsystem that stands for a unit of the real organization. May hold other organization units, work units, classes and relationships.
+      section: OMG UML 1.4 4.7.2.3; UML 1.3 4.7.1.3
+    WorkUnit:
+      display: Work Unit
+      group: Object model
+      origin: omg
+      uml_base: Subsystem
+      abstract_stated: false
+      definition: A task-oriented set of objects that forms a recognizable whole to the end user. Holds one or more entities and may have a facade showing the part of them relevant to the task.
+      section: OMG UML 1.4 4.7.2.4; UML 1.3 4.7.1.4
+    Worker:
+      display: Worker
+      group: Roles and things
+      origin: omg
+      uml_base: Class
+      abstract_stated: false
+      definition: An abstraction of a person acting within the business. It may work with other workers and operate on entities.
+      section: OMG UML 1.4 4.7.3.1
+    CaseWorker:
+      display: Case Worker
+      group: Roles and things
+      origin: omg
+      uml_base: Class
+      specializes: Worker
+      abstract_stated: false
+      definition: A worker who deals directly with actors outside the system.
+      section: OMG UML 1.4 4.7.3.2
+    InternalWorker:
+      display: Internal Worker
+      group: Roles and things
+      origin: omg
+      uml_base: Class
+      specializes: Worker
+      abstract_stated: false
+      definition: A worker who deals only with other workers and entities inside the system.
+      section: OMG UML 1.4 4.7.3.3
+    Entity:
+      display: Entity
+      group: Roles and things
+      origin: omg
+      uml_base: Class
+      abstract_stated: false
+      definition: 'A passive class: its objects start no interaction on their own, and it usually outlives any one interaction.'
+      section: OMG UML 1.4 4.7.3.4
+    UseCaseRealization:
+      display: Use Case Realization
+      group: Realization
+      origin: omg-1.3
+      uml_base: Collaboration
+      abstract_stated: false
+      definition: A collaboration kind listed in the UML 1.3 summary table. The text read gives no further definition. UML 1.4 and 1.5 do not list it.
+      section: UML 1.3 Table 4-3 (name only)
+  enumerations: {}
+  properties: {}
+  properties_note: The OMG profile defines no enumerations and adds no recorded properties.
+relationships:
+- name: Communicate
+  uml_kind: Association
+  source:
+  - Actor
+  - CaseWorker
+  - Entity
+  - WorkUnit
+  - InternalWorker
+  target:
+  - Actor
+  - CaseWorker
+  - Entity
+  - WorkUnit
+  - InternalWorker
+  roles: null
+  multiplicity:
+    targets_per_source: not stated
+    sources_per_target: not stated
+  origin: omg
+  section: OMG UML 1.3 4.7.3.1, 4.8.2, Table 4-4; UML 1.4 4.7.4.1
+  note: 'Instances of the associated elements interact. One-way or two-way; the direction of communication is the direction of navigability. Allowed pairs: see allowed.'
+- name: Subscribe
+  uml_kind: Association
+  source:
+  - Actor
+  - CaseWorker
+  - Entity
+  - WorkUnit
+  - InternalWorker
+  target:
+  - Actor
+  - CaseWorker
+  - Entity
+  - WorkUnit
+  - InternalWorker
+  roles:
+    source: subscriber
+    target: publisher
+  multiplicity:
+    targets_per_source: not stated
+    sources_per_target: not stated
+  origin: omg
+  section: OMG UML 1.3 4.7.3.2, 4.8.2, Table 4-4; UML 1.4 4.7.4.2
+  note: 'Objects of the source are notified when an event occurs in objects of the target. The association carries a specification of the events. Allowed pairs: see allowed.'
+relationships_note: 'multiplicity keys: targets_per_source is how many target instances one source instance may link to; sources_per_target is how many source instances one target instance may link to. The OMG profile states no multiplicities, so all are ''not stated''. Where `source` or `target` is a list, any member may take that end. The relationships are UML associations carrying a business keyword.'
+relationships_allowed:
+  Communicate_and_Subscribe:
+    applies_when: omg-1.3
+    authority: Permissive. OMG UML 1.3 4.8.2 says that, besides the combinations UML already allows, these combinations of communicate and subscribe may also be used. A pair absent from the table is not covered by the profile; it is not stated to be forbidden. The table exists in UML 1.3 only.
+    orientation: Outer key is the element at the From end (source); inner key is the element at the To end (target). The value lists the association keywords allowed. 'Actor' is the plain UML actor.
+    section: OMG UML 1.3 Table 4-4, pp. 4-13 to 4-14
+    note: 'Not symmetric: for example actor to work unit allows subscribe, work unit to actor does not. The plain worker, object system, organization unit and use case kinds do not appear.'
+    cells:
+      Actor:
+        CaseWorker:
+        - communicate
+        WorkUnit:
+        - communicate
+        - subscribe
+      CaseWorker:
+        Actor:
+        - communicate
+        CaseWorker:
+        - communicate
+        Entity:
+        - communicate
+        - subscribe
+        WorkUnit:
+        - communicate
+        - subscribe
+        InternalWorker:
+        - communicate
+      Entity:
+        Entity:
+        - communicate
+        - subscribe
+        WorkUnit:
+        - communicate
+      WorkUnit:
+        Actor:
+        - communicate
+        CaseWorker:
+        - communicate
+        Entity:
+        - communicate
+        - subscribe
+        WorkUnit:
+        - communicate
+        - subscribe
+        InternalWorker:
+        - communicate
+      InternalWorker:
+        CaseWorker:
+        - communicate
+        Entity:
+        - communicate
+        - subscribe
+        WorkUnit:
+        - communicate
+        - subscribe
+        InternalWorker:
+        - communicate
+diagram_types: none-in-standard
+diagram_types_note: The OMG chapter defines no diagram type and names no diagram kind. It describes only how the package and class kinds are labeled (see conventions). A use case model is a UML model of use cases and actors and an object model a UML model of classes and subsystems; drawing them on UML use case and class diagrams is ordinary UML, not something the chapter states.
+constraints:
+- id: BIZMOD-STR-004
+  statement: A use case belongs to a single use case package; it is not split across several.
+  strength: must
+  section: OMG UML 1.4 4.7.1.3, p. 4-11
+  applies_when: omg
+  checkable: static
+- id: BIZMOD-STR-005
+  statement: The top-level package of an Object Model is an Object System.
+  strength: must
+  section: OMG UML 1.4 4.7.2.1, p. 4-12
+  applies_when: omg
+  checkable: static
+- id: BIZMOD-STR-006
+  statement: A Use Case System, Use Case Package, Object System and Organization Unit each 'may contain' a listed set of elements (use cases, use case packages and relationships; organization units, work units, classes and relationships).
+  strength: note
+  section: OMG UML 1.4 4.7.1, 4.7.2; UML 1.3 4.7.1
+  applies_when: omg
+  checkable: none
+  note: The lists are permissive, are not stated to be exclusive, and omit actors, so they are not a closed-world check.
+- id: BIZMOD-STR-007
+  statement: A Work Unit holds one or more entities.
+  strength: should
+  section: OMG UML 1.4 4.7.2.4 ('may contain'); UML 1.3 4.7.1.4 ('contains')
+  applies_when: omg
+  checkable: static
+  note: UML 1.3 says 'contains one or more entities', UML 1.4 says 'may contain'. The weaker reading governs.
+- id: BIZMOD-STR-009
+  statement: Models are exterior to the business (use case models) or interior to it (object models), and a large business system may be divided into subordinate business systems.
+  strength: note
+  section: OMG UML 1.4 4.7, p. 4-10
+  applies_when: omg
+  checkable: none
+- id: BIZMOD-GEN-001
+  statement: 'All elements in a generalization have the same kind: a worker inherits only from workers, a case worker only from case workers, an internal worker only from internal workers, an entity only from entities.'
+  strength: must
+  section: OMG UML 1.4 4.8.1, p. 4-16; UML 1.3 4.8.1, p. 4-13
+  applies_when: omg
+  checkable: static
+  note: The printed OCL is cut off mid-expression across two pages and, read literally, also forbids a worker being the parent of a case worker or internal worker, although those are called subtypes of worker. The sentence governs. In UML 1.3 the rule is the same sentence with no OCL.
+- id: BIZMOD-LNK-001
+  statement: Besides the associations UML allows, communicate and subscribe are used between the kinds, and only between the pairs, in the allowed table of this language.
+  strength: should
+  section: OMG UML 1.3 4.8.2, Table 4-4
+  applies_when: omg-1.3
+  checkable: static
+  note: Permissive wording ('may also be used'), so a pair outside the table is a warning. Present in UML 1.3 only.
+- id: BIZMOD-LNK-010
+  statement: In a communicate association the direction of communication is the direction of navigability.
+  strength: note
+  section: OMG UML 1.3 4.7.3.1, p. 4-13
+  applies_when: omg-1.3
+  checkable: none
+- id: BIZMOD-DEF-001
+  statement: 'An Entity is passive: its objects start no interaction on their own, and it usually outlives any one interaction.'
+  strength: must
+  section: OMG UML 1.4 4.7.3.4, p. 4-14
+  applies_when: omg
+  checkable: none
+- id: BIZMOD-DEF-004
+  statement: A Worker is an abstraction of a person acting within the business. A Case Worker deals directly with actors outside the system; an Internal Worker deals only with workers and entities inside it.
+  strength: must
+  section: OMG UML 1.4 4.7.3.1 to 4.7.3.3
+  applies_when: omg
+  checkable: none
+- id: BIZMOD-GUID-004
+  statement: The OMG profile adds no recorded properties and no constraints beyond its well-formedness rules, is not a complete definition of business modeling, and leaves all of UML available.
+  strength: note
+  section: OMG UML 1.3 4.5, 4.6.1, 4.6.2; UML 1.4 4.5
+  applies_when: omg
+  checkable: none
+- id: BIZMOD-GUID-008
+  statement: The profile was dropped from UML 2. Its last OMG appearance is UML 1.5 (March 2003).
+  strength: note
+  section: OMG UML 1.5 chapter 4; UML 2.0 and later (absent)
+  checkable: none
+conventions:
+  provenance:
+    status: source-text
+    note: Drawing rules the OMG chapter states. They are conventions for an author or a renderer, not validation. No layout numbers are given.
+  global:
+  - A kind of package, model or subsystem shows its keyword in guillemets (for example «useCaseModel», «objectSystem», «workUnit»); the model or subsystem icon may be used at the upper right of the package symbol, together with the keyword. The keyword is unambiguous, so the icon is optional. (OMG UML 1.3 4.7.1.5; UML 1.4 4.7.1, 4.7.2)
+  - A kind of class shows its keyword in guillemets inside the ordinary class symbol, or the profile's special icons. Tools and users are free to add icons for more specific concepts, such as documents and actions. (OMG UML 1.3 4.7.2.5, 4.7.2.6; UML 1.4 4.7.3.5)
+  - A case worker and an internal worker are shown as explicit subtypes of the worker kind. (OMG UML 1.4 4.7.3.2, 4.7.3.3, Figure 4-3)
+  - An association kind shows its keyword in guillemets. It has no special icon. (OMG UML 1.3 4.7.3.3; UML 1.4 4.7.4)
+notes: 'Strength policy: must = error, should = warning, note = advice only. ''applies_when'' values: omg (the OMG profile, any version 1.3 to 1.5), omg-1.3 (the UML 1.3 text only). A rule with no applies_when is language-wide. ''checkable'': static (a validator that sees only the saved model can check it), partial (only the structure or simple cases), runtime, none (not a property of a model).'
+# data_types and notation: added to meet the guide shape (2026-11-04). Facts are the OMG UML 1.3, 1.4 and 1.5 profile chapter only; each carries its section.
+data_types:
+  coverage: none
+  inherits_from: uml-2
+  note: The profile defines no data types, no enumerations, no units and no recorded properties of its own, and leaves all of UML available (OMG UML 1.3 4.5, 4.6.1; UML 1.4 4.5); any type a model needs comes from UML, and the source does not map the UML 1.x types it was written against to the UML 2 ones.
+  attributes:
+    coverage: none
+    where: concepts
+    note: No concept entry carries `attributes` because the profile adds none (see concepts.properties_note); a Worker, Entity or any other kind has only the attributes its UML base (Class, Subsystem, Package, Model, Collaboration) already has.
+notation:
+  coverage: informative
+  section: "OMG UML 1.3 4.7.1.5, 4.7.2.5, 4.7.2.6, 4.7.3.3, Figures 4-3 and 4-4; UML 1.4 4.7.1 to 4.7.4, 4.7.3.5, Figures 4-3 and 4-4"
+  note: The chapter defines no symbols of its own apart from four small icons (worker, internal worker, case worker, entity); every other kind is an ordinary UML symbol with its keyword in guillemets, the chapter states no sizes or colors, and it defines no diagram type (see diagram_types_note). Marked informative because UML 1.3 presents the profile as defined while UML 1.4 and 1.5 call it an example profile.
+  inherits_from: uml-2
+  # Plain UML symbols (package, class box, association line, generalization arrow, actor, use case) are drawn as the UML guide describes them. The chapter was written against UML 1.x, so a UML 2 symbol may differ in detail; the chapter does not compare them.
+  elements:
+    UseCaseModel: {shape: "the UML package symbol (rectangle with a small tab at the upper left); the source calls it a package stereotyped as the keyword", marker: "optional: the UML 1.x model icon at the upper right of the package symbol, together with the keyword; the chapter does not draw this icon", label: "the keyword «useCaseModel» above the name; the icon is not required because the keyword is unambiguous", section: "OMG UML 1.4 4.7.1.1; UML 1.3 4.7.1.5"}
+    UseCaseSystem: {shape: "the UML package symbol", marker: "none: UML 1.3 says there are no special icons for package kinds, and the optional model and subsystem icon does not apply to a plain package", label: "the keyword «useCaseSystem» above the name", section: "OMG UML 1.4 4.7.1.2; UML 1.3 4.7.1.5"}
+    UseCasePackage: {shape: "the UML package symbol", marker: "none, as for UseCaseSystem", label: "the keyword «useCasePackage» above the name", section: "OMG UML 1.4 4.7.1.3; UML 1.3 4.7.1.5"}
+    ObjectModel: {shape: "the UML package symbol", marker: "optional: the UML 1.x model icon at the upper right, together with the keyword; the chapter does not draw it", label: "the keyword «objectModel» above the name", section: "OMG UML 1.4 4.7.2.1; UML 1.3 4.7.1.5"}
+    ObjectSystem: {shape: "the UML package symbol (the source says a package stereotyped as the keyword, although its table gives Subsystem as the base)", marker: "optional: the UML 1.x subsystem icon at the upper right, together with the keyword; the chapter does not draw it", label: "the keyword «objectSystem» above the name", section: "OMG UML 1.4 4.7.2.2; UML 1.3 4.7.1.5"}
+    OrganizationUnit: {shape: "the UML package symbol (same wording as ObjectSystem)", marker: "optional: the UML 1.x subsystem icon at the upper right, together with the keyword; the chapter does not draw it", label: "the keyword «organizationUnit» above the name", section: "OMG UML 1.4 4.7.2.3; UML 1.3 4.7.1.5"}
+    WorkUnit: {shape: "the UML package symbol (same wording as ObjectSystem)", marker: "optional: the UML 1.x subsystem icon at the upper right, together with the keyword; the chapter does not draw it", label: "the keyword «workUnit» above the name", section: "OMG UML 1.4 4.7.2.4; UML 1.3 4.7.1.5"}
+    Worker: {shape: "either the ordinary UML class box (rectangle) with the keyword «worker» above the class name, or a special icon", marker: "the icon is a circle holding a stick figure, with a small arrowhead on the top of the circle's outline; the name is written below the circle", label: "the keyword «worker» above the name in the class box form", section: "OMG UML 1.4 4.7.3.1, 4.7.3.5, Figure 4-4; UML 1.3 4.7.2.5, Figure 4-3"}
+    CaseWorker: {shape: "either the ordinary UML class box with the keyword «caseWorker» above the class name (UML 1.3 prints «case worker»), or a special icon; shown as an explicit subtype of the worker kind", marker: "the icon is a circle holding a stick figure, with a short horizontal line leaving the left side of the circle and ending in a short vertical bar; the name is written below", label: "in the stereotype-subtyping figure, two class boxes each with «stereotype» above the name (Worker and CaseWorker), joined by a line whose end at Worker carries a hollow triangle", section: "OMG UML 1.4 4.7.3.2, 4.7.3.5, Figures 4-3 and 4-4; UML 1.3 4.7.2.5, Figure 4-3"}
+    InternalWorker: {shape: "either the ordinary UML class box with the keyword «internalWorker» above the class name (UML 1.3 prints «internal worker»), or a special icon; shown as an explicit subtype of the worker kind, as for CaseWorker", marker: "in the figure the icon is drawn as the worker icon: a circle holding a stick figure, with a small arrowhead on the top of the circle's outline; the text does not say whether the two are meant to be identical", label: "the keyword «internalWorker» above the name in the class box form", section: "OMG UML 1.4 4.7.3.3, 4.7.3.5, Figure 4-4; UML 1.3 4.7.2.5, Figure 4-3"}
+    Entity: {shape: "either the ordinary UML class box with the keyword «entity» above the class name, or a special icon", marker: "the icon is a plain circle resting on a short horizontal line; the name is written below", label: "the keyword «entity» above the name in the class box form", section: "OMG UML 1.4 4.7.3.4, 4.7.3.5, Figure 4-4; UML 1.3 4.7.2.5, Figure 4-3"}
+  relationships:
+    Communicate: {line: "the ordinary UML association line between the two class symbols; one-way or two-way, and the direction of communication is the navigability, which the line shows as UML does", source_end: "as UML draws an association end; no adornment stated", target_end: "as UML draws an association end; no adornment stated", label: "the keyword «communicate» on the line; no special icon", section: "OMG UML 1.3 4.7.3.1, 4.7.3.3; UML 1.4 4.7.4.1"}
+    Subscribe: {line: "the ordinary UML association line between the two class symbols, drawn from the subscriber (source) to the publisher (target)", source_end: "as UML draws an association end; no adornment stated", target_end: "as UML draws an association end; no adornment stated", label: "the keyword «subscribe» on the line; no special icon; the association carries a specification of the events, and the source does not say where it is written", section: "OMG UML 1.3 4.7.3.2, 4.7.3.3; UML 1.4 4.7.4.2"}
+  not_specified:
+    - UseCaseRealization  # named only in the UML 1.3 summary table; no notation text read for it (UML 1.3 4.7.1.5 and 4.7.2.5 cover package and class kinds only)
+  free_icons: "Tools and users may add icons for more specific concepts; the chapter's example shows a small page icon for a document-like entity in two states and a pair of gear wheels for an action, joined by plain arrows (OMG UML 1.3 4.7.2.6, Figure 4-4)."
+
+layout:
+  basis: Our conventions, not this standard's. Sizes and spacing come from the shared layout standard; this block says only which size class each concept takes and how each diagram type is arranged.
+  element_types:   # concept -> size class, for every concept the notation draws as a symbol
+    # container: the package symbol
+    ObjectModel: container
+    ObjectSystem: container
+    OrganizationUnit: container
+    UseCaseModel: container
+    UseCasePackage: container
+    UseCaseSystem: container
+    WorkUnit: container
+    # box: the class box with a keyword above the name (the optional icons do not change the size class)
+    CaseWorker: box
+    Entity: box
+    InternalWorker: box
+    Worker: box
+  no_element_type:   # concepts that take no size class, with the reason
+    drawn_as_line:
+      reason: The relationship kinds and the use case realization are lines, so there is no symbol to size.
+      concepts:
+      - Communicate
+      - Subscribe
+      - UseCaseRealization
+  exceptions: {}
+  diagram_types: {}   # the standard defines no diagram type, so every diagram takes the defaults (graph, frame-header)
