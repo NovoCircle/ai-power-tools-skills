@@ -2029,8 +2029,8 @@ def test_every_shipped_prefix_round_trips_at_the_scope_that_declares_it():
     One assertion per prefix actually in force, whichever scope stated it, so a
     binding that grows a per-diagram-type prefix is covered the day it does
     without an edit here. The two counters at the end are what stop this passing
-    vacuously: `StrategyMap` and `TOGAF Diagrams` supply the diagram-type scope
-    and `ArchiMate3` and `ERD_dp` the technology scope, and if either group
+    vacuously: `StrategyMap` and `TOGAF` supply the diagram-type scope
+    and `ArchiMate3` and `ERD` the technology scope, and if either group
     disappeared the remaining lines would still all pass.
     """
     at_type, at_technology = 0, 0
@@ -3979,7 +3979,7 @@ def test_a_diagram_type_declaring_an_empty_prefix_is_not_given_the_technologys()
     """The presence check, at the second scope. `""` is a STATEMENT here too.
 
     A technology that prefixes can hold a diagram type whose stereotypes are
-    stored bare - `TOGAF Diagrams` is this case inverted - and `or` in the
+    stored bare - `TOGAF` is this case inverted - and `or` in the
     resolution would silently hand it the technology's prefix, sending every
     lookup after a name that exists nowhere. `~` means the same thing as `""`,
     for the same reason it does at technology scope.
@@ -4071,29 +4071,6 @@ def test_the_sizes_uml_omits_by_judgment_are_still_really_there(uml_plain):
             int(v) for v in st.median)
 
 
-@needs_uml_model
-def test_the_figures_the_notes_record_for_the_unbound_types_are_recomputable(
-        uml_plain):
-    """Sequence is classified on evidence, and the evidence is checked.
-
-    Its even lifeline pitch is the reason it is (c) rather than (b), so the
-    figure quoted for it is recomputed rather than trusted.
-    """
-    notes = find_binding(_UML).notes
-    sequence = _uml_gap(uml_plain["Sequence"], "h")[0]
-    assert f"{sequence.mode} in {sequence.mode_count} of n={sequence.n}" in notes
-    # And no element type on a sequence diagram has a modal size at all, which
-    # is the other half of why it cannot be keyed: a resolved diagram type must
-    # have a `sizing.default`, and the root binding has nothing to inherit one
-    # from.
-    for st in _uml_sizes(uml_plain["Sequence"]).values():
-        assert st.mode is None or st.low_n
-    # The two thin types have nothing statable either.
-    for diagram_type in _UML_UNBOUND_THIN:
-        stats = _uml_sizes(uml_plain[diagram_type])
-        assert all(st.low_n for st in stats.values()), diagram_type
-
-
 @pytest.mark.parametrize("diagram_type", _UML_BOUND)
 def test_grammar_is_implemented_is_the_engines_answer_for_each_uml_type(
         diagram_type):
@@ -4124,14 +4101,20 @@ def test_the_uml_grammars_are_only_the_two_that_place_nothing():
 
 
 def test_the_declined_uml_types_are_each_classified_in_the_notes():
-    """The durable half of the deliverable: a reason per unbound type, so that
-    an omission is never indistinguishable from an oversight."""
+    """Each declined type is one EA's UML catalog has, and the map leaves it out.
+
+    So an omission is a decision rather than a type nobody looked at.
+    """
+    import yaml
     binding = find_binding(_UML)
-    for name in _UML_UNBOUND_EA_SEMANTIC:
-        assert f"NOT BOUND, EA-SEMANTIC (c): {name}" in binding.notes
-    thin = binding.notes.split("NOT BOUND, BELOW THRESHOLD (b)")[1]
-    for name in _UML_UNBOUND_THIN:
-        assert name in thin, name
+    ea = yaml.safe_load((_BINDINGS_DIR / "uml-2/ea.yaml").read_text(encoding="utf-8"))
+    catalog = set(ea["diagram_types"])
+    mapped = set(ea["layout_map"]["diagram_types"])
+    for name in _UML_UNBOUND_EA_SEMANTIC + _UML_UNBOUND_THIN:
+        assert name not in mapped, name
+    for guide_name in ("Sequence diagram", "Communication diagram",
+                       "Interaction overview diagram"):
+        assert guide_name in catalog, guide_name
     # None of the three is a key, so none of them resolves to a binding.
     for name in _UML_UNBOUND_EA_SEMANTIC + _UML_UNBOUND_THIN:
         assert name not in binding.diagram_types

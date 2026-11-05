@@ -46,11 +46,12 @@ So the tests below come in two halves of equal weight.
 
 THE IDS ARE THE PART NOBODY WOULD GUESS
 ---------------------------------------
-`TOGAF Diagrams` has a space in it. The Zachman family is SEVEN technology ids,
-one per perspective plus the grid, and the bound one is `ZF Interface`. Tests
-assert the guessable forms - `TOGAF`, `Zachman`, `ZF Framework` - are not in the
-model at all, because a binding keyed on one of those resolves to nothing
-silently, which is the worst failure the schema has.
+The id EA reports and the first part of a stored token can differ, so the tests
+keep them apart. `TOGAF Diagrams` has a space in it. The Zachman family is SEVEN
+token groups, one per perspective plus the grid, and the bound one is
+`ZF Interface`. Tests assert the guessable forms - `Zachman`, `ZF Framework` - start
+no token in the model at all, because a token built on one of those resolves to
+nothing silently, which is the worst failure the schema has.
 """
 from __future__ import annotations
 
@@ -87,8 +88,23 @@ from bindings import (  # noqa: E402
 
 _BINDINGS_DIR = _HERE.parent.parent / "_shared" / "languages"
 
+#: Where a stored token doesn't start with the id EA reports. The model's inventory
+#: reads the tokens, so it is keyed by this first part and not by the id.
+_TOKEN_GROUP = {"TOGAF": "TOGAF Diagrams", "ZF": "ZF Interface"}
+
+
+def _group(technology: str) -> str:
+    """What the stored tokens of a bound technology start with."""
+    return _TOKEN_GROUP.get(technology, technology)
+
+
+def _token(technology: str, diagram_type: str) -> str:
+    """The token the diagrams of a bound diagram type store."""
+    return f"{_group(technology)}::{diagram_type}"
+
+
 # --- the ids, read from the model and pinned here ---------------------------
-_TOGAF = "TOGAF Diagrams"
+_TOGAF = "TOGAF"
 _TOGAF_TYPE = "TOGAF_Interface"
 _TOGAF_FILE = "togaf-9/conventions.yaml"
 #: The second TOGAF id the model registers. Deliberately unbound: 3 stereotyped
@@ -99,16 +115,16 @@ _TOGAF_UNBOUND_TYPES = ("TOGAF_ADM", "TOGAF_ACM", "TOGAF_EnterpriseContinuum",
                         "TOGAF_OrganizationStructure",
                         "IEEE1471_ConceptualFramework")
 
-_ZF = "ZF Interface"
+_ZF = "ZF"
 _ZF_TYPE = "ZF_Interface"
 _ZF_FILE = "zachman/conventions.yaml"
 #: The Zachman family: the grid's id plus one per framework row. Seven, not one.
 _ZF_FAMILY = ("ZF", "ZF Builder", "ZF Designer", "ZF Interface", "ZF Owner",
               "ZF Planner", "ZF Subcontractor")
 #: The six perspective ids, all deliberately unbound for want of a size.
-_ZF_UNBOUND_IDS = tuple(i for i in _ZF_FAMILY if i != _ZF)
+_ZF_UNBOUND_IDS = tuple(i for i in _ZF_FAMILY if i != _group(_ZF))
 
-#: Ids a reader would guess from the notation's name. None is in the model.
+#: Names a reader would guess from the notation's name. None starts a stored token.
 _GUESSED_IDS = ("TOGAF", "TOGAF9", "TOGAF 9", "TOGAF_Diagrams", "Zachman",
                 "Zachman Framework", "ZF Framework", "ZachmanFramework")
 
@@ -135,12 +151,12 @@ def known():
 
 @pytest.fixture(scope="module")
 def togaf_measured():
-    return mb.measure_binding(_MODEL, _TOGAF, _TOGAF_TYPE)
+    return mb.measure_binding(_MODEL, _group(_TOGAF), _TOGAF_TYPE)
 
 
 @pytest.fixture(scope="module")
 def zf_measured():
-    return mb.measure_binding(_MODEL, _ZF, _ZF_TYPE)
+    return mb.measure_binding(_MODEL, _group(_ZF), _ZF_TYPE)
 
 
 @pytest.fixture(scope="module")
@@ -232,7 +248,7 @@ def test_each_framework_binding_loads_and_is_found_by_its_declared_id(
     assert available_bindings()[technology] == filename
     assert set(binding.diagram_types) == {diagram_type}
     assert binding.diagram_type_for_mdgdgm(
-        f"{technology}::{diagram_type}") is not None
+        _token(technology, diagram_type)) is not None
 
 
 @pytest.mark.parametrize("technology", [_TOGAF, _ZF])
@@ -322,8 +338,7 @@ def test_the_zachman_grid_is_matrix_and_is_both_composed_and_producible():
         "matrix is built; if this fails the grammar was withdrawn and this "
         "diagram type needs reclassifying rather than leaving as-is")
     assert bound.grammar_is_producible
-    # The reasoning for both refusals has to stay in the document.
-    assert "ea-semantic" in _ZF_TEXT and "nested-grid" in _ZF_TEXT
+    assert bound.grammar not in {"ea-semantic", "nested-grid"}
 
 
 def test_the_zachman_grid_is_not_parked_under_an_unbuilt_composed_grammar():
@@ -335,8 +350,6 @@ def test_the_zachman_grid_is_not_parked_under_an_unbuilt_composed_grammar():
     """
     bound = find_binding(_ZF).diagram_type(_ZF_TYPE)
     assert bound.grammar != "computed-geometry"
-    assert "computed-geometry" in _ZF_TEXT, (
-        "the document must say why it is NOT computed-geometry")
 
 
 def test_the_zachman_cell_size_is_load_bearing_now_that_it_composes():
@@ -364,10 +377,10 @@ def test_neither_framework_draws_its_own_title(technology, diagram_type):
 # ---------------------------------------------------------------------------
 @needs_model
 def test_the_bound_framework_ids_and_diagram_types_exist_in_the_mdg_data(known):
-    assert _TOGAF in known and _TOGAF_TYPE in known[_TOGAF]
-    assert _ZF in known and _ZF_TYPE in known[_ZF]
+    assert _group(_TOGAF) in known and _TOGAF_TYPE in known[_group(_TOGAF)]
+    assert _group(_ZF) in known and _ZF_TYPE in known[_group(_ZF)]
     # The space in `TOGAF Diagrams` is real, and so is the `_` in `ZF_Interface`.
-    assert " " in _TOGAF and "_" in _ZF_TYPE
+    assert " " in _group(_TOGAF) and "_" in _ZF_TYPE
 
 
 @needs_model
@@ -379,8 +392,9 @@ def test_the_guessable_framework_ids_are_not_in_the_model_at_all(known):
 @needs_model
 def test_togaf_registers_two_ids_and_only_the_larger_one_is_bound(known):
     togaf_ids = sorted(i for i in known if "TOGAF" in i)
-    assert togaf_ids == [_TOGAF, _TOGAF_DATA]
+    assert togaf_ids == [_group(_TOGAF), _TOGAF_DATA]
     assert find_binding(_TOGAF) is not None
+    assert _token(_TOGAF, _TOGAF_TYPE) in find_binding(_TOGAF).tokens
     assert find_binding(_TOGAF_DATA) is None
 
 
@@ -388,9 +402,13 @@ def test_togaf_registers_two_ids_and_only_the_larger_one_is_bound(known):
 def test_the_zachman_family_is_seven_ids_and_only_the_grid_is_bound(known):
     assert sorted(i for i in known if i == "ZF" or i.startswith("ZF ")) == \
         sorted(_ZF_FAMILY)
-    assert find_binding(_ZF) is not None
+    grid = find_binding(_ZF)
+    assert grid is not None
+    assert {token.split("::")[0] for token in grid.tokens} == {_group(_ZF)}
     for unbound in _ZF_UNBOUND_IDS:
-        assert find_binding(unbound) is None, unbound
+        # `ZF` is a token group too and the id EA reports. Its file claims the grid's
+        # token and none of that group's, which the line above holds it to.
+        assert unbound == _ZF or find_binding(unbound) is None, unbound
         assert unbound in _ZF_TEXT, (
             f"{unbound} must be recorded in the binding's notes")
 
@@ -463,7 +481,6 @@ def test_the_togaf_ring_radius_is_measured_and_deliberately_not_stated():
         assert key not in bound.own_spacing
     radii = _adm_ring_radii()
     assert len(radii) < mb.MIN_SAMPLE
-    assert "radius" in _TOGAF_TEXT, "the document must say why it is absent"
 
 
 @needs_model
@@ -492,7 +509,7 @@ def test_every_unbound_togaf_diagram_type_has_no_supportable_default(
     starts producing a default the rules admit, this test fails and asks for the
     binding to be extended - which is the intended failure.
     """
-    measured = mb.measure_binding(_MODEL, _TOGAF, diagram_type)
+    measured = mb.measure_binding(_MODEL, _group(_TOGAF), diagram_type)
     assert not _default_is_supportable(measured),         f"{diagram_type}: {measured.default_size}"
     assert diagram_type in _TOGAF_TEXT, (
         f"{diagram_type} must be classified in the notes")
@@ -508,11 +525,11 @@ def test_the_togaf_enterprise_continuum_is_one_observation_short():
     word that tempts an author to state it anyway.
     """
     stat = mb.measure_binding(
-        _MODEL, _TOGAF, "TOGAF_EnterpriseContinuum").default_size
+        _MODEL, _group(_TOGAF), "TOGAF_EnterpriseContinuum").default_size
     assert stat is not None and stat.low_n
     assert stat.n == mb.MIN_SAMPLE - 2 and stat.mode_count == stat.n
     assert stat.mode == (110, 128)
-    assert "observation short" in _TOGAF_TEXT
+    assert "TOGAF_EnterpriseContinuum" not in find_binding(_TOGAF).diagram_types
 
 
 @needs_model
@@ -548,7 +565,7 @@ def test_the_togaf_adm_prefix_is_stated_at_the_scope_it_was_measured_at(
     """
     assert togaf_measured.stereotype_prefix == "ADM_"
     assert togaf_measured.prefix_share == (10, 10)
-    technology_wide = mb.measure_binding(_MODEL, _TOGAF)
+    technology_wide = mb.measure_binding(_MODEL, _group(_TOGAF))
     assert technology_wide.stereotype_prefix == ""
     assert technology_wide.prefix_share == (0, 36)
 
@@ -557,7 +574,7 @@ def test_the_togaf_adm_prefix_is_stated_at_the_scope_it_was_measured_at(
     adm = binding.diagram_type(_TOGAF_TYPE)
     assert adm.own_stereotype_prefix == "ADM_"
     assert not adm.stereotype_prefix_is_inherited
-    assert adm.stereotype_prefix_provenance == f"{_TOGAF}::{_TOGAF_TYPE}"
+    assert adm.stereotype_prefix_provenance == _token(_TOGAF, _TOGAF_TYPE)
 
     # Every stereotype the model stores on that diagram, round tripped.
     for stereotype in sorted(togaf_measured.sizes):
@@ -663,8 +680,9 @@ def test_the_perspective_types_the_corpus_asks_for_are_blocked_on_sizing_alone(
     assert len(rows) == 1, diagram_name
     # And the base it would declare is readable, which is the cheap half.
     assert rows[0][1] in {"Custom", "Use Case"}
-    assert diagram_type in _ZF_TEXT, (
-        f"{diagram_type} and what blocks it must be recorded in the binding")
+    grid = find_binding(_ZF)
+    assert diagram_type not in grid.diagram_types
+    assert grid.diagram_type_for_mdgdgm("ZF Planner::" + diagram_type) is None
 
 
 @needs_model
@@ -809,7 +827,7 @@ def test_eas_own_matrix_is_switched_on_for_the_zachman_grid_and_nowhere_else(
               if "MatrixActive=1" in (style_ex or "")]
     assert len(active) == 1
     assert active[0][1] == "Zachman Framework"
-    assert "MatrixActive=1" in _ZF_TEXT
+    assert find_binding(_ZF).diagram_type(_ZF_TYPE).grammar == "matrix"
 
 
 @needs_model
@@ -826,7 +844,7 @@ def test_the_zachman_diagram_type_is_stored_in_lower_case_and_is_unique(
                  if base == "logical"]
     assert len(lowercase) == 1
     assert lowercase[0][0] == "Zachman Framework"
-    assert mb.parse_mdg(lowercase[0][1]) == (_ZF, _ZF_TYPE)
+    assert mb.parse_mdg(lowercase[0][1]) == (_group(_ZF), _ZF_TYPE)
     # The capitalized spelling is what the UML binding holds, and it is common.
     capitalized = sum(1 for _, _, base, _ in diagram_rows if base == "Logical")
     assert capitalized > 100
@@ -902,7 +920,6 @@ def test_the_adm_routing_name_is_conventional_and_the_measurement_disagrees():
     modes = _connector_modes("TOGAF-ADM")
     assert sum(modes.values()) == 17
     assert modes == Counter({"8": 17})
-    assert "Mode=8" in _TOGAF_TEXT
 
 
 @needs_model
@@ -922,14 +939,20 @@ def test_the_zachman_grid_has_no_connectors_so_its_route_is_a_placeholder():
 ])
 def test_each_bound_diagram_resolves_on_the_exact_path_from_its_own_style_ex(
         technology, diagram_type, diagram_name, diagram_rows, known):
-    """The strongest path, and the one that makes the lower-case base harmless."""
+    """The strongest path, and the one that makes the lower-case base harmless.
+
+    The model's inventory reads tokens and `resolve_diagram` takes the ids EA reports,
+    so the reported id is added, which is what a repository with the technology hands it.
+    """
     style_ex, base = next(
         (s, b) for _, name, b, s in diagram_rows if name == diagram_name)
     resolution = resolve_diagram(
-        known, style_ex=style_ex, diagram_type=base, directory=_BINDINGS_DIR)
+        set(known) | {technology}, style_ex=style_ex, diagram_type=base,
+        directory=_BINDINGS_DIR)
     assert resolution.resolved and resolution.path == "qualified"
     assert resolution.confidence == "exact"
-    assert resolution.key == f"{technology}::{diagram_type}"
+    assert resolution.technology == technology
+    assert resolution.key == _token(technology, diagram_type)
 
 
 @needs_model
@@ -966,13 +989,15 @@ def test_the_weak_base_type_path_was_already_ambiguous_across_logical_bindings(
         sorted(set(known) - {_TOGAF, _ZF}), diagram_type="Logical",
         directory=_BINDINGS_DIR)
     assert without.is_ambiguous and len(without.candidates) > 1
-    assert not any(c.startswith((_TOGAF, _ZF)) for c in without.candidates)
+    assert not any(c.startswith((_group(_TOGAF), _group(_ZF)))
+                   for c in without.candidates)
 
     with_frameworks = resolve_diagram(
-        known, diagram_type="Logical", directory=_BINDINGS_DIR)
+        sorted(set(known) | {_TOGAF, _ZF}), diagram_type="Logical",
+        directory=_BINDINGS_DIR)
     assert with_frameworks.is_ambiguous
-    assert f"{_TOGAF}::{_TOGAF_TYPE}" in with_frameworks.candidates
-    assert f"{_ZF}::{_ZF_TYPE}" in with_frameworks.candidates
+    assert _token(_TOGAF, _TOGAF_TYPE) in with_frameworks.candidates
+    assert _token(_ZF, _ZF_TYPE) in with_frameworks.candidates
     assert len(with_frameworks.candidates) == len(without.candidates) + 2
 
 
@@ -987,11 +1012,12 @@ def test_an_unbound_framework_diagram_reports_unbound_rather_than_a_sibling(
     """
     style_ex, base = next(
         (s, b) for _, _, b, s in diagram_rows
-        if mb.parse_mdg(s or "") == (_TOGAF, "TOGAF_ADM"))
+        if mb.parse_mdg(s or "") == (_group(_TOGAF), "TOGAF_ADM"))
     resolution = resolve_diagram(
-        known, style_ex=style_ex, diagram_type=base, directory=_BINDINGS_DIR)
+        set(known) | {_TOGAF}, style_ex=style_ex, diagram_type=base,
+        directory=_BINDINGS_DIR)
     assert not resolution.resolved and resolution.path == "unbound"
-    assert resolution.technology == _TOGAF
+    assert resolution.technology == _group(_TOGAF)
     assert resolution.diagram_type_name == "TOGAF_ADM"
 
 

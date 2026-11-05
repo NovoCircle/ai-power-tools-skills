@@ -475,7 +475,8 @@ def test_the_authoring_guide_does_not_teach_the_bare_form():
         "bare names. It conflates two different things and it is how "
         "APT-2026-0155 was written."
     )
-    assert "connector_stereotype: ArchiMate_Assignment" in text, (
+    assert ("connector_stereotypes: [ArchiMate_Assignment]" in text
+            or "connector_stereotype: ArchiMate_Assignment" in text), (
         "the authoring guide no longer shows the prefixed selector, so an author "
         "following it will write names that match nothing"
     )

@@ -11,6 +11,8 @@ notes: |
   EA's ArchiMate3 MDG declares five diagram types, all based on Logical. There is no Strategy diagram type: strategy concepts (Capability, Resource, CourseOfAction, ValueStream) are stereotypes drawn on a Business diagram.
 
   FILL IS NOT MERELY CLAIMED HERE, IT IS SOMETIMES UNAVAILABLE. Measured on EA 17.1 build 1716: Node and Grouping ignore a per-diagram fill outright. The write succeeds, the property reads back, and EA draws the element in its own colors -- Node's shape script paints the faces of a 3D box, and a Grouping is a dashed container ArchiMate gives no fill. Seven other concepts tested (ApplicationComponent, Device, SystemSoftware, Equipment, Facility, BusinessService, Artifact) honor it. Nine concepts is a sample, not a sweep, so the answer is a note here rather than data a consumer could trust; the full sweep and a per-concept schema field are filed separately. If you need a color-coded technology layer, reach for Device or SystemSoftware rather than Node, or use a free channel.
+
+  `ArchiMate3` is the id EA reports, measured on EA 17.1 build 1716.
 diagram_types:
   Business:
     base: Logical
@@ -46,9 +48,9 @@ diagram_types:
       - Composition
       - Specialization
     channels:
-      fill: 'ArchiMate layer and aspect. Normative: the standard palette is the notation, and recoloring
-        it by lifecycle or ownership destroys the reader''s ability to tell a business service from an
-        application one.'
+      fill: 'Layer and aspect, by our convention: yellow business, blue application, green technology,
+        as in the standard''s examples (3.9). Not normative, but keep it, because recoloring by lifecycle
+        or ownership stops a reader telling a business service from an application one.'
       claimed:
         position: Abstraction level. Y position says which layer an element belongs to, so moving an element
           between bands changes what the diagram asserts.
@@ -94,7 +96,7 @@ diagram_types:
       - Composition
       - Specialization
     channels:
-      fill: ArchiMate layer and aspect. Normative.
+      fill: ArchiMate layer and aspect.
       claimed:
         position: 'Abstraction level: which layer band an element sits in.'
         size: Role. Uniform within a band.
@@ -139,7 +141,7 @@ diagram_types:
       - Composition
       - Specialization
     channels:
-      fill: ArchiMate layer and aspect. Normative.
+      fill: ArchiMate layer and aspect.
       claimed:
         position: 'Abstraction level: which layer band an element sits in.'
         size: Role. Uniform within a band.
@@ -184,7 +186,7 @@ diagram_types:
       - Specialization
     channels:
       fill: ArchiMate aspect. The motivation elements share one layer, so fill distinguishes stakeholder
-        from driver from goal. Still normative.
+        from driver from goal.
       claimed:
         position: 'Level of intent: driver, goal, requirement, principle.'
         size: Role. Uniform within a band.
