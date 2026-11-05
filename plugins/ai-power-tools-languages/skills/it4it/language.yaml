@@ -1,0 +1,4281 @@
+# IT4IT Reference Architecture language file (schema_version 1).
+# Written from the standard only. Concept names are the standard's own terms without spaces.
+# Tool-neutral: no tool facts live here.
+schema_version: 1
+id: it4it
+name: IT4IT Reference Architecture
+owner:
+  name: The Open Group
+  kind: standards-body
+standard:
+  name: 'IT4IT Standard: A Reference Architecture for Managing Digital'
+  version: '3.0'
+  status: read from the public draft, with no claim of conformance
+  reference: The Open Group, IT4IT Standard, Version 3.0.1, document C24A, published 24 October 2024 (supersedes version 3.0, C221, 18 October 2022), https://publications.opengroup.org/c24a
+  basis: The text read is the public Snapshot draft of version 3.0 (document S220, February 2022), read from an archived copy of https://pubs.opengroup.org/it4it/3.0/snapshot/. The published
+    3.0 and 3.0.1 texts require a sign-in and were not read, so counts, wording and section numbers may differ. Every section reference in this file is to the Snapshot text.
+  newer_draft: The Open Group IT4IT Standard, Version 3.1 (Snapshot), document S261, published 12 October 2026, valid through 31 March 2027. Not read.
+concepts:
+  source: IT4IT Snapshot 3.0, chapter 11 (definitions and metamodel) with chapters 3 and 4. 26 metamodel concepts. The standard says its metamodel has ten normative concepts and some
+    non-normative ones, pictured in Figure 75 (11.1). The figure has 17 boxes, and 16 concepts here are those boxes (L1 and L2 Grouping are both FunctionalGroup, Value Stage is ValueStreamStage,
+    Product Backbone Data Object is BackboneDataObject, Attribute is KeyAttribute, SoR Integration is SystemOfRecordIntegration, and Relationship is DataRelationship). The other ten come from
+    the text and aren't in the figure, namely KeyDataObject, DigitalProductBackbone, ServiceOfferBackbone, SystemOfRecord, EngagementIntegration, DigitalProduct, ServiceOffer, ServiceContract,
+    DigitalProductInstance, and System. The text doesn't name the ten normative concepts. Our reading of the figure's level tags, marked as a reading, is that the boxes tagged only with Levels
+    1 to 3 make ten when the two groupings count as one. The figure tags Lifecycle Data Object 2 and 3, while the text of 11.7 introduces data objects at Level 1; this file follows the text.
+    Section 11.7 says "six core concepts" and then lists eight, among them "Management capabilities". The reference model that the standard specifies as instances of these concepts (value
+    streams, stages, functional groups, functional components, data objects) is under reference_model. Generalizations are inferred from the text; the standard never declares a concept abstract.
+  groups:
+    Level 1:
+      defined_by: Chapter 3; 11.3; 11.7
+      notes: Overview-level concepts.
+    Level 2:
+      defined_by: Chapter 5; 11.4; 11.8
+      notes: Value stream documentation.
+    Level 3:
+      defined_by: Chapters 6 to 10; 11.5; 11.9
+      notes: Vendor-independent architecture.
+    Level 4 (non-normative):
+      defined_by: '11.10'
+      notes: Vendor and integrator extensions.
+    Digital Product (chapter 4):
+      defined_by: Chapter 4
+      notes: The Digital Product and its offer, contract and instance.
+  elements:
+    ValueNetwork:
+      display: Value Network
+      category: Level 1
+      section: 11.7.1; 3.2
+      definition: 'The model of the digital business function: the relationships across value-creating functions, including primary activities (planning, production, consumption, fulfillment,
+        support) and supporting ones (finance, HR, governance, supplier management).'
+    ValueStream:
+      display: Value Stream
+      category: Level 1
+      section: 11.7.2; 11.8.1; 5
+      definition: The key value-creating activities for a discrete area of the value network, where net value is added to the Digital Product as it moves through its lifecycle. The standard
+        defines seven.
+    Scenario:
+      display: Scenario
+      category: Level 2
+      section: 11.8.2; 5.x.1
+      definition: A situation in which a value stream should be triggered to add value.
+    ValueStreamStage:
+      display: Value Stream Stage
+      category: Level 2
+      section: 11.8.3; 5.x
+      definition: A refinement of a value stream, defined by entry and exit criteria, main activities, example stakeholders and participating data objects.
+      specializes: ValueStream
+    Stakeholder:
+      display: Stakeholder
+      category: Level 2
+      section: 11.8.4
+      definition: A persona or role an organization is expected to engage in a given stage; the listed ones are proposals.
+    FunctionalGroup:
+      display: Functional Group
+      category: Level 1
+      section: 11.7.3; 3.1
+      definition: A grouping of functional components and data objects that gives context to the functionality an organization must deliver. Five at Level 1 and fourteen at Level 2.
+    FunctionalComponent:
+      display: Functional Component
+      category: Level 1
+      section: 11.7.4
+      definition: The smallest unit of technology that stands alone and is useful to a digital practitioner; it has data object inputs and outputs and affects the key data object it
+        controls.
+    LifecycleDataObject:
+      display: Lifecycle Data Object
+      category: Level 1
+      section: 11.7.5
+      definition: Data that annotates or models an aspect of a Digital Product being planned, developed, offered or consumed; aligned with the UML idea of an artifact.
+    KeyDataObject:
+      display: Key Data Object
+      category: Level 1
+      section: 11.7.5; 11.7.8
+      definition: A lifecycle data object essential to end-to-end traceability. Drawn black in the simplified notation.
+      specializes: LifecycleDataObject
+    BackboneDataObject:
+      display: Backbone Data Object
+      category: Level 1
+      section: 11.7.8; 11.7.9
+      definition: A key data object that forms part of the Digital Product Backbone or the Service Offer Backbone. Drawn orange in the simplified notation.
+      specializes: KeyDataObject
+    DigitalProductBackbone:
+      display: Digital Product Backbone
+      category: Level 1
+      section: 11.7.8
+      definition: 'The group of backbone data objects giving a holistic view of a product in its planning, development, consumable or running state: Digital Product, Product Design,
+        Product Release, Desired Product Instance and Actual Product Instance.'
+    ServiceOfferBackbone:
+      display: Service Offer Backbone
+      category: Level 1
+      section: 11.7.9
+      definition: 'The group of backbone data objects that control and define consumption: Service Offer, Subscription, Chargeback Contract and Service Contract.'
+    SystemOfRecord:
+      display: System of Record
+      category: Level 1
+      section: 11.7.6
+      definition: An authoritative source system; the lifecycle data objects are the authoritative or master data.
+    DataRelationship:
+      display: Data Relationship
+      category: Level 1
+      section: 11.7.7; 11.9.2
+      definition: An essential relationship between two data objects, with a cardinality of 1:1, 1:n or n:m.
+    KeyAttribute:
+      display: Key Attribute
+      category: Level 3
+      section: 11.9.1
+      definition: An attribute an implementation must support for a data object; the vendor-independent minimum.
+    DataFlow:
+      display: Data Flow
+      category: Level 3
+      section: 11.9.3
+      definition: A flow of information between functional components that exposes the need for integration.
+    SystemOfRecordIntegration:
+      display: System of Record Integration
+      category: Level 3
+      section: 11.9.4
+      definition: A data flow refined to keep a relationship between two data objects consistent.
+      specializes: DataFlow
+    EngagementIntegration:
+      display: System of Engagement Integration
+      category: Level 3
+      section: 11.9.5
+      definition: A data flow that helps human or machine interaction with data objects; guidance rather than prescription.
+      specializes: DataFlow
+    Capability:
+      display: Capability
+      category: Level 4 (non-normative)
+      section: 11.10.2
+      definition: The ability of an organization to produce an outcome of value through people, processes and technology; a refinement of the Level 2 groups.
+    EssentialService:
+      display: Essential Service
+      category: Level 4 (non-normative)
+      section: 11.10.3
+      definition: A means of integrating functional components or acting on a data object (for example create, read, update, delete); typically an API or web service.
+    Process:
+      display: Process
+      category: Level 4 (non-normative)
+      section: 11.1 (Figure 75); 11.10.4
+      definition: A business process at Levels 4 and 5 that uses essential services and realizes a capability. Figure 75 names it as a concept, and the text describes it only through the process flow of a scenario.
+    DigitalProduct:
+      display: Digital Product
+      category: Digital Product (chapter 4)
+      section: '4.4'
+      definition: A service, physical item or digital item that provides an agreed outcome for a consumer, incorporates and requires software, needs active management of that software
+        over its lifecycle, and is described by a formal offer with an explicit price.
+    ServiceOffer:
+      display: Service Offer
+      category: Digital Product (chapter 4)
+      section: 4.4.2
+      definition: The possible Service Contract terms as the potential consumer sees them.
+    ServiceContract:
+      display: Service Contract
+      category: Digital Product (chapter 4)
+      section: 4.4.3
+      definition: The agreement formed when an offer is accepted, with commitments, usage and financial rules and lifecycle expectations.
+    DigitalProductInstance:
+      display: Digital Product Instance
+      category: Digital Product (chapter 4)
+      section: 4.4.3; 4.17
+      definition: The realization of a Digital Product for a consumer, created when an offer is accepted.
+    System:
+      display: System
+      category: Digital Product (chapter 4)
+      section: 4.4.1
+      definition: The technology components of an instance that the provider manages, including recursive supporting resources.
+  relationships:
+    ValueNetworkComprisesValueStream:
+      display: Value Network contains Value Streams
+      category: relationship
+    ValueStreamHasScenario:
+      display: Value Stream is executed for Scenarios
+      category: relationship
+    ValueStreamHasStage:
+      display: Value Stream is refined into Stages
+      category: relationship
+    ValueStreamDependsOnValueStream:
+      display: Value Stream depends on Value Stream
+      category: relationship
+    StageInvolvesStakeholder:
+      display: Stage lists Stakeholders as examples
+      category: relationship
+    StageUsesDataObject:
+      display: Stage lists participating Data Objects, each with its Functional Component
+      category: relationship
+    FunctionalGroupContainsFunctionalGroup:
+      display: Level 1 Functional Group is decomposed into Level 2 Functional Groups
+      category: relationship
+    FunctionalGroupContainsFunctionalComponent:
+      display: Functional Group contains Functional Components
+      category: relationship
+    FunctionalComponentControlsDataObject:
+      display: Functional Component controls Data Objects
+      category: relationship
+    FunctionalComponentSupportsValueStream:
+      display: Functional Component supports Value Streams
+      category: relationship
+    DataObjectRelatesToDataObject:
+      display: Data Object relates to Data Object with cardinality 1:1, 1:n or n:m
+      category: relationship
+    DataObjectHasKeyAttribute:
+      display: Data Object has Key Attributes
+      category: relationship
+    DataFlowConnectsFunctionalComponents:
+      display: Functional Component sends a Data Flow to Functional Component
+      category: relationship
+    CapabilityRelatesToFunctionalComponent:
+      display: Capability is supported by Functional Components
+      category: relationship
+    EssentialServiceBelongsToFunctionalComponent:
+      display: Essential Service is offered by a Functional Component
+      category: relationship
+    BackboneGroupsBackboneDataObjects:
+      display: Backbone groups its Data Objects
+      category: relationship
+    FunctionalGroupRelatesToValueNetwork:
+      display: Level 1 Functional Group relates to the Value Network
+      category: relationship
+    FunctionalGroupAggregatesCapability:
+      display: Level 2 Functional Group aggregates Capabilities
+      category: relationship
+    CapabilityRelatesToStakeholder:
+      display: Capability relates to Stakeholder
+      category: relationship
+    FunctionalComponentRealizesCapability:
+      display: Functional Component realizes Capability
+      category: relationship
+    FunctionalComponentRealizesEssentialService:
+      display: Functional Component realizes Essential Service
+      category: relationship
+    ProcessRealizesCapability:
+      display: Process realizes Capability
+      category: relationship
+    EssentialServiceServesProcess:
+      display: Essential Service serves Process
+      category: relationship
+    EssentialServiceRelatesToSystemOfRecordIntegration:
+      display: Essential Service relates to System of Record Integration
+      category: relationship
+    SystemOfRecordIntegrationRelatesToDataRelationship:
+      display: System of Record Integration relates to Data Relationship
+      category: relationship
+relationships:
+- name: ValueNetworkComprisesValueStream
+  source: ValueNetwork
+  target: ValueStream
+  display: Value Network contains Value Streams
+  multiplicity:
+    targets_per_source: '*'
+    sources_per_target: '*'
+  section: 11.7.1; 11.7.2
+  multiplicity_basis: inferred
+- name: ValueStreamHasScenario
+  source: ValueStream
+  target: Scenario
+  display: Value Stream is executed for Scenarios
+  multiplicity:
+    targets_per_source: 1..*
+    sources_per_target: '1'
+  section: 11.8.1; 5.x.1
+  note: At least one is shown for every stream (4, 4, 4, 3, 4, 4, 5).
+  multiplicity_basis: inferred
+- name: ValueStreamHasStage
+  source: ValueStream
+  target: ValueStreamStage
+  display: Value Stream is refined into Stages
+  multiplicity:
+    targets_per_source: 1..*
+    sources_per_target: '1'
+  section: 11.8.3; 5
+  note: 'Seven streams, 28 stages: 5, 4, 4, 4, 3, 5, 3.'
+  multiplicity_basis: inferred
+- name: ValueStreamDependsOnValueStream
+  source: ValueStream
+  target: ValueStream
+  display: Value Stream depends on Value Stream
+  multiplicity:
+    targets_per_source: '*'
+    sources_per_target: '*'
+  section: 5.x (Cross-Value Stream Dependencies)
+  note: Reflexive; the two sides of the text disagree in three places.
+  multiplicity_basis: inferred
+- name: StageInvolvesStakeholder
+  source: ValueStreamStage
+  target: Stakeholder
+  display: Stage lists Stakeholders as examples
+  multiplicity:
+    targets_per_source: '*'
+    sources_per_target: '*'
+  section: 11.8.3; 11.8.4
+  note: Proposals only.
+  multiplicity_basis: inferred
+- name: StageUsesDataObject
+  source: ValueStreamStage
+  target: LifecycleDataObject
+  display: Stage lists participating Data Objects, each with its Functional Component
+  multiplicity:
+    targets_per_source: '*'
+    sources_per_target: '*'
+  section: 11.8.3; 5.x
+  multiplicity_basis: inferred
+- name: FunctionalGroupContainsFunctionalGroup
+  source: FunctionalGroup
+  target: FunctionalGroup
+  display: Level 1 Functional Group is decomposed into Level 2 Functional Groups
+  multiplicity:
+    targets_per_source: '*'
+    sources_per_target: '1'
+  section: 11.7.3
+  note: Five Level 1 groups and fourteen Level 2 groups.
+  multiplicity_basis: inferred
+- name: FunctionalGroupContainsFunctionalComponent
+  source: FunctionalGroup
+  target: FunctionalComponent
+  display: Functional Group contains Functional Components
+  multiplicity:
+    targets_per_source: '*'
+    sources_per_target: '1'
+  section: 11.7.3; 6 to 10
+  multiplicity_basis: inferred
+- name: FunctionalComponentControlsDataObject
+  source: FunctionalComponent
+  target: LifecycleDataObject
+  display: Functional Component controls Data Objects
+  multiplicity:
+    targets_per_source: '*'
+    sources_per_target: '1'
+  section: 11.7.4; 11.7.5
+  note: A data object is controlled by exactly one component.
+  multiplicity_basis: inferred
+- name: FunctionalComponentSupportsValueStream
+  source: FunctionalComponent
+  target: ValueStream
+  display: Functional Component supports Value Streams
+  multiplicity:
+    targets_per_source: 1..*
+    sources_per_target: '*'
+  section: 6 to 10; Appendix A
+  note: Each component section lists the value streams it supports.
+  multiplicity_basis: inferred
+- name: DataObjectRelatesToDataObject
+  source: LifecycleDataObject
+  target: LifecycleDataObject
+  display: Data Object relates to Data Object with cardinality 1:1, 1:n or n:m
+  multiplicity:
+    targets_per_source: '*'
+    sources_per_target: '*'
+  section: 11.7.7; 11.9.2; 6 to 10
+  note: The reference model lists 114 such relationships, joining 113 pairs.
+  multiplicity_basis: inferred
+- name: DataObjectHasKeyAttribute
+  source: LifecycleDataObject
+  target: KeyAttribute
+  display: Data Object has Key Attributes
+  multiplicity:
+    targets_per_source: 1..*
+    sources_per_target: '1'
+  section: 11.9.1
+  note: Figure 75 joins Attribute to Lifecycle Data Object and also to Product Backbone Data Object.
+  multiplicity_basis: inferred
+- name: DataFlowConnectsFunctionalComponents
+  source: FunctionalComponent
+  target: FunctionalComponent
+  display: Functional Component sends a Data Flow to Functional Component
+  multiplicity:
+    targets_per_source: '*'
+    sources_per_target: '*'
+  section: 11.9.3
+  note: 'Kinds: system of record integration and engagement integration.'
+  multiplicity_basis: inferred
+- name: CapabilityRelatesToFunctionalComponent
+  source: Capability
+  target: FunctionalComponent
+  display: Capability is supported by Functional Components
+  multiplicity:
+    targets_per_source: '*'
+    sources_per_target: '*'
+  section: 11.10.2
+  note: Non-normative.
+  multiplicity_basis: inferred
+- name: EssentialServiceBelongsToFunctionalComponent
+  source: EssentialService
+  target: FunctionalComponent
+  display: Essential Service is offered by a Functional Component
+  multiplicity:
+    targets_per_source: '*'
+    sources_per_target: '1'
+  section: 11.10.3
+  note: Non-normative.
+  multiplicity_basis: inferred
+- name: BackboneGroupsBackboneDataObjects
+  source: DigitalProductBackbone
+  target: BackboneDataObject
+  display: Backbone groups its Data Objects
+  multiplicity:
+    targets_per_source: '5'
+    sources_per_target: '*'
+  section: 11.7.8; 11.7.9
+  note: Digital Product Backbone has five; Service Offer Backbone has four.
+  multiplicity_basis: inferred
+- name: FunctionalGroupRelatesToValueNetwork
+  source: FunctionalGroup
+  target: ValueNetwork
+  display: Level 1 Functional Group relates to the Value Network
+  multiplicity:
+    targets_per_source: '*'
+    sources_per_target: '*'
+  section: 11.1 (Figure 75)
+  note: Solid line with an open arrowhead at the Value Network.
+  multiplicity_basis: inferred
+- name: FunctionalGroupAggregatesCapability
+  source: FunctionalGroup
+  target: Capability
+  display: Level 2 Functional Group aggregates Capabilities
+  multiplicity:
+    targets_per_source: '*'
+    sources_per_target: '*'
+  section: 11.1 (Figure 75)
+  note: Hollow diamond at the Level 2 group. Non-normative.
+  multiplicity_basis: inferred
+- name: CapabilityRelatesToStakeholder
+  source: Capability
+  target: Stakeholder
+  display: Capability relates to Stakeholder
+  multiplicity:
+    targets_per_source: '*'
+    sources_per_target: '*'
+  section: 11.1 (Figure 75)
+  note: Plain line. Non-normative.
+  multiplicity_basis: inferred
+- name: FunctionalComponentRealizesCapability
+  source: FunctionalComponent
+  target: Capability
+  display: Functional Component realizes Capability
+  multiplicity:
+    targets_per_source: '*'
+    sources_per_target: '*'
+  section: 11.1 (Figure 75)
+  note: Dotted line with a hollow triangle at the Capability, beside the plain line of CapabilityRelatesToFunctionalComponent. Non-normative.
+  multiplicity_basis: inferred
+- name: FunctionalComponentRealizesEssentialService
+  source: FunctionalComponent
+  target: EssentialService
+  display: Functional Component realizes Essential Service
+  multiplicity:
+    targets_per_source: '*'
+    sources_per_target: '*'
+  section: 11.1 (Figure 75)
+  note: Dotted line with a hollow triangle at the Essential Service. Non-normative.
+  multiplicity_basis: inferred
+- name: ProcessRealizesCapability
+  source: Process
+  target: Capability
+  display: Process realizes Capability
+  multiplicity:
+    targets_per_source: '*'
+    sources_per_target: '*'
+  section: 11.1 (Figure 75)
+  note: Dotted line with a hollow triangle at the Capability. Non-normative.
+  multiplicity_basis: inferred
+- name: EssentialServiceServesProcess
+  source: EssentialService
+  target: Process
+  display: Essential Service serves Process
+  multiplicity:
+    targets_per_source: '*'
+    sources_per_target: '*'
+  section: 11.1 (Figure 75)
+  note: Solid line with an open arrowhead at the Process. Non-normative.
+  multiplicity_basis: inferred
+- name: EssentialServiceRelatesToSystemOfRecordIntegration
+  source: EssentialService
+  target: SystemOfRecordIntegration
+  display: Essential Service relates to System of Record Integration
+  multiplicity:
+    targets_per_source: '*'
+    sources_per_target: '*'
+  section: 11.1 (Figure 75)
+  note: Plain line. Non-normative.
+  multiplicity_basis: inferred
+- name: SystemOfRecordIntegrationRelatesToDataRelationship
+  source: SystemOfRecordIntegration
+  target: DataRelationship
+  display: System of Record Integration relates to Data Relationship
+  multiplicity:
+    targets_per_source: '*'
+    sources_per_target: '*'
+  section: 11.1 (Figure 75)
+  note: Plain line.
+  multiplicity_basis: inferred
+reference_model:
+  note: 'The normative content of Levels 1 to 3, as the Snapshot specifies it: 7 value streams, 14 functional groups, 35 functional components and 46 data objects with their key attributes
+    and 114 data relationships. Directions and cardinalities are as the standard writes them, source side first. A conflict between two sections is recorded on the relationship. The
+    relationship list is the allowed set for data objects: the standard defines "key relationships" only, and the cardinalities mean "can relate", never "must".'
+  functional_groups:
+  - name: Plan
+    level: 1
+    normative: true
+    section: Chapter 6
+  - name: Build
+    level: 1
+    normative: true
+    section: Chapter 7
+  - name: Deliver
+    level: 1
+    normative: true
+    section: Chapter 8
+  - name: Run
+    level: 1
+    normative: true
+    section: Chapter 9
+  - name: Supporting
+    level: 1
+    normative: false
+    section: Chapter 10
+  - name: Strategy
+    level: 2
+    parent: Plan
+    section: '6.1'
+    normative: true
+  - name: Portfolio
+    level: 2
+    parent: Plan
+    section: '6.2'
+    normative: true
+  - name: Develop
+    level: 2
+    parent: Build
+    section: '7.1'
+    normative: true
+  - name: Test
+    level: 2
+    parent: Build
+    section: '7.2'
+    normative: true
+  - name: Consume
+    level: 2
+    parent: Deliver
+    section: '8.1'
+    normative: true
+  - name: Fulfill
+    level: 2
+    parent: Deliver
+    section: '8.2'
+    normative: true
+  - name: Support
+    level: 2
+    parent: Run
+    section: '9.1'
+    normative: true
+  - name: Assure
+    level: 2
+    parent: Run
+    section: '9.2'
+    normative: true
+  - name: Financial Management
+    level: 2
+    parent: Supporting
+    section: '10.1'
+    normative: false
+  - name: Governance Risk & Compliance
+    level: 2
+    parent: Supporting
+    section: '10.2'
+    normative: false
+  - name: Workforce Management
+    level: 2
+    parent: Supporting
+    section: '10.3'
+    normative: false
+  - name: Sourcing & Vendor Management
+    level: 2
+    parent: Supporting
+    section: '10.4'
+    normative: false
+  - name: Intelligence & Reporting
+    level: 2
+    parent: Supporting
+    section: '10.5'
+    normative: false
+  - name: Collaboration & Communication
+    level: 2
+    parent: Supporting
+    section: '10.6'
+    normative: false
+  value_streams:
+  - name: Evaluate
+    section: '5.1'
+    description: Continuous assessment of the whole Digital Product Portfolio to align it with business strategy and find new product opportunities.
+    key_stakeholder: Product Portfolio Manager
+    value: Optimized product portfolio and a portfolio investment plan with funding.
+    depends_on:
+    - Explore
+    - Integrate
+    - Deploy
+    - Release
+    - Consume
+    - Operate
+    scenarios:
+    - Consider a New Digital Product
+    - Perform Digital Product Governance
+    - Rationalize the Product Portfolio
+    - Plan Product Portfolio Investments
+    stages:
+    - name: Gather Influencers
+      data_objects:
+      - Policy
+      - Strategic Objective
+      - Strategic Theme
+    - name: Identify Gaps
+      data_objects:
+      - Digital Product
+      - Policy
+      - Product Backlog Item
+      - Scope Agreement
+      - Strategic Objective
+      - Strategic Theme
+      - Value Stream
+    - name: Propose Investments
+      data_objects:
+      - Budget Item
+      - Digital Product
+      - Policy
+      - Portfolio Backlog Item
+      - Scope Agreement
+      - Strategic Objective
+      - Strategic Theme
+      - Value Stream
+    - name: Define Backlog Mandates
+      data_objects:
+      - Architecture Blueprint
+      - Architecture Roadmap Item
+      - Digital Product
+      - Policy
+      - Portfolio Backlog Item
+      - Product Backlog Item
+      - Scope Agreement
+      - Strategic Objective
+      - Strategic Theme
+      - Value Stream
+    - name: Ensure Governance
+      data_objects:
+      - Digital Product
+      - Policy
+      - Portfolio Backlog Item
+      - Scope Agreement
+      - Strategic Objective
+      - Strategic Theme
+      - Value Stream
+  - name: Explore
+    section: '5.2'
+    description: Continuous exploration of new features and directions for a Digital Product, working from the Scope Agreements Evaluate produces.
+    key_stakeholder: Product Manager
+    value: Accepted, planned product backlog with a detailed Scope Agreement, release roadmap and resources.
+    depends_on:
+    - Evaluate
+    - Integrate
+    scenarios:
+    - Investigate a New Digital Product Idea
+    - Optimize a Digital Product
+    - Refine Digital Product Feasibility
+    - Retire Digital Product
+    stages:
+    - name: Prioritize Backlog Items
+      data_objects:
+      - Digital Product
+      - Policy
+      - Portfolio Backlog Item
+      - Scope Agreement
+      - Strategic Objective
+      - Strategic Theme
+    - name: Define Digital Product Architecture
+      data_objects:
+      - Architecture Blueprint
+      - Policy
+      - Portfolio Backlog Item
+      - Product Design
+      - Strategic Objective
+      - Strategic Theme
+    - name: Refine Product Backlog
+      data_objects:
+      - Architecture Blueprint
+      - Architecture Roadmap Item
+      - Digital Product
+      - Policy
+      - Portfolio Backlog Item
+      - Product Backlog Item
+      - Product Design
+      - Requirement
+      - Scope Agreement
+    - name: Finalize Roadmap & Scope Agreement
+      data_objects:
+      - Architecture Roadmap Item
+      - Digital Product
+      - Policy
+      - Portfolio Backlog Item
+      - Product Backlog Item
+      - Product Design
+      - Scope Agreement
+  - name: Integrate
+    section: '5.3'
+    description: Designs, builds and tests a new Product Release in non-production environments and makes it ready to deploy.
+    key_stakeholder: Product Manager with the Development Teams
+    value: A new Product Release accepted and ready for deployment and release.
+    depends_on:
+    - Explore
+    - Consume
+    - Deploy
+    - Operate
+    scenarios:
+    - Develop a New or Initial Product Release
+    - Configure an Off-the-Shelf or SaaS Product for Use
+    - Deliver an Emergency Change or Hotfix
+    - Update of a Vendor Product
+    stages:
+    - name: Plan Product Release
+      data_objects:
+      - Defect
+      - Policy
+      - Portfolio Backlog Item
+      - Problem
+      - Product Backlog Item
+      - Requirement
+      - Scope Agreement
+      - Test Plan
+    - name: Design & Develop
+      data_objects:
+      - Defect
+      - Policy
+      - Product Backlog Item
+      - Product Design
+      - Requirement
+      - Source
+      - Test Case
+      - Test Plan
+    - name: Build, Integrate, & Test
+      data_objects:
+      - Build Package
+      - Fulfillment Book
+      - Pipeline
+      - Product Release
+      - Requirement
+      - Source
+      - Test Case
+      - Test Plan
+    - name: Accept & Publish Release
+      data_objects:
+      - Defect
+      - Desired Product Instance
+      - Fulfillment Book
+      - Log
+      - Order
+      - Product Backlog Item
+      - Product Release
+      - Requirement
+      - Scope Agreement
+      - Subscription
+      - Test Case
+      - Test Plan
+  - name: Deploy
+    section: '5.4'
+    description: Installs, updates or removes a Product Release in the production environment.
+    key_stakeholder: Product Manager
+    value: Product Releases are installed safely without unexpected outages of running instances.
+    depends_on:
+    - Integrate
+    - Consume
+    scenarios:
+    - Deploy a First Product Release for a New Digital Product
+    - Deploy a New Product Release Version for a Digital Product
+    - Disable or Remove Existing Product Release Instances of a Digital Product
+    stages:
+    - name: Plan & Approve Deployment
+      data_objects:
+      - Actual Product Instance
+      - Change
+      - Desired Product Instance
+      - Product Release
+      - Service Contract
+    - name: Fulfill Deployment
+      data_objects:
+      - Actual Product Instance
+      - Change
+      - Desired Product Instance
+      - Fulfillment Book
+      - Knowledge Item
+      - Problem
+      - Product Release
+      - Resource
+      - Runbook
+      - Service Monitor
+    - name: Validate Deployment
+      data_objects:
+      - Actual Product Instance
+      - Change
+      - Desired Product Instance
+      - Problem
+      - Product Release
+      - Resource
+      - Runbook
+      - Service Contract
+    - name: Observe Deployment
+      data_objects:
+      - Actual Product Instance
+      - Event
+      - KPI
+      - Log
+      - Service Contract
+  - name: Release
+    section: '5.5'
+    description: Makes Service Offers available to consumers for ordering a new, changed or decommissioned product instance or its support.
+    key_stakeholder: Catalog Manager
+    value: Managed, consumable Service Offers for the Digital Product.
+    depends_on:
+    - Deploy
+    scenarios:
+    - Release a New Service Offer
+    - Change an Existing Service Offer
+    - Bundle Existing Service Offers
+    - Terminate a Service Offer
+    stages:
+    - name: Define Service Offer
+      data_objects:
+      - Cost Model
+      - Fulfillment Book
+      - Knowledge Item
+      - Product Release
+      - Service Contract
+      - Service Offer
+    - name: Implement Service Offer
+      data_objects:
+      - Knowledge Item
+      - Service Offer Catalog
+      - Service Offer
+    - name: Publish Service Offer
+      data_objects:
+      - Cost Model
+      - Knowledge Item
+      - Service Offer Catalog
+      - Service Offer
+  - name: Consume
+    section: '5.6'
+    description: 'The consumer''s lifecycle: select an offer, order, get fulfillment, get support and get status.'
+    key_stakeholder: Customer or consumer (person or system)
+    value: Consumers find offerings and obtain deployed, supported products under a Service Contract.
+    depends_on:
+    - Release
+    - Operate
+    scenarios:
+    - Order a New Desired Product Instance
+    - Order an Actual Product Instance Modification
+    - Order an Actual Product Instance Termination
+    - Order an Actual Product Instance Support
+    stages:
+    - name: Select an Offer
+      data_objects:
+      - Entitlement
+      - Identity
+      - Interaction
+      - Service Offer Catalog
+      - Service Offer
+    - name: Agree to Service Offer
+      data_objects:
+      - Interaction
+      - Order
+      - Service Contract
+    - name: Subscribe to Service Offer
+      data_objects:
+      - Actual Product Instance
+      - Change
+      - Chargeback Contract
+      - Cost Model
+      - Desired Product Instance
+      - Fulfillment Book
+      - Order
+      - Resource
+      - Service Contract
+      - Subscription
+    - name: Provide Service Support
+      data_objects:
+      - Incident
+      - Interaction
+      - Knowledge Item
+      - Subscription
+    - name: Publish Service Status
+      data_objects:
+      - Chargeback Contract
+      - Chargeback Record
+      - Incident
+      - KPI
+      - Service Contract
+      - Subscription
+      - Usage Record
+  - name: Operate
+    section: '5.7'
+    description: Keeps deployed instances available and performing within their Service Contract, including compliance and security.
+    key_stakeholder: Consumer
+    value: The instance operates and can be consumed as the Service Contract agrees.
+    depends_on:
+    - Deploy
+    - Consume
+    scenarios:
+    - Remediate an Identified Back-End Issue
+    - Ensure Disaster Recovery Objectives
+    - Remediate a major Event or Incident
+    - Remediate Consumer Front-End Issue
+    - Perform Scheduled Maintenance
+    stages:
+    - name: Detect Issue
+      data_objects:
+      - Actual Product Instance
+      - Event
+      - Incident
+      - Interaction
+      - Log
+      - Service Contract
+      - Service Monitor
+    - name: Diagnose Issue
+      data_objects:
+      - Actual Product Instance
+      - Event
+      - Incident
+      - Knowledge Item
+      - Log
+      - Problem
+      - Runbook
+      - Service Contract
+    - name: Resolve Issue
+      data_objects:
+      - Actual Product Instance
+      - Change
+      - Event
+      - Incident
+      - Interaction
+      - Knowledge Item
+      - Log
+      - Runbook
+      - Service Contract
+  value_stream_dependency_notes:
+  - Depends-on lists follow each value stream's own "depends on" text. Release and Operate also depend on Integrate according to Integrate's dependents list, but their own lists omit
+    it (inferred edges). Integrate depends on Deploy according to its own list, but Deploy's dependents list omits Integrate.
+  supporting_function_examples:
+    note: The data objects the draft names as examples under five supporting functions it describes without defining (chapter 10). They have no key attributes, relationships, or controlling components, and they are not part of the normative content. The names here are short singular forms we chose. Section 10.2 writes "IT audits and audit findings" and "Compliance evidence and compliance-related exceptions/issues", shortened here to Audit Finding and Compliance Evidence, and 10.5 writes "Metrics and KPI", where KPI is already a data object.
+    groups:
+    - group: Governance Risk & Compliance
+      section: '10.2'
+      examples: [Risk Assessment, Risk, Vendor Risk, Audit Finding, Compliance Evidence, Risk Issue]
+    - group: Workforce Management
+      section: '10.3'
+      examples: [Employee, Job Profile and Roles, Team, Resource Allocation]
+    - group: Sourcing & Vendor Management
+      section: '10.4'
+      examples: [Vendor, Contract, Purchase Order]
+    - group: Intelligence & Reporting
+      section: '10.5'
+      examples: [Metric]
+    - group: Collaboration & Communication
+      section: '10.6'
+      examples: []
+  example_stakeholders:
+  - Business Analyst
+  - Business Stakeholder
+  - Catalog Manager
+  - Chief Security Officer
+  - Compliance Manager
+  - Consumer
+  - Data Protection Officer
+  - Development Team
+  - Enterprise Architect
+  - External Stakeholder
+  - Operations Manager
+  - Product Architect
+  - Product Manager
+  - Product Portfolio Manager
+  - Release & Deployment Manager
+  - Risk Analyst
+  - Scrum Master
+  - Security Analyst
+  - Security Architect
+  - Security Officer
+  - Service Desk Agent
+  - Support Specialist
+  - Test Specialist
+  - Vendor Manager
+  functional_components:
+  - name: Policy
+    group: Strategy
+    level1_group: Plan
+    section: 6.1.1
+    value_streams:
+    - Evaluate
+    - Explore
+    - Integrate
+    controls:
+    - Policy
+  - name: Strategy
+    group: Strategy
+    level1_group: Plan
+    section: 6.1.2
+    value_streams:
+    - Evaluate
+    - Explore
+    controls:
+    - Strategic Theme
+    - Strategic Objective
+  - name: Enterprise Architecture
+    group: Strategy
+    level1_group: Plan
+    section: 6.1.3
+    value_streams:
+    - Evaluate
+    - Explore
+    controls:
+    - Architecture Roadmap Item
+    - Architecture Blueprint
+    - Value Stream
+  - name: Portfolio Backlog
+    group: Portfolio
+    level1_group: Plan
+    section: 6.2.1
+    value_streams:
+    - Evaluate
+    - Explore
+    - Integrate
+    controls:
+    - Portfolio Backlog Item
+  - name: Proposal
+    group: Portfolio
+    level1_group: Plan
+    section: 6.2.2
+    value_streams:
+    - Evaluate
+    - Explore
+    - Integrate
+    controls:
+    - Scope Agreement
+  - name: Product Portfolio
+    group: Portfolio
+    level1_group: Plan
+    section: 6.2.3
+    value_streams:
+    - Evaluate
+    - Explore
+    controls:
+    - Digital Product
+  - name: Product Backlog
+    group: Develop
+    level1_group: Build
+    section: 7.1.1
+    value_streams:
+    - Evaluate
+    - Explore
+    - Integrate
+    controls:
+    - Product Backlog Item
+  - name: Requirement
+    group: Develop
+    level1_group: Build
+    section: 7.1.2
+    value_streams:
+    - Explore
+    - Integrate
+    controls:
+    - Requirement
+  - name: Product Design
+    group: Develop
+    level1_group: Build
+    section: 7.1.3
+    value_streams:
+    - Explore
+    - Integrate
+    controls:
+    - Product Design
+  - name: Source Control
+    group: Develop
+    level1_group: Build
+    section: 7.1.4
+    value_streams:
+    - Integrate
+    controls:
+    - Source
+  - name: Pipeline
+    group: Develop
+    level1_group: Build
+    section: 7.1.5
+    value_streams:
+    - Integrate
+    controls:
+    - Pipeline
+  - name: Build Package
+    group: Develop
+    level1_group: Build
+    section: 7.1.6
+    value_streams:
+    - Integrate
+    controls:
+    - Build Package
+  - name: Release Composition
+    group: Develop
+    level1_group: Build
+    section: 7.1.7
+    value_streams:
+    - Integrate
+    - Deploy
+    - Release
+    controls:
+    - Product Release
+    - Product Release Blueprint
+  - name: Test
+    group: Test
+    level1_group: Build
+    section: 7.2.1
+    value_streams:
+    - Integrate
+    controls:
+    - Test Case
+    - Test Plan
+  - name: Defect
+    group: Test
+    level1_group: Build
+    section: 7.2.2
+    value_streams:
+    - Integrate
+    controls:
+    - Defect
+  - name: Consumption Experience
+    group: Consume
+    level1_group: Deliver
+    section: 8.1.1
+    value_streams:
+    - Consume
+    - Operate
+    controls:
+    - Interaction
+  - name: Identity
+    group: Consume
+    level1_group: Deliver
+    section: 8.1.2
+    value_streams:
+    - Consume
+    controls:
+    - Identity
+    - Entitlement
+  - name: Offer
+    group: Consume
+    level1_group: Deliver
+    section: 8.1.3
+    value_streams:
+    - Release
+    - Consume
+    controls:
+    - Service Offer Catalog
+    - Service Offer
+  - name: Order
+    group: Consume
+    level1_group: Deliver
+    section: 8.1.4
+    value_streams:
+    - Integrate
+    - Consume
+    controls:
+    - Order
+    - Subscription
+  - name: Chargeback
+    group: Consume
+    level1_group: Deliver
+    section: 8.1.5
+    value_streams:
+    - Consume
+    controls:
+    - Chargeback Contract
+    - Chargeback Record
+  - name: Change
+    group: Fulfill
+    level1_group: Deliver
+    section: 8.2.1
+    value_streams:
+    - Deploy
+    - Consume
+    - Operate
+    controls:
+    - Change
+  - name: Fulfillment Orchestration
+    group: Fulfill
+    level1_group: Deliver
+    section: 8.2.2
+    value_streams:
+    - Integrate
+    - Deploy
+    - Consume
+    controls:
+    - Desired Product Instance
+  - name: Resource
+    group: Fulfill
+    level1_group: Deliver
+    section: 8.2.3
+    value_streams:
+    - Deploy
+    - Consume
+    controls:
+    - Resource
+  - name: Fulfillment
+    group: Fulfill
+    level1_group: Deliver
+    section: 8.2.4
+    value_streams:
+    - Integrate
+    - Deploy
+    - Release
+    - Consume
+    controls:
+    - Fulfillment Book
+  - name: Usage
+    group: Fulfill
+    level1_group: Deliver
+    section: 8.2.5
+    value_streams:
+    - Consume
+    controls:
+    - Usage Record
+  - name: Service Level
+    group: Support
+    level1_group: Run
+    section: 9.1.1
+    value_streams:
+    - Deploy
+    - Release
+    - Consume
+    - Operate
+    controls:
+    - Service Contract
+    - KPI
+  - name: Incident
+    group: Support
+    level1_group: Run
+    section: 9.1.2
+    value_streams:
+    - Consume
+    - Operate
+    controls:
+    - Incident
+  - name: Problem
+    group: Support
+    level1_group: Run
+    section: 9.1.3
+    value_streams:
+    - Integrate
+    - Deploy
+    - Operate
+    controls:
+    - Problem
+  - name: Knowledge
+    group: Support
+    level1_group: Run
+    section: 9.1.4
+    value_streams:
+    - Deploy
+    - Release
+    - Consume
+    - Operate
+    controls:
+    - Knowledge Item
+  - name: Configuration
+    group: Assure
+    level1_group: Run
+    section: 9.2.1
+    value_streams:
+    - Deploy
+    - Consume
+    - Operate
+    controls:
+    - Actual Product Instance
+  - name: Monitoring
+    group: Assure
+    level1_group: Run
+    section: 9.2.2
+    value_streams:
+    - Integrate
+    - Deploy
+    - Operate
+    controls:
+    - Service Monitor
+    - Log
+  - name: Event
+    group: Assure
+    level1_group: Run
+    section: 9.2.3
+    value_streams:
+    - Deploy
+    - Operate
+    controls:
+    - Event
+  - name: Diagnostics & Remediation
+    group: Assure
+    level1_group: Run
+    section: 9.2.4
+    value_streams:
+    - Deploy
+    - Operate
+    controls:
+    - Runbook
+  - name: Cost Modeling
+    group: Financial Management
+    level1_group: Supporting
+    section: 10.1.1
+    value_streams:
+    - Release
+    - Consume
+    controls:
+    - Cost Model
+  - name: Investment
+    group: Financial Management
+    level1_group: Supporting
+    section: 10.1.2
+    value_streams:
+    - Evaluate
+    controls:
+    - Budget Item
+  data_objects:
+  - name: Policy
+    concept: KeyDataObject
+    controlled_by: Policy
+    section: 6.1.1.1
+    value_streams:
+    - Evaluate
+    - Explore
+    - Integrate
+    key_attributes:
+    - Id
+    - Name
+    - Description
+    - Applicable Geography
+    purpose: A rule or directive the digital organization maintains and must comply with.
+  - name: Strategic Theme
+    concept: KeyDataObject
+    controlled_by: Strategy
+    section: 6.1.2.1
+    value_streams:
+    - Evaluate
+    - Explore
+    key_attributes:
+    - Id
+    - Name
+    - Description
+    purpose: A statement of direction that groups strategic objectives and gives context to portfolio decisions.
+  - name: Strategic Objective
+    concept: KeyDataObject
+    controlled_by: Strategy
+    section: 6.1.2.2
+    value_streams:
+    - Evaluate
+    - Explore
+    key_attributes:
+    - Id
+    - Name
+    - Description
+    purpose: A specific, actionable goal with measurable outcomes for named stakeholders.
+  - name: Architecture Roadmap Item
+    concept: KeyDataObject
+    controlled_by: Enterprise Architecture
+    section: 6.1.3.1
+    value_streams:
+    - Evaluate
+    - Explore
+    key_attributes:
+    - Id
+    - Name
+    - Status
+    - TargetDate
+    - Roadmaps
+    - Description
+    purpose: A work package on a timeline that realizes a step toward the target architecture.
+  - name: Architecture Blueprint
+    concept: KeyDataObject
+    controlled_by: Enterprise Architecture
+    section: 6.1.3.2
+    value_streams:
+    - Evaluate
+    - Explore
+    key_attributes:
+    - Id
+    - Name
+    - Description
+    - Version
+    - Artifact List
+    purpose: 'An approved architecture definition: the building blocks, including Digital Products, and how they relate.'
+  - name: Value Stream
+    concept: KeyDataObject
+    controlled_by: Enterprise Architecture
+    section: 6.1.3.3
+    value_streams:
+    - Evaluate
+    key_attributes:
+    - Id
+    - Name
+    - Description
+    - Stakeholder
+    - Value Stream Id (N)
+    purpose: An end-to-end view of how value reaches a stakeholder, for the business or for managing Digital Products.
+  - name: Portfolio Backlog Item
+    concept: KeyDataObject
+    controlled_by: Portfolio Backlog
+    section: 6.2.1.1
+    value_streams:
+    - Evaluate
+    - Explore
+    - Integrate
+    key_attributes:
+    - Id
+    - Name
+    - Description
+    - Prioritization
+    - Acceptance Criteria
+    - Related Products
+    - Demand Profile
+    - Cost Estimation
+    purpose: A discrete statement of portfolio-level work with acceptance criteria and funding needs.
+  - name: Scope Agreement
+    concept: KeyDataObject
+    controlled_by: Proposal
+    section: 6.2.2.1
+    value_streams:
+    - Evaluate
+    - Explore
+    - Integrate
+    key_attributes:
+    - Id
+    - Description
+    - Business Entity
+    - Anticipated Business Value (optional)
+    - Proposed Budget
+    - Approved Budget
+    - Status
+    - Context
+    purpose: 'A proposal built from rationalized Portfolio Backlog Items: budget, benefits, scope and status.'
+  - name: Digital Product
+    concept: BackboneDataObject
+    controlled_by: Product Portfolio
+    section: 6.2.3.1
+    backbone: Digital Product Backbone
+    value_streams:
+    - Evaluate
+    - Explore
+    key_attributes:
+    - Id
+    - Name
+    - Description
+    - Product Manager
+    - Investment Status
+    - Portfolio
+    - Business Criticality
+    - Security Risk
+    - Budget
+    - Total Cost of Ownership (TCO)
+    - Profit/Loss
+    purpose: The entity that represents a product across its whole lifecycle and every value stream.
+  - name: Product Backlog Item
+    concept: KeyDataObject
+    controlled_by: Product Backlog
+    section: 7.1.1.1
+    value_streams:
+    - Evaluate
+    - Explore
+    - Integrate
+    key_attributes:
+    - Id
+    - Title
+    - Type
+    - Description
+    - Status
+    - Parent Id
+    - Budget
+    - Actual Spend
+    - Start Date
+    - End Date
+    - Size
+    - Definition of Done
+    - Priority
+    - Value
+    purpose: 'A unit of work on a product: epic, feature, story or task.'
+  - name: Requirement
+    concept: KeyDataObject
+    controlled_by: Requirement
+    section: 7.1.2.1
+    value_streams:
+    - Explore
+    - Integrate
+    key_attributes:
+    - Id
+    - Name
+    - Description
+    - Purpose
+    - Type
+    - Status
+    - Reference
+    - Priority
+    - Owner
+    - Version
+    purpose: A long-lived statement of required functionality or a non-functional condition.
+  - name: Product Design
+    concept: BackboneDataObject
+    controlled_by: Product Design
+    section: 7.1.3.1
+    backbone: Digital Product Backbone
+    value_streams:
+    - Explore
+    - Integrate
+    key_attributes:
+    - Id
+    - Name
+    - Description
+    - Version
+    - Artifacts
+    purpose: The design artifacts for a Digital Product and the changes made to them for a release.
+  - name: Source
+    concept: KeyDataObject
+    controlled_by: Source Control
+    section: 7.1.4.1
+    value_streams:
+    - Integrate
+    key_attributes:
+    - Id
+    - Version
+    - Repository
+    - Owner
+    - Date/Time
+    - Person Id(s)
+    - Tags
+    - Comments
+    purpose: Source code and configuration under version control that realizes the design.
+  - name: Pipeline
+    concept: KeyDataObject
+    controlled_by: Pipeline
+    section: 7.1.5.1
+    value_streams:
+    - Integrate
+    key_attributes:
+    - Id
+    - Name
+    - Version
+    purpose: The orchestrated build, test and deployment workflow that delivers a release.
+  - name: Build Package
+    concept: KeyDataObject
+    controlled_by: Build Package
+    section: 7.1.6.1
+    value_streams:
+    - Integrate
+    key_attributes:
+    - Id
+    - Name
+    - Description
+    - Type
+    - Status
+    - Compliance Status
+    - Version
+    - Tags and Metadata
+    purpose: A deployable collection of build artifacts kept in a secure repository.
+  - name: Product Release
+    concept: BackboneDataObject
+    controlled_by: Release Composition
+    section: 7.1.7.1
+    backbone: Digital Product Backbone
+    value_streams:
+    - Integrate
+    - Deploy
+    - Release
+    key_attributes:
+    - Id
+    - Name
+    - Description
+    - Status
+    - Version
+    - Tags
+    - Deployment Model
+    - Actual Spend
+    purpose: A candidate or actual release of a Digital Product with its documentation and artifacts.
+  - name: Product Release Blueprint
+    concept: KeyDataObject
+    controlled_by: Release Composition
+    section: 7.1.7.2
+    value_streams: []
+    key_attributes:
+    - Id
+    - Name
+    - Description
+    - Version
+    - Deployment Model
+    purpose: The specification and procedures for deploying and operating a release.
+  - name: Test Case
+    concept: KeyDataObject
+    controlled_by: Test
+    section: 7.2.1.1
+    value_streams:
+    - Integrate
+    key_attributes:
+    - Id
+    - Name
+    - Description
+    - Status
+    - Result
+    purpose: A definition of how to validate one aspect of a release.
+  - name: Test Plan
+    concept: KeyDataObject
+    controlled_by: Test
+    section: 7.2.1.2
+    value_streams:
+    - Integrate
+    key_attributes:
+    - Id
+    - Name
+    - Description
+    - Status
+    - Version
+    - Test Runs
+    purpose: A plan that fixes test scope and coverage and lists the Test Cases to run.
+  - name: Defect
+    concept: KeyDataObject
+    controlled_by: Defect
+    section: 7.2.2.1
+    value_streams:
+    - Integrate
+    key_attributes:
+    - Id
+    - Title
+    - Description
+    - Status
+    purpose: An issue with a release that must be remediated to meet the requirements.
+  - name: Interaction
+    concept: KeyDataObject
+    controlled_by: Consumption Experience
+    section: 8.1.1.1
+    value_streams:
+    - Consume
+    - Operate
+    key_attributes:
+    - Id
+    - Description
+    - Status
+    - Opened For
+    - Assigned To
+    - Opened
+    - Updated
+    purpose: A consumer request for assistance through any channel; it is routed to an order, change, incident or request for information.
+  - name: Identity
+    concept: KeyDataObject
+    controlled_by: Identity
+    section: 8.1.2.1
+    value_streams:
+    - Consume
+    key_attributes:
+    - Id
+    - Name
+    - Discriminator
+    - Location
+    - Creation Date
+    - Expiry Date
+    - Organization Id
+    purpose: A consumer (person or machine) who may use the consumption experience.
+  - name: Entitlement
+    concept: KeyDataObject
+    controlled_by: Identity
+    section: 8.1.2.2
+    value_streams:
+    - Consume
+    key_attributes:
+    - Id
+    - Type
+    purpose: A grant or denial of access to Service Offers and resources.
+  - name: Service Offer Catalog
+    concept: KeyDataObject
+    controlled_by: Offer
+    section: 8.1.3.1
+    value_streams:
+    - Release
+    - Consume
+    key_attributes:
+    - Id
+    - Name
+    purpose: A collection of Service Offers offered to certain consumers.
+  - name: Service Offer
+    concept: BackboneDataObject
+    controlled_by: Offer
+    section: 8.1.3.2
+    backbone: Service Offer Backbone
+    value_streams:
+    - Release
+    - Consume
+    key_attributes:
+    - Id
+    - Catalog Id
+    - Name
+    - Start Date
+    - Expiry Date
+    - Status
+    - Price
+    - Required Value
+    purpose: The definition of what can be ordered, with price, delivery terms and service levels.
+  - name: Order
+    concept: KeyDataObject
+    controlled_by: Order
+    section: 8.1.4.1
+    value_streams:
+    - Integrate
+    - Consume
+    key_attributes:
+    - Id
+    - Status
+    - Date
+    - Latest Fulfill Date
+    - Actual Fulfill Date
+    - Required Value
+    purpose: A formal request to create, change or remove a consumer's use of a Service Offer.
+  - name: Subscription
+    concept: BackboneDataObject
+    controlled_by: Order
+    section: 8.1.4.2
+    backbone: Service Offer Backbone
+    value_streams:
+    - Integrate
+    - Consume
+    key_attributes:
+    - Id
+    - Status
+    - Start Date
+    - Expiry Date
+    purpose: The consumer's right to access a service.
+  - name: Chargeback Contract
+    concept: BackboneDataObject
+    controlled_by: Chargeback
+    section: 8.1.5.1
+    backbone: Service Offer Backbone
+    value_streams:
+    - Consume
+    key_attributes:
+    - Id
+    - Status
+    - Rule
+    - Frequency
+    purpose: 'The financial agreement between consumer and provider: billing rule and frequency.'
+  - name: Chargeback Record
+    concept: KeyDataObject
+    controlled_by: Chargeback
+    section: 8.1.5.2
+    value_streams:
+    - Consume
+    key_attributes:
+    - Id
+    - Status
+    - From Date
+    - To Date
+    - Amount
+    purpose: The actual charge or showback amount for one billing period.
+  - name: Change
+    concept: KeyDataObject
+    controlled_by: Change
+    section: 8.2.1.1
+    value_streams:
+    - Deploy
+    - Consume
+    - Operate
+    key_attributes:
+    - Id
+    - Title
+    - Description
+    - Category
+    - Approval Status
+    - Risk
+    - Planned Start Time
+    - Planned End Time
+    - Assigned To
+    purpose: A proposed change to one or more configuration items, with approval and risk.
+  - name: Desired Product Instance
+    concept: BackboneDataObject
+    controlled_by: Fulfillment Orchestration
+    section: 8.2.2.1
+    backbone: Digital Product Backbone
+    value_streams:
+    - Integrate
+    - Deploy
+    - Consume
+    key_attributes:
+    - Id
+    - Name
+    - Type
+    - Configuration Items
+    - Create Time
+    - Last Modified Time
+    purpose: The specification of a product deployment that meets the requirements in an Order or Change.
+  - name: Resource
+    concept: KeyDataObject
+    controlled_by: Resource
+    section: 8.2.3.1
+    value_streams:
+    - Deploy
+    - Consume
+    key_attributes:
+    - Id
+    - Type
+    - Status
+    purpose: A limited asset that can be allocated to a Digital Product.
+  - name: Fulfillment Book
+    concept: KeyDataObject
+    controlled_by: Fulfillment
+    section: 8.2.4.1
+    value_streams:
+    - Integrate
+    - Deploy
+    - Release
+    - Consume
+    key_attributes:
+    - Id
+    - Category
+    - Description
+    - Execution Time
+    purpose: A runbook that fulfills individual resources for orchestration.
+  - name: Usage Record
+    concept: KeyDataObject
+    controlled_by: Usage
+    section: 8.2.5.1
+    value_streams:
+    - Consume
+    key_attributes:
+    - Id
+    - Usage Date From
+    - Usage Date To
+    - Units
+    - Unit Type
+    purpose: A measurement of consumption of a service or component.
+  - name: Service Contract
+    concept: BackboneDataObject
+    controlled_by: Service Level
+    section: 9.1.1.1
+    backbone: Service Offer Backbone
+    value_streams:
+    - Deploy
+    - Release
+    - Consume
+    - Operate
+    key_attributes:
+    - Id
+    - Name
+    - Type
+    - Provider
+    - Consumer
+    - Start Date
+    - End Date
+    - Support Calendar
+    - Adherence Calculation Periodicity
+    - Maintenance Window
+    purpose: The service characteristics and measurement terms; a template for logical services, an instance for realized ones.
+  - name: KPI
+    concept: KeyDataObject
+    controlled_by: Service Level
+    section: 9.1.1.2
+    value_streams:
+    - Deploy
+    - Consume
+    key_attributes:
+    - Id
+    - Name
+    - Timestamp
+    - Metric
+    - Algorithm
+    purpose: The definition of a measured objective, its thresholds and its calculation.
+  - name: Incident
+    concept: KeyDataObject
+    controlled_by: Incident
+    section: 9.1.2.1
+    value_streams:
+    - Consume
+    - Operate
+    key_attributes:
+    - Id
+    - Title
+    - Category
+    - Subcategory
+    - Status
+    - Status Time
+    - Outage Start Time
+    - Outage End Time
+    - Severity
+    - Priority
+    - Description
+    - Assigned To
+    purpose: An unplanned interruption or quality reduction of a service.
+  - name: Problem
+    concept: KeyDataObject
+    controlled_by: Problem
+    section: 9.1.3.1
+    value_streams:
+    - Integrate
+    - Deploy
+    - Operate
+    key_attributes:
+    - Id
+    - Title
+    - Category
+    - Subcategory
+    - Description
+    - Status
+    - Status Time
+    - Assigned To
+    purpose: The underlying cause of severe or repeating incidents, tracked to resolution.
+  - name: Knowledge Item
+    concept: KeyDataObject
+    controlled_by: Knowledge
+    section: 9.1.4.1
+    value_streams:
+    - Deploy
+    - Release
+    - Consume
+    - Operate
+    key_attributes:
+    - Id
+    - Title
+    - Status
+    - Author Id
+    - Publish Date
+    - Expiry Date
+    - Body
+    purpose: Searchable content for operators and consumers, including known errors.
+  - name: Actual Product Instance
+    concept: BackboneDataObject
+    controlled_by: Configuration
+    section: 9.2.1.1
+    backbone: Digital Product Backbone
+    value_streams:
+    - Deploy
+    - Consume
+    - Operate
+    key_attributes:
+    - Id
+    - Name
+    - Type
+    - Configuration Items
+    - Create Time
+    - Last Modified Time
+    - Owner
+    - Location
+    purpose: The realized deployment of a Desired Product Instance, with its configuration items.
+  - name: Service Monitor
+    concept: KeyDataObject
+    controlled_by: Monitoring
+    section: 9.2.2.1
+    value_streams:
+    - Deploy
+    - Operate
+    key_attributes:
+    - Id
+    - Name
+    - Description
+    - Type
+    - Measurement Definitions
+    - Last Run Time
+    - Last Run Status
+    purpose: The definition of operational measurement for an instance or its parts.
+  - name: Log
+    concept: KeyDataObject
+    controlled_by: Monitoring
+    section: 9.2.2.2
+    value_streams:
+    - Integrate
+    - Deploy
+    - Operate
+    key_attributes:
+    - Id
+    - Timestamp
+    - Data
+    purpose: A record of information about configuration items for understanding health and usage.
+  - name: Event
+    concept: KeyDataObject
+    controlled_by: Event
+    section: 9.2.3.1
+    value_streams:
+    - Deploy
+    - Operate
+    key_attributes:
+    - Id
+    - Name
+    - Category
+    - Type
+    - Status
+    - Status Time
+    - Severity
+    - Threshold Definitions
+    - Assigned To
+    - Is Correlated
+    purpose: An alert signifying a change of state of a monitored item or instance.
+  - name: Runbook
+    concept: KeyDataObject
+    controlled_by: Diagnostics & Remediation
+    section: 9.2.4.1
+    value_streams:
+    - Deploy
+    - Operate
+    key_attributes:
+    - Id
+    - Description
+    - Category
+    - Execution Time
+    purpose: A routine set of operator procedures, manual or automated.
+  - name: Cost Model
+    concept: KeyDataObject
+    controlled_by: Cost Modeling
+    section: 10.1.1.1
+    value_streams:
+    - Release
+    - Consume
+    key_attributes:
+    - Id
+    - Name
+    - Description
+    - Status
+    - Version
+    - Calculation
+    - Resource Type
+    - Resource Id
+    - Resource Unit of Work
+    - Cost per Unit of Work
+    - Time Period
+    purpose: How a Digital Product accounts for the cost of the services it delivers.
+  - name: Budget Item
+    concept: KeyDataObject
+    controlled_by: Investment
+    section: 10.1.2.1
+    value_streams:
+    - Evaluate
+    key_attributes:
+    - Id
+    - Financial Period
+    - Investment Type
+    - Approved Budget
+    - Spend
+    - Forecast
+    purpose: An approved investment for one or more Digital Products in a financial period.
+  data_relationships:
+  - name: Policy to Digital Product
+    source: Policy
+    target: Digital Product
+    standard_cardinality: n:m
+    targets_per_source: '*'
+    sources_per_target: '*'
+    section: 6.1.1.1; 6.2.3.1
+  - name: Policy to Architecture Roadmap Item
+    source: Policy
+    target: Architecture Roadmap Item
+    standard_cardinality: n:m
+    targets_per_source: '*'
+    sources_per_target: '*'
+    section: 6.1.1.1; 6.1.3.1
+  - name: Policy to Portfolio Backlog Item
+    source: Policy
+    target: Portfolio Backlog Item
+    standard_cardinality: n:m
+    targets_per_source: '*'
+    sources_per_target: '*'
+    section: 6.1.1.1; 6.2.1.1
+  - name: Policy to Requirement
+    source: Policy
+    target: Requirement
+    standard_cardinality: n:m
+    targets_per_source: '*'
+    sources_per_target: '*'
+    section: 6.1.1.1; 7.1.2.1
+  - name: Strategic Theme to Strategic Objective
+    source: Strategic Theme
+    target: Strategic Objective
+    standard_cardinality: n:m
+    targets_per_source: '*'
+    sources_per_target: '*'
+    section: 6.1.2.1; 6.1.2.2
+  - name: Strategic Objective to Portfolio Backlog Item
+    source: Strategic Objective
+    target: Portfolio Backlog Item
+    standard_cardinality: n:m
+    targets_per_source: '*'
+    sources_per_target: '*'
+    section: 6.1.2.2; 6.2.1.1
+  - name: Strategic Objective to Architecture Roadmap Item
+    source: Strategic Objective
+    target: Architecture Roadmap Item
+    standard_cardinality: n:m
+    targets_per_source: '*'
+    sources_per_target: '*'
+    section: 6.1.2.2; 6.1.3.1
+  - name: Architecture Roadmap Item to Product Backlog Item
+    source: Architecture Roadmap Item
+    target: Product Backlog Item
+    standard_cardinality: n:m
+    targets_per_source: '*'
+    sources_per_target: '*'
+    section: 6.1.3.1
+    note: Stated only from the Roadmap Item side.
+  - name: Portfolio Backlog Item to Architecture Roadmap Item
+    source: Portfolio Backlog Item
+    target: Architecture Roadmap Item
+    standard_cardinality: n:1
+    targets_per_source: 0..1
+    sources_per_target: '*'
+    section: 6.2.1.1
+    note: Stated only from the Portfolio Backlog Item side; the Roadmap Item section lists Product Backlog Item instead.
+  - name: Architecture Roadmap Item to Value Stream
+    source: Architecture Roadmap Item
+    target: Value Stream
+    standard_cardinality: n:m
+    targets_per_source: '*'
+    sources_per_target: '*'
+    section: 6.1.3.1; 6.1.3.3
+  - name: Architecture Roadmap Item to Architecture Blueprint
+    source: Architecture Roadmap Item
+    target: Architecture Blueprint
+    standard_cardinality: n:m
+    targets_per_source: '*'
+    sources_per_target: '*'
+    section: 6.1.3.1; 6.1.3.2
+  - name: Architecture Blueprint to Digital Product
+    source: Architecture Blueprint
+    target: Digital Product
+    standard_cardinality: n:m
+    targets_per_source: '*'
+    sources_per_target: '*'
+    section: 6.1.3.2; 6.2.3.1
+  - name: Value Stream to Digital Product
+    source: Value Stream
+    target: Digital Product
+    standard_cardinality: n:m
+    targets_per_source: '*'
+    sources_per_target: '*'
+    section: 6.1.3.3; 6.2.3.1
+  - name: Portfolio Backlog Item to Scope Agreement
+    source: Portfolio Backlog Item
+    target: Scope Agreement
+    standard_cardinality: '1:1'
+    targets_per_source: 0..1
+    sources_per_target: 0..1
+    section: 6.2.1.1; 6.2.2.1
+    note: 'Conflict: 6.2.2.1 gives Scope Agreement to Portfolio Backlog Item as n:m.'
+  - name: Portfolio Backlog Item to Digital Product
+    source: Portfolio Backlog Item
+    target: Digital Product
+    standard_cardinality: n:m
+    targets_per_source: '*'
+    sources_per_target: '*'
+    section: 6.2.1.1; 6.2.3.1
+    note: 'Conflict: 6.2.3.1 gives Digital Product to Portfolio Backlog Item as 1:n.'
+  - name: Portfolio Backlog Item to Product Backlog Item
+    source: Portfolio Backlog Item
+    target: Product Backlog Item
+    standard_cardinality: 1:n
+    targets_per_source: '*'
+    sources_per_target: 0..1
+    section: 6.2.1.1; 7.1.1.1
+  - name: Requirement to Portfolio Backlog Item
+    source: Requirement
+    target: Portfolio Backlog Item
+    standard_cardinality: n:m
+    targets_per_source: '*'
+    sources_per_target: '*'
+    section: 6.2.1.1; 7.1.2.1
+  - name: Scope Agreement to Budget Item
+    source: Scope Agreement
+    target: Budget Item
+    standard_cardinality: n:1
+    targets_per_source: 0..1
+    sources_per_target: '*'
+    section: 6.2.2.1; 10.1.2.1
+  - name: Scope Agreement to Product Backlog Item
+    source: Scope Agreement
+    target: Product Backlog Item
+    standard_cardinality: 1:n
+    targets_per_source: '*'
+    sources_per_target: 0..1
+    section: 6.2.2.1
+    note: Stated only from the Scope Agreement side.
+  - name: Digital Product to Scope Agreement
+    source: Digital Product
+    target: Scope Agreement
+    standard_cardinality: n:m
+    targets_per_source: '*'
+    sources_per_target: '*'
+    section: 6.2.3.1
+    note: Stated only from the Digital Product side.
+  - name: Digital Product to Product Design
+    source: Digital Product
+    target: Product Design
+    standard_cardinality: 1:n
+    targets_per_source: '*'
+    sources_per_target: 0..1
+    section: 6.2.3.1; 7.1.3.1
+  - name: Digital Product to Digital Product
+    source: Digital Product
+    target: Digital Product
+    standard_cardinality: n:m
+    targets_per_source: '*'
+    sources_per_target: '*'
+    section: 6.2.3.1
+    note: Reflexive; 11.7.7 says this version defines no reflexive relationships.
+  - name: Product Backlog Item to Digital Product
+    source: Product Backlog Item
+    target: Digital Product
+    standard_cardinality: n:1
+    targets_per_source: 0..1
+    sources_per_target: '*'
+    section: 7.1.1.1
+    note: Stated only from the Product Backlog Item side.
+  - name: Product Backlog Item to Product Backlog Item (parent and child)
+    source: Product Backlog Item
+    target: Product Backlog Item
+    standard_cardinality: 1:n
+    targets_per_source: '*'
+    sources_per_target: 0..1
+    section: 7.1.1.1
+    note: 'Reflexive: parent and child items.'
+  - name: Product Backlog Item to Product Backlog Item (dependency)
+    source: Product Backlog Item
+    target: Product Backlog Item
+    standard_cardinality: n:m
+    targets_per_source: '*'
+    sources_per_target: '*'
+    section: 7.1.1.1
+    note: 'Reflexive: dependency between items.'
+  - name: Product Backlog Item to Product Release
+    source: Product Backlog Item
+    target: Product Release
+    standard_cardinality: n:1
+    targets_per_source: 0..1
+    sources_per_target: '*'
+    section: 7.1.1.1; 7.1.7.1
+    note: 'Conflict: 7.1.1.1 writes the cardinality as 1:n but explains it as one release per item.'
+  - name: Product Backlog Item to Product Design
+    source: Product Backlog Item
+    target: Product Design
+    standard_cardinality: n:1
+    targets_per_source: 0..1
+    sources_per_target: '*'
+    section: 7.1.1.1; 7.1.3.1
+  - name: Product Backlog Item to Source
+    source: Product Backlog Item
+    target: Source
+    standard_cardinality: n:m
+    targets_per_source: '*'
+    sources_per_target: '*'
+    section: 7.1.1.1; 7.1.4.1
+  - name: Product Backlog Item to Defect
+    source: Product Backlog Item
+    target: Defect
+    standard_cardinality: n:m
+    targets_per_source: '*'
+    sources_per_target: '*'
+    section: 7.1.1.1; 7.2.2.1
+    note: 'Conflict: 7.2.2.1 gives Defect to Product Backlog Item as 1:n.'
+  - name: Product Backlog Item to Requirement
+    source: Product Backlog Item
+    target: Requirement
+    standard_cardinality: n:m
+    targets_per_source: '*'
+    sources_per_target: '*'
+    section: 7.1.1.1; 7.1.2.1
+  - name: Product Backlog Item to Test Case
+    source: Product Backlog Item
+    target: Test Case
+    standard_cardinality: n:m
+    targets_per_source: '*'
+    sources_per_target: '*'
+    section: 7.1.1.1; 7.2.1.1
+  - name: Requirement to Product Design
+    source: Requirement
+    target: Product Design
+    standard_cardinality: n:m
+    targets_per_source: '*'
+    sources_per_target: '*'
+    section: 7.1.2.1; 7.1.3.1
+  - name: Requirement to Requirement
+    source: Requirement
+    target: Requirement
+    standard_cardinality: n:m
+    targets_per_source: '*'
+    sources_per_target: '*'
+    section: 7.1.2.1
+    note: 'Reflexive: recursive or hierarchical.'
+  - name: Requirement to Test Case
+    source: Requirement
+    target: Test Case
+    standard_cardinality: 1:n
+    targets_per_source: '*'
+    sources_per_target: 0..1
+    section: 7.1.2.1; 7.2.1.1
+    note: 'Conflict: 7.2.1.1 gives Test Case to Requirement as n:m.'
+  - name: Product Design to Product Release
+    source: Product Design
+    target: Product Release
+    standard_cardinality: 1:n
+    targets_per_source: '*'
+    sources_per_target: 0..1
+    section: 7.1.3.1; 7.1.7.1
+  - name: Source to Pipeline
+    source: Source
+    target: Pipeline
+    standard_cardinality: n:m
+    targets_per_source: '*'
+    sources_per_target: '*'
+    section: 7.1.4.1; 7.1.5.1
+    note: 7.1.5.1 names the Source end only as "source code".
+  - name: Source to Build Package
+    source: Source
+    target: Build Package
+    standard_cardinality: n:m
+    targets_per_source: '*'
+    sources_per_target: '*'
+    section: 7.1.4.1; 7.1.6.1
+  - name: Source to Test Case
+    source: Source
+    target: Test Case
+    standard_cardinality: n:m
+    targets_per_source: '*'
+    sources_per_target: '*'
+    section: 7.1.4.1; 7.2.1.1
+    note: 'Conflict: 7.2.1.1 writes Test Case to source code as 1:n.'
+  - name: Source to Defect
+    source: Source
+    target: Defect
+    standard_cardinality: n:m
+    targets_per_source: '*'
+    sources_per_target: '*'
+    section: 7.1.4.1
+    note: Stated only from the Source side.
+  - name: Source to Digital Product
+    source: Source
+    target: Digital Product
+    standard_cardinality: n:1
+    targets_per_source: 0..1
+    sources_per_target: '*'
+    section: 7.1.4.1
+    note: Stated only from the Source side.
+  - name: Pipeline to Test Plan
+    source: Pipeline
+    target: Test Plan
+    standard_cardinality: n:m
+    targets_per_source: '*'
+    sources_per_target: '*'
+    section: 7.1.5.1
+    note: 'Conflict: 7.2.1.2 gives Test Plan to Pipeline as n:1.'
+  - name: Pipeline to Build Package
+    source: Pipeline
+    target: Build Package
+    standard_cardinality: 1:n
+    targets_per_source: '*'
+    sources_per_target: 0..1
+    section: 7.1.5.1; 7.1.6.1
+  - name: Pipeline to Product Release Blueprint
+    source: Pipeline
+    target: Product Release Blueprint
+    standard_cardinality: 1:n
+    targets_per_source: '*'
+    sources_per_target: 0..1
+    section: 7.1.5.1; 7.1.7.2
+  - name: Pipeline to Change
+    source: Pipeline
+    target: Change
+    standard_cardinality: 1:n
+    targets_per_source: '*'
+    sources_per_target: 0..1
+    section: 7.1.5.1; 8.2.1.1
+  - name: Build Package to Test Plan
+    source: Build Package
+    target: Test Plan
+    standard_cardinality: n:m
+    targets_per_source: '*'
+    sources_per_target: '*'
+    section: 7.1.6.1; 7.2.1.2
+  - name: Build Package to Product Release Blueprint
+    source: Build Package
+    target: Product Release Blueprint
+    standard_cardinality: n:m
+    targets_per_source: '*'
+    sources_per_target: '*'
+    section: 7.1.6.1; 7.1.7.2
+  - name: Build Package to Build Package
+    source: Build Package
+    target: Build Package
+    standard_cardinality: n:m
+    targets_per_source: '*'
+    sources_per_target: '*'
+    section: 7.1.6.1
+    note: 'Reflexive: dependency between packages.'
+  - name: Test Case to Build Package
+    source: Test Case
+    target: Build Package
+    standard_cardinality: n:m
+    targets_per_source: '*'
+    sources_per_target: '*'
+    section: 7.2.1.1
+    note: Stated only from the Test Case side.
+  - name: Product Release to Product Release Blueprint
+    source: Product Release
+    target: Product Release Blueprint
+    standard_cardinality: n:1
+    targets_per_source: 0..1
+    sources_per_target: '*'
+    section: 7.1.7.1
+    note: 'Conflict: 7.1.7.2 gives Product Release to Product Release Blueprint as 1:n.'
+  - name: Product Release to Defect
+    source: Product Release
+    target: Defect
+    standard_cardinality: n:m
+    targets_per_source: '*'
+    sources_per_target: '*'
+    section: 7.1.7.1; 7.2.2.1
+  - name: Product Release to Desired Product Instance
+    source: Product Release
+    target: Desired Product Instance
+    standard_cardinality: 1:n
+    targets_per_source: '*'
+    sources_per_target: 0..1
+    section: 7.1.7.1; 8.2.2.1
+  - name: Product Release to Product Release
+    source: Product Release
+    target: Product Release
+    standard_cardinality: n:m
+    targets_per_source: '*'
+    sources_per_target: '*'
+    section: 7.1.7.1
+    note: 'Reflexive: dependency on other products in a given version.'
+  - name: Service Offer to Product Release Blueprint
+    source: Service Offer
+    target: Product Release Blueprint
+    standard_cardinality: n:1
+    targets_per_source: 0..1
+    sources_per_target: '*'
+    section: 8.1.3.2
+    note: 'Conflict: 7.1.7.2 gives Service Offer to Product Release Blueprint as n:m.'
+  - name: Test Case to Test Plan
+    source: Test Case
+    target: Test Plan
+    standard_cardinality: n:m
+    targets_per_source: '*'
+    sources_per_target: '*'
+    section: 7.2.1.1; 7.2.1.2
+  - name: Test Case to Defect
+    source: Test Case
+    target: Defect
+    standard_cardinality: 1:n
+    targets_per_source: '*'
+    sources_per_target: 0..1
+    section: 7.2.1.1; 7.2.2.1
+  - name: Test Case to Test Case
+    source: Test Case
+    target: Test Case
+    standard_cardinality: 1:n
+    targets_per_source: '*'
+    sources_per_target: 0..1
+    section: 7.2.1.1
+    note: Reflexive.
+  - name: Product Release to Test Plan
+    source: Product Release
+    target: Test Plan
+    standard_cardinality: n:m
+    targets_per_source: '*'
+    sources_per_target: '*'
+    section: 7.2.1.2
+    note: Stated only from the Test Plan section.
+  - name: Test Plan to Test Plan
+    source: Test Plan
+    target: Test Plan
+    standard_cardinality: n:m
+    targets_per_source: '*'
+    sources_per_target: '*'
+    section: 7.2.1.2
+    note: 'Reflexive: decomposition or relation.'
+  - name: Problem to Defect
+    source: Problem
+    target: Defect
+    standard_cardinality: 1:n
+    targets_per_source: '*'
+    sources_per_target: 0..1
+    section: 7.2.2.1; 9.1.3.1
+  - name: Interaction to Identity
+    source: Interaction
+    target: Identity
+    standard_cardinality: n:1
+    targets_per_source: 0..1
+    sources_per_target: '*'
+    section: 8.1.1.1
+    note: 'Conflict: 8.1.2.1 writes Identity to Interaction as n:1, which reads the other way.'
+  - name: Interaction to Order
+    source: Interaction
+    target: Order
+    standard_cardinality: n:1
+    targets_per_source: 0..1
+    sources_per_target: '*'
+    section: 8.1.1.1
+    note: 'Conflict: 8.1.4.1 gives Order to Interaction as 1:1.'
+  - name: Interaction to Incident
+    source: Interaction
+    target: Incident
+    standard_cardinality: 1:n
+    targets_per_source: '*'
+    sources_per_target: 0..1
+    section: 8.1.1.1; 9.1.2.1
+  - name: Interaction to Knowledge Item
+    source: Interaction
+    target: Knowledge Item
+    standard_cardinality: 1:n
+    targets_per_source: '*'
+    sources_per_target: 0..1
+    section: 8.1.1.1
+    note: 'Conflict: 9.1.4.1 gives Knowledge Item to Interaction as n:m.'
+  - name: Identity to Order
+    source: Identity
+    target: Order
+    standard_cardinality: 1:n
+    targets_per_source: '*'
+    sources_per_target: 0..1
+    section: 8.1.2.1; 8.1.4.1
+  - name: Identity to Entitlement
+    source: Identity
+    target: Entitlement
+    standard_cardinality: 1:n
+    targets_per_source: '*'
+    sources_per_target: 0..1
+    section: 8.1.2.1
+    note: 'Conflict: 8.1.2.2 gives Entitlement to Identity as n:m.'
+  - name: Subscription to Identity
+    source: Subscription
+    target: Identity
+    standard_cardinality: n:1
+    targets_per_source: 0..1
+    sources_per_target: '*'
+    section: 8.1.2.1; 8.1.4.2
+  - name: Entitlement to Service Offer
+    source: Entitlement
+    target: Service Offer
+    standard_cardinality: n:1
+    targets_per_source: 0..1
+    sources_per_target: '*'
+    section: 8.1.2.2; 8.1.3.2
+  - name: Service Offer Catalog to Service Offer
+    source: Service Offer Catalog
+    target: Service Offer
+    standard_cardinality: n:m
+    targets_per_source: '*'
+    sources_per_target: '*'
+    section: 8.1.3.1
+    note: Stated only from the Service Offer Catalog side.
+  - name: Service Offer to Order
+    source: Service Offer
+    target: Order
+    standard_cardinality: 1:n
+    targets_per_source: '*'
+    sources_per_target: 0..1
+    section: 8.1.3.2; 8.1.4.1
+  - name: Service Offer to Subscription
+    source: Service Offer
+    target: Subscription
+    standard_cardinality: n:m
+    targets_per_source: '*'
+    sources_per_target: '*'
+    section: 8.1.3.2
+    note: 'Conflict: 8.1.4.2 gives Subscription to Service Offer as n:1.'
+  - name: Service Offer to Interaction
+    source: Service Offer
+    target: Interaction
+    standard_cardinality: n:1
+    targets_per_source: 0..1
+    sources_per_target: '*'
+    section: 8.1.3.2
+    note: Stated only from the Service Offer side.
+  - name: Service Offer to Service Offer
+    source: Service Offer
+    target: Service Offer
+    standard_cardinality: n:m
+    targets_per_source: '*'
+    sources_per_target: '*'
+    section: 8.1.3.2
+    note: 'Reflexive: composite offers.'
+  - name: Order to Subscription
+    source: Order
+    target: Subscription
+    standard_cardinality: n:m
+    targets_per_source: '*'
+    sources_per_target: '*'
+    section: 8.1.4.1
+    note: Stated only from the Order side.
+  - name: Order to Change
+    source: Order
+    target: Change
+    standard_cardinality: 1:n
+    targets_per_source: '*'
+    sources_per_target: 0..1
+    section: 8.1.4.1
+    note: 'Conflict: 8.2.1.1 gives Change to Order as 1:n.'
+  - name: Subscription to Chargeback Contract
+    source: Subscription
+    target: Chargeback Contract
+    standard_cardinality: 1:n
+    targets_per_source: '*'
+    sources_per_target: 0..1
+    section: 8.1.4.2; 8.1.5.1
+  - name: Subscription to Desired Product Instance
+    source: Subscription
+    target: Desired Product Instance
+    standard_cardinality: n:1
+    targets_per_source: 0..1
+    sources_per_target: '*'
+    section: 8.1.4.2; 8.2.2.1
+    note: 'Conflict: 8.2.2.1 writes Desired Product Instance to Subscription as n:1, which reads the other way.'
+  - name: Subscription to Service Contract
+    source: Subscription
+    target: Service Contract
+    standard_cardinality: '1:1'
+    targets_per_source: 0..1
+    sources_per_target: 0..1
+    section: 8.1.4.2; 9.1.1.1
+  - name: Chargeback Contract to Chargeback Record
+    source: Chargeback Contract
+    target: Chargeback Record
+    standard_cardinality: 1:n
+    targets_per_source: '*'
+    sources_per_target: 0..1
+    section: 8.1.5.1
+    note: 'Conflict: 8.1.5.2 writes Chargeback Record to Chargeback Contract as 1:n.'
+  - name: Chargeback Record to Usage Record
+    source: Chargeback Record
+    target: Usage Record
+    standard_cardinality: 1:n
+    targets_per_source: '*'
+    sources_per_target: 0..1
+    section: 8.1.5.2
+    note: Stated only from the Chargeback Record side.
+  - name: Usage Record to Chargeback Contract
+    source: Usage Record
+    target: Chargeback Contract
+    standard_cardinality: n:1
+    targets_per_source: 0..1
+    sources_per_target: '*'
+    section: 8.2.5.1
+    note: Stated only from the Usage Record side. 8.1.5.2 lists Chargeback Record to Usage Record instead.
+  - name: Change to Desired Product Instance
+    source: Change
+    target: Desired Product Instance
+    standard_cardinality: 1:n
+    targets_per_source: '*'
+    sources_per_target: 0..1
+    section: 8.2.1.1; 8.2.2.1
+    note: 'Conflict: 8.2.2.1 writes Desired Product Instance to Change as 1:n, which reads the other way.'
+  - name: Change to Change
+    source: Change
+    target: Change
+    standard_cardinality: n:m
+    targets_per_source: '*'
+    sources_per_target: '*'
+    section: 8.2.1.1
+    note: 'Reflexive: dependency or decomposition.'
+  - name: Incident to Change
+    source: Incident
+    target: Change
+    standard_cardinality: 1:n
+    targets_per_source: '*'
+    sources_per_target: 0..1
+    section: 8.2.1.1; 9.1.2.1
+    note: 'Conflict: 8.2.1.1 also lists Incident to Change as n:1 and Change to Incident as 1:n.'
+  - name: Problem to Change
+    source: Problem
+    target: Change
+    standard_cardinality: 1:n
+    targets_per_source: '*'
+    sources_per_target: 0..1
+    section: 8.2.1.1; 9.1.3.1
+  - name: Desired Product Instance to Actual Product Instance
+    source: Desired Product Instance
+    target: Actual Product Instance
+    standard_cardinality: '1:1'
+    targets_per_source: 0..1
+    sources_per_target: 0..1
+    section: 8.2.2.1; 9.2.1.1
+  - name: Desired Product Instance to Fulfillment Book
+    source: Desired Product Instance
+    target: Fulfillment Book
+    standard_cardinality: m:n
+    targets_per_source: '*'
+    sources_per_target: '*'
+    section: 8.2.2.1; 8.2.4.1
+    note: Written m:n; read as n:m.
+  - name: Desired Product Instance to Resource
+    source: Desired Product Instance
+    target: Resource
+    standard_cardinality: 1:n
+    targets_per_source: '*'
+    sources_per_target: 0..1
+    section: 8.2.2.1; 8.2.3.1
+  - name: Desired Product Instance to Desired Product Instance
+    source: Desired Product Instance
+    target: Desired Product Instance
+    standard_cardinality: n:m
+    targets_per_source: '*'
+    sources_per_target: '*'
+    section: 8.2.2.1
+    note: 'Reflexive: dependence on other products.'
+  - name: Resource to Usage Record
+    source: Resource
+    target: Usage Record
+    standard_cardinality: 1:n
+    targets_per_source: '*'
+    sources_per_target: 0..1
+    section: 8.2.3.1; 8.2.5.1
+  - name: Incident to Service Contract
+    source: Incident
+    target: Service Contract
+    standard_cardinality: n:m
+    targets_per_source: '*'
+    sources_per_target: '*'
+    section: 9.1.1.1; 9.1.2.1
+  - name: Actual Product Instance to Service Contract
+    source: Actual Product Instance
+    target: Service Contract
+    standard_cardinality: 1:n
+    targets_per_source: '*'
+    sources_per_target: 0..1
+    section: 9.1.1.1; 9.2.1.1
+  - name: Service Contract to KPI
+    source: Service Contract
+    target: KPI
+    standard_cardinality: n:m
+    targets_per_source: '*'
+    sources_per_target: '*'
+    section: 9.1.1.1
+    note: 'Conflict: 9.1.1.2 gives KPI to Service Contract as 1:n.'
+  - name: Incident to Problem
+    source: Incident
+    target: Problem
+    standard_cardinality: n:m
+    targets_per_source: '*'
+    sources_per_target: '*'
+    section: 9.1.2.1; 9.1.3.1
+  - name: Incident to Knowledge Item
+    source: Incident
+    target: Knowledge Item
+    standard_cardinality: n:m
+    targets_per_source: '*'
+    sources_per_target: '*'
+    section: 9.1.2.1; 9.1.4.1
+  - name: Incident to Runbook
+    source: Incident
+    target: Runbook
+    standard_cardinality: n:m
+    targets_per_source: '*'
+    sources_per_target: '*'
+    section: 9.1.2.1; 9.2.4.1
+  - name: Incident to Actual Product Instance
+    source: Incident
+    target: Actual Product Instance
+    standard_cardinality: n:m
+    targets_per_source: '*'
+    sources_per_target: '*'
+    section: 9.1.2.1; 9.2.1.1
+  - name: Event to Incident
+    source: Event
+    target: Incident
+    standard_cardinality: n:m
+    targets_per_source: '*'
+    sources_per_target: '*'
+    section: 9.1.2.1; 9.2.3.1
+  - name: Incident to Incident
+    source: Incident
+    target: Incident
+    standard_cardinality: n:m
+    targets_per_source: '*'
+    sources_per_target: '*'
+    section: 9.1.2.1
+    note: 'Reflexive: incidents about the same issue.'
+  - name: Problem to Portfolio Backlog Item
+    source: Problem
+    target: Portfolio Backlog Item
+    standard_cardinality: '1:1'
+    targets_per_source: 0..1
+    sources_per_target: 0..1
+    section: 9.1.3.1
+    note: Stated only from the Problem side.
+  - name: Problem to Knowledge Item
+    source: Problem
+    target: Knowledge Item
+    standard_cardinality: n:m
+    targets_per_source: '*'
+    sources_per_target: '*'
+    section: 9.1.3.1; 9.1.4.1
+  - name: Problem to Actual Product Instance
+    source: Problem
+    target: Actual Product Instance
+    standard_cardinality: n:m
+    targets_per_source: '*'
+    sources_per_target: '*'
+    section: 9.1.3.1; 9.2.1.1
+  - name: Knowledge Item to Knowledge Item
+    source: Knowledge Item
+    target: Knowledge Item
+    standard_cardinality: n:m
+    targets_per_source: '*'
+    sources_per_target: '*'
+    section: 9.1.4.1
+    note: Reflexive.
+  - name: Runbook to Actual Product Instance
+    source: Runbook
+    target: Actual Product Instance
+    standard_cardinality: n:m
+    targets_per_source: '*'
+    sources_per_target: '*'
+    section: 9.2.1.1; 9.2.4.1
+  - name: Actual Product Instance to Event
+    source: Actual Product Instance
+    target: Event
+    standard_cardinality: n:m
+    targets_per_source: '*'
+    sources_per_target: '*'
+    section: 9.2.1.1; 9.2.3.1
+  - name: Service Monitor to Actual Product Instance
+    source: Service Monitor
+    target: Actual Product Instance
+    standard_cardinality: 1:n
+    targets_per_source: '*'
+    sources_per_target: 0..1
+    section: 9.2.1.1; 9.2.2.1
+  - name: Actual Product Instance to Actual Product Instance
+    source: Actual Product Instance
+    target: Actual Product Instance
+    standard_cardinality: n:m
+    targets_per_source: '*'
+    sources_per_target: '*'
+    section: 9.2.1.1
+    note: 'Reflexive: dependence on other products.'
+  - name: Service Monitor to Log
+    source: Service Monitor
+    target: Log
+    standard_cardinality: 1:n
+    targets_per_source: '*'
+    sources_per_target: 0..1
+    section: 9.2.2.1; 9.2.2.2
+  - name: Log to Event
+    source: Log
+    target: Event
+    standard_cardinality: n:m
+    targets_per_source: '*'
+    sources_per_target: '*'
+    section: 9.2.2.2; 9.2.3.1
+  - name: Event to Change
+    source: Event
+    target: Change
+    standard_cardinality: 1:n
+    targets_per_source: '*'
+    sources_per_target: 0..1
+    section: 9.2.3.1
+    note: Stated only from the Event side.
+  - name: Event to Event
+    source: Event
+    target: Event
+    standard_cardinality: n:m
+    targets_per_source: '*'
+    sources_per_target: '*'
+    section: 9.2.3.1
+    note: 'Reflexive: correlation to a primary event.'
+  - name: Event to Runbook
+    source: Event
+    target: Runbook
+    standard_cardinality: n:m
+    targets_per_source: '*'
+    sources_per_target: '*'
+    section: 9.2.4.1
+    note: Stated only from the Runbook section.
+  - name: Cost Model to Chargeback Record
+    source: Cost Model
+    target: Chargeback Record
+    standard_cardinality: 1:n
+    targets_per_source: '*'
+    sources_per_target: 0..1
+    section: 10.1.1.1
+    note: Stated only from the Cost Model side.
+  - name: Cost Model to Resource
+    source: Cost Model
+    target: Resource
+    standard_cardinality: 1:n
+    targets_per_source: '*'
+    sources_per_target: 0..1
+    section: 10.1.1.1
+    note: Stated only from the Cost Model side.
+  - name: Budget Item to Digital Product
+    source: Budget Item
+    target: Digital Product
+    standard_cardinality: n:1
+    targets_per_source: 0..1
+    sources_per_target: '*'
+    section: 10.1.2.1
+    note: Stated only from the Budget Item side.
+constraints:
+- id: IT4IT-MM-001
+  statement: The IT4IT metamodel is defined as a solution pattern in the ArchiMate language, and the reference architecture is exchangeable as a model in the ArchiMate model exchange
+    format.
+  strength: note
+  section: 11 (introduction); 11.6
+  checkable: none
+- id: IT4IT-MM-002
+  statement: The reference architecture is communicated at five abstraction levels. Only Levels 1, 2 and 3 are standardized; Levels 4 and 5 are not part of the normative standard.
+  strength: note
+  section: 11.2; 11.10
+  checkable: none
+- id: IT4IT-MM-003
+  statement: Anything added at Level 4 or Level 5 must be mappable back to what Levels 1 to 3 specify.
+  strength: must
+  section: 11.10.1
+  applies_when: level-4-or-5-content
+  checkable: none
+- id: IT4IT-MM-004
+  statement: Additions at Level 4 or Level 5 should build on and add to the Levels 1 to 3 model and should not change it.
+  strength: should
+  section: '11.10'
+  applies_when: level-4-or-5-content
+  checkable: none
+- id: IT4IT-MM-005
+  statement: Levels 4 and 5 are owned and controlled by the consumers of the standard, not by The Open Group.
+  strength: note
+  section: '11.10'
+  checkable: none
+- id: IT4IT-MM-006
+  statement: Level 1 introduces the seven value streams, the four functional groups plus the Supporting Functions, the Digital Product, key data objects and the functional components
+    that control them.
+  strength: note
+  section: 11.3; 3
+  checkable: none
+- id: IT4IT-MM-007
+  statement: Level 2 normatively defines the value streams and introduces scenarios, value stream stages and stakeholders.
+  strength: note
+  section: 11.4; 11.8
+  checkable: none
+- id: IT4IT-MM-008
+  statement: Level 3 normatively defines functional components, data objects, key attributes, relationships with cardinality, and data flows.
+  strength: note
+  section: 11.5; 11.9
+  checkable: none
+- id: IT4IT-MM-009
+  statement: Levels 2 and 3 together constitute the formal reference architecture.
+  strength: note
+  section: '11.6'
+  checkable: none
+- id: IT4IT-MM-010
+  statement: Capabilities are non-normative. They refine the Level 2 functional groups; each functional component belongs to one Level 2 group and can relate to one or several capabilities.
+  strength: note
+  section: 11.10.2
+  checkable: none
+- id: IT4IT-MM-011
+  statement: Where capabilities are described, they should be shown with the ArchiMate notation for consistency.
+  strength: should
+  section: 11.10.2
+  applies_when: capabilities-described
+  checkable: none
+- id: IT4IT-MM-012
+  statement: The simplified notation translates directly into the ArchiMate representation and is as formal as it.
+  strength: note
+  section: 11 (introduction)
+  checkable: none
+- id: IT4IT-MM-013
+  statement: The Snapshot text says it is not an approved standard and conformance to it must not be specified or claimed. This applies to the draft text read for this research, not
+    to the published 3.0 or 3.0.1.
+  strength: note
+  section: 1.3 (Snapshot)
+  applies_when: snapshot-text
+  checkable: none
+- id: IT4IT-MM-014
+  statement: 'Normative wording: "shall" is a requirement, "shall not" a prohibition, "should" a recommendation, "may" an option, "can" a possible behavior, and "will" means "shall".'
+  strength: note
+  section: '1.5'
+  checkable: none
+- id: IT4IT-MM-015
+  statement: 'The standard focuses on key data objects only: those mandatory for end-to-end operational and financial traceability of the product lifecycle. Other data objects are outside
+    its prescriptive control.'
+  strength: note
+  section: 11.7.5
+  checkable: none
+- id: IT4IT-MM-016
+  statement: Only functional components that affect key data objects are part of the reference architecture. Corporate finance, HR and contract systems are not, except where the standard
+    refers to them.
+  strength: note
+  section: 11.7.4
+  checkable: none
+- id: IT4IT-MM-017
+  statement: Functional groups are only groupings. The standard does not prescribe what capabilities an organization builds; the capabilities shown in Figure 78 are illustrative.
+  strength: note
+  section: 11.7.3
+  checkable: none
+- id: IT4IT-MM-018
+  statement: The Supporting Functions are defined only by the minimum functionality they must deliver and the essential data objects that main components expect from them; they are not
+    normatively defined in this version.
+  strength: note
+  section: 3.1; 10 (introduction); 11.7.3
+  checkable: none
+- id: IT4IT-DEF-001
+  statement: A functional component must have defined inputs and outputs that are data objects, and must have an impact on a key data object that it controls.
+  strength: must
+  section: 11.7.4
+  checkable: partial
+- id: IT4IT-DEF-002
+  statement: A functional component typically controls one key data object; the architecture does not insist on this and a component can control several, especially if they are intrinsically
+    connected.
+  strength: note
+  section: 11.7.4
+  checkable: none
+- id: IT4IT-DEF-003
+  statement: A single data object can be controlled by only one functional component, although a component may control several data objects.
+  strength: must
+  section: 11.7.5
+  checkable: static
+- id: IT4IT-DEF-004
+  statement: A data object must be controlled by applications; the standard defines the application building blocks for managing digital as functional components.
+  strength: must
+  section: '3.4'
+  checkable: none
+- id: IT4IT-DEF-005
+  statement: The eight functional groups below the four core groups must be established, and populated by their functional components, to manage Digital Products.
+  strength: must
+  section: '3.4'
+  checkable: none
+- id: IT4IT-DEF-006
+  statement: The stages of a value stream are not a sequence of activities. Value streams are abstract, not process descriptions.
+  strength: note
+  section: 11.8.1
+  checkable: none
+- id: IT4IT-DEF-007
+  statement: A value stream stage is defined by its entrance and exit criteria, its main activities, example stakeholders, and its participating data objects together with the functions
+    that contain them.
+  strength: must
+  section: 11.8.3; 5.x
+  checkable: partial
+- id: IT4IT-DEF-008
+  statement: A value stream is defined by its scenarios, its stages, its key stakeholder, its value and its cross-value-stream dependencies.
+  strength: must
+  section: 5; 11.8.1
+  checkable: partial
+- id: IT4IT-DEF-009
+  statement: The stakeholders listed for a stage are proposals, not normative requirements.
+  strength: note
+  section: 11.8.4
+  checkable: none
+- id: IT4IT-DEF-010
+  statement: Stakeholders must be refined when the reference architecture is used to derive a concrete implementation architecture at Level 5.
+  strength: must
+  section: 11.8.4
+  applies_when: level-5-derivation
+  checkable: none
+- id: IT4IT-DEF-011
+  statement: A scenario defines a situation in which a value stream should be triggered to add value to the value network.
+  strength: note
+  section: 11.8.2
+  checkable: none
+- id: IT4IT-DEF-012
+  statement: A value network describes relationships across value-creating functions; each activity both consumes value and produces it for potentially many other activities. It replaces
+    the waterfall-style value chain.
+  strength: note
+  section: 11.7.1; 3.2
+  checkable: none
+- id: IT4IT-DEF-013
+  statement: A system of record is a system that holds or controls authoritative source data. The lifecycle data objects are the authoritative or master data for managing digital.
+  strength: note
+  section: 11.7.6
+  checkable: none
+- id: IT4IT-DEF-014
+  statement: A Digital Product must include one or more Service Offers that define the Service Contract options for consumers.
+  strength: must
+  section: '4.4'
+  checkable: partial
+- id: IT4IT-DEF-015
+  statement: A Digital Product must provide interactions through machine interfaces, human interfaces, or both.
+  strength: must
+  section: '4.4'
+  checkable: none
+- id: IT4IT-DEF-016
+  statement: A Digital Product may be delivered as a Digital Product Instance, consumed inside or outside an organization, depend on other Digital Products, be made of other Digital
+    Products, and be a resource for other Digital Products. An instance may contain IT and non-IT resources and software.
+  strength: note
+  section: '4.4'
+  checkable: none
+- id: IT4IT-DEF-017
+  statement: A Service Offer must include every element that will become part of the contract if the offer is accepted.
+  strength: must
+  section: 4.4.2
+  checkable: none
+- id: IT4IT-DEF-018
+  statement: When a consumer accepts an offer, an instance of the Digital Product is created and the provider-consumer relationship is recorded in a contract based on that offer.
+  strength: note
+  section: 4.4.3
+  checkable: none
+- id: IT4IT-DEF-019
+  statement: A Product Manager should be able to describe return on investment across the product lifecycle; offering an instance at no direct price should be a deliberate pricing decision
+    explained in the product's lifetime financial model.
+  strength: should
+  section: 4.4.4
+  checkable: none
+- id: IT4IT-DEF-020
+  statement: The system behind a Digital Product should not be retired until all contractual obligations are met or the contract is terminated under the provider-consumer agreement.
+  strength: should
+  section: '4.12'
+  applies_when: retirement
+  checkable: none
+- id: IT4IT-DEF-021
+  statement: A Digital Product Manager must consider end-of-life scenarios and give consumers recourse when a product reaches end of life.
+  strength: must
+  section: '4.12'
+  applies_when: retirement
+  checkable: none
+- id: IT4IT-DEF-022
+  statement: Until a system is retired, its resources and dependencies must be managed until no active consumers depend on it and all instances are retired, and longer where regulation
+    requires data retention.
+  strength: must
+  section: '4.13'
+  applies_when: retirement
+  checkable: none
+- id: IT4IT-DEF-023
+  statement: Data governance must be applied across the whole product lifecycle, including retention and privacy compliance.
+  strength: must
+  section: '4.14'
+  checkable: none
+- id: IT4IT-DEF-024
+  statement: Policies and controls should keep the design, planning, source and related information available for much longer than a project-oriented model would.
+  strength: should
+  section: '4.14'
+  checkable: none
+- id: IT4IT-DEF-025
+  statement: A Service Offer should define all anticipated consumer interaction methods and set expectations for human and machine consumers, such as response time and planned downtime
+    notice.
+  strength: should
+  section: '4.18'
+  checkable: none
+- id: IT4IT-DEF-026
+  statement: 'Digital Product portfolios are managed from three perspectives: market-facing, internal-facing and foundational. The Product Portfolio component describes the same three
+    tiers.'
+  strength: note
+  section: 4.9; 6.2.3
+  checkable: none
+- id: IT4IT-DEF-027
+  statement: The Service Contract exists apart from the digital and physical components of the product and may need management long after instances and users are gone, for example for
+    records retention.
+  strength: note
+  section: '4.15'
+  checkable: none
+- id: IT4IT-DEF-028
+  statement: The Digital Product replaces the IT Service of the earlier version as the main entity; "Service System" becomes "System", and "service" is used mainly for delivery of products
+    as a service.
+  strength: note
+  section: 4.5; Preface
+  checkable: none
+- id: IT4IT-NAME-001
+  statement: A value stream is named with a verb that captures its essence. The "x2y" form is not used and the word "continuous" is not prefixed.
+  strength: should
+  section: 11.7.2
+  checkable: static
+- id: IT4IT-NAME-002
+  statement: A functional group is named with a verb describing what the group of functions does.
+  strength: should
+  section: 11.7.3
+  checkable: static
+- id: IT4IT-NAME-003
+  statement: A functional component is named with a noun, or a noun with a qualifier, describing what it manages. The word "component" may be appended as shorthand.
+  strength: should
+  section: 11.7.4
+  checkable: static
+- id: IT4IT-NAME-004
+  statement: A data object is named with a noun describing what it controls.
+  strength: should
+  section: 11.7.5
+  checkable: static
+- id: IT4IT-NAME-005
+  statement: Attribute names do not repeat the data object name (for example "Id", not "IncidentId"); a specific attribute is written with dot notation (for example "Incident.Id"), and
+    names are reused wherever they mean the same thing.
+  strength: should
+  section: 11.9.1
+  checkable: partial
+- id: IT4IT-ATTR-001
+  statement: Each data object must support the key attributes the standard lists for it. Implementations may add more but at Level 3 only this vendor-independent minimum is defined.
+  strength: must
+  section: 11.9.1; 6 to 10 (each data object)
+  checkable: partial
+- id: IT4IT-ATTR-002
+  statement: A key attribute need not have a value for every instance. An approval attribute, for example, is filled only after approval happens.
+  strength: note
+  section: 11.9.1
+  checkable: none
+- id: IT4IT-ATTR-003
+  statement: The most basic key attributes of a data object are a unique identifier and its lifecycle status; often others identify relationships to other data objects.
+  strength: should
+  section: 11.9.1
+  checkable: partial
+- id: IT4IT-ATTR-004
+  statement: The Scope Agreement attribute Anticipated Business Value is marked optional, the only key attribute so marked.
+  strength: note
+  section: 6.2.2.1
+  checkable: static
+- id: IT4IT-REL-001
+  statement: Each data object must maintain the key relationships the standard lists for it.
+  strength: must
+  section: 11.9.2; 6 to 10 (each data object)
+  checkable: partial
+- id: IT4IT-REL-002
+  statement: 'Cardinality takes only three forms: 1:1 (at most one on each side), 1:n (at most one on the first side, many on the other) and n:m. Each means "can relate"; a requirement
+    that a relationship exist is never stated, and UML multiplicity is not specified.'
+  strength: must
+  section: 11.9.2; Table 1
+  checkable: static
+- id: IT4IT-REL-003
+  statement: 'Each relationship is documented as "A to B (x:y): reason", the first object being the one being described. 1:n and n:1 are the same relationship read from either end.'
+  strength: note
+  section: 11.9.2
+  checkable: none
+- id: IT4IT-REL-004
+  statement: Only key relationships, those that advance the service lifecycle, are defined. Others may be kept for local needs, and optimizations such as a shortcut from an instance
+    to its product are not recommended or prescribed.
+  strength: note
+  section: 11.9.2
+  checkable: none
+- id: IT4IT-REL-005
+  statement: This version defines no reflexive relationships (a data object related to others of its own type); a future version will. The data object sections nevertheless list several,
+    which is an inconsistency in the text.
+  strength: note
+  section: 11.7.7; 6 to 9
+  checkable: none
+- id: IT4IT-REL-006
+  statement: Compliance with the prescribed system of record relationship mapping is what ensures end-to-end operational and financial traceability and model integrity.
+  strength: note
+  section: 11.7.7
+  checkable: partial
+- id: IT4IT-REL-007
+  statement: 'A data flow is refined into a system of record integration only if all three conditions hold: it creates a relationship between two data objects in the components it connects;
+    those two data objects must have a direct relationship to maintain; and their lifecycles are interlocked.'
+  strength: must
+  section: 11.9.4
+  checkable: none
+- id: IT4IT-REL-008
+  statement: Data flows show where integration and data sharing are needed. They are not a process, the arrow starts at the component that normally triggers the exchange, and information
+    may move both ways.
+  strength: note
+  section: 11.9.3
+  checkable: none
+- id: IT4IT-REL-009
+  statement: 'Two kinds of data flow exist: system of record flows, which keep the information model consistent and traceable, and engagement flows, which help carry out the value streams.
+    Engagement integrations are guidance, not prescription.'
+  strength: note
+  section: 11.9.3; 11.9.5
+  checkable: none
+- id: IT4IT-REL-010
+  statement: The link between a Service Offer and a Product Release is made through the Product Release Blueprint.
+  strength: note
+  section: 11.7.9
+  checkable: partial
+- id: IT4IT-CRIT-001
+  statement: The Policy component shall align and map to Enterprise Architecture; support role-based review and approval of Policies; give visibility into Policy attributes (types, status,
+    non-compliance, audit history, risks, issues); govern Policies tied to downstream value stream stages; manage internal and external Policies with revision history; and track exceptions
+    and waivers.
+  strength: must
+  section: 6.1.1 (Functional Criteria)
+  checkable: none
+  component: Policy
+- id: IT4IT-CRIT-002
+  statement: The Strategy component must align to business objectives and goals and stay aligned with the Architecture Roadmaps; and shall support periodic review of Strategic Themes,
+    manage creation and closure of Strategic Objectives, show themes and initiatives as widely as possible, and trace each strategic initiative to the value streams it affects.
+  strength: must
+  section: 6.1.2 (Functional Criteria)
+  checkable: none
+  component: Strategy
+- id: IT4IT-CRIT-003
+  statement: The Enterprise Architecture component shall be the system of record for Architecture Roadmaps and Roadmap Items; develop the Architecture Vision; develop baseline and target
+    architecture artifacts (business, information, application, technology, security); identify gaps; create the Architecture Blueprint; identify the migration strategy; identify reusable
+    building blocks and the Digital Products that realize the target architecture; ensure artifacts comply with standards and policies and that the realized architecture meets KPIs and
+    SLAs; ensure each Blueprint addresses Portfolio Backlog Items and stakeholder concerns; feed the Product Portfolio; and ensure created Digital Products comply with the Roadmap and
+    Blueprint.
+  strength: must
+  section: 6.1.3 (Functional Criteria)
+  checkable: none
+  component: Enterprise Architecture
+- id: IT4IT-CRIT-004
+  statement: The component may identify intermediate Roadmap Items for incremental delivery, and can receive Strategic Objective and Portfolio Backlog Item information where those components
+    exist.
+  strength: note
+  section: 6.1.3 (Functional Criteria)
+  checkable: none
+  component: Enterprise Architecture
+- id: IT4IT-CRIT-005
+  statement: The Portfolio Backlog component shall make proposed, accepted, rejected and prioritized Portfolio Backlog Items transparent, and execute the processes to review, accept,
+    create, prioritize, update and close them.
+  strength: must
+  section: 6.2.1 (Functional Criteria)
+  checkable: none
+  component: Portfolio Backlog
+- id: IT4IT-CRIT-006
+  statement: The Proposal component shall create a Scope Agreement from rationalized Portfolio Backlog Items; for urgent items support a quick evaluation, notify the Portfolio Backlog
+    component of a rejection, and update the Scope Agreement and in-flight Product Backlog Items; for structured proposals build labor and asset consumption models, take resource and
+    asset prices from Offers where those exist, ensure the proposal meets technology policies, send proposed investments to the Investment component, compare planned and actual benefits,
+    review change requests from Integrate, treat the Product Portfolio as the authoritative list of deliverables, and identify the security controls needed for each data classification.
+  strength: must
+  section: 6.2.2 (Functional Criteria)
+  checkable: none
+  component: Proposal
+- id: IT4IT-CRIT-007
+  statement: The component should validate the asset consumption model against available assets, model the ongoing labor and non-labor budget, rank proposals by benefits, risks and ROI,
+    and actuate Product Portfolio entries through a project management system.
+  strength: should
+  section: 6.2.2 (Functional Criteria)
+  checkable: none
+  component: Proposal
+- id: IT4IT-CRIT-008
+  statement: A Scope Agreement may follow an expedited or a structured approval. The component may produce proposals periodically, define tangible and intangible benefits, build proposal
+    scenarios for what-if analysis, and create Product Portfolio views.
+  strength: note
+  section: 6.2.2 (Functional Criteria)
+  checkable: none
+  component: Proposal
+- id: IT4IT-CRIT-009
+  statement: The Product Portfolio component must include all Digital Products, provide Service Offers through specific Product Designs and Releases, and track consumer contracts; and
+    shall support portfolio-level funding and de-funding, review strategy and market input to propose portfolio changes, track backlog items used for investment priorities, assess the
+    effectiveness and satisfaction of consumed Service Offers, manage an inventory of shared resources, systems, offers and instances, track all consumers, compare similar products,
+    create and update Digital Products, keep service blueprints and endpoints, and aggregate charges from Chargeback where it exists.
+  strength: must
+  section: 6.2.3 (Functional Criteria)
+  checkable: none
+  component: Product Portfolio
+- id: IT4IT-CRIT-010
+  statement: The component should aggregate metrics (cost, performance, consumption, capacity, risk, benefits, quality) and ensure compliance with applicable Policies where a Policy
+    component exists.
+  strength: should
+  section: 6.2.3 (Functional Criteria)
+  checkable: none
+  component: Product Portfolio
+- id: IT4IT-CRIT-011
+  statement: The component may support a taxonomy of portfolios and sub-portfolios, share roadmaps (including major and minor versions) with market, consumers, peers and partners, and
+    send operation charge acceptance to Chargeback.
+  strength: note
+  section: 6.2.3 (Functional Criteria)
+  checkable: none
+  component: Product Portfolio
+- id: IT4IT-CRIT-012
+  statement: The Product Backlog component shall be the system of record for a product's Product Backlog Items; define standard item types (epics, features, stories); include security,
+    risk and compliance items; prioritize each item; define customer value, size, effort, acceptance criteria and the Definition of Done; compute business impact and cost of delay; assess
+    risk; manage lifecycle and status; coordinate planning and give execution oversight; report status and resources consumed; track time spent; trace items to the products being developed;
+    associate the backlog with one Product Manager and one or more teams; and keep Portfolio Backlog Items traceable to realization in Product Releases.
+  strength: must
+  section: 7.1.1 (Functional Criteria)
+  checkable: none
+  component: Product Backlog
+- id: IT4IT-CRIT-013
+  statement: The component can associate requirements (including non-functional) with items, relate an item to a Portfolio Backlog Item, decompose items into sub-items, and use Scrum,
+    Kanban or traditional project methods; it may integrate with Collaboration.
+  strength: note
+  section: 7.1.1 (Functional Criteria)
+  checkable: none
+  component: Product Backlog
+- id: IT4IT-CRIT-014
+  statement: The Requirement component shall be the system of record for Requirements; manage their lifecycle, state and changes across the product lifecycle; capture service level,
+    user experience, security, risk, privacy, compliance, data management, and monitoring and logging requirements (security and compliance ones traceable to Policies); collect, refine,
+    scope and track Requirements linked to Product Backlog Items; keep each Requirement traceable to its original source and to the Source and Test Cases; allow tracing to Test Cases
+    and Policies where those components exist; and rank Requirements.
+  strength: must
+  section: 7.1.2 (Functional Criteria)
+  checkable: none
+  component: Requirement
+- id: IT4IT-CRIT-015
+  statement: The component can send requirement data to Product Design, and may relate Requirements to stakeholders and personas and link them to Portfolio Backlog Items.
+  strength: note
+  section: 7.1.2 (Functional Criteria)
+  checkable: none
+  component: Requirement
+- id: IT4IT-CRIT-016
+  statement: The Product Design component shall be the system of record for Product Designs; identify the design changes the backlog and Requirements need; maintain the design of the
+    product and its parts, data model, integrations, security model, user experience, infrastructure, operations and support features, customer journeys and business processes; record
+    the delivery model and the instrumentation for measuring performance; document compliance with non-functional requirements and with SLOs and XLAs; receive the product vision from
+    the Product Portfolio; and support collaboration and review of design artifacts.
+  strength: must
+  section: 7.1.3 (Functional Criteria)
+  checkable: none
+  component: Product Design
+- id: IT4IT-CRIT-017
+  statement: The component may identify service suppliers for the chosen delivery model.
+  strength: note
+  section: 7.1.3 (Functional Criteria)
+  checkable: none
+  component: Product Design
+- id: IT4IT-CRIT-018
+  statement: The Source Control component shall be the system of record for Sources; associate each repository with its Digital Product; control access securely; manage the Source lifecycle;
+    trace every update to Product Backlog Items; promote reuse; cover all source including infrastructure as code, automated tests and monitoring as code; inform stakeholders of updates;
+    allow peer review, analytics and comparison of changes; verify code quality and conformance and analyze for security issues; hold Test Case code; and integrate with code editors.
+  strength: must
+  section: 7.1.4 (Functional Criteria)
+  checkable: none
+  component: Source Control
+- id: IT4IT-CRIT-019
+  statement: The component can integrate with external sources such as open-source libraries and vendor repositories.
+  strength: note
+  section: 7.1.4 (Functional Criteria)
+  checkable: none
+  component: Source Control
+- id: IT4IT-CRIT-020
+  statement: The Pipeline component shall keep Pipelines under version control and secured; associate each Pipeline with a source repository; manage and record executions; embed policy
+    checks; track task progress; associate and trigger Test Plans; register the Build Package and update its status; link the Product Release to the Pipeline and update its status; create
+    a Change to log and to announce deployments, use the Change component for impact assessment, wait for its approval; and start deployments through Fulfillment Orchestration.
+  strength: must
+  section: 7.1.5 (Functional Criteria)
+  checkable: none
+  component: Pipeline
+- id: IT4IT-CRIT-021
+  statement: A Pipeline may be managed as code in Source Control; it can be associated with a Digital Product and can use the Change component to schedule deployment in a change window.
+  strength: note
+  section: 7.1.5 (Functional Criteria)
+  checkable: none
+  component: Pipeline
+- id: IT4IT-CRIT-022
+  statement: The Build Package component shall be the authoritative source for Build Packages; manage their lifecycle from registration to archiving; secure them; keep a full audit trail;
+    receive each package from its Pipeline and associate it with that Pipeline; ensure packages are safe to deploy; keep a bill of materials for each Product Release; scan packages and
+    their dependencies for security, compliance and vulnerability issues before deployment; and associate packages with Test Plans.
+  strength: must
+  section: 7.1.6 (Functional Criteria)
+  checkable: none
+  component: Build Package
+- id: IT4IT-CRIT-023
+  statement: The component may receive packages and artifacts from external sources.
+  strength: note
+  section: 7.1.6 (Functional Criteria)
+  checkable: none
+  component: Build Package
+- id: IT4IT-CRIT-024
+  statement: The Release Composition component shall be the system of record for Product Releases and Product Release Blueprints; create them for the Fulfillment component to deploy;
+    manage them for delivery of new or changed products; and include in the Blueprint the templates for Service Offers and for configuring Service Monitors.
+  strength: must
+  section: 7.1.7 (Functional Criteria)
+  checkable: none
+  component: Release Composition
+- id: IT4IT-CRIT-025
+  statement: The Test component shall maintain the test strategy and Test Plans; link Test Cases to Plans; use the Product Backlog to plan Test Cases; keep automated Test Cases in Source
+    Control; trace tests to Requirements; plan and run tests for service levels, non-functional requirements and operations activities; include abuse cases; run unit, code quality, functional,
+    security, vulnerability, penetration, performance, business process, regression and integration tests; create Defects; log runs and results; manage representative test data; report
+    per Requirement or backlog item; be the system of record for Test Cases; manage their lifecycle; calculate coverage for new builds and releases; measure code quality; scan builds
+    for vulnerabilities; build automated security tests; and run security tests early.
+  strength: must
+  section: 7.2.1 (Functional Criteria)
+  checkable: none
+  component: Test
+- id: IT4IT-CRIT-026
+  statement: The Defect component shall be the system of record for Defects; manage their lifecycle; track origin, status, importance and relation to Requirements and known errors; register
+    all types of Defect including security; analyze and resolve them; report their status; create known errors for unresolved Defects; receive Defects from Test and from Problem; and
+    provide them to the Product Backlog.
+  strength: must
+  section: 7.2.2 (Functional Criteria)
+  checkable: none
+  component: Defect
+- id: IT4IT-CRIT-027
+  statement: The component may document issues to communicate to Release Composition, and may consume Defects from Problem and Test.
+  strength: note
+  section: 7.2.2 (Functional Criteria)
+  checkable: none
+  component: Defect
+- id: IT4IT-CRIT-028
+  statement: The Consumption Experience component shall be available to all users who want to consume digital services; expose functionality by user profile and entitlement; expose relevant
+    IT4IT functions in one place; classify each interaction (request for information, Order, Change or Incident) and route it; route requests to queues or fulfillers; let consumers search
+    and read Knowledge Items; promote self-help and self-healing; let users raise, view and update tickets; and show planned and executed changes.
+  strength: must
+  section: 8.1.1 (Functional Criteria)
+  checkable: none
+  component: Consumption Experience
+- id: IT4IT-CRIT-029
+  statement: The component can send users to knowledge before they open a ticket, can engage Collaboration and Communication components for the front end, and can let consumers resolve
+    more of their own issues.
+  strength: note
+  section: 8.1.1 (Functional Criteria)
+  checkable: none
+  component: Consumption Experience
+- id: IT4IT-CRIT-030
+  statement: The Identity component shall protect confidentiality through access control; make all consumers and their activities uniquely identifiable; confirm access to catalog items
+    matches documented business needs with Entitlements attached to Identities; support compliance verification of access; and be able to list all consumers with portal access and their
+    Entitlement levels.
+  strength: must
+  section: 8.1.2 (Functional Criteria)
+  checkable: none
+  component: Identity
+- id: IT4IT-CRIT-031
+  statement: The Offer component shall contain all Offers available to consumers; aggregate and provide a unified catalog through Consumption Experience; drive consumption through Service
+    Offer Catalogs and help identify prices and options; and enable grouping of Service Offers.
+  strength: must
+  section: 8.1.3 (Functional Criteria)
+  checkable: none
+  component: Offer
+- id: IT4IT-CRIT-032
+  statement: The component may create the Service Contract template and pass it to the Service Level component.
+  strength: note
+  section: 8.1.3 (Functional Criteria)
+  checkable: none
+  component: Offer
+- id: IT4IT-CRIT-033
+  statement: The Order component shall tell the consumer the fulfillment status; supply Subscription information for the Chargeback Contract; confirm access matches Entitlements and
+    Identity; supply delivery times for SLA measurement; break composite Orders into individual requests; send the bound Offer template to Change; rationalize and route clean orders
+    to fulfillment; keep Subscription data updated and create Subscriptions on successful fulfillment; identify consumption trends; and keep traceability through the fulfillment channels.
+  strength: must
+  section: 8.1.4 (Functional Criteria)
+  checkable: none
+  component: Order
+- id: IT4IT-CRIT-034
+  statement: The component should send Service Contract instances to the Service Level component where one exists.
+  strength: should
+  section: 8.1.4 (Functional Criteria)
+  checkable: none
+  component: Order
+- id: IT4IT-CRIT-035
+  statement: The Chargeback component shall show consumers cost information at service level; calculate chargeback or showback; consolidate charges for a billing period; and send charges
+    for an Actual Product Instance to the Product Portfolio where one exists.
+  strength: must
+  section: 8.1.5 (Functional Criteria)
+  checkable: none
+  component: Chargeback
+- id: IT4IT-CRIT-036
+  statement: The component should send a Chargeback Record for approval and internal reconciliation to the finance function where one exists.
+  strength: should
+  section: 8.1.5 (Functional Criteria)
+  checkable: none
+  component: Chargeback
+- id: IT4IT-CRIT-037
+  statement: The component can take actual Usage into account.
+  strength: note
+  section: 8.1.5 (Functional Criteria)
+  checkable: none
+  component: Chargeback
+- id: IT4IT-CRIT-038
+  statement: The Change component shall be the system of record for change requests; manage Change state and lifecycle; communicate with stakeholders and notify those affected; assess
+    risk and support impact assessment; keep each Change related to the actual service for Configuration use; keep a Change calendar and manage conflicting deployments; associate Fulfillment
+    Orders with Changes and Changes with Desired Product Instances, Incidents and (where it exists) Problems; and classify each Change as standard, emergency or normal from its risk
+    profile.
+  strength: must
+  section: 8.2.1 (Functional Criteria)
+  checkable: none
+  component: Change
+- id: IT4IT-CRIT-039
+  statement: The component may support automating Change execution; it can accept Changes directly from the Pipeline and can give Change data to Event and Monitoring for root cause analysis.
+  strength: note
+  section: 8.2.1 (Functional Criteria)
+  checkable: none
+  component: Change
+- id: IT4IT-CRIT-040
+  statement: The Fulfillment Orchestration component shall orchestrate the implementation of Change Orders across fulfillment systems or manual tasks; get resources from the Resource
+    component; choose and coordinate fulfillment mechanisms and their dependencies; create a Desired Product Instance from the Product Release template for a new product system; report
+    Subscription status to Order; and create the Actual Product Instance as a copy of the Desired Product Instance in Configuration.
+  strength: must
+  section: 8.2.2 (Functional Criteria)
+  checkable: none
+  component: Fulfillment Orchestration
+- id: IT4IT-CRIT-041
+  statement: The component should modify the Desired Product Instance for all consumer Subscriptions to track delivery.
+  strength: should
+  section: 8.2.2 (Functional Criteria)
+  checkable: none
+  component: Fulfillment Orchestration
+- id: IT4IT-CRIT-042
+  statement: The component may keep a registry of fulfillers, generate Fulfillment Orders and the Desired Product Instance from the bound Offer template, update the resource inventory,
+    and order dependent services; it can create or change Service Monitors, route Orders externally and trigger fulfillment automation.
+  strength: note
+  section: 8.2.2 (Functional Criteria)
+  checkable: none
+  component: Fulfillment Orchestration
+- id: IT4IT-CRIT-043
+  statement: The Resource component shall manage the pool of Resources behind services; establish the resource requirements of services; ensure physical and virtual pool availability
+    for Order fulfillment; and keep soft and hard limits and quotas and act when they are breached.
+  strength: must
+  section: 8.2.3 (Functional Criteria)
+  checkable: none
+  component: Resource
+- id: IT4IT-CRIT-044
+  statement: The component may provide capacity utilization to the Usage component.
+  strength: note
+  section: 8.2.3 (Functional Criteria)
+  checkable: none
+  component: Resource
+- id: IT4IT-CRIT-045
+  statement: The Fulfillment component shall ensure fulfillment activities are standardized and automated, or well documented if manual; keep automated Runbooks updated with routine
+    deployment and configuration activity; and check that Fulfillment Books run as designed.
+  strength: must
+  section: 8.2.4 (Functional Criteria)
+  checkable: none
+  component: Fulfillment
+- id: IT4IT-CRIT-046
+  statement: The component can let Fulfillment Orchestration trigger automated Fulfillment Books.
+  strength: note
+  section: 8.2.4 (Functional Criteria)
+  checkable: none
+  component: Fulfillment
+- id: IT4IT-CRIT-047
+  statement: The Usage component shall encrypt sensitive usage information or restrict access to it; collect the cost of sub-services when a service is decomposed; collect usage from
+    vendor invoices for Resources the service uses; and collect the cost of capacity used to deliver the service.
+  strength: must
+  section: 8.2.5 (Functional Criteria)
+  checkable: none
+  component: Usage
+- id: IT4IT-CRIT-048
+  statement: The component may track actual usage, break it down by Subscription, consumer and provider, collect metrics from Monitoring and feed Chargeback; it can generate usage reports.
+    A Usage Record may use any unit.
+  strength: note
+  section: 8.2.5 (Functional Criteria)
+  checkable: none
+  component: Usage
+- id: IT4IT-CRIT-049
+  statement: The Service Level component shall be the system of record for the Service Contract; manage the lifecycle and state of Service Contracts and KPIs and the relations between
+    them; report quality of service per SLO; and, where Order exists, create a Service Contract instance and start measuring it when a Subscription is instantiated.
+  strength: must
+  section: 9.1.1 (Functional Criteria)
+  checkable: none
+  component: Service Level
+- id: IT4IT-CRIT-050
+  statement: The component may take measurements from Monitoring and Incident, instantiate a Service Contract from an Offer template, and report service level status to Consumption Experience.
+  strength: note
+  section: 9.1.1 (Functional Criteria)
+  checkable: none
+  component: Service Level
+- id: IT4IT-CRIT-051
+  statement: The Incident component shall be the system of record for Incidents; manage state, escalation and lifecycle; allow an Incident to start from an Event; create an Incident
+    when an Interaction cannot join an existing one; and create a Problem when an Incident is severe, needs deep investigation or repeats.
+  strength: must
+  section: 9.1.2 (Functional Criteria)
+  checkable: none
+  component: Incident
+- id: IT4IT-CRIT-052
+  statement: The component may trigger a Runbook, trigger an emergency Change, give business measurements to Service Level and receive knowledge from the Knowledge component.
+  strength: note
+  section: 9.1.2 (Functional Criteria)
+  checkable: none
+  component: Incident
+- id: IT4IT-CRIT-053
+  statement: The Problem component shall be the system of record for Problems; manage state and lifecycle; receive Incident information to create a Problem; send Change information for
+    a fix; and push Problem data needing emergency development to the Defect component.
+  strength: must
+  section: 9.1.3 (Functional Criteria)
+  checkable: none
+  component: Problem
+- id: IT4IT-CRIT-054
+  statement: The component may send Problems to the Portfolio Backlog, send known errors to Knowledge, and push data to Diagnostics and Remediation to trigger a Runbook.
+  strength: note
+  section: 9.1.3 (Functional Criteria)
+  checkable: none
+  component: Problem
+- id: IT4IT-CRIT-055
+  statement: The Knowledge component shall be the system of record for Knowledge Items; manage state and lifecycle; create Knowledge Items from known errors in Problem; let consumers
+    and staff rank items; provide knowledge for consumers and for digital operations including diagnostics and remediation; let all users contribute content; and reduce service desk
+    requests through self-service.
+  strength: must
+  section: 9.1.4 (Functional Criteria)
+  checkable: none
+  component: Knowledge
+- id: IT4IT-CRIT-056
+  statement: The component may aggregate internal and external sources, share knowledge through Consumption Experience, and improve access through search, filtering, natural language
+    queries, third-party knowledge and trend analytics.
+  strength: note
+  section: 9.1.4 (Functional Criteria)
+  checkable: none
+  component: Knowledge
+- id: IT4IT-CRIT-057
+  statement: The Configuration component shall be the system of record for Actual Product Instances and their relationships; manage their lifecycle; create them from the Desired Product
+    Instance; hold the realization of the service in production; and calculate change impact and the business impact of Incidents and Events.
+  strength: must
+  section: 9.2.1 (Functional Criteria)
+  checkable: none
+  component: Configuration
+- id: IT4IT-CRIT-058
+  statement: The component may be populated by service discovery.
+  strength: note
+  section: 9.2.1 (Functional Criteria)
+  checkable: none
+  component: Configuration
+- id: IT4IT-CRIT-059
+  statement: The Monitoring component shall be the system of record for Service Monitors; monitor all aspects of an Actual Product Instance including infrastructure, applications, security
+    and product instances; store all measurement results; compute compound monitors from simple measurements; and manage the Service Monitor lifecycle.
+  strength: must
+  section: 9.2.2 (Functional Criteria)
+  checkable: none
+  component: Monitoring
+- id: IT4IT-CRIT-060
+  statement: The component may monitor customer experience, service-level attainment, usage and service status for other components, and may receive monitor definitions from Fulfillment
+    Orchestration.
+  strength: note
+  section: 9.2.2 (Functional Criteria)
+  checkable: none
+  component: Monitoring
+- id: IT4IT-CRIT-061
+  statement: The Event component shall be the system of record for Events; manage their state and lifecycle; manage correlation between Events; categorize Event data; receive Events
+    from Service Monitors; and forward Events categorized as Incidents to the Incident component.
+  strength: must
+  section: 9.2.3 (Functional Criteria)
+  checkable: none
+  component: Event
+- id: IT4IT-CRIT-062
+  statement: The component may start a Change from Event data and send automated remediation to Diagnostics and Remediation.
+  strength: note
+  section: 9.2.3 (Functional Criteria)
+  checkable: none
+  component: Event
+- id: IT4IT-CRIT-063
+  statement: The Diagnostics and Remediation component shall be the system of record for Runbooks and manage their lifecycle.
+  strength: must
+  section: 9.2.4 (Functional Criteria)
+  checkable: none
+  component: Diagnostics & Remediation
+- id: IT4IT-CRIT-064
+  statement: The component may allow an Event, Incident or Problem to trigger a Runbook for diagnostics or remediation.
+  strength: note
+  section: 9.2.4 (Functional Criteria)
+  checkable: none
+  component: Diagnostics & Remediation
+- id: IT4IT-CRIT-065
+  statement: The Cost Modeling component shall be the reference for cost allocation to the corresponding resource.
+  strength: must
+  section: 10.1.1 (Functional Criteria)
+  checkable: none
+  component: Cost Modeling
+- id: IT4IT-CRIT-066
+  statement: The component may be structured by categories of resource and may include a simulation capability.
+  strength: note
+  section: 10.1.1 (Functional Criteria)
+  checkable: none
+  component: Cost Modeling
+- id: IT4IT-CRIT-067
+  statement: The Investment component shall be the authoritative source for investments requested over a period; manage the whole investment lifecycle; receive development investment
+    requests from Proposal; assess feasibility and obtain Finance approval; and report the final scoping and investment decisions to stakeholders.
+  strength: must
+  section: 10.1.2 (Functional Criteria)
+  checkable: none
+  component: Investment
+- id: IT4IT-CRIT-068
+  statement: The component may receive proposed run, maintain and non-service investments from investment owners.
+  strength: note
+  section: 10.1.2 (Functional Criteria)
+  checkable: none
+  component: Investment
+- id: IT4IT-VS-001
+  statement: Evaluate stages shall co-create the vision and strategic roadmap and define Strategic Themes and Objectives (Gather Influencers); assess the current state, identify gaps
+    and draft Scope Agreements (Identify Gaps); weigh value, risk, cost, time and resources and classify investment and divestment themes (Propose Investments); and further define Scope
+    Agreements (Define Backlog Mandates).
+  strength: must
+  section: 5.1.2 to 5.1.6 (Activities)
+  checkable: none
+  value_stream: Evaluate
+- id: IT4IT-VS-002
+  statement: Evaluate stages should consider existing roadmaps, demand and constraints and review standards for compliance gaps; consider consumer surveys and research needs and run
+    a capability assessment; analyze priority, urgency and impact; consider the existing portfolio and managed service provider agreements, develop the Architecture Roadmap and rationalize
+    the portfolio as Retain, Replace, Re-Build or Retire; and develop guardrails, traceable repositories and confirm use of enablers (Ensure Governance).
+  strength: should
+  section: 5.1.2 to 5.1.6 (Activities)
+  checkable: none
+  value_stream: Evaluate
+- id: IT4IT-VS-003
+  statement: Evaluate stages may run an environmental scan, identify improvement and rationalization opportunities, run what-if analysis, consolidate demand, create Architecture Blueprints
+    and identify architecture enablers.
+  strength: note
+  section: 5.1.2 to 5.1.6 (Activities)
+  checkable: none
+  value_stream: Evaluate
+- id: IT4IT-VS-004
+  statement: Explore stages shall prioritize and refine qualified Portfolio Backlog Items (Prioritize Backlog Items); create Architecture Blueprints and validate product viability with
+    stakeholders (Define Digital Product Architecture); translate Scope Agreements into smaller work, organize it into work packages, size and prioritize it and update the Scope Agreement
+    (Refine Product Backlog); and assign resources to work packages, obtain stakeholder agreement to the roadmap, track and report progress, and update Portfolio Backlog Items with build
+    and deliver status (Finalize Roadmap and Scope Agreement).
+  strength: must
+  section: 5.2.2 to 5.2.5 (Activities)
+  checkable: none
+  value_stream: Explore
+- id: IT4IT-VS-005
+  statement: Explore stages should ensure scoped items deliver value, mitigate risk and meet governance criteria, plan program increments and align portfolio and product roadmaps; define
+    the conceptual architecture, research best practice and establish business impacts; and determine dependencies.
+  strength: should
+  section: 5.2.2 to 5.2.5 (Activities)
+  checkable: none
+  value_stream: Explore
+- id: IT4IT-VS-006
+  statement: Explore stages may weigh new revenue, themes and directives, adjust funding, group and rationalize items, re-validate the Scope Agreement, re-confirm alignment, create Blueprints
+    per work package, refine the business case, hold regular planning meetings and update work packages.
+  strength: note
+  section: 5.2.2 to 5.2.5 (Activities)
+  checkable: none
+  value_stream: Explore
+- id: IT4IT-VS-007
+  statement: Integrate stages shall analyze stakeholder needs, capture, refine and prioritize Product Backlog Items, and create the test strategy and sprint plan (Plan Product Release);
+    define requirements, create and approve the Product Design, define Test Plans and Cases, develop or configure changes and commit them (Design and Develop); create build artifacts
+    in continuous integration, review code, validate compliance and security, create the release package, deploy to test environments, run tests against policy and identify Defects (Build,
+    Integrate and Test); and review release readiness, have the Product Manager accept the release, inform stakeholders and publish the release package (Accept and Publish Release).
+  strength: must
+  section: 5.3.2 to 5.3.5 (Activities)
+  checkable: none
+  value_stream: Integrate
+- id: IT4IT-VS-008
+  statement: Integrate stages may compile code where applicable.
+  strength: note
+  section: 5.3.2 to 5.3.5 (Activities)
+  checkable: none
+  value_stream: Integrate
+- id: IT4IT-VS-009
+  statement: Deploy stages shall estimate deployment time and downtime, ensure resources, plan the deployment time and obtain required approvals (Plan and Approve Deployment); create
+    the Desired Product Instance topology, reserve Resources, create Orders for dependent services, verify the orchestration and Fulfillment Books, deploy Build Package artifacts, Runbooks,
+    Service Monitors and Knowledge Items (Fulfill Deployment); discover the deployed items and compare them with the desired model, check components, Service Monitors, Logs and service
+    level monitoring are running, and check known errors are registered (Validate Deployment); and observe Logs, Events and service levels and decide whether to patch forward or roll
+    back (Observe Deployment).
+  strength: must
+  section: 5.4.2 to 5.4.5 (Activities)
+  checkable: none
+  value_stream: Deploy
+- id: IT4IT-VS-010
+  statement: Deploy stages may validate that Knowledge Items exist for accepted Defects, inform support specialists, suppress monitoring Events during the change window, start the Actual
+    Product Instance, and observe test consumption.
+  strength: note
+  section: 5.4.2 to 5.4.5 (Activities)
+  checkable: none
+  value_stream: Deploy
+- id: IT4IT-VS-011
+  statement: Release stages shall take in demand for new, changed, bundled and terminated Service Offers, check offer information is complete and take in catalog structure changes (Define
+    Service Offer); create or update the Service Offer and maintain its price list, access, catalog structure and views (Implement Service Offer); and activate the offer at its valid-from
+    date and ensure it is in the catalog and reachable by the target consumers (Publish Service Offer).
+  strength: must
+  section: 5.5.2 to 5.5.4 (Activities)
+  checkable: none
+  value_stream: Release
+- id: IT4IT-VS-012
+  statement: Release stages may plan release activities and dates, end an offer's validity, inform and promote, and sell the offer; stages can inform stakeholders of upcoming changes.
+  strength: note
+  section: 5.5.2 to 5.5.4 (Activities)
+  checkable: none
+  value_stream: Release
+- id: IT4IT-VS-013
+  statement: Consume stages shall show Service Offers in searchable form and enable filtering and assessment (Select an Offer); have the customer accept the Service Contract terms (Agree
+    to Service Offer); orchestrate Desired Product Instance fulfillment and deliver the Actual Product Instance with access (Subscribe to Service Offer); give self-help, help requests,
+    issue reporting, resolutions, escalation and feedback to development (Provide Service Support); and collect usage statistics, calculate KPIs and notify consumers of ongoing issues
+    (Publish Service Status).
+  strength: must
+  section: 5.6.2 to 5.6.6 (Activities)
+  checkable: none
+  value_stream: Consume
+- id: IT4IT-VS-014
+  statement: Consume stages may advertise across channels and predict future impact; stages can measure the Service Contract against agreed terms.
+  strength: note
+  section: 5.6.2 to 5.6.6 (Activities)
+  checkable: none
+  value_stream: Consume
+- id: IT4IT-VS-015
+  statement: Operate stages shall create Events or Incidents when policies or thresholds are breached and assign prioritized ones to a resolver group (Detect Issue); propose and approve
+    a course of action (Diagnose Issue); and ensure everything is in place to resolve Incidents and Events and close related Incidents, Interactions and Events (Resolve Issue).
+  strength: must
+  section: 5.7.2 to 5.7.4 (Activities)
+  checkable: none
+  value_stream: Operate
+- id: IT4IT-VS-016
+  statement: Operate stages should proactively monitor instances (discover topology, track usage, detect issues, report patterns), detect incoming issues from the service desk, correlate
+    Events and Incidents; understand severity and impact and find fixes and workarounds, identify root causes; collaborate on executing the course of action and validate success with
+    consumer acceptance.
+  strength: should
+  section: 5.7.2 to 5.7.4 (Activities)
+  checkable: none
+  value_stream: Operate
+diagram_types:
+  Level 1 End-to-End Overview:
+    defined_by: Chapter 3; 11.3; 11.7
+    admits:
+    - ValueNetwork
+    - ValueStream
+    - FunctionalGroup
+    - FunctionalComponent
+    - KeyDataObject
+    - BackboneDataObject
+    - DataRelationship
+    conventions: Value streams, the four core groups and the Supporting Functions, the functional diagram of groups, components and data objects, and the Digital Product and Service
+      Offer backbones (Figures 1 to 9, 76 to 86). The text of 11.7.5 says Level 1 is depicted without data objects and relationships, citing Figure 7, but Figure 7 draws both; Figure 86 shows Level
+      1 in ArchiMate notation.
+  Level 2 Value Stream Documentation:
+    defined_by: Chapter 5; 11.4; 11.8
+    admits:
+    - ValueStream
+    - Scenario
+    - ValueStreamStage
+    - Stakeholder
+    - LifecycleDataObject
+    - FunctionalComponent
+    - FunctionalGroup
+    conventions: One value stream model and one detailed model per value stream (Figures 20 to 34) with scenarios, stages, stakeholders and participating data objects with their containing
+      functions (Figure 87 summarizes the ArchiMate structure).
+  Level 3 Vendor-Independent Architecture:
+    defined_by: Chapters 6 to 10; 11.5; 11.9
+    admits:
+    - FunctionalGroup
+    - FunctionalComponent
+    - KeyDataObject
+    - BackboneDataObject
+    - DataRelationship
+    - SystemOfRecordIntegration
+    - EngagementIntegration
+    conventions: One model per functional group and one per functional component (Figures 35 to 74). System of record integrations are a black dotted line with a solid end arrow named
+      by the data object transferred; engagement integrations are a blue dotted line with a solid end arrow named by the engagement or action that triggers it. Cardinality is not drawn;
+      it is written in each data object's relationship list.
+  Level 4 Vendor and Integrator Extensions:
+    defined_by: 11.10.1 to 11.10.4 (non-normative)
+    admits:
+    - Capability
+    - EssentialService
+    - Scenario
+    - FunctionalComponent
+    - LifecycleDataObject
+    conventions: Not standardized. Vendors and integrators may add attributes, non-key data objects, other notations (for example UML for data models), process, canonical data models
+      and integration techniques, all mappable back to Levels 1 to 3. Essential services are drawn as an oval inside a functional component in the informal notation.
+  Level 5 Implementation Architecture:
+    defined_by: 11.10.5 (non-normative)
+    admits:
+    - Capability
+    - EssentialService
+    - FunctionalComponent
+    - LifecycleDataObject
+    - Stakeholder
+    conventions: Not standardized. The full ArchiMate language can specify an actual current or future state implementation of the reference architecture.
+data_types:
+  coverage: none
+  note: The standard defines no data types, lengths, or lists of values. Each key attribute has a name and a short description in its data object's section, and nothing more.
+  attributes:
+    coverage: some_concepts
+    where: reference_model.data_objects
+    key: key_attributes
+    section: 11.9.1; chapters 6 to 10 (each data object's Key Attributes)
+    note: All 46 data objects list key attributes, 292 in all, as names under key_attributes. They belong to the reference model's data objects, so no entry under concepts holds any.
+notation:
+  coverage: normative
+  section: 11.7 to 11.10
+  note: The definitions chapter gives each main concept a simplified form and an ArchiMate form, and says the first translates directly into the second and is as formal. It states no duty to use either. `shape` is the simplified form and `archimate` the other; `form` archimate marks an entry the figures show in that form only. All colors are the standard's, and figures also show the two forms mixed.
+  elements:
+    ValueNetwork:
+      form: archimate
+      shape: tan rounded rectangle
+      marker: chevron at top right
+      label: inside
+      section: 11.1 (Figure 75)
+    ValueStream:
+      shape: blue block arrow pointing right
+      archimate: pale yellow rounded rectangle with a chevron marker at top right; tan in the metamodel and value stream figures
+      label: inside
+      section: 11.7.2 (Figure 77)
+    ValueStreamStage:
+      form: archimate
+      shape: tan chevron pointing right, in a row with the other stages inside its value stream; Figure 87 shows a tan rounded rectangle with a chevron marker instead
+      label: inside
+      section: 5.1 (Figure 22); 11.8.4 (Figure 87)
+    Scenario:
+      form: archimate
+      shape: purple box inside its value stream
+      marker: circular target at top right
+      label: inside
+      section: 11.8.4 (Figure 87)
+    Stakeholder:
+      form: archimate
+      shape: purple box with clipped corners, inside its stage
+      marker: small pill shape at top right
+      label: inside
+      section: 11.1 (Figure 75); 11.8.4 (Figure 87)
+    FunctionalGroup:
+      shape: blue rounded rectangle with black outline; Figure 7 draws groups as pale rounded rectangles with a teal outline, holding their contents
+      archimate: white rounded rectangle; Figures 75 and 78 draw a dashed rectangle with the name at the top
+      label: inside, at the top when it holds contents
+      section: 11.7.3 (Figures 78 and 79); 3.3.7 (Figure 7)
+    FunctionalComponent:
+      shape: rectangle, blue for a primary component and gray for a secondary one
+      archimate: pale cyan rectangle labeled "[Application Function]", rounded when it holds data objects; a component's own model shows it cyan and its neighbors gray
+      marker: upward chevron at top right, doubled in Figure 82
+      label: inside, at the top when it holds data objects
+      section: 11.7.4 (Figure 80); 11.7.5 (Figure 82); 11.9.3 (Figure 88)
+    LifecycleDataObject:
+      shape: black circle
+      archimate: pale cyan rectangle with a thin band across the top
+      label: white, inside
+      section: 11.7.5 (Figure 81)
+    KeyDataObject:
+      shape: black circle
+      archimate: pale cyan rectangle with a thin band across the top
+      label: white, inside
+      section: 11.7.5 (Figure 81)
+    BackboneDataObject:
+      shape: orange circle
+      archimate: orange rectangle with a thin band across the top
+      label: inside
+      section: 11.7.5; 11.7.8 (Figure 85); 3.3.7 (Figure 7)
+    DigitalProductBackbone:
+      shape: an orange line joining its orange circles
+      archimate: gold rectangle with its name in a thin band across the top, holding its orange data objects joined by lines
+      section: 3.3.7 (Figure 7); 11.7.8 (Figure 85)
+    ServiceOfferBackbone:
+      shape: an orange line joining its orange circles
+      archimate: gold rectangle with its name in a thin band across the top, holding its orange data objects joined by lines
+      section: 3.3.7 (Figure 7); 11.7.8 (Figure 85)
+    KeyAttribute:
+      form: archimate
+      shape: pale cyan rectangle with a thin band across the top, in the metamodel figure only; models document attributes as lists of text
+      label: inside
+      section: 11.1 (Figure 75); 11.9.1
+    Capability:
+      form: archimate
+      shape: tan rounded rectangle
+      marker: stepped blocks at top right
+      label: inside
+      section: 11.7.3 (Figure 78); 11.1 (Figure 75)
+    EssentialService:
+      shape: oval inside a functional component
+      archimate: pale cyan rounded rectangle with an oval marker at top right
+      label: inside
+      section: 11.10.3; 11.1 (Figure 75)
+    Process:
+      form: archimate
+      shape: pale yellow rounded rectangle
+      marker: block arrow at top right
+      label: inside
+      section: 11.1 (Figure 75)
+  relationships:
+    DataRelationship:
+      line: solid black line, heavy in the simplified form; Figure 7 draws the links among backbone data objects in orange
+      source_end: none
+      target_end: none
+      label: none; cardinality is not drawn
+      section: 11.7.7 (Figure 83)
+    DataObjectRelatesToDataObject:
+      line: the same line as DataRelationship
+      source_end: none
+      target_end: none
+      label: none; cardinality is not drawn
+      section: 11.7.7 (Figure 83)
+    SystemOfRecordIntegration:
+      line: black dotted line, drawn with dashes in Figure 88, between two functional components
+      source_end: none, at the component that would normally trigger the exchange
+      target_end: solid arrowhead
+      label: the data object transferred
+      section: 11.9.3 (Figure 88); 11.9.5
+    EngagementIntegration:
+      line: blue dotted line, drawn with dashes in Figures 36 and 88, between two functional components
+      source_end: none, at the component that would normally trigger the exchange
+      target_end: solid arrowhead
+      label: the engagement or action responsible; Figures 36 and 88 show a data object's name
+      section: 11.9.3 (Figure 88); 11.9.5
+    DataFlowConnectsFunctionalComponents:
+      line: drawn as one of its two kinds, SystemOfRecordIntegration or EngagementIntegration
+      section: 11.9.3 (Figure 88)
+    FunctionalComponentControlsDataObject:
+      line: none; the data object sits inside the component
+      section: 11.7.5 (Figure 82)
+    FunctionalGroupContainsFunctionalComponent:
+      line: none; the component sits inside the group
+      section: 11.7.3 (Figure 78); 3.3.7 (Figure 7)
+    FunctionalGroupContainsFunctionalGroup:
+      line: none in models, where the Level 2 group sits inside the Level 1 group; the metamodel figure draws a line with a hollow diamond at the Level 1 end
+      section: 11.7.3 (Figure 78); 3.3.7 (Figure 7); 11.1 (Figure 75)
+    ValueNetworkComprisesValueStream:
+      form: archimate
+      line: solid line
+      source_end: filled diamond
+      target_end: none
+      section: 11.1 (Figure 75)
+    ValueStreamHasStage:
+      line: none in models, where the stage sits inside the value stream; the metamodel figure draws a line with a filled diamond at the value stream end
+      section: 5.1 (Figure 22); 11.8.4 (Figure 87); 11.1 (Figure 75)
+    ValueStreamHasScenario:
+      line: none in Figure 87, where the scenario sits inside the value stream; the metamodel figure draws a plain line
+      section: 11.8.4 (Figure 87); 11.1 (Figure 75)
+    StageInvolvesStakeholder:
+      line: none in Figure 87, where the stakeholder sits inside the stage; the metamodel figure draws a plain line
+      section: 11.8.4 (Figure 87); 11.1 (Figure 75)
+    StageUsesDataObject:
+      line: none in Figure 87, where the data object sits inside the stage; the metamodel figure draws a plain line
+      section: 11.8.4 (Figure 87); 11.1 (Figure 75)
+    FunctionalComponentSupportsValueStream:
+      form: archimate
+      line: solid line from a dashed frame around the supporting components to the value stream
+      source_end: none
+      target_end: arrowhead
+      section: 5.1 (Figure 22)
+    DataObjectHasKeyAttribute:
+      form: archimate
+      line: plain solid line, in the metamodel figure only
+      source_end: none
+      target_end: none
+      section: 11.1 (Figure 75)
+    EssentialServiceBelongsToFunctionalComponent:
+      line: none; the oval sits inside the component
+      section: 11.10.3
+    BackboneGroupsBackboneDataObjects:
+      form: archimate
+      line: none; the data objects sit inside the backbone's rectangle
+      section: 11.7.8 (Figure 85)
+    FunctionalGroupRelatesToValueNetwork:
+      form: archimate
+      line: solid line
+      source_end: none
+      target_end: open arrowhead
+      section: 11.1 (Figure 75)
+    FunctionalGroupAggregatesCapability:
+      form: archimate
+      line: solid line
+      source_end: hollow diamond
+      target_end: none
+      section: 11.1 (Figure 75)
+    CapabilityRelatesToStakeholder:
+      form: archimate
+      line: plain solid line
+      source_end: none
+      target_end: none
+      section: 11.1 (Figure 75)
+    CapabilityRelatesToFunctionalComponent:
+      form: archimate
+      line: plain solid line
+      source_end: none
+      target_end: none
+      section: 11.1 (Figure 75)
+    FunctionalComponentRealizesCapability:
+      form: archimate
+      line: dotted line
+      source_end: none
+      target_end: hollow triangle
+      section: 11.1 (Figure 75)
+    FunctionalComponentRealizesEssentialService:
+      form: archimate
+      line: dotted line
+      source_end: none
+      target_end: hollow triangle
+      section: 11.1 (Figure 75)
+    ProcessRealizesCapability:
+      form: archimate
+      line: dotted line
+      source_end: none
+      target_end: hollow triangle
+      section: 11.1 (Figure 75)
+    EssentialServiceServesProcess:
+      form: archimate
+      line: solid line
+      source_end: none
+      target_end: open arrowhead
+      section: 11.1 (Figure 75)
+    EssentialServiceRelatesToSystemOfRecordIntegration:
+      form: archimate
+      line: plain solid line
+      source_end: none
+      target_end: none
+      section: 11.1 (Figure 75)
+    SystemOfRecordIntegrationRelatesToDataRelationship:
+      form: archimate
+      line: plain solid line
+      source_end: none
+      target_end: none
+      section: 11.1 (Figure 75)
+  not_specified:
+  - SystemOfRecord
+  - DataFlow
+  - DigitalProduct
+  - ServiceOffer
+  - ServiceContract
+  - DigitalProductInstance
+  - System
+  - ValueStreamDependsOnValueStream
+layout:
+  basis: Our conventions, not this standard's. Sizes and spacing come from the shared layout standard.
+  note: A data object's circle holds its name, so it takes the box size and is drawn as a circle within it; the event circle is too small to hold a name. A functional component holds its data objects, so it's a container.
+  element_types:
+    ValueNetwork: container
+    ValueStream: container
+    ValueStreamStage: box
+    Scenario: box
+    Stakeholder: box
+    FunctionalGroup: container
+    FunctionalComponent: container
+    LifecycleDataObject: box
+    KeyDataObject: box
+    BackboneDataObject: box
+    DigitalProductBackbone: container
+    ServiceOfferBackbone: container
+    KeyAttribute: box
+    Capability: box
+    EssentialService: box
+    Process: box
+  no_element_type:
+    drawn_as_line:
+      reason: These are lines or nesting, as notation says, so there is no symbol to size.
+      concepts: [DataRelationship, SystemOfRecordIntegration, EngagementIntegration, DataFlow, ValueNetworkComprisesValueStream, ValueStreamHasScenario, ValueStreamHasStage, ValueStreamDependsOnValueStream, StageInvolvesStakeholder, StageUsesDataObject, FunctionalGroupContainsFunctionalGroup, FunctionalGroupContainsFunctionalComponent, FunctionalComponentControlsDataObject, FunctionalComponentSupportsValueStream, DataObjectRelatesToDataObject, DataObjectHasKeyAttribute, DataFlowConnectsFunctionalComponents, CapabilityRelatesToFunctionalComponent, EssentialServiceBelongsToFunctionalComponent, BackboneGroupsBackboneDataObjects, FunctionalGroupRelatesToValueNetwork, FunctionalGroupAggregatesCapability, CapabilityRelatesToStakeholder, FunctionalComponentRealizesCapability, FunctionalComponentRealizesEssentialService, ProcessRealizesCapability, EssentialServiceServesProcess, EssentialServiceRelatesToSystemOfRecordIntegration, SystemOfRecordIntegrationRelatesToDataRelationship]
+    drawn_as_data_object:
+      reason: Each appears in a model as the reference model's data object of that name, which takes the box size.
+      concepts: [DigitalProduct, ServiceOffer, ServiceContract, DigitalProductInstance]
+    no_symbol:
+      reason: The figures read for this guide give these no symbol. The data objects together form the system of record, and a system is what a product instance runs on.
+      concepts: [SystemOfRecord, System]
+  exceptions: {}
+  diagram_types:
+    Level 1 End-to-End Overview: {arrangement: nested-grid, route: orthogonal, title: frame-header, channels: {fill: "the kind of data object: black for key, orange for backbone"}}
+    Level 2 Value Stream Documentation: {arrangement: nested-grid, route: orthogonal, title: frame-header}
+    Level 3 Vendor-Independent Architecture: {arrangement: nested-grid, route: orthogonal, title: frame-header, channels: {fill: "the kind of data object: black for key, orange for backbone", line_color: "the kind of integration: black for system of record, blue for engagement"}}
+  viewpoints: {}
+conventions:
+  provenance: Drawing facts stated in the text of 11.7 to 11.10. The top-level notation key adds what the standard's figures show.
+  notation:
+  - element: Value stream
+    drawing: A simplified notation and an ArchiMate-aligned notation both exist (Figure 77, an image); the text does not describe the shape
+    section: 11.7.2
+  - element: Functional group
+    drawing: ArchiMate grouping shown by containment around its components and data objects (Figure 79)
+    section: 11.7.3
+  - element: Primary functional component
+    drawing: Blue rectangle in the simplified notation
+    section: 11.7.4
+  - element: Secondary functional component
+    drawing: Gray rectangle in the simplified notation
+    section: 11.7.4
+  - element: Key data object
+    drawing: Black circle in the simplified notation
+    section: 11.7.5
+  - element: Backbone data object
+    drawing: Orange circle in the simplified notation
+    section: 11.7.5
+  - element: Controlled data object
+    drawing: The data object is embedded inside the component that controls it (Figure 82)
+    section: 11.7.5
+  - element: Data relationship
+    drawing: A line between the two data objects; identical in the simplified and ArchiMate notations
+    section: 11.7.7
+  - element: System of record integration
+    drawing: Black dotted line with a solid end arrow, named by the data object transferred
+    section: 11.9.5
+  - element: Engagement integration
+    drawing: Blue dotted line with a solid end arrow, named by the engagement or action responsible
+    section: 11.9.5
+  - element: Essential service (Level 4)
+    drawing: Oval inside a functional component in the informal notation
+    section: 11.10.3
+  notations_available:
+  - Simplified notation (circles, rectangles, lines) for readers new to ArchiMate
+  - ArchiMate notation
+archimate_mapping:
+  note: Stated by the standard as a fact; the mapping is recorded here, not modeled. ArchiMate has no attributes or cardinality, so the standard documents both as text.
+  rows:
+  - concept: Functional Component
+    archimate: Application Function
+    section: 11.7.4
+  - concept: Lifecycle Data Object
+    archimate: Data Object
+    section: 11.7.5
+  - concept: Functional Group
+    archimate: Grouping
+    section: 11.7.3
+  - concept: Value Stream and Value Stream Stage
+    archimate: Value Stream (the text writes "Value Stream data object", apparently a slip)
+    section: 11.8.3
+  - concept: Scenario
+    archimate: Outcome (a motivation element)
+    section: 11.8.2
+  - concept: Stakeholder
+    archimate: Stakeholder (the text writes "Business Stakeholder motivational element")
+    section: 11.8.4
+  - concept: Essential Service (Level 4)
+    archimate: Application Service
+    section: 11.10.3
+  - concept: System of record integration and engagement integration
+    archimate: Collaboration and interaction concepts
+    section: 11.9.5
+  - concept: Data relationship
+    archimate: A plain line between two Data Objects; ArchiMate cannot carry cardinality, so it is documented in text
+    section: 11.7.7; 11.9.2
+  - concept: Data object attributes
+    archimate: Not modeled; ArchiMate has no attributes, so they are documented as name and description lists
+    section: 11.9.1
+  - concept: Capability (Level 4)
+    archimate: Capability, recommended but non-normative
+    section: 11.10.2
+notes: 'IT4IT defines a reference model, not a drawing notation. Its "diagram types" are the abstraction levels. Strength follows decision A5 (shall and must = must, should = should,
+  may and can = note). Constraint categories: MM metamodel and levels, DEF definitions, NAME naming, ATTR key attributes, REL relationships and data flow, CRIT functional criteria, VS
+  value stream activities. Multiplicity keys: targets_per_source is how many targets one source can relate to; sources_per_target is how many sources one target can relate to; "*" is
+  zero or more, "0..1" is at most one. standard_cardinality keeps the standard''s own x:y notation: "A to B (1:n)" means one A can relate to many B and one B to at most one A.'
