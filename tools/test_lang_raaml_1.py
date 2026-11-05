@@ -23,6 +23,8 @@ import pytest
 
 yaml = pytest.importorskip("yaml")
 
+from gate import FORBIDDEN
+
 LANG = "raaml-1"
 ROOT = Path(__file__).resolve().parent.parent
 PLUGINS = ROOT / "plugins"
@@ -39,9 +41,6 @@ TOOL_WORDS = re.compile(r"\b(sparx|MDG|toolbox|quick ?linker|t_object|t_connecto
                         r"magicdraw|signavio|bizagi|lucidchart|draw\.io)\b|\bEA\b", re.I)
 INTERNAL = re.compile(r"research[/\\]|ea-samples-run|skill-draft|ruleset-draft|ea-reference|STANDARD-NOTES|OPEN-POINTS|"
                       r"open points?\b|\bAP[TV]-\d{4}-\d+|ea-catalog|EA-RESOURCES|language-library")
-# Written in pieces so that this file does not itself contain what the release gate rejects.
-LOCAL = re.compile(r"[A-Za-z]:\\{1,2}(?:Sparx" r"Services|Us" r"ers)\b|/c/(?:Sparx" r"Services|Us" r"ers)\b|Ryan" r"Schmierer|r" r"schmierer")
-CUSTOMER = re.compile(r"\b(?:T" r"VO|T" r"EA|E" r"DD)\b|Tech" r"Ventures")
 DASH = re.compile("[" + chr(0x2014) + chr(0x2013) + "]")
 
 
@@ -91,8 +90,8 @@ def test_the_shelf_names_no_tool(path):
 def test_nothing_shipped_points_at_a_private_file_or_names_a_customer(path):
     text = path.read_text(encoding="utf-8")
     assert not INTERNAL.search(text), INTERNAL.search(text).group(0)
-    assert not LOCAL.search(text), LOCAL.search(text).group(0)
-    assert not CUSTOMER.search(text), CUSTOMER.search(text).group(0)
+    for pattern, why in FORBIDDEN:
+        assert not pattern.search(text), why
     assert not DASH.search(text), "dash"
     assert "\r" not in text and not text.startswith("\ufeff")
 

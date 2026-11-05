@@ -1741,16 +1741,16 @@ notes: 'RAAML 1.0 is a UML profile and set of model libraries on SysML. A situat
 
 layout:
   basis: Our conventions, not this standard's. Sizes and spacing come from the shared layout standard; this block only says which element type each concept takes.
-  element_types:        # concept -> element type; a concept left out is drawn as a rectangle (box)
+  element_types:        # concept -> element type; a concept left out is drawn as a rectangle (box). Abstract library classes are drawn as blocks and stay rectangles.
     ConditionalEvent: box
     Assumption: box
     Justification: box
     Strategy: box
+    Solution: box
     BasicEvent: event-circle
     UndevelopedEvent: event-circle
     HouseEvent: event-circle
     ZeroEvent: event-circle
-    Solution: event-circle
     DormantEvent: decision-diamond
     AND: decision-diamond
     OR: decision-diamond
@@ -1783,4 +1783,44 @@ layout:
         HazardousEvent.systemLevelEffect, HazardousEvent.vehicleLevelEffect]
     text-inside:
       reason: A marker applied to another element and written as a keyword on it, so it has no box of its own.
-      concepts: [IDCarrier, ASILAssignment]
+      concepts: [IDCarrier, ASILAssignment, Verified, Confirmed]
+  diagram_types:
+    block definition:
+      arrangement: layered-bands
+      title: frame-header
+      route: orthogonal
+      channels:
+        fill: null
+        claimed:
+          position: Hierarchy level. Which band a block sits in says how deep in the generalization or composition tree it is.
+          line_style: Relationship kind. Dashed lines are dependencies, so a second variable cannot use dash pattern.
+        free: [fill, border, border_width, line_color, font_color, opacity, icon]
+    fault tree:
+      arrangement: layered-bands
+      title: frame-header
+      route: orthogonal
+      channels:
+        fill: null
+        claimed:
+          position: Level in the tree. The top event is at the top, and a gate's inputs sit in the band below it.
+          icon: The symbol of an event or a gate says which kind it is.
+        free: [fill, border, border_width, line_color, line_style, font_color, opacity]
+    GSN argument:
+      arrangement: layered-bands
+      title: frame-header
+      route: orthogonal
+      channels:
+        fill: null
+        claimed:
+          position: Level in the argument. A goal sits above the strategies and solutions that support it.
+          line_style: Relationship kind. A supported-by line and an in-context-of line differ and must stay distinct.
+        free: [fill, border, border_width, line_color, font_color, opacity, icon]
+    control structure:
+      arrangement: graph
+      title: frame-header
+      route: straight
+      channels:
+        fill: null
+        claimed:
+          line_style: Relationship kind. Control actions and feedback are different lines in the loop.
+        free: [fill, border, border_width, line_color, font_color, opacity, icon]

@@ -108,3 +108,9 @@ Illustration (Westbrook Bank is fictitious): the FMEA item `Authorization unavai
 6. **Case.** A ruleset selector compares the stored string exactly: `Situation`, `FMEAItem`, `ID carrier`, `MAJORITY VOTE`. A lower-case spelling selects nothing and the run looks clean.
 7. **Direction.** Sparx's FMEA pattern draws the failure mode, cause and effect class as the connector's source and the FMEA item as its target (EA stores the arrow pointing back at the source). A rule that counts connectors reads one direction; draw them the same way. Sparx's FTA Pattern shows the gate wiring (measured on screen, EA 17.1 build 1716, 2026-11-04): an input connector runs from the event (source) to the gate (target), and the output runs from the gate (source) to the top event (target), the opposite way round. Both are plain Associations with direction Source -> Destination and carry no `input` or `output` stereotype.
 8. **Flags are not tags.** Whether a class is abstract, and a property's multiplicity and redefinition, are not tagged values and are not stored in a form the validator reads (multiplicity).
+
+## Checking a model
+
+This ruleset needs server 3.6.5 or later. On 3.6.4 and earlier some of its rules report nothing, with no error, so a clean result there means nothing.
+
+The ruleset is `rulesets/raaml-1/raaml-1_rules.yaml`, with 27 rules.

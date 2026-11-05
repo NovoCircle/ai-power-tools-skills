@@ -2209,3 +2209,30 @@ harvest:
     eight types; toolboxes, a fault tree diagram and two quick-link sources were read (see toolbox and quick_links). Not done:
     the FMEA, STPA, GSN and ISO 26262 diagram types were not created or opened.'
   ea_build: 17.1 build 1716
+
+# EA's names for this language's layout. tools/gen_conventions.py reads layout_map.
+layout_map:
+  technology: RAAML
+  display_name: RAAML
+  extends: UML
+  stereotype_prefix: ''
+  notes: |
+    Five of the eight diagram types ea.yaml lists are bound, the five whose token was created and read back. Sparx's FMEA and fault tree patterns both use RAAML::RAAML, so it takes the fault tree's arrangement, and an FMEA drawn on it does too.
+
+    NOT BOUND, TOKEN NOT MEASURED. Failure Mode and Effect Analysis, Fault Tree Analysis, and ISO 26262 Road Vehicles - Functional Safety are listed by EA, and their stored tokens were not read.
+  diagram_types:
+    RAAML:
+      guide: fault tree
+      base: Logical
+    RAAML - Core:
+      guide: block definition
+      base: Logical
+    RAAML - General Concepts:
+      guide: block definition
+      base: Logical
+    Systems Theoretic Process Analysis:
+      guide: control structure
+      base: Logical
+    Goal Structuring Notation:
+      guide: GSN argument
+      base: Logical
