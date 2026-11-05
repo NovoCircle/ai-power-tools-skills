@@ -192,9 +192,9 @@ relationships:
   - {name: BindingBindsParameter, source: Binding, target: InformationItem, via: parameter, kind: containment, multiplicity: {targets_per_source: '1'}, section: '7.3.6'}
   - {name: BindingHasFormula, source: Binding, target: Expression, via: bindingFormula, kind: containment, multiplicity: {targets_per_source: '0..1'}, section: '7.3.6'}
   - {name: DecisionTableHasInput, source: DecisionTable, target: InputClause, via: input, kind: containment, multiplicity: {targets_per_source: '*'}, section: '8.3.1'}
-  - {name: DecisionTableHasOutput, source: DecisionTable, target: OutputClause, via: output, kind: containment, multiplicity: {targets_per_source: '* (1..* per prose, 8.1)'}, section: '8.3.1; 8.1'}
+  - {name: DecisionTableHasOutput, source: DecisionTable, target: OutputClause, via: output, kind: containment, multiplicity: {targets_per_source: '1..*', note: 'The metamodel table gives *; the text of 8.1 says one or more.'}, section: '8.3.1; 8.1'}
   - {name: DecisionTableHasAnnotationClause, source: DecisionTable, target: RuleAnnotationClause, via: annotation, kind: containment, multiplicity: {targets_per_source: '*'}, section: '8.3.1'}
-  - {name: DecisionTableHasRule, source: DecisionTable, target: DecisionRule, via: rule, kind: containment, multiplicity: {targets_per_source: '* (1..* per prose, 8.1)'}, section: '8.3.1; 8.1'}
+  - {name: DecisionTableHasRule, source: DecisionTable, target: DecisionRule, via: rule, kind: containment, multiplicity: {targets_per_source: '1..*', note: 'The metamodel table gives *; the text of 8.1 says one or more.'}, section: '8.3.1; 8.1'}
   - {name: InputClauseHasExpression, source: InputClause, target: Expression, via: inputExpression, kind: containment, multiplicity: {targets_per_source: '0..1'}, section: '8.3.2'}
   - {name: InputClauseHasValues, source: InputClause, target: UnaryTests, via: inputValues, kind: containment, multiplicity: {targets_per_source: '0..1'}, section: '8.3.2'}
   - {name: OutputClauseHasValues, source: OutputClause, target: UnaryTests, via: outputValues, kind: containment, multiplicity: {targets_per_source: '0..1'}, section: '8.3.2'}
@@ -543,13 +543,6 @@ layout:
     FunctionDefinition: large-box
     List: large-box
     Relation: large-box
-    InputClause: box
-    OutputClause: box
-    RuleAnnotationClause: box
-    DecisionRule: box
-    RuleAnnotation: box
-    Binding: box
-    ContextEntry: box
   exceptions: {}
   diagram_types:
     DecisionRequirementsDiagram:
@@ -571,6 +564,16 @@ layout:
         - opacity
   viewpoints: {}
   no_element_type:
+    table_part:
+      reason: A cell or row inside a boxed expression; it takes the size of the table that holds it.
+      concepts:
+      - InputClause
+      - OutputClause
+      - RuleAnnotationClause
+      - DecisionRule
+      - RuleAnnotation
+      - Binding
+      - ContextEntry
     interchange_record:
       reason: 'A diagram interchange record: it is drawn as the element it depicts, or as a line across
         a decision service, and takes no element size of its own.'
