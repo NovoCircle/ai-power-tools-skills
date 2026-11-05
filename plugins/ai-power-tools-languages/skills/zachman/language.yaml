@@ -208,7 +208,7 @@ classification:
     column: D
     row: 1
     name: List of organizations
-    variable_means: major organization unit
+    variable_means: class of agent
     connector_means: not defined in this cell
     example_notations: [list of organization units]
     basis: partial
@@ -272,7 +272,7 @@ classification:
   - id: E4
     column: E
     row: 4
-    name: Control structure
+    name: Control architecture
     variable_means: execute
     connector_means: component cycle
     example_notations: [control structure]

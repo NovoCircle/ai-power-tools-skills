@@ -97,7 +97,7 @@ The cells, by column. The first name is the cell's description; the second and t
 
 | Row | Cell | Agent | Work |
 |---|---|---|---|
-| 1 | list of organizations | major organization unit | not defined |
+| 1 | list of organizations | class of agent | not defined |
 | 2 | organization (work) model | organization unit | work product |
 | 3 | human interface architecture | role | deliverable |
 | 4 | presentation architecture | user | job |
@@ -111,7 +111,7 @@ The cells, by column. The first name is the cell's description; the second and t
 | 1 | list of events | major event | major cycle |
 | 2 | master schedule | business event | business cycle |
 | 3 | processing structure | system event | processing cycle |
-| 4 | control structure | execute | component cycle |
+| 4 | control architecture (Figure 6 prints control structure) | execute | component cycle |
 | 5 | timing definition | interrupt | machine cycle |
 | 6 | the schedule followed | instance | instance |
 

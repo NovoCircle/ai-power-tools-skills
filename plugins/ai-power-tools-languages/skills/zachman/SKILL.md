@@ -54,7 +54,7 @@ The primitive's meaning changes with the row. A few examples (the full table is 
 - **Data**: a class of business thing (1) → business entity (2) → data entity (3) → segment or row (4) → field (5).
 - **Function**: a class of business process (1) → business process (2) → application function (3) → computer function (4) → language statement (5).
 - **Network**: major business location (1) → business unit at a location (2) → system function such as a processor (3) → hardware and system software (4) → address (5).
-- **People**: major organization unit (1) → organization unit (2) → role (3) → user (4) → identity (5). *Partly garbled in the source; hypothetical in the paper.*
+- **People**: class of agent (1) → organization unit (2) → role (3) → user (4) → identity (5). *Partly garbled in the source; hypothetical in the paper.*
 - **Time**: major event (1) → business event (2) → system event (3) → execute (4) → interrupt (5).
 - **Motivation**: major objective and strategy (1) → business objective and strategy (2) → criterion and option (3) → condition and action (4) → subcondition and step (5). *Partly garbled in the source; hypothetical in the paper.*
 - **Row 6** holds instances of all of these.
