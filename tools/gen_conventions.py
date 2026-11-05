@@ -212,6 +212,8 @@ def _diagram_type(sources: Sources, name: str, entry: Mapping[str, Any],
         routing["trunk_for"] = list(trunk["for"])
 
     out: dict[str, Any] = {}
+    if entry.get("token"):
+        out["token"] = entry["token"]
     if entry.get("base"):
         out["base"] = entry["base"]
     if "stereotype_prefix" in entry:
@@ -307,6 +309,22 @@ def generate_language(sources: Sources, language_id: str) -> str | None:
     return HEADER + "\n" + body
 
 
+def _token_of(technology: Any, name: str, entry: Mapping[str, Any]) -> str:
+    """The `MDGDgm` token a map entry claims: its own, or `<technology>::<name>`."""
+    return entry.get("token") or f"{technology}::{name}"
+
+
+def _duplicate_tokens(files: Mapping[Path, str]) -> list[str]:
+    """Each token that two language folders, or two entries in one, both claim."""
+    claims: dict[str, list[str]] = {}
+    for path, text in files.items():
+        doc = yaml.safe_load(text)
+        for name, entry in doc["diagram_types"].items():
+            claims.setdefault(_token_of(doc["technology"], name, entry), []).append(path.parent.name)
+    return [f"{token!r} is claimed by {', '.join(sorted(folders))}"
+            for token, folders in sorted(claims.items()) if len(folders) > 1]
+
+
 def expected_files(root: Path = ROOT) -> dict[Path, str]:
     """`{path: text}` for every generated file the sources call for.
 
@@ -332,6 +350,9 @@ def expected_files(root: Path = ROOT) -> dict[Path, str]:
     if not out:
         raise GenerationError(f"{root / EA_REL}: no `ea.yaml` has a `layout_map`, so there is "
                               f"nothing to generate or check")
+    duplicates = _duplicate_tokens(out)
+    if duplicates:
+        raise GenerationError("one diagram token, more than one claim: " + "; ".join(duplicates))
     return out
 
 
@@ -502,6 +523,11 @@ def map_problems(ea: Mapping[str, Any], language: Mapping[str, Any] | None,
     defaults = standard["defaults"]
 
     for name, entry in (layout_map.get("diagram_types") or {}).items():
+        stated = entry.get("token")
+        if stated and "::" not in str(stated):
+            problems.append(f"{where}: `{name}` has token {stated!r}, which is not a whole token")
+        if "::" in name and not stated:
+            problems.append(f"{where}: `{name}` holds `::`, so it must state its `token`")
         guide = entry.get("guide")
         first = guide[0] if isinstance(guide, list) else guide
         if first and first not in guide_types:
@@ -509,7 +535,7 @@ def map_problems(ea: Mapping[str, Any], language: Mapping[str, Any] | None,
                             f"`layout.diagram_types`")
         source = (guide_types.get(first) or {}) if first else entry
         arrangement = source.get("arrangement") or defaults["arrangement"]
-        recorded = grammars.get(f"{technology}::{name}")
+        recorded = grammars.get(_token_of(technology, name, entry))
         if recorded is not None:
             translated = "ea-semantic" if arrangement == "type-fixed" else arrangement
             if translated != recorded and not entry.get("arrangement_reason"):
@@ -536,6 +562,7 @@ def map_problems(ea: Mapping[str, Any], language: Mapping[str, Any] | None,
 
     # The whole ea.yaml is here, so the map must agree with it.
     if (technology and ea.get("technology") not in (None, "none", technology)
+            and ea.get("api_technology_id") != technology
             and not layout_map.get("technology_reason")):
         problems.append(f"{where}: technology {technology!r} differs from ea.yaml's "
                         f"{ea.get('technology')!r}")
@@ -550,8 +577,9 @@ def map_problems(ea: Mapping[str, Any], language: Mapping[str, Any] | None,
     tokens = {str(row.get(key)) for row in declared.values() if isinstance(row, Mapping)
               for key in ("token", "ea_name")} if isinstance(declared, Mapping) else set()
     for name, entry in (layout_map.get("diagram_types") or {}).items():
-        token = f"{technology}::{name}"
-        if tokens and token not in tokens and name not in tokens and not entry.get("token_reason"):
+        token = _token_of(technology, name, entry)
+        known = token in tokens or (not entry.get("token") and name in tokens)
+        if tokens and not known and not entry.get("token_reason"):
             problems.append(f"{where}: `{token}` is not in ea.yaml's `diagram_types`")
     return problems
 

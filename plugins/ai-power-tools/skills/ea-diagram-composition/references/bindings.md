@@ -56,6 +56,54 @@ says so and names the install.
 pip install pyyaml
 ```
 
+### 2.1 One id EA reports, any number of tokens
+
+`technology` is the id EA reports, the one `Repository.IsTechnologyLoaded` answers to. The resolver
+never uses a file unless that id is in the installed list. What a diagram stores after `MDGDgm=` is a
+**token**, and its first part is often not that id. So a language's `layout_map` names the id once and
+declares the token on each diagram type whose token doesn't read `<technology>::<name>`:
+
+```yaml
+layout_map:
+  technology: EAExtended:Requirements    # the id EA reports
+  extends: UML
+  diagram_types:
+    Requirements:                        # any name; the guide's or EA's
+      token: Extended::Requirements      # exactly what EA stores after MDGDgm=
+      base: Custom
+```
+
+`token` is carried into the generated `conventions.yaml`. The rules:
+
+- **Leave it out when the token is `<technology>::<name>`.** Most maps need nothing, and nothing about
+  them changes.
+- **A stored token resolves to the file that claims it,** in any installed file, before its first part
+  is read as a technology. A diagram type with a `token` answers to that token and no other.
+- **A name holding `::` must state its `token`.** A map may key a diagram type by its full token, as
+  long as it states it too.
+- **One token, one file.** A second claim, in another folder or the same one, fails
+  `tools/gen_conventions.py` and its `--check`, and the loader raises `DuplicateToken`. A diagram type
+  with no `token` claims `<technology>::<name>`, so a stated token can collide with it.
+- **A token in `token` must be in `ea.yaml`'s `diagram_types`,** or the entry states a `token_reason`.
+- **`technology` may be `ea.yaml`'s `technology` or `api_technology_id`.** Anything else needs a
+  `technology_reason`.
+- **A token left out of a family is `unbound`, not `not-installed`.** A file that claims
+  `UPDM2_AV::AV-1` owns `UPDM2_AV`, so a diagram stating `UPDM2_AV::AV-3` is told the file doesn't bind
+  it, instead of being told to check an id.
+
+Check the id before writing the map. It isn't guessable, and the Resources tab can show another name.
+
+| Language | `technology`, as EA reports it | `token` |
+|---|---|---|
+| UPDM | `UPDM2` | `UPDM2_OV::OV-2`, and one per diagram type |
+| RAAML | `RAAML1.0` | `RAAML::RAAML`, and one per diagram type |
+| UAF | `UAF` | `UAFP_Framework::UPDM Framework` |
+| Requirements | `EAExtended:Requirements` | `Extended::Requirements` |
+| Business Modeling | `EAExtended` | `Extended::Business Modeling` |
+
+UAF's other views are drawn on SysML diagram types, so they carry `SysML1.4::` tokens. Those are SysML's
+to claim, so UAF's map doesn't list them.
+
 ## 3. The closed vocabularies
 
 Four vocabularies are fixed. A value outside them is refused on load.
@@ -126,7 +174,7 @@ mistakes are told what they probably meant.
 
 | Key | Required | Validated against |
 |---|---|---|
-| `technology` | yes | Non-empty string, and must not contain `::`. This is the part *before* the `::` in an `MDGDgm=<Tech>::<DiagramType>` value, and it has to match EA verbatim. |
+| `technology` | yes | Non-empty string, and must not contain `::`. The id EA reports, verbatim. It's also the part *before* the `::` in a diagram's `MDGDgm` value unless the diagram type states a `token` (§2.1). |
 | `display_name` | no | Non-empty string. Defaults to `technology`. |
 | `extends` | no | Technology id of another binding in the same catalog — **the notation this one is built on**. Cannot be this binding's own id; cycles are refused by name. Every shipped MDG binding names the base notation here; see §5.6. |
 | `stereotype_prefix` | no | String, `""` included. See §5.3 — `""` is a statement, not an omission. |
@@ -142,6 +190,7 @@ space.
 
 | Key | Required | Validated against |
 |---|---|---|
+| `token` | no | The whole value EA stores after `MDGDgm=`: `<part>::<part>`, with no `;` or `=`. Defaults to `<technology>::<name>`. One token belongs to one file. See §2.1. |
 | `base` | no | Non-empty string. The EA base diagram type this MDG diagram type is built on, which is what a caller passes to `create_diagram` to create one — `Logical` for `ArchiMate3::Application`, `Analysis` for `BPMN2.0::Business Process`. **Consumed twice**: it picks the parent diagram type this one inherits its unstated sizes and gaps from (§5.6), and it is the resolver's weakest match when a diagram names no MDG diagram type of its own. State it on every diagram type — a missing `base` costs the substrate. |
 | `grammar` | yes | One of the eight grammars (§3). Mandatory, which is why `graph` and `ea-semantic` exist — see §5.5. |
 | `title` | yes | `drawn` or `frame-header`. |
@@ -545,6 +594,7 @@ document.
 | `available_bindings(directory=None)` | `{technology id: file}` for every valid binding on hand, named below the directory (`bpmn-2/conventions.yaml`). An invalid file is omitted rather than raising, so one bad file does not make the whole catalog unreadable; load it directly to see why. **A duplicate technology id is the exception and raises `DuplicateTechnology`** naming the id and every file that claims it — omitting one of two files that claim an id is not omitting it, it is picking a winner, and the readers of the directory used to pick different ones. |
 | `declared_technologies(directory=None)` | `{technology id: filenames that declare it}` for every file that parses, validated or not. Identity only: the one view of the directory every reader agrees on. |
 | `binding_conflicts(directory=None)` | The subset of the above with more than one file per id. Never raises, so an audit or a health check can report a shadowed id instead of failing on it. Empty for a clean directory. |
+| `token_conflicts(directory=None)` | `{token: filenames}` for each token more than one file claims (§2.1). Never raises. The readers that raise `DuplicateTechnology` raise `DuplicateToken` for these. |
 | `unvalidated_glyphs(name)` | The distinct characters of `name` that `HEADER_ADVANCE_PX` was never calibrated on — it was measured over printable ASCII in one font. The guard on that constant: a width predicted for a name carrying any of these is an extrapolation, and `spec(names=...)` reports it as `SpecFit.extrapolated`. |
 | `implemented_grammars()` | The grammars the engine has a `compose_<grammar>` for, **read from `compose.py` on every call**. Never a written-down set: a hand-kept flag pinned to the engine by a test is two copies of one fact, and that shape once let a measurement tool report a remembered reach figure for a grammar that had already shipped. |
 | `producible_grammars()` | `implemented_grammars()` plus the grammars EA's layout places — the answer to "can we produce this at all". |
@@ -565,7 +615,7 @@ On `Binding`:
 | `profile(name)` | One `PresentationProfile`. Raises, naming what is declared. |
 | `stereotype_for(concept)` | `ApplicationComponent` to `ArchiMate_ApplicationComponent`. |
 | `concept_for(stereotype)` | The inverse. A stereotype without the prefix comes back unchanged — models contain elements stereotyped from other technologies, or from none, and a lookup helper is the wrong place to have an opinion about that. |
-| `diagram_type_for_mdgdgm(value)` | Resolve an `MDGDgm=<Tech>::<DiagramType>` value, or `None` when it names another technology, so a caller can try the next binding. Only about half of real diagrams carry `MDGDgm` at all; the rest identify themselves through `Diagram_Type`, so resolution needs a second path. |
+| `diagram_type_for_mdgdgm(value)` | Resolve a whole `MDGDgm=` value, or `None` when no diagram type here claims it, so a caller can try the next binding. Only about half of real diagrams carry `MDGDgm` at all; the rest identify themselves through `Diagram_Type`, so resolution needs a second path. |
 | `viewpoints_admitting(concepts)` | Viewpoints that admit **every** concept given, narrowest first — the one admitting the fewest concepts overall leads, ties broken by name. Ranking is on admissibility only; intent matching belongs to the caller. |
 
 On `DiagramTypeBinding`:
@@ -590,7 +640,7 @@ On `DiagramTypeBinding`:
 | `grammar_is_producible` | Property. Whether a diagram of this type can be produced at all today, by either route — a composed grammar that is built, or one EA's layout places. |
 | `geometry_is_composed` | Property. Whether the coordinates are ours to compute. `False` means they come from EA. |
 | `grammar_placement` | Property. Who places the geometry, as one of the three values in `GRAMMAR_PLACEMENT`. |
-| `mdg_diagram_type` | Property. The `<Tech>::<DiagramType>` string, to compare against a diagram's own `MDGDgm`. |
+| `mdg_diagram_type` | Property. The token: the stated `token`, or `<Tech>::<DiagramType>`. Compare it against a diagram's own `MDGDgm`, and pass it when creating one. |
 
 On `Viewpoint`: `admits_concept(concept)`, plus `diagram_type`, `intent` and `admits` as read-only
 attributes, and `effective_grammar`, `grammar_is_implemented`, `grammar_is_producible` and
