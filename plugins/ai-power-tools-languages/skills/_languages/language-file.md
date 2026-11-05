@@ -72,6 +72,33 @@ A shape is described in plain geometry and words a person could draw from: "roun
 
 The `layout` block is ours, not the standard's. It maps each concept to a size class from `layout-standard.yaml` and says how each diagram type is arranged. It never restates a size: sizes and spacing live in the shared standard, in one unit, for all languages.
 
+```yaml
+layout:
+  element_types:          # concept name -> size class. A concept left out takes `box`
+    DecisionNode: decision-diamond
+  no_element_type:        # concepts with no symbol of their own to size
+    drawn_as_text:        # a group, named for what its concepts have in common
+      reason: Shown as text inside another symbol, so there is no symbol to size.
+      concepts: [CallEvent, TimeEvent]
+  diagram_types:
+    Class diagram:
+      arrangement: graph
+      route: straight
+      title: frame-header
+      trunk:              # optional: lines of these kinds join into one shared line
+        route: tree-vertical
+        for: [Generalization]
+      channels:           # what each visual channel already means on this diagram type
+        fill: null        # what fill means, or null if it means nothing
+        claimed:          # channel -> what it means, so a second meaning can't use it
+          size: Compartment content, because a box is sized by what it shows.
+        free: [line_color, font_color]  # channels a second meaning may use
+```
+
+`no_element_type` accounts for the concepts that take no size class: text in a compartment, a marker, a line. Each group states one `reason` and lists its `concepts` by name. A list is required, so a sentence or a pointer to `notation.not_specified` doesn't count.
+
+A diagram type that isn't listed takes the shared defaults. `trunk` says which relationship kinds are drawn as one shared line, with `route` naming how it runs and `for` naming the kinds. `channels` keeps a second meaning from colliding with the notation: `fill` and each entry under `claimed` say what a channel already carries, and `free` lists the channels left over. A channel can't be both claimed and free. The arrangements, routes, titles, and channels are all from the vocabulary in `layout-standard.yaml`.
+
 ## `SKILL.md`
 
 Each guide's `SKILL.md` has two sections with these exact headings: `## Data types and attributes` and `## How it is drawn`. Each is a few plain lines that state the coverage, name what matters most, and point at `language.yaml`.
