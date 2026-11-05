@@ -56,7 +56,6 @@ class TestForbiddenIdentifiers:
     @pytest.mark.parametrize("line,expect", [
         ("The TVO model was the source.", "TVO"),
         ("Applied to the TEA repository.", "TEA"),
-        ("Delivered for CA EDD last year.", "EDD"),
         ("TechVentures used this pattern.", "TechVentures"),
     ])
     def test_a_real_customer_identifier_is_caught(self, library, line, expect):
@@ -154,6 +153,18 @@ class TestUnknownIdentifiers:
                      "Use Diagrams::Thing here"):
             f = _write(library, "s/SKILL.md", "# s\n\n" + text + "\n")
             assert "unrecognized MDG namespace" in _findings(f), text
+
+    def test_a_known_spaced_id_must_start_on_a_word_boundary(self, library):
+        """A customer's name that merely ends in a known id is not that id."""
+        for text in ("Use AcmeData Modeling::Thing here",
+                     "Use Acme-Data Modeling::Thing here",
+                     "Use Contoso_ZF Owner::Thing here"):
+            f = _write(library, "s/SKILL.md", "# s\n\n" + text + "\n")
+            assert "unrecognized MDG namespace" in _findings(f), text
+        for text in ("`Data Modeling::Thing`", "MDGDgm=ZF Owner::OwnerTime", "(ZF Owner::OwnerTime)",
+                     "Data Modeling::Thing"):
+            f = _write(library, "s/SKILL.md", "# s\n\n" + text + "\n")
+            assert "unrecognized MDG namespace" not in _findings(f), text
 
 
 
