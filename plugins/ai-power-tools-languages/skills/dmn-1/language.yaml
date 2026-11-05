@@ -1,0 +1,565 @@
+# Decision Model and Notation (DMN) 1.2: language file (schema_version 1).
+# Written from the standard only. Concept names are the standard's own metamodel class names (no spaces).
+# Keys beyond the base guide shape: conformance_types, concepts.groups,
+# concepts.enumerations, relationships.connection_tables, relationships.references, and on each constraint applies_when, checkable, see_conventions.
+#   constraints[].checkable    : static = a validator that sees only the saved model can check it; partial = only the structure, simple cases or
+#                                graph analysis (or it needs another model); runtime = needs a running instance; none = not a property of a model.
+#   constraints[].applies_when : omitted = always; level = depends on the conformance level the model targets; automation = only for decision logic
+#                                meant for full automation.
+#   Strength policy: must = error, should = warning, note = advice only.
+schema_version: 1
+id: dmn-1
+name: Decision Model and Notation (DMN)
+owner: {name: Object Management Group, kind: standards-body}
+standard:
+  name: Decision Model and Notation
+  version: '1.2'
+  status: published
+  reference: 'OMG formal/19-01-05 (specification PDF, January 2019). Normative machine-readable files: DMN12.xsd, DMNDI12.xsd, DI.xsd, DC.xsd, DMN12.xmi, DMNDI12.xmi (dtc/18-05-04 to dtc/18-06-07). https://www.omg.org/spec/DMN/1.2/'
+  later_versions: 'Newer versions exist (1.3 to 1.6 and a 1.7 beta) and are not described here.'
+conformance_types:
+  Level1:
+    section: '2.1, p. 15'
+    requires: 'Clauses 6 (decision requirements), 7 (decision logic) and 8 (decision table), plus the general requirements of 2.2.'
+    expressions: 'Expression text is not interpreted. If a tool interprets it, the interpretation agrees with clause 7.'
+  Level2:
+    section: '2.1, p. 15'
+    adds_to: Level1
+    requires: 'Everything in Level 1, and interpretation of S-FEEL (clause 9).'
+    expressions: 'Literal expressions are restricted to S-FEEL.'
+  Level3:
+    section: '2.1, p. 15'
+    adds_to: Level2
+    requires: 'Clauses 6, 7, 8 and 10 (full FEEL and the boxed expressions of clause 10). A Level 3 tool can also claim Levels 2 and 1.'
+    expressions: 'Full FEEL.'
+  general: 'All levels also meet 2.2: use the specified shapes, icons and markers (2.2.1); give interpretations consistent with the specified semantics (2.2.2); let users create and view every mandatory attribute (2.2.3).'
+concepts:
+  source: 'OMG DMN 1.2: the metamodel in DMN12.xmi (43 classes, 5 enumerations; the abstract wrapper class Element for foreign extension content is not listed, leaving 42) and DMNDI12.xmi (8 DMN classes), with the clauses of the PDF (6 to 8, 10.5, 13). Generalization and abstract flags come from the XMI; where the PDF text and the XMI differ, the XMI is followed and the difference is noted on the concept. The 66 FEEL grammar rules and the semantic mappings are not concepts and are not listed.'
+  groups:
+    Foundation: {defined_by: 'Clauses 6.3.1 to 6.3.5', notes: 'Root classes and the container: identity, naming, the model container, imports, element collections.'}
+    DRG elements: {defined_by: 'Clauses 6.3.7 to 6.3.12', notes: 'The things in a Decision Requirements Graph: decisions, knowledge models, services, input data, knowledge sources.', diagram_type: DecisionRequirementsDiagram}
+    Requirements: {defined_by: 'Clauses 6.3.13 to 6.3.15', notes: 'The three kinds of dependency between DRG elements.', diagram_type: DecisionRequirementsDiagram}
+    Artifacts: {defined_by: 'Clause 6.3.6', notes: 'Annotations that add information without changing the meaning of a model.', diagram_type: DecisionRequirementsDiagram}
+    Business context: {defined_by: 'Clause 6.3.8', notes: 'Placeholders for organizational and performance information defined by other OMG models.'}
+    Types and variables: {defined_by: 'Clauses 7.3.2, 7.3.3', notes: 'Item definitions (data structure and range) and information items (variables).'}
+    Decision logic: {defined_by: 'Clauses 7.3, 10.5', notes: 'Expressions that say how a result is computed: literal expressions, invocations, bindings, contexts, lists, relations, function definitions.', diagram_type: BoxedExpression}
+    Decision tables: {defined_by: 'Clause 8.3', notes: 'The decision table and its clauses and rules.', diagram_type: BoxedExpression}
+    Extensibility: {defined_by: 'Clause 6.3.16', notes: 'Hooks for attaching elements and attributes from other metamodels.'}
+    Diagram interchange: {defined_by: 'Clause 13', notes: 'The classes that interchange the layout of a Decision Requirements Diagram.', diagram_type: DecisionRequirementsDiagram}
+  elements:
+    DMNElement: {display: DMN Element, category: Foundation, abstract: true, attributes: [{name: id, type: ID, multiplicity: '0..1', section: '6.3.1 Table 3'}, {name: description, type: String, multiplicity: '0..1', section: '6.3.1 Table 3'}, {name: label, type: String, multiplicity: '0..1', note: 'A short alternative description; it has no notation and is not the Diagram Interchange label', section: '6.3.1 Table 3'}]}
+    NamedElement: {display: Named Element, category: Foundation, abstract: true, specializes: DMNElement, attributes: [{name: name, type: string, section: '6.3.1 Table 4'}]}
+    Expression: {display: Expression, category: Decision logic, abstract: true, specializes: DMNElement, attributes: [{name: typeRef, type: String, multiplicity: '0..1', note: Optional per the text, section: '7.3.1'}]}
+    UnaryTests: {display: Unary Tests, category: Decision logic, specializes: DMNElement}
+    Definitions: {display: Definitions, category: Foundation, specializes: NamedElement, attributes: [{name: namespace, type: anyURI, multiplicity: '1', section: '6.3.2 Table 5'}, {name: expressionLanguage, type: anyURI, multiplicity: '0..1', section: '6.3.2 Table 5'}, {name: typeLanguage, type: anyURI, multiplicity: '0..1', section: '6.3.2 Table 5'}, {name: exporter, type: string, multiplicity: '0..1', section: '6.3.2 Table 5'}, {name: exporterVersion, type: string, multiplicity: '0..1', section: '6.3.2 Table 5'}]}
+    Import: {display: Import, category: Foundation, specializes: NamedElement, attributes: [{name: importType, type: anyURI, section: '6.3.3 Table 6'}, {name: locationURI, type: anyURI, multiplicity: '0..1', section: '6.3.3 Table 6'}, {name: namespace, type: anyURI, section: '6.3.3 Table 6'}]}
+    ImportedValues: {display: Imported Values, category: Foundation, specializes: Import}
+    ElementCollection: {display: Element Collection, category: Foundation, specializes: NamedElement}
+    DRGElement: {display: DRG Element, category: DRG elements, abstract: true, specializes: NamedElement}
+    Decision: {display: Decision, category: DRG elements, specializes: DRGElement, attributes: [{name: question, type: string, multiplicity: '0..1', section: '6.3.7 Table 10'}, {name: allowedAnswers, type: string, multiplicity: '0..1', section: '6.3.7 Table 10'}]}
+    Invocable: {display: Invocable, category: DRG elements, abstract: true, specializes: DRGElement}
+    BusinessKnowledgeModel: {display: Business Knowledge Model, category: DRG elements, specializes: Invocable}
+    DecisionService: {display: Decision Service, category: DRG elements, specializes: Invocable}
+    InputData: {display: Input Data, category: DRG elements, specializes: DRGElement}
+    KnowledgeSource: {display: Knowledge Source, category: DRG elements, specializes: DRGElement, attributes: [{name: locationURI, type: anyURI, multiplicity: '0..1', section: '6.3.12 Table 18'}, {name: type, type: string, multiplicity: '0..1', section: '6.3.12 Table 18'}]}
+    InformationRequirement: {display: Information Requirement, category: Requirements, specializes: DMNElement}
+    KnowledgeRequirement: {display: Knowledge Requirement, category: Requirements, specializes: DMNElement}
+    AuthorityRequirement: {display: Authority Requirement, category: Requirements, specializes: DMNElement}
+    Artifact: {display: Artifact, category: Artifacts, abstract: true, specializes: DMNElement}
+    Association: {display: Association, category: Artifacts, specializes: Artifact, attributes: [{name: associationDirection, type: AssociationDirection, default: 'None', section: '6.3.6.1 Table 8'}]}
+    TextAnnotation: {display: Text Annotation, category: Artifacts, specializes: Artifact, attributes: [{name: text, type: string, section: '6.3.6.2 Table 9'}, {name: textFormat, type: string, default: text/plain, section: '6.3.6.2 Table 9'}]}
+    BusinessContextElement: {display: Business Context Element, category: Business context, abstract: true, specializes: NamedElement, attributes: [{name: URI, type: anyURI, multiplicity: '0..1', section: '6.3.8 Table 11'}]}
+    OrganisationalUnit: {display: Organizational Unit, category: Business context, specializes: BusinessContextElement}
+    PerformanceIndicator: {display: Performance Indicator, category: Business context, specializes: BusinessContextElement}
+    ItemDefinition: {display: Item Definition, category: Types and variables, specializes: NamedElement, attributes: [{name: typeRef, type: String, multiplicity: '1', note: 'The table gives bound 1; the text says an item definition may have a type reference or be composed of item components', section: '7.3.2 Table 24'}, {name: typeLanguage, type: String, multiplicity: '0..1', section: '7.3.2 Table 24'}, {name: IsCollection, type: Boolean, default: 'false', section: '7.3.2 Table 24'}]}
+    InformationItem: {display: Information Item, category: Types and variables, specializes: NamedElement, attributes: [{name: typeRef, type: String, multiplicity: '1', section: '7.3.3 Table 25'}]}
+    LiteralExpression: {display: Literal Expression, category: Decision logic, specializes: Expression, attributes: [{name: text, type: string, multiplicity: '0..1', section: '7.3.4 Table 26'}, {name: expressionLanguage, type: anyURI, multiplicity: '0..1', section: '7.3.4 Table 26'}]}
+    Invocation: {display: Invocation, category: Decision logic, specializes: Expression}
+    Binding: {display: Binding, category: Decision logic}
+    Context: {display: Context, category: Decision logic, specializes: Expression}
+    ContextEntry: {display: Context Entry, category: Decision logic, specializes: DMNElement}
+    FunctionDefinition: {display: Function Definition, category: Decision logic, specializes: Expression, attributes: [{name: kind, type: FunctionKind, default: FEEL, section: '10.5.3 Table 74'}]}
+    List: {display: List, category: Decision logic, specializes: Expression}
+    Relation: {display: Relation, category: Decision logic, specializes: Expression}
+    DecisionTable: {display: Decision Table, category: Decision tables, specializes: Expression, attributes: [{name: hitPolicy, type: HitPolicy, default: UNIQUE, section: '8.3.1 Table 29'}, {name: aggregation, type: BuiltinAggregator, note: Present only with the COLLECT hit policy, section: '8.3.1 Table 29'}, {name: preferredOrientation, type: DecisionTableOrientation, multiplicity: '0..1', section: '8.3.1 Table 29'}, {name: outputLabel, type: string, multiplicity: '0..1', section: '8.3.1 Table 29'}]}
+    InputClause: {display: Input Clause, category: Decision tables, specializes: DMNElement}
+    OutputClause: {display: Output Clause, category: Decision tables, specializes: DMNElement, attributes: [{name: typeRef, type: String, multiplicity: '1', note: The text says a single-output table does not give one, section: '8.3.2 Table 31'}, {name: name, type: string, multiplicity: '0..1', section: '8.3.2 Table 31'}]}
+    RuleAnnotationClause: {display: Rule Annotation Clause, category: Decision tables, attributes: [{name: name, type: string, multiplicity: '1', section: '8.3.2 Table 32'}]}
+    DecisionRule: {display: Decision Rule, category: Decision tables, specializes: DMNElement}
+    RuleAnnotation: {display: Rule Annotation, category: Decision tables, attributes: [{name: text, type: string, multiplicity: '0..1', section: '8.3.3 Table 34'}]}
+    ExtensionElements: {display: Extension Elements, category: Extensibility}
+    ExtensionAttribute: {display: Extension Attribute, category: Extensibility, attributes: [{name: name, type: string, section: '6.3.16.2 Table 23'}]}
+    DMNDI: {display: DMN Diagram Interchange, category: Diagram interchange}
+    DMNDiagram: {display: DMN Diagram, category: Diagram interchange, attributes: [{name: name, type: String, default: empty string, section: '13.4.4 Table 78'}, {name: documentation, type: String, default: empty string, section: '13.4.4 Table 78'}, {name: resolution, type: Real, default: '300 user units per inch', section: '13.4.4 Table 78'}, {name: size, type: DC::Dimension, multiplicity: '0..1', section: '13.4.4 Table 78'}]}
+    DMNDiagramElement: {display: DMN Diagram Element, category: Diagram interchange, abstract: true}
+    DMNShape: {display: DMN Shape, category: Diagram interchange, specializes: DMNDiagramElement, attributes: [{name: bounds, type: DC::Bounds, multiplicity: '1', section: '13.4.6 Table 80'}, {name: isListedInputData, type: Boolean, multiplicity: '0..1', section: '13.4.6 Table 80'}, {name: isCollapsed, type: Boolean, multiplicity: '0..1', default: 'false', section: '13.4.6 Table 80'}]}
+    DMNEdge: {display: DMN Edge, category: Diagram interchange, specializes: DMNDiagramElement, attributes: [{name: wayPoints, type: DC::Point, multiplicity: '2..*', section: '13.4.7 Table 81'}]}
+    DMNDecisionServiceDividerLine: {display: DMN Decision Service Divider Line, category: Diagram interchange}
+    DMNLabel: {display: DMN Label, category: Diagram interchange, attributes: [{name: bounds, type: DC::Bounds, multiplicity: '0..1', section: '13.4.8 Table 82'}, {name: text, type: String, multiplicity: '0..1', section: '13.4.8 Table 82'}]}
+    DMNStyle: {display: DMN Style, category: Diagram interchange, attributes: [{name: id, type: String, multiplicity: '0..1', section: '13.4.9 Table 83'}, {name: fillColor, type: DC::Color, multiplicity: '0..1', default: white, section: '13.4.9 Table 83'}, {name: strokeColor, type: DC::Color, multiplicity: '0..1', default: black, section: '13.4.9 Table 83'}, {name: fontColor, type: DC::Color, multiplicity: '0..1', default: black, section: '13.4.9 Table 83'}, {name: fontFamily, type: String, multiplicity: '0..1', default: Arial, section: '13.4.9 Table 83'}, {name: fontSize, type: Real, multiplicity: '0..1', default: '8', section: '13.4.9 Table 83'}, {name: fontItalic, type: Boolean, multiplicity: '0..1', default: 'false', section: '13.4.9 Table 83'}, {name: fontBold, type: Boolean, multiplicity: '0..1', default: 'false', section: '13.4.9 Table 83'}, {name: fontUnderline, type: Boolean, multiplicity: '0..1', default: 'false', section: '13.4.9 Table 83'}, {name: fontStrikeThrough, type: Boolean, multiplicity: '0..1', default: 'false', section: '13.4.9 Table 83'}, {name: labelHorizontalAlignement, type: AlignmentKind, multiplicity: '0..1', note: Spelled so in the table, section: '13.4.9 Table 83'}, {name: labelVerticalAlignment, type: AlignmentKind, multiplicity: '0..1', section: '13.4.9 Table 83'}]}
+  enumerations:
+    HitPolicy: {values: [UNIQUE, FIRST, PRIORITY, ANY, COLLECT, RULE ORDER, OUTPUT ORDER], default: UNIQUE, indicators: {UNIQUE: U, FIRST: F, PRIORITY: P, ANY: A, COLLECT: C, RULE ORDER: R, OUTPUT ORDER: O}, section: '8.3.1; 8.2.10'}
+    BuiltinAggregator: {values: [SUM, COUNT, MIN, MAX], indicators: {SUM: '+', COUNT: '#', MIN: '<', MAX: '>'}, applies_to: 'COLLECT only', section: '8.3.1; 8.2.10'}
+    DecisionTableOrientation: {values: [Rule-as-Row, Rule-as-Column, CrossTable], section: '8.3.1'}
+    FunctionKind: {values: [FEEL, Java, PMML], default: FEEL, section: '10.5.3'}
+    AssociationDirection: {values: [None, One, Both], default: None, section: '6.3.6.1'}
+  decision_table_cells:
+    note: 'The parts of a decision table are the Decision Table classes above; the unary-test cell kinds are listed here for reference.'
+    input_entry: 'Unary tests (a value, a list, a range, a comparison, a boolean expression using the special variable ?, or "-" for irrelevant)'
+    input_values: 'Unary tests listing the expected values of an input'
+    output_values: 'Unary tests listing the allowed outputs; for Priority and Output order, in decreasing priority'
+    output_entry: 'A literal expression'
+    section: '8.2; 8.3.3'
+  feel:
+    note: 'FEEL and S-FEEL are summarized for validation. The grammar (66 numbered rules; S-FEEL 38) is defined in 10.3.1.2 and 9.2 and is not reproduced.'
+    s_feel: {section: 9, grammar_rules: 38, use: 'Level 2 literal expressions; default language of decision tables'}
+    feel: {section: 10, grammar_rules: 66, use: 'Level 3 literal expressions; boxed expressions'}
+    types: [number, string, boolean, days and time duration, years and months duration, time, date, date and time, list, context, function, Any, Null]
+    literals_without_syntax: [date, time, date and time, duration]
+    built_in_function_groups:
+      conversion: [date, time, date and time, duration, years and months duration, number, string]
+      boolean: [not]
+      string: [substring, string length, upper case, lower case, substring before, substring after, replace, contains, starts with, ends with, matches, split]
+      list: [list contains, count, min, max, sum, mean, all, any, sublist, append, concatenate, insert before, remove, reverse, index of, union, distinct values, flatten, product, median, stddev, mode]
+      numeric: [decimal, floor, ceiling, abs, modulo, sqrt, log, exp, odd, even]
+      other: [sort, get value, get entries]
+    three_valued_logic: [true, false, null]
+relationships:
+  note: 'DMN has three requirement connectors (Information, Knowledge, Authority) and the Association, which are concepts in their own right; the metamodel links between classes are in references. The connection table (Table 2) is the permissive upper bound for requirements. Direction in references: source is the holder, target is the element referenced. In connection_tables the outer key is the required element (the spec''s From column) and the inner keys are the elements that may require it (the To column).'
+  connection_tables:
+    Requirements:
+      source: '6.2.3, Table 2 (pp. 40-41)'
+      applies_in: [DecisionRequirementsDiagram]
+      orientation: 'Outer key = the required element (From). Inner map: the element that requires it (To) to the requirement kind. A pair absent from the table is not allowed. The arrow is drawn from required to requiring.'
+      authority: 'The table, with its 11 pairs, is the standard''s complete statement; the type of requirement is determined by the two types.'
+      cells:
+        Decision: {Decision: InformationRequirement, KnowledgeSource: AuthorityRequirement}
+        BusinessKnowledgeModel: {Decision: KnowledgeRequirement, BusinessKnowledgeModel: KnowledgeRequirement}
+        DecisionService: {Decision: KnowledgeRequirement, BusinessKnowledgeModel: KnowledgeRequirement}
+        InputData: {Decision: InformationRequirement, KnowledgeSource: AuthorityRequirement}
+        KnowledgeSource: {Decision: AuthorityRequirement, BusinessKnowledgeModel: AuthorityRequirement, KnowledgeSource: AuthorityRequirement}
+      pair_count: 11
+      note: 'No requirement ends in Input Data. No requirement is held by a Decision Service, and no requirement is required by a Decision Service.'
+  requirement_semantics:
+    InformationRequirement: {holder: Decision, required: [Decision, InputData], line: 'solid, solid arrowhead', meaning: 'Output of a decision or an input data value is an input of the holder.'}
+    KnowledgeRequirement: {holder: [Decision, BusinessKnowledgeModel], required: [BusinessKnowledgeModel, DecisionService], line: 'dashed, open arrowhead', meaning: 'The holder invokes the required function.'}
+    AuthorityRequirement: {holder: [Decision, BusinessKnowledgeModel, KnowledgeSource], required: 'KnowledgeSource (held by any); Decision or InputData (held by a KnowledgeSource only)', line: 'dashed, filled circle head', meaning: 'The holder depends on the required element as a source of guidance or knowledge. No execution semantics.'}
+  references:
+  - {name: DefinitionsContainsDRGElement, source: Definitions, target: DRGElement, via: drgElement, kind: containment, multiplicity: {targets_per_source: '*'}, section: '6.3.2'}
+  - {name: DefinitionsContainsItemDefinition, source: Definitions, target: ItemDefinition, via: itemDefinition, kind: containment, multiplicity: {targets_per_source: '*'}, section: '6.3.2'}
+  - {name: DefinitionsContainsBusinessContextElement, source: Definitions, target: BusinessContextElement, via: businessContextElement, kind: containment, multiplicity: {targets_per_source: '*'}, section: '6.3.2'}
+  - {name: DefinitionsContainsElementCollection, source: Definitions, target: ElementCollection, via: elementCollection, kind: containment, multiplicity: {targets_per_source: '*'}, section: '6.3.2'}
+  - {name: DefinitionsContainsImport, source: Definitions, target: Import, via: import, kind: containment, multiplicity: {targets_per_source: '*'}, section: '6.3.2'}
+  - {name: DefinitionsContainsArtifact, source: Definitions, target: Artifact, via: artifact, kind: containment, multiplicity: {targets_per_source: '0..*'}, section: '6.3.2'}
+  - {name: DefinitionsContainsDMNDI, source: Definitions, target: DMNDI, via: dmnDI, kind: containment, multiplicity: {targets_per_source: '0..1'}, section: '6.3.2'}
+  - {name: ElementCollectionReferencesDRGElement, source: ElementCollection, target: DRGElement, via: drgElement, kind: reference, multiplicity: {targets_per_source: '*'}, section: '6.3.4'}
+  - {name: DecisionHasInformationRequirement, source: Decision, target: InformationRequirement, via: informationRequirement, kind: containment, multiplicity: {targets_per_source: '*'}, section: '6.3.7'}
+  - {name: DecisionHasKnowledgeRequirement, source: Decision, target: KnowledgeRequirement, via: knowledgeRequirement, kind: containment, multiplicity: {targets_per_source: '*'}, section: '6.3.7'}
+  - {name: DecisionHasAuthorityRequirement, source: Decision, target: AuthorityRequirement, via: authorityRequirement, kind: containment, multiplicity: {targets_per_source: '*'}, section: '6.3.7'}
+  - {name: DecisionHasLogic, source: Decision, target: Expression, via: decisionLogic, kind: containment, multiplicity: {targets_per_source: '0..1'}, section: '6.3.7'}
+  - {name: DecisionHasVariable, source: Decision, target: InformationItem, via: variable, kind: containment, multiplicity: {targets_per_source: '1'}, section: '6.3.7', note: 'text: "defines an InformationItem"'}
+  - {name: DecisionSupportsObjective, source: Decision, target: 'BMM Objective', via: supportedObjective, kind: reference, multiplicity: {targets_per_source: '*'}, section: '6.3.7', external: 'OMG BMM (BMM::Objective)'}
+  - {name: DecisionImpactsPerformanceIndicator, source: Decision, target: PerformanceIndicator, via: impactedPerformanceIndicator, kind: reference, multiplicity: {targets_per_source: '*'}, section: '6.3.7'}
+  - {name: DecisionMadeByUnit, source: Decision, target: OrganisationalUnit, via: decisionMaker, kind: reference, multiplicity: {targets_per_source: '*'}, section: '6.3.7'}
+  - {name: DecisionOwnedByUnit, source: Decision, target: OrganisationalUnit, via: decisionOwner, kind: reference, multiplicity: {targets_per_source: '*'}, section: '6.3.7'}
+  - {name: DecisionUsedByProcess, source: Decision, target: 'BPMN Process', via: usingProcesses, kind: reference, multiplicity: {targets_per_source: '*'}, section: '6.3.7; Annex A.5', external: 'OMG BPMN 2.0 (Process)'}
+  - {name: DecisionUsedByTask, source: Decision, target: 'BPMN Task', via: usingTasks, kind: reference, multiplicity: {targets_per_source: '*'}, section: '6.3.7; Annex A.5', external: 'OMG BPMN 2.0 (Task)'}
+  - {name: BKMHasKnowledgeRequirement, source: BusinessKnowledgeModel, target: KnowledgeRequirement, via: knowledgeRequirement, kind: containment, multiplicity: {targets_per_source: '*'}, section: '6.3.9'}
+  - {name: BKMHasAuthorityRequirement, source: BusinessKnowledgeModel, target: AuthorityRequirement, via: authorityRequirement, kind: containment, multiplicity: {targets_per_source: '*'}, section: '6.3.9'}
+  - {name: BKMEncapsulatesFunction, source: BusinessKnowledgeModel, target: FunctionDefinition, via: encapsulatedLogic, kind: containment, multiplicity: {targets_per_source: '0..1'}, section: '6.3.9'}
+  - {name: InvocableHasVariable, source: Invocable, target: InformationItem, via: variable, kind: containment, multiplicity: {targets_per_source: '1'}, section: '6.3.9'}
+  - {name: DecisionServiceOutputDecision, source: DecisionService, target: Decision, via: outputDecisions, kind: reference, multiplicity: {targets_per_source: '1..*'}, section: '6.3.10'}
+  - {name: DecisionServiceEncapsulatedDecision, source: DecisionService, target: Decision, via: encapsulatedDecisions, kind: reference, multiplicity: {targets_per_source: '0..*'}, section: '6.3.10'}
+  - {name: DecisionServiceInputDecision, source: DecisionService, target: Decision, via: inputDecisions, kind: reference, multiplicity: {targets_per_source: '0..*'}, section: '6.3.10'}
+  - {name: DecisionServiceInputData, source: DecisionService, target: InputData, via: inputData, kind: reference, multiplicity: {targets_per_source: '0..*'}, section: '6.3.10'}
+  - {name: InputDataHasVariable, source: InputData, target: InformationItem, via: variable, kind: containment, multiplicity: {targets_per_source: '1'}, section: '6.3.11'}
+  - {name: KnowledgeSourceOwnedByUnit, source: KnowledgeSource, target: OrganisationalUnit, via: owner, kind: reference, multiplicity: {targets_per_source: '0..1'}, section: '6.3.12'}
+  - {name: KnowledgeSourceHasAuthorityRequirement, source: KnowledgeSource, target: AuthorityRequirement, via: authorityRequirement, kind: containment, multiplicity: {targets_per_source: '*'}, section: '6.3.12'}
+  - {name: InformationRequirementRequiresDecision, source: InformationRequirement, target: Decision, via: requiredDecision, kind: reference, multiplicity: {targets_per_source: '0..1'}, section: '6.3.13', note: 'exactly one of this and the next'}
+  - {name: InformationRequirementRequiresInput, source: InformationRequirement, target: InputData, via: requiredInput, kind: reference, multiplicity: {targets_per_source: '0..1'}, section: '6.3.13'}
+  - {name: KnowledgeRequirementRequiresInvocable, source: KnowledgeRequirement, target: Invocable, via: requiredKnowledge, kind: reference, multiplicity: {targets_per_source: '1'}, section: '6.3.14'}
+  - {name: AuthorityRequirementRequiresKnowledgeSource, source: AuthorityRequirement, target: KnowledgeSource, via: requiredAuthority, kind: reference, multiplicity: {targets_per_source: '0..1'}, section: '6.3.15'}
+  - {name: AuthorityRequirementRequiresDecision, source: AuthorityRequirement, target: Decision, via: requiredDecision, kind: reference, multiplicity: {targets_per_source: '0..1'}, section: '6.3.15', note: 'only when held by a KnowledgeSource'}
+  - {name: AuthorityRequirementRequiresInput, source: AuthorityRequirement, target: InputData, via: requiredInput, kind: reference, multiplicity: {targets_per_source: '0..1'}, section: '6.3.15', note: 'only when held by a KnowledgeSource'}
+  - {name: AssociationSource, source: Association, target: DMNElement, via: sourceRef, kind: reference, multiplicity: {targets_per_source: '1'}, section: '6.3.6.1'}
+  - {name: AssociationTarget, source: Association, target: DMNElement, via: targetRef, kind: reference, multiplicity: {targets_per_source: '1'}, section: '6.3.6.1'}
+  - {name: ItemDefinitionHasComponent, source: ItemDefinition, target: ItemDefinition, via: itemComponent, kind: containment, multiplicity: {targets_per_source: '*'}, section: '7.3.2'}
+  - {name: ItemDefinitionAllowsValues, source: ItemDefinition, target: UnaryTests, via: allowedValues, kind: containment, multiplicity: {targets_per_source: '0..1'}, section: '7.3.2'}
+  - {name: InformationItemValue, source: InformationItem, target: Expression, via: valueExpression, kind: reference, multiplicity: {targets_per_source: '0..1'}, section: '7.3.3', note: 'derived'}
+  - {name: LiteralExpressionImportsValues, source: LiteralExpression, target: ImportedValues, via: importedValues, kind: containment, multiplicity: {targets_per_source: '0..1'}, section: '7.3.4'}
+  - {name: InvocationCallsFunction, source: Invocation, target: Expression, via: calledFunction, kind: containment, multiplicity: {targets_per_source: '1'}, section: '7.3.5'}
+  - {name: InvocationHasBinding, source: Invocation, target: Binding, via: binding, kind: containment, multiplicity: {targets_per_source: '*'}, section: '7.3.5'}
+  - {name: BindingBindsParameter, source: Binding, target: InformationItem, via: parameter, kind: containment, multiplicity: {targets_per_source: '1'}, section: '7.3.6'}
+  - {name: BindingHasFormula, source: Binding, target: Expression, via: bindingFormula, kind: containment, multiplicity: {targets_per_source: '0..1'}, section: '7.3.6'}
+  - {name: DecisionTableHasInput, source: DecisionTable, target: InputClause, via: input, kind: containment, multiplicity: {targets_per_source: '*'}, section: '8.3.1'}
+  - {name: DecisionTableHasOutput, source: DecisionTable, target: OutputClause, via: output, kind: containment, multiplicity: {targets_per_source: '* (1..* per prose, 8.1)'}, section: '8.3.1; 8.1'}
+  - {name: DecisionTableHasAnnotationClause, source: DecisionTable, target: RuleAnnotationClause, via: annotation, kind: containment, multiplicity: {targets_per_source: '*'}, section: '8.3.1'}
+  - {name: DecisionTableHasRule, source: DecisionTable, target: DecisionRule, via: rule, kind: containment, multiplicity: {targets_per_source: '* (1..* per prose, 8.1)'}, section: '8.3.1; 8.1'}
+  - {name: InputClauseHasExpression, source: InputClause, target: Expression, via: inputExpression, kind: containment, multiplicity: {targets_per_source: '0..1'}, section: '8.3.2'}
+  - {name: InputClauseHasValues, source: InputClause, target: UnaryTests, via: inputValues, kind: containment, multiplicity: {targets_per_source: '0..1'}, section: '8.3.2'}
+  - {name: OutputClauseHasValues, source: OutputClause, target: UnaryTests, via: outputValues, kind: containment, multiplicity: {targets_per_source: '0..1'}, section: '8.3.2'}
+  - {name: OutputClauseHasDefault, source: OutputClause, target: LiteralExpression, via: defaultOutputEntry, kind: containment, multiplicity: {targets_per_source: '0..1'}, section: '8.3.2'}
+  - {name: RuleHasInputEntry, source: DecisionRule, target: UnaryTests, via: inputEntry, kind: containment, multiplicity: {targets_per_source: '0..*'}, section: '8.3.3'}
+  - {name: RuleHasOutputEntry, source: DecisionRule, target: LiteralExpression, via: outputEntry, kind: containment, multiplicity: {targets_per_source: '1..*'}, section: '8.3.3'}
+  - {name: RuleHasAnnotationEntry, source: DecisionRule, target: RuleAnnotation, via: annotationEntry, kind: containment, multiplicity: {targets_per_source: '0..*'}, section: '8.3.3'}
+  - {name: ContextHasEntry, source: Context, target: ContextEntry, via: contextEntry, kind: containment, multiplicity: {targets_per_source: '*'}, section: '10.5.1'}
+  - {name: ContextEntryHasVariable, source: ContextEntry, target: InformationItem, via: variable, kind: containment, multiplicity: {targets_per_source: '0..1'}, section: '10.5.2'}
+  - {name: ContextEntryHasValue, source: ContextEntry, target: Expression, via: value, kind: containment, multiplicity: {targets_per_source: '1'}, section: '10.5.2'}
+  - {name: FunctionDefinitionHasParameter, source: FunctionDefinition, target: InformationItem, via: formalParameter, kind: containment, multiplicity: {targets_per_source: '*'}, section: '10.5.3'}
+  - {name: FunctionDefinitionHasBody, source: FunctionDefinition, target: Expression, via: body, kind: containment, multiplicity: {targets_per_source: '0..1'}, section: '10.5.3'}
+  - {name: ListHasElement, source: List, target: Expression, via: element, kind: containment, multiplicity: {targets_per_source: '*'}, section: '10.5.4'}
+  - {name: RelationHasRow, source: Relation, target: List, via: row, kind: containment, multiplicity: {targets_per_source: '*'}, section: '10.5.5'}
+  - {name: RelationHasColumn, source: Relation, target: InformationItem, via: column, kind: containment, multiplicity: {targets_per_source: '*'}, section: '10.5.5'}
+  - {name: DMNDIHasDiagram, source: DMNDI, target: DMNDiagram, via: diagrams, kind: containment, multiplicity: {targets_per_source: '0..*'}, section: '13.4.3'}
+  - {name: DMNDIHasStyle, source: DMNDI, target: DMNStyle, via: styles, kind: containment, multiplicity: {targets_per_source: '0..*'}, section: '13.4.3'}
+  - {name: DiagramHasElement, source: DMNDiagram, target: DMNDiagramElement, via: diagramElements, kind: containment, multiplicity: {targets_per_source: '0..*'}, section: '13.4.4'}
+  - {name: DiagramElementDepictsElement, source: DMNDiagramElement, target: DMNElement, via: dmnElementRef, kind: reference, multiplicity: {targets_per_source: '1'}, section: '13.4.5'}
+  - {name: DiagramElementHasLabel, source: DMNDiagramElement, target: DMNLabel, via: label, kind: containment, multiplicity: {targets_per_source: '0..1'}, section: '13.4.5'}
+  - {name: EdgeHasWaypoints, source: DMNEdge, target: Point, via: wayPoints, kind: containment, multiplicity: {targets_per_source: '2..*'}, section: '13.4.7', external: 'OMG Diagram Commons (DC::Point)'}
+  - {name: ShapeHasDividerLine, source: DMNShape, target: DMNDecisionServiceDividerLine, via: decisionServiceDividerLine, kind: containment, multiplicity: {targets_per_source: '0..1'}, section: '13.4.6'}
+diagram_types:
+  DecisionRequirementsDiagram:
+    defined_by: 'Clauses 6.1, 6.2 and Table 1 (the notation) and 13 (the interchange form). A DRD is a picture of all or part of a Decision Requirements Graph.'
+    conformance: [Level1, Level2, Level3]
+    admits: [Decision, BusinessKnowledgeModel, InputData, KnowledgeSource, DecisionService, InformationRequirement, KnowledgeRequirement, AuthorityRequirement, TextAnnotation, Association]
+    admits_note: 'A DRD may show only part of a graph (a partial or filtered view, 6.2.4); an element whose requirements are not shown carries an ellipsis. Under the Listed Input Data option, Input Data is not drawn as a shape but listed inside each Decision that requires it. A Decision Service is drawn expanded (around its decisions) or collapsed, never both in one diagram. Requirements join only the pairs in relationships.connection_tables.'
+    excludes: [DecisionTable, LiteralExpression, Invocation, Context, List, Relation, FunctionDefinition]
+    views: [Complete graph view, Partial view (hidden categories or collapsed areas), Listed Input Data view]
+    conventions: depiction
+  BoxedExpression:
+    defined_by: 'Clauses 7.2, 8.2 and 10.2.1. The notation for the decision logic of one DRG element; tied to the DRD element only by name (7.2.1).'
+    kind: notation
+    conformance: [Level1, Level2, Level3]
+    admits: [DecisionTable, LiteralExpression, Invocation, Context, List, Relation, FunctionDefinition]
+    admits_note: 'The top-level boxed expression carries a name box with the name of its DRG element. Boxed expressions nest. Level 1 and 2 use decision tables, boxed literal expressions and boxed invocations; contexts, lists, relations and function definitions need Level 3 (10.2.1). Interchange of the layout of boxed expressions is not defined (13.1).'
+    excludes: [Decision, BusinessKnowledgeModel, InputData, KnowledgeSource, DecisionService]
+    orientations: [Rule-as-Row, Rule-as-Column, CrossTable]
+    conventions: depiction
+data_types:
+  coverage: full
+  section: '7.3.2; 9.3; 10.3.1.3; 10.3.2.1'
+  note: 'DMN defines its own data types: the FEEL types, the Item Definition that builds new types from them, a handful of enumerations, and the plain value types its metamodel attributes use. S-FEEL uses the FEEL types with simpler number and date definitions.'
+  types:
+  - {name: number, kind: primitive, section: '10.3.1.3', note: 'In S-FEEL it has the literal and value spaces of the XML Schema decimal type; an implementation may limit precision to 34 decimal digits (9.3).'}
+  - {name: string, kind: primitive, section: '10.3.1.3'}
+  - {name: boolean, kind: primitive, section: '10.3.1.3'}
+  - {name: time, kind: primitive, section: '10.3.1.3', note: 'Has no literal; made with the time function (10.3.1.3).'}
+  - {name: date and time, kind: primitive, section: '10.3.1.3', note: 'Has no literal; made with the date and time function. S-FEEL does not have it.'}
+  - {name: date, kind: primitive, section: '10.3.2.3.5; 9.3', note: 'A FEEL type; omitted from the list in 10.3.1.3. In S-FEEL it is date and time with hour, minute and second absent (9.3).'}
+  - {name: days and time duration, kind: primitive, section: '10.3.1.3', note: 'Has no literal; made with the duration function.'}
+  - {name: years and months duration, kind: primitive, section: '10.3.1.3', note: 'Has no literal; made with the duration function.'}
+  - {name: list, kind: structured, section: '10.3.2.1', note: 'An ordered collection of values.'}
+  - {name: context, kind: structured, section: '10.3.2.1', note: 'A partially ordered collection of (string, value) pairs called context entries.'}
+  - {name: function, kind: structured, section: '10.3.2.1', note: 'A lambda expression with lexical closure, or a function defined externally in Java or PMML.'}
+  - {name: 'Null', kind: other, section: '10.3.2.1', note: 'The type whose only value is null.'}
+  - {name: Any, kind: other, section: '10.3.2.1', note: 'The type that includes every value.'}
+  - {name: ItemDefinition, kind: structured, section: '7.3.2', note: 'The way a model defines its own type: a base type, optionally limited by allowed values (unary tests), or a composition of nested item components; a collection flag says the values are collections. A type reference names a base type, an Item Definition or an imported type.'}
+  - {name: String, kind: primitive, section: '6.3.1', note: 'Value type of attributes such as description, label and typeRef (Tables 3, 24, 25). Some tables print it as string.'}
+  - {name: ID, kind: primitive, section: '6.3.1', note: 'The XML ID syntax; unique within the decision model (Table 3).'}
+  - {name: anyURI, kind: primitive, section: '6.3.2', note: 'Value type of namespace, locationURI and the expression and type language attributes (Tables 5, 6, 11, 18).'}
+  - {name: Boolean, kind: primitive, section: '7.3.2', note: 'Value type of IsCollection, isListedInputData and isCollapsed (Tables 24, 80).'}
+  - {name: Real, kind: primitive, section: '13.4.4', note: 'Value type of resolution and fontSize (Tables 78, 83).'}
+  - {name: HitPolicy, kind: enumeration, values: [UNIQUE, FIRST, PRIORITY, ANY, COLLECT, RULE ORDER, OUTPUT ORDER], section: '8.3.1', note: 'Default UNIQUE; indicator letters are in concepts.enumerations.'}
+  - {name: BuiltinAggregator, kind: enumeration, values: [SUM, COUNT, MIN, MAX], section: '8.3.1', note: 'Used only with the COLLECT hit policy.'}
+  - {name: DecisionTableOrientation, kind: enumeration, values: [Rule-as-Row, Rule-as-Column, CrossTable], section: '8.3.1'}
+  - {name: FunctionKind, kind: enumeration, values: [FEEL, Java, PMML], section: '10.5.3', note: 'Default FEEL.'}
+  - {name: AssociationDirection, kind: enumeration, values: [None, One, Both], section: '6.3.6.1', note: 'Default None.'}
+  - {name: AlignmentKind, kind: enumeration, section: '13.4.9', note: 'Value type of the label alignment attributes of a style; the DMN text names it and says start means top and end means bottom, but lists no values.'}
+  - {name: 'DC::Bounds', kind: structured, section: '13.4.6', note: 'Position and size of a shape; defined by the Diagram Commons model that DMN refers to.'}
+  - {name: 'DC::Point', kind: structured, section: '13.4.7', note: 'A waypoint of an edge.'}
+  - {name: 'DC::Dimension', kind: structured, section: '13.4.4', note: 'The size of a diagram.'}
+  - {name: 'DC::Color', kind: structured, section: '13.4.9', note: 'Value type of the fill, stroke and font colors of a style.'}
+  attributes:
+    coverage: some_concepts
+    where: concepts
+    note: 'Each concept that has value attributes in the standard lists them under attributes, with the table they come from. Links between concepts are not repeated there; they are in relationships.references.'
+notation:
+  coverage: normative
+  section: '6.2; 7.2; 8.2; 10.2; 13.5'
+  note: 'The standard defines the shapes and lines of the Decision Requirements Diagram (Table 1), the layout of decision tables and the layouts of the boxed expressions; size, color and label position are flexible except where it says otherwise (2.2.1).'
+  elements:
+    Decision: {shape: rectangle, line: normally solid, label: 'name inside the shape; a label, when given, is shown instead of the name', marker: none, note: 'With the Listed Input Data option the names of the required input data are listed under the name inside the shape, separated from it by a horizontal line.', section: '6.2.1.1; Table 1 (p. 36); 13.5.2.1 Table 84'}
+    BusinessKnowledgeModel: {shape: rectangle with two clipped corners (top left and bottom right, cut at a slant), line: normally solid, label: name inside the shape, marker: none, section: '6.2.1.2; Table 1 (p. 36); 13.5.2.2 Table 85'}
+    InputData: {shape: 'stadium: two parallel straight sides (top and bottom) and two semicircular ends (left and right)', line: normally solid, label: name inside the shape, marker: none, note: Under the Listed Input Data option it is not drawn as a shape but listed inside each decision that requires it., section: '6.2.1.3; Table 1 (p. 36); 13.5.2.3 Table 86'}
+    KnowledgeSource: {shape: 'three straight sides (top, left, right) and a wavy bottom side', line: normally solid, label: name inside the shape, marker: none, section: '6.2.1.4; Table 1 (p. 36); 13.5.2.4 Table 87'}
+    DecisionService: {shape: rounded rectangle, line: heavy solid border, label: name inside the shape (at the top when the shape is divided), marker: 'collapsed: a small square holding a plus sign at the bottom center, with no decisions drawn inside; expanded: the encapsulated decisions are drawn inside', note: 'When the output decisions are fewer than the encapsulated decisions, a straight solid line across the shape divides it: the upper part holds the name and the output decisions, the lower part the other encapsulated decisions. The border encloses all encapsulated decisions and no other decisions or input data.', section: '6.2.5; Table 1 (p. 36); 13.5.2.6 Table 89'}
+    TextAnnotation: {shape: 'an open square bracket on the left side (a vertical line with a short stroke at the top and bottom, pointing right), followed by the text', label: 'the modeler''s own text', marker: none, note: Joined to the element it explains by an association line., section: '6.3.6.2; Table 1 (p. 36); 13.5.2.5 Table 88'}
+    DMNShape: {shape: 'the shape of the element it depicts, placed and sized by its bounds', note: 'Depicts a decision, business knowledge model, input data, knowledge source, decision service or text annotation. Its listed-input-data flag chooses between a separate input data shape and a list inside the decision; its collapsed flag chooses the collapsed decision service.', section: '13.4.6; 13.5.2'}
+    DMNDecisionServiceDividerLine: {shape: 'a straight solid line across a decision service shape, with its start and end on the border', section: '6.2.5; 13.4.6; 13.5.2.6 Table 89'}
+    DMNLabel: {shape: no shape of its own, label: 'text shown inside the shape in place of the element''s name', section: '13.4.8'}
+    DMNStyle: {shape: no shape of its own, note: 'Sets fill color, border color, font and label alignment. Defaults: white fill, black border and text, Arial 8 point, no italic, bold, underline or strike-through.', section: '13.4.9; 13.5'}
+    DecisionTable: {shape: 'a grid of cells in one of three layouts: rules as rows, rules as columns, or a crosstab', line: 'double lines between the input clauses and the output clauses (continuing between their entries), between the output clauses and the annotation clauses (continuing between their entries), and between the clause header cells and the entry cells; single lines between all other cells', label: 'a name box at the top left holds the name of the information item the table gives a value to', marker: 'the hit policy letter in a cell at the top left (rules as rows) or the bottom left (rules as columns); none in a crosstab', note: 'Rules as rows: every input column is left of every output column. Rules as columns: every input row is above every output row. Crosstab: two input dimensions, with all output cells at the lower right. Rules are numbered in a column or row at the edge; the number is required for First and Rule order tables. Colors are suggested only.', section: '8.2; 8.2.1; 8.2.2; 8.2.10; Figures 8.5 to 8.9'}
+    InputClause: {shape: a header cell, label: 'the input expression; the expected input values are listed in a cell under it (rules as rows) or beside it (rules as columns)', marker: none, section: '8.2; Figures 8.5 to 8.8'}
+    OutputClause: {shape: a header cell, label: 'the output label; the output values are listed in a cell under it (rules as rows) or beside it (rules as columns)', marker: none, section: '8.2; Figures 8.5 to 8.8'}
+    RuleAnnotationClause: {shape: a header cell, label: its name, marker: none, note: 'Placed after the output clauses, separated from them by a double line.', section: '8.2.1; 8.2'}
+    DecisionRule: {shape: 'one row of cells (rules as rows) or one column of cells (rules as columns)', label: 'the rule number, then one input entry per input clause, one output entry per output clause, then the annotation entries', marker: none, section: '8.2; Figures 8.5 to 8.8'}
+    RuleAnnotation: {shape: a cell in the rule, label: its text, marker: none, section: '8.2.1'}
+    UnaryTests: {shape: no shape of its own, label: 'text in a table cell: an input entry, or the list of input or output values of a clause; "-" in an input entry means irrelevant', section: '8.2; 8.2.7'}
+    LiteralExpression: {shape: 'a boxed expression: a name box on top and a box with the expression text below it; the name box may instead be separated from the expression box by white space and joined to it by a line on the left', label: 'the expression text; in a decision table it is the text of an output entry cell', marker: none, section: '7.2; 7.2.1; 10.2.1; 10.2.1.2 Figures 10.1 to 10.3'}
+    Invocation: {shape: 'a boxed expression: a name box on top, a box holding the called function below it, then one row per binding', label: 'in each row the parameter name sits in a shaded cell on the left and the binding expression on the right', marker: none, note: A function with no parameters is invoked in text form as the function name followed by empty parentheses, in a single box., section: '7.2.3; 10.2.1.3; Figures 10.4 and 10.5'}
+    Binding: {shape: 'one row of a boxed invocation: the parameter name in a shaded cell on the left and the binding expression on the right', marker: none, section: '7.2.3; 10.2.1.3; Figure 10.4'}
+    Context: {shape: 'a boxed expression holding name and value pairs, arranged as a vertical list (names down the left edge) or a horizontal one (names across the top edge), with an optional result box', label: 'the result box is a full-width cell under the entries (vertical) or a cell at the right (horizontal)', note: 'Entries may be separated by white space and joined by a line on the left (top). The names are legal FEEL names; values and the result are boxed expressions. A context with no result box is used for case data. A name cell may be shared by nested entries.', section: '10.2.1.4; Figures 10.6 to 10.11'}
+    ContextEntry: {shape: 'a pair of cells: the name in a shaded cell and the value expression next to it', marker: none, section: '10.2.1.4; Figures 10.6 and 10.7'}
+    FunctionDefinition: {shape: 'a boxed expression of three cells: the kind letter at the left of a top row, the parameters in parentheses beside it, and the body in a cell across the full width below', label: 'kind letter F for FEEL, P for PMML or J for Java; the kind cell may be left out for a FEEL function', marker: none, section: '10.2.1.7; Figure 10.15'}
+    List: {shape: 'a boxed expression: items one under another in single cells (vertical), or all items in one cell separated by commas (horizontal)', marker: none, section: '10.2.1.5; Figures 10.12 and 10.13'}
+    Relation: {shape: 'a table: a shaded header row of column names, then one row of value cells for each contained list', marker: none, note: 'A vertical list of horizontal contexts with no result cells, with the names shown once at the top.', section: '10.2.1.6; Figure 10.14'}
+  relationships:
+    InformationRequirement: {line: solid, target_end: filled arrowhead, source_end: none, note: 'Drawn from the required input data or decision to the decision that requires it.', section: '6.2.2.1; Table 1 (p. 36); 13.5.3.1 Table 90'}
+    KnowledgeRequirement: {line: dashed, target_end: open arrowhead (two thin strokes), source_end: none, note: 'Drawn from the business knowledge model or decision service to the decision or business knowledge model that invokes it.', section: '6.2.2.2; Table 1 (p. 36); 13.5.3.2 Table 91'}
+    AuthorityRequirement: {line: dashed, target_end: filled circle, source_end: none, note: 'Drawn from the authority (a knowledge source) to the element that depends on it; a decision or input data is drawn to a knowledge source the same way.', section: '6.2.2.3; Table 1 (p. 36); 13.5.3.3 Table 92'}
+    Association: {line: dotted, target_end: 'none when the direction is None; an open arrowhead when it is One or Both', source_end: 'none unless the direction is Both, then an open arrowhead', note: Links a text annotation to the element it explains., section: '6.3.6.1; Table 1 (p. 36); 13.5.3.4 Table 93'}
+    DMNEdge: {line: 'the line of the requirement or association it depicts, running through at least two waypoints', target_end: as the depicted element, source_end: as the depicted element, section: '13.4.7; 13.5.3'}
+  not_specified:
+  - DMNElement
+  - NamedElement
+  - Expression
+  - DRGElement
+  - Invocable
+  - Artifact
+  - BusinessContextElement
+  - Definitions
+  - Import
+  - ImportedValues
+  - ElementCollection
+  - OrganisationalUnit
+  - PerformanceIndicator
+  - ItemDefinition
+  - InformationItem
+  - ExtensionElements
+  - ExtensionAttribute
+  - DMNDI
+  - DMNDiagram
+  - DMNDiagramElement
+constraints:
+- {id: DMN-DRD-001, strength: must, section: '6.2.3; Table 2', checkable: static, statement: 'Requirements may join only the pairs of elements in the connection table (11 pairs), and the pair of element types fixes the kind of requirement: Decision to Decision, Input Data to Decision = information; Business Knowledge Model or Decision Service to Decision or Business Knowledge Model = knowledge; Knowledge Source, Decision or Input Data to Knowledge Source, and Knowledge Source to Decision or Business Knowledge Model = authority.'}
+- {id: DMN-DRD-002, strength: must, section: '6.2.3', checkable: static, statement: 'No requirement may end in an Input Data element: an Input Data element requires nothing.'}
+- {id: DMN-DRD-003, strength: must, section: '6.2.2.1', checkable: static, statement: 'The Information Requirements of a valid Decision Requirements Graph form a directed acyclic graph.'}
+- {id: DMN-DRD-004, strength: must, section: '6.3.7, p. 52', checkable: static, statement: 'The requirement subgraph of a Decision is acyclic: a Decision does not require itself, directly or through other requirements. The Decision that holds an Information Requirement must not lie in the requirement subgraph of the Decision it requires.'}
+- {id: DMN-DRD-005, strength: must, section: '6.3.9, pp. 56-57; 6.3.14', checkable: static, statement: 'The requirement subgraph of a Business Knowledge Model is acyclic: it does not require itself, directly or indirectly. A Business Knowledge Model holding a Knowledge Requirement must not lie in the subgraph of the knowledge it requires.'}
+- {id: DMN-DRD-006, strength: must, section: '6.3.10, pp. 58-59', checkable: static, statement: 'The requirement subgraph of a Decision Service (itself plus the subgraphs of its encapsulated and output decisions) is acyclic: a Decision Service does not require itself, directly or indirectly.'}
+- {id: DMN-DRD-007, strength: must, section: '6.3.13, p. 61', checkable: static, statement: 'An Information Requirement references a required Decision or a required Input Data, but not both, and references one of them.'}
+- {id: DMN-DRD-008, strength: must, section: '6.3.14, p. 62', checkable: static, statement: 'A Knowledge Requirement references a required Invocable (a Business Knowledge Model or a Decision Service), and is held by a Decision or a Business Knowledge Model.'}
+- {id: DMN-DRD-009, strength: must, section: '6.3.15; Table 21', checkable: static, statement: 'An Authority Requirement held by a Decision or a Business Knowledge Model references a Knowledge Source. One held by a Knowledge Source references a Knowledge Source, a Decision or an Input Data element.'}
+- {id: DMN-DRD-010, strength: must, section: '6.1; 6.3.13; 6.3.14, pp. 35, 61-62', checkable: static, statement: 'A required element must be defined in the same decision model or in an imported one, and a requirement is well formed only if the element it requires is well formed. A Decision Requirements Graph is self-contained: the immediate requirements of every Decision are present in it.'}
+- {id: DMN-DRD-011, strength: must, section: '6.2.2.2, p. 38', checkable: partial, statement: 'If a Decision or Business Knowledge Model holds a Knowledge Requirement on an invocable element, the logic of the holder must contain an invocation of that element with an expression for each of its parameters.'}
+- {id: DMN-DRD-012, strength: must, section: '6.3.10; Table 16', checkable: static, statement: 'A Decision Service has one or more output decisions.'}
+- {id: DMN-DRD-013, strength: must, section: '6.3.10, p. 58', checkable: static, statement: 'At least one of the encapsulated decisions and the input decisions of a Decision Service is specified.'}
+- {id: DMN-DRD-014, strength: must, section: '5.3.3; 10.4, pp. 32, 151', checkable: static, statement: 'Every Decision that the output decisions of a Decision Service require, directly or indirectly, is an encapsulated decision of the service, an input decision of it, or required by one of its input decisions.'}
+- {id: DMN-DRD-015, strength: note, section: '5.3.3, p. 32', checkable: static, statement: 'Only the output decisions and one of the encapsulated or input decision lists need be given. The remaining lists (required input data, the other decision list) can be inferred from the decision model, or, if given, validated against it.'}
+- {id: DMN-DRD-016, strength: note, section: '6.2.2.3, p. 39', checkable: none, statement: 'Knowledge Sources and Authority Requirements have no execution semantics. The standard gives example uses (a document or person that governs a decision; analytics that derive business knowledge from data and decision results) and leaves the details of use to the implementer.'}
+- {id: DMN-DRD-017, strength: note, section: '5.3.1, p. 28', checkable: none, statement: 'A Decision may have no Business Knowledge Model, one, or several. Using one to encapsulate logic is a matter of style and methodology.'}
+- {id: DMN-DRD-018, strength: note, section: '5.3.3, pp. 32-33', checkable: none, statement: 'A Decision Service is stateless and free of side effects. It is complete if it contains logic to evaluate all its encapsulated decisions on every possible input, and a request is valid if it supplies every input decision and input datum the evaluated decisions need.'}
+- {id: DMN-NAME-001, strength: must, section: '6.3.1; Table 3, p. 45', checkable: static, statement: 'An element identifier, when present, is an XML ID and is unique within the decision model (within its containing Definitions).'}
+- {id: DMN-NAME-002, strength: must, section: '6.3.1; Table 4, p. 46', checkable: static, statement: 'Every named element (Definitions, Import, Element Collection, Decision, Business Knowledge Model, Decision Service, Input Data, Knowledge Source, Item Definition, Information Item, business context element) has a name.'}
+- {id: DMN-NAME-003, strength: must, section: '6.3.7; 6.3.9, pp. 52, 56', checkable: static, statement: 'The name of an invocable element (Business Knowledge Model or Decision Service) differs from the name of every other invocable, Input Data, Decision and import in the decision model.'}
+- {id: DMN-NAME-004, strength: must, section: '6.3.11, p. 60', checkable: static, statement: 'The name of an Input Data element differs from the name of every other Decision, Input Data, Business Knowledge Model, Decision Service and import in the decision model.'}
+- {id: DMN-NAME-005, strength: must, section: '6.3.3, p. 49', checkable: static, statement: 'An import name is distinct from the names of the other imports, Decisions, Input Data, Business Knowledge Models, Decision Services and Item Definitions of the importing model.'}
+- {id: DMN-NAME-006, strength: must, section: '7.3.2, p. 71', checkable: static, statement: 'The name of an Item Definition is distinct from the names of the other Item Definitions and imports in the same model.'}
+- {id: DMN-NAME-007, strength: must, section: '7.3.2, p. 72', checkable: static, statement: 'The name of an item component is unique within its containing Item Definition or component.'}
+- {id: DMN-NAME-008, strength: must, section: '7.3.3, p. 72', checkable: static, statement: 'An Information Item has a name, and the name is unique within its scope.'}
+- {id: DMN-NAME-009, strength: must, section: '6.3.9, p. 57; 6.3.10, p. 58', checkable: static, statement: 'The variable of an invocable element (Business Knowledge Model or Decision Service) carries the same name as the element.'}
+- {id: DMN-NAME-010, strength: should, section: '7.1, p. 66', checkable: static, statement: 'When elements are mapped to the expression language, the name of the variable of a Decision or Input Data element is the same as the (possibly qualified) name of the element, which keeps variable names unique.'}
+- {id: DMN-STRUC-001, strength: must, section: '6.3.2; 6.3.5, pp. 47, 49-50', checkable: static, statement: 'The Definitions element contains all DRG elements, Item Definitions, business context elements, Element Collections and Artifacts of a model. Requirements, bindings, clauses, decision rules, imports and the like are contained in a DRG element, or in an element that is, at any depth.'}
+- {id: DMN-STRUC-002, strength: must, section: '6.3.4, p. 49', checkable: static, statement: 'An Element Collection references the DRG elements it groups; it does not contain them. DRG elements are contained only in Definitions.'}
+- {id: DMN-STRUC-003, strength: must, section: '6.3.13; 6.3.14; 6.3.15, pp. 61-63', checkable: static, statement: 'A requirement references the element it requires and does not contain it. Decisions, Input Data, Business Knowledge Models and Knowledge Sources are contained only in Definitions.'}
+- {id: DMN-STRUC-004, strength: must, section: '6.3.3, p. 48', checkable: static, statement: 'Imports are explicitly defined. An Import has an import type and a namespace, and may give a location.'}
+- {id: DMN-STRUC-005, strength: must, section: '6.3.6.1; Table 8, p. 50', checkable: static, statement: 'An Association has exactly one source and exactly one target, which may be any DMN element. Direction None draws no arrowhead; One puts the arrowhead at the target; Both puts one at each end.'}
+- {id: DMN-STRUC-006, strength: must, section: '6.3.16.2; Table 23, p. 64', checkable: static, statement: 'An extension attribute carries a value or a reference to a value (valueRef), never both.'}
+- {id: DMN-LOGIC-001, strength: must, section: '7.1, p. 66; 7.3.3, p. 73', checkable: partial, statement: 'Every variable that a Decision value expression refers to belongs to a required Decision, required Input Data or required knowledge, and the variable of each required Decision and Input Data is referred to in that expression.'}
+- {id: DMN-LOGIC-002, strength: must, section: '7.3.3, p. 73', checkable: partial, statement: 'Every parameter of a Business Knowledge Model is a variable used in the value expression of that Business Knowledge Model.'}
+- {id: DMN-LOGIC-003, strength: must, section: '7.1, pp. 66-67', checkable: static, statement: 'If a Decision requires more than one Business Knowledge Model, its value expression is a literal expression that says how they are invoked and combined.'}
+- {id: DMN-LOGIC-004, strength: must, section: '7.1, p. 67', checkable: static, statement: 'If a Decision requires no Business Knowledge Model, its value expression is a literal expression or a decision table that gives the whole logic.'}
+- {id: DMN-LOGIC-005, strength: must, section: '7.1, p. 67', checkable: partial, statement: 'If a Decision requires exactly one Business Knowledge Model and elaborates its result, the value expression is a literal expression. Only when it requires exactly one and does not elaborate may the value expression be an invocation.'}
+- {id: DMN-LOGIC-006, strength: must, section: '7.1, p. 66', checkable: static, statement: 'A Business Knowledge Model that requires other Business Knowledge Models has an explicit value expression that says how they are invoked and their results combined.'}
+- {id: DMN-LOGIC-007, strength: must, section: '7.3.5, p. 75', checkable: static, statement: 'The called function of an Invocation in a Decision is the encapsulated logic of the Business Knowledge Model that the Decision requires.'}
+- {id: DMN-LOGIC-008, strength: should, section: '7.3.5, p. 75', checkable: static, statement: 'An Invocation has exactly one binding for each parameter of the encapsulated logic it calls. Clause 7.3.5 says so; clause 7.3.6 requires only that the bound names be a subset of the parameters, and clause 10.3.2.13.4 binds an unsupplied named parameter to null.'}
+- {id: DMN-LOGIC-009, strength: must, section: '7.3.6, p. 75', checkable: static, statement: 'The parameter names in the bindings of an Invocation are a subset of the formal parameters of the called function.'}
+- {id: DMN-LOGIC-010, strength: note, section: '7.3.5, pp. 74-75; 5.3.1', checkable: none, statement: 'A Decision with exactly one Knowledge Requirement and nothing to add can use an Invocation as its logic. The Invocation then lets many Decisions reuse the same Business Knowledge Model, each with its own bindings.'}
+- {id: DMN-LOGIC-011, strength: must, section: '7.3.4, p. 74', checkable: static, statement: 'A literal expression has text or imported values, never both, and the import type of imported values agrees with the expression language of the expression.'}
+- {id: DMN-LOGIC-012, strength: must, section: '7.3.4; Table 26, p. 74', checkable: partial, statement: 'The text of a literal expression is a valid expression in its expression language (the language of the Definitions unless overridden on the expression). The standard semantics apply only if every literal expression is valid.'}
+- {id: DMN-LOGIC-013, strength: must, section: '7.3.1, p. 71', checkable: static, statement: 'If the expression that defines the output of a Decision names a type, that type is the type of the Decision.'}
+- {id: DMN-LOGIC-014, strength: must, section: '7.3.3, p. 73', checkable: partial, statement: 'The type of an Information Item is compatible with the type of the DMN element from which it takes its value.'}
+- {id: DMN-LOGIC-015, strength: must, section: '7.3.2, p. 72', checkable: static, statement: 'An Item Definition is defined in exactly one of two ways: by a type reference (possibly restricted by allowed values) or by a composition of item components.'}
+- {id: DMN-LOGIC-016, strength: must, section: '7.3.2; 9.5.1, pp. 72, 100', checkable: partial, statement: 'Allowed values of an Item Definition are unary tests, their type is consistent with the Item Definition, and when present they give the complete range of the Item Definition.'}
+- {id: DMN-LOGIC-017, strength: must, section: '7.3.2; 12.3.2, pp. 71, 182', checkable: static, statement: 'A type reference to a built-in type omits any prefix. A type reference to an imported type is qualified with the import name, and the external document is imported by an Import that gives both its namespace and its name.'}
+- {id: DMN-LOGIC-018, strength: must, section: '10.2.1.7, p. 107', checkable: static, statement: 'The boxed expression of a Business Knowledge Model is a boxed function definition, or a decision table whose input expressions are taken to be the parameter names.'}
+- {id: DMN-LOGIC-019, strength: must, section: '10.2.1.7, p. 108', checkable: static, statement: 'A boxed function definition has a kind (FEEL, PMML or Java; FEEL when omitted), parameters and a body. A FEEL body is a FEEL expression that uses the parameters. A Java or PMML body is a context giving the mapping information.'}
+- {id: DMN-LOGIC-020, strength: must, section: '10.3.2.13.2, p. 128', checkable: static, statement: 'Mapping information for an externally defined function is a context of one of two forms. Java form: a class name on the classpath and a method signature of a public static method with argument type names only. PMML form: the identifier of a PMML document and, optionally, the name of a model in it (the first model if none).'}
+- {id: DMN-LOGIC-021, strength: should, section: '10.3.2.13.2, pp. 128-129', checkable: none, statement: 'Externally defined functions are deterministic and free of side effects. The standard does not fully define a model that uses them.'}
+- {id: DMN-LOGIC-022, strength: should, section: '10.5, p. 152', checkable: static, statement: 'FEEL contexts, function definitions, relations and lists are modeled as Context, Function Definition, Relation and List elements, and drawn as boxed expressions, whenever possible (when they are top-level expressions).'}
+- {id: DMN-LOGIC-023, strength: must, section: '10.2.1.4, p. 105', checkable: static, statement: 'Context entry names in a boxed context are legal names in the expression language. The values and the optional result are boxed expressions.'}
+- {id: DMN-LOGIC-024, strength: must, section: '10.2.1.3, p. 103', checkable: static, statement: 'A boxed invocation lists at least one parameter; a function with no parameters is invoked in textual form.'}
+- {id: DMN-LOGIC-025, strength: must, section: '7.2.1, p. 67; 10.2.1, p. 101', checkable: static, statement: 'A top-level boxed expression has a name box holding the name of the DRG element whose logic it is.'}
+- {id: DMN-LOGIC-026, strength: note, section: '7.1, p. 66', checkable: none, statement: 'Knowledge Sources are documentation of the decision logic and are not part of it. They have no representation at the decision logic level.'}
+- {id: DMN-TBL-001, strength: must, section: '8.1, p. 77; 8.3.3', checkable: static, statement: 'A decision table has one or more rules and one or more output clauses. It may have no input clauses; a rule with no input entries always applies.'}
+- {id: DMN-TBL-002, strength: must, section: '8.3.3, p. 93', checkable: static, statement: 'Each rule has one input entry per input clause, in the order of the input clauses, and one output entry per output clause, in the order of the output clauses. Annotation entries follow the order of the annotation clauses.'}
+- {id: DMN-TBL-003, strength: must, section: '8.1, p. 77; 8.3.2, p. 91', checkable: static, statement: 'When a table has two or more output clauses, each output clause has a name (the table returns a context with one entry per output). When it has one, the output clause has no name. Every rule annotation clause has a name.'}
+- {id: DMN-TBL-004, strength: must, section: '8.3.2; Table 31, p. 91; 8.3.3, p. 93', checkable: static, statement: 'An output clause of a single-output table does not give a type reference; one of a multiple-output table may. Each output entry is consistent with the type reference of its output clause.'}
+- {id: DMN-TBL-005, strength: must, section: '8.2.5, p. 84', checkable: static, statement: 'A decision table that is the value expression of an Information Item (a Decision, or a binding formula in a boxed invocation) names that Information Item as its information item name. One nested in another boxed expression may use the container for the name.'}
+- {id: DMN-TBL-006, strength: must, section: '8.2.7, p. 85; 8.2.4, p. 83; 10.3.2.10, p. 124', checkable: static, statement: 'Input entries, input values and output values are unary tests; an input expression is a textual expression; an output entry is an expression. Under Conformance Level 2 each is restricted to the S-FEEL forms in clause 9.5.3.'}
+- {id: DMN-TBL-007, strength: should, section: '8.2.7, p. 85', checkable: partial, statement: 'An input entry is "-" (irrelevant) or a subset of the input values given for its input clause. An entry outside the input values, for example below 0 when the values are 0 to 120, is reported as invalid.'}
+- {id: DMN-TBL-008, strength: must, section: '8.2.2, p. 81; 8.2.10, p. 87; Note 1, p. 88', checkable: static, statement: 'A crosstab table is always Unique, is complete and unique by definition, and needs no hit policy indicator.'}
+- {id: DMN-TBL-009, strength: must, section: '8.2, p. 81; 8.3.1, p. 90', checkable: static, statement: 'Rules are numbered consecutively from 1 when the hit policy is First or Rule order, because the meaning depends on the order. Numbering is optional for other tables and absent in a crosstab.'}
+- {id: DMN-TBL-010, strength: must, section: '8.2.9, p. 86', checkable: static, statement: 'In the X shorthand for vertical tables with a single output (rules as columns), each rule marks at most one output value with X and every other output entry is "-". The output values are listed once, before the rules.'}
+- {id: DMN-TBL-011, strength: must, section: '8.2.8-8.2.9, pp. 85-86', checkable: static, statement: 'Output entry cells are never merged, except in a crosstab. Input entry cells merge only when adjacent, identical and preceded by the same (or no) prior cells.'}
+- {id: DMN-TBL-012, strength: should, section: '8.2.7, p. 85', checkable: none, statement: 'Evaluating an input expression or executing a rule has no side effect that changes the evaluation of another expression or rule of the same table. This matters most in First hit tables.'}
+- {id: DMN-TBL-013, strength: must, section: '8.3.1, p. 90', checkable: static, statement: 'The preferred orientation of a table is one of Rule-as-Row, Rule-as-Column or CrossTable, and the table is shown that way. All input columns lie left of all output columns (rules as rows), all input rows above all output rows (rules as columns), and all output cells at the lower right (crosstab).'}
+- {id: DMN-TBL-014, strength: should, section: '8.2.11, p. 89; 8.3.2, p. 92; 10.3.2.10, p. 126', checkable: static, statement: 'A default output value, if given, is one of the table output values (underlined in the list of output values) and applies only to an incomplete table. A complete table gives none. With several outputs the default is a context of output names and values.'}
+- {id: DMN-TBL-015, strength: note, section: '8.2.4, p. 83; 10.3.2.10, p. 126', checkable: none, statement: 'If no rule matches, the table returns its default output value, or null if it has none.'}
+- {id: DMN-HIT-001, strength: must, section: '8.3.1, p. 90', checkable: static, statement: 'The hit policy is one of UNIQUE, FIRST, PRIORITY, ANY, COLLECT, RULE ORDER or OUTPUT ORDER, and defaults to UNIQUE. Its indicator is U, F, P, A, C, R or O (and C+, C<, C>, C# for Collect with an operator).'}
+- {id: DMN-HIT-002, strength: must, section: '8.2.10, p. 87', checkable: static, statement: 'A Unique table (the default) contains no overlapping rules: any two rules are disjoint, so only one rule can match.'}
+- {id: DMN-HIT-003, strength: must, section: '8.2.10, p. 87', checkable: static, statement: 'The hit policy indicator is mandatory except on a Unique table (where it is optional), so that the type of table is clear. Tools may support a nonempty subset of the hit policies but always support Unique.'}
+- {id: DMN-HIT-004, strength: must, section: '8.2.10, p. 87', checkable: partial, statement: 'In an Any table, rules may overlap only if the overlapping rules give equal output entries for every output, rule annotations ignored. If they differ the policy is incorrect and the result is undefined.'}
+- {id: DMN-HIT-005, strength: must, section: '8.2.5, p. 84; 8.2.10, p. 87', checkable: static, statement: 'A Priority or Output order table gives an ordered list of output values; the order is the priority, highest first. Priority is independent of rule order.'}
+- {id: DMN-HIT-006, strength: should, section: '10.3.2.10, p. 126; 8.2.10, p. 88', checkable: static, statement: 'An Output order table has a single output. The clause 8 text and its example also allow it with compound output; priority is then decided over the outputs that have output values, left to right or top to bottom. The two clauses disagree.'}
+- {id: DMN-HIT-007, strength: must, section: '8.3.1, p. 90', checkable: static, statement: 'For First and Rule order the rules are explicitly ordered and numbered. For Priority and Output order the output values determine the result.'}
+- {id: DMN-HIT-008, strength: must, section: '8.2.10, p. 88; 8.3.1, p. 90', checkable: static, statement: 'An aggregation operator is given only with the Collect hit policy. The operators are + (sum), < (minimum), > (maximum) and # (count). A Collect table with no operator returns the list of all hits.'}
+- {id: DMN-HIT-009, strength: must, section: '8.2.10, p. 88; 10.3.2.10, p. 125', checkable: static, statement: 'A table with compound output (two or more output clauses) uses no Collect operator, because the operators are undefined over several outputs.'}
+- {id: DMN-HIT-010, strength: must, section: '8.2.10, p. 88; 10.3.2.10, p. 125', checkable: static, statement: 'A table with compound output uses only Unique, Any, Priority, First, Rule order or Collect without an operator (Output order too, in the clause 8 reading; see DMN-HIT-006).'}
+- {id: DMN-HIT-011, strength: note, section: '8.2.10, p. 87', checkable: none, statement: 'Single hit policies (Unique, Any, Priority, First) return the output of one rule. Multiple hit policies (Output order, Rule order, Collect) return a list or an aggregate. The initial letter tells which.'}
+- {id: DMN-HIT-012, strength: note, section: '8.2.10, p. 87; 10.3.2.10, p. 124', checkable: none, statement: 'Rule annotations are not part of the result and are ignored in hit policy validation and in execution semantics.'}
+- {id: DMN-HIT-013, strength: note, section: '10.3.2.10, pp. 125-126', checkable: none, statement: 'Evaluation: match every rule (unordered). With no match, return the default or null. Otherwise order the matches by rule number for First and Rule order; for a single hit policy return the first of the list; for a multiple one return the list, or aggregate it with sum, count, minimum or maximum.'}
+- {id: DMN-COV-001, strength: should, section: '8.1, p. 77; 8.2.4, p. 83', checkable: partial, statement: 'A decision table is complete: its rules cover all combinations of the expected input values of all its input expressions. Completeness can be judged only against input values that are given.'}
+- {id: DMN-COV-002, strength: should, section: '8.2.4, p. 83', checkable: static, statement: 'The input values given for an input clause are exclusive (disjoint, for example not "<5, <10") and complete (all relevant values present, for example not "<5, >5").'}
+- {id: DMN-COV-003, strength: note, section: '8.1, p. 80', checkable: static, statement: 'Two input entries of one input expression are disjoint if they share no value, overlapping if they do; "-" overlaps every entry. Two rules overlap if all their corresponding input entries overlap, and are disjoint if at least one pair is disjoint.'}
+- {id: DMN-COV-004, strength: must, section: '5.2.2, p. 26', checkable: partial, applies_when: automation, statement: 'For full automation of decisions the decision logic is complete: it gives a result for every possible set of input values.'}
+- {id: DMN-COV-005, strength: note, section: '8.2.10, pp. 87-89; Note 2', checkable: none, statement: 'Rule order matters only in First and Rule order tables. First tables hide the overall logic, are hard to validate by hand and need care; the last rule is often the catch-remainder.'}
+- {id: DMN-COV-006, strength: note, section: '8.1, p. 77; 8.2.7, p. 85', checkable: static, statement: 'A table with at least one "-" input entry is contracted; the others are expanded. Tables whose entries are all true, false or "-" are historically called limited-entry; the restriction is not needed.'}
+- {id: DMN-FEEL-001, strength: must, section: '2.1, p. 15; 7.1, p. 65; 9; 10', checkable: static, applies_when: level, statement: 'At Conformance Level 1 expression text is not interpreted. At Level 2 literal expressions are restricted to S-FEEL. At Level 3 the full FEEL of clause 10 applies. S-FEEL is a subset of FEEL and is indicated by the same language URI.'}
+- {id: DMN-FEEL-002, strength: must, section: '9.5, p. 100', checkable: static, applies_when: level, statement: 'Under S-FEEL: an Item Definition allowed value is a simple unary tests; an invocation binding formula is a simple expression; a decision table input expression and output entry are simple expressions; input values, output values and input entries are simple unary tests.'}
+- {id: DMN-FEEL-003, strength: must, section: '10.3.1.4, p. 114', checkable: static, statement: 'A name does not start with a reserved word of the grammar (a literal terminal symbol); a later part of a name may be one. Names are sequences of tokens, so extra white space inside a name is insignificant.'}
+- {id: DMN-FEEL-004, strength: must, section: '10.3.1.3, p. 114; 7.2.2.2, p. 69', checkable: static, statement: 'Dates, times and durations have no literal syntax in FEEL. They are made from a string with the built-in functions date, time, date and time and duration. A typographical date or time literal obeys the same syntax.'}
+- {id: DMN-FEEL-005, strength: must, section: '7.2.2.1, p. 68', checkable: static, statement: 'A typographical string literal (italic text standing for a quoted string) contains no comma and conforms to the name rule.'}
+- {id: DMN-FEEL-006, strength: must, section: '10.3.2.6, p. 119; 10.3.2.11.1, p. 126', checkable: static, statement: 'A context entry expression may refer to earlier entries and to values in scope but not to its own key. The references between entries are acyclic and form a partial order, and entries are evaluated in that order.'}
+- {id: DMN-FEEL-007, strength: must, section: '10.3.2.13.4, p. 129', checkable: static, statement: 'In a positional invocation every parameter is supplied. In a named invocation, parameters not supplied are bound to null.'}
+- {id: DMN-FEEL-008, strength: should, section: '10.3.2.9, p. 119', checkable: partial, statement: 'Comparison is defined only between values of conforming types. Comparing, for example, a number with a boolean or a string gives no meaningful result.'}
+- {id: DMN-FEEL-009, strength: must, section: '9.4, p. 100', checkable: static, applies_when: level, statement: 'Under S-FEEL, comparison needs two operands of the same type (years and months with days and time durations may be compared for equality only), and strings and booleans are compared only for equality. Arithmetic is defined only for the type combinations listed in clause 9.4.'}
+- {id: DMN-FEEL-010, strength: note, section: '10.3.2.16, p. 141; 10.3.4, p. 144', checkable: none, statement: 'FEEL uses three-valued logic (true, false, null). A built-in function given a value outside its domain returns null and should report or log a diagnostic.'}
+- {id: DMN-FEEL-011, strength: note, section: '10.3.1.6, p. 115', checkable: none, statement: 'A name is matched against names in scope from left to right and the longest match wins; parentheses or other punctuation disambiguate.'}
+- {id: DMN-FEEL-012, strength: note, section: '10.3, p. 110; 10.2.1.2, p. 102', checkable: none, statement: 'FEEL has no side effects and the same meaning in every conformant implementation, except where external functions are invoked. A boxed FEEL expression is best kept simple and composed from small boxed expressions.'}
+- {id: DMN-CONF-001, strength: must, section: '2.1, p. 15', checkable: none, statement: 'A tool may claim conformance to DMN only if it fully matches the applicable compliance points. A tool that matches only some may say it is based on the specification.'}
+- {id: DMN-CONF-002, strength: must, section: '2.1, p. 15', checkable: none, statement: 'Level 1 requires clauses 6 (requirements), 7 (decision logic) and 8 (decision table); expression text is not interpreted, but any interpretation given is consistent with clause 7.'}
+- {id: DMN-CONF-003, strength: must, section: '2.1, p. 15', checkable: none, statement: 'Level 2 requires everything in Level 1 and interpretation of S-FEEL expressions (clause 9).'}
+- {id: DMN-CONF-004, strength: must, section: '2.1, p. 15', checkable: none, statement: 'Level 3 requires clauses 6, 7, 8 and 10 (FEEL). Level 3 includes Levels 2 and 1.'}
+- {id: DMN-CONF-005, strength: must, section: '2.2.1, p. 15', checkable: none, statement: 'Every conformance level requires the general conformance of clause 2.2. A tool that draws decision model diagrams uses the shapes, icons and markers the specification shows.'}
+- {id: DMN-CONF-006, strength: must, section: '2.2.1, pp. 15-16', checkable: none, see_conventions: extension, statement: 'An extension to a diagram does not change the specified shape of a graphical element or marker (a dashed line to plain, a square to a triangle, rounded to square corners), and a new shape does not conflict with any shape or marker the standard defines.'}
+- {id: DMN-CONF-007, strength: must, section: '2.2.2, p. 16', checkable: none, statement: 'Where a tool interprets a diagram element as a semantic specification of a concept, the interpretation is consistent with the semantics the standard gives.'}
+- {id: DMN-CONF-008, strength: must, section: '2.2.3, p. 16', checkable: none, statement: 'For every mandatory attribute a tool gives the user a way to create and display its value on each element that has it. Where a graphical representation is required it is used; where optional, a graphical or other mechanism may be used.'}
+- {id: DMN-CONF-009, strength: must, section: '6.2.4, p. 41', checkable: none, statement: 'A tool provides a way to specify and display the properties of a DRG element that a DRD does not normally show (for example, the business processes and tasks that use a Decision).'}
+- {id: DMN-CONF-010, strength: should, section: '8.2, p. 81', checkable: static, statement: 'Where an expression is not meant to be interpreted, the tool indicates this with the language URI for uninterpreted expressions.'}
+- {id: DMN-DI-001, strength: must, section: '13.4.6-13.4.7; 13.5, pp. 188-190, 193', checkable: static, see_conventions: depiction, statement: 'Every shape and every edge in a diagram references exactly one DMN model element. A shape or edge with no reference, or an invalid one, is not drawn.'}
+- {id: DMN-DI-002, strength: must, section: '13.4.6; Table 80, pp. 188-189', checkable: static, statement: 'A shape depicts a Decision, Business Knowledge Model, Input Data, Knowledge Source, Decision Service or Text Annotation. It has bounds.'}
+- {id: DMN-DI-003, strength: must, section: '13.4.7; Table 81, p. 190', checkable: static, statement: 'An edge depicts an Information Requirement, Knowledge Requirement, Authority Requirement or Association, and has at least two waypoints.'}
+- {id: DMN-DI-004, strength: must, section: '13.4.4, p. 185; 13.4.4, p. 186', checkable: static, statement: 'A diagram does not contain another diagram. Only positive coordinates are used for elements in a diagram.'}
+- {id: DMN-DI-005, strength: must, section: '6.2.5, p. 44', checkable: static, see_conventions: decision_service, statement: 'A DMN element appears at most once in a diagram. In particular the same Decision Service is not drawn both expanded and collapsed in one diagram.'}
+- {id: DMN-DI-006, strength: must, section: '6.2.5, p. 42', checkable: static, see_conventions: decision_service, statement: 'The border of an expanded Decision Service encloses all its encapsulated decisions and no other decisions or input data (it may enclose other elements, which are then not part of its definition). If its output decisions are fewer than its encapsulated decisions, a straight solid line divides it into an output part and an encapsulated part.'}
+- {id: DMN-DI-007, strength: must, section: '13.4.6; Table 80, p. 189', checkable: static, statement: 'The divider-line attribute applies only to a Decision Service shape (its waypoints lie on the border), the collapsed attribute only to a Decision Service shape, and the listed-input-data attribute only to an Input Data shape.'}
+- {id: DMN-DI-008, strength: must, section: '6.2.1.3, p. 37', checkable: static, see_conventions: listed_input_data, statement: 'If an Input Data element is not drawn as a shape, it is listed on every Decision that requires it, unless it is deliberately hidden.'}
+- {id: DMN-DI-009, strength: should, section: '6.2.4, pp. 41-42', checkable: none, see_conventions: partial_views, statement: 'A DRG element with requirements that the diagram does not show is marked with an ellipsis.'}
+- {id: DMN-DI-010, strength: must, section: '13.4.1, p. 184', checkable: static, statement: 'The exporting tool orders shapes and edges in a diagram so that anything meant to appear on top comes later in the order (z-order).'}
+- {id: DMN-DI-011, strength: must, section: '13.4.8, p. 191; 6.2.1, pp. 37-38', checkable: static, statement: 'The name of an element is displayed inside its shape unless a label gives other text, in which case the label text is displayed instead.'}
+- {id: DMN-DI-012, strength: note, section: '13.1, p. 183', checkable: none, statement: 'DMN DI interchanges laid-out DRDs only and does not check that a diagram is correct. Diagram interchange for boxed expressions and decision tables might come in a later version. A diagram needs both the DI data and the model it references.'}
+- {id: DMN-XCH-001, strength: must, section: '12.3.1, p. 181', checkable: static, statement: 'The root element of every DMN file is Definitions. Each file declares a namespace, which may differ between the files of one model.'}
+- {id: DMN-XCH-002, strength: must, section: '12.3.1, p. 181', checkable: static, statement: 'The set of files of a model is self-contained: every definition used in a file is imported, directly or indirectly, by an Import. A file may import non-DMN files (XSD, PMML) whose definitions it uses.'}
+- {id: DMN-XCH-003, strength: must, section: '12.3.2, pp. 181-182', checkable: static, statement: 'A reference to an element in another file uses a valid URI reference whose fragment is the id of the element and which has no query. A fragment-only reference points to an element in the same file.'}
+- {id: DMN-XCH-004, strength: must, section: '6.3.2, p. 47', checkable: static, statement: 'Expression language and type language are given as URIs. The default expression language is FEEL; the default type language is FEEL; a URI for uninterpreted text exists for pseudo-code.'}
+- {id: DMN-XCH-005, strength: should, section: '12.1, p. 181', checkable: none, statement: 'Tools support interchange of incomplete models: they disregard attributes that the XML schema marks required but are missing, and relax lower bounds above zero.'}
+- {id: DMN-XCH-006, strength: note, section: '6.3.16, p. 64', checkable: none, statement: 'Extension elements and attributes may be added to any DMN element. Only the additions may be lost in interchange.'}
+- {id: DMN-BCTX-001, strength: must, section: 'Annex A, A.5(a), p. 202', checkable: partial, statement: 'A Decision is not associated with Tasks that belong to Processes it is not also associated with, and not with Tasks that belong to no Process it is associated with. Inconsistency between the Task and Process associations of a Decision is not allowed. (Checking needs the business process model.)'}
+- {id: DMN-BCTX-002, strength: should, section: '6.3.7, p. 52; Annex A, A.5, p. 202', checkable: none, statement: 'A tool lets the user record, for each Decision, the Processes and Tasks that use it (and the objectives it supports, the performance indicators it affects, and its decision makers and owners).'}
+- {id: DMN-BCTX-003, strength: note, section: '5.2.2, p. 27', checkable: partial, statement: 'Once Decisions are mapped to Tasks, a tool could verify that all Input Data are provided by earlier tasks and that decision results are used only by later tasks or gateways. No formal mapping of Item Definitions or Input Data to data objects is defined.'}
+- {id: DMN-BCTX-004, strength: note, section: '6.3.8, p. 54; Annex A, p. 201', checkable: none, statement: 'Business context elements (organizational unit, performance indicator) are placeholders for definitions in other OMG models. The Business Rule Task is the most natural process task for a Decision, though a Decision can be associated with any Task.'}
+- {id: DMN-GUID-001, strength: note, section: '5.1; 5.2.4, pp. 24, 28', checkable: none, statement: 'DMN is not tied to BPMN, and its two levels (decision requirements, decision logic) may be used on their own or together. DMN prescribes no method.'}
+- {id: DMN-GUID-002, strength: note, section: '5.2, pp. 25-28', checkable: none, statement: 'Three uses: modeling human decision-making (mostly high-level, natural language), modeling requirements for automated decision-making (prescriptive, more logic), and implementing automated decisions (logic fully specified, executed through decision services). A project may use all three: as-is, to-be, executable.'}
+- {id: DMN-GUID-003, strength: note, section: '9.1, p. 97', checkable: none, statement: 'Few complete decision models can be built from S-FEEL alone; there is generally at least one Decision that needs full FEEL. Developers and users are encouraged to use and implement full FEEL.'}
+- {id: DMN-GUID-004, strength: note, section: '6.2.2.1, p. 38', checkable: none, statement: 'A DRD that shows only Decisions, Input Data and Information Requirements is equivalent to a data-flow diagram of the communication between them at evaluation time.'}
+conventions:
+  provenance: {status: standard, note: 'Drawing rules the standard states for the Decision Requirements Diagram, decision tables and boxed expressions (6.2, 7.2, 8.2, 10.2, 13.5). They are conventions for a renderer, not validation. The few sentences the standard words as requirements are also kept as constraints with a see_conventions pointer. Layout numbers (spacing, sizes) are not part of the standard.'}
+  depiction:
+    shapes:
+      Decision: 'Rectangle, normally solid lines. Listed Input Data is shown beneath the name, separated by a horizontal line (6.2.1.1).'
+      BusinessKnowledgeModel: 'Rectangle with two clipped corners (6.2.1.2).'
+      InputData: 'Shape with two parallel straight sides and two semicircular ends (6.2.1.3).'
+      KnowledgeSource: 'Shape with three straight sides and one wavy side (6.2.1.4).'
+      DecisionService: 'Rounded rectangle with a heavy solid border, expanded or collapsed; an expanded one is divided by a straight solid line when the outputs are fewer than the encapsulated decisions (6.2.5).'
+      TextAnnotation: 'A square bracket followed by the text (Table 1).'
+    connectors:
+      InformationRequirement: 'Solid line, solid arrowhead, drawn toward the requiring Decision (6.2.2.1).'
+      KnowledgeRequirement: 'Dashed line, open arrowhead, drawn toward the element that needs the knowledge (6.2.2.2).'
+      AuthorityRequirement: 'Dashed line, filled circular head, drawn from the authority to the governed element (6.2.2.3).'
+      Association: 'Dotted line; direction None, One (arrowhead at the target) or Both (13.5.3.4).'
+    labels: 'The name of an element is displayed inside its shape unless a label supplies other text, which is displayed instead (6.2.1, 13.4.8).'
+    ellipsis: 'An element with requirements not shown in this diagram is marked with an ellipsis (6.2.4).'
+    section: '6.2; 13.5'
+  decision_service:
+    border: 'The border encloses all encapsulated decisions and no other decisions or input data. Other elements may lie within it and are then not part of the service (6.2.5).'
+    divider: 'When the output decisions are fewer than the encapsulated decisions, a straight solid line divides the shape: the output part holds the service name and the output decisions; the other part holds the remaining encapsulated decisions (6.2.5).'
+    one_form_per_diagram: 'The same service is not drawn both expanded and collapsed in one diagram. Services are overlays, so a decision inside may be required from outside (6.2.5).'
+    collapsed: 'A collapsed service does not show the requirements of the decisions inside (6.2.5).'
+  listed_input_data: 'An optional presentation. If Input Data is not drawn as a shape it is listed beneath the name of each Decision that requires it, inside the shape (6.2.1.3).'
+  partial_views: 'A DRD can hide categories of elements or collapse areas (6.2.4).'
+  decision_table:
+    orientation: 'Rules as rows (inputs left of outputs), rules as columns (inputs above outputs), or crosstab (two input dimensions, outputs lower right) (8.2.2).'
+    lines: 'Line style is normative: double lines between input clauses and output clauses, between output clauses and annotation clauses, and between the clause headers and the entries; single lines elsewhere (8.2.1). Color is suggested only.'
+    hit_policy_cell: 'The hit policy letter is in the top-left cell (horizontal) or bottom-left (vertical). A crosstab has none (8.2.10).'
+    rule_numbers: 'Consecutive natural numbers from 1; required for First and Rule order tables (8.2).'
+    merged_cells: 'Adjacent input entry cells with identical content and identical (or no) prior cells may be merged; output cells may not (8.2.8, 8.2.9).'
+    shorthand: 'In vertical single-output tables an X marks the output value that applies and "-" the others (8.2.9).'
+    default_output: 'A default output value is underlined in the list of output values (8.2.11).'
+    section: '8.2'
+  boxed_expression:
+    name_box: 'A name box on top (one box) or separate, joined by a line on the left (7.2.1, 10.2.1).'
+    literals: 'A string literal may be shown italic, with no quotes; a date or time literal bold italic (7.2.2).'
+    invocation: 'A box with the name of the called function and a row per binding: parameter name left, binding expression right (7.2.3).'
+    context: 'Vertical or horizontal arrangement of name and value pairs and an optional result box (10.2.1.4).'
+    function: 'Three cells: kind letter (F, P or J; omitted for FEEL), parameters in parentheses, body (10.2.1.7).'
+    section: '7.2; 10.2.1'
+  extension:
+    permitted: 'New markers or indicators; a new kind of artifact shape that does not conflict with any specified shape or marker; colors with their own meaning; line styles that do not conflict with a specified one.'
+    forbidden: 'Changing the specified shape of a defined element or marker (dashed to plain, square to triangle, rounded to square corners).'
+    flexible: 'Size, color, line style and text position, except where the standard states otherwise (2.2.1).'
+    section: '2.2.1'
+  interchange_style:
+    precedence: 'A shape or edge style is resolved attribute by attribute from: its own local style, its shared style, the diagram''s local style, the diagram''s shared style, then defaults (13.4.9). Defaults: white fill, black stroke and font, Arial 8 point, no italic, bold, underline or strike-through.'
+    z_order: 'Shapes and edges are ordered so that anything meant to be on top comes later (13.4.1).'
+    default_resolution: '300 user units per inch (13.4.4).'
+notes: 'DMN 1.2 describes a notation (the Decision Requirements Diagram and boxed expressions), a metamodel with an XML interchange format and a diagram-interchange model, decision tables with hit policies, a simple expression language (S-FEEL) and a full expression language (FEEL) with formal semantics. Concept names are the metamodel class names. Multiplicity keys on relationships.references: targets_per_source is how many target instances one source instance may link to; ''*'' means zero or more. sources_per_target is given only where the standard states it. kind is containment (the target is owned by the source) or reference (the target lives elsewhere). Tool-specific encodings of these concepts belong in the tool''s own file, not here.'
+
+# Our conventions for drawing this language, kept apart from `notation`, which holds only what the standard states.
+# Sizes and spacing come from the shared layout standard; this block says which size class each concept takes.
+# A concept not listed here is a plain rectangle (box) or has no shape of its own (see `notation`).
+layout:
+  basis: Our conventions, not this standard's. Sizes and spacing come from the shared layout standard.
+  element_types:
+    BusinessKnowledgeModel: box
+    InputData: box
+    KnowledgeSource: box
+    DecisionService: container
+    TextAnnotation: note
+    DecisionTable: large-box
+    LiteralExpression: large-box
+    Invocation: large-box
+    Context: large-box
+    FunctionDefinition: large-box
+    List: large-box
+    Relation: large-box
+    InputClause: box
+    OutputClause: box
+    RuleAnnotationClause: box
+    DecisionRule: box
+    RuleAnnotation: box
+    Binding: box
+    ContextEntry: box
+  exceptions: {}
+  diagram_types:   # BoxedExpression is not listed and takes the defaults
+    DecisionRequirementsDiagram:
+      arrangement: graph
+      route: straight
+      title: frame-header
+      channels:
+        fill: Kind of element. Decisions, input data, knowledge models and knowledge sources should read differently, so a fill that already separates them stays as it is.
+        claimed:
+          position: Direction of dependency. The element that requires another sits above it, so moving an element up or down for another reason reverses the reading.
+          size: Enclosure, for a decision service only. It is sized by the decisions inside it.
+          icon: Kind of decision logic. A decision may show a table or a chevron glyph.
+        free: [border, border_width, font_color, opacity]
