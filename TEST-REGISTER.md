@@ -75,7 +75,7 @@ Required: U, a test module whose module-level `COVERS` names the asset. Tests th
 |---|---|---|---|
 | asset:plugins/ai-power-tools-languages/skills/_languages/layout-standard.yaml | U | present (17 tests, test_languages.py) | complete |
 | asset:plugins/ai-power-tools/rulesets/* | U | present (17 tests, test_languages.py) | complete |
-| asset:plugins/ai-power-tools/skills/_shared/languages/* | U | present (114 tests, test_bindings_frameworks.py, test_bindings_real_model.py, test_bindings_strategy.py, test_gen_conventions.py) | complete |
+| asset:plugins/ai-power-tools/skills/_shared/languages/* | U | present (117 tests, test_bindings_frameworks.py, test_bindings_real_model.py, test_bindings_strategy.py, test_gen_conventions.py) | complete |
 | asset:ruleset-archimate31/archimate31_rules.yaml | U | present (12 tests, test_ruleset_archimate31.py) | complete |
 
 ## Deployment surfaces
@@ -137,7 +137,7 @@ method of a test class is written `Class.test_name`.
   - `tools/test_languages.py::test_a_missing_reference_fails`
   - `tools/test_languages.py::test_implements_is_read_however_a_ruleset_groups_its_rules`
   - `tools/test_languages.py::test_an_implements_that_names_no_rule_fails_and_so_does_none`
-- `asset:plugins/ai-power-tools/skills/_shared/languages/*` U (114)
+- `asset:plugins/ai-power-tools/skills/_shared/languages/*` U (117)
   - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_frameworks.py::test_each_framework_binding_loads_and_is_found_by_its_declared_id`
   - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_frameworks.py::test_each_framework_binding_declares_a_measured_empty_prefix`
   - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_frameworks.py::test_each_framework_binding_is_built_on_uml_and_states_the_standards_gaps`
@@ -244,6 +244,9 @@ method of a test class is written `Class.test_name`.
   - `tools/test_gen_conventions.py::test_the_nine_stubs_and_the_two_maps_are_there`
   - `tools/test_gen_conventions.py::test_each_layout_block_and_map_passes_its_checks`
   - `tools/test_gen_conventions.py::test_the_fixture_holds_thirty_two_rows_all_of_them_generated`
+  - `tools/test_gen_conventions.py::test_a_shape_with_no_line_is_caught_and_a_stated_reason_clears_it`
+  - `tools/test_gen_conventions.py::test_element_types_may_name_what_the_notation_names`
+  - `tools/test_gen_conventions.py::test_a_map_on_another_technology_needs_a_reason`
   - `tools/test_gen_conventions.py::test_a_planted_wrong_arrangement_fails`
   - `tools/test_gen_conventions.py::test_a_planted_unknown_type_and_vocabulary_word_fail`
   - `tools/test_gen_conventions.py::test_an_exception_needs_a_reason_and_a_source`
