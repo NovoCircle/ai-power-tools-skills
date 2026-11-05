@@ -171,6 +171,8 @@ SHELF_NAMESPACES = {
 # against the line instead and the bare word stays unknown.
 KNOWN_SPACED_IDS = (
     "TOGAF Diagrams",
+    # Sparx-shipped group on the Resources tab (`EA Requirements`), whose stored token is `Extended::Requirements`.
+    "EA Requirements",
     # Sparx-shipped diagram type of Core Extensions (`Data Modeling`), ending the stored token `Extended::Data Modeling`.
     "Data Modeling",
     # Sparx-shipped, and the technology behind the corpus row whose
