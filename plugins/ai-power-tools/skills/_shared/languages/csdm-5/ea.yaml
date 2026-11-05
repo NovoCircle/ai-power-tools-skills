@@ -2412,3 +2412,17 @@ quick_links:
 drawing: 'A small script on every shape and line shows CSDM''s words, not the stored name. Fill colors come from the stereotype''s
   default. The script''s default size follows the shared layout standard: a box is 100 by 70, and Request Catalog, a container,
   is 150 by 90.'
+layout_map:
+  technology: CSDM5
+  stereotype_prefix: CSDM
+  diagram_types:
+    CSDMDiagram:
+      guide:
+      - Configuration Item Relationships
+      - Conceptual Model
+      - Digital System Model
+      - Value Stream Mapping
+      - Product Model Classes
+      base: Diagram_Logical
+      size_keys:
+        CSDMRequestCatalog: RequestCatalog
