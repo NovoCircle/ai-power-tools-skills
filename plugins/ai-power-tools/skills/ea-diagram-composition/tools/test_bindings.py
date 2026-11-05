@@ -2029,8 +2029,8 @@ def test_every_shipped_prefix_round_trips_at_the_scope_that_declares_it():
     One assertion per prefix actually in force, whichever scope stated it, so a
     binding that grows a per-diagram-type prefix is covered the day it does
     without an edit here. The two counters at the end are what stop this passing
-    vacuously: `StrategyMap` and `TOGAF Diagrams` supply the diagram-type scope
-    and `ArchiMate3` and `ERD_dp` the technology scope, and if either group
+    vacuously: `StrategyMap` and `TOGAF` supply the diagram-type scope
+    and `ArchiMate3` and `ERD` the technology scope, and if either group
     disappeared the remaining lines would still all pass.
     """
     at_type, at_technology = 0, 0
