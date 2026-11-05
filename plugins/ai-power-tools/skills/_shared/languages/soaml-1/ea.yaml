@@ -493,10 +493,31 @@ layout_map:
   stereotype_prefix: ''
   notes: |
     EA has two diagram types for this language. `SoaML` draws the guide's Services Architecture and its other views except Choreography. `SoaMLSequence` is stored as a sequence diagram, so its arrangement is fixed here on EA's side, and the guide doesn't state it. The standard names no diagram types. Route names are conventions, not measurements.
+
+    `SoaML` is the id EA reports, measured on EA 17.1 build 1716.
   diagram_types:
     SoaML:
       guide: Services Architecture
       base: Component
+      size_keys:
+        collaboration: Collaboration
+        Collaboration: Collaboration
+        collaborationUse: CollaborationUse
+        CollaborationUse: CollaborationUse
+        serviceContract: ServiceContract
+        ServiceContract: ServiceContract
+        servicesArchitecture: ServicesArchitecture
+        ServicesArchitecture: ServicesArchitecture
+        milestone: Milestone
+        Milestone: Milestone
+        port: Port
+        Port: Port
+        request: Request
+        requestPoint: Request
+        Request: Request
+        service: Service
+        servicePoint: Service
+        Service: Service
     SoaMLSequence:
       base: Sequence
       arrangement: type-fixed
@@ -512,3 +533,22 @@ layout_map:
         - font_color
         - opacity
         - icon
+      size_keys:
+        collaboration: Collaboration
+        Collaboration: Collaboration
+        collaborationUse: CollaborationUse
+        CollaborationUse: CollaborationUse
+        serviceContract: ServiceContract
+        ServiceContract: ServiceContract
+        servicesArchitecture: ServicesArchitecture
+        ServicesArchitecture: ServicesArchitecture
+        milestone: Milestone
+        Milestone: Milestone
+        port: Port
+        Port: Port
+        request: Request
+        requestPoint: Request
+        Request: Request
+        service: Service
+        servicePoint: Service
+        Service: Service
