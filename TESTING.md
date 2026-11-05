@@ -13,6 +13,9 @@ A full run takes about 15 minutes; the chevron sweep is more than 2,000 of the 5
 
 None of these tests start Enterprise Architect, Visio or any GUI.
 
+Two plugins ship from here. The language plugin ships no tests, so `pytest.ini` names no folder of
+its own for it: `tools/test_languages.py` checks its guides, and finds each new language on disk.
+
 ## Where a test goes
 
 A test lives beside the module it tests, in the same `tools/` folder, named for the module:

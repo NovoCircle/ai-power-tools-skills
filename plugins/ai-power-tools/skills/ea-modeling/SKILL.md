@@ -301,15 +301,15 @@ reserved-word gotcha) is in [`references/sql_schema.md`](references/sql_schema.m
 
 ## 10. Working with an MDG technology
 
-Westbrook Bank's `WBA` technology is the illustration throughout; substitute your own
-technology id, stereotypes and tags. Confirm your technology is loaded and enabled before
-tagging (`get_mdg_from_runtime` with your technology id as `tech_id` answers `source: "live"`;
-otherwise use `ea-mdg-deploy` first). Tag applicability comes from your technology's
-definition. In the Westbrook Bank illustration, the base 6 tags apply to all 15 element
-stereotypes and the AI 4 apply only to the 3 AI stereotypes (`pciScopeJustification`,
-`product` and `vendor` are declared on only the stereotypes the canon names). Verification SQL
-and the illustration's tag matrix:
-[`references/wba_mdg_reference.md`](references/wba_mdg_reference.md).
+**A language in the `ea-start-here` language table:** load its skill,
+`ai-power-tools-languages:<id>`, then read its how-to, `../_shared/languages/<id>/howto.md`. If
+that skill isn't available, give the message in `ea-start-here` §7 and stop the language work.
+
+Otherwise Westbrook Bank's `WBA` technology is the illustration; substitute your own technology
+id, stereotypes and tags. Confirm your technology is loaded and enabled before tagging
+(`get_mdg_from_runtime` with your technology id as `tech_id` answers `source: "live"`; otherwise
+use `ea-mdg-deploy` first). Tag applicability comes from your technology's definition.
+Verification SQL and the tag rule: [`references/wba_mdg_reference.md`](references/wba_mdg_reference.md).
 
 ---
 
