@@ -213,4 +213,4 @@ EA creates the tags with the stereotype and leaves them empty; it checks no valu
 
 ## Checking a model
 
-The ruleset is `rulesets/togaf-9/togaf-9_rules.yaml`. This ruleset needs server 3.6.5 or later. On 3.6.4 and earlier its rules report nothing, with no error, so a clean result there means nothing.
+The ruleset is `rulesets/togaf-9/togaf-9_rules.yaml`. 1 of 8 rules in this ruleset use formats newer than 3.6.4, and on that server they report nothing or don't run as written. Use server 3.6.5 or later, because a clean result on 3.6.4 doesn't mean the model passes.

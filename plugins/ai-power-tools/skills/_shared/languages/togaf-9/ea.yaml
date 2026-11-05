@@ -1610,8 +1610,7 @@ harvest:
 
 # EA's names for this language's layout. tools/gen_conventions.py reads layout_map.
 layout_map:
-  technology: TOGAF Diagrams
-  technology_reason: EA's TOGAF technology registers these diagram types under its TOGAF Diagrams profile.
+  technology: TOGAF
   display_name: TOGAF 9 (TOGAF Diagrams MDG)
   extends: UML
   stereotype_prefix: ''
@@ -1625,8 +1624,11 @@ layout_map:
     Not bound, for want of enough elements to support a default size: TOGAF_EnterpriseContinuum, TOGAF_ADM, TOGAF_ACM, TOGAF_OrganizationStructure and IEEE1471_ConceptualFramework.
 
     No viewpoints. TOGAF publishes a catalog of them, but nothing here records which concepts each one accepts, so none is listed.
+
+    `TOGAF` is the id EA reports, measured on EA 17.1 build 1716.
   diagram_types:
     TOGAF_Interface:
+      token: TOGAF Diagrams::TOGAF_Interface
       base: Logical
       stereotype_prefix: ADM_
       default_type: large-box

@@ -3,7 +3,7 @@
 # shelf. EA's names come from `layout_map` in this folder's ea.yaml. To change a value,
 # change the source and run `python tools/gen_conventions.py`.
 
-technology: TOGAF Diagrams
+technology: TOGAF
 display_name: TOGAF 9 (TOGAF Diagrams MDG)
 extends: UML
 stereotype_prefix: ''
@@ -17,8 +17,11 @@ notes: |
   Not bound, for want of enough elements to support a default size: TOGAF_EnterpriseContinuum, TOGAF_ADM, TOGAF_ACM, TOGAF_OrganizationStructure and IEEE1471_ConceptualFramework.
 
   No viewpoints. TOGAF publishes a catalog of them, but nothing here records which concepts each one accepts, so none is listed.
+
+  `TOGAF` is the id EA reports, measured on EA 17.1 build 1716.
 diagram_types:
   TOGAF_Interface:
+    token: TOGAF Diagrams::TOGAF_Interface
     base: Logical
     stereotype_prefix: ADM_
     grammar: radial
