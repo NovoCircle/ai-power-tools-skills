@@ -49,7 +49,7 @@ def test_the_register_finds_the_units_it_should():
     assert len(_by_kind("skill")) >= 24, [u.id for u in _by_kind("skill")]
     assert len(_by_kind("prog")) >= 18, [u.id for u in _by_kind("prog")]
     assert len(_by_kind("asset")) >= 12, [u.id for u in _by_kind("asset")]
-    assert {u.id for u in _by_kind("srf")} == {"srf:plugin"}
+    assert {u.id for u in _by_kind("srf")} == {"srf:plugin", "srf:languages-plugin"}
 
 
 def test_the_committed_register_equals_a_fresh_generation():
