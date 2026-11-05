@@ -4,7 +4,14 @@ How to model the content metamodel of the TOGAF skill the way Sparx's built-in t
 
 ## Version
 
-**The skill and this guide describe TOGAF 9.1.** The Open Group has published TOGAF 9.2 (2018) and the TOGAF Standard 10th Edition (2022); neither was studied. EA's technology reports its own version, `3.0` (`GetTechnologyVersion("TOGAF")`), which names no edition, so nothing here says whether EA's stereotypes follow 9.1 exactly or include later changes.
+**The skill and this guide describe TOGAF 9.1. Which edition EA's technology follows is not proven.** The evidence supports 9.1, and it stops short of settling it.
+
+- EA reports its technology as version `3.0` (`GetTechnologyVersion("TOGAF")`), which names no edition, and the technology file is encrypted.
+- One Sparx regional page says TOGAF 9.1 is supported in build 3.0 of the technology. Sparx's 17.1 guide says version 9.x and never 9.1 or 9.2.
+- All six shipped TOGAF patterns are named `to9.1-*`, and five of them were exported after 9.2 launched in April 2018.
+- The stored names include `PlatformService` and have no `TechnologyService`, `BusinessCapability` or `ValueStream`, which a third-party list gives as 9.2 names. That list is not The Open Group's text.
+
+Reading The Open Group's 9.2 metamodel chapter is what would settle it, and nobody has done that. The TOGAF Standard 10th Edition (2022) wasn't studied either.
 
 ## Does EA have the content metamodel? Mostly, under its own names
 
@@ -203,3 +210,7 @@ EA creates the tags with the stereotype and leaves them empty; it checks no valu
 11. **Tags are empty by default**, so a rule that wants a rationale or a priority reports every new Principle until the tags are filled.
 12. **Technology version.** `GetTechnologyVersion("TOGAF")` returns `3.0`, not an edition of the standard; `IsTechnologyLoaded("TOGAF9.1")` is False. `IEEE1471` is not a technology id of its own (it is False too); the profile prefix is.
 13. **Two rows on the tab** (`Control`, `Solution`) have one stored name each; `Control` is accepted on Object, Collaboration, Component and Node and `Solution` on Class, Package, Component and UseCase, so which two metaclasses the rows are is not known.
+
+## Checking a model
+
+The ruleset is `rulesets/togaf-9/togaf-9_rules.yaml`. This ruleset needs server 3.6.5 or later. On 3.6.4 and earlier its rules report nothing, with no error, so a clean result there means nothing.

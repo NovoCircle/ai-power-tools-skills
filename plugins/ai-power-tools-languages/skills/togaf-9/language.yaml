@@ -1362,10 +1362,9 @@ diagram_types:
       admits: [Principle]
       admits_basis: stated-list-in-35.6
       shows: Business and architecture principles that describe what a good solution or architecture looks like; used to evaluate decision points and to govern change.
-      conventions: not-measured
-    Stakeholder Map Matrix: {kind: matrix, defined_by: 35.6.2 (A Architecture Vision), phase: A Architecture Vision, module: core, admits: none-stated, shows: 'Stakeholders of the engagement, their influence, and the key questions or concerns the architecture must address.', notes: 'The standard says no specific metamodel entities are used, because the phase is informal and the data sensitive.', conventions: not-measured}
-    Value Chain Diagram: {kind: diagram, defined_by: 35.6.2 (A Architecture Vision), phase: A Architecture Vision, module: core, admits: none-stated, shows: 'A high-level orientation of the enterprise and how it interacts with the outside world, aimed at presentational impact; a quick way to align stakeholders.', notes: No entities listed by the standard. Contrasted with the formal Functional Decomposition Diagram., conventions: not-measured}
-    Solution Concept Diagram: {kind: diagram, defined_by: 35.6.2 (A Architecture Vision), phase: A Architecture Vision, module: core, admits: none-stated, shows: 'A pencil-sketch of the solution envisaged at the start; may carry key objectives, requirements and constraints and flag areas for formal modeling.', notes: No entities listed by the standard., conventions: not-measured}
+    Stakeholder Map Matrix: {kind: matrix, defined_by: 35.6.2 (A Architecture Vision), phase: A Architecture Vision, module: core, admits: none-stated, shows: 'Stakeholders of the engagement, their influence, and the key questions or concerns the architecture must address.', notes: 'The standard says no specific metamodel entities are used, because the phase is informal and the data sensitive.'}
+    Value Chain Diagram: {kind: diagram, defined_by: 35.6.2 (A Architecture Vision), phase: A Architecture Vision, module: core, admits: none-stated, shows: 'A high-level orientation of the enterprise and how it interacts with the outside world, aimed at presentational impact; a quick way to align stakeholders.', notes: No entities listed by the standard. Contrasted with the formal Functional Decomposition Diagram.}
+    Solution Concept Diagram: {kind: diagram, defined_by: 35.6.2 (A Architecture Vision), phase: A Architecture Vision, module: core, admits: none-stated, shows: 'A pencil-sketch of the solution envisaged at the start; may carry key objectives, requirements and constraints and flag areas for formal modeling.', notes: No entities listed by the standard.}
     Organization/Actor Catalog:
       kind: catalog
       defined_by: 35.6.3 (B Business Architecture)
@@ -1375,7 +1374,6 @@ diagram_types:
       admits_basis: stated-list-in-35.6
       shows: A definitive list of all participants that interact with IT, including users and owners of IT systems; used to test requirements for completeness.
       notes: Location may be included if no independent Location Catalog is kept.
-      conventions: not-measured
     Driver/Goal/Objective Catalog:
       kind: catalog
       defined_by: 35.6.3 (B Business Architecture)
@@ -1385,7 +1383,6 @@ diagram_types:
       admits_basis: stated-list-in-35.6
       shows: A cross-organization reference of how drivers are met through goals, objectives and, optionally, measures; used to find synergies.
       notes: Measure is optional.
-      conventions: not-measured
     Role Catalog:
       kind: catalog
       defined_by: 35.6.3 (B Business Architecture)
@@ -1394,7 +1391,6 @@ diagram_types:
       admits: [Role]
       admits_basis: stated-list-in-35.6
       shows: All authorization levels or zones in the enterprise; input to security definition, change impact, job functions and training.
-      conventions: not-measured
     Business Service/Function Catalog:
       kind: catalog
       defined_by: 35.6.3 (B Business Architecture)
@@ -1404,7 +1400,6 @@ diagram_types:
       admits_basis: stated-list-in-35.6
       shows: A functional decomposition in filterable, queryable form; identifies capabilities and the level at which governance applies.
       notes: Information System Service may optionally be included.
-      conventions: not-measured
     Location Catalog:
       kind: catalog
       defined_by: 35.6.3 (B Business Architecture)
@@ -1413,7 +1408,6 @@ diagram_types:
       admits: [Location]
       admits_basis: stated-list-in-35.6
       shows: All locations where the enterprise operates or houses architecturally relevant assets such as data centers.
-      conventions: not-measured
     Process/Event/Control/Product Catalog:
       kind: catalog
       defined_by: 35.6.3 (B Business Architecture)
@@ -1422,7 +1416,6 @@ diagram_types:
       admits: [Process, Event, Control, Product]
       admits_basis: stated-list-in-35.6
       shows: A hierarchy of processes, the events that trigger them, their outputs and the controls on them; supports impact analysis across process chains.
-      conventions: not-measured
     Contract/Measure Catalog:
       kind: catalog
       defined_by: 35.6.3 (B Business Architecture)
@@ -1432,7 +1425,6 @@ diagram_types:
       admits_basis: stated-list-in-35.6
       shows: 'All agreed service contracts and, optionally, their measures: the master list of agreed service levels.'
       notes: Information System Service is optional; Measure is optional per the text ("and (optionally) the measures").
-      conventions: not-measured
     Business Interaction Matrix:
       kind: matrix
       defined_by: 35.6.3 (B Business Architecture)
@@ -1443,7 +1435,6 @@ diagram_types:
       axes: not stated
       shows: Interactions between organizations and business functions; highlights value chain and dependencies.
       notes: Text also names the relationships Business Service communicates with Business Service and Business Service is dependent on Business Service, which the relationship table does not list.
-      conventions: not-measured
     Actor/Role Matrix:
       kind: matrix
       defined_by: 35.6.3 (B Business Architecture)
@@ -1454,8 +1445,7 @@ diagram_types:
       axes: Actor by Role
       shows: Which actors perform which roles; supports security, skills and change-management definition.
       notes: Relationship named Actor performs Role; the table calls it Actor performs task in Role.
-      conventions: not-measured
-    Business Footprint Diagram: {kind: diagram, defined_by: 35.6.3 (B Business Architecture), phase: B Business Architecture, module: core, admits: none-stated, shows: 'Links between business goals, organizational units, business functions and services, and maps functions to the technical components delivering them; traces a technical component to the goal it satisfies and shows service ownership. Senior-stakeholder communication.', notes: 'Entities are named in prose (goals, organizational units, functions, services, technical components), not as a list.', conventions: not-measured}
+    Business Footprint Diagram: {kind: diagram, defined_by: 35.6.3 (B Business Architecture), phase: B Business Architecture, module: core, admits: none-stated, shows: 'Links between business goals, organizational units, business functions and services, and maps functions to the technical components delivering them; traces a technical component to the goal it satisfies and shows service ownership. Senior-stakeholder communication.', notes: 'Entities are named in prose (goals, organizational units, functions, services, technical components), not as a list.'}
     Business Service/Information Diagram:
       kind: diagram
       defined_by: 35.6.3 (B Business Architecture)
@@ -1464,7 +1454,6 @@ diagram_types:
       admits: [BusinessService, DataEntity]
       admits_basis: prose-in-35.6; not a closed list
       shows: 'The information needed to support one or more business services: data consumed or produced, and possibly the source. A first view of information, elaborated in Phase C.'
-      conventions: not-measured
     Functional Decomposition Diagram:
       kind: diagram
       defined_by: 35.6.3 (B Business Architecture)
@@ -1473,8 +1462,7 @@ diagram_types:
       admits: [Function]
       admits_basis: prose-in-35.6; not a closed list
       shows: The capabilities of an organization relevant to the architecture, on one page; a base for heat-maps of scope and decisions.
-      conventions: not-measured
-    Product Lifecycle Diagram: {kind: diagram, defined_by: 35.6.3 (B Business Architecture), phase: B Business Architecture, module: core, admits: none-stated, shows: 'Lifecycles of key entities in the enterprise, for example products tracked from manufacture to disposal.', notes: No entities listed by the standard., conventions: not-measured}
+    Product Lifecycle Diagram: {kind: diagram, defined_by: 35.6.3 (B Business Architecture), phase: B Business Architecture, module: core, admits: none-stated, shows: 'Lifecycles of key entities in the enterprise, for example products tracked from manufacture to disposal.', notes: No entities listed by the standard.}
     Goal/Objective/Service Diagram:
       kind: diagram
       defined_by: 35.6.3 (B Business Architecture)
@@ -1483,7 +1471,6 @@ diagram_types:
       admits: [Driver, Goal, Objective, Measure, BusinessService]
       admits_basis: prose-in-35.6; not a closed list
       shows: 'How a service contributes to the business vision or strategy: services tied to the drivers, goals, objectives and measures they support.'
-      conventions: not-measured
     Business Use-Case Diagram:
       kind: diagram
       defined_by: 35.6.3 (B Business Architecture)
@@ -1493,7 +1480,6 @@ diagram_types:
       admits_basis: prose-in-35.6; not a closed list
       shows: Consumers and providers of business services, showing how and when a capability is used; helps validate the interaction of actors and roles with processes and functions.
       notes: Entities are named in prose.
-      conventions: not-measured
     Organization Decomposition Diagram:
       kind: diagram
       defined_by: 35.6.3 (B Business Architecture)
@@ -1502,7 +1488,6 @@ diagram_types:
       admits: [Actor, Role, Location]
       admits_basis: prose-in-35.6; not a closed list
       shows: Links between actors, roles and locations in an organization tree; a chain of command of owners and decision-makers.
-      conventions: not-measured
     Process Flow Diagram:
       kind: diagram
       defined_by: 35.6.3 (B Business Architecture)
@@ -1512,7 +1497,6 @@ diagram_types:
       admits_basis: prose-in-35.6; not a closed list
       shows: 'All models and mappings for the process entity: sequential flow of control between activities, with swim-lanes for ownership, plus the controls, events and products around them.'
       notes: Entities are named in prose.
-      conventions: not-measured
     Event Diagram:
       kind: diagram
       defined_by: 35.6.3 (B Business Architecture)
@@ -1521,7 +1505,6 @@ diagram_types:
       admits: [Event, Process]
       admits_basis: prose-in-35.6; not a closed list
       shows: 'The relationship between events and processes: events as triggers, where they come from, what they trigger.'
-      conventions: not-measured
     Data Entity/Data Component Catalog:
       kind: catalog
       defined_by: 35.6.4 (C Data Architecture)
@@ -1531,7 +1514,6 @@ diagram_types:
       admits_basis: stated-list-in-35.6
       shows: All data used across the enterprise, with the components where data entities are stored; supports data governance and re-use.
       notes: Colored core in Figure 35-3 although two of its entities belong to the Data extension.
-      conventions: not-measured
     Data Entity/Business Function Matrix:
       kind: matrix
       defined_by: 35.6.4 (C Data Architecture)
@@ -1542,7 +1524,6 @@ diagram_types:
       axes: Data Entity by Function
       shows: Which business functions use which data entities; assigns ownership of data to organizations and supports gap analysis and data governance.
       notes: Text also names the relationship of a data entity to its owning Organization Unit, which the relationship table does not list.
-      conventions: not-measured
     Application/Data Matrix:
       kind: matrix
       defined_by: 35.6.4 (C Data Architecture)
@@ -1552,7 +1533,6 @@ diagram_types:
       admits_basis: stated-list-in-35.6
       axes: Logical Application Component by Data Entity
       shows: Which applications create, read, update and delete which data entities; supports access assignment, duplication analysis and gap analysis.
-      conventions: not-measured
     Conceptual Data Diagram:
       kind: diagram
       defined_by: 35.6.4 (C Data Architecture)
@@ -1561,7 +1541,6 @@ diagram_types:
       admits: [DataEntity]
       admits_basis: prose-in-35.6; not a closed list
       shows: 'Relationships between critical data entities, for business stakeholders. Techniques: entity relationship models, simplified UML class diagrams.'
-      conventions: not-measured
     Logical Data Diagram:
       kind: diagram
       defined_by: 35.6.4 (C Data Architecture)
@@ -1570,7 +1549,6 @@ diagram_types:
       admits: [DataEntity]
       admits_basis: prose-in-35.6; not a closed list
       shows: Logical views of relationships between critical data entities, for application developers and database designers.
-      conventions: not-measured
     Data Dissemination Diagram:
       kind: diagram
       defined_by: 35.6.4 (C Data Architecture)
@@ -1580,7 +1558,6 @@ diagram_types:
       admits_basis: prose-in-35.6; not a closed list
       shows: How logical data entities are physically realized by application components; supports sizing and shows replication and master-copy ownership.
       notes: The text says application components; the metamodel splits them into logical and physical.
-      conventions: not-measured
     Data Security Diagram:
       kind: diagram
       defined_by: 35.6.4 (C Data Architecture)
@@ -1589,8 +1566,7 @@ diagram_types:
       admits: [Actor, DataEntity]
       admits_basis: prose-in-35.6; not a closed list
       shows: Which actor can access which enterprise data; shows compliance with privacy law and trust implications for partners. May be a matrix or a mapping.
-      conventions: not-measured
-    Data Migration Diagram: {kind: diagram, defined_by: 35.6.4 (C Data Architecture), phase: C Data Architecture, module: data, admits: none-stated, shows: 'The flow of data from source to target applications: extraction, profiling, transformation, mapping and loading; a tool for auditing and traceability.', notes: No entities listed by the standard; data and applications are implied., conventions: not-measured}
+    Data Migration Diagram: {kind: diagram, defined_by: 35.6.4 (C Data Architecture), phase: C Data Architecture, module: data, admits: none-stated, shows: 'The flow of data from source to target applications: extraction, profiling, transformation, mapping and loading; a tool for auditing and traceability.', notes: No entities listed by the standard; data and applications are implied.}
     Data Lifecycle Diagram:
       kind: diagram
       defined_by: 35.6.4 (C Data Architecture)
@@ -1599,7 +1575,6 @@ diagram_types:
       admits: [DataEntity]
       admits_basis: prose-in-35.6; not a closed list
       shows: Data entities across their lifecycle from conception to disposal, each state change with the event or rule that triggers it; decoupled from business process.
-      conventions: not-measured
     Application Portfolio Catalog:
       kind: catalog
       defined_by: 35.6.5 (C Application Architecture)
@@ -1609,7 +1584,6 @@ diagram_types:
       admits_basis: stated-list-in-35.6
       shows: All applications in the enterprise; defines the horizontal scope of change and is the usual start of the Application Architecture phase.
       notes: Colored core in Figure 35-3 although Information System Service and Physical Application Component belong to extensions.
-      conventions: not-measured
     Interface Catalog:
       kind: catalog
       defined_by: 35.6.5 (C Application Architecture)
@@ -1618,7 +1592,6 @@ diagram_types:
       admits: [LogicalApplicationComponent, PhysicalApplicationComponent]
       admits_basis: stated-list-in-35.6
       shows: The interfaces between applications (batch file, direct database connection, API or web service); scopes dependencies early. Uses the relationship Application communicates with application.
-      conventions: not-measured
     Application/Organization Matrix:
       kind: matrix
       defined_by: 35.6.5 (C Application Architecture)
@@ -1629,7 +1602,6 @@ diagram_types:
       axes: Logical or Physical Application Component by Organization Unit
       shows: Which organization units use which applications.
       notes: 'The text calls the relationship a composite to be validated: Organization Units own Services; Actors belonging to them use Services; Services are realized by application components.'
-      conventions: not-measured
     Role/Application Matrix:
       kind: matrix
       defined_by: 35.6.5 (C Application Architecture)
@@ -1640,7 +1612,6 @@ diagram_types:
       axes: Logical Application Component by Role
       shows: Which business roles use which applications; supports role-based computing and security checks.
       notes: 'Composite to be validated: Role accesses Function; Function is bounded by Service; Services are realized by application components.'
-      conventions: not-measured
     Application/Function Matrix:
       kind: matrix
       defined_by: 35.6.5 (C Application Architecture)
@@ -1651,7 +1622,6 @@ diagram_types:
       axes: Logical Application Component by Function
       shows: Which applications support which business functions.
       notes: 'Composite to be validated: Function is bounded by Service; Services are realized by application components.'
-      conventions: not-measured
     Application Interaction Matrix:
       kind: matrix
       defined_by: 35.6.5 (C Application Architecture)
@@ -1662,7 +1632,6 @@ diagram_types:
       axes: Application Service, Logical and Physical Application Component on both rows and columns
       shows: 'Communication relationships between applications: the matrix equivalent of the Interface Catalog or Application Communication Diagram.'
       notes: 'Relationships named: Application Service consumes Application Service; Logical (or Physical) Application Component communicates with Logical (or Physical) Application Component.'
-      conventions: not-measured
     Application Communication Diagram:
       kind: diagram
       defined_by: 35.6.5 (C Application Architecture)
@@ -1671,7 +1640,6 @@ diagram_types:
       admits: [ApplicationComponent, DataEntity, BusinessService]
       admits_basis: prose-in-35.6; not a closed list
       shows: 'Communication between applications: components and their interfaces, interfaces tied to data entities, applications tied to business services. Logical; shows intermediary technology only where relevant.'
-      conventions: not-measured
     Application and User Location Diagram:
       kind: diagram
       defined_by: 35.6.5 (C Application Architecture)
@@ -1681,7 +1649,6 @@ diagram_types:
       admits_basis: prose-in-35.6; not a closed list
       shows: 'The geographical distribution of applications: where users use them, where hosts run, where they are built and tested. Shows rationalization opportunities, license and support estimates.'
       notes: Entities named in prose.
-      conventions: not-measured
     Application Use-Case Diagram:
       kind: diagram
       defined_by: 35.6.5 (C Application Architecture)
@@ -1691,7 +1658,6 @@ diagram_types:
       admits_basis: prose-in-35.6; not a closed list
       shows: Consumers and providers of application services, showing how and when functionality is used; can be re-used in systems design.
       notes: Entities named in prose (actors, application services).
-      conventions: not-measured
     Enterprise Manageability Diagram:
       kind: diagram
       defined_by: 35.6.5 (C Application Architecture)
@@ -1701,7 +1667,6 @@ diagram_types:
       admits_basis: prose-in-35.6; not a closed list
       shows: How applications interact with application and technology components that support operational management; a filter on the Application Communication Diagram for management software.
       notes: Listed under the Governance extension in 34.4.1 and Figure 35-3, and under Application Architecture in 35.6.5.
-      conventions: not-measured
     Process/Application Realization Diagram:
       kind: diagram
       defined_by: 35.6.5 (C Application Architecture)
@@ -1711,7 +1676,6 @@ diagram_types:
       admits_basis: prose-in-35.6; not a closed list
       shows: The sequence of events when several applications execute a business process, adding sequencing and batch/real-time hand-offs to the Application Communication Diagram.
       notes: Entities named in prose.
-      conventions: not-measured
     Software Engineering Diagram:
       kind: diagram
       defined_by: 35.6.5 (C Application Architecture)
@@ -1721,7 +1685,6 @@ diagram_types:
       admits_basis: prose-in-35.6; not a closed list
       shows: Applications broken into packages, modules, services and operations from a development view; supports impact analysis for migration.
       notes: Entities named in prose.
-      conventions: not-measured
     Application Migration Diagram:
       kind: diagram
       defined_by: 35.6.5 (C Application Architecture)
@@ -1731,7 +1694,6 @@ diagram_types:
       admits_basis: prose-in-35.6; not a closed list
       shows: 'Migration from baseline to target application components: which applications and interfaces map between stages, temporary applications and staging areas.'
       notes: Entities named in prose.
-      conventions: not-measured
     Software Distribution Diagram:
       kind: diagram
       defined_by: 35.6.5 (C Application Architecture)
@@ -1740,7 +1702,6 @@ diagram_types:
       admits: [PhysicalApplicationComponent, PhysicalTechnologyComponent, Location]
       admits_basis: prose-in-35.6; not a closed list
       shows: 'How application software is structured and distributed across the estate: physical applications on physical technology and the location of that technology.'
-      conventions: not-measured
     Technology Standards Catalog:
       kind: catalog
       defined_by: 35.6.6 (D Technology Architecture)
@@ -1750,7 +1711,6 @@ diagram_types:
       admits_basis: stated-list-in-35.6
       shows: 'The agreed technology standards: technologies, versions, lifecycles and refresh cycles; may carry location- or domain-specific standards.'
       notes: The entity list the text gives sits under the Technology Portfolio Catalog wording and repeats it; see gaps.
-      conventions: not-measured
     Technology Portfolio Catalog:
       kind: catalog
       defined_by: 35.6.6 (D Technology Architecture)
@@ -1759,7 +1719,6 @@ diagram_types:
       admits: [PlatformService, LogicalTechnologyComponent, PhysicalTechnologyComponent]
       admits_basis: stated-list-in-35.6
       shows: All technology in use (hardware, infrastructure software, application software), classified against the Technical Reference Model; the start of the Technology Architecture phase.
-      conventions: not-measured
     Application/Technology Matrix:
       kind: matrix
       defined_by: 35.6.6 (D Technology Architecture)
@@ -1769,7 +1728,6 @@ diagram_types:
       admits_basis: stated-list-in-35.6
       axes: Application Component by Technology Component (with Services)
       shows: The mapping of applications to technology platform; aligned with platform decomposition diagrams. Uses the relationship Physical Technology Component realizes Physical Application Component.
-      conventions: not-measured
     Environments and Locations Diagram:
       kind: diagram
       defined_by: 35.6.6 (D Technology Architecture)
@@ -1779,7 +1737,6 @@ diagram_types:
       admits_basis: prose-in-35.6; not a closed list
       shows: Which locations host which applications and technologies, where users interact, and where the deployment environments (including non-production) exist.
       notes: Entities named in prose.
-      conventions: not-measured
     Platform Decomposition Diagram:
       kind: diagram
       defined_by: 35.6.6 (D Technology Architecture)
@@ -1788,7 +1745,6 @@ diagram_types:
       admits: [LogicalTechnologyComponent, PhysicalTechnologyComponent]
       admits_basis: prose-in-35.6; not a closed list
       shows: 'The technology platform supporting the information systems architecture: hardware and software, logical and physical technology components with attributes; may be mapped to application components.'
-      conventions: not-measured
     Processing Diagram:
       kind: diagram
       defined_by: 35.6.6 (D Technology Architecture)
@@ -1798,7 +1754,6 @@ diagram_types:
       admits_basis: prose-in-35.6; not a closed list
       shows: 'Deployable units of code and configuration and how they are deployed onto technology: grouping into deployment units, interactions between units, load and capacity.'
       notes: Entities named in prose.
-      conventions: not-measured
     Networked Computing/Hardware Diagram:
       kind: diagram
       defined_by: 35.6.6 (D Technology Architecture)
@@ -1808,8 +1763,7 @@ diagram_types:
       admits_basis: prose-in-35.6; not a closed list
       shows: The as-deployed logical view of logical application components in a distributed network environment, mapped to technology components such as servers.
       notes: Entities named in prose.
-      conventions: not-measured
-    Communications Engineering Diagram: {kind: diagram, defined_by: 35.6.6 (D Technology Architecture), phase: D Technology Architecture, module: infrastructure-consolidation, admits: none-stated, shows: 'The means of communication between assets in the technology architecture: logical client-server connections, network boundaries and infrastructure; protocol and capacity, not content.', notes: No entities listed by the standard., conventions: not-measured}
+    Communications Engineering Diagram: {kind: diagram, defined_by: 35.6.6 (D Technology Architecture), phase: D Technology Architecture, module: infrastructure-consolidation, admits: none-stated, shows: 'The means of communication between assets in the technology architecture: logical client-server connections, network boundaries and infrastructure; protocol and capacity, not content.', notes: No entities listed by the standard.}
     Project Context Diagram:
       kind: diagram
       defined_by: 35.6.7 (E Opportunities and Solutions)
@@ -1819,8 +1773,7 @@ diagram_types:
       admits_basis: prose-in-35.6; not a closed list
       shows: The scope of a work package within the transformation roadmap, linked to the organizations, functions, services, processes, applications, data and technology it adds, removes or affects.
       notes: Linked entity types named in prose.
-      conventions: not-measured
-    Benefits Diagram: {kind: diagram, defined_by: 35.6.7 (E Opportunities and Solutions), phase: E Opportunities and Solutions, module: core, admits: none-stated, shows: 'Opportunities in an architecture definition, classified by relative size, benefit and complexity; used to select, prioritize and sequence opportunities.', notes: No entities listed by the standard., conventions: not-measured}
+    Benefits Diagram: {kind: diagram, defined_by: 35.6.7 (E Opportunities and Solutions), phase: E Opportunities and Solutions, module: core, admits: none-stated, shows: 'Opportunities in an architecture definition, classified by relative size, benefit and complexity; used to select, prioritize and sequence opportunities.', notes: No entities listed by the standard.}
     Requirements Catalog:
       kind: catalog
       defined_by: 35.6.8 (Requirements Management)
@@ -1829,7 +1782,6 @@ diagram_types:
       admits: [Requirement, Assumption, Constraint, Gap]
       admits_basis: stated-list-in-35.6
       shows: Things the enterprise needs to do to meet its objectives; usually implemented through Phase E change initiatives; used as a quality check on fitness for purpose.
-      conventions: not-measured
 viewpoints:
   note: Eight recommended views (35.7). The standard says they are a starting point, not a full viewpoint definition. Not a closed set.
   views:
