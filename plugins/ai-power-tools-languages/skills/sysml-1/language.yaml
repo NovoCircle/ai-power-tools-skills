@@ -958,6 +958,7 @@ layout:
     SysMLInteractionDiagram: container
     SysMLStateMachineDiagram: container
     SysMLUseCaseDiagram: container
+    InvocationOnNestedPortAction: box
   exceptions: {}
   no_element_type:
     line:
