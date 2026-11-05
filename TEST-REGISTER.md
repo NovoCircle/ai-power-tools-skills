@@ -84,13 +84,16 @@ Required: U, a test module whose module-level `COVERS` names the asset. Tests th
 | asset:ea-diagram-composition/bindings/uafp_framework.yaml | U | present (6 tests, test_bindings_real_model.py) | complete |
 | asset:ea-diagram-composition/bindings/uml.yaml | U | present (6 tests, test_bindings_real_model.py) | complete |
 | asset:ea-diagram-composition/bindings/zf-interface.yaml | U | present (6 tests, test_bindings_real_model.py) | complete |
+| asset:plugins/ai-power-tools-languages/skills/_languages/layout-standard.yaml | U | present (17 tests, test_languages.py) | complete |
+| asset:plugins/ai-power-tools/rulesets/* | U | present (17 tests, test_languages.py) | complete |
 | asset:ruleset-archimate31/archimate31_rules.yaml | U | present (12 tests, test_ruleset_archimate31.py) | complete |
 
 ## Deployment surfaces
 
 | Unit | Required | U | D | Verdict |
 |---|---|---|---|---|
-| srf:plugin | U D | 2 test modules (105 tests) + 2 CI steps | — | missing D |
+| srf:languages-plugin | U D | 1 test modules (17 tests) + 0 CI steps | case file tools/surfaces/languages-plugin.md | complete |
+| srf:plugin | U D | 2 test modules (142 tests) + 2 CI steps | — | missing D |
 
 ## Integration cases
 
@@ -267,6 +270,42 @@ method of a test class is written `Class.test_name`.
   - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_real_model.py::test_a_stated_prefix_is_the_prefix_the_model_stores`
   - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_real_model.py::test_every_stereotype_the_binding_names_exists`
   - `plugins/ai-power-tools/skills/ea-diagram-composition/tools/test_bindings_real_model.py::test_the_wrong_form_matches_nothing`
+- `asset:plugins/ai-power-tools-languages/skills/_languages/layout-standard.yaml` U (17)
+  - `tools/test_languages.py::test_the_plugin_ships_no_server_no_dependency_and_the_tool_plugins_version`
+  - `tools/test_languages.py::test_the_reader_page_ships_and_names_no_tool`
+  - `tools/test_languages.py::test_the_marketplace_has_no_language_entry_before_a_release_tag_exists`
+  - `tools/test_languages.py::test_language_files_stay_out_of_the_manifest`
+  - `tools/test_languages.py::test_the_build_writes_both_archives_the_same_way_each_time`
+  - `tools/test_languages.py::test_plugin_root_refuses_an_unknown_plugin`
+  - `tools/test_languages.py::test_each_guide_has_the_shared_shape`
+  - `tools/test_languages.py::test_each_guide_holds_its_id_everywhere`
+  - `tools/test_languages.py::test_each_ruleset_holds_its_id_and_every_rule_resolves`
+  - `tools/test_languages.py::test_the_layout_standard_names_no_tool_once_it_is_there`
+  - `tools/test_languages.py::test_a_good_guide_passes`
+  - `tools/test_languages.py::test_a_stub_needs_only_its_id_name_and_layout`
+  - `tools/test_languages.py::test_a_planted_fault_in_language_yaml_fails`
+  - `tools/test_languages.py::test_a_planted_fault_in_skill_md_fails`
+  - `tools/test_languages.py::test_a_missing_reference_fails`
+  - `tools/test_languages.py::test_implements_is_read_however_a_ruleset_groups_its_rules`
+  - `tools/test_languages.py::test_an_implements_that_names_no_rule_fails_and_so_does_none`
+- `asset:plugins/ai-power-tools/rulesets/*` U (17)
+  - `tools/test_languages.py::test_the_plugin_ships_no_server_no_dependency_and_the_tool_plugins_version`
+  - `tools/test_languages.py::test_the_reader_page_ships_and_names_no_tool`
+  - `tools/test_languages.py::test_the_marketplace_has_no_language_entry_before_a_release_tag_exists`
+  - `tools/test_languages.py::test_language_files_stay_out_of_the_manifest`
+  - `tools/test_languages.py::test_the_build_writes_both_archives_the_same_way_each_time`
+  - `tools/test_languages.py::test_plugin_root_refuses_an_unknown_plugin`
+  - `tools/test_languages.py::test_each_guide_has_the_shared_shape`
+  - `tools/test_languages.py::test_each_guide_holds_its_id_everywhere`
+  - `tools/test_languages.py::test_each_ruleset_holds_its_id_and_every_rule_resolves`
+  - `tools/test_languages.py::test_the_layout_standard_names_no_tool_once_it_is_there`
+  - `tools/test_languages.py::test_a_good_guide_passes`
+  - `tools/test_languages.py::test_a_stub_needs_only_its_id_name_and_layout`
+  - `tools/test_languages.py::test_a_planted_fault_in_language_yaml_fails`
+  - `tools/test_languages.py::test_a_planted_fault_in_skill_md_fails`
+  - `tools/test_languages.py::test_a_missing_reference_fails`
+  - `tools/test_languages.py::test_implements_is_read_however_a_ruleset_groups_its_rules`
+  - `tools/test_languages.py::test_an_implements_that_names_no_rule_fails_and_so_does_none`
 - `asset:ruleset-archimate31/archimate31_rules.yaml` U (12)
   - `ruleset-archimate31/tools/test_ruleset_archimate31.py::test_ruleset_matches_more_than_zero_archimate_elements`
   - `ruleset-archimate31/tools/test_ruleset_archimate31.py::test_ruleset_matches_more_than_zero_connectors`
@@ -2448,7 +2487,27 @@ method of a test class is written `Class.test_name`.
   - `plugins/ai-power-tools/skills/prol-start-here/references/test-cases.md#TC-40`
   - `plugins/ai-power-tools/skills/prol-start-here/references/test-cases.md#TC-41`
   - `plugins/ai-power-tools/skills/prol-start-here/references/test-cases.md#TC-42`
-- `srf:plugin` U (107)
+- `srf:languages-plugin` U (17)
+  - `tools/test_languages.py::test_the_plugin_ships_no_server_no_dependency_and_the_tool_plugins_version`
+  - `tools/test_languages.py::test_the_reader_page_ships_and_names_no_tool`
+  - `tools/test_languages.py::test_the_marketplace_has_no_language_entry_before_a_release_tag_exists`
+  - `tools/test_languages.py::test_language_files_stay_out_of_the_manifest`
+  - `tools/test_languages.py::test_the_build_writes_both_archives_the_same_way_each_time`
+  - `tools/test_languages.py::test_plugin_root_refuses_an_unknown_plugin`
+  - `tools/test_languages.py::test_each_guide_has_the_shared_shape`
+  - `tools/test_languages.py::test_each_guide_holds_its_id_everywhere`
+  - `tools/test_languages.py::test_each_ruleset_holds_its_id_and_every_rule_resolves`
+  - `tools/test_languages.py::test_the_layout_standard_names_no_tool_once_it_is_there`
+  - `tools/test_languages.py::test_a_good_guide_passes`
+  - `tools/test_languages.py::test_a_stub_needs_only_its_id_name_and_layout`
+  - `tools/test_languages.py::test_a_planted_fault_in_language_yaml_fails`
+  - `tools/test_languages.py::test_a_planted_fault_in_skill_md_fails`
+  - `tools/test_languages.py::test_a_missing_reference_fails`
+  - `tools/test_languages.py::test_implements_is_read_however_a_ruleset_groups_its_rules`
+  - `tools/test_languages.py::test_an_implements_that_names_no_rule_fails_and_so_does_none`
+- `srf:languages-plugin` D (1)
+  - `tools/surfaces/languages-plugin.md`
+- `srf:plugin` U (144)
   - `tools/test_gate.py::TestForbiddenIdentifiers.test_a_real_customer_identifier_is_caught`
   - `tools/test_gate.py::TestForbiddenIdentifiers.test_the_sparx_shipped_tea_framework_is_allowed`
   - `tools/test_gate.py::TestForbiddenIdentifiers.test_a_customer_extension_of_tea_framework_is_caught`
@@ -2515,6 +2574,7 @@ method of a test class is written `Class.test_name`.
   - `tools/test_gate.py::TestRulesetPathsAreTheInstalledOnes.test_a_github_url_is_not_caught`
   - `tools/test_gate.py::TestRulesetPathsAreTheInstalledOnes.test_a_repo_relative_mention_is_not_caught`
   - `tools/test_gate.py::TestRulesetPathsAreTheInstalledOnes.test_documenting_no_installed_path_at_all_is_caught`
+  - `tools/test_gate.py::TestRulesetPathsAreTheInstalledOnes.test_the_old_install_location_does_not_count_as_the_plugin_path`
   - `tools/test_gate.py::TestRulesetPathsAreTheInstalledOnes.test_the_gates_own_source_is_not_scanned`
   - `tools/test_gate.py::TestPluginPackage.test_a_skills_only_plugin_passes`
   - `tools/test_gate.py::TestPluginPackage.test_no_plugin_tree_is_not_a_finding`
@@ -2523,6 +2583,25 @@ method of a test class is written `Class.test_name`.
   - `tools/test_gate.py::TestPluginPackage.test_a_stamp_that_lags_the_plugin_version_is_caught`
   - `tools/test_gate.py::TestPluginPackage.test_a_missing_stamp_is_caught`
   - `tools/test_gate.py::TestPluginPackage.test_version_drift_between_the_files_is_caught`
+  - `tools/test_gate.py::TestLanguagePlugin.test_no_language_plugin_is_not_a_finding`
+  - `tools/test_gate.py::TestLanguagePlugin.test_a_whole_guide_passes`
+  - `tools/test_gate.py::TestLanguagePlugin.test_a_program_image_or_xml_is_caught`
+  - `tools/test_gate.py::TestLanguagePlugin.test_a_private_working_file_beside_a_guide_is_caught`
+  - `tools/test_gate.py::TestLanguagePlugin.test_a_missing_guide_file_is_caught`
+  - `tools/test_gate.py::TestLanguagePlugin.test_a_name_or_id_other_than_the_folder_is_caught`
+  - `tools/test_gate.py::TestLanguagePlugin.test_a_missing_layout_block_is_caught`
+  - `tools/test_gate.py::TestLanguagePlugin.test_a_stub_holds_only_its_language_file`
+  - `tools/test_gate.py::TestLanguagePlugin.test_a_server_or_dependency_in_its_plugin_json_is_caught`
+  - `tools/test_gate.py::TestLanguagePlugin.test_a_version_other_than_the_tool_plugins_is_caught`
+  - `tools/test_gate.py::TestLanguagePlugin.test_a_tool_word_is_caught_in_any_file`
+  - `tools/test_gate.py::TestLanguagePlugin.test_a_role_or_an_ordinary_word_is_not_a_tool`
+  - `tools/test_gate.py::TestLanguagePlugin.test_a_tool_word_exception_is_one_line`
+  - `tools/test_gate.py::TestLanguagePlugin.test_an_exception_with_no_reason_or_source_is_caught_and_all_are_listed`
+  - `tools/test_gate.py::TestLanguagePlugin.test_a_pointer_to_what_stays_private_is_caught`
+  - `tools/test_gate.py::TestLanguagePlugin.test_a_standards_bodys_own_address_is_not_a_private_pointer`
+  - `tools/test_gate.py::TestLanguagePlugin.test_a_pack_gets_the_customer_name_scan`
+  - `tools/test_gate.py::TestLanguagePlugin.test_a_concept_as_namespace_passes_only_in_its_own_folder`
+  - `tools/test_gate.py::TestLanguagePlugin.test_a_per_language_namespace_is_valid_only_in_that_folder`
   - `tools/test_publish_plugin.py::TestRefusesBeforeStaging.test_version_drift_refuses`
   - `tools/test_publish_plugin.py::TestRefusesBeforeStaging.test_marketplace_drift_refuses`
   - `tools/test_publish_plugin.py::TestRefusesBeforeStaging.test_a_declared_server_refuses`
@@ -2531,25 +2610,42 @@ method of a test class is written `Class.test_name`.
   - `tools/test_publish_plugin.py::TestRefusesBeforeStaging.test_a_missing_skills_stamp_refuses`
   - `tools/test_publish_plugin.py::TestRefusesBeforeStaging.test_missing_archive_refuses`
   - `tools/test_publish_plugin.py::TestRefusesBeforeStaging.test_stale_archive_refuses`
+  - `tools/test_publish_plugin.py::TestRefusesBeforeStaging.test_a_missing_language_archive_refuses`
+  - `tools/test_publish_plugin.py::TestRefusesBeforeStaging.test_a_stale_language_archive_refuses`
+  - `tools/test_publish_plugin.py::TestRefusesBeforeStaging.test_a_language_plugin_on_another_version_refuses`
+  - `tools/test_publish_plugin.py::TestRefusesBeforeStaging.test_a_missing_language_plugin_refuses`
+  - `tools/test_publish_plugin.py::TestRefusesBeforeStaging.test_a_dependency_in_the_language_plugin_refuses`
   - `tools/test_publish_plugin.py::TestDryRun.test_stages_and_prints_but_changes_nothing`
   - `tools/test_publish_plugin.py::TestDryRun.test_committed_bytes_are_the_archive_bytes_despite_autocrlf`
   - `tools/test_publish_plugin.py::TestDryRun.test_the_tree_replaces_what_was_there`
+  - `tools/test_publish_plugin.py::test_both_trees_land_in_one_commit`
+  - `tools/test_publish_plugin.py::test_a_dropped_language_file_does_not_survive_the_next_release`
+  - `tools/test_publish_plugin.py::test_uncommitted_language_changes_count_as_dirty`
   - `tools/test_publish_plugin.py::test_tree_problems_catches_an_altered_blob`
   - `tools/test_publish_plugin.py::TestPublish.test_pushes_the_tree_and_tags_that_commit`
   - `tools/test_publish_plugin.py::TestPublish.test_never_moves_an_existing_tag`
   - `tools/test_publish_plugin.py::TestPublish.test_a_second_run_is_a_no_op`
+  - `tools/test_publish_plugin.py::TestPublish.test_one_tag_carries_both_trees`
+  - `tools/test_publish_plugin.py::TestPublish.test_a_tag_without_the_language_tree_is_never_moved`
   - `tools/test_publish_plugin.py::TestPublish.test_refuses_uncommitted_shipped_files`
   - `tools/test_publish_plugin.py::TestPublish.test_publish_does_not_edit_the_marketplace`
   - `tools/test_publish_plugin.py::TestPinMarketplace.test_refuses_a_tag_that_does_not_exist`
   - `tools/test_publish_plugin.py::TestPinMarketplace.test_refuses_a_tag_whose_plugin_declares_a_server`
   - `tools/test_publish_plugin.py::TestPinMarketplace.test_refuses_a_tag_carrying_another_version`
   - `tools/test_publish_plugin.py::TestPinMarketplace.test_pins_git_subdir_to_the_tag_and_its_sha`
+  - `tools/test_publish_plugin.py::TestPinMarketplace.test_adds_the_language_entry_at_the_same_tag_and_commit`
+  - `tools/test_publish_plugin.py::TestPinMarketplace.test_declares_the_dependency_as_a_bare_name_in_the_tool_entry`
+  - `tools/test_publish_plugin.py::TestPinMarketplace.test_a_second_pin_keeps_one_entry_each`
+  - `tools/test_publish_plugin.py::TestPinMarketplace.test_refuses_a_tag_whose_language_plugin_declares_a_server`
   - `tools/test_publish_plugin.py::TestVerify.test_passes_once_pinned`
   - `tools/test_publish_plugin.py::TestVerify.test_reads_the_published_marketplace_by_default`
   - `tools/test_publish_plugin.py::TestVerify.test_fails_on_a_relative_entry`
   - `tools/test_publish_plugin.py::TestVerify.test_fails_when_the_sha_is_not_the_tags`
   - `tools/test_publish_plugin.py::TestVerify.test_fails_when_the_ref_is_another_release`
   - `tools/test_publish_plugin.py::TestVerify.test_fails_when_the_published_plugin_declares_a_server`
+  - `tools/test_publish_plugin.py::TestVerify.test_fails_when_the_language_entry_is_missing`
+  - `tools/test_publish_plugin.py::TestVerify.test_fails_when_the_dependency_is_not_declared`
+  - `tools/test_publish_plugin.py::TestVerify.test_fails_when_the_language_entry_pins_another_commit`
   - `tools/test_publish_plugin.py::TestVerify.test_local_requires_verify`
   - `tools/test_publish_plugin.py::test_a_sha_must_be_full_lowercase_hex`
   - `tools/test_publish_plugin.py::test_blob_sha_matches_git`
@@ -2578,12 +2674,12 @@ Quoted from `tools/register.toml`. Nothing here is decided until its status says
 |---|---|---|---|---|---|
 | Skill | A | 24 | 24 | 0 | 0 |
 | Helper program | U | 19 | 19 | 0 | 0 |
-| Data asset | U | 12 | 12 | 0 | 0 |
-| Deployment surface | U | 1 | 1 | 0 | 0 |
-| Deployment surface | D | 1 | 0 | 0 | 1 |
+| Data asset | U | 14 | 14 | 0 | 0 |
+| Deployment surface | U | 2 | 2 | 0 | 0 |
+| Deployment surface | D | 2 | 1 | 0 | 1 |
 | Integration case | I | 1 | 1 | 0 | 0 |
 
 - Skills without A: 0 of 24.
 - Helper programs with no using skill: 2 (fidelity.py, measure_binding.py).
-- Data assets with U that run locally only: 0 of 12.
+- Data assets with U that run locally only: 0 of 14.
 - Gaps in all: 1.

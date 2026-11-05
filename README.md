@@ -11,7 +11,9 @@ shared between them, and no Visio skill is ever installed from here.
 
 ## How to install
 
-One plugin carries these skills. It is skills only: the MCP server is the **AI Power Tools for
+Two plugins carry these skills. `ai-power-tools` holds the Enterprise Architect skills, and
+`ai-power-tools-languages` holds one guide per modeling language and a shared layout standard, and
+names no tool. Both are skills only: the MCP server is the **AI Power Tools for
 Sparx EA Claude Desktop extension**, a separate download
 ([latest `.mcpb`](https://github.com/NovoCircle/ai-power-tools-releases/releases/latest/download/AI-Power-Tools-for-Enterprise-Architect.mcpb)),
 installed from Claude Desktop's Settings > Extensions. Install both; the skills' preflight
@@ -21,6 +23,11 @@ tells you when the extension is missing or older than the skills.
 claude plugin marketplace add NovoCircle/ai-power-tools-skills
 claude plugin install ai-power-tools@novocircle
 ```
+
+Installing `ai-power-tools` brings `ai-power-tools-languages` with it, because the marketplace
+entry declares it as a dependency. `claude plugin update` does not bring a newly declared
+dependency: if you update from a release before the language plugin, run the install command again.
+If you remove the language plugin, `ai-power-tools` stops loading until you install it again.
 
 Restart Claude afterwards: plugin changes are staged, not applied to a running session.
 
@@ -34,9 +41,10 @@ Use the Claude Desktop Code tab or another session that runs locally on that mac
 session can still read exports, Parquet files and generated Power BI projects from a folder you
 have connected.
 
-In Claude Desktop you can instead download `ai-power-tools.plugin` from the
+In Claude Desktop you can instead download `ai-power-tools.plugin` and
+`ai-power-tools-languages.plugin` from the
 [latest release](https://github.com/NovoCircle/ai-power-tools-skills/releases/latest) and
-upload it in the app. That copy is per machine and does not update itself; the marketplace
+upload each in the app. Each copy is per machine and does not update itself; the marketplace
 does.
 
 ### Coming from `install_skills`?
@@ -189,13 +197,14 @@ The skills, the MCP server and the VS Code extension ship **together, on one ver
 release is one number across both repositories, not a skills release that happens to coincide
 with a server one.
 
-### Where customers' plugin comes from
+### Where customers' plugins come from
 
 This repository is where skills development happens, so the marketplace does **not** serve
-the plugin from here. Its `ai-power-tools` entry pins the **released** copy of
+the plugins from here. Its `ai-power-tools` entry pins the **released** copy of
 `plugins/ai-power-tools/` in
 [`ai-power-tools-releases`](https://github.com/NovoCircle/ai-power-tools-releases), by release
-tag and commit:
+tag and commit, and declares `ai-power-tools-languages` as a dependency. The release adds that
+plugin's entry the same way, at the same tag and commit, so it isn't in the file before then:
 
 ```json
 "source": {
@@ -215,7 +224,7 @@ at a release. **Never edit that entry by hand**, and never point it at a relativ
 that is how every development merge reached fresh installs labeled as the last release.
 
 The copy in `ai-power-tools-releases` is generated, one way. `publish-plugin.py` writes it from
-`dist/ai-power-tools.plugin` — the same bytes Cowork gets — and replaces the whole tree each
+`dist/<name>.plugin` — the same bytes Cowork gets — and replaces both whole trees each
 release. Nobody edits it there.
 
 ### Steps
@@ -223,7 +232,7 @@ release. Nobody edits it there.
 ```
 python tools/regen-manifest.py     # refresh the sha256 map
 python tools/gate.py               # release blocker if red
-python tools/build-plugin.py       # emits dist/ai-power-tools.plugin
+python tools/build-plugin.py       # emits dist/<name>.plugin for both plugins
 python tools/publish-plugin.py                    # dry run: stage the release commit, print every step
 python tools/publish-plugin.py --publish          # push the tree to ai-power-tools-releases, tag vX.Y.Z
 #   ... server release cut on that tag, smoke-tested, promoted (see the ordering below) ...
@@ -254,7 +263,8 @@ tag names, and `plugin.json` at that sha carries this version and no `mcpServers
 
 Three files carry the version and must agree — `manifest.json`'s `bundle_version`,
 `plugins/ai-power-tools/.claude-plugin/plugin.json`, and the `ai-power-tools` entry in
-`.claude-plugin/marketplace.json` — and a fourth spot, the skills-version stamp
+`.claude-plugin/marketplace.json` — and the language plugin's `plugin.json` must equal them, since
+the two plugins release under one number. So must one more spot, the skills-version stamp
 (`ping(skills_version="X.Y.Z")` in `plugins/ai-power-tools/skills/ea-start-here/SKILL.md`),
 must equal them. The stamp is committed text rather than injected at build time, because the
 manifest hashes every shipped file. `tools/build-plugin.py` and `tools/gate.py` refuse when
