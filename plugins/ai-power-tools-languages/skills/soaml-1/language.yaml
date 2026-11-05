@@ -1,0 +1,1376 @@
+# SoaML 1.0.1 language file (schema_version 1).
+# Written from the standard only. Concept names are the standard's own names (no spaces).
+# Tool-neutral: no tool facts live here.
+schema_version: 1
+id: soaml-1
+name: Service oriented architecture Modeling Language (SoaML)
+owner:
+  name: Object Management Group
+  kind: standards-body
+standard:
+  name: Service oriented architecture Modeling Language
+  version: 1.0.1
+  status: published
+  reference: OMG formal/12-05-10 (specification, May 2012); machine-readable profile ptc/12-05-03 and metamodel ptc/12-05-02 under the base address http://www.omg.org/spec/SoaML/20120501; https://www.omg.org/spec/SoaML/1.0.1/.
+    Latest version as of 2026-10-20; supersedes 1.0 (March 2012). Defined as a UML profile and an equivalent metamodel on UML 2.1.
+concepts:
+  source: 'OMG SoaML 1.0.1: profile element descriptions (clause 6.4), categorization (clause 7) and business motivation integration (clause 8). 28 named concepts. Each concept names the UML concept it extends,
+    as the standard defines it; the standard declares none abstract. Concepts marked kind refinement add one property to an existing UML concept; placeholder marks an element defined elsewhere.'
+  elements:
+    Participant:
+      display: Participant
+      category: Participants
+      extends:
+      - Class
+      kind: new
+      note: The type of a party that provides and/or consumes services; a person, organization, system, application or component. Not declared abstract. The description also says it applies to a class or
+        a component.
+      section: 6.4.10
+    Agent:
+      display: Agent
+      category: Participants
+      extends:
+      - Component
+      specializes: Participant
+      kind: new
+      note: A participant with its own life cycle whose needs and capabilities may change.
+      section: 6.4.1
+    Service:
+      display: Service
+      category: Service ports
+      extends:
+      - Port
+      kind: new
+      synonyms:
+      - ServicePoint (metamodel name, clause 9.1)
+      - Service Point
+      note: A port where a participant offers a service. Typed by a ServiceInterface or an Interface.
+      section: 6.4.18
+    Request:
+      display: Request
+      category: Service ports
+      extends:
+      - Port
+      kind: new
+      synonyms:
+      - RequestPoint (notation keyword, 6.4.14; metamodel name)
+      - Request Port
+      note: A conjugate port where a participant consumes a service. Typed by a ServiceInterface or an Interface.
+      section: 6.4.14
+    Port:
+      display: Port (refinement)
+      category: Service ports
+      extends:
+      - Port
+      kind: refinement
+      attributes:
+      - name: connectorRequired
+        type: Boolean
+        multiplicity: 0..1
+        default: true
+        meaning: Whether a connector is required on the port
+      note: Refines the UML port with a flag; applies to any port, including Service and Request.
+      section: 6.4.11
+    ServiceChannel:
+      display: Service Channel
+      category: Connections
+      extends:
+      - Connector
+      kind: new
+      note: A communication path between a Request and a Service.
+      section: 6.4.15
+    ServiceInterface:
+      display: Service Interface
+      category: Service specification
+      extends:
+      - Class
+      kind: new
+      note: Provider-side definition of a service; the type of Service and Request ports. A class that realizes and uses interfaces, not itself a UML interface.
+      section: 6.4.17
+    ServiceContract:
+      display: Service Contract
+      category: Service specification
+      extends:
+      - Collaboration
+      kind: new
+      note: The binding agreement among the parties to a service, with roles and a choreography.
+      section: 6.4.16
+    Provider:
+      display: Provider
+      category: Service specification
+      extends:
+      - Interface
+      - Class
+      kind: new
+      note: Type of the provider role in a service contract. Interface for a non-composite contract, Class for a composite one.
+      section: 6.4.13
+    Consumer:
+      display: Consumer
+      category: Service specification
+      extends:
+      - Interface
+      - Class
+      kind: new
+      note: Type of the consumer role in a service contract. Interface for a non-composite contract, Class for a composite one.
+      section: 6.4.4
+    ServicesArchitecture:
+      display: Services Architecture
+      category: Architecture
+      extends:
+      - Collaboration
+      kind: new
+      note: How a set of participants work together for a purpose by providing and using services.
+      section: 6.4.19
+    Collaboration:
+      display: Collaboration (refinement)
+      category: Architecture
+      extends:
+      - Collaboration
+      kind: refinement
+      attributes:
+      - name: isStrict
+        type: Boolean
+        default: true
+        meaning: Default strictness for any use of the collaboration
+      section: 6.4.5
+    CollaborationUse:
+      display: Collaboration Use (refinement)
+      category: Architecture
+      extends:
+      - CollaborationUse
+      kind: refinement
+      attributes:
+      - name: isStrict
+        type: Boolean
+        meaning: Whether this use is strict; defaults to the collaboration value
+      section: 6.4.6
+    Capability:
+      display: Capability
+      category: Capabilities
+      extends:
+      - Class
+      kind: new
+      note: The ability to act and produce an outcome that achieves a result.
+      section: 6.4.3
+    Expose:
+      display: Expose
+      category: Capabilities
+      extends:
+      - Dependency
+      kind: new
+      note: A dependency from a ServiceInterface to a Capability it exposes.
+      section: 6.4.7
+    MessageType:
+      display: Message Type
+      category: Service data
+      extends:
+      - DataType
+      - Class
+      - Signal
+      kind: new
+      attributes:
+      - name: encoding
+        type: String
+        multiplicity: 0..1
+        meaning: Encoding of the payload
+      note: Pure data exchanged between consumers and providers.
+      section: 6.4.8
+    Attachment:
+      display: Attachment
+      category: Service data
+      extends:
+      - Property
+      kind: new
+      attributes:
+      - name: encoding
+        type: String
+        multiplicity: 0..1
+        meaning: Platform encoding, for example SOAP-RPC, Doc-Literal, ASN.1
+      - name: mimeType
+        type: String
+        multiplicity: 0..1
+        meaning: IANA media type
+      note: A part of a message that is attached to it rather than contained in it.
+      section: 6.4.2
+    Property:
+      display: Property (refinement)
+      category: Service data
+      extends:
+      - Property
+      kind: refinement
+      attributes:
+      - name: isID
+        type: Boolean
+        multiplicity: 0..1
+        default: false
+        meaning: Property contributes to identifying instances of its classifier
+      synonyms:
+      - Id (notation keyword)
+      section: 6.4.12
+    Milestone:
+      display: Milestone
+      category: Behavior markers
+      extends:
+      - Comment
+      kind: new
+      attributes:
+      - name: progress
+        type: Integer
+        meaning: Progress measurement
+      - name: signal
+        type: Signal
+        multiplicity: 0..1
+        meaning: Signal associated with the milestone
+      - name: value
+        type: Expression
+        multiplicity: '*'
+        meaning: Arguments of the signal
+      note: A progress marker in a behavior; adds no functional meaning.
+      section: 6.4.9
+    Catalog:
+      display: Catalog
+      category: Categorization
+      extends:
+      - Package
+      specializes: NoteDescriptor (named, not defined)
+      kind: new
+      note: A named collection of categories and other catalogs.
+      section: 7.3.1
+    Categorization:
+      display: Categorization
+      category: Categorization
+      extends:
+      - Dependency
+      kind: new
+      note: Links any element to a category or category value.
+      section: 7.3.2
+    Category:
+      display: Category
+      category: Categorization
+      extends:
+      - Artifact
+      specializes: NodeDescriptor
+      kind: new
+      note: A kind of information about elements; meaning left to the modeler.
+      section: 7.3.3
+    CategoryValue:
+      display: Category Value
+      category: Categorization
+      extends:
+      - InstanceSpecification
+      specializes: FreeFormValue
+      kind: new
+      note: A specific value of a category.
+      section: 7.3.4
+    NodeDescriptor:
+      display: Node Descriptor (placeholder)
+      category: Categorization
+      extends:
+      - Artifact
+      kind: placeholder
+      note: Placeholder for the RAS element of the same name.
+      section: 7.3.5
+    FreeFormDescriptor:
+      display: Free Form Descriptor (placeholder)
+      category: Categorization
+      extends:
+      - Property
+      kind: placeholder
+      note: Placeholder for the RAS element of the same name.
+      section: 7.3.5
+    FreeFormValue:
+      display: Free Form Value (placeholder)
+      category: Categorization
+      extends:
+      - ValueSpecification
+      kind: placeholder
+      note: Placeholder for the RAS element of the same name.
+      section: 7.3.5
+    MotivationElement:
+      display: Motivation Element (placeholder)
+      category: Business motivation link
+      kind: placeholder
+      note: Placeholder for a business motivation element (vision, goal, objective, mission, strategy, tactic, policy, regulation). To be replaced by a business motivation profile or metamodel element.
+      section: 8.3.1
+    MotivationRealization:
+      display: Motivation Realization
+      category: Business motivation link
+      extends:
+      - Realization
+      specializes: Realization
+      kind: new
+      attributes:
+      - name: realizedEnd
+        type: End
+        multiplicity: '*'
+        meaning: Ends realized (metamodel only)
+      note: A realization of a motivation element by a behaviored classifier.
+      section: 8.3.2
+  external:
+    Class: A UML class.
+    Component: A UML component, a kind of class.
+    Interface: A UML interface.
+    Port: A UML port, an interaction point of a classifier.
+    Connector: A UML connector between connectable elements.
+    Collaboration: 'A UML collaboration: roles and a pattern of interaction.'
+    CollaborationUse: A UML use of a collaboration with role bindings.
+    Dependency: A UML dependency (usage, realization and others are kinds of it).
+    Realization: A UML realization dependency.
+    InterfaceRealization: A UML realization of an interface by a classifier.
+    Usage: A UML usage dependency.
+    DataType: A UML data type.
+    PrimitiveType: A UML primitive type.
+    Signal: A UML signal.
+    Property: A UML property.
+    Comment: A UML comment.
+    Package: A UML package.
+    Artifact: A UML artifact.
+    InstanceSpecification: A UML instance specification.
+    ValueSpecification: A UML value specification.
+    BehavioredClassifier: A UML classifier that can own behaviors.
+    Behavior: 'A UML behavior: interaction, activity, state machine, protocol state machine or opaque behavior.'
+    Operation: A UML operation.
+    Parameter: A UML parameter.
+    UseCase: A UML use case.
+    Expression: A UML expression.
+    Element: Any UML element.
+  relationships:
+    ServiceChannelConnectsRequestAndService:
+      display: Service Channel connects a Request and a Service
+      category: relationship
+    ServiceIsTypedByServiceInterface:
+      display: Service is typed by a Service Interface or an Interface
+      category: relationship
+    RequestIsTypedByServiceInterface:
+      display: Request is typed by a Service Interface or an Interface
+      category: relationship
+    ParticipantOffersService:
+      display: Participant offers a Service
+      category: relationship
+    ParticipantMakesRequest:
+      display: Participant makes a Request
+      category: relationship
+    ServiceInterfaceProvidesInterface:
+      display: Service Interface provides an Interface (realizes it)
+      category: relationship
+    ServiceInterfaceRequiresInterface:
+      display: Service Interface requires an Interface (uses it)
+      category: relationship
+    ServiceInterfaceHasRolePart:
+      display: Service Interface has a role part typed by a realized or used Interface
+      category: relationship
+    ServiceInterfaceOwnsPort:
+      display: Service Interface owns a Service or Request port (compound service)
+      category: relationship
+    ServiceInterfaceExposesCapability:
+      display: Service Interface exposes a Capability
+      category: relationship
+    CapabilityRealizesServiceInterface:
+      display: Capability realizes a Service Interface
+      category: relationship
+    ParticipantRealizesCapability:
+      display: Participant realizes a Capability
+      category: relationship
+    ParticipantHasPartTypedByCapability:
+      display: Participant has a part typed by a Capability
+      category: relationship
+    CapabilityUsesCapability:
+      display: Capability uses another Capability
+      category: relationship
+    ConsumerUsesProvider:
+      display: Consumer uses Provider
+      category: relationship
+    ProviderMayUseConsumer:
+      display: Provider may use Consumer
+      category: relationship
+    ServiceContractHasRoleTypedBy:
+      display: Service Contract has a role typed by a Provider, a Consumer or a Service Interface
+      category: relationship
+    ServiceContractSpecializesServiceContract:
+      display: Service Contract specializes another Service Contract
+      category: relationship
+    ServiceContractUsesNestedContract:
+      display: Service Contract uses a nested Service Contract (compound contract)
+      category: relationship
+    ServiceContractOwnsChoreography:
+      display: Service Contract owns a choreography
+      category: relationship
+    ServiceInterfaceOwnsProtocol:
+      display: Service Interface owns a protocol
+      category: relationship
+    ServicesArchitectureHasRoleTypedBy:
+      display: Services Architecture has a role typed by a Participant or a Capability
+      category: relationship
+    ServicesArchitectureUsesServiceContract:
+      display: Services Architecture uses a Service Contract
+      category: relationship
+    ClassifierFulfillsCollaboration:
+      display: Classifier fulfills a Service Contract or adheres to a Services Architecture
+      category: relationship
+    CollaborationUseBindsRoleToPart:
+      display: Collaboration Use binds a role to a part of the owning classifier
+      category: relationship
+    ParticipantRealizesParticipant:
+      display: Participant realizes a specification Participant
+      category: relationship
+    ParticipantOrContractRealizesUseCase:
+      display: Participant or Service Contract realizes a Use Case
+      category: relationship
+    MessageTypeOwnsAttachment:
+      display: Message Type owns an Attachment
+      category: relationship
+    MessageTypeAggregatesType:
+      display: Message Type aggregates a Message Type or data type
+      category: relationship
+    ServiceOperationParameterTypedBy:
+      display: Service operation parameter is typed by a Message Type (document style) or a Primitive Type or Data Type (RPC style)
+      category: relationship
+    MilestoneRefersToSignal:
+      display: Milestone refers to a Signal
+      category: relationship
+    CatalogContains:
+      display: Catalog contains Categories, Category Values and Catalogs
+      category: relationship
+    ElementIsCategorizedBy:
+      display: Element is categorized by a Category or Category Value
+      category: relationship
+    CategoryValueIsClassifiedByCategory:
+      display: Category Value is classified by a Category
+      category: relationship
+    MotivationRealizationRealizesMotivationElement:
+      display: Behaviored classifier realizes a Motivation Element
+      category: relationship
+    PortIsLinkedToMotivationElement:
+      display: Service or Request may be linked to a Motivation Element
+      category: relationship
+relationships:
+- name: ServiceChannelConnectsRequestAndService
+  source: Request
+  target: Service
+  kind: Connector
+  roles:
+    source: requestEnd
+    target: serviceEnd
+  multiplicity:
+    ends: one Request end and one Service end
+  note: The relationship is the connector itself (ServiceChannel). The two ends are a Request and a Service, in an architecture.
+  section: 6.4.15 [1]
+- name: ServiceIsTypedByServiceInterface
+  source: Service
+  target:
+  - ServiceInterface
+  - Interface
+  kind: Typed element
+  multiplicity: not stated
+  section: 6.4.18 [1]
+- name: RequestIsTypedByServiceInterface
+  source: Request
+  target:
+  - ServiceInterface
+  - Interface
+  kind: Typed element
+  multiplicity: not stated
+  section: 6.4.14 [1]
+- name: ParticipantOffersService
+  source: Participant
+  target: Service
+  kind: Owned port
+  multiplicity: not stated
+  note: '"Any number" of services; the metamodel derives "offers" from owned ports of this kind.'
+  section: 6.4.10; 9.1
+- name: ParticipantMakesRequest
+  source: Participant
+  target: Request
+  kind: Owned port
+  multiplicity: not stated
+  note: '"Any number" of requests; the metamodel derives "makes" from owned ports of this kind.'
+  section: 6.4.10; 9.1
+- name: ServiceInterfaceProvidesInterface
+  source: ServiceInterface
+  target: Interface
+  kind: Interface realization
+  multiplicity:
+    targets_per_source: typically one, not always
+  section: 6.2.1; 6.4.17
+- name: ServiceInterfaceRequiresInterface
+  source: ServiceInterface
+  target: Interface
+  kind: Usage
+  multiplicity:
+    targets_per_source: typically one, not always
+  section: 6.2.1; 6.4.17
+- name: ServiceInterfaceHasRolePart
+  source: ServiceInterface
+  target: Interface
+  kind: Owned part
+  multiplicity: not stated
+  note: The part typed by the realized interface is the provider role; the part typed by the used interface is the consumer role.
+  section: 6.2.1; 6.4.17 [1]
+- name: ServiceInterfaceOwnsPort
+  source: ServiceInterface
+  target:
+  - Service
+  - Request
+  kind: Owned port
+  multiplicity: not stated
+  section: 6.4.17
+- name: ServiceInterfaceExposesCapability
+  source: ServiceInterface
+  target: Capability
+  kind: Dependency (Expose)
+  multiplicity: not stated
+  section: 6.4.7
+- name: CapabilityRealizesServiceInterface
+  source: Capability
+  target: ServiceInterface
+  kind: Realization
+  multiplicity: not stated
+  section: 6.2.5; 6.4.3
+- name: ParticipantRealizesCapability
+  source: Participant
+  target: Capability
+  kind: Realization
+  multiplicity: not stated
+  section: 6.2.5
+- name: ParticipantHasPartTypedByCapability
+  source: Participant
+  target: Capability
+  kind: Part
+  multiplicity: not stated
+  section: 6.2.5; 6.4.7
+- name: CapabilityUsesCapability
+  source: Capability
+  target: Capability
+  kind: Usage
+  multiplicity: not stated
+  section: 6.2.5; 6.4.3
+- name: ConsumerUsesProvider
+  source: Consumer
+  target: Provider
+  kind: Usage
+  multiplicity: not stated
+  note: The consumer calls the provider. The text says the consumer "will also have" this dependency.
+  section: 6.4.4
+- name: ProviderMayUseConsumer
+  source: Provider
+  target: Consumer
+  kind: Usage
+  multiplicity: not stated
+  note: Optional; the provider calls back the consumer in a two-way service. 6.4.16 constraint 5 words this more strongly.
+  section: 6.4.13
+- name: ServiceContractHasRoleTypedBy
+  source: ServiceContract
+  target:
+  - Provider
+  - Consumer
+  - ServiceInterface
+  kind: Collaboration role
+  multiplicity:
+    targets_per_source: at least one Provider and at least one Consumer where roles are typed by interfaces
+  section: 6.4.16
+- name: ServiceContractSpecializesServiceContract
+  source: ServiceContract
+  target: ServiceContract
+  kind: Generalization
+  multiplicity: not stated
+  section: 6.4.16
+- name: ServiceContractUsesNestedContract
+  source: ServiceContract
+  target: ServiceContract
+  kind: Collaboration use
+  multiplicity: not stated
+  note: Nesting to any level.
+  section: 6.4.16; 6.4.6
+- name: ServiceContractOwnsChoreography
+  source: ServiceContract
+  target: Behavior
+  kind: Owned behavior
+  multiplicity: not stated
+  note: 'Any UML behavior kind: interaction, activity, state machine, timing description.'
+  section: 6.4.16
+- name: ServiceInterfaceOwnsProtocol
+  source: ServiceInterface
+  target: Behavior
+  kind: Owned behavior
+  multiplicity: not stated
+  note: Any UML behavior kind.
+  section: 6.4.17
+- name: ServicesArchitectureHasRoleTypedBy
+  source: ServicesArchitecture
+  target:
+  - Participant
+  - Capability
+  kind: Collaboration role
+  multiplicity: not stated
+  section: 6.4.19 [1]
+- name: ServicesArchitectureUsesServiceContract
+  source: ServicesArchitecture
+  target: ServiceContract
+  kind: Collaboration use with role bindings
+  multiplicity: not stated
+  section: 6.4.19; 6.2.3
+- name: ClassifierFulfillsCollaboration
+  source:
+  - ServiceInterface
+  - Participant
+  target:
+  - ServiceContract
+  - ServicesArchitecture
+  kind: Collaboration use
+  multiplicity:
+    targets_per_source: zero or more, usually one-to-one for a service interface and its contract
+  section: 6.4.6; 6.4.16
+- name: CollaborationUseBindsRoleToPart
+  source: CollaborationUse
+  target: Property
+  kind: Role binding
+  multiplicity:
+    targets_per_source: one part per role of the collaboration
+  section: 6.4.6
+- name: ParticipantRealizesParticipant
+  source: Participant
+  target: Participant
+  kind: Component realization
+  multiplicity: not stated
+  section: 6.4.10
+- name: ParticipantOrContractRealizesUseCase
+  source:
+  - Participant
+  - ServiceContract
+  target: UseCase
+  kind: Realization
+  multiplicity: not stated
+  section: 6.2.6; 6.4.18
+- name: MessageTypeOwnsAttachment
+  source: MessageType
+  target: Attachment
+  kind: Owned attribute
+  multiplicity: not stated
+  section: 6.4.2
+- name: MessageTypeAggregatesType
+  source: MessageType
+  target:
+  - MessageType
+  - DataType
+  kind: Aggregation
+  multiplicity: not stated
+  note: Associations of a message type with other message or data types must be aggregations (MSG-005).
+  section: 6.4.8
+- name: ServiceOperationParameterTypedBy
+  source: Parameter
+  target:
+  - MessageType
+  - PrimitiveType
+  - DataType
+  kind: Typed element
+  multiplicity:
+    document style: at most one in, one out and one exception parameter
+  section: 6.4.8
+- name: MilestoneRefersToSignal
+  source: Milestone
+  target: Signal
+  kind: Association
+  multiplicity:
+    targets_per_source: 0..1
+  section: 6.4.9
+- name: CatalogContains
+  source: Catalog
+  target:
+  - Category
+  - CategoryValue
+  - Catalog
+  kind: Containment
+  multiplicity: not stated
+  section: 7.3.1 [1]
+- name: ElementIsCategorizedBy
+  source: Element
+  target:
+  - Category
+  - CategoryValue
+  kind: Dependency (Categorization)
+  multiplicity: not stated
+  section: 7.3.2
+- name: CategoryValueIsClassifiedByCategory
+  source: CategoryValue
+  target: Category
+  kind: Classifier
+  multiplicity:
+    targets_per_source: '1'
+  section: 7.3.4 [1]
+- name: MotivationRealizationRealizesMotivationElement
+  source: BehavioredClassifier
+  target: MotivationElement
+  kind: Realization (MotivationRealization)
+  multiplicity: not stated
+  section: 6.2.6; 8.3.2
+- name: PortIsLinkedToMotivationElement
+  source:
+  - Service
+  - Request
+  target: MotivationElement
+  kind: Link
+  multiplicity: not stated
+  section: 6.4.18; 6.4.14
+constraints:
+- id: SOAML-PART-001
+  statement: The active flag of an Agent is always true.
+  strength: must
+  section: 6.4.1 (Constraints), p. 36
+  checkable: static
+- id: SOAML-PART-002
+  statement: A Participant does not realize or use an Interface directly; it does so through its Service and Request ports.
+  strength: must
+  section: 6.4.10 [1], p. 53
+  checkable: static
+  applies_when: applies to the participant itself, not to the inside of a component that implements it (PART-003)
+- id: SOAML-PART-003
+  statement: The inside of a component that implements a Participant is not bound by PART-002; its links to its container and to other implementation components need not use services.
+  strength: note
+  section: 6.4.10 [2], p. 53
+  checkable: none
+- id: SOAML-PART-004
+  statement: The implementation of a provided service is consistent with the operations, protocols and constraints of its Service Interface.
+  strength: must
+  section: 6.4.10 (Semantics), p. 53
+  checkable: runtime
+- id: SOAML-PART-005
+  statement: A Participant's own classifier behavior is limited to construction, not a long-running life cycle; an Agent's classifier behavior, if any, is its life cycle.
+  strength: should
+  section: 6.4.1 (Semantics), p. 37
+  checkable: none
+- id: SOAML-PART-006
+  statement: A Participant implements a provided service operation by a method (an owned behavior), by event handling, or by delegation to a part, another participant or a user. The standard does not constrain
+    the choice and the means may be mixed.
+  strength: note
+  section: 6.4.10 (Semantics), pp. 53-54
+  checkable: none
+- id: SOAML-PART-007
+  statement: Behavioral compatibility for a realization of a Participant by another is a semantic variation point.
+  strength: note
+  section: 6.4.10 (Semantic Variation Points), p. 54
+  checkable: none
+- id: SOAML-PORT-001
+  statement: The type of a Service is a Service Interface or an Interface.
+  strength: must
+  section: 6.4.18 [1], p. 78
+  checkable: static
+- id: SOAML-PORT-002
+  statement: The direction of a Service is incoming.
+  strength: must
+  section: 6.4.18 [2], p. 78
+  checkable: none
+- id: SOAML-PORT-003
+  statement: The type of a Request is a Service Interface or an Interface.
+  strength: must
+  section: 6.4.14 [1], p. 61
+  checkable: static
+- id: SOAML-PORT-004
+  statement: 'A Request is conjugated: the provided and required interfaces of its type are inverted.'
+  strength: must
+  section: 6.4.14 [2], p. 61
+  checkable: static
+- id: SOAML-PORT-005
+  statement: Where connectorRequired is true (the default), every instance of the port has at least one connector or Service Channel attached. Where it is false, the owning classifier can work without one.
+  strength: must
+  section: 6.4.11 (Semantics), p. 56
+  checkable: partial
+  applies_when: connectorRequired is true
+- id: SOAML-PORT-006
+  statement: 'The provided and required interfaces of a Service or Request are derived from its type. For a Service Interface type: provided are the interfaces it realizes, required are the interfaces it
+    uses, and a Request swaps the two. For a plain Interface type: a Service provides it and requires nothing; a Request requires it.'
+  strength: note
+  section: 6.4.14 and 6.4.18 (Semantics), pp. 61-62, 77
+  checkable: static
+- id: SOAML-PORT-007
+  statement: The service flag of a port (a convention of UML) distinguishes client-facing ports from ports used only to implement the participant; all such ports are Service or Request ports.
+  strength: note
+  section: 6.4.11 (Semantics), p. 56
+  checkable: none
+- id: SOAML-CHAN-001
+  statement: One end of a Service Channel is a Request and the other a Service, in an architecture.
+  strength: must
+  section: 6.4.15 [1], p. 63
+  checkable: static
+- id: SOAML-CHAN-002
+  statement: The Request and the Service connected by a Service Channel are compatible.
+  strength: must
+  section: 6.4.15 [2], p. 63
+  checkable: partial
+- id: SOAML-CHAN-003
+  statement: 'A Request and a Service are compatible only if at least one holds: (1) they have the same type, an Interface or a Service Interface; (2) the type of the Service specializes or realizes the
+    type of the Request; (3) the Service provides an operation for every operation used through the Request, the Request provides one for every operation used through the Service, and their protocols fit;
+    (4) any of these holds for the subset of a Service Interface defined by a port on it.'
+  strength: must
+  section: 6.4.15 (Semantics), p. 64
+  checkable: partial
+- id: SOAML-CHAN-004
+  statement: The contract behavior of a Service Channel is compatible with the protocols specified for the connected Requests and Services.
+  strength: must
+  section: 6.4.15 [3], p. 63
+  checkable: runtime
+- id: SOAML-CHAN-005
+  statement: Behavioral compatibility between Requests and Services is a semantic variation point. Compatibility does not require the same type or a common contract; the standard keeps coupling loose on
+    purpose.
+  strength: note
+  section: 6.4.15 (Semantics, Semantic Variation Points), pp. 63-64
+  checkable: none
+- id: SOAML-CHAN-006
+  statement: Where a Service Interface has more than two parts, the combination of all the channels through a service port is compatible with the port's protocol, not each channel on its own.
+  strength: must
+  section: 6.4.17.1 (Examples, Figures 6.50 to 6.52), pp. 74-75
+  checkable: runtime
+  applies_when: the Service Interface has more than two parts
+- id: SOAML-SINT-001
+  statement: All parts of a Service Interface are typed by the Interfaces the Service Interface realizes or uses.
+  strength: must
+  section: 6.4.17 [1], p. 71
+  checkable: static
+- id: SOAML-SINT-002
+  statement: The interface of the provider is the type of one of the parts of the Service Interface and is realized by it; the interface of the consumer, if there is one, is used by it.
+  strength: must
+  section: 6.2.1, p. 13
+  checkable: static
+- id: SOAML-SINT-003
+  statement: Provided interfaces are designated by realization and required interfaces by usage. Typically one of each, not always.
+  strength: note
+  section: 6.2.1, p. 12; 6.4.17, p. 73
+  checkable: static
+- id: SOAML-SINT-004
+  statement: A Service Interface can realize any number of Interfaces; some platform-specific models may restrict that to at most one.
+  strength: note
+  section: 6.4.17 (Semantics), p. 73
+  checkable: none
+- id: SOAML-SINT-005
+  statement: A Service Interface may own behaviors of any UML behavior kind (its protocol) and constraints stating what successful use of the service accomplishes.
+  strength: note
+  section: 6.2.1, p. 12; 6.4.17 (Semantics), p. 73
+  checkable: none
+- id: SOAML-SINT-006
+  statement: When the constraints of a Service Interface are evaluated, and how its behaviors are checked against participants' behaviors, are semantic variation points.
+  strength: note
+  section: 6.4.17.1, p. 73
+  checkable: none
+- id: SOAML-SINT-007
+  statement: A Service Interface may own Service or Request ports; together they make up a larger composite service between the same parties, and a participant may connect the whole service or any one sub-service.
+  strength: note
+  section: 6.4.17, p. 71; 6.4.16, p. 70
+  checkable: none
+- id: SOAML-SINT-008
+  statement: A Service Interface is a class that realizes and uses interfaces; it is not itself an interface.
+  strength: should
+  section: 6.4.17 (Extends Metaclass), p. 70; 6.2.1, p. 12
+  checkable: static
+- id: SOAML-CONT-001
+  statement: Each role in a Service Contract has a type that is a Service Interface, or an Interface or Class marked as a Provider or a Consumer.
+  strength: must
+  section: 6.4.16 (Description), p. 65; (Semantics), p. 67
+  checkable: static
+- id: SOAML-CONT-002
+  statement: A Service Contract has at least one Provider and at least one Consumer among its role types.
+  strength: must
+  section: 6.4.16 (Semantics), p. 67
+  checkable: static
+  applies_when: the role types are Interfaces or Classes marked as Provider or Consumer
+- id: SOAML-CONT-003
+  statement: The type of each role in a Service Contract has a uses dependency on the type of every role it is connected to.
+  strength: must
+  section: 6.4.16 [5], p. 67
+  checkable: static
+- id: SOAML-CONT-004
+  statement: A specialized Service Contract complies with the more general one; it may restrict the behavior or the operations used.
+  strength: must
+  section: 6.4.16 (Description), p. 65
+  checkable: runtime
+- id: SOAML-CONT-005
+  statement: 'A party that plays a role in a Service Contract, including a participant with a port typed by a role type, is bound by the contract: its interfaces, exchange patterns, behavior and message
+    formats. The Provider and Consumer interfaces are bound by the constraints and behavior of their contract.'
+  strength: must
+  section: 6.4.16 (Description, Semantics), pp. 65, 67; 6.4.4 and 6.4.13 (Constraints), pp. 41, 59
+  checkable: runtime
+- id: SOAML-CONT-006
+  statement: Where a Service Interface owns a behavior and is also used as a type in a Service Contract, the Service Interface's behavior complies with the contract.
+  strength: must
+  section: 6.4.16 (Semantics), p. 67
+  checkable: runtime
+- id: SOAML-CONT-007
+  statement: Specify the protocol in the Service Contract or in the Service Interface, not in both.
+  strength: should
+  section: 6.4.16 (Semantics), p. 67
+  checkable: none
+- id: SOAML-CONT-008
+  statement: A Service Interface may fulfill zero or more Service Contracts; usually it fulfills one.
+  strength: note
+  section: 6.4.16 (Examples), p. 67
+  checkable: none
+- id: SOAML-CONT-009
+  statement: A Service Contract may have any number of roles, usually two. It may own a behavior (the choreography) of any UML behavior kind; the choreography is not required.
+  strength: note
+  section: 6.4.16, pp. 65, 68
+  checkable: none
+- id: SOAML-CONT-010
+  statement: A Service Contract that uses nested Service Contracts is a compound contract; nesting may go to any level. A compound contract is not the same as a service implemented by calling other services.
+  strength: note
+  section: 6.4.16, pp. 65, 69
+  checkable: none
+- id: SOAML-CONT-011
+  statement: A Collaboration Use is not required for a Service Contract when the types are compatible; the contract binds the types of its roles.
+  strength: note
+  section: 6.4.5, p. 42; 6.4.6, p. 43; 6.4.16, p. 65
+  checkable: none
+- id: SOAML-CONT-012
+  statement: For a Service Contract with more than two parties, typing the consumer's port with the provider's interface and marking it a Request works less well than typing each port with its own role's
+    interface.
+  strength: note
+  section: 6.2.4.2, p. 23
+  checkable: none
+- id: SOAML-ARCH-001
+  statement: The parts of a Services Architecture are typed by a Participant or a Capability.
+  strength: must
+  section: 6.4.19 [1], p. 81
+  checkable: static
+- id: SOAML-ARCH-002
+  statement: Each participant that fills a role in a Services Architecture has a port for each role binding attached to it, and the type of that port is compliant with the type of the role in the Service
+    Contract.
+  strength: must
+  section: 6.4.19 [1], p. 81; 6.2.3, p. 19
+  checkable: partial
+- id: SOAML-ARCH-003
+  statement: Each use of a service in a Services Architecture is represented by a Service Contract bound to the roles of participants.
+  strength: must
+  section: 6.4.19 (Description), p. 80
+  checkable: static
+- id: SOAML-ARCH-004
+  statement: A Collaboration Use binds each role of its Collaboration to a part of the owning classifier.
+  strength: must
+  section: 6.4.6 (Semantics), p. 44
+  checkable: static
+- id: SOAML-ARCH-005
+  statement: 'When a Collaboration Use is strict, each part is compatible with the role it is bound to: the same type; a type that specializes the role type; a type that realizes it; or a type that has
+    at least the owned attributes and operations of the role type. The owning classifier''s behaviors are also compatible with the Collaboration''s owned behavior.'
+  strength: must
+  section: 6.4.6, pp. 43-44; 6.4.16 [1]-[4], pp. 66-67
+  checkable: partial
+  applies_when: isStrict is true (the default)
+- id: SOAML-ARCH-006
+  statement: The strictness of a Collaboration sets the default for each Collaboration Use typed by it. A non-strict use means the modeler warrants that the part can play the role even though the types
+    are not compatible.
+  strength: note
+  section: 6.4.5 and 6.4.6, pp. 42-43
+  checkable: static
+- id: SOAML-ARCH-007
+  statement: A participant that realizes a Services Architecture adheres to the architecture it specifies.
+  strength: must
+  section: 6.2.2, p. 15
+  checkable: runtime
+- id: SOAML-ARCH-008
+  statement: Using a Services Architecture is optional but recommended. A community-level architecture assumes no controlling entity; a participant-level architecture usually has a business process, whose
+    swim lanes correspond to the participant roles.
+  strength: note
+  section: 6.4.19 (Description), p. 80; 6.2.2, p. 16
+  checkable: none
+- id: SOAML-ARCH-009
+  statement: Compliance between the types named as roles in a collaboration use is a semantic variation point, determined by modelers or tools.
+  strength: note
+  section: 6.4.6 (Semantic Variation Points), p. 44
+  checkable: none
+- id: SOAML-MSG-001
+  statement: A Message Type has no owned operations.
+  strength: must
+  section: 6.4.8 [1], p. 48
+  checkable: static
+- id: SOAML-MSG-002
+  statement: A Message Type has no owned behaviors.
+  strength: must
+  section: 6.4.8 [2], p. 48
+  checkable: static
+- id: SOAML-MSG-003
+  statement: All owned attributes of a Message Type are public.
+  strength: must
+  section: 6.4.8 [3], p. 48
+  checkable: static
+- id: SOAML-MSG-004
+  statement: The owned attributes of a Message Type are of a primitive type or of a Message Type.
+  strength: must
+  section: 6.4.2 (Semantics), p. 38
+  checkable: static
+- id: SOAML-MSG-005
+  statement: Associations between a Message Type and other message or data types are aggregations.
+  strength: must
+  section: 6.4.8 (Examples), p. 49
+  checkable: static
+- id: SOAML-MSG-006
+  statement: A document-style service operation has at most one in, one out and one exception parameter (an out parameter marked as an exception), and every parameter is typed by a Message Type.
+  strength: must
+  section: 6.4.8 (Semantics), p. 48
+  checkable: static
+  applies_when: the operation is document style
+- id: SOAML-MSG-007
+  statement: An RPC-style service operation may have any number of in, inout and out parameters and a return value; the type of each is a primitive type or a data type.
+  strength: must
+  section: 6.4.8 (Semantics), pp. 48-49
+  checkable: static
+  applies_when: the operation is RPC style
+- id: SOAML-MSG-008
+  statement: 'Service operations use call by value: parameters are value objects or data transfer objects, and no service operation assumes anything about the identity or location of a parameter.'
+  strength: must
+  section: 6.4.8 (Semantics), p. 49
+  checkable: none
+- id: SOAML-MSG-009
+  statement: 'A Message Type holds domain or service content only: no header or protocol-specific information, and no dependency on the environment, location or information system of either party.'
+  strength: must
+  section: 6.4.8 (Description), pp. 47-48
+  checkable: none
+- id: SOAML-MSG-010
+  statement: A Message Type is generally applied to a data type; it may be applied to a class, whose identity is then ignored, because existing models often do not tell the two apart.
+  strength: should
+  section: 6.4.8 (Description, Note), p. 48
+  checkable: static
+- id: SOAML-MSG-011
+  statement: An Attachment marks a part of a message that is attached rather than embedded; it may carry an encoding and a media type of its own.
+  strength: note
+  section: 6.4.2, pp. 38-39
+  checkable: none
+- id: SOAML-MSG-012
+  statement: An identifying property helps distinguish instances of its classifier and correlate messages in long-running exchanges. A classifier may have several, and compound identifiers use a class or
+    data type with the flag set.
+  strength: note
+  section: 6.4.12, p. 58; 6.4.8, p. 48
+  checkable: none
+- id: SOAML-CAPA-001
+  statement: The source of an Expose is a Service Interface and its target is the exposed Capability.
+  strength: must
+  section: 6.4.7 (Description), p. 46
+  checkable: static
+- id: SOAML-CAPA-002
+  statement: Expose is not realization. Neither an Expose nor a Capability's realization of a Service Interface requires the two sides to have the same operations or properties.
+  strength: note
+  section: 6.4.7 (Semantics), p. 47
+  checkable: none
+- id: SOAML-CAPA-003
+  statement: Capabilities may have usage dependencies on each other, be organized into packages and layers, own behaviors that are the methods of their operations, and type parts of participants.
+  strength: note
+  section: 6.4.3, p. 40; 6.2.5, p. 29
+  checkable: none
+- id: SOAML-CAPA-004
+  statement: A participant that provides a service has a capability to provide it; different providers may have different capabilities for the same service.
+  strength: should
+  section: 6.1.3, p. 8
+  checkable: none
+- id: SOAML-CATG-001
+  statement: A Catalog contains only Categories, Category Values or other Catalogs.
+  strength: must
+  section: 7.3.1 [1], p. 84
+  checkable: static
+- id: SOAML-CATG-002
+  statement: The target of a Categorization is a Category or a Category Value.
+  strength: must
+  section: 7.3.2 [1], p. 85
+  checkable: static
+- id: SOAML-CATG-003
+  statement: A Category is contained in a Catalog.
+  strength: must
+  section: 7.3.3 [1], p. 86
+  checkable: static
+- id: SOAML-CATG-004
+  statement: The classifier of a Category Value is a Category.
+  strength: must
+  section: 7.3.4 [1], p. 88
+  checkable: static
+- id: SOAML-CATG-005
+  statement: Categorization is optional under the profile compliance point. The meaning of being in a Category is left to the modeler, and one element may be categorized in many ways.
+  strength: note
+  section: 2, p. 2; 7.3.1 (Semantics), p. 84
+  checkable: none
+- id: SOAML-CATG-006
+  statement: The properties of a Category are owned by that Category and cannot be reused by another Category, unlike free-form descriptors in the reusable asset specification.
+  strength: note
+  section: 7.3.5, p. 89
+  checkable: none
+- id: SOAML-MOTV-001
+  statement: A Motivation Realization is a realization from a behaviored classifier (a Service Contract is the example) to a business motivation element.
+  strength: must
+  section: 8.3.2, p. 92; 6.2.6, p. 32
+  checkable: static
+- id: SOAML-MOTV-002
+  statement: The link to the business motivation model is optional and assumes the motivation model is available as a profile or as a package that can be merged.
+  strength: note
+  section: 8.1, p. 91
+  checkable: none
+- id: SOAML-MOTV-003
+  statement: A Service or a Request may be connected to a business motivation element to show its intended value proposition or goals, and may carry constraints stating qualities of service.
+  strength: note
+  section: 6.4.18, p. 77; 6.4.14, p. 61
+  checkable: none
+- id: SOAML-BEHV-001
+  statement: A Milestone has an integer progress value.
+  strength: must
+  section: 6.4.9 (Attributes), p. 51
+  checkable: static
+- id: SOAML-BEHV-002
+  statement: A Milestone adds nothing to the functional meaning of a behavior; implementations may ignore it.
+  strength: note
+  section: 6.4.9, pp. 51-52
+  checkable: none
+- id: SOAML-CONF-001
+  statement: 'Compliance means UML at the L3 compliance level plus the extensions, as a profile or as a metamodel merged into UML. Three compliance points exist: P1 the profile, P2 the basic metamodel,
+    P3 the metamodel with the business motivation link. The categorization package is optional in P1.'
+  strength: note
+  section: 2, pp. 1-3
+  checkable: none
+- id: SOAML-CONF-002
+  statement: 'The standard leaves these to modelers and tools as semantic variation points: compliance between collaboration role types; behavioral compatibility of component realizations and of Requests
+    with Services; when a Service Interface''s constraints are evaluated and how its behaviors are checked.'
+  strength: note
+  section: 6.4.6, 6.4.10, 6.4.15, 6.4.17.1
+  checkable: none
+diagram_types:
+  Services Architecture:
+    defined_by: Informative examples (6.2.2, 6.2.4.7, 6.4.19; Figures 6.7, 6.8, 6.18, 6.55); no named diagram type
+    normative: false
+    admits:
+    - ServicesArchitecture
+    - ServiceContract
+    - CollaborationUse
+    - Participant
+    - Capability
+    - Service
+    - Request
+    - ServiceChannel
+    note: Community level shows participant roles joined by the service contracts they use. Participant level shows the roles inside one participant, with external roles in dashed outline (shared aggregation).
+  Service Contract:
+    defined_by: Informative examples (6.2.3, 6.2.4, 6.4.16; Figures 6.9, 6.12, 6.43)
+    normative: false
+    admits:
+    - ServiceContract
+    - Provider
+    - Consumer
+    - ServiceInterface
+    - Interface
+    note: Roles typed by interfaces, with the uses dependencies between them.
+  Choreography:
+    defined_by: Informative examples (6.2.3, 6.2.4; Figures 6.10, 6.11, 6.15, 6.44)
+    normative: false
+    admits:
+    - ServiceContract
+    - ServiceInterface
+    - Milestone
+    note: An interaction or activity owned by a contract or service interface.
+  Participants:
+    defined_by: Informative examples (6.1.5, 6.2.1.2, 6.2.4.1, 6.4.10; Figures 6.1, 6.6, 6.13, 6.37, 6.41)
+    normative: false
+    admits:
+    - Participant
+    - Agent
+    - Service
+    - Request
+    - ServiceInterface
+    - Interface
+    - ServiceChannel
+    - Capability
+    note: Participants with their service and request ports; ports on two participants may be connected.
+  Service Interface:
+    defined_by: Informative examples (6.2.1, 6.4.17; Figures 6.4, 6.48, 6.49)
+    normative: false
+    admits:
+    - ServiceInterface
+    - Interface
+    - Service
+    - Request
+    - MessageType
+    note: The service interface, its realized and used interfaces, its parts and its protocol.
+  Capabilities:
+    defined_by: 6.4.3 names this the "service dependencies diagram"; Figures 6.19 to 6.23
+    normative: false
+    admits:
+    - Capability
+    - ServiceInterface
+    - Participant
+    - Expose
+    note: Capabilities with usage dependencies, realized service interfaces and Expose dependencies. The only view the text names.
+  Service Data:
+    defined_by: Informative examples (6.4.2, 6.4.8, 6.4.12; Figures 6.31, 6.34, 6.35, 6.40)
+    normative: false
+    admits:
+    - MessageType
+    - Attachment
+    - Property
+    - DataType
+    note: Message types, attachments and identifying properties.
+  Categorization:
+    defined_by: Informative example (7.3.3; Figure 7.5)
+    normative: false
+    admits:
+    - Catalog
+    - Category
+    - CategoryValue
+    - Categorization
+    - Participant
+    note: Catalogs and categories applied to participants.
+  Business Motivation:
+    defined_by: Informative example (8.3.2; Figure 8.3)
+    normative: false
+    admits:
+    - MotivationElement
+    - MotivationRealization
+    - ServiceContract
+    note: Motivation elements and the realizations from a service contract.
+conventions:
+- rule: A participant, agent or capability is shown as a class or component carrying its keyword, or with its icon decoration in the name compartment. A participant that is only a specification also carries
+    the keyword "specification".
+  section: 6.4.1; 6.4.3; 6.4.10
+  normative: true
+- rule: A service interface, provider or consumer is shown as a class or interface carrying its keyword.
+  section: 6.4.4; 6.4.13; 6.4.17
+  normative: true
+- rule: A service or request is shown as a port carrying its keyword (the Request keyword in the text is "RequestPoint") or its icon decoration.
+  section: 6.4.14; 6.4.18
+  normative: true
+- rule: A request port's conjugate type may be shown with a tilde before the type name.
+  section: 6.2.1.2; 6.2.4.2
+  normative: false
+- rule: A service channel uses connector notation, optionally with its keyword.
+  section: 6.4.15
+  normative: true
+- rule: A service contract or services architecture is shown as a collaboration carrying its keyword or icon decoration.
+  section: 6.4.16; 6.4.19
+  normative: true
+- rule: In a participant's own services architecture, roles outside the participant are drawn with dashed outlines (shared aggregation in UML).
+  section: 6.2.2; 6.2.4.8
+  normative: false
+- rule: An expose is a dependency with its keyword. A message type and an attachment are data type notation with the keyword. An identifying property is shown as {isID=true} or with the keyword Id. A milestone
+    is a comment with the keyword.
+  section: 6.4.7; 6.4.8; 6.4.2; 6.4.12; 6.4.9
+  normative: true
+- rule: A catalog is a package, a category an artifact, a category value an instance specification, and a categorization a dependency, each with its keyword.
+  section: '7.3'
+  normative: true
+- rule: Showing the full port type and interfaces on every port is more than most diagrams need; usually only the port type is shown.
+  section: 6.2.1.2; 6.2.4.1
+  normative: false
+notes: 'SoaML is a UML profile (with an equivalent metamodel). It defines no diagram types or viewpoints, so the diagram_types entries are the informal views its own examples use, all marked normative false.
+  Concept names are the standard''s own names without spaces; synonyms record the other spellings the standard uses. Multiplicities are stated only where the standard states them, otherwise "not stated".
+  Constraint strengths: must for requirements, constraints and "shall"-style statements; should for guidance; note for options, method notes and variation points. checkable: static means a model alone can
+  show it; partial means a model alone shows only part of it; runtime means it concerns behavior; none means it cannot be checked from a model.'
+# data_types and notation: added to meet the guide shape (2026-11-04). Facts are OMG SoaML 1.0.1 only; each carries its section. Figures were read as rendered pages.
+data_types:
+  coverage: partial
+  inherits_from: uml-2
+  section: "6.4.8, 6.4.2"
+  note: SoaML defines no primitive types or enumerations of its own; it adds the message type and the attachment, and its attributes use the UML types Boolean, String, Integer, Signal and Expression.
+  types:
+    - {name: MessageType, kind: structured, section: "6.4.8", note: "pure data exchanged between parties; a UML data type (or class or signal) with no operations, no behaviors and only public attributes of a primitive type or another message type"}
+    - {name: Attachment, kind: other, section: "6.4.2", note: "a part of a message that travels beside it, with its own encoding (String) and mimeType (String) attributes"}
+  attributes:
+    coverage: some_concepts
+    where: concepts
+    note: Each concept entry that has attributes lists them under `attributes` (name, type, multiplicity, default where stated). The standard states that every other concept adds no attributes, so those entries carry none. Types named there (Boolean, String, Integer, Signal, Expression) are UML's; End appears only in the metamodel.
+notation:
+  coverage: normative
+  inherits_from: uml-2
+  section: "6.4 (the Notation part of each description); 7.3; 8.3.2; Figures 6.6, 6.7, 6.8, 6.9, 6.12, 6.19 to 6.23, 6.30, 6.34, 6.36, 6.42, 6.48, 6.49, 7.2 to 7.5, 8.3"
+  note: SoaML is drawn with UML notation; each concept adds a keyword in guillemets above the name or a small icon decoration, a few add a named shape or line, and no sizes or colors are stated.
+  default: {shape: "the box or symbol of the UML concept it extends, with the concept name as a keyword in guillemets above the name, or a small icon in the name compartment", line: "the line of the UML relationship it extends, with the keyword on the line where the standard names one", section: "6.4"}
+  # Only what differs from the default is listed. A small blue icon is shown in the standard for some concepts; its pixels are low resolution.
+  elements:
+    Participant: {shape: "UML class box: a name compartment on top of an empty or member compartment, with «Participant» above the name", marker: "or the Participant icon beside the name: a small box with two short tabs on its left edge and a small figure at its lower right; a participant that is only a specification also carries «specification»", label: "name; italic when abstract; ports sit on its border", section: "6.4.10 (Figures 6.6, 6.42)"}
+    Agent: {shape: "UML component or class box with «Agent» above the name", marker: "or the Agent icon in the name compartment: the component symbol (a small rectangle with two short tabs on its left edge) overlaid with a small person figure", label: "name", section: "6.4.1 (Figure 6.30)"}
+    Service: {shape: "small square on the border of the participant box (the UML port)", marker: "its icon is a small hollow circle joined by a short line to a small filled square; a ball (small circle on a stick) beside the port shows the provided interface", label: "«Service» name : Type, with the provided interface name beside the ball", section: "6.4.18 (Figures 6.6, 6.42)"}
+    Request: {shape: "small square on the border of the participant box (the UML port)", marker: "its icon is a small filled square joined by a short line to an open half circle; a socket (open half circle on a stick) beside the port shows the interface it requires", label: "«Request» name : ~Type, a tilde before the type name because the port is conjugate; the text names the keyword «RequestPoint»", section: "6.4.14 (Figures 6.6, 6.42)"}
+    Port: {same_as: "the UML port, with no new notation", section: "6.4.11"}
+    ServiceInterface: {shape: "UML class box with «ServiceInterface» above the name and an operations compartment below", marker: "a small circle in the upper right corner of the box; its role parts are small boxes inside, joined by a solid line", label: "name; italic when abstract", section: "6.4.17 (Figures 6.48, 6.49)"}
+    ServiceContract: {shape: "dashed ellipse with «ServiceContract» above its name at the top and a dashed horizontal line under the name; role boxes (small solid rectangles) inside, joined by solid lines", marker: "or the ServiceContract icon: a small blue glyph of rounded outlines with a small figure at its lower right", label: "role : Type inside each box", section: "6.4.16 (Figures 6.9, 6.12)"}
+    ServicesArchitecture: {shape: "dashed ellipse with «ServicesArchitecture» above its name at the top and a dashed horizontal line under the name; participant roles inside as small rectangles, solid for roles inside the participant and dashed for roles outside it, and each use of a service contract as a smaller dashed ellipse", marker: "or the ServicesArchitecture icon: a small oval outline with a small figure on a base line below it", label: "role : Type in a rectangle, name : Contract in an ellipse; the role name sits at the end of each dashed line to a contract", section: "6.4.19 (Figures 6.7, 6.8)"}
+    Provider: {shape: "UML class or interface box with «Provider» above the name and an operations compartment below", marker: "a small half circle in the upper right corner of the box", label: "name", section: "6.4.13 (Figure 6.12)"}
+    Consumer: {shape: "UML class or interface box with «Consumer» above the name and an operations compartment below", marker: "a small half circle in the upper right corner of the box", label: "name", section: "6.4.4 (Figure 6.12)"}
+    Collaboration: {same_as: "the UML collaboration, with no new notation", section: "6.4.5"}
+    CollaborationUse: {same_as: "the UML collaboration use, with no new notation", section: "6.4.6"}
+    Capability: {shape: "UML class or component box with «Capability» above the name and an operations compartment below", marker: "or the Capability icon in the name compartment: a small blue glyph of a page with text lines and a small figure at its lower right", label: "name; operations as + name(parameters) : type", section: "6.4.3 (Figures 6.19 to 6.23)"}
+    MessageType: {shape: "UML data type box with «MessageType» above the name; public attributes below, each written + name : Type", marker: "none", label: "an attachment is an attribute line with «Attachment» before its name; an identifying attribute carries «Id» before its name", section: "6.4.8 (Figure 6.34)"}
+    Attachment: {shape: "an attribute line inside a message type box, written + «Attachment» name : Type", marker: "none", label: "name : Type", section: "6.4.2 (Figure 6.34)"}
+    Property: {shape: "an attribute line carrying the keyword «Id» before its name, or the text {isID=true} after it", marker: "none", label: "+ «Id» name : Type", section: "6.4.12 (Figure 6.34)"}
+    Milestone: {shape: "UML note symbol: a rectangle with a folded upper right corner", marker: "a dashed line from the note to a small circle on the message or point of the behavior it marks", label: "«Milestone» above the signal name and its value, written Order <1> in the figure; the text gives the value in parentheses", section: "6.4.9 (Figure 6.36)"}
+    Catalog: {shape: "UML package symbol: a rectangle with a small tab at its upper left, with «Catalog» above the name", marker: "a small package icon before the name", label: "name", section: "7.3.1 (Figure 7.2)"}
+    Category: {shape: "UML class-style box with «Category» above the name and an attribute compartment below", marker: "a small icon before the name", label: "name; attributes written name : Type", section: "7.3.3 (Figure 7.4)"}
+    CategoryValue: {shape: "UML instance specification box: the name written instance : Category and underlined, a compartment of slots below", marker: "none", label: "slots written name = value", section: "7.3.4 (Figures 7.5, 7.6)"}
+  relationships:
+    ServiceChannel: {line: "solid line between a Request port and a Service port, drawn as a UML connector", target_end: "none", source_end: "none", label: "optional «ServiceChannel»", section: "6.4.15 (Figure 6.42)"}
+    ServiceChannelConnectsRequestAndService: {same_as: "ServiceChannel", section: "6.4.15"}
+    Expose: {line: "dashed line", target_end: "open arrowhead at the capability", source_end: "none", label: "«Expose»", section: "6.4.7 (Figure 6.23)"}
+    ServiceInterfaceExposesCapability: {same_as: "Expose", section: "6.4.7"}
+    ServiceInterfaceProvidesInterface: {line: "dashed line", target_end: "hollow triangle at the interface", source_end: "none", section: "6.2.1 (Figures 6.20, 6.49)"}
+    ServiceInterfaceRequiresInterface: {line: "dashed line", target_end: "open arrowhead at the interface", source_end: "none", label: "«use»", section: "6.2.1 (Figures 6.20, 6.49)"}
+    CapabilityRealizesServiceInterface: {line: "dashed line", target_end: "hollow triangle at the service interface", source_end: "none", section: "6.2.5 (Figure 6.20)"}
+    ParticipantRealizesCapability: {line: "dashed line", target_end: "hollow triangle at the capability", source_end: "none", section: "6.2.5 (Figure 6.21)"}
+    CapabilityUsesCapability: {line: "dashed line", target_end: "open arrowhead at the capability used", source_end: "none", label: "«use»", section: "6.2.5 (Figure 6.19)"}
+    ConsumerUsesProvider: {line: "dashed line", target_end: "open arrowhead at the provider", source_end: "none", label: "optional «use»", section: "6.4.4 (Figure 6.12)"}
+    ProviderMayUseConsumer: {line: "dashed line, the same one that joins the two interface boxes in Figure 6.12, which carries an open arrowhead at each end when both uses exist", target_end: "open arrowhead at the consumer", source_end: "none", section: "6.4.13 (Figure 6.12)"}
+    ParticipantRealizesParticipant: {line: "dashed line", target_end: "hollow triangle at the specification participant", source_end: "none", section: "6.4.10 (Figure 6.42)"}
+    CollaborationUseBindsRoleToPart: {line: "dashed line from the collaboration-use ellipse to the part", target_end: "none", source_end: "none", label: "the role name at the part end", section: "6.4.19 (Figure 6.7)"}
+    MessageTypeAggregatesType: {line: "solid line between two type boxes", target_end: "open arrowhead at the aggregated type", source_end: "diamond at the message type end", label: "role name and multiplicity at the ends", section: "6.4.8 (Figure 6.34)"}
+    Categorization: {line: "dashed line from the categorized element", target_end: "open arrowhead at the category or category value", source_end: "none", label: "optional «Categorization»", section: "7.3.2 (Figure 7.3)"}
+    ElementIsCategorizedBy: {same_as: "Categorization", section: "7.3.2"}
+    CatalogContains: {line: "solid line from the catalog to the contained category, category value or catalog", target_end: "none", source_end: "a circle with a plus sign at the catalog end", section: "7.3.1 (Figure 7.5)"}
+    MotivationRealization: {line: "dashed line, the UML realization notation", target_end: "toward the motivation element realized", source_end: "none", label: "«motivationRealization»", section: "8.3.2 (Figure 8.3)"}
+    MotivationRealizationRealizesMotivationElement: {same_as: "MotivationRealization", section: "8.3.2"}
+  # Placeholders for elements defined elsewhere: the reusable asset specification (7.3.5) and the business motivation model (8.3.1).
+  not_specified: [NodeDescriptor, FreeFormDescriptor, FreeFormValue, MotivationElement]
+
+layout:
+  basis: Our conventions, not this standard's. Sizes and spacing come from the shared layout standard;
+    this block says only which size class each concept takes and how each diagram type is arranged.
+  element_types:
+    Agent: box
+    Capability: box
+    Category: box
+    CategoryValue: box
+    Consumer: box
+    MessageType: box
+    Participant: box
+    Provider: box
+    ServiceInterface: box
+    Collaboration: large-box
+    CollaborationUse: large-box
+    ServiceContract: large-box
+    ServicesArchitecture: large-box
+    Catalog: container
+    Milestone: note
+    Port: attached-item
+    Request: attached-item
+    Service: attached-item
+  no_element_type:
+    drawn_as_text:
+      reason: Shown as an attribute line inside a message type box, so there is no symbol to size.
+      concepts:
+      - Attachment
+      - Property
+    drawn_as_line:
+      reason: The relationship concepts are lines, so there is no symbol to size.
+      concepts:
+      - Expose
+      - MotivationRealization
+      - ServiceChannel
+      - Categorization
+    not_drawn:
+      reason: The standard gives these no drawing of their own.
+      concepts:
+      - NodeDescriptor
+      - FreeFormDescriptor
+      - FreeFormValue
+      - MotivationElement
+  exceptions: {}
+  diagram_types:
+    Services Architecture:
+      arrangement: graph
+      title: frame-header
+      route: straight
+      channels:
+        claimed:
+          line_style: Solid against dashed separates a service channel from a role binding or a use (6.4.15, 6.2.1).
+        free:
+        - fill
+        - border
+        - border_width
+        - line_color
+        - font_color
+        - opacity
+        - icon
