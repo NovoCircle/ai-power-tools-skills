@@ -1316,9 +1316,9 @@ notation:
   not_specified: [NodeDescriptor, FreeFormDescriptor, FreeFormValue, MotivationElement]
 
 layout:
-  basis: Our conventions, not this standard's. Sizes and spacing come from the shared layout standard; this block says only which size class each concept takes and how each diagram type is arranged.
-  element_types:   # concept -> size class, for every concept the notation draws as a symbol
-    # box: the class, component or data type box with a keyword above the name
+  basis: Our conventions, not this standard's. Sizes and spacing come from the shared layout standard;
+    this block says only which size class each concept takes and how each diagram type is arranged.
+  element_types:
     Agent: box
     Capability: box
     Category: box
@@ -1328,28 +1328,30 @@ layout:
     Participant: box
     Provider: box
     ServiceInterface: box
-    # large-box: ellipses (dashed, with the keyword) that hold roles
     Collaboration: large-box
     CollaborationUse: large-box
     ServiceContract: large-box
     ServicesArchitecture: large-box
-    # container: the package symbol
     Catalog: container
-    # note: the note symbol
     Milestone: note
-    # attached-item: small squares on the border of a participant
     Port: attached-item
     Request: attached-item
     Service: attached-item
-  no_element_type:   # concepts that take no size class, each group with its reason
+  no_element_type:
     drawn_as_text:
       reason: Shown as an attribute line inside a message type box, so there is no symbol to size.
-      concepts: [Attachment, Property]
+      concepts:
+      - Attachment
+      - Property
     drawn_as_line:
       reason: The relationship concepts are lines, so there is no symbol to size.
-      concepts: [Expose, MotivationRealization, ServiceChannel, Categorization]
+      concepts:
+      - Expose
+      - MotivationRealization
+      - ServiceChannel
+      - Categorization
     not_drawn:
       reason: The standard gives these no drawing of their own.
       concepts: see `notation.not_specified`
   exceptions: {}
-  diagram_types: {}   # the standard defines no diagram type; its nine informal views all take the defaults (graph, frame-header)
+  diagram_types: {}
