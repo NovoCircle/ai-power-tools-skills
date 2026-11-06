@@ -479,13 +479,13 @@ Covers: File and directory naming
 
 **Ask:** "Start the ruleset for UML 2.5. What do I call the folder and the file?"
 
-**Passes when:** The reply names the directory `ruleset-uml25` (lowercase, hyphen) and the file
-`uml25_rules.yaml` (lowercase, underscore), one YAML file for the whole language.
+**Passes when:** The reply names the folder `rulesets/uml-2` (the language's id) and the file
+`uml-2_rules.yaml` (the id followed by `_rules.yaml`), one YAML file for the whole language.
 
 **Check:**
 
 ```check
-reply: says: the directory is ruleset-uml25 and the file is uml25_rules.yaml
+reply: says: the folder is rulesets/uml-2 and the file is uml-2_rules.yaml
 reply: not: says to use one file per rule
 ```
 
@@ -952,8 +952,8 @@ TC-09 and TC-17 with the sub-headings that carry their promises.
   it", and the Ruleset Catalog is the library's internal roadmap ("Planned" entries). A customer cannot
   publish to the bundle. The catalog's status column also dates itself ("bundle 1.3.0") against other
   skills' version numbers.
-- The skill tells the reader to read `ruleset-archimate31/archimate31_rules.yaml` first. It ships in
-  the library manifest, but its location relative to an installed skill is not stated.
+- The skill tells the reader to read `rulesets/archimate-3/archimate-3_rules.yaml` first. It ships in
+  the plugin, but its location relative to an installed skill is not stated.
 - Tool naming is mixed: prose says `validate_model` (server 1.2.0) while the test code calls
   `ea_validate(operation="audit", ...)`. Where the `mode: "demo_validation"` parameter goes is not
   stated; TC-07 assumes a key beside `rules_path_or_content`.

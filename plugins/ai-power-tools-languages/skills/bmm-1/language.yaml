@@ -1,0 +1,661 @@
+# Business Motivation Model (BMM) 1.3: language file (schema_version 1).
+# Written from the standard only. Concept names are the standard's own UML names (no spaces).
+schema_version: 1
+id: bmm-1
+name: Business Motivation Model (BMM)
+owner: {name: Object Management Group, kind: standards-body}
+standard:
+  name: Business Motivation Model
+  version: '1.3'
+  status: published
+  reference: OMG formal/15-05-19 (specification, April 2015); normative machine-readable model dtc/14-11-08 (BMM.xmi); https://www.omg.org/spec/BMM/1.3/
+concepts:
+  source: 'OMG BMM 1.3: concepts catalog (clause 9.2) and relationship catalog (9.5, 9.6), with generalizations and multiplicities from the normative machine-readable model dtc/14-11-08. 33 element concepts; the 34th class, MotivationElement, is a bookkeeping superclass that gives every concept a name and a description and is not listed here.'
+  elements:
+    Vision: {display: Vision, category: Ends, specializes: End, attributes: [{name: name}, {name: description}]}
+    End: {display: End, category: Ends, attributes: [{name: name}, {name: description}]}
+    DesiredResult: {display: Desired Result, category: Ends, specializes: End, attributes: [{name: name}, {name: description}]}
+    Goal: {display: Goal, category: Ends, specializes: DesiredResult, attributes: [{name: name}, {name: description}]}
+    Objective: {display: Objective, category: Ends, specializes: DesiredResult, attributes: [{name: name}, {name: description}]}
+    DesiredResultCategory: {display: Desired Result Category, category: Ends, attributes: [{name: name}, {name: description}]}
+    Means: {display: Means, category: Means, attributes: [{name: name}, {name: description}]}
+    Mission: {display: Mission, category: Means, specializes: Means, attributes: [{name: name}, {name: description}]}
+    CourseOfAction: {display: Course of Action, category: Means, specializes: Means, attributes: [{name: name}, {name: description}]}
+    Strategy: {display: Strategy, category: Means, specializes: CourseOfAction, attributes: [{name: name}, {name: description}]}
+    Tactic: {display: Tactic, category: Means, specializes: CourseOfAction, attributes: [{name: name}, {name: description}]}
+    Directive: {display: Directive, category: Means, specializes: Means, attributes: [{name: name}, {name: description}]}
+    BusinessPolicy: {display: Business Policy, category: Means, specializes: Directive, attributes: [{name: name}, {name: description}]}
+    BusinessRule: {display: Business Rule, category: Means, specializes: Directive, attributes: [{name: name}, {name: description}]}
+    Influencer: {display: Influencer, category: Influencers, attributes: [{name: name}, {name: description}]}
+    InternalInfluencer: {display: Internal Influencer, category: Influencers, specializes: Influencer, attributes: [{name: name}, {name: description}]}
+    ExternalInfluencer: {display: External Influencer, category: Influencers, specializes: Influencer, attributes: [{name: name}, {name: description}]}
+    Regulation: {display: Regulation, category: Influencers, specializes: ExternalInfluencer, attributes: [{name: name}, {name: description}]}
+    InfluencerCategory: {display: Influencer Category, category: Influencers, attributes: [{name: name}, {name: description}]}
+    InfluencingOrganization: {display: Influencing Organization, category: Influencers, attributes: [{name: name}, {name: description}]}
+    OrganizationCategory: {display: Organization Category, category: Influencers, attributes: [{name: name}, {name: description}]}
+    Assessment: {display: Assessment, category: Assessments, attributes: [{name: name}, {name: description}]}
+    AssessmentCategory: {display: Assessment Category, category: Assessments, attributes: [{name: name}, {name: description}]}
+    PotentialImpact: {display: Potential Impact, category: Assessments, attributes: [{name: name}, {name: description}]}
+    Risk: {display: Risk, category: Assessments, specializes: PotentialImpact, attributes: [{name: name}, {name: description}]}
+    PotentialReward: {display: Potential Reward, category: Assessments, specializes: PotentialImpact, attributes: [{name: name}, {name: description}]}
+    OrganizationUnit: {display: Organization Unit, category: Placeholders, attributes: [{name: name}, {name: description}]}
+    BusinessProcess: {display: Business Process, category: Placeholders, attributes: [{name: name}, {name: description}]}
+    Asset: {display: Asset, category: Placeholders, attributes: [{name: name}, {name: description}]}
+    FixedAsset: {display: Fixed Asset, category: Placeholders, specializes: Asset, attributes: [{name: name}, {name: description}]}
+    Resource: {display: Resource, category: Placeholders, specializes: Asset, attributes: [{name: name}, {name: description}]}
+    Offering: {display: Offering, category: Placeholders, specializes: FixedAsset, attributes: [{name: name}, {name: description}]}
+    Liability: {display: Liability, category: Placeholders, attributes: [{name: name}, {name: description}]}
+  relationships:
+    AssessmentAffectsAchievementOfEnd: {display: Assessment affects achievement of End, category: relationship}
+    AssessmentAffectsEmploymentOfMeans: {display: Assessment affects employment of Means, category: relationship}
+    AssessmentsJudgmentOfInfluencer: {display: Assessment judges Influencer, category: relationship}
+    AssessmentIdentifiesPotentialImpact: {display: Assessment identifies Potential Impact, category: relationship}
+    AssessmentProvidesImpetusForDirective: {display: Assessment provides impetus for Directive, category: relationship}
+    PotentialImpactProvidesImpetusForDirective: {display: Potential Impact provides impetus for Directive, category: relationship}
+    UsingAssessmentUsesUsedAssessment: {display: Assessment uses Assessment, category: relationship}
+    AssessmentCategoryCategorizesAssessment: {display: Assessment Category categorizes Assessment, category: relationship}
+    BroaderAssessmentCategoryCategorizesNarrowerAssessmentCategory: {display: broader Assessment Category categorizes narrower Assessment Category, category: relationship}
+    InfluencerCategoryCategorizesInfluencer: {display: Influencer Category categorizes Influencer, category: relationship}
+    BroaderInfluencerCategoryCategorizesNarrowerInfluencerCategory: {display: broader Influencer Category categorizes narrower Influencer Category, category: relationship}
+    InfluencingOrganizationIsSourceOfInfluencer: {display: Influencing Organization is source of Influencer, category: relationship}
+    OrganizationCategoryCategorizesInfluencingOrganization: {display: Organization Category categorizes Influencing Organization, category: relationship}
+    BroaderOrganizationCategoryCategorizesNarrowerOrganizationCategory: {display: broader Organization Category categorizes narrower Organization Category, category: relationship}
+    OrganizationUnitActsAsInfluencingOrganization: {display: Organization Unit acts as Influencing Organization, category: relationship}
+    OrganizationUnitRecognizesInfluencer: {display: Organization Unit recognizes Influencer, category: relationship}
+    OrganizationUnitMakesAssessment: {display: Organization Unit makes Assessment, category: relationship}
+    OrganizationUnitDefinesEnd: {display: Organization Unit defines End, category: relationship}
+    OrganizationUnitEstablishesMeans: {display: Organization Unit establishes Means, category: relationship}
+    StrategyDeterminesOrganizationUnit: {display: Strategy determines Organization Unit, category: relationship}
+    OrganizationUnitIsResponsibleForBusinessProcess: {display: Organization Unit is responsible for Business Process, category: relationship}
+    OrganizationUnitIsResponsibleForAsset: {display: Organization Unit is responsible for Asset, category: relationship}
+    OrganizationUnitIsResponsibleForLiability: {display: Organization Unit is responsible for Liability, category: relationship}
+    GoalAmplifiesVision: {display: Goal amplifies Vision, category: relationship}
+    ObjectiveQuantifiesGoal: {display: Objective quantifies Goal, category: relationship}
+    MissionMakesOperativeVision: {display: Mission makes operative Vision, category: relationship}
+    StrategyIsAComponentOfThePlanForMission: {display: Strategy is a component of the plan for Mission, category: relationship}
+    TacticImplementsStrategy: {display: Tactic implements Strategy, category: relationship}
+    BroaderCourseOfActionIncludesMoreSpecificCourseOfAction: {display: broader Course of Action includes more specific Course of Action, category: relationship}
+    EnablingCourseOfActionEnablesEnabledCourseOfAction: {display: enabling Course of Action enables enabled Course of Action, category: relationship}
+    CourseOfActionChannelsEffortsTowardsDesiredResult: {display: Course of Action channels efforts towards Desired Result, category: relationship}
+    DirectiveGovernsCourseOfAction: {display: Directive governs Course of Action, category: relationship}
+    CourseOfActionIsFormulatedBasedOnDirective: {display: Course of Action is formulated based on Directive, category: relationship}
+    DirectiveSupportsAchievementOfDesiredResult: {display: Directive supports achievement of Desired Result, category: relationship}
+    BroaderDesiredResultIncludesMoreSpecificDesiredResult: {display: broader Desired Result includes more specific Desired Result, category: relationship}
+    DesiredResultCategoryCategorizesDesiredResult: {display: Desired Result Category categorizes Desired Result, category: relationship}
+    BroaderDesiredResultCategoryIncludesMoreSpecificDesiredResultCategory: {display: broader Desired Result Category includes more specific Desired Result Category, category: relationship}
+    BusinessPolicyIsBasisForBusinessRule: {display: Business Policy is basis for Business Rule, category: relationship}
+    BroaderBusinessPolicyIncludesMoreSpecificBusinessPolicy: {display: broader Business Policy includes more specific Business Policy, category: relationship}
+    BusinessPolicyGovernsBusinessProcess: {display: Business Policy governs Business Process, category: relationship}
+    BusinessRuleGuidesBusinessProcess: {display: Business Rule guides Business Process, category: relationship}
+    TacticEffectsEnforcementLevelOfBusinessRule: {display: Tactic effects enforcement level of Business Rule, category: relationship}
+    DirectiveActsAsRegulation: {display: Directive acts as Regulation, category: relationship}
+    BusinessProcessRealizesCourseOfAction: {display: Business Process realizes Course of Action, category: relationship}
+    BusinessProcessDeliversOffering: {display: Business Process delivers Offering, category: relationship}
+    BusinessProcessManagesAsset: {display: Business Process manages Asset, category: relationship}
+    CourseOfActionDeploysAsset: {display: Course of Action deploys Asset, category: relationship}
+    CourseOfActionDefinesOffering: {display: Course of Action defines Offering, category: relationship}
+    CourseOfActionDischargesLiability: {display: Course of Action discharges Liability, category: relationship}
+    DirectiveGovernsUseOfAsset: {display: Directive governs use of Asset, category: relationship}
+    FixedAssetProvidesResource: {display: Fixed Asset provides Resource, category: relationship}
+    LiabilityClaimsResource: {display: Liability claims Resource, category: relationship}
+    OfferingRequiresResource: {display: Offering requires Resource, category: relationship}
+    OfferingUsesFixedAsset: {display: Offering uses Fixed Asset, category: relationship}
+relationships:
+- name: AssessmentAffectsAchievementOfEnd
+  source: Assessment
+  target: End
+  roles: {source: judgingAssessment, target: affectedEnd}
+  multiplicity: {targets_per_source: '*', sources_per_target: '*'}
+  section: 8.5.5; 8.5.6
+- name: AssessmentAffectsEmploymentOfMeans
+  source: Assessment
+  target: Means
+  roles: {source: judgingAssessment, target: affectedMeans}
+  multiplicity: {targets_per_source: '*', sources_per_target: '*'}
+  section: 8.5.5; 8.5.6
+- name: AssessmentsJudgmentOfInfluencer
+  source: Assessment
+  target: Influencer
+  roles: {source: judgingAssessment, target: judgedInfluencer}
+  multiplicity: {targets_per_source: 1..*, sources_per_target: '*'}
+  section: 8.5.5
+- name: AssessmentIdentifiesPotentialImpact
+  source: Assessment
+  target: PotentialImpact
+  roles: {source: identifyingAssessment, target: identifiedPotentialImpact}
+  multiplicity: {targets_per_source: 1..*, sources_per_target: '*'}
+  section: 8.5.7
+- name: AssessmentProvidesImpetusForDirective
+  source: Assessment
+  target: Directive
+  roles: {source: motivatingAssessment, target: motivatedDirective}
+  multiplicity: {targets_per_source: '*', sources_per_target: '*'}
+  section: 8.5.6
+- name: PotentialImpactProvidesImpetusForDirective
+  source: PotentialImpact
+  target: Directive
+  roles: {source: motivatingPotentialImpact, target: motivatedDirective}
+  multiplicity: {targets_per_source: '*', sources_per_target: '*'}
+  section: 7.3.6; 8.5.7
+- name: UsingAssessmentUsesUsedAssessment
+  source: Assessment
+  target: Assessment
+  roles: {source: usingAssessment, target: usedAssessment}
+  multiplicity: {targets_per_source: '*', sources_per_target: '*'}
+  section: 8.5.6.1
+- name: AssessmentCategoryCategorizesAssessment
+  source: AssessmentCategory
+  target: Assessment
+  roles: {source: categorizingAssessmentCategory, target: categorizedAssessment}
+  multiplicity: {targets_per_source: '*', sources_per_target: '*'}
+  section: 8.5.6.2
+- name: BroaderAssessmentCategoryCategorizesNarrowerAssessmentCategory
+  source: AssessmentCategory
+  target: AssessmentCategory
+  roles: {source: broaderAssessmentCategory, target: narrowerAssessmentCategory}
+  multiplicity: {targets_per_source: '*', sources_per_target: '*'}
+  section: 8.5.6.2; 8.7
+- name: InfluencerCategoryCategorizesInfluencer
+  source: InfluencerCategory
+  target: Influencer
+  roles: {source: categorizingInfluencerCategory, target: categorizedInfluencer}
+  multiplicity: {targets_per_source: '*', sources_per_target: '*'}
+  section: 8.5.2
+- name: BroaderInfluencerCategoryCategorizesNarrowerInfluencerCategory
+  source: InfluencerCategory
+  target: InfluencerCategory
+  roles: {source: broaderInfluencerCategory, target: narrowerInfluencerCategory}
+  multiplicity: {targets_per_source: '*', sources_per_target: '*'}
+  section: 8.5.2; 8.7
+- name: InfluencingOrganizationIsSourceOfInfluencer
+  source: InfluencingOrganization
+  target: Influencer
+  roles: {source: sourceInfluencingOrganization, target: providedInfluencer}
+  multiplicity: {targets_per_source: '*', sources_per_target: '*'}
+  section: 8.5.3
+- name: OrganizationCategoryCategorizesInfluencingOrganization
+  source: OrganizationCategory
+  target: InfluencingOrganization
+  roles: {source: categorizingOrganizationCategory, target: categorizedInfluencingOrganization}
+  multiplicity: {targets_per_source: '*', sources_per_target: '*'}
+  section: 8.5.3
+- name: BroaderOrganizationCategoryCategorizesNarrowerOrganizationCategory
+  source: OrganizationCategory
+  target: OrganizationCategory
+  roles: {source: broaderOrganizationCategory, target: narrowerOrganizationCategory}
+  multiplicity: {targets_per_source: '*', sources_per_target: '*'}
+  section: 8.5.3; 8.7
+- name: OrganizationUnitActsAsInfluencingOrganization
+  source: OrganizationUnit
+  target: InfluencingOrganization
+  roles: {source: influencingOrganizationUnit, target: internalInfluencingOrganization}
+  multiplicity: {targets_per_source: '*', sources_per_target: 0..1}
+  section: 8.5.3
+- name: OrganizationUnitRecognizesInfluencer
+  source: OrganizationUnit
+  target: Influencer
+  roles: {source: recognizingOrganizationUnit, target: recognizedInfluencer}
+  multiplicity: {targets_per_source: '*', sources_per_target: '*'}
+  section: 8.5.1; 8.6.1
+- name: OrganizationUnitMakesAssessment
+  source: OrganizationUnit
+  target: Assessment
+  roles: {source: assessingOrganizationUnit, target: madeAssessment}
+  multiplicity: {targets_per_source: '*', sources_per_target: 1..*}
+  section: 8.5.6; 8.6.1
+- name: OrganizationUnitDefinesEnd
+  source: OrganizationUnit
+  target: End
+  roles: {source: definingOrganizationUnit, target: definedEnd}
+  multiplicity: {targets_per_source: '*', sources_per_target: 1..*}
+  section: 8.2; 8.6.1
+- name: OrganizationUnitEstablishesMeans
+  source: OrganizationUnit
+  target: Means
+  roles: {source: establishingOrganizationUnit, target: establishedMeans}
+  multiplicity: {targets_per_source: '*', sources_per_target: '*'}
+  section: 8.3; 8.6.1
+- name: StrategyDeterminesOrganizationUnit
+  source: Strategy
+  target: OrganizationUnit
+  roles: {source: determiningStrategy, target: determinedOrganizationUnit}
+  multiplicity: {targets_per_source: '*', sources_per_target: '*'}
+  section: 7.3.8; 8.6.1
+- name: OrganizationUnitIsResponsibleForBusinessProcess
+  source: OrganizationUnit
+  target: BusinessProcess
+  roles: {source: responsibleOrganizationUnit, target: managedBusinessProcess}
+  multiplicity: {targets_per_source: '*', sources_per_target: '*'}
+  section: 7.3.9; 8.6.2
+- name: OrganizationUnitIsResponsibleForAsset
+  source: OrganizationUnit
+  target: Asset
+  roles: {source: responsibleOrganizationUnit, target: managedAsset}
+  multiplicity: {targets_per_source: '*', sources_per_target: '*'}
+  section: 8.6.1; 8.6.3
+- name: OrganizationUnitIsResponsibleForLiability
+  source: OrganizationUnit
+  target: Liability
+  roles: {source: responsibleOrganizationUnit, target: managedLiability}
+  multiplicity: {targets_per_source: '*', sources_per_target: '*'}
+  section: 8.6.1; 8.6.3
+- name: GoalAmplifiesVision
+  source: Goal
+  target: Vision
+  roles: {source: amplifyingGoal, target: amplifiedVision}
+  multiplicity: {targets_per_source: 0..1, sources_per_target: '*'}
+  section: 8.2.2; 8.2.4
+- name: ObjectiveQuantifiesGoal
+  source: Objective
+  target: Goal
+  roles: {source: quantifyingObjective, target: quantifiedGoal}
+  multiplicity: {targets_per_source: '*', sources_per_target: '*'}
+  section: 8.2.5
+- name: MissionMakesOperativeVision
+  source: Mission
+  target: Vision
+  roles: {source: deliveringMission, target: operativeVision}
+  multiplicity: {targets_per_source: 0..1, sources_per_target: '*'}
+  section: 8.2.2; 8.3.2
+- name: StrategyIsAComponentOfThePlanForMission
+  source: Strategy
+  target: Mission
+  roles: {source: missionComponent, target: plannedMission}
+  multiplicity: {targets_per_source: '*', sources_per_target: '*'}
+  section: 8.3.2; 8.3.4
+- name: TacticImplementsStrategy
+  source: Tactic
+  target: Strategy
+  roles: {source: implementingTactic, target: implementedStrategy}
+  multiplicity: {targets_per_source: '*', sources_per_target: '*'}
+  section: 8.3.5
+- name: BroaderCourseOfActionIncludesMoreSpecificCourseOfAction
+  source: CourseOfAction
+  target: CourseOfAction
+  roles: {source: broaderCourseOfAction, target: moreSpecificCourseOfAction}
+  multiplicity: {targets_per_source: '*', sources_per_target: '*'}
+  section: 8.3.12.1; 8.7
+- name: EnablingCourseOfActionEnablesEnabledCourseOfAction
+  source: CourseOfAction
+  target: CourseOfAction
+  roles: {source: enablingCourseOfAction, target: enabledCourseOfAction}
+  multiplicity: {targets_per_source: '*', sources_per_target: '*'}
+  section: 8.3.12.2; 8.7
+- name: CourseOfActionChannelsEffortsTowardsDesiredResult
+  source: CourseOfAction
+  target: DesiredResult
+  roles: {source: supportingCourseOfAction, target: supportedDesiredResult}
+  multiplicity: {targets_per_source: '*', sources_per_target: '*'}
+  section: 8.2.3; 8.3.3.1
+- name: DirectiveGovernsCourseOfAction
+  source: Directive
+  target: CourseOfAction
+  roles: {source: governingDirective, target: governedCourseOfAction}
+  multiplicity: {targets_per_source: '*', sources_per_target: '*'}
+  section: 8.3.6
+- name: CourseOfActionIsFormulatedBasedOnDirective
+  source: CourseOfAction
+  target: Directive
+  roles: {source: derivedCourseOfAction, target: baseDirective}
+  multiplicity: {targets_per_source: '*', sources_per_target: '*'}
+  section: 8.3.6
+- name: DirectiveSupportsAchievementOfDesiredResult
+  source: Directive
+  target: DesiredResult
+  roles: {source: supportingDirective, target: supportedDesiredResult}
+  multiplicity: {targets_per_source: '*', sources_per_target: '*'}
+  section: 8.3.6
+- name: BroaderDesiredResultIncludesMoreSpecificDesiredResult
+  source: DesiredResult
+  target: DesiredResult
+  roles: {source: broaderDesiredResult, target: moreSpecificDesiredResult}
+  multiplicity: {targets_per_source: '*', sources_per_target: '*'}
+  section: 8.2.6.1; 8.7
+- name: DesiredResultCategoryCategorizesDesiredResult
+  source: DesiredResultCategory
+  target: DesiredResult
+  roles: {source: categorizingDesiredResultCategory, target: categorizedDesiredResult}
+  multiplicity: {targets_per_source: '*', sources_per_target: '*'}
+  section: 8.2.3.1
+- name: BroaderDesiredResultCategoryIncludesMoreSpecificDesiredResultCategory
+  source: DesiredResultCategory
+  target: DesiredResultCategory
+  roles: {source: broaderDesiredResultCategory, target: moreSpecificDesiredResultCategory}
+  multiplicity: {targets_per_source: '*', sources_per_target: '*'}
+  section: 8.2.3.1; 8.7
+- name: BusinessPolicyIsBasisForBusinessRule
+  source: BusinessPolicy
+  target: BusinessRule
+  roles: {source: baseBusinessPolicy, target: derivedBusinessRule}
+  multiplicity: {targets_per_source: '*', sources_per_target: '*'}
+  section: 8.3.10; 8.3.11
+- name: BroaderBusinessPolicyIncludesMoreSpecificBusinessPolicy
+  source: BusinessPolicy
+  target: BusinessPolicy
+  roles: {source: broaderBusinessPolicy, target: moreSpecificBusinessPolicy}
+  multiplicity: {targets_per_source: '*', sources_per_target: '*'}
+  section: 8.3.12.3; 8.7
+- name: BusinessPolicyGovernsBusinessProcess
+  source: BusinessPolicy
+  target: BusinessProcess
+  roles: {source: governingBusinessPolicy, target: governedBusinessProcess}
+  multiplicity: {targets_per_source: '*', sources_per_target: '*'}
+  section: 7.3.9; 8.3.10; 8.6.2
+- name: BusinessRuleGuidesBusinessProcess
+  source: BusinessRule
+  target: BusinessProcess
+  roles: {source: guidingBusinessRule, target: guidedBusinessProcess}
+  multiplicity: {targets_per_source: '*', sources_per_target: '*'}
+  section: 7.3.9; 8.3.11; 8.6.2
+- name: TacticEffectsEnforcementLevelOfBusinessRule
+  source: Tactic
+  target: BusinessRule
+  roles: {source: effectingTactic, target: enforcedBusinessRule}
+  multiplicity: {targets_per_source: '*', sources_per_target: '*'}
+  section: 8.3.7
+- name: DirectiveActsAsRegulation
+  source: Directive
+  target: Regulation
+  roles: {source: regulatingDirective, target: directiveRegulation}
+  multiplicity: {targets_per_source: '*', sources_per_target: 0..1}
+  section: 8.3.8; 8.5.4
+- name: BusinessProcessRealizesCourseOfAction
+  source: BusinessProcess
+  target: CourseOfAction
+  roles: {source: realizingBusinessProcess, target: realizedCourseOfAction}
+  multiplicity: {targets_per_source: '*', sources_per_target: '*'}
+  section: 7.3.9; 8.6.2
+- name: BusinessProcessDeliversOffering
+  source: BusinessProcess
+  target: Offering
+  roles: {source: deliveringBusinessProcess, target: deliveredOffering}
+  multiplicity: {targets_per_source: '*', sources_per_target: '*'}
+  section: 8.6.3
+- name: BusinessProcessManagesAsset
+  source: BusinessProcess
+  target: Asset
+  roles: {source: managingBusinessProcess, target: managedAsset}
+  multiplicity: {targets_per_source: '*', sources_per_target: '*'}
+  section: 8.6.3
+- name: CourseOfActionDeploysAsset
+  source: CourseOfAction
+  target: Asset
+  roles: {source: deployingCourseOfAction, target: deployedAsset}
+  multiplicity: {targets_per_source: '*', sources_per_target: '*'}
+  section: 8.6.3
+- name: CourseOfActionDefinesOffering
+  source: CourseOfAction
+  target: Offering
+  roles: {source: definingCourseOfAction, target: definedOffering}
+  multiplicity: {targets_per_source: '*', sources_per_target: '*'}
+  section: 8.6.3
+- name: CourseOfActionDischargesLiability
+  source: CourseOfAction
+  target: Liability
+  roles: {source: dischargingCourseOfAction, target: dischargedLiability}
+  multiplicity: {targets_per_source: '*', sources_per_target: '*'}
+  section: 8.6.3
+- name: DirectiveGovernsUseOfAsset
+  source: Directive
+  target: Asset
+  roles: {source: governingDirective, target: governedAsset}
+  multiplicity: {targets_per_source: '*', sources_per_target: '*'}
+  section: 8.6.3
+- name: FixedAssetProvidesResource
+  source: FixedAsset
+  target: Resource
+  roles: {source: providingFixedAsset, target: providedResource}
+  multiplicity: {targets_per_source: '*', sources_per_target: '*'}
+  section: 8.6.3
+- name: LiabilityClaimsResource
+  source: Liability
+  target: Resource
+  roles: {source: claimingLiability, target: claimedResource}
+  multiplicity: {targets_per_source: '*', sources_per_target: '*'}
+  section: 8.6.3
+- name: OfferingRequiresResource
+  source: Offering
+  target: Resource
+  roles: {source: requiringOffering, target: requiredResource}
+  multiplicity: {targets_per_source: '*', sources_per_target: '*'}
+  section: 8.6.3
+- name: OfferingUsesFixedAsset
+  source: Offering
+  target: FixedAsset
+  roles: {source: usingOffering, target: usedFixedAsset}
+  multiplicity: {targets_per_source: '*', sources_per_target: '*'}
+  section: 8.6.3
+constraints:
+- id: BMM-CARD-001
+  statement: Every Assessment judges at least one Influencer and affects the achievement of at least one End or the employment of at least one Means.
+  strength: should
+  section: 9.2 (Assessment entry), p. 59
+- id: BMM-CARD-002
+  statement: Every Assessment identifies at least one Potential Impact.
+  strength: should
+  section: 9.2 (Assessment entry), p. 59
+- id: BMM-CARD-003
+  statement: Every Assessment is made by at least one Organization Unit.
+  strength: should
+  section: 9.2 (Organization Unit entry), p. 68
+- id: BMM-CARD-004
+  statement: Every End is defined by at least one Organization Unit.
+  strength: should
+  section: 9.2 (Organization Unit entry), p. 68
+- id: BMM-CARD-005
+  statement: A Goal amplifies at most one Vision.
+  strength: must
+  section: 9.2 (Goal entry), p. 65
+- id: BMM-CARD-006
+  statement: A Mission makes operative at most one Vision.
+  strength: must
+  section: 9.2 (Mission entry), p. 66
+- id: BMM-CARD-007
+  statement: An Influencing Organization is played by at most one Organization Unit, and a Regulation is the role of at most one Directive.
+  strength: must
+  section: 8.5.3; 8.5.4; normative machine-readable model
+- id: BMM-CARD-008
+  statement: Unless a rule says otherwise, every relationship is many-to-many and optional at both ends.
+  strength: must
+  section: 6.1; Annex A
+- id: BMM-HIER-001
+  statement: 'A Desired Result includes only Desired Results of its own kind: Goals include Goals and Objectives include Objectives. The only link between a Goal and an Objective is that the Objective quantifies the Goal.'
+  strength: must
+  section: 9.2 (Desired Result entry), p. 63; 8.2.6.1
+- id: BMM-HIER-002
+  statement: 'Each of the nine relationships that connect a concept to itself (listed in 8.7) is transitive and may not form a loop: a category cannot, directly or through its descendants, include or categorize its own ancestor.'
+  strength: must
+  section: 8.7, p. 58
+- id: BMM-HIER-003
+  statement: A Course of Action includes Courses of Action of the same kind (Strategies with Strategies, Tactics with Tactics), and one Course of Action enables another of the same kind in the usual case.
+  strength: should
+  section: 8.3.12.1; 8.3.12.2
+- id: BMM-DEF-001
+  statement: 'A Business Policy is under the enterprise''s control: an authorized party chooses it from alternatives in response to one or more Assessments.'
+  strength: note
+  section: 8.3.10; 9.2 (Business Policy entry)
+- id: BMM-DEF-002
+  statement: 'A Business Rule is practicable and atomic: one aspect of governance in the enterprise''s standard vocabulary, which a person can check directly against a situation. A Business Policy is neither directly practicable nor directly automatable.'
+  strength: must
+  section: 8.3.9; 8.3.11; 9.2
+- id: BMM-DEF-003
+  statement: An enforcement level applies only to behavior-guiding rules, never to definitional rules, which are true by definition. A Tactic is what sets the enforcement level of a Business Rule.
+  strength: must
+  section: 8.3.7 and footnote 4; 9.2
+- id: BMM-REL-001
+  statement: An Objective that quantifies a Goal gives the basis for measuring progress toward that Goal.
+  strength: must
+  section: 8.2.5; 9.2 (Objective entry)
+- id: BMM-REL-002
+  statement: Every Course of Action is governed by some Directive. A Course of Action with none should be examined carefully, although too many Directives can over-constrain it.
+  strength: should
+  section: 8.3.6, p. 31
+- id: BMM-REL-003
+  statement: A Business Rule is often, but not necessarily, derived from a Business Policy; the link is optional.
+  strength: note
+  section: 8.3.11
+- id: BMM-REL-004
+  statement: An Influencer leads to a Business Policy only through an Assessment that identifies a Potential Impact.
+  strength: must
+  section: 8.5.7, p. 50
+- id: BMM-REL-005
+  statement: When an Assessment is related to both an End and a Means and no direct relationship joins them (Course of Action channels efforts towards Desired Result, or Directive supports achievement of Desired Result), the gap should be considered carefully.
+  strength: should
+  section: 8.5.5; 9.2 (Assessment entry)
+- id: BMM-REL-006
+  statement: Each Influencer is placed in at least one general Influencer Category and is classed as internal or external. The class may be given by a subclass (Internal Influencer or External Influencer) or by an instance of an internal or external Influencer Category; either mechanism satisfies the rule.
+  strength: should
+  section: 8.5.2; Annex G.3
+- id: BMM-REL-007
+  statement: A relationship between two BMM concepts is allowed only if the standard defines that relationship (one of its fact types) between those concepts or concepts they specialize. The standard's relationship catalog is held as data in this language file; a pair it does not list allows no relationship.
+  strength: must
+  section: 9.5; 9.6
+- id: BMM-QUAL-001
+  statement: An Objective is attainable, time-targeted and measurable. Time-targeted means it states an absolute or relative time frame for when it is met. Measurable means it carries explicit criteria for whether it is being met, at minimum a yes-or-no basis.
+  strength: must
+  section: 8.2.5, p. 24; 7.3.1
+- id: BMM-QUAL-002
+  statement: An Objective statement begins with its time target, followed by a quantified noun.
+  strength: should
+  section: 8.2.5, p. 25
+- id: BMM-QUAL-003
+  statement: A Goal is narrow enough that Objectives can quantify it. A Vision is too broad to be measured directly by Objectives, and Goals themselves are not specific in time or measure.
+  strength: should
+  section: 8.2.3; 8.2.4
+- id: BMM-QUAL-004
+  statement: 'A Mission statement has exactly three brief parts and nothing more: an action, a product or service, and a market or customer. It stays day to day and broad enough to cover all Strategies.'
+  strength: should
+  section: 8.3.2, p. 28
+- id: BMM-QUAL-005
+  statement: Qualitative or comparative words that describe a desired end state (best, fastest, leading-edge) belong in Ends and Directives, not in a Mission, Strategy or Tactic. Qualitative words that do not name the end state are acceptable.
+  strength: should
+  section: 8.4, p. 38
+- id: BMM-QUAL-006
+  statement: An Influencer is stated neutrally and factually, with no qualitative words. A statement that carries them is really an Assessment.
+  strength: should
+  section: 8.5, p. 38
+- id: BMM-QUAL-007
+  statement: If a Business Rule can be derived directly from a statement, the statement is almost certainly not an Influencer; it is probably a Business Policy.
+  strength: should
+  section: 8.5.1, p. 39
+- id: BMM-QUAL-008
+  statement: An Influencer is described, not only named.
+  strength: should
+  section: 8.5.1
+- id: BMM-QUAL-009
+  statement: Avoid a Business Policy that only restates a Strategy in a trivial way.
+  strength: should
+  section: 8.3.10, p. 35
+- id: BMM-GUID-001
+  statement: Directives that are not stated cannot be addressed by the model; to count, a Directive is explicit and recorded officially.
+  strength: note
+  section: 8.3.6, p. 31
+- id: BMM-GUID-002
+  statement: Strategies generally pair with Goals and Tactics with Objectives, but the standard does not enforce the pairing. An enterprise that wants it adds its own constraint.
+  strength: note
+  section: 8.2.3 footnote 1; 7.3.3
+- id: BMM-GUID-003
+  statement: The line between Strategy and Tactic is the enterprise's own; a Course of Action may move from one to the other over time.
+  strength: note
+  section: 7.3.3; 8.2.3; 8.3.3.1
+- id: BMM-GUID-004
+  statement: When several Assessments attach to one End or Means, evaluate their combined impact to expose trade-offs between Risks and Potential Rewards.
+  strength: should
+  section: 8.5.7.1
+- id: BMM-GUID-005
+  statement: Business Process, Organization Unit, Asset and Liability instances are references to things maintained elsewhere. Record only those relevant to governance decisions; a complete structure of assets is not required.
+  strength: note
+  section: 8.6; 8.6.3
+- id: BMM-GUID-006
+  statement: Keeping the three decompositions (of Desired Results, Courses of Action and Business Policies) in step with each other is left to methodology and tools.
+  strength: note
+  section: 7.2.5
+- id: BMM-GUID-007
+  statement: Recording who defined an End, who established a Means, who recognized an Influencer and who made an Assessment, and when, is recommended as an audit trail but cannot always be required.
+  strength: note
+  section: 8.2; 8.3; 8.5.1; 8.5.6
+- id: BMM-GUID-008
+  statement: Using a Vision or a Mission is optional; an enterprise can use the model without either.
+  strength: note
+  section: 7.3.1; 7.3.2
+- id: BMM-GUID-009
+  statement: 'The model should be traceable in both directions: forward from an Influencer''s impact to the processes, rules and responsibilities it leads to, and backward from a process or rule to the reason it exists.'
+  strength: note
+  section: 7.2.3; 7.4
+data_types:
+  coverage: none
+  note: The standard defines no data types; its only attributes are name and description on every concept, with no type stated.
+  attributes:
+    coverage: every_concept
+    where: concepts
+    section: "9.3"
+    note: Name and description sit on a common superclass (MotivationElement), so each of the 33 concepts carries both. The standard gives neither a type or a multiplicity, and defines no other attribute. Who defined an element, who assessed it, when, an Objective's time target and its measurement criteria have no attribute.
+notation:
+  coverage: informative
+  section: Annex A
+  note: No symbols or diagram types are defined; Annex A, which is informative, gives three non-normative conventions and nothing else.
+  default:
+    shape: a box
+    line: a line between two boxes, labeled with a verb phrase in each direction
+    section: Annex A
+  conventions:
+    - id: box
+      drawing: A box is a core concept.
+      section: Annex A
+    - id: nested-box
+      drawing: A box inside a box means "is a category of". Nesting does not imply exclusive or complete categories, and no category is mandatory.
+      section: Annex A
+    - id: labeled-line
+      drawing: A line between two boxes, or from a box to itself, is a fact type (a relationship). It is labeled with a verb phrase in each direction so it reads as a sentence. It implies no mandatory end and no limit.
+      section: Annex A
+  additional_marks:
+    - drawing: A fact type with three or more participants is drawn as a box whose name ends in an asterisk.
+      section: Annex A
+    - drawing: A shaded box (orange in the Annex) marks a concept related to the model but outside its scope.
+      section: Annex A
+  not_specified: []
+  not_defined_by_standard: [diagram types, symbols or shapes for individual concepts, symbols for individual relationships, colors other than the shaded out-of-scope box, layout rules, a legend, a diagram frame or diagram names, rules for what a diagram may contain, any notation for instance models]
+diagram_types: none-in-standard
+notes: 'BMM is a vocabulary and a set of fact types (a metamodel). It defines no graphical notation and no diagram types; its informative Annex A describes three non-normative drawing conventions only. A tool''s own diagram types are described in that tool''s file, not here. Every concept inherits name and description from MotivationElement. Multiplicity keys: targets_per_source is how many target instances one source instance may link to; sources_per_target is how many source instances one target instance may link to; ''*'' means zero or more.'
+layout:
+  basis: "Our conventions, not this standard's.  Sizes and spacing come from the shared layout standard."
+  element_types:                # Annex A draws every concept as a box; the standard names no other shape
+    Vision: box
+    End: box
+    DesiredResult: box
+    Goal: box
+    Objective: box
+    DesiredResultCategory: box
+    Means: box
+    Mission: box
+    CourseOfAction: box
+    Strategy: box
+    Tactic: box
+    Directive: box
+    BusinessPolicy: box
+    BusinessRule: box
+    Influencer: box
+    InternalInfluencer: box
+    ExternalInfluencer: box
+    Regulation: box
+    InfluencerCategory: box
+    InfluencingOrganization: box
+    OrganizationCategory: box
+    Assessment: box
+    AssessmentCategory: box
+    PotentialImpact: box
+    Risk: box
+    PotentialReward: box
+    OrganizationUnit: box
+    BusinessProcess: box
+    Asset: box
+    FixedAsset: box
+    Resource: box
+    Offering: box
+    Liability: box
+  exceptions: {}
+  diagram_types: {}              # the standard defines none; the shared defaults apply
+  no_element_type:               # concepts that take no size class, each group with its reason
+    drawn_as_line:
+      reason: "A relationship is a line between two boxes, labeled with a verb phrase in each direction (Annex A), so there is no symbol to size."
+      concepts: [AssessmentAffectsAchievementOfEnd, AssessmentAffectsEmploymentOfMeans, AssessmentsJudgmentOfInfluencer, AssessmentIdentifiesPotentialImpact, AssessmentProvidesImpetusForDirective, PotentialImpactProvidesImpetusForDirective, UsingAssessmentUsesUsedAssessment, AssessmentCategoryCategorizesAssessment, BroaderAssessmentCategoryCategorizesNarrowerAssessmentCategory, InfluencerCategoryCategorizesInfluencer, BroaderInfluencerCategoryCategorizesNarrowerInfluencerCategory, InfluencingOrganizationIsSourceOfInfluencer, OrganizationCategoryCategorizesInfluencingOrganization, BroaderOrganizationCategoryCategorizesNarrowerOrganizationCategory, OrganizationUnitActsAsInfluencingOrganization, OrganizationUnitRecognizesInfluencer, OrganizationUnitMakesAssessment, OrganizationUnitDefinesEnd, OrganizationUnitEstablishesMeans, StrategyDeterminesOrganizationUnit, OrganizationUnitIsResponsibleForBusinessProcess, OrganizationUnitIsResponsibleForAsset, OrganizationUnitIsResponsibleForLiability, GoalAmplifiesVision, ObjectiveQuantifiesGoal, MissionMakesOperativeVision, StrategyIsAComponentOfThePlanForMission, TacticImplementsStrategy, BroaderCourseOfActionIncludesMoreSpecificCourseOfAction, EnablingCourseOfActionEnablesEnabledCourseOfAction, CourseOfActionChannelsEffortsTowardsDesiredResult, DirectiveGovernsCourseOfAction, CourseOfActionIsFormulatedBasedOnDirective, DirectiveSupportsAchievementOfDesiredResult, BroaderDesiredResultIncludesMoreSpecificDesiredResult, DesiredResultCategoryCategorizesDesiredResult, BroaderDesiredResultCategoryIncludesMoreSpecificDesiredResultCategory, BusinessPolicyIsBasisForBusinessRule, BroaderBusinessPolicyIncludesMoreSpecificBusinessPolicy, BusinessPolicyGovernsBusinessProcess, BusinessRuleGuidesBusinessProcess, TacticEffectsEnforcementLevelOfBusinessRule, DirectiveActsAsRegulation, BusinessProcessRealizesCourseOfAction, BusinessProcessDeliversOffering, BusinessProcessManagesAsset, CourseOfActionDeploysAsset, CourseOfActionDefinesOffering, CourseOfActionDischargesLiability, DirectiveGovernsUseOfAsset, FixedAssetProvidesResource, LiabilityClaimsResource, OfferingRequiresResource, OfferingUsesFixedAsset]

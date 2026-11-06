@@ -154,6 +154,18 @@ class TestUnknownIdentifiers:
             f = _write(library, "s/SKILL.md", "# s\n\n" + text + "\n")
             assert "unrecognized MDG namespace" in _findings(f), text
 
+    def test_a_known_spaced_id_must_start_on_a_word_boundary(self, library):
+        """A customer's name that merely ends in a known id is not that id."""
+        for text in ("Use AcmeData Modeling::Thing here",
+                     "Use Acme-Data Modeling::Thing here",
+                     "Use Contoso_ZF Owner::Thing here"):
+            f = _write(library, "s/SKILL.md", "# s\n\n" + text + "\n")
+            assert "unrecognized MDG namespace" in _findings(f), text
+        for text in ("`Data Modeling::Thing`", "MDGDgm=ZF Owner::OwnerTime", "(ZF Owner::OwnerTime)",
+                     "Data Modeling::Thing"):
+            f = _write(library, "s/SKILL.md", "# s\n\n" + text + "\n")
+            assert "unrecognized MDG namespace" not in _findings(f), text
+
 
 
 # ---------------------------------------------------------------------------
@@ -716,7 +728,7 @@ class TestRulesetPathsAreTheInstalledOnes:
     confident wrong answers, fresh installs found nothing.
     """
 
-    _GOOD = "run it from ~/.claude/ai-power-tools/rulesets/x/rules.yaml\n"
+    _GOOD = "run it from ../../rulesets/x/x_rules.yaml\n"
 
     def test_the_old_skills_directory_path_is_caught(self, library):
         _write(library, "ea-validation/SKILL.md",
@@ -754,7 +766,16 @@ class TestRulesetPathsAreTheInstalledOnes:
         disk."""
         _write(library, "ea-validation/SKILL.md", "no local path documented\n")
         findings = gate.check_ruleset_paths(library)
-        assert any("no shipped file documents the installed ruleset path" in f
+        assert any("no shipped file documents the plugin's ruleset path" in f
+                   for f in findings), findings
+
+    def test_the_old_install_location_does_not_count_as_the_plugin_path(self, library):
+        """It holds the words `ai-power-tools/rulesets`, and that is how the old
+        positive half passed by accident once the plugin path appeared."""
+        _write(library, "ea-validation/SKILL.md",
+               "run it from ~/.claude/ai-power-tools/rulesets/x/rules.yaml\n")
+        findings = gate.check_ruleset_paths(library)
+        assert any("no shipped file documents the plugin's ruleset path" in f
                    for f in findings), findings
 
     def test_the_gates_own_source_is_not_scanned(self, library):
@@ -822,3 +843,150 @@ class TestPluginPackage:
         (library / "manifest.json").write_text(
             json.dumps({"bundle_version": "9.9.8", "skills": []}), encoding="utf-8")
         assert "Version drift" in gate.check_plugin_package()[0]
+
+
+# --------------------------------------------------------------------------
+# The language plugin
+# --------------------------------------------------------------------------
+
+SHELF = "plugins/ai-power-tools-languages"
+_LANGUAGE_YAML = (
+    "id: demo-1\nname: Demo\n"
+    "concepts: {elements: {Thing: {section: '1'}}}\n"
+    "layout: {basis: ours, element_types: {}, exceptions: {}, diagram_types: {}}\n")
+_SKILL = "---\nname: demo-1\ndescription: A demo guide.\n---\n\n# Demo\n"
+
+
+class TestLanguagePlugin:
+    @pytest.fixture(autouse=True)
+    def _fresh_cache(self, monkeypatch):
+        monkeypatch.setattr(gate, "_LANGUAGE_CACHE", {})
+
+    def _guide(self, root, language_yaml=_LANGUAGE_YAML, skill=_SKILL):
+        _write(root, f"{SHELF}/skills/demo-1/language.yaml", language_yaml)
+        _write(root, f"{SHELF}/skills/demo-1/SKILL.md", skill)
+        _write(root, f"{SHELF}/skills/demo-1/references/standard.md", "# Standard\n")
+        _write(root, f"{SHELF}/skills/demo-1/references/rules.md", "# Rules\n")
+
+    def test_no_language_plugin_is_not_a_finding(self, library):
+        assert gate.check_language_plugin() == []
+        assert gate.check_shelf_tool_words() == []
+        assert gate.check_internal_references() == []
+
+    def test_a_whole_guide_passes(self, library):
+        self._guide(library)
+        assert gate.check_language_plugin() == []
+        assert gate.check_shelf_tool_words() == []
+
+    @pytest.mark.parametrize("name", ["tool.py", "icon.png", "pack.xml"])
+    def test_a_program_image_or_xml_is_caught(self, library, name):
+        self._guide(library)
+        _write(library, f"{SHELF}/skills/_languages/{name}", "x\n")
+        assert "holds text only" in " | ".join(gate.check_language_plugin())
+
+    def test_a_private_working_file_beside_a_guide_is_caught(self, library):
+        self._guide(library)
+        _write(library, f"{SHELF}/skills/demo-1/OPEN-POINTS.md", "# Open\n")
+        assert "OPEN-POINTS.md: not part of a guide" in " | ".join(gate.check_language_plugin())
+
+    def test_a_missing_guide_file_is_caught(self, library):
+        self._guide(library)
+        (library / SHELF / "skills/demo-1/references/rules.md").unlink()
+        assert "references/rules.md is missing" in " | ".join(gate.check_language_plugin())
+
+    def test_a_name_or_id_other_than_the_folder_is_caught(self, library):
+        self._guide(library, _LANGUAGE_YAML.replace("id: demo-1", "id: demo"),
+                    _SKILL.replace("name: demo-1", "name: demo"))
+        found = " | ".join(gate.check_language_plugin())
+        assert "id 'demo' is not the folder name" in found
+        assert "SKILL.md: name 'demo' is not the folder name" in found
+
+    def test_a_missing_layout_block_is_caught(self, library):
+        self._guide(library, "id: demo-1\nname: Demo\n")
+        assert "no layout block" in " | ".join(gate.check_language_plugin())
+
+    def test_a_stub_holds_only_its_language_file(self, library):
+        stub = "id: demo-1\nname: Demo\nstub: true\nlayout: {basis: ours}\n"
+        _write(library, f"{SHELF}/skills/demo-1/language.yaml", stub)
+        assert gate.check_language_plugin() == []
+        _write(library, f"{SHELF}/skills/demo-1/SKILL.md", _SKILL)
+        assert "a stub holds only language.yaml" in " | ".join(gate.check_language_plugin())
+
+    def test_a_server_or_dependency_in_its_plugin_json_is_caught(self, library):
+        for key in ("mcpServers", "dependencies"):
+            _write(library, f"{SHELF}/.claude-plugin/plugin.json", json.dumps(
+                {"name": "ai-power-tools-languages", "version": "1.0.0", key: ["x"]}))
+            assert key in " | ".join(gate.check_plugin_package())
+
+    def test_a_version_other_than_the_tool_plugins_is_caught(self, library):
+        _write(library, "plugins/ai-power-tools/.claude-plugin/plugin.json",
+               json.dumps({"name": "ai-power-tools", "version": "2.0.0"}))
+        _write(library, f"{SHELF}/.claude-plugin/plugin.json",
+               json.dumps({"name": "ai-power-tools-languages", "version": "1.0.0"}))
+        assert "Version drift: language plugin.json" in " | ".join(gate.check_plugin_package())
+
+    @pytest.mark.parametrize("text", [
+        "Draw it in Sparx.", "Use the MDG toolbox.", "Open it in EA.", "visio stencil"])
+    def test_a_tool_word_is_caught_in_any_file(self, library, text):
+        self._guide(library)
+        _write(library, f"{SHELF}/skills/_languages/layout-standard.yaml", f"note: {text}\n")
+        assert "names a tool" in " | ".join(gate.check_shelf_tool_words())
+
+    @pytest.mark.parametrize("text", ["Enterprise Architect is a role.", "The area of idea."])
+    def test_a_role_or_an_ordinary_word_is_not_a_tool(self, library, text):
+        _write(library, f"{SHELF}/skills/_languages/language-file.md", f"{text}\n")
+        assert gate.check_shelf_tool_words() == []
+
+    def test_a_tool_word_exception_is_one_line(self, library, monkeypatch):
+        _write(library, f"{SHELF}/skills/demo-1/references/standard.md", "cited Visio figure\n")
+        monkeypatch.setattr(gate, "SHELF_TOOL_WORD_EXCEPTIONS", (
+            ("skills/demo-1/references/standard.md", "cited Visio figure", "why"),))
+        assert gate.check_shelf_tool_words() == []
+
+    def test_an_exception_with_no_reason_or_source_is_caught_and_all_are_listed(self, library):
+        self._guide(library, _LANGUAGE_YAML.replace(
+            "exceptions: {}",
+            "exceptions: {Thing: {reason: stated}, Other: {reason: stated, source: 'S1 7.2'}}"))
+        assert [row[1] for row in gate.layout_exceptions()] == ["Thing", "Other"]
+        found = gate.check_layout_exceptions()
+        assert len(found) == 1 and "Thing needs a reason and a source" in found[0]
+
+    @pytest.mark.parametrize("text", [
+        "See OPEN-POINTS.md.", "from research/language-library", "in ea-samples-run",
+        "the skill-draft", "the ruleset-draft", "ea-reference notes", "STANDARD-NOTES.md",
+        "filed as APT-2026-0001", "filed as APV-2026-0001"])
+    @pytest.mark.parametrize("where", [
+        f"{SHELF}/skills/demo-1/references/rules.md",
+        "plugins/ai-power-tools/rulesets/demo-1/demo-1_rules.yaml",
+        "plugins/ai-power-tools/skills/_shared/languages/demo-1/howto.md"])
+    def test_a_pointer_to_what_stays_private_is_caught(self, library, where, text):
+        _write(library, where, f"{text}\n")
+        assert "which customers don't have" in " | ".join(gate.check_internal_references())
+
+    def test_a_standards_bodys_own_address_is_not_a_private_pointer(self, library):
+        _write(library, f"{SHELF}/skills/demo-1/references/rules.md",
+               "https://www.example.org/research/spec\n")
+        assert gate.check_internal_references() == []
+
+    def test_a_pack_gets_the_customer_name_scan(self, library):
+        pack = _write(library, "plugins/ai-power-tools/skills/_shared/languages/x/pack/X.xml",
+                      "<a>TVO</a>\n")
+        other = _write(library, "fixtures/other.xml", "<a>TVO</a>\n")
+        found = list(gate.iter_files(library))
+        assert pack in found and other not in found
+        assert "TVO" in _findings(pack)
+
+    def test_a_concept_as_namespace_passes_only_in_its_own_folder(self, library):
+        self._guide(library, _LANGUAGE_YAML.replace("Thing:", "Quillmoor:"))
+        ok = _write(library, f"{SHELF}/skills/demo-1/references/rules.md", "`Quillmoor::part`\n")
+        assert "unrecognized MDG namespace" not in _findings(ok)
+        other = _write(library, f"{SHELF}/skills/other-1/references/rules.md", "`Quillmoor::part`\n")
+        assert "unrecognized MDG namespace" in _findings(other)
+        outside = _write(library, "plugins/ai-power-tools/skills/x/SKILL.md", "`Quillmoor::part`\n")
+        assert "unrecognized MDG namespace" in _findings(outside)
+
+    def test_a_per_language_namespace_is_valid_only_in_that_folder(self, library):
+        uaf = _write(library, f"{SHELF}/skills/uaf-1/references/rules.md", "`Resources::x`\n")
+        assert "unrecognized MDG namespace" not in _findings(uaf)
+        uml = _write(library, f"{SHELF}/skills/uml-2/references/rules.md", "`Resources::x`\n")
+        assert "unrecognized MDG namespace" in _findings(uml)

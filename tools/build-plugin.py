@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""Package the plugin as `dist/ai-power-tools.plugin` for the Cowork channel.
+"""Package the plugins as `dist/<name>.plugin` for the Cowork channel.
+
+There are two: `ai-power-tools` (the tool plugin) and `ai-power-tools-languages`
+(the language shelf, which carries guides and the layout standard and no program).
 
 Claude Code installs this plugin from the marketplace, which pins the released
 copy of this tree in the releases repository (see tools/publish-plugin.py,
@@ -28,6 +31,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 PLUGIN = ROOT / "plugins" / "ai-power-tools"
+SHELF = ROOT / "plugins" / "ai-power-tools-languages"
+#: (name, folder) for every plugin that ships, tool plugin first.
+PLUGIN_DIRS = (("ai-power-tools", PLUGIN), ("ai-power-tools-languages", SHELF))
 MANIFEST = ROOT / "manifest.json"
 DIST = ROOT / "dist"
 
@@ -94,6 +100,45 @@ def package_problems(plugin: Path = PLUGIN) -> list[str]:
     return problems
 
 
+def shelf_problems(shelf: Path = SHELF, plugin: Path = PLUGIN) -> list[str]:
+    """The language shelf's own checks: skills only, and the tool plugin's version.
+
+    The shelf and the tool plugin release together under one version number, so a
+    shelf whose `plugin.json` differs would put two version numbers on one
+    release. `version_problems` checks the tool plugin against the manifest and
+    the marketplace; the shelf is held to the tool plugin.
+    """
+    shelf_json = shelf / ".claude-plugin" / "plugin.json"
+    if not shelf_json.is_file():
+        return [f"Missing {shelf_json}"]
+    problems = package_problems(shelf)
+    data = json.loads(shelf_json.read_text(encoding="utf-8"))
+    if "dependencies" in data:
+        problems.append("The language plugin's plugin.json declares dependencies. "
+                        "The shelf depends on nothing.")
+    plugin_json = plugin / ".claude-plugin" / "plugin.json"
+    if plugin_json.is_file():
+        want = json.loads(plugin_json.read_text(encoding="utf-8"))["version"]
+        if data.get("version") != want:
+            problems.append(f"Version drift: language plugin.json "
+                            f"{data.get('version')} != ai-power-tools plugin.json {want}")
+    return problems
+
+
+def generated_problems(root: Path = ROOT) -> list[str]:
+    """Generated files must be current, so a build can't ship two sets of numbers."""
+    tools = str(Path(__file__).resolve().parent)
+    if tools not in sys.path:
+        sys.path.insert(0, tools)
+    import gen_conventions
+    try:
+        stale = gen_conventions.stale_files(root)
+    except gen_conventions.GenerationError as exc:
+        return [f"Generated files can't be checked: {exc}"]
+    return [f"Stale generated file: {rel}. Run tools/gen_conventions.py and commit the result."
+            for rel in stale]
+
+
 def version_problems(plugin: Path = PLUGIN, manifest: Path = MANIFEST,
                      marketplace: Path = ROOT / ".claude-plugin" / "marketplace.json"
                      ) -> tuple[str | None, list[str]]:
@@ -128,39 +173,46 @@ def plugin_files(plugin: Path = PLUGIN) -> list[Path]:
                   if p.is_file() and not _is_build_residue(p))
 
 
+def write_archive(plugin: Path, out: Path) -> tuple[int, int]:
+    """Write one plugin as a `.plugin` archive. Returns (files, bytes)."""
+    files = plugin_files(plugin)
+    DIST.mkdir(exist_ok=True)
+    # Fixed timestamps: the same input must produce the same archive, so a
+    # rebuild that changed nothing is visibly identical.
+    with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as zf:
+        for f in files:
+            info = zipfile.ZipInfo(str(f.relative_to(plugin).as_posix()),
+                                   date_time=(1980, 1, 1, 0, 0, 0))
+            info.compress_type = zipfile.ZIP_DEFLATED
+            info.external_attr = 0o644 << 16
+            zf.writestr(info, f.read_bytes())
+    return len(files), out.stat().st_size
+
+
 def main() -> int:
     plugin_version, problems = version_problems()
     problems += package_problems()
+    problems += shelf_problems()
+    problems += generated_problems()
     if problems:
         for p in problems:
             print(p, file=sys.stderr)
         return 1
 
-    files = plugin_files()
-    if not files:
-        print(f"No files under {PLUGIN}", file=sys.stderr)
-        return 1
+    for name, folder in PLUGIN_DIRS:
+        if not plugin_files(folder):
+            print(f"No files under {folder}", file=sys.stderr)
+            return 1
 
-    DIST.mkdir(exist_ok=True)
-    out = DIST / "ai-power-tools.plugin"
-    # Fixed timestamps: the same input must produce the same archive, so a
-    # rebuild that changed nothing is visibly identical.
-    with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as zf:
-        for f in files:
-            info = zipfile.ZipInfo(str(f.relative_to(PLUGIN).as_posix()),
-                                   date_time=(1980, 1, 1, 0, 0, 0))
-            info.compress_type = zipfile.ZIP_DEFLATED
-            info.external_attr = 0o644 << 16
-            zf.writestr(info, f.read_bytes())
-
-    size = out.stat().st_size
-    if size > MAX_UPLOAD_BYTES:
-        print(f"{out.name} is {size} bytes — over the "
-              f"{MAX_UPLOAD_BYTES}-byte desktop upload limit", file=sys.stderr)
-        return 1
-
-    print(f"{out.relative_to(ROOT)} — {len(files)} files, {size} bytes, "
-          f"version {plugin_version}")
+    for name, folder in PLUGIN_DIRS:
+        out = DIST / f"{name}.plugin"
+        count, size = write_archive(folder, out)
+        if size > MAX_UPLOAD_BYTES:
+            print(f"{out.name} is {size} bytes — over the "
+                  f"{MAX_UPLOAD_BYTES}-byte desktop upload limit", file=sys.stderr)
+            return 1
+        print(f"{out.relative_to(ROOT)} — {count} files, {size} bytes, "
+              f"version {plugin_version}")
     return 0
 
 

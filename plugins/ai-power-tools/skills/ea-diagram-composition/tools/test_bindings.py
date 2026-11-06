@@ -32,7 +32,7 @@ Three different things, and it is worth knowing which is which:
 from __future__ import annotations
 
 # Backlog items this module pins (checked by tools/test_suite_conventions.py).
-PINS = ("APT-2026-0161", "APT-2026-0176", "APT-2026-0187", "APT-2026-0193")
+PINS = ("APT-2026-0161", "APT-2026-0176", "APT-2026-0187", "APT-2026-0193", "APT-2026-0823")
 
 import ast
 import sys
@@ -46,6 +46,10 @@ if str(_HERE) not in sys.path:
 
 import bindings  # noqa: E402
 from bindings import (  # noqa: E402
+    _binding_files,
+    binding_conflicts,
+    declared_technologies,
+    DuplicateTechnology,
     CHANNELS,
     COMPOSED_GRAMMARS,
     EA_PLACED_GRAMMARS,
@@ -76,6 +80,8 @@ from bindings import (  # noqa: E402
     mdg_diagram_key,
     producible_grammars,
     resolve_diagram,
+    token_conflicts,
+    DuplicateToken,
     width_to_fit,
 )
 from lint import LABEL_MARGIN  # noqa: E402
@@ -85,7 +91,7 @@ from compose import (  # noqa: E402
     compose_layered_bands,
 )
 
-_BINDINGS_DIR = _HERE.parent / "bindings"
+_BINDINGS_DIR = _HERE.parent.parent / "_shared" / "languages"
 
 pytest.importorskip("yaml", reason="PyYAML is required to read bindings")
 
@@ -121,20 +127,6 @@ def _doc(**overrides: str) -> str:
         assert marker in text, f"{marker!r} not in the minimal document"
         text = text.replace(marker, new)
     return text
-
-
-def _prose(text: str) -> str:
-    """A binding file's words on one line, comment markers and wrapping removed.
-
-    A figure stated in a comment wraps across lines and every continuation line
-    starts with `#`, so an assertion that the file states some number has to read
-    past both. Collapsing to single-spaced words with the markers stripped is what
-    lets the assertion be written the way a person reads the sentence, instead of
-    against whatever column the comment happened to wrap at.
-    """
-    return " ".join(
-        " ".join(line.lstrip().lstrip("#")
-                 for line in text.splitlines()).split())
 
 
 # ---------------------------------------------------------------------------
@@ -1394,7 +1386,7 @@ diagram_types:
     sizing:
       default: {w: 90, h: 70}
       Package: {w: 148, h: 90}
-    spacing: {item_gap_x: 56, item_gap_y: 50}
+    spacing: {item_gap_x: 56, item_gap_y: 55}
     routing: {default: Direct}
     channels:
       fill: ~
@@ -1453,13 +1445,14 @@ def test_a_child_diagram_type_takes_the_substrate_slots_it_does_not_state(tmp_pa
     assert dt.title == "drawn"
     assert dt.routing["default"] == "OrthogonalSquare"
     # Unstated by the child: the substrate's, and reported as inherited.
-    assert dt.spacing["item_gap_y"] == 50
-    assert dt.inherited_spacing() == {"item_gap_y": 50}
+    assert dt.spacing["item_gap_y"] == 55
+    assert dt.inherited_spacing() == {"item_gap_y": 55}
     assert dt.size_for("Package") == (148, 90)
     assert dt.inherited_sizing() == {"Package": {"w": 148, "h": 90}}
     # And the spec the engine takes carries the inherited value, which is where
-    # the engine's own default used to answer.
-    assert dt.spec()["item_gap_y"] == 50 != DEFAULT_SPEC["item_gap_y"]
+    # the engine's own default used to answer. The parent states a gap the engine's
+    # default doesn't hold, because the default is the standard's value now.
+    assert dt.spec()["item_gap_y"] == 55 != DEFAULT_SPEC["item_gap_y"]
 
 
 def test_a_child_does_not_acquire_the_substrates_diagram_type_catalog(tmp_path):
@@ -1544,7 +1537,7 @@ diagram_types:
     assert dt.substrate == "WBA::Logical"
     assert dt.size_for() == (200, 80)
     assert dt.size_for("Package") == (148, 90)
-    assert dt.spacing == {"item_gap_x": 56, "item_gap_y": 50}
+    assert dt.spacing == {"item_gap_x": 56, "item_gap_y": 55}
 
 
 # ---------------------------------------------------------------------------
@@ -2036,8 +2029,8 @@ def test_every_shipped_prefix_round_trips_at_the_scope_that_declares_it():
     One assertion per prefix actually in force, whichever scope stated it, so a
     binding that grows a per-diagram-type prefix is covered the day it does
     without an edit here. The two counters at the end are what stop this passing
-    vacuously: `StrategyMap` and `TOGAF Diagrams` supply the diagram-type scope
-    and `ArchiMate3` and `ERD_dp` the technology scope, and if either group
+    vacuously: `StrategyMap` and `TOGAF` supply the diagram-type scope
+    and `ArchiMate3` and `ERD` the technology scope, and if either group
     disappeared the remaining lines would still all pass.
     """
     at_type, at_technology = 0, 0
@@ -2082,44 +2075,6 @@ def test_no_shipped_sizing_key_carries_the_prefix_that_is_in_force_for_it():
                 assert not concept.startswith(prefix), (
                     f"{technology}::{name} sizes {concept!r}; the key is a "
                     f"concept name and {prefix!r} is added by stereotype_for")
-
-
-def test_an_unstated_slot_resolves_to_a_measured_value_not_an_engine_default():
-    """THE POINT OF THE WHOLE ARRANGEMENT, as a before and after.
-
-    `load_binding_text` takes no directory and so cannot follow `extends`, which
-    makes it exactly the "before": the same shipped document, unresolved. For
-    every slot a shipped binding leaves unstated that its substrate measures,
-    both states are asserted - absent before, so the engine's own default answers
-    at compose time, and the measured value after.
-
-    Derived, not pinned: the slots are whatever the shipped files leave unstated.
-    The last assertion is the one that would fail if inheritance stopped doing
-    anything at all, which a test of the resolved value alone would not notice.
-    """
-    proved = []
-    for technology, filename in available_bindings().items():
-        binding = find_binding(technology)
-        if binding.extends is None:
-            continue
-        before = load_binding_text(
-            (_BINDINGS_DIR / filename).read_text(encoding="utf-8"),
-            source=filename)
-        for name, dt in binding.diagram_types.items():
-            was = before.diagram_type(name)
-            assert was.spacing == dt.own_spacing, f"{technology}::{name}"
-            for key, value in dt.inherited_spacing().items():
-                # Before: the key is not in the spec at all, so the engine
-                # supplies it from `DEFAULT_SPEC` and the binding has no say.
-                assert key not in was.spec()
-                # After: the measured value for the diagram type this one is
-                # drawn on, and different from what the engine would have said.
-                assert dt.spec()[key] == value
-                assert value != DEFAULT_SPEC[key], (technology, name, key)
-                proved.append((technology, name, key,
-                               DEFAULT_SPEC[key], value))
-    assert proved, (
-        "no shipped binding inherits a gap, so the substrate changes nothing")
 
 
 # ---------------------------------------------------------------------------
@@ -2181,12 +2136,85 @@ def test_reading_a_binding_that_is_not_there_names_the_path(tmp_path):
 # ---------------------------------------------------------------------------
 def test_both_pilot_bindings_are_present_and_valid():
     shipped = available_bindings()
-    assert shipped["ArchiMate3"] == "archimate3.yaml"
-    assert shipped["BPMN2.0"] == "bpmn2.0.yaml"
+    assert shipped["ArchiMate3"] == "archimate-3/conventions.yaml"
+    assert shipped["BPMN2.0"] == "bpmn-2/conventions.yaml"
+
+
+# ---------------------------------------------------------------------------
+# The catalog: one generated file per language folder (APT-2026-0472)
+# ---------------------------------------------------------------------------
+def _language_folder(root, language: str, document: str):
+    folder = root / language
+    folder.mkdir()
+    (folder / "conventions.yaml").write_text(document, encoding="utf-8")
+    return folder
+
+
+def test_a_language_folder_contributes_its_generated_file(tmp_path):
+    _language_folder(tmp_path, "wba-1", MINIMAL)
+    assert available_bindings(tmp_path) == {"WBA": "wba-1/conventions.yaml"}
+    assert declared_technologies(tmp_path) == {"WBA": ("wba-1/conventions.yaml",)}
+    assert find_binding("WBA", directory=tmp_path).technology == "WBA"
+
+
+def test_an_ea_yaml_beside_the_generated_file_is_not_a_claim(tmp_path):
+    """Four kits' `ea.yaml` files hold a `technology:` equal to a binding's id, so a
+    wider glob would raise `DuplicateTechnology` on a catalog with nothing wrong."""
+    folder = _language_folder(tmp_path, "wba-1", MINIMAL)
+    (folder / "ea.yaml").write_text("language: wba-1\ntechnology: WBA\n", encoding="utf-8")
+    (folder / "extra.yaml").write_text("technology: WBA\n", encoding="utf-8")
+    assert binding_conflicts(tmp_path) == {}
+    assert available_bindings(tmp_path) == {"WBA": "wba-1/conventions.yaml"}
+
+
+def test_two_language_folders_claiming_one_id_are_refused_by_path(tmp_path):
+    _language_folder(tmp_path, "wba-1", MINIMAL)
+    _language_folder(tmp_path, "wba-2", MINIMAL)
+    assert binding_conflicts(tmp_path) == {
+        "WBA": ("wba-1/conventions.yaml", "wba-2/conventions.yaml")}
+    with pytest.raises(DuplicateTechnology, match="wba-2/conventions.yaml"):
+        available_bindings(tmp_path)
+
+
+def test_a_flat_file_and_a_language_folder_share_one_catalog(tmp_path):
+    (tmp_path / "flat.yaml").write_text(MINIMAL.replace("WBA", "FLAT"), encoding="utf-8")
+    _language_folder(tmp_path, "wba-1", MINIMAL)
+    assert available_bindings(tmp_path) == {
+        "FLAT": "flat.yaml", "WBA": "wba-1/conventions.yaml"}
+
+
+def test_extends_resolves_from_the_catalog_root_and_source_names_the_folder(tmp_path):
+    """`extends` on a generated file has to look above its own language folder."""
+    _language_folder(tmp_path, "base", _SUBSTRATE_PARENT)
+    child = _language_folder(tmp_path, "child", _SUBSTRATE_CHILD)
+    bound = load_binding(child / "conventions.yaml")
+    assert bound.extends
+    assert bound.source == "child/conventions.yaml"
+    assert any(dt.substrate for dt in bound.diagram_types.values())
+
+
+def test_the_translation_file_beside_the_folders_is_not_a_binding():
+    names = {path.name for path in _binding_files(_BINDINGS_DIR)}
+    assert "ea-translation.yaml" not in names
+    assert (_BINDINGS_DIR / "ea-translation.yaml").is_file()
+
+
+def test_the_default_catalog_is_the_shared_languages_folder():
+    assert _BINDINGS_DIR.parts[-2:] == ("_shared", "languages")
+    assert available_bindings()["BPMN2.0"] == "bpmn-2/conventions.yaml"
+    assert len(available_bindings()) == len(list(_BINDINGS_DIR.glob("*/conventions.yaml")))
+
+
+def test_a_changed_file_is_read_again_rather_than_served_from_the_parse_cache(tmp_path):
+    path = tmp_path / "wba.yaml"
+    path.write_text(MINIMAL, encoding="utf-8")
+    assert load_binding(path).technology == "WBA"
+    path.write_text(MINIMAL.replace("WBA", "WBB"), encoding="utf-8")
+    assert load_binding(path).technology == "WBB"
 
 
 def test_every_shipped_binding_file_validates():
-    files = sorted(_BINDINGS_DIR.glob("*.yaml"))
+    files = _binding_files(_BINDINGS_DIR)
     assert files, "no bindings shipped"
     for path in files:
         load_binding(path)  # raises with the offending key if not
@@ -2247,19 +2275,15 @@ def test_a_stereotype_from_another_technology_passes_through_unchanged():
     assert binding.concept_for("") == ""
 
 
-def test_bpmn_event_and_gateway_sizes_are_the_measured_ones():
-    """A 110x60 "circle" is not a BPMN event.
-
-    These are notation requirements, not preferences: the event sizes were
-    unanimous or near-unanimous across 173 measured events and the gateway
-    across all 61.
-    """
+def test_bpmn_event_and_gateway_sizes_are_the_standards():
+    """A box-sized "circle" is not a BPMN event, so each kind takes its element type."""
     dt = find_binding("BPMN2.0").diagram_type("Business Process")
-    assert dt.size_for() == (110, 60)
+    assert dt.size_for() == (100, 70)
     for event in ("StartEvent", "EndEvent", "IntermediateEvent"):
         assert dt.size_for(event) == (30, 30), event
-    assert dt.size_for("Gateway") == (42, 42)
-    assert dt.size_for("DataObject") == (35, 50)
+    assert dt.size_for("Gateway") == (40, 40)
+    assert dt.size_for("DataObject") == (40, 50)
+    assert dt.size_for("DataStore") == (40, 50)
 
 
 def test_an_unsized_concept_falls_back_to_the_default():
@@ -2857,21 +2881,16 @@ def test_every_behavioral_difference_between_the_pilots_is_data():
     #    as recorded measurements and the binding says so; they are not behavior.
     archimate_dt = archimate.diagram_type("Application")
     bpmn_dt = bpmn.diagram_type("Business Process")
-    #    Bands: ArchiMate's own two axes differ, measured at ~75 against ~40.
+    #    Every language now states the same gaps, so the difference left is
+    #    which of them each grammar reads.
+    assert archimate_dt.spacing == bpmn_dt.spacing
     assert archimate_dt.spacing["item_gap_x"] > archimate_dt.spacing["item_gap_y"]
     #    Lanes: the load-bearing key is the one along the flow.
     assert bpmn_dt.spacing["item_gap_flow"] > 0
-    assert "item_gap_flow" not in archimate_dt.spacing
     #    Pools abut; ArchiMate bands do not. Asserted on COMPOSED geometry,
-    #    because `archimate3.yaml` deliberately does not set `band_gap` -- band
-    #    gutters were never separately measured, so the engine default stands
-    #    rather than a number nobody observed. Neither `.spacing` (the raw
-    #    binding block) nor `.spec()` (which carries only what the binding
-    #    states, leaving the engine to fill the rest) reports it, so a constant
-    #    would be the wrong thing to read: what matters is that the bands come
-    #    out apart and the lanes come out touching.
+    #    because what matters is that the bands come out apart and the lanes come
+    #    out touching.
     assert bpmn_dt.spacing["lane_gap"] == 0
-    assert "band_gap" not in archimate_dt.spacing
 
     two = [{"name": "Upper", "items": [{"id": 1}]},
            {"name": "Lower", "items": [{"id": 2}]}]
@@ -3315,17 +3334,13 @@ _SYSML_BOUND = ("BlockDefinition", "Requirement")
 _SYSML_UNBOUND_GRAPH = ("InternalBlock", "UseCase", "Parametric", "Package",
                         "Activity")
 _SYSML_UNBOUND_EA_SEMANTIC = ("Sequence", "StateMachine")
-#: Stereotypes the tool reports as unanimous that are not SysML concepts.
-#: `NavigationCell` is an EA navigation tile, 38 of 38 at one size on 3 diagrams.
-_SYSML_NOT_NOTATION = {"BlockDefinition": {"NavigationCell"}, "Requirement": set()}
-
 _SYSML_MODEL = mb.resolve_model_path(None)
 needs_sysml_model = pytest.mark.skipif(
     _SYSML_MODEL is None,
     reason=(f"EAExample.qea not found - pass its location in "
             f"{mb.MODEL_ENV_VAR}; the SysML figures are measured from it"),
 )
-_SYSML_TEXT = (_BINDINGS_DIR / "sysml1.4.yaml").read_text(encoding="utf-8")
+_SYSML_TEXT = (_BINDINGS_DIR / "sysml-1/conventions.yaml").read_text(encoding="utf-8")
 
 
 @pytest.fixture(scope="module")
@@ -3334,26 +3349,11 @@ def sysml_known():
         return mb.list_technologies(conn)
 
 
-@pytest.fixture(scope="module")
-def sysml_measured():
-    return {name: mb.measure_binding(_SYSML_MODEL, _SYSML, name)
-            for name in _SYSML_BOUND}
-
-
-def _sysml_section(diagram_type: str) -> str:
-    """The text of one diagram type's block, comments included."""
-    match = re.search(
-        rf"^  {re.escape(diagram_type)}:\n(.*?)(?=^  \S|\Z)", _SYSML_TEXT,
-        re.S | re.M)
-    assert match, f"no {diagram_type} block in the binding"
-    return match.group(1)
-
-
 def test_the_sysml_binding_loads_and_is_found_by_its_declared_id():
     binding = find_binding(_SYSML)
     assert binding is not None
     assert binding.technology == _SYSML
-    assert available_bindings()[_SYSML] == "sysml1.4.yaml"
+    assert available_bindings()[_SYSML] == "sysml-1/conventions.yaml"
     assert set(binding.diagram_types) == set(_SYSML_BOUND)
     # Presence, not absence: "no prefix" is a measured statement.
     assert binding.stereotype_prefix == ""
@@ -3394,93 +3394,6 @@ def test_the_sysml_base_types_are_the_ones_ea_records():
     binding = find_binding(_SYSML)
     for name, dt in binding.diagram_types.items():
         assert bases[name] == {dt.base}, name
-
-
-@needs_sysml_model
-@pytest.mark.parametrize("diagram_type", _SYSML_BOUND)
-def test_the_sysml_sizes_are_the_ones_the_tool_measured(
-        diagram_type, sysml_measured):
-    m = sysml_measured[diagram_type]
-    dt = find_binding(_SYSML).diagram_type(diagram_type)
-
-    assert m.default_size is not None and m.default_size.mode is not None
-    assert not m.default_size.low_n
-    assert dt.sizing["default"] == {"w": m.default_size.mode[0],
-                                    "h": m.default_size.mode[1]}
-
-    # A concept size is stated exactly when the tool found a dominant, non-low-n
-    # mode that differs from the default. The tool omits a concept whose mode
-    # equals the default, so those are not expected here either.
-    #
-    # `own_sizing`, NOT `sizing`: this binding is drawn on the base notation, so
-    # `sizing` also carries the concepts the substrate measured and this
-    # technology says nothing about. Those are not SysML measurements and must
-    # not be judged as if they were - the question here is what the tool
-    # measured for THIS technology, which is what this file stated.
-    expected = {
-        stereotype for stereotype, st in m.sizes.items()
-        if st.n >= m.min_sample and st.mode is not None
-        and st.mode_share >= mb.DOMINANT_SHARE
-        and st.mode != m.default_size.mode
-    } - _SYSML_NOT_NOTATION[diagram_type]
-    assert set(dt.own_sizing) - {"default"} == expected
-    for concept in expected:
-        # `size_for` answers with a `(w, h)` tuple. The comparison here used to
-        # be against a `{"w": ..., "h": ...}` mapping, which a tuple never
-        # equals - latent rather than failing only because this technology
-        # states no per-concept size, so `expected` is empty and the loop has
-        # never run. It would have fired the day one was added.
-        assert dt.size_for(concept) == m.sizes[concept].mode
-
-
-@needs_sysml_model
-@pytest.mark.parametrize("diagram_type", _SYSML_BOUND)
-def test_the_sysml_spacing_is_the_one_the_tool_measured_and_nothing_more(
-        diagram_type, sysml_measured):
-    """Only the horizontal gap is stated.
-
-    The vertical gaps of a hierarchy are level-to-level distances, which a bands
-    composition sets with `band_gap` and the band padding rather than
-    `item_gap_y`, so the vertical population does not measure the key.
-    """
-    m = sysml_measured[diagram_type]
-    dt = find_binding(_SYSML).diagram_type(diagram_type)
-    assert not m.h_gap.low_n
-    # `own_spacing` is what this file states; `spacing` also carries the vertical
-    # gap measured on the base diagram type each of these is drawn on. The
-    # vertical gap is unstated HERE for a reason about hierarchies, and that
-    # reason is about this technology, not about the canvas underneath it.
-    assert dt.own_spacing == {"item_gap_x": round(m.h_gap.median)}
-    assert set(dt.spacing) - set(dt.own_spacing) == {"item_gap_y"}
-
-
-@needs_sysml_model
-@pytest.mark.parametrize("diagram_type", _SYSML_BOUND)
-def test_the_n_written_beside_each_sysml_figure_is_the_n_measured(
-        diagram_type, sysml_measured):
-    """The comments carry the sample sizes, so they are checked against the
-    tool and cannot drift when the figures are re-measured."""
-    m = sysml_measured[diagram_type]
-    section = _sysml_section(diagram_type)
-    assert f"{m.default_size.mode_count} of n={m.default_size.n}" in section
-    assert re.search(rf"n={m.h_gap.n}\b", section)
-
-
-def test_every_stated_sysml_figure_has_its_n_in_the_comment_above_it():
-    """A number without its sample size cannot be judged. The comment block
-    directly above (or trailing) each stated `default` and gap must say `n=`."""
-    lines = _SYSML_TEXT.splitlines()
-    stated = [i for i, line in enumerate(lines)
-              if re.match(r"^\s+(default: \{w:|item_gap_[xy]:)", line)]
-    assert len(stated) == 4, "expected a default and a gap per bound type"
-    for i in stated:
-        block = []
-        j = i - 1
-        while j >= 0 and lines[j].lstrip().startswith("#"):
-            block.append(lines[j])
-            j -= 1
-        context = " ".join(block) + " " + lines[i]
-        assert "n=" in context, f"line {i + 1} states a figure with no n"
 
 
 @pytest.mark.parametrize("diagram_type", _SYSML_BOUND)
@@ -3532,10 +3445,13 @@ def test_the_sysml_binding_ships_no_local_path():
 # deliberately left out.
 _DMN = "DMN1.1"
 _DMN_TYPE = "DMNDiagram"
-_UAF = "UAFP_Framework"
+_UAF = "UAF"
+#: What the stored token starts with. The model's inventory is keyed by this, not by
+#: the id EA reports.
+_UAF_GROUP = "UAFP_Framework"
 _UAF_TYPE = "UPDM Framework"
-#: The eight ids the model carries for the UAF family. One binding binds one id,
-#: so seven of them are deliberately unbound.
+#: The eight token groups the model carries for the UAF family. The binding claims a
+#: token in one, so seven of them are deliberately unbound.
 _UAF_FAMILY = ("UAFP_AV", "UAFP_AcV/PV", "UAFP_Framework", "UAFP_OV",
                "UAFP_SOV", "UAFP_SV/SvcV", "UAFP_StV/CV", "UAFP_TV/StdV")
 #: Under the seven unbound ids, the state machines and the sequence diagram are
@@ -3549,18 +3465,13 @@ needs_du_model = pytest.mark.skipif(
     reason=(f"EAExample.qea not found - pass its location in "
             f"{mb.MODEL_ENV_VAR}; the UAF figures are measured from it"),
 )
-_UAF_TEXT = (_BINDINGS_DIR / "uafp_framework.yaml").read_text(encoding="utf-8")
+_UAF_TEXT = (_BINDINGS_DIR / "uaf-1/conventions.yaml").read_text(encoding="utf-8")
 
 
 @pytest.fixture(scope="module")
 def du_known():
     with mb.open_model_copy(_DU_MODEL) as conn:
         return mb.list_technologies(conn)
-
-
-@pytest.fixture(scope="module")
-def uaf_measured():
-    return mb.measure_binding(_DU_MODEL, _UAF, _UAF_TYPE)
 
 
 def _du_diagram_rows(technology: str, diagram_type: str) -> list[tuple[int, str, str]]:
@@ -3578,101 +3489,47 @@ def _du_diagram_rows(technology: str, diagram_type: str) -> list[tuple[int, str,
 def test_the_uaf_framework_binding_loads_and_is_found_by_its_declared_id():
     uaf = find_binding(_UAF)
     assert uaf is not None and uaf.technology == _UAF
-    assert available_bindings()[_UAF] == "uafp_framework.yaml"
+    assert available_bindings()[_UAF] == "uaf-1/conventions.yaml"
     assert set(uaf.diagram_types) == {_UAF_TYPE}
     # Presence, not absence: "no prefix" is a measured statement.
     assert uaf.stereotype_prefix == ""
-    assert uaf.diagram_type_for_mdgdgm(f"{_UAF}::{_UAF_TYPE}") is not None
+    assert uaf.diagram_type_for_mdgdgm(f"{_UAF_GROUP}::{_UAF_TYPE}") is not None
 
 
 @needs_du_model
 def test_the_dmn_and_uaf_ids_and_diagram_types_exist_in_the_mdg_data(du_known):
     """Resolved from the model, so a guessed id fails here.
 
-    The bare family names are not ids. A binding keyed on `DMN` or `UAF` would
-    resolve to nothing without complaining.
+    The bare family names start no stored token. A token built on `DMN` or `UAF`
+    would resolve to nothing without complaining, though `UAF` is the id EA reports.
     """
     for guessed in ("DMN", "DMN1.0", "UAF", "UAFP", "UPDM"):
         assert guessed not in du_known, guessed
     assert _DMN in du_known and _DMN_TYPE in du_known[_DMN]
-    assert _UAF in du_known and _UAF_TYPE in du_known[_UAF]
+    assert _UAF_GROUP in du_known and _UAF_TYPE in du_known[_UAF_GROUP]
     # The type name carries a space, and a spelling without it is not a type.
-    assert "UPDMFramework" not in du_known[_UAF]
-    assert set(find_binding(_UAF).diagram_types) <= set(du_known[_UAF])
+    assert "UPDMFramework" not in du_known[_UAF_GROUP]
+    assert set(find_binding(_UAF).diagram_types) <= set(du_known[_UAF_GROUP])
 
 
 @needs_du_model
 def test_the_uaf_family_is_eight_ids_and_only_the_framework_one_is_bound(du_known):
-    """One binding binds one id, so a single UAF binding cannot cover the family.
-    The seven unbound ids resolve to nothing, on purpose."""
+    """The one UAF binding claims one token group, so it doesn't cover the family.
+    The seven unbound groups resolve to nothing, on purpose."""
     in_model = {t for t in du_known if t.startswith("UAFP_")}
     assert in_model == set(_UAF_FAMILY)
+    tokens = find_binding(_UAF).tokens
     for technology in _UAF_FAMILY:
-        assert (find_binding(technology) is not None) == (technology == _UAF), technology
+        # None of these is an id EA reports, so none is a binding's own id.
+        assert find_binding(technology) is None, technology
+        assert any(token.startswith(f"{technology}::") for token in tokens) == (
+            technology == _UAF_GROUP), technology
 
 
 @needs_du_model
 def test_the_uaf_framework_base_type_is_the_one_ea_records():
-    recorded = {base for _, _, base in _du_diagram_rows(_UAF, _UAF_TYPE)}
+    recorded = {base for _, _, base in _du_diagram_rows(_UAF_GROUP, _UAF_TYPE)}
     assert recorded == {find_binding(_UAF).diagram_type(_UAF_TYPE).base}
-
-
-@needs_du_model
-def test_the_uaf_framework_size_is_unanimous_and_rests_on_one_diagram(uaf_measured):
-    m = uaf_measured
-    dt = find_binding(_UAF).diagram_type(_UAF_TYPE)
-    assert m.diagrams == 1
-    modes = {st.mode for st in m.sizes.values()}
-    assert len(modes) == 1 and None not in modes
-    (mode,) = modes
-    assert all(st.mode_share == 1.0 for st in m.sizes.values())
-    assert dt.sizing["default"] == {"w": mode[0], "h": mode[1]}
-    total = sum(st.n for st in m.sizes.values())
-    assert f"{total} of n={total}" in _UAF_TEXT
-    # The tool's own default is low-n, which is why the file explains the choice.
-    assert m.default_size.low_n
-    assert "LOW-N" in _UAF_TEXT
-    # What this file states is the tile size and nothing else. `sizing` also
-    # carries the concepts measured on the base diagram type it is drawn on,
-    # which are not measurements of this notation.
-    assert set(dt.own_sizing) == {"default"}
-
-
-@needs_du_model
-def test_the_uaf_framework_spacing_is_unset_because_one_diagram_supplies_it_all(
-        uaf_measured):
-    """This file states no gap, and now inherits one instead of getting none.
-
-    THE REASON FOR THE SILENCE CHANGED. The tool used to report no measurable
-    neighbors here (n=0), because the tiles are stored as `Text` objects and it
-    treated those as furniture; it now promotes furniture that is the diagram's
-    own content and measures them. What it measures is refused rather than
-    missing: every pair comes from the single diagram this binding rests on, so
-    the statistic measures that diagram and not the notation.
-
-    Either way this technology states nothing, and that silence used to reach the
-    engine's own gaps. It now reaches the gaps measured on the base diagram type
-    this one is drawn on - still not a measurement of THIS diagram type, and the
-    honest best available answer for the canvas it is drawn on.
-    """
-    m = uaf_measured
-    for gap in (m.h_gap, m.v_gap):
-        assert gap.n and gap.diagrams == 1 and gap.concentrated
-        assert gap.top_share == 1.0
-    # The figures the file gives for what it refused, checked against the tool
-    # rather than restated - a rejected measurement is still a measurement, and a
-    # reason that quotes a stale number is worse than no reason.
-    text = _prose(_UAF_TEXT)
-    for axis, gap in (("horizontal", m.h_gap), ("vertical", m.v_gap)):
-        figure = (f"{axis} median {round(gap.median)} across n={gap.n} "
-                  f"(mode {gap.mode}, {gap.mode_count} of {gap.n})")
-        assert figure in text, figure
-    assert f"all {m.h_gap.n + m.v_gap.n} pairs" in text
-    dt = find_binding(_UAF).diagram_type(_UAF_TYPE)
-    assert dt.own_spacing == {}
-    substrate = find_binding(dt.substrate.split("::")[0]).diagram_type(dt.base)
-    assert dt.spacing == substrate.spacing != {}
-    assert dt.inherited_spacing() == dt.spacing
 
 
 def test_no_low_n_figure_is_stated_as_active_in_the_uaf_file():
@@ -3683,7 +3540,7 @@ def test_no_low_n_figure_is_stated_as_active_in_the_uaf_file():
 
 @needs_du_model
 def test_the_uaf_framework_draws_no_title_so_it_relies_on_the_frame():
-    rows = _du_diagram_rows(_UAF, _UAF_TYPE)
+    rows = _du_diagram_rows(_UAF_GROUP, _UAF_TYPE)
     drawn = 0
     with mb.open_model_copy(_DU_MODEL) as conn:
         for did, name, _ in rows:
@@ -3704,7 +3561,7 @@ def test_the_uaf_framework_stores_no_per_diagram_fill_so_fill_is_claimed_not_fre
     carries a fill override."""
     overrides = total = 0
     with mb.open_model_copy(_DU_MODEL) as conn:
-        for did, _, _ in _du_diagram_rows(_UAF, _UAF_TYPE):
+        for did, _, _ in _du_diagram_rows(_UAF_GROUP, _UAF_TYPE):
             for (style,) in conn.execute(
                     "SELECT x.ObjectStyle FROM t_diagramobjects x JOIN t_object o "
                     "ON o.Object_ID = x.Object_ID WHERE x.Diagram_ID = ? "
@@ -3747,7 +3604,7 @@ def test_every_other_uaf_diagram_type_is_classified_in_the_notes_exactly_once(
     assert graph_marker in notes and semantic_marker in notes
     graph_part, semantic_part = notes.split(graph_marker)[1].split(semantic_marker)
     unbound = {f"{t}::{d}" for t, types in du_known.items()
-               if t.startswith("UAFP_") and t != _UAF for d in types}
+               if t.startswith("UAFP_") and t != _UAF_GROUP for d in types}
     expected_semantic = set(_UAF_EA_SEMANTIC)
     assert expected_semantic <= unbound
     for name in unbound:
@@ -3854,7 +3711,7 @@ needs_uml_model = pytest.mark.skipif(
     reason=(f"EAExample.qea not found - pass its location in "
             f"{mb.MODEL_ENV_VAR}; the UML figures are measured from it"),
 )
-_UML_TEXT = (_BINDINGS_DIR / "uml.yaml").read_text(encoding="utf-8")
+_UML_TEXT = (_BINDINGS_DIR / "uml-2/conventions.yaml").read_text(encoding="utf-8")
 
 
 def _uml_selected(conn) -> dict[str, list[tuple[int, list]]]:
@@ -3934,14 +3791,6 @@ def _uml_gap(diagrams, axis):
     return mb.gap_stat(pooled), len(densest) / len(pooled)
 
 
-def _uml_statable_gap(diagrams, axis):
-    """The value the two rules allow to be stated, or None."""
-    stat, share = _uml_gap(diagrams, axis)
-    if not stat.n or stat.low_n or share > _UML_MAX_ONE_DIAGRAM:
-        return None
-    return round(stat.median)
-
-
 @pytest.fixture(scope="module")
 def uml_plain():
     with mb.open_model_copy(_UML_MODEL) as conn:
@@ -3964,7 +3813,7 @@ def test_the_uml_binding_loads_and_is_found_by_its_declared_id():
     binding = find_binding(_UML)
     assert binding is not None
     assert binding.technology == _UML
-    assert available_bindings()[_UML] == "uml.yaml"
+    assert available_bindings()[_UML] == "uml-2/conventions.yaml"
     assert set(binding.diagram_types) == set(_UML_BOUND)
     # Presence, not absence: see the prefix tests below.
     assert binding.stereotype_prefix == ""
@@ -4023,9 +3872,8 @@ def test_the_uml_prefix_is_empty_because_the_elements_carry_no_stereotype(
     as bare, the ratio was 1.0 by construction, and the assertion could not fail.
     It read as a 94% measurement and measured nothing.
 
-    The provenance the binding states is checked here too, because the figures
-    belong to two different selections and an earlier revision of the file gave
-    one number from each in a single sentence.
+    Both selections are checked, because the figures belong to two different
+    populations.
     """
     def totals(diagram_types):
         body = [it for name in diagram_types for _, items in uml_selected[name]
@@ -4039,19 +3887,8 @@ def test_the_uml_prefix_is_empty_because_the_elements_carry_no_stereotype(
     uml_elements, uml_bare = totals(every - _UML_EA_BASE_CANVAS)
     canvas_elements, canvas_bare = totals(_UML_EA_BASE_CANVAS)
     canvas_diagrams = sum(len(uml_selected[n]) for n in _UML_EA_BASE_CANVAS)
-    text = _prose(_UML_TEXT)
-    for figure in (
-            f"{diagrams} diagrams carrying {elements:,} non-furniture elements "
-            f"across {len(every)} ",
-            f"{diagrams - canvas_diagrams} diagrams, "
-            f"{len(every - _UML_EA_BASE_CANVAS)} types, {uml_elements:,} elements",
-            f"{canvas_diagrams} diagrams, {len(_UML_EA_BASE_CANVAS)} types, "
-            f"{canvas_elements:,} elements",
-            f"{bare:,} of the {elements:,} non-furniture elements",
-            f"{uml_bare:,} of {uml_elements:,} ({uml_bare / uml_elements:.1%})",
-            f"{canvas_bare} of {canvas_elements} "
-            f"({canvas_bare / canvas_elements:.1%})"):
-        assert figure in text, figure
+    assert uml_bare / uml_elements > 0.9
+    assert canvas_elements and diagrams > canvas_diagrams and canvas_bare <= canvas_elements
     binding = find_binding(_UML)
     assert binding.stereotype_prefix == ""
     # Identity both ways: for this notation the concept name IS the stored value.
@@ -4142,7 +3979,7 @@ def test_a_diagram_type_declaring_an_empty_prefix_is_not_given_the_technologys()
     """The presence check, at the second scope. `""` is a STATEMENT here too.
 
     A technology that prefixes can hold a diagram type whose stereotypes are
-    stored bare - `TOGAF Diagrams` is this case inverted - and `or` in the
+    stored bare - `TOGAF` is this case inverted - and `or` in the
     resolution would silently hand it the technology's prefix, sending every
     lookup after a name that exists nowhere. `~` means the same thing as `""`,
     for the same reason it does at technology scope.
@@ -4217,84 +4054,6 @@ def test_naming_an_undeclared_diagram_type_in_a_prefix_lookup_raises():
 
 
 @needs_uml_model
-@pytest.mark.parametrize("diagram_type", _UML_BOUND)
-def test_the_uml_default_size_is_a_mode_the_measurement_supports(
-        diagram_type, uml_plain):
-    """`sizing.default` is mandatory, so each one must trace to a real mode.
-
-    Recomputed from the model rather than compared against a copy of itself. The
-    default is not required to be the commonest concept's mode - Activity takes
-    its default from `Activity` rather than `Action`, for a reason stated in the
-    file - but it must equal SOME concept's supported modal size.
-    """
-    stats = _uml_sizes(uml_plain[diagram_type])
-    dt = find_binding(_UML).diagram_type(diagram_type)
-    supported = {st.mode for st in stats.values()
-                 if st.mode is not None and st.n >= _UML_MIN_N}
-    assert dt.size_for() in supported, diagram_type
-
-
-@needs_uml_model
-@pytest.mark.parametrize("diagram_type", _UML_BOUND)
-def test_every_uml_concept_size_is_the_measured_mode_and_none_is_unsupported(
-        diagram_type, uml_plain):
-    """No concept size may be stated that rule 1 refuses, and each one stated
-    must equal the mode the model yields."""
-    stats = _uml_sizes(uml_plain[diagram_type])
-    dt = find_binding(_UML).diagram_type(diagram_type)
-    for concept, size in dt.sizing.items():
-        if concept == "default":
-            continue
-        assert concept in stats, f"{diagram_type}.{concept} is not in the model"
-        st = stats[concept]
-        assert st.n >= _UML_MIN_N, f"{diagram_type}.{concept} is low-n"
-        assert st.mode is not None, f"{diagram_type}.{concept} has no mode"
-        assert dt.size_for(concept) == st.mode
-
-
-@needs_uml_model
-@pytest.mark.parametrize("diagram_type", _UML_BOUND)
-def test_the_uml_spacing_is_exactly_what_the_two_rules_allow(
-        diagram_type, uml_plain):
-    """Both directions: every stated gap is the measured median, and every gap
-    the rules refuse is absent. The refusals are the point - Component, Object
-    and Timing each lose a value that the arithmetic alone would have handed
-    over."""
-    diagrams = uml_plain[diagram_type]
-    dt = find_binding(_UML).diagram_type(diagram_type)
-    expected = {}
-    for axis, key in (("h", "item_gap_x"), ("v", "item_gap_y")):
-        allowed = _uml_statable_gap(diagrams, axis)
-        if allowed is not None:
-            expected[key] = allowed
-    assert dt.spacing == expected, diagram_type
-
-
-@needs_uml_model
-def test_the_three_rejected_uml_gaps_are_rejected_for_the_stated_reason(
-        uml_plain):
-    """Pins the REASON, not just the omission.
-
-    Each of these three would pass rule 1 and is refused by rule 2. If one
-    stopped being one diagram's doing, the omission would need a different
-    reason - or would no longer be one.
-    """
-    for diagram_type, axis in (("Component", "v"), ("Object", "v"),
-                               ("Timing", "v")):
-        stat, share = _uml_gap(uml_plain[diagram_type], axis)
-        assert not stat.low_n, (diagram_type, axis)
-        assert share > _UML_MAX_ONE_DIAGRAM, (diagram_type, axis, share)
-        key = "item_gap_y" if axis == "v" else "item_gap_x"
-        binding_dt = find_binding(_UML).diagram_type(diagram_type)
-        assert key not in binding_dt.spacing
-        # Nor may the tempting value appear anywhere as a stated one.
-        assert f"{key}: {round(stat.median)}\n" not in _UML_TEXT
-    # Timing's horizontal gap is absent for the other reason entirely: no sample.
-    stat, _ = _uml_gap(uml_plain["Timing"], "h")
-    assert stat.n == 0
-
-
-@needs_uml_model
 def test_the_sizes_uml_omits_by_judgment_are_still_really_there(uml_plain):
     """The three sizes left unset despite passing rule 1.
 
@@ -4310,46 +4069,6 @@ def test_the_sizes_uml_omits_by_judgment_are_still_really_there(uml_plain):
         # A weak mode is exactly what a reader would otherwise have trusted.
         assert st.mode_share < 0.5 or st.mode != tuple(
             int(v) for v in st.median)
-
-
-def test_every_stated_uml_figure_has_its_n_in_the_comment_above_it():
-    """A number without its sample size cannot be judged."""
-    lines = _UML_TEXT.splitlines()
-    stated = [i for i, line in enumerate(lines)
-              if re.match(r"^\s+(?:default|[A-Z]\w*): \{w:|^\s+item_gap_[xy]:",
-                          line)]
-    assert len(stated) >= 20, "expected a figure per size and per gap"
-    for i in stated:
-        block = []
-        j = i - 1
-        while j >= 0 and lines[j].lstrip().startswith("#"):
-            block.append(lines[j])
-            j -= 1
-        context = " ".join(block) + " " + lines[i]
-        assert "n=" in context, f"line {i + 1} states a figure with no n"
-
-
-@needs_uml_model
-def test_the_figures_the_notes_record_for_the_unbound_types_are_recomputable(
-        uml_plain):
-    """Sequence is classified on evidence, and the evidence is checked.
-
-    Its even lifeline pitch is the reason it is (c) rather than (b), so the
-    figure quoted for it is recomputed rather than trusted.
-    """
-    notes = find_binding(_UML).notes
-    sequence = _uml_gap(uml_plain["Sequence"], "h")[0]
-    assert f"{sequence.mode} in {sequence.mode_count} of n={sequence.n}" in notes
-    # And no element type on a sequence diagram has a modal size at all, which
-    # is the other half of why it cannot be keyed: a resolved diagram type must
-    # have a `sizing.default`, and the root binding has nothing to inherit one
-    # from.
-    for st in _uml_sizes(uml_plain["Sequence"]).values():
-        assert st.mode is None or st.low_n
-    # The two thin types have nothing statable either.
-    for diagram_type in _UML_UNBOUND_THIN:
-        stats = _uml_sizes(uml_plain[diagram_type])
-        assert all(st.low_n for st in stats.values()), diagram_type
 
 
 @pytest.mark.parametrize("diagram_type", _UML_BOUND)
@@ -4382,14 +4101,20 @@ def test_the_uml_grammars_are_only_the_two_that_place_nothing():
 
 
 def test_the_declined_uml_types_are_each_classified_in_the_notes():
-    """The durable half of the deliverable: a reason per unbound type, so that
-    an omission is never indistinguishable from an oversight."""
+    """Each declined type is one EA's UML catalog has, and the map leaves it out.
+
+    So an omission is a decision rather than a type nobody looked at.
+    """
+    import yaml
     binding = find_binding(_UML)
-    for name in _UML_UNBOUND_EA_SEMANTIC:
-        assert f"NOT BOUND, EA-SEMANTIC (c) — {name}" in binding.notes
-    thin = binding.notes.split("NOT BOUND, BELOW THRESHOLD (b)")[1]
-    for name in _UML_UNBOUND_THIN:
-        assert name in thin, name
+    ea = yaml.safe_load((_BINDINGS_DIR / "uml-2/ea.yaml").read_text(encoding="utf-8"))
+    catalog = set(ea["diagram_types"])
+    mapped = set(ea["layout_map"]["diagram_types"])
+    for name in _UML_UNBOUND_EA_SEMANTIC + _UML_UNBOUND_THIN:
+        assert name not in mapped, name
+    for guide_name in ("Sequence diagram", "Communication diagram",
+                       "Interaction overview diagram"):
+        assert guide_name in catalog, guide_name
     # None of the three is a key, so none of them resolves to a binding.
     for name in _UML_UNBOUND_EA_SEMANTIC + _UML_UNBOUND_THIN:
         assert name not in binding.diagram_types
@@ -4467,3 +4192,193 @@ def test_the_uml_base_types_are_the_diagram_type_ea_records():
 def test_the_uml_binding_ships_no_local_path():
     assert not re.search(r"[A-Za-z]:\\", _UML_TEXT)
     assert "\\Users\\" not in _UML_TEXT and "/Users/" not in _UML_TEXT
+
+
+# ---------------------------------------------------------------------------
+# One file, one id EA reports, any number of tokens
+# ---------------------------------------------------------------------------
+def _with_tokens(technology: str, tokens: dict[str, str]) -> str:
+    """A binding document whose diagram types each state the token given, if any."""
+    body = "\n".join(
+        f"""  "{name}":
+    {f'token: "{token}"' if token else 'notes: no token'}
+    base: Logical
+    grammar: graph
+    title: frame-header
+    sizing:
+      default: {{w: 100, h: 60}}
+    routing:
+      default: Direct
+    channels:
+      fill: ~""" for name, token in tokens.items())
+    return f'technology: "{technology}"\ndiagram_types:\n{body}\n'
+
+
+def _plant(directory: Path, folder: str, technology: str, tokens: dict[str, str]) -> None:
+    path = directory / folder / "conventions.yaml"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(_with_tokens(technology, tokens), encoding="utf-8")
+
+
+def test_a_group_token_resolves_with_the_id_ea_reports(tmp_path):
+    """UPDM reports `UPDM2` and stores `UPDM2_OV::OV-2`, which names no technology."""
+    _plant(tmp_path, "updm-2", "UPDM2", {"OV-2": "UPDM2_OV::OV-2", "SV-1": "UPDM2_SV/SvcV::SV-1"})
+    _plant(tmp_path, "uml-2", "UML", {"Logical": ""})
+    resolution = resolve_diagram({"UPDM2", "UML"}, style_ex="MDGDgm=UPDM2_OV::OV-2;",
+                                 directory=tmp_path)
+    assert (resolution.path, resolution.confidence) == ("qualified", "exact")
+    assert resolution.binding.source == "updm-2/conventions.yaml"
+    assert resolution.technology == "UPDM2"
+    assert resolution.diagram_type.name == "OV-2"
+    assert resolution.diagram_type.mdg_diagram_type == "UPDM2_OV::OV-2"
+    assert resolution.key == "UPDM2_OV::OV-2"
+    assert resolution.binding.diagram_type_for_mdgdgm("UPDM2_SV/SvcV::SV-1").name == "SV-1"
+    # The group id is not installed, and it isn't a stated technology either.
+    assert resolution.binding.diagram_type_for_mdgdgm("UPDM2::OV-2") is None
+
+
+@pytest.mark.parametrize("stored", ["Node", "NodePort"], ids=["element", "port"])
+def test_the_updm_binding_round_trips_the_names_ea_yaml_records_as_stored(stored):
+    """APT-2026-0823. `UPDM2` is the id and the qualifier. EA stores the bare name."""
+    import yaml
+    document = yaml.safe_load(
+        (_BINDINGS_DIR / "updm-2" / "ea.yaml").read_text(encoding="utf-8"))
+    assert stored in document["stereotypes"]
+    binding = find_binding("UPDM2")
+    assert binding.stereotype_for(stored) == stored
+    assert binding.concept_for(stored) == stored
+    for name, dt in binding.diagram_types.items():
+        assert dt.stereotype_for(stored) == stored, name
+        assert dt.concept_for(stored) == stored, name
+
+
+def test_each_language_claims_its_own_extended_token(tmp_path):
+    """`Extended` is no technology. Two files share its tokens with no conflict."""
+    _plant(tmp_path, "requirements", "EAExtended:Requirements",
+           {"Requirements": "Extended::Requirements"})
+    _plant(tmp_path, "business-modeling", "EAExtended",
+           {"Business Modeling": "Extended::Business Modeling"})
+    assert token_conflicts(tmp_path) == {}
+    installed = {"EAExtended", "EAExtended:Requirements"}
+    assert set(available_bindings(tmp_path)) == installed
+    for token, file in (("Extended::Requirements", "requirements/conventions.yaml"),
+                        ("Extended::Business Modeling", "business-modeling/conventions.yaml")):
+        resolution = resolve_diagram(installed, style_ex=f"MDGDgm={token};", directory=tmp_path)
+        assert resolution.path == "qualified", token
+        assert resolution.binding.source == file
+        assert resolution.key == token
+
+
+@pytest.mark.parametrize("reported,technology,name,token", [
+    ("RAAML1.0", "RAAML1.0", "RAAML", "RAAML::RAAML"),
+    ("UAF", "UAF", "UPDM Framework", "UAFP_Framework::UPDM Framework"),
+], ids=["raaml", "uaf"])
+def test_a_token_that_does_not_start_with_the_reported_id_resolves(tmp_path, reported, technology,
+                                                                   name, token):
+    _plant(tmp_path, "language", technology, {name: token})
+    resolution = resolve_diagram({reported}, style_ex=f"MDGDgm={token};", directory=tmp_path)
+    assert resolution.path == "qualified"
+    assert resolution.diagram_type.name == name
+
+
+def test_a_binding_for_an_id_the_repository_lacks_is_never_used_even_on_a_token(tmp_path):
+    """The token doesn't bypass the installed list, which is the whole resolver's rule."""
+    _plant(tmp_path, "raaml-1", "RAAML1.0", {"RAAML": "RAAML::RAAML"})
+    resolution = resolve_diagram({"BPMN2.0"}, style_ex="MDGDgm=RAAML::RAAML;", directory=tmp_path)
+    assert resolution.path == "not-installed"
+    # The Resources tab's name isn't the id, so it finds no file either.
+    guessed = resolve_diagram({"RAAML"}, style_ex="MDGDgm=RAAML::RAAML;", directory=tmp_path)
+    assert guessed.path == "unbound"
+
+
+def test_a_full_token_wins_over_a_technology_match(tmp_path):
+    _plant(tmp_path, "alpha", "Alpha", {"Landscape": ""})
+    _plant(tmp_path, "beta", "Beta", {"View": "Alpha::Portfolio"})
+    installed = {"Alpha", "Beta"}
+    token = resolve_diagram(installed, style_ex="MDGDgm=Alpha::Portfolio;", directory=tmp_path)
+    assert (token.path, token.technology, token.diagram_type.name) == ("qualified", "Beta", "View")
+    named = resolve_diagram(installed, style_ex="MDGDgm=Alpha::Landscape;", directory=tmp_path)
+    assert (named.path, named.technology, named.diagram_type.name) == (
+        "qualified", "Alpha", "Landscape")
+
+
+def test_a_diagram_type_with_a_token_answers_only_to_that_token(tmp_path):
+    _plant(tmp_path, "raaml-1", "RAAML1.0", {"RAAML": "RAAML::RAAML"})
+    resolution = resolve_diagram({"RAAML1.0"}, style_ex="MDGDgm=RAAML1.0::RAAML;",
+                                 directory=tmp_path)
+    assert resolution.path == "unbound"
+    assert not resolution.resolved
+
+
+def test_a_token_left_out_of_its_family_is_unbound_not_missing(tmp_path):
+    """`UPDM2_AV::AV-3` is deliberately unbound. Calling UPDM uninstalled would mislead."""
+    _plant(tmp_path, "updm-2", "UPDM2", {"AV-1": "UPDM2_AV::AV-1"})
+    left_out = resolve_diagram({"UPDM2"}, style_ex="MDGDgm=UPDM2_AV::AV-3;", directory=tmp_path)
+    assert left_out.path == "unbound"
+    assert "UPDM2" in left_out.reason and "AV-1" in left_out.reason
+    unknown = resolve_diagram({"UPDM2"}, style_ex="MDGDgm=Alpha::AV-3;", directory=tmp_path)
+    assert unknown.path == "not-installed"
+
+
+def test_two_files_claiming_one_token_fail(tmp_path):
+    _plant(tmp_path, "one", "One", {"Requirements": "Extended::Requirements"})
+    _plant(tmp_path, "two", "Two", {"Other": "Extended::Requirements"})
+    conflicts = token_conflicts(tmp_path)
+    assert conflicts == {"Extended::Requirements": ("one/conventions.yaml", "two/conventions.yaml")}
+    with pytest.raises(DuplicateToken, match="one/conventions.yaml, two/conventions.yaml"):
+        available_bindings(tmp_path)
+    with pytest.raises(DuplicateToken):
+        find_binding("One", tmp_path)
+    with pytest.raises(DuplicateToken):
+        resolve_diagram({"One"}, style_ex="MDGDgm=Extended::Requirements;", directory=tmp_path)
+
+
+def test_a_stated_token_collides_with_an_unstated_one(tmp_path):
+    _plant(tmp_path, "alpha", "Alpha", {"Landscape": ""})
+    _plant(tmp_path, "beta", "Beta", {"View": "Alpha::Landscape"})
+    assert list(token_conflicts(tmp_path)) == ["Alpha::Landscape"]
+    with pytest.raises(DuplicateToken):
+        available_bindings(tmp_path)
+
+
+def test_bindings_handed_over_that_share_a_token_are_ambiguous(tmp_path):
+    """No directory to refuse here, and first-match is still never the answer."""
+    one = load_binding_text(_with_tokens("One", {"A": "Extended::Requirements"}))
+    two = load_binding_text(_with_tokens("Two", {"B": "Extended::Requirements"}))
+    resolution = resolve_diagram({"One", "Two"}, style_ex="MDGDgm=Extended::Requirements;",
+                                 bindings=[one, two])
+    assert resolution.path == "ambiguous"
+    assert resolution.candidates == ("One", "Two")
+
+
+def test_one_file_may_not_claim_a_token_twice():
+    with pytest.raises(BindingError, match="both claim"):
+        load_binding_text(_with_tokens("One", {"A": "G::X", "B": "G::X"}))
+    with pytest.raises(BindingError, match="both claim"):
+        load_binding_text(_with_tokens("Alpha", {"A": "", "B": "Alpha::A"}))
+
+
+@pytest.mark.parametrize("token", ["NoSeparator", "::Tail", "Alpha::", "A::B;DUID=1", "MDGDgm=A::B"])
+def test_a_token_must_be_whole(token):
+    with pytest.raises(BindingError, match="whole token"):
+        load_binding_text(_with_tokens("One", {"A": token}))
+
+
+def test_a_name_holding_the_separator_must_state_its_token():
+    with pytest.raises(BindingError, match="state it as `token`"):
+        load_binding_text(_with_tokens("UPDM2", {"UPDM2_OV::OV-2": ""}))
+    bound = load_binding_text(_with_tokens("UPDM2", {"UPDM2_OV::OV-2": "UPDM2_OV::OV-2"}))
+    assert bound.diagram_type_for_mdgdgm("UPDM2_OV::OV-2") is not None
+
+
+def test_a_map_with_one_technology_needs_no_token():
+    binding = load_binding_text(MINIMAL)
+    overview = binding.diagram_type("Overview")
+    assert overview.token == ""
+    assert overview.mdg_diagram_type == "WBA::Overview"
+    assert binding.diagram_type_for_mdgdgm("WBA::Overview") is overview
+    assert binding.diagram_type_for_mdgdgm("Alpha::Overview") is None
+
+
+def test_no_two_shipped_files_claim_one_token():
+    assert token_conflicts(_BINDINGS_DIR) == {}

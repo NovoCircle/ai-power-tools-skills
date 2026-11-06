@@ -237,4 +237,4 @@ knowledge is in the wrong place — a test enforces that no notation is named in
 
 - `tools/advise.py` — the ranking engine. Pure arithmetic, no repository calls, no notation names
 - [`ea-diagram-composition`](../ea-diagram-composition/SKILL.md) — where the chosen view gets drawn;
-  its `bindings/` are the view catalogues this skill ranks
+  its bindings, generated into `_shared/languages/`, are the view catalogues this skill ranks
